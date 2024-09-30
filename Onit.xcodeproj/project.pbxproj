@@ -7,7 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		281941BA2CA7B52200A58767 /* SageKit in Frameworks */ = {isa = PBXBuildFile; productRef = 281941B92CA7B52200A58767 /* SageKit */; };
+		28BF71682CAB72A200DE7C03 /* SageKit in Frameworks */ = {isa = PBXBuildFile; productRef = 28BF71672CAB72A200DE7C03 /* SageKit */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -27,7 +27,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				281941BA2CA7B52200A58767 /* SageKit in Frameworks */,
+				28BF71682CAB72A200DE7C03 /* SageKit in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -70,7 +70,7 @@
 			);
 			name = Onit;
 			packageProductDependencies = (
-				281941B92CA7B52200A58767 /* SageKit */,
+				28BF71672CAB72A200DE7C03 /* SageKit */,
 			);
 			productName = Onit;
 			productReference = 2883E4B32CA5ECBB00F79A48 /* Onit.app */;
@@ -101,7 +101,7 @@
 			mainGroup = 2883E4AA2CA5ECBB00F79A48;
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
-				281941B82CA7B52200A58767 /* XCLocalSwiftPackageReference "../../Developer/packages/SageKit" */,
+				28BF71662CAB72A200DE7C03 /* XCRemoteSwiftPackageReference "SageKit" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 2883E4B42CA5ECBB00F79A48 /* Products */;
@@ -331,16 +331,21 @@
 		};
 /* End XCConfigurationList section */
 
-/* Begin XCLocalSwiftPackageReference section */
-		281941B82CA7B52200A58767 /* XCLocalSwiftPackageReference "../../Developer/packages/SageKit" */ = {
-			isa = XCLocalSwiftPackageReference;
-			relativePath = ../../Developer/packages/SageKit;
+/* Begin XCRemoteSwiftPackageReference section */
+		28BF71662CAB72A200DE7C03 /* XCRemoteSwiftPackageReference "SageKit" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/blsage/SageKit";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 0.0.1;
+			};
 		};
-/* End XCLocalSwiftPackageReference section */
+/* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
-		281941B92CA7B52200A58767 /* SageKit */ = {
+		28BF71672CAB72A200DE7C03 /* SageKit */ = {
 			isa = XCSwiftPackageProductDependency;
+			package = 28BF71662CAB72A200DE7C03 /* XCRemoteSwiftPackageReference "SageKit" */;
 			productName = SageKit;
 		};
 /* End XCSwiftPackageProductDependency section */
