@@ -1,0 +1,12 @@
+{
+  "images" : [
+    {
+      "filename" : "arrows-spin.svg",
+      "idiom" : "universal"
+    }
+  ],
+  "info" : {
+    "author" : "xcode",
+    "version" : 1
+  }
+}
