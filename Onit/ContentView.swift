@@ -16,11 +16,6 @@ struct ContentView: View {
         }
         .background(Color.black)
         .frame(minWidth: 400)
-        .onAppear {
-            setWindow(.main) {
-                $0.level = .floating
-            }
-        }
     }
 }
 

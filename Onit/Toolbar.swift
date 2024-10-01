@@ -34,7 +34,7 @@ struct Toolbar: View {
                 .padding(4)
         }
         .buttonStyle(HoverableButtonStyle())
-        .keyboardShortcut(.escape)
+        .keyboardShortcut(.escape, modifiers: [])
     }
 
     var resize: some View {
