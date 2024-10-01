@@ -49,8 +49,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             // Remove the title bar space and make it draggable by the background
             window.titleVisibility = .hidden
             window.titlebarAppearsTransparent = true
-            window.styleMask.remove(.titled) // Remove title bar entirely
-            window.styleMask.insert(.fullSizeContentView) // Allow content to fill the window
+            window.styleMask.insert(.titled)
+            window.styleMask.insert(.fullSizeContentView)
 
             // Make the window background movable so it can still be dragged
             window.isMovableByWindowBackground = true
@@ -101,26 +101,35 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     func setupFloatingWindow() {
-        // Create the NSWindow with SwiftUI OmniPromptView as content
-        window = NSWindow(
+        // Create the NSWindow with SwiftUI OnitPromptView as content
+        window = KeyWindow(
             contentRect: NSRect(x: 100, y: 100, width: 200, height: 100), // Adjust size as needed
-            styleMask: [.borderless],
+            styleMask: [.titled, .fullSizeContentView],
             backing: .buffered,
             defer: false
         )
 
         // Set up NSWindow properties
+        window?.titleVisibility = .hidden
+        window?.titlebarAppearsTransparent = true
         window?.isOpaque = false
         window?.backgroundColor = .clear
-        window?.level = .statusBar
-        window?.ignoresMouseEvents = true
+        window?.level = .floating
+        window?.ignoresMouseEvents = false // Ensure the window accepts mouse events
+        window?.isMovableByWindowBackground = true
+        window?.acceptsMouseMovedEvents = true
 
         // Embed the SwiftUI view into the window using NSHostingView
-        let contentView = NSHostingView(rootView: OnitPromptView()) // Use your SwiftUI view here
+        let contentView = NSHostingView(rootView: OnitPromptView())
         contentView.frame = NSRect(x: 0, y: 0, width: 200, height: 100) // Adjust frame size
         window?.contentView = contentView
 
+        // Make the window the key and main window
         window?.makeKeyAndOrderFront(nil)
+        window?.makeMain()
+
+        // Assuming 'contentView' contains your text field
+        window?.makeFirstResponder(contentView)
     }
 
     @objc private func applicationDidActivate(_ notification: Notification) {
@@ -263,3 +272,11 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
 }
 
+  class KeyWindow: NSWindow {
+      override var canBecomeKey: Bool {
+          return true
+      }
+      override var canBecomeMain: Bool {
+          return true
+      }
+  }

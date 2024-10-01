@@ -9,14 +9,29 @@ import SwiftUI
 
 @main
 struct OnitApp: App {
-    @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
+//    @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
 
     var body: some Scene {
+        MenuBarScene()
+
         WindowGroup {
-            ContentView()
-                .foregroundStyle(.white)
+            TempView()
         }
         .windowStyle(.hiddenTitleBar)
         .defaultSize(width: 400, height: 84)
+
+    }
+}
+
+struct TempView: View {
+    @State var showWindow = false
+
+    var body: some View {
+        Button("Click here") {
+            showWindow = true
+        }
+        .floatingPanel(isPresented: $showWindow) {
+            Text("hello world")
+        }
     }
 }

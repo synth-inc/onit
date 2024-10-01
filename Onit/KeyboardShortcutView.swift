@@ -37,9 +37,11 @@ struct KeyboardShortcutView: View {
         var body: some View {
             switch key {
             case .return:
-                Image(.return)
+                Text("⏎")
             case .delete:
-                Image(.deleteKey)
+                Text("⌫")
+            case .space:
+                Text("␣")
             default:
                 Text(String(key.character).uppercased())
             }
@@ -52,13 +54,11 @@ struct KeyboardShortcutView: View {
         var body: some View {
             switch modifier {
             case .command:
-                Image(.commandKey)
-                    .resizable()
-                    .scaledToFit()
+                Text("⌘")
             case .option:
-                Image(.option)
-                    .resizable()
-                    .scaledToFit()
+                Text("⌥")
+            case .shift:
+                Text("⇧")
             default:
                 EmptyView()
             }
