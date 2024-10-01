@@ -13,20 +13,25 @@ import MenuBarExtraAccess
 struct App: SwiftUI.App {
 //    @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
     @Environment(\.openWindow) var openWindow
+    @Environment(\.model) var model
 
     init() {
         KeyboardShortcuts.launch()
     }
 
     var body: some Scene {
+        @Bindable var model = model
+
         MenuBarExtra {
             MenuBarContent()
+                .environment(model)
         } label: {
             Image(.smirkIcon)
                 .renderingMode(.template)
                 .foregroundStyle(.white)
         }
         .menuBarExtraStyle(.window)
+        .menuBarExtraAccess(isPresented: $model.showMenuBarExtra)
 
         WindowScene()
             .commands {

@@ -8,6 +8,8 @@
 import SwiftUI
 
 struct MenuBarRow<Leading: View, Trailing: View>: View {
+    @Environment(\.model) var model
+
     var action: () -> Void
     var leading: Leading
     var trailing: Trailing
@@ -25,6 +27,9 @@ struct MenuBarRow<Leading: View, Trailing: View>: View {
     var body: some View {
         Button {
             action()
+
+            @Bindable var model = model
+            model.showMenuBarExtra = false
         } label: {
             HStack {
                 leading

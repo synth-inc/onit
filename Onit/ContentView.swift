@@ -20,6 +20,8 @@ struct ContentView: View {
         .frame(minWidth: 400)
         .onAppear {
             setWindow(.main) {
+                guard !windowSet else { return }
+
                 $0.level = .floating
                 if $0.styleMask != [.resizable, .docModalWindow] {
                     print($0.styleMask)
@@ -31,6 +33,7 @@ struct ContentView: View {
                 $0.titleVisibility = .hidden
 
                 $0.backgroundColor = .clear
+                
                 windowSet = true
             }
         }
