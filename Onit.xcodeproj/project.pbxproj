@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		28BF71682CAB72A200DE7C03 /* SageKit in Frameworks */ = {isa = PBXBuildFile; productRef = 28BF71672CAB72A200DE7C03 /* SageKit */; };
 		28F57E222CAC84AA006AAA8C /* KeyboardShortcuts in Frameworks */ = {isa = PBXBuildFile; productRef = 28F57E212CAC84AA006AAA8C /* KeyboardShortcuts */; };
+		28F57E292CAC9262006AAA8C /* MenuBarExtraAccess in Frameworks */ = {isa = PBXBuildFile; productRef = 28F57E282CAC9262006AAA8C /* MenuBarExtraAccess */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -42,6 +43,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				28BF71682CAB72A200DE7C03 /* SageKit in Frameworks */,
+				28F57E292CAC9262006AAA8C /* MenuBarExtraAccess in Frameworks */,
 				28F57E222CAC84AA006AAA8C /* KeyboardShortcuts in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -87,6 +89,7 @@
 			packageProductDependencies = (
 				28BF71672CAB72A200DE7C03 /* SageKit */,
 				28F57E212CAC84AA006AAA8C /* KeyboardShortcuts */,
+				28F57E282CAC9262006AAA8C /* MenuBarExtraAccess */,
 			);
 			productName = Onit;
 			productReference = 2883E4B32CA5ECBB00F79A48 /* Onit.app */;
@@ -119,6 +122,7 @@
 			packageReferences = (
 				28BF71662CAB72A200DE7C03 /* XCRemoteSwiftPackageReference "SageKit" */,
 				28F57E202CAC84AA006AAA8C /* XCRemoteSwiftPackageReference "KeyboardShortcuts" */,
+				28F57E272CAC9262006AAA8C /* XCRemoteSwiftPackageReference "MenuBarExtraAccess" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 2883E4B42CA5ECBB00F79A48 /* Products */;
@@ -365,6 +369,14 @@
 				minimumVersion = 2.1.0;
 			};
 		};
+		28F57E272CAC9262006AAA8C /* XCRemoteSwiftPackageReference "MenuBarExtraAccess" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/orchetect/MenuBarExtraAccess";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.0.5;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -377,6 +389,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 28F57E202CAC84AA006AAA8C /* XCRemoteSwiftPackageReference "KeyboardShortcuts" */;
 			productName = KeyboardShortcuts;
+		};
+		28F57E282CAC9262006AAA8C /* MenuBarExtraAccess */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 28F57E272CAC9262006AAA8C /* XCRemoteSwiftPackageReference "MenuBarExtraAccess" */;
+			productName = MenuBarExtraAccess;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

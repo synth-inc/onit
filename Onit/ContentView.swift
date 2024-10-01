@@ -17,8 +17,8 @@ struct ContentView: View {
         .background(Color.black)
         .frame(minWidth: 400)
         .onAppear {
-            for window in NSApplication.shared.windows {
-                window.level = .floating
+            setWindow(.main) {
+                $0.level = .floating
             }
         }
     }

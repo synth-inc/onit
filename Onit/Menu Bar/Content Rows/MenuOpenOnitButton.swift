@@ -16,6 +16,7 @@ struct MenuOpenOnitButton: View {
 
     var body: some View {
         MenuBarRow {
+            NSApplication.shared.activate(ignoringOtherApps: true)
             openWindow(id: "main")
         } leading: {
             HStack(spacing: 4) {
@@ -33,7 +34,7 @@ struct MenuOpenOnitButton: View {
             KeyboardShortcutView(shortcut: shortcut)
                 .padding(.trailing, 10)
         }
-        .keyboardShortcut(.space, modifiers: [.command, .option])
+//        .keyboardShortcut(.space, modifiers: [.command, .option])
     }
 }
 
