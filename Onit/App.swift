@@ -14,6 +14,10 @@ struct App: SwiftUI.App {
 //    @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
     @Environment(\.openWindow) var openWindow
 
+    init() {
+        KeyboardShortcuts.launch()
+    }
+
     var body: some Scene {
         MenuBarExtra {
             MenuBarContent()
@@ -38,6 +42,7 @@ struct App: SwiftUI.App {
             return WindowPlacement(x: 0, y: 0)
         }
         .keyboardShortcut(.space, modifiers: [.control, .option, .command])
+        .handlesExternalEvents(matching: [.launch])
     }
 }
 
