@@ -8,6 +8,8 @@
 import SwiftUI
 
 struct ContentView: View {
+    @State var windowSet = false
+
     var body: some View {
         VStack(spacing: 0) {
             Toolbar()
@@ -16,6 +18,22 @@ struct ContentView: View {
         }
         .background(Color.black)
         .frame(minWidth: 400)
+        .onAppear {
+            setWindow(.main) {
+                $0.level = .floating
+                if $0.styleMask != [.resizable, .docModalWindow] {
+                    print($0.styleMask)
+                    $0.styleMask = [.resizable, .docModalWindow]
+                }
+                $0.isMovableByWindowBackground = true
+
+                $0.titlebarAppearsTransparent = true
+                $0.titleVisibility = .hidden
+
+                $0.backgroundColor = .clear
+                windowSet = true
+            }
+        }
     }
 }
 

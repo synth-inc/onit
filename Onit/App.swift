@@ -29,6 +29,14 @@ struct App: SwiftUI.App {
         .menuBarExtraStyle(.window)
 
         WindowScene()
+            .commands {
+                CommandGroup(after: .appInfo) {
+                    Color.clear
+                        .onAppear {
+                            openWindow(id: .main)
+                        }
+                }
+            }
     }
 }
 
