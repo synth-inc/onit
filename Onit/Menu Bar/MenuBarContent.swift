@@ -11,18 +11,12 @@ struct MenuBarContent: View {
     var body: some View {
         VStack(spacing: 5) {
             MenuOpenOnitButton()
-
             MenuDivider()
-
             MenuAppearsInPicker()
-
             MenuDivider()
-
             MenuSettings()
             MenuHowItWorks()
-
             MenuDivider()
-
             MenuQuit()
         }
         .padding(.horizontal, 5)

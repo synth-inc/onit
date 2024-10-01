@@ -27,6 +27,7 @@ struct TextInputView: View {
                     placeholderView
                 }
             }
+            .foregroundStyle(.white)
             .tint(.foreground)
             .appFont(.medium16)
     }

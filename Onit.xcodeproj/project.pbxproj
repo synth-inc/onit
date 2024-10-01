@@ -8,15 +8,29 @@
 
 /* Begin PBXBuildFile section */
 		28BF71682CAB72A200DE7C03 /* SageKit in Frameworks */ = {isa = PBXBuildFile; productRef = 28BF71672CAB72A200DE7C03 /* SageKit */; };
+		28F57E222CAC84AA006AAA8C /* KeyboardShortcuts in Frameworks */ = {isa = PBXBuildFile; productRef = 28F57E212CAC84AA006AAA8C /* KeyboardShortcuts */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
 		2883E4B32CA5ECBB00F79A48 /* Onit.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Onit.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		28F57E1D2CAC7913006AAA8C /* Exceptions for "Onit" folder in "Onit" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 2883E4B22CA5ECBB00F79A48 /* Onit */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		2883E4B52CA5ECBB00F79A48 /* Onit */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				28F57E1D2CAC7913006AAA8C /* Exceptions for "Onit" folder in "Onit" target */,
+			);
 			path = Onit;
 			sourceTree = "<group>";
 		};
@@ -28,6 +42,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				28BF71682CAB72A200DE7C03 /* SageKit in Frameworks */,
+				28F57E222CAC84AA006AAA8C /* KeyboardShortcuts in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -71,6 +86,7 @@
 			name = Onit;
 			packageProductDependencies = (
 				28BF71672CAB72A200DE7C03 /* SageKit */,
+				28F57E212CAC84AA006AAA8C /* KeyboardShortcuts */,
 			);
 			productName = Onit;
 			productReference = 2883E4B32CA5ECBB00F79A48 /* Onit.app */;
@@ -102,6 +118,7 @@
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
 				28BF71662CAB72A200DE7C03 /* XCRemoteSwiftPackageReference "SageKit" */,
+				28F57E202CAC84AA006AAA8C /* XCRemoteSwiftPackageReference "KeyboardShortcuts" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 2883E4B42CA5ECBB00F79A48 /* Products */;
@@ -265,8 +282,8 @@
 				DEVELOPMENT_TEAM = GA42SWSGPU;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
-				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_LSBackgroundOnly = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = ./Onit/Info.plist;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -293,8 +310,8 @@
 				DEVELOPMENT_TEAM = GA42SWSGPU;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
-				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_LSBackgroundOnly = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = ./Onit/Info.plist;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -340,6 +357,14 @@
 				minimumVersion = 0.0.1;
 			};
 		};
+		28F57E202CAC84AA006AAA8C /* XCRemoteSwiftPackageReference "KeyboardShortcuts" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/sindresorhus/KeyboardShortcuts";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.1.0;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -347,6 +372,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 28BF71662CAB72A200DE7C03 /* XCRemoteSwiftPackageReference "SageKit" */;
 			productName = SageKit;
+		};
+		28F57E212CAC84AA006AAA8C /* KeyboardShortcuts */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 28F57E202CAC84AA006AAA8C /* XCRemoteSwiftPackageReference "KeyboardShortcuts" */;
+			productName = KeyboardShortcuts;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

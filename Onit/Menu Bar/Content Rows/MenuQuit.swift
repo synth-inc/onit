@@ -14,7 +14,7 @@ struct MenuQuit: View {
 
     var body: some View {
         MenuBarRow {
-
+            NSApplication.shared.terminate(nil)
         } leading: {
             Text("Quit Omni Completely")
                 .padding(.leading, 10)
@@ -22,6 +22,7 @@ struct MenuQuit: View {
             KeyboardShortcutView(shortcut: shortcut)
                 .padding(.trailing, 10)
         }
+        .keyboardShortcut("q")
     }
 }
 

@@ -8,6 +8,8 @@
 import SwiftUI
 
 struct Toolbar: View {
+    @Environment(\.dismissWindow) var dismissWindow
+
     var body: some View {
         HStack(spacing: 4) {
             esc
@@ -25,18 +27,14 @@ struct Toolbar: View {
 
     var esc: some View {
         Button {
-            print("ESC")
-            if let window = NSApplication.shared.windows.first {
-                window.close()
-            } else {
-                print("Error closing window")
-            }
+            dismissWindow(id: .main)
         } label: {
             Text("ESC")
                 .appFont(.medium13)
                 .padding(4)
         }
         .buttonStyle(HoverableButtonStyle())
+        .keyboardShortcut(.escape)
     }
 
     var resize: some View {

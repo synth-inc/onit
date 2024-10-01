@@ -8,13 +8,15 @@
 import SwiftUI
 
 struct MenuOpenOnitButton: View {
+    @Environment(\.openWindow) var openWindow
+
     var shortcut: KeyboardShortcut {
         .init(.space, modifiers: [.option, .command])
     }
 
     var body: some View {
         MenuBarRow {
-
+            openWindow(id: "main")
         } leading: {
             HStack(spacing: 4) {
                 Image(.smirkIcon)
@@ -31,6 +33,7 @@ struct MenuOpenOnitButton: View {
             KeyboardShortcutView(shortcut: shortcut)
                 .padding(.trailing, 10)
         }
+        .keyboardShortcut(.space, modifiers: [.command, .option])
     }
 }
 
