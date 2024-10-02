@@ -8,23 +8,44 @@
 import SwiftUI
 
 struct ContentView: View {
+    @Environment(\.model) var model
     var panelManager: PanelManager
 
     var body: some View {
         VStack(spacing: 0) {
             Toolbar()
-            Color.gray700.frame(height: 1)
+            divider
             TextInputView()
+            content
         }
         .background(Color.black)
+        .buttonStyle(.plain)
         .frame(minWidth: 400)
         .overlay {
             RoundedRectangle(cornerRadius: 14)
                 .stroke(.gray700, lineWidth: 2)
         }
     }
+
+    @ViewBuilder
+    var content: some View {
+        switch model.generationState {
+        case .generating:
+            divider
+            GeneratingView()
+        case .generated(let result):
+            GeneratedView(result: result)
+        default:
+            EmptyView()
+        }
+    }
+
+    var divider: some View {
+        Color.gray700.frame(height: 1)
+    }
 }
 
 #Preview {
     ContentView(panelManager: .init())
+        .environment(Model())
 }

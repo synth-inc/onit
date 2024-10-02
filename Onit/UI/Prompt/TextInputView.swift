@@ -8,8 +8,9 @@
 import SwiftUI
 
 struct TextInputView: View {
-    @State private var instructions = ""
+    @Environment(\.model) var model
 
+    @State private var instructions = ""
     @FocusState var focused: Bool
 
     var body: some View {
@@ -31,7 +32,7 @@ struct TextInputView: View {
             }
             .focused($focused)
             .foregroundStyle(.white)
-            .tint(.foreground)
+            .tint(.FG)
             .appFont(.medium16)
             .onAppear {
                 focused = true
@@ -48,10 +49,16 @@ struct TextInputView: View {
     }
 
     var sendButton: some View {
-        Image(.circleArrowUp)
-            .renderingMode(.template)
-            .foregroundStyle(instructions.isEmpty ? Color.gray700 : .blue400)
-            .padding(3)
+        Button {
+            model.generate()
+        } label: {
+            Image(.circleArrowUp)
+                .renderingMode(.template)
+                .foregroundStyle(instructions.isEmpty ? Color.gray700 : .blue400)
+                .padding(3)
+        }
+        .buttonStyle(.plain)
+        .keyboardShortcut(.return, modifiers: [])
     }
 }
 

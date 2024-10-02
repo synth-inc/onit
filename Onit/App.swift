@@ -19,6 +19,10 @@ struct App: SwiftUI.App {
             panelManager?.showPanel()
         }
         panelManager.showPanel()
+
+        Accessibility.requestPermissions()
+        Accessibility.observeActiveApplication()
+        Accessibility.setupWindow(withView: OnitPromptView())
     }
 
     var body: some Scene {
