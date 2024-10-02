@@ -11,12 +11,13 @@ import MenuBarExtraAccess
 
 @main
 struct App: SwiftUI.App {
-//    @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
-    @Environment(\.openWindow) var openWindow
-    @Environment(\.model) var model
+    @State var model = Model()
+//    @State var panelManager = PanelManager()
 
     init() {
-        KeyboardShortcuts.launch()
+//        KeyboardShortcuts.onKeyUp(for: .launch) { [weak panelManager] in
+//            panelManager?.showPanel()
+//        }
     }
 
     var body: some Scene {
@@ -32,18 +33,11 @@ struct App: SwiftUI.App {
         }
         .menuBarExtraStyle(.window)
         .menuBarExtraAccess(isPresented: $model.showMenuBarExtra)
-
-        WindowScene()
-            .commands {
-                CommandGroup(after: .appInfo) {
-                    Color.clear
-                        .onAppear {
-                            openWindow(id: .main)
-                        }
-                }
-            }
+//        .environment(panelManager)
     }
 }
+
+// MARK: - Testing
 
 //@main
 struct TestApp: SwiftUI.App {

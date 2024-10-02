@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct MenuOpenOnitButton: View {
-    @Environment(\.openWindow) var openWindow
+    @Environment(\.panelManager) var panelManager
 
     var shortcut: KeyboardShortcut {
         .init(.space, modifiers: [.option, .command])
@@ -16,8 +16,7 @@ struct MenuOpenOnitButton: View {
 
     var body: some View {
         MenuBarRow {
-            NSApplication.shared.activate(ignoringOtherApps: true)
-            openWindow(id: "main")
+//            panelManager.showPanel()
         } leading: {
             HStack(spacing: 4) {
                 Image(.smirkIcon)
@@ -34,7 +33,6 @@ struct MenuOpenOnitButton: View {
             KeyboardShortcutView(shortcut: shortcut)
                 .padding(.trailing, 10)
         }
-//        .keyboardShortcut(.space, modifiers: [.command, .option])
     }
 }
 

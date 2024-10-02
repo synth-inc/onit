@@ -11,7 +11,7 @@ import AppKit
 import ServiceManagement
 import SwiftUI
 
-class AppDelegate: NSObject, NSApplicationDelegate {
+class OldAppDelegate: NSObject, NSApplicationDelegate {
     var window: NSWindow?
     var observer: AXObserver?
 
@@ -150,7 +150,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         var observer: AXObserver?
 
         let observerCallback: AXObserverCallback = { _, element, notification, refcon in
-            let delegate = Unmanaged<AppDelegate>.fromOpaque(refcon!).takeUnretainedValue()
+            let delegate = Unmanaged<OldAppDelegate>.fromOpaque(refcon!).takeUnretainedValue()
             print("Focus change notification: \(notification)")
             delegate.handleFocusChange(for: element)
         }

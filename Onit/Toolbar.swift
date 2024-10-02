@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct Toolbar: View {
-    @Environment(\.dismissWindow) var dismissWindow
+    @Environment(\.panelManager) var panelManager
 
     var body: some View {
         HStack(spacing: 4) {
@@ -27,7 +27,7 @@ struct Toolbar: View {
 
     var esc: some View {
         Button {
-            dismissWindow(id: .main)
+            panelManager.closePanel()
         } label: {
             Text("ESC")
                 .appFont(.medium13)
