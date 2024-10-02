@@ -36,6 +36,7 @@ import SwiftUI
         newPanel.standardWindowButton(.closeButton)?.isHidden = true
         newPanel.standardWindowButton(.miniaturizeButton)?.isHidden = true
         newPanel.standardWindowButton(.zoomButton)?.isHidden = true
+        newPanel.isFloatingPanel = true
 
         let panelContentView = NSHostingView(rootView: ContentView(panelManager: self))
         panelContentView.wantsLayer = true
@@ -45,8 +46,6 @@ import SwiftUI
         panelContentView.layer?.backgroundColor = NSColor.windowBackgroundColor.cgColor
 
         newPanel.contentView = panelContentView
-
-        newPanel.isFloatingPanel = true
 
         panel = newPanel
 

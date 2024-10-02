@@ -18,13 +18,3 @@ extension KeyboardShortcuts.Name {
 extension String {
     static let launch = "launch"
 }
-
-extension KeyboardShortcuts {
-    static func launch() {
-        KeyboardShortcuts.onKeyUp(for: .launch) {
-            if let url = URL(string: "onit://" + .launch) {
-                NSWorkspace.shared.open(url)
-            }
-        }
-    }
-}
