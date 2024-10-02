@@ -10,6 +10,8 @@ import SwiftUI
 struct TextInputView: View {
     @State private var instructions = ""
 
+    @FocusState var focused: Bool
+
     var body: some View {
         HStack {
             textField
@@ -27,9 +29,13 @@ struct TextInputView: View {
                     placeholderView
                 }
             }
+            .focused($focused)
             .foregroundStyle(.white)
             .tint(.foreground)
             .appFont(.medium16)
+            .onAppear {
+                focused = true
+            }
     }
 
     var placeholderView: some View {

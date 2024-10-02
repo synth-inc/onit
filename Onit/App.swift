@@ -11,13 +11,13 @@ import MenuBarExtraAccess
 
 @main
 struct App: SwiftUI.App {
-    @State var model = Model()
-//    @State var panelManager = PanelManager()
+    @Environment(\.model) var model
+    @Environment(\.panelManager) var panelManager
 
     init() {
-//        KeyboardShortcuts.onKeyUp(for: .launch) { [weak panelManager] in
-//            panelManager?.showPanel()
-//        }
+        KeyboardShortcuts.onKeyUp(for: .launch) { [weak panelManager] in
+            panelManager?.showPanel()
+        }
     }
 
     var body: some Scene {
@@ -26,6 +26,7 @@ struct App: SwiftUI.App {
         MenuBarExtra {
             MenuBarContent()
                 .environment(model)
+                .environment(panelManager)
         } label: {
             Image(.smirkIcon)
                 .renderingMode(.template)
@@ -33,7 +34,6 @@ struct App: SwiftUI.App {
         }
         .menuBarExtraStyle(.window)
         .menuBarExtraAccess(isPresented: $model.showMenuBarExtra)
-//        .environment(panelManager)
     }
 }
 

@@ -14,7 +14,7 @@ import SwiftUI
     func showPanel() {
         if let existingPanel = panel, existingPanel.isVisible {
             existingPanel.makeKeyAndOrderFront(nil)
-//            NSApp.activate(ignoringOtherApps: true)
+            NSApp.activate(ignoringOtherApps: true)
             return
         }
 
@@ -41,7 +41,7 @@ import SwiftUI
 
 //        newPanel.center()
         newPanel.makeKeyAndOrderFront(nil)
-//        NSApp.activate(ignoringOtherApps: true)
+        NSApp.activate(ignoringOtherApps: true)
     }
 
     func closePanel() {
