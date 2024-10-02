@@ -18,6 +18,10 @@ struct ContentView: View {
         }
         .background(Color.black)
         .frame(minWidth: 400)
+        .overlay {
+            RoundedRectangle(cornerRadius: 14)
+                .stroke(.gray700, lineWidth: 2)
+        }
     }
 }
 

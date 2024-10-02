@@ -18,6 +18,7 @@ struct App: SwiftUI.App {
         KeyboardShortcuts.onKeyUp(for: .launch) { [weak panelManager] in
             panelManager?.showPanel()
         }
+        panelManager.showPanel()
     }
 
     var body: some Scene {
@@ -34,6 +35,9 @@ struct App: SwiftUI.App {
         }
         .menuBarExtraStyle(.window)
         .menuBarExtraAccess(isPresented: $model.showMenuBarExtra)
+        .commands {
+
+        }
     }
 }
 
