@@ -17,6 +17,7 @@ class Accessibility {
     private var mode: AccessibilityMode = .highlightTopEdgeMode
 
     let kAXFrameAttribute = "AXFrame"
+    let kAXBoundsChangedNotification = "AXBoundsChanged"
 
     private var window: NSWindow?
 
@@ -132,9 +133,29 @@ class Accessibility {
             handleFocusChange(for: element)
         case kAXSelectedTextChangedNotification as String:
             handleSelectionChange(for: element)
+        case kAXBoundsChangedNotification as String:
+            handleBoundsChanged(for: element)
+        case kAXValueChangedNotification as String:
+            handleValueChanged(for: element)
         default:
             break
         }
+    }
+
+    func handleValueChanged(for element: AXUIElement) {
+        print("Handling value changed...")
+
+        // Re-fetch the bounding rectangle for the selected text
+        if let observedElement = observedElementForSelection?.takeUnretainedValue() {
+            handleHighlightTopEdgeMode(observedElement, shouldAnimate: false)
+        }
+    }
+
+    func handleBoundsChanged(for element: AXUIElement) {
+        print("Handling bounds changed...")
+
+        // Re-fetch the bounding rectangle for the selected text
+        handleHighlightTopEdgeMode(element, shouldAnimate: false)
     }
 
     private func observeFocusChanges() {
@@ -226,6 +247,7 @@ class Accessibility {
             // Remove previous selection observer
             if let previousElement = observedElementForSelection, let observer = observer {
                 AXObserverRemoveNotification(observer, previousElement.takeUnretainedValue(), kAXSelectedTextChangedNotification as CFString)
+                AXObserverRemoveNotification(observer, previousElement.takeUnretainedValue(), kAXBoundsChangedNotification as CFString)
                 previousElement.release()
                 observedElementForSelection = nil
             }
@@ -243,18 +265,51 @@ class Accessibility {
             observedElementForSelection = retainedElement
 
             // Add observer to new element
-            let result = AXObserverAddNotification(observer, elementToObserve, kAXSelectedTextChangedNotification as CFString, Unmanaged.passUnretained(self).toOpaque())
-            if result == .success {
-                print("Added selection changed observer to element.")
+            let result1 = AXObserverAddNotification(observer, elementToObserve, kAXSelectedTextChangedNotification as CFString, Unmanaged.passUnretained(self).toOpaque())
+            let result2 = AXObserverAddNotification(observer, elementToObserve, kAXBoundsChangedNotification as CFString, Unmanaged.passUnretained(self).toOpaque())
+
+            if result1 == .success && result2 == .success {
+                print("Added selection and bounds changed observers to element.")
             } else {
-                print("Failed to add selection changed notification to new element. Error: \(result.rawValue)")
+                print("Failed to add observers. Errors: \(result1.rawValue), \(result2.rawValue)")
                 observedElementForSelection?.release()
                 observedElementForSelection = nil
+            }
+
+            if let scrollViewElement = findAncestor(element: elementToObserve, role: kAXScrollAreaRole as String) {
+                // Add observer to scroll view
+                let result = AXObserverAddNotification(observer, scrollViewElement, kAXValueChangedNotification as CFString, Unmanaged.passUnretained(self).toOpaque())
+                if result == .success {
+                    print("Added value changed observer to scroll view.")
+                } else {
+                    print("Failed to add value changed notification to scroll view. Error: \(result.rawValue)")
+                }
             }
 
             // Handle initial selection
             handleHighlightTopEdgeMode(elementToObserve, shouldAnimate: shouldAnimate)
         }
+    }
+
+    func findAncestor(element: AXUIElement, role: String) -> AXUIElement? {
+        var currentElement: AXUIElement? = element
+        while let element = currentElement {
+            var roleValue: CFTypeRef?
+            let roleResult = AXUIElementCopyAttributeValue(element, kAXRoleAttribute as CFString, &roleValue)
+            if roleResult == .success, let roleStr = roleValue as? String, roleStr == role {
+                return element
+            }
+            // Get the parent
+            var parentValue: CFTypeRef?
+            let parentResult = AXUIElementCopyAttributeValue(element, kAXParentAttribute as CFString, &parentValue)
+            if parentResult == .success {
+                let parentElement = parentValue as! AXUIElement
+                currentElement = parentElement
+            } else {
+                break
+            }
+        }
+        return nil
     }
 
     func handleTextFieldMode(for focusedElement: AXUIElement) {
