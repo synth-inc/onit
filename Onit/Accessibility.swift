@@ -352,18 +352,40 @@ class Accessibility {
                 print("No screen contains the rect's origin. Using main screen.")
                 guard let screen = NSScreen.main else { return }
 
-                // Adjust the y-coordinate
+                // Adjust the y-coordinate to macOS coordinate system
                 adjustedRect.origin.y = screen.frame.maxY - adjustedRect.origin.y
 
                 self.window?.setFrameOrigin(NSPoint(x: adjustedRect.origin.x, y: adjustedRect.origin.y))
                 return
             }
 
-            // Adjust the y-coordinate to align the bottom of the window with the top of the text
-            adjustedRect.origin.y = screen.frame.maxY - adjustedRect.origin.y
+            // Use visibleFrame to account for safe areas (menu bar, dock)
+            let screenFrame = screen.frame
+            let visibleFrame = screen.visibleFrame
 
-            self.window?.setFrameOrigin(NSPoint(x: adjustedRect.origin.x, y: adjustedRect.origin.y))
-            print("Floating window moved to position: \(adjustedRect.origin)")
+            // Adjust the y-coordinate from top-left to bottom-left origin
+            adjustedRect.origin.y = screenFrame.maxY - adjustedRect.origin.y
+
+            let windowHeight = self.window?.frame.height ?? 0
+
+            // Calculate positions to place the window above or below the selection
+            let positionAbove = adjustedRect.origin.y // Window's bottom edge aligns with selection's top edge
+            let positionBelow = adjustedRect.origin.y - adjustedRect.height - windowHeight // Window's top edge aligns with selection's bottom edge
+
+            // Determine if positioning above would cause the window to go off the top of the visible area (menu bar)
+            let windowTopEdgeIfAbove = positionAbove + windowHeight
+
+            if windowTopEdgeIfAbove > visibleFrame.maxY {
+                // Position the window below the selection, ensuring it doesn't go off-screen
+                let windowOriginY = max(positionBelow, visibleFrame.minY)
+                self.window?.setFrameOrigin(NSPoint(x: adjustedRect.origin.x, y: windowOriginY))
+                print("Window positioned below the selection at: \(NSPoint(x: adjustedRect.origin.x, y: windowOriginY))")
+            } else {
+                // Keep the current behavior, positioning above the selection
+                let windowOriginY = max(positionAbove, visibleFrame.minY)
+                self.window?.setFrameOrigin(NSPoint(x: adjustedRect.origin.x, y: windowOriginY))
+                print("Window positioned above the selection at: \(NSPoint(x: adjustedRect.origin.x, y: windowOriginY))")
+            }
         }
     }
 
