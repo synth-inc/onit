@@ -9,6 +9,10 @@ import SwiftUI
 
 extension Model: NSWindowDelegate {
     func showPanel() {
+        #if !targetEnvironment(simulator)
+        setInput(Accessibility.input)
+        #endif
+
         if let existingPanel = panel, existingPanel.isVisible {
             existingPanel.makeKeyAndOrderFront(nil)
             existingPanel.orderFrontRegardless()

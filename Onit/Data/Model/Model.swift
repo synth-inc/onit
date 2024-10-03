@@ -12,6 +12,7 @@ import SageKit
     var showMenuBarExtra = false
     var generationState: GenerationState = .idle
     var panel: CustomPanel?
+    var input: Input?
 
     var generating: Bool {
         generationState == .generating

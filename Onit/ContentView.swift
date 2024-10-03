@@ -14,6 +14,7 @@ struct ContentView: View {
         VStack(spacing: 0) {
             Toolbar()
             divider
+            input
             TextInputView()
             content
         }
@@ -23,6 +24,13 @@ struct ContentView: View {
         .overlay {
             RoundedRectangle(cornerRadius: 14)
                 .stroke(.gray700, lineWidth: 2)
+        }
+    }
+
+    @ViewBuilder
+    var input: some View {
+        if let input = model.input {
+            InputView(input: input)
         }
     }
 

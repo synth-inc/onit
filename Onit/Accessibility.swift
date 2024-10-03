@@ -13,13 +13,15 @@ enum AccessibilityMode {
     case highlightTopEdgeMode
 }
 
+#if !targetEnvironment(simulator)
 class Accessibility {
     var selectedText: String?
     var currentSource: String?
     var selectedSource: String?
 
     static var input: Input? {
-        .init(text: shared.selectedText, source: shared.selectedText)
+        guard let text = shared.selectedText else { return nil }
+        return .init(text: text, source: shared.selectedSource)
     }
 
     private var mode: AccessibilityMode = .highlightTopEdgeMode
@@ -640,3 +642,4 @@ class Accessibility {
         }
     }
 }
+#endif

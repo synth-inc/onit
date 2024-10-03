@@ -8,6 +8,12 @@
 import Foundation
 
 struct Input {
-    var text: String?
+    var text: String
     var source: String?
+}
+
+// MARK: - Sample
+
+extension Input {
+    static let sample = Input(text: "Some input text goes here and looks pretty good", source: "Xcode")
 }
