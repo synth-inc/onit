@@ -1,16 +1,13 @@
 //
-//  PanelManager.swift
+//  Model+Panel.swift
 //  Onit
 //
-//  Created by Benjamin Sage on 10/2/24.
+//  Created by Benjamin Sage on 10/3/24.
 //
 
-import Observation
 import SwiftUI
 
-@MainActor @Observable final class PanelManager: NSObject, NSWindowDelegate {
-    private var panel: CustomPanel?
-
+extension Model: NSWindowDelegate {
     func showPanel() {
         if let existingPanel = panel, existingPanel.isVisible {
             existingPanel.makeKeyAndOrderFront(nil)
@@ -38,7 +35,7 @@ import SwiftUI
         newPanel.standardWindowButton(.zoomButton)?.isHidden = true
         newPanel.isFloatingPanel = true
 
-        let panelContentView = NSHostingView(rootView: ContentView(panelManager: self))
+        let panelContentView = NSHostingView(rootView: ContentView().environment(self))
         panelContentView.wantsLayer = true
         panelContentView.layer?.cornerRadius = 14
         panelContentView.layer?.cornerCurve = .continuous
@@ -78,16 +75,4 @@ class CustomPanel: NSPanel {
     override var canBecomeKey: Bool {
         return true
     }
-}
-
-extension EnvironmentValues {
-    var panelManager: PanelManager {
-        get { self[PanelManagerEnvironmentKey.self] }
-        set { self[PanelManagerEnvironmentKey.self] = newValue }
-    }
-}
-
-@MainActor
-struct PanelManagerEnvironmentKey: @preconcurrency EnvironmentKey {
-    static let defaultValue: PanelManager = .init()
 }
