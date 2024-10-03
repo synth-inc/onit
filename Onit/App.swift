@@ -12,13 +12,12 @@ import MenuBarExtraAccess
 @main
 struct App: SwiftUI.App {
     @Environment(\.model) var model
-    @Environment(\.panelManager) var panelManager
 
     init() {
-        KeyboardShortcuts.onKeyUp(for: .launch) { [weak panelManager] in
-            panelManager?.showPanel()
+        KeyboardShortcuts.onKeyUp(for: .launch) { [weak model] in
+            model?.showPanel()
         }
-        panelManager.showPanel()
+        model.showPanel()
 
         Accessibility.requestPermissions()
         Accessibility.setupWindow(withView: OnitPromptView())
@@ -31,7 +30,6 @@ struct App: SwiftUI.App {
         MenuBarExtra {
             MenuBarContent()
                 .environment(model)
-                .environment(panelManager)
         } label: {
             Image(.smirkIcon)
                 .renderingMode(.template)

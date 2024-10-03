@@ -8,9 +8,10 @@
 import SwiftUI
 import SageKit
 
-@MainActor @Observable class Model {
+@MainActor @Observable class Model: NSObject {
     var showMenuBarExtra = false
     var generationState: GenerationState = .idle
+    var panel: CustomPanel?
 
     var generating: Bool {
         generationState == .generating

@@ -9,7 +9,6 @@ import SwiftUI
 
 struct ContentView: View {
     @Environment(\.model) var model
-    var panelManager: PanelManager
 
     var body: some View {
         VStack(spacing: 0) {
@@ -46,6 +45,6 @@ struct ContentView: View {
 }
 
 #Preview {
-    ContentView(panelManager: .init())
+    ContentView()
         .environment(Model())
 }

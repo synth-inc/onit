@@ -16,7 +16,11 @@ enum AccessibilityMode {
 class Accessibility {
     var selectedText: String?
     var currentSource: String?
-    var selectedSource:String?
+    var selectedSource: String?
+
+    static var input: Input? {
+        .init(text: shared.selectedText, source: shared.selectedText)
+    }
 
     private var mode: AccessibilityMode = .highlightTopEdgeMode
 

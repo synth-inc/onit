@@ -8,14 +8,14 @@
 import SwiftUI
 
 struct Toolbar: View {
-    @Environment(\.panelManager) var panelManager
+    @Environment(\.model) var model
 
     var body: some View {
         HStack(spacing: 4) {
             esc
             resize
             Spacer()
-            model
+            languageModel
             add
             history
             settings
@@ -27,7 +27,7 @@ struct Toolbar: View {
 
     var esc: some View {
         Button {
-            panelManager.closePanel()
+            model.closePanel()
         } label: {
             Text("ESC")
                 .appFont(.medium13)
@@ -48,7 +48,7 @@ struct Toolbar: View {
         .buttonStyle(HoverableButtonStyle())
     }
 
-    var model: some View {
+    var languageModel: some View {
         Button {
 
         } label: {
