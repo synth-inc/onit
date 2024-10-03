@@ -72,7 +72,10 @@ class Accessibility {
     }
 
     private func observeActiveApplication() {
-        nsObjectObserver = NSWorkspace.shared.notificationCenter.addObserver(
+        let notificationCenter = NSWorkspace.shared.notificationCenter
+
+        // Observe when any application is activated
+        nsObjectObserver = notificationCenter.addObserver(
             forName: NSWorkspace.didActivateApplicationNotification,
             object: nil,
             queue: nil
@@ -82,6 +85,40 @@ class Accessibility {
                 print("\nApplication activated: \(app.localizedName ?? "Unknown")")
                 self.setupObserver(for: app.processIdentifier)
             }
+
+            // Handle app activation
+            self.handleAppActivation()
+        }
+
+        // Observe when any application is deactivated
+        notificationCenter.addObserver(
+            forName: NSWorkspace.didDeactivateApplicationNotification,
+            object: nil,
+            queue: nil
+        ) { [weak self] notification in
+            guard let self = self else { return }
+            if let app = notification.userInfo?[NSWorkspace.applicationUserInfoKey] as? NSRunningApplication {
+                print("\nApplication deactivated: \(app.localizedName ?? "Unknown")")
+            }
+
+            // Handle app deactivation
+            self.handleAppDeactivation()
+        }
+    }
+
+    private func handleAppDeactivation() {
+        DispatchQueue.main.async {
+            self.window?.orderOut(nil)
+            print("Window hidden; application deactivated.")
+        }
+    }
+
+    private func handleAppActivation() {
+        // Check if there's an existing text selection
+        if let focusedApp = NSWorkspace.shared.frontmostApplication {
+            let pid = focusedApp.processIdentifier
+            let appElement = AXUIElementCreateApplication(pid)
+            handleInitialFocus(for: appElement)
         }
     }
 
@@ -172,7 +209,7 @@ class Accessibility {
             print("Successfully retrieved focused UI element within application.")
             if CFGetTypeID(focusedElement) == AXUIElementGetTypeID() {
                 let axElement = focusedElement as! AXUIElement
-                handleFocusChange(for: axElement)
+                handleFocusChange(for: axElement, shouldAnimate: false)
             } else {
                 print("Focused element is not an AXUIElement.")
             }
@@ -181,7 +218,7 @@ class Accessibility {
         }
     }
 
-    func handleFocusChange(for focusedElement: AXUIElement) {
+    func handleFocusChange(for focusedElement: AXUIElement, shouldAnimate: Bool = true) {
         switch mode {
         case .textfieldMode:
             handleTextFieldMode(for: focusedElement)
@@ -216,7 +253,7 @@ class Accessibility {
             }
 
             // Handle initial selection
-            handleHighlightTopEdgeMode(elementToObserve)
+            handleHighlightTopEdgeMode(elementToObserve, shouldAnimate: shouldAnimate)
         }
     }
 
@@ -260,7 +297,7 @@ class Accessibility {
         }
     }
 
-    private func handleHighlightTopEdgeMode(_ focusedElement: AXUIElement) {
+    private func handleHighlightTopEdgeMode(_ focusedElement: AXUIElement, shouldAnimate: Bool = true) {
         print("Handling highlight in top edge mode...")
 
         // Get the role of the focused element for debugging
@@ -302,8 +339,13 @@ class Accessibility {
                             // Adjust the window position based on the bounding rect
                             adjustWindowPosition(with: boundingRect)
                             DispatchQueue.main.async {
-                                self.showWindowWithAnimation()
-                                print("Window shown at selected text position.")
+                                if shouldAnimate {
+                                    self.showWindowWithAnimation()
+                                    print("Window shown at selected text position with animation.")
+                                } else {
+                                    self.showWindowWithoutAnimation()
+                                    print("Window shown at selected text position without animation.")
+                                }
                             }
                         } else {
                             print("Failed to get CGRect from AXValue.")
@@ -338,9 +380,18 @@ class Accessibility {
         }
     }
 
+    func showWindowWithoutAnimation() {
+        guard let window = self.window else { return }
+
+        DispatchQueue.main.async {
+            window.alphaValue = 1.0
+            window.makeKeyAndOrderFront(nil)
+        }
+    }
+
     func handleSelectionChange(for element: AXUIElement) {
         guard mode == .highlightTopEdgeMode else { return }
-        handleHighlightTopEdgeMode(element)
+        handleHighlightTopEdgeMode(element, shouldAnimate: true)
     }
 
     private func adjustWindowPosition(with rect: CGRect) {
