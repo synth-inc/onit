@@ -302,7 +302,7 @@ class Accessibility {
                             // Adjust the window position based on the bounding rect
                             adjustWindowPosition(with: boundingRect)
                             DispatchQueue.main.async {
-                                self.window?.orderFront(nil)
+                                self.showWindowWithAnimation()
                                 print("Window shown at selected text position.")
                             }
                         } else {
@@ -446,5 +446,46 @@ class Accessibility {
             }
         }
         return nil
+    }
+
+    func showWindowWithAnimation() {
+        guard let window = self.window else { return }
+
+        DispatchQueue.main.async {
+            // Ensure the contentView is layer-backed
+            window.contentView?.wantsLayer = true
+
+            // Get the contentView's layer
+            guard let layer = window.contentView?.layer else { return }
+
+            // Set the anchorPoint to the center and adjust the layer's position
+            let oldFrame = layer.frame
+            layer.anchorPoint = CGPoint(x: 0.5, y: 0.5)
+            layer.frame = oldFrame // Reset frame to keep the layer in the same place
+
+            // Set initial state
+            window.alphaValue = 0.0
+            window.makeKeyAndOrderFront(nil)
+
+            // Animate the window's alphaValue
+            NSAnimationContext.runAnimationGroup { context in
+                context.duration = 0.3 // Adjust duration as needed
+                context.timingFunction = CAMediaTimingFunction(name: .easeOut)
+                window.animator().alphaValue = 1.0
+            }
+
+            // Create a scale animation for the layer
+            let scaleAnimation = CABasicAnimation(keyPath: "transform.scale")
+            scaleAnimation.fromValue = 0.95
+            scaleAnimation.toValue = 1.0
+            scaleAnimation.duration = 0.3 // Match duration with alphaValue animation
+            scaleAnimation.timingFunction = CAMediaTimingFunction(name: .easeOut)
+
+            // Apply the animation to the layer
+            layer.add(scaleAnimation, forKey: "scaleUp")
+
+            // Set the final transform to ensure the layer ends up at the correct scale
+            layer.transform = CATransform3DIdentity
+        }
     }
 }

@@ -17,11 +17,10 @@ struct OnitPromptView: View {
                 .renderingMode(.template)
                 .scaledToFit()
                 .frame(width: 14, height: 14)
-                .foregroundStyle(Color.white)
-                .opacity(0.8)
             KeyboardShortcutView(shortcut: shortcut, characterWidth: 12, spacing: 3)
                 .font(.system(size: 13, weight: .light))
         }
+        .foregroundStyle(Color.secondary)
         .padding(4)
         .background {
             RoundedRectangle(cornerRadius: 6)
