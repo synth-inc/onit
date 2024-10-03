@@ -14,6 +14,10 @@ enum AccessibilityMode {
 }
 
 class Accessibility {
+    var selectedText: String?
+    var currentSource: String?
+    var selectedSource:String?
+
     private var mode: AccessibilityMode = .highlightTopEdgeMode
 
     let kAXFrameAttribute = "AXFrame"
@@ -99,6 +103,7 @@ class Accessibility {
         ) { [weak self] notification in
             guard let self = self else { return }
             if let app = notification.userInfo?[NSWorkspace.applicationUserInfoKey] as? NSRunningApplication {
+                currentSource = app.localizedName
                 print("\nApplication deactivated: \(app.localizedName ?? "Unknown")")
             }
 
@@ -276,15 +281,8 @@ class Accessibility {
                 observedElementForSelection = nil
             }
 
-            if let scrollViewElement = findAncestor(element: elementToObserve, role: kAXScrollAreaRole as String) {
-                // Add observer to scroll view
-                let result = AXObserverAddNotification(observer, scrollViewElement, kAXValueChangedNotification as CFString, Unmanaged.passUnretained(self).toOpaque())
-                if result == .success {
-                    print("Added value changed observer to scroll view.")
-                } else {
-                    print("Failed to add value changed notification to scroll view. Error: \(result.rawValue)")
-                }
-            }
+            // Store the selected text
+            selectedText = getSelectedText(from: elementToObserve)
 
             // Handle initial selection
             handleHighlightTopEdgeMode(elementToObserve, shouldAnimate: shouldAnimate)
@@ -435,6 +433,46 @@ class Accessibility {
         }
     }
 
+    func getSelectedText(from focusedElement: AXUIElement) -> String? {
+        // 1. Get the selected text range attribute
+        var selectedRangeValue: CFTypeRef?
+        let result = AXUIElementCopyAttributeValue(focusedElement, kAXSelectedTextRangeAttribute as CFString, &selectedRangeValue)
+
+        guard result == .success else {
+            print("Failed to get the selected text range.")
+            return nil
+        }
+
+        let rangeValue = selectedRangeValue as! AXValue
+
+        // 2. Extract the range
+        var selectedRange = CFRange()
+        if !AXValueGetValue(rangeValue, .cfRange, &selectedRange) {
+            print("Failed to extract CFRange from AXValue.")
+            return nil
+        }
+        print("Selected text range: \(selectedRange)")
+
+        // 3. Use AXStringForRangeParameterizedAttribute to get the text for the range
+        var selectedTextValue: CFTypeRef?
+        let textResult = AXUIElementCopyParameterizedAttributeValue(
+            focusedElement,
+            kAXStringForRangeParameterizedAttribute as CFString,
+            rangeValue,
+            &selectedTextValue
+        )
+
+        if textResult == .success, let selectedText = selectedTextValue as? String, !selectedText.isEmpty {
+            print("Selected text: \(selectedText)")
+            self.selectedSource = currentSource
+            return selectedText
+        } else {
+            print("Failed to get the selected text. Error: \(textResult.rawValue)")
+            self.selectedSource = nil
+            return nil
+        }
+    }
+
     func showWindowWithoutAnimation() {
         guard let window = self.window else { return }
 
@@ -447,6 +485,9 @@ class Accessibility {
     func handleSelectionChange(for element: AXUIElement) {
         guard mode == .highlightTopEdgeMode else { return }
         handleHighlightTopEdgeMode(element, shouldAnimate: true)
+
+        // Store the selected text when the selection changes
+        selectedText = getSelectedText(from: element)
     }
 
     private func adjustWindowPosition(with rect: CGRect) {
