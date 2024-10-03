@@ -94,6 +94,7 @@ class Accessibility {
             guard let self = self else { return }
             if let app = notification.userInfo?[NSWorkspace.applicationUserInfoKey] as? NSRunningApplication {
                 print("\nApplication activated: \(app.localizedName ?? "Unknown")")
+                currentSource = app.localizedName
                 self.setupObserver(for: app.processIdentifier)
             }
 
@@ -109,7 +110,6 @@ class Accessibility {
         ) { [weak self] notification in
             guard let self = self else { return }
             if let app = notification.userInfo?[NSWorkspace.applicationUserInfoKey] as? NSRunningApplication {
-                currentSource = app.localizedName
                 print("\nApplication deactivated: \(app.localizedName ?? "Unknown")")
             }
 
