@@ -1,16 +1,16 @@
 import { Response, NextFunction } from 'express';
 import jwt, { JwtPayload } from 'jsonwebtoken';
 import { AuthenticatedRequest } from '@interfaces/AuthenticatedRequest';
+import { CustomError } from '@utils/CustomError';
 
-const auth = async (
+const auth = (
     req: AuthenticatedRequest,
     res: Response,
     next: NextFunction
-): Promise<void> => {
+): void => {
     const authHeader = req.headers['authorization'];
     if (!authHeader) {
-        res.status(401).json({ message: 'Access token missing' });
-        return;
+        throw new CustomError('Access token missing', 401);
     }
 
     const token = authHeader.split(' ')[1];
@@ -22,7 +22,7 @@ const auth = async (
         req.user = decoded;
         next();
     } catch (err) {
-        res.status(403).json({ message: 'Invalid access token' });
+        throw new CustomError('Invalid access token', 403);
     }
 };
 

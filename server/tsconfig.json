@@ -17,6 +17,9 @@
       ],
       "@interfaces/*": [
         "types/*"
+      ],
+      "@utils/*": [
+        "utils/*"
       ]
     },
     "outDir": "dist", /* Specify an output folder for all emitted files. */

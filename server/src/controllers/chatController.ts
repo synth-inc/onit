@@ -1,7 +1,7 @@
-// src/controllers/chatController.ts
-import { Response } from 'express';
+import { Request, Response, NextFunction } from 'express';
 import { AuthenticatedRequest } from '@interfaces/AuthenticatedRequest';
 import OpenAI from 'openai';
+import { CustomError } from '@utils/CustomError';
 
 interface Input {
     application?: string;
@@ -16,11 +16,16 @@ interface ProcessInputRequest extends AuthenticatedRequest {
 }
 
 const processInput = async (
-    req: ProcessInputRequest,
-    res: Response
+    req: Request,
+    res: Response,
+    next: NextFunction
 ): Promise<void> => {
     const { instructions, input } = req.body;
     const { application, selectedText } = input || {};
+
+    if (!instructions) {
+        throw new CustomError('Instructions are required', 400);
+    }
 
     const openai = new OpenAI();
 
@@ -38,11 +43,7 @@ const processInput = async (
         const output = response.choices[0].message.content?.trim();
         res.json({ output });
     } catch (error: any) {
-        console.error(
-            'Error communicating with OpenAI API:',
-            error.response ? error.response.data : error.message
-        );
-        res.status(500).json({ message: 'Internal server error' });
+        next(error);
     }
 };
 

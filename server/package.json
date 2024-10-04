@@ -11,7 +11,8 @@
     "@controllers": "dist/controllers",
     "@routes": "dist/routes",
     "@middleware": "dist/middleware",
-    "@interfaces": "dist/types"
+    "@interfaces": "dist/types",
+    "@utils": "dist/utils"
   },
   "keywords": [],
   "author": "",
