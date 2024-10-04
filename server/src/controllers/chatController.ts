@@ -1,19 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
-import { AuthenticatedRequest } from '@interfaces/AuthenticatedRequest';
 import OpenAI from 'openai';
 import { CustomError } from '@utils/CustomError';
-
-interface Input {
-    application?: string;
-    selectedText?: string;
-}
-
-interface ProcessInputRequest extends AuthenticatedRequest {
-    body: {
-        instructions: string;
-        input?: Input;
-    };
-}
 
 const processInput = async (
     req: Request,
