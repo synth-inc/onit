@@ -4,7 +4,7 @@ import auth from '@middleware/auth';
 
 const router = express.Router();
 
-// POST /api/process
+// POST /process
 router.post('/process', auth, chatController.processInput);
 
 export default router;
