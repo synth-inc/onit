@@ -565,40 +565,41 @@ class Accessibility {
         DispatchQueue.main.async {
             var adjustedRect = rect
 
-            // Get the primary screen (main display)
+            // Get the primary screen
             guard let primaryScreen = NSScreen.screens.first else {
-                print("No screens available.")
+                print("No primary screen found.")
                 return
             }
 
-            let primaryScreenFrame = primaryScreen.frame
-            let visibleFrame = primaryScreen.visibleFrame
-
-            // Adjust the y-coordinate from top-left to bottom-left origin using the primary screen
-            adjustedRect.origin.y = primaryScreenFrame.maxY - (adjustedRect.origin.y + adjustedRect.height)
-
-            let windowHeight = self.window?.frame.height ?? 0
-
-            // Calculate positions to place the window above or below the selection
-            let positionAbove = adjustedRect.origin.y + adjustedRect.height // Window's bottom edge aligns with selection's top edge
-            let positionBelow = adjustedRect.origin.y - windowHeight // Window's top edge aligns with selection's bottom edge
-
-            // Determine if positioning above would cause the window to go off the top of the visible area (menu bar)
-            let windowTopEdgeIfAbove = positionAbove + windowHeight
-
-            let windowOriginY: CGFloat
-
-            if windowTopEdgeIfAbove > visibleFrame.maxY {
-                // Position the window below the selection, ensuring it doesn't go off-screen
-                windowOriginY = max(positionBelow, visibleFrame.minY)
-                print("Window positioned below the selection at: \(NSPoint(x: adjustedRect.origin.x, y: windowOriginY))")
-            } else {
-                // Position the window above the selection
-                windowOriginY = max(positionAbove, visibleFrame.minY)
-                print("Window positioned above the selection at: \(NSPoint(x: adjustedRect.origin.x, y: windowOriginY))")
+            guard let currentScreen = NSScreen.main else {
+                print("NO main screen found")
+                return
             }
 
+            // Flip the y-coordinate from Quartz to Cocoa coordinate system
+            adjustedRect.origin.y = primaryScreen.frame.maxY - (adjustedRect.origin.y + adjustedRect.size.height)
+
+            // Now, adjustedRect.origin is in Cocoa coordinate system
+
+            // Get the window's height
+            let windowHeight = self.window?.frame.height ?? 0
+
+            // Calculate the window's y-position to place it above the selection
+            var windowOriginY = adjustedRect.origin.y + adjustedRect.size.height
+
+            // Ensure the window doesn't go off-screen vertically
+            let visibleFrame = currentScreen.visibleFrame
+
+            // If the window would go off the top of the screen, position it below the selection
+            if windowOriginY + windowHeight > visibleFrame.maxY {
+                // Position the window below the selection
+                windowOriginY = adjustedRect.origin.y - windowHeight
+                print("Adjusting window position to below the selection.")
+            }
+
+            // Set the window's position
             self.window?.setFrameOrigin(NSPoint(x: adjustedRect.origin.x, y: windowOriginY))
+            print("Window positioned at: \(NSPoint(x: adjustedRect.origin.x, y: windowOriginY))")
         }
     }
 
