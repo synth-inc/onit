@@ -6,3 +6,10 @@
 //
 
 import Foundation
+
+enum GenerationState: Equatable {
+    case idle
+    case generating
+    case generated(String)
+    case error(FetchingError)
+}

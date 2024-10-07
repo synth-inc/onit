@@ -7,13 +7,13 @@
 
 import Foundation
 
-struct Input {
-    var text: String
-    var source: String?
+struct Input: Codable {
+    var selectedText: String
+    var application: String?
 }
 
 // MARK: - Sample
 
 extension Input {
-    static let sample = Input(text: "Some input text goes here and looks pretty good", source: "Xcode")
+    static let sample = Input(selectedText: "Some input text goes here and looks pretty good", application: "Xcode")
 }

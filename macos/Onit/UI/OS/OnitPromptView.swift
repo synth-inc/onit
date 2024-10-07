@@ -12,7 +12,7 @@ struct OnitPromptView: View {
 
     var body: some View {
         HStack(spacing: 3) {
-            Image(.smirkIcon)
+            Image(.smirk)
                 .resizable()
                 .renderingMode(.template)
                 .scaledToFit()

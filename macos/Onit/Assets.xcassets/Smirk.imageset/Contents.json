@@ -1,15 +1,17 @@
 {
   "images" : [
     {
-      "filename" : "Subtract (10).svg",
+      "filename" : "Union-4.png",
       "idiom" : "universal",
       "scale" : "1x"
     },
     {
+      "filename" : "Union-3.png",
       "idiom" : "universal",
       "scale" : "2x"
     },
     {
+      "filename" : "Union-2.png",
       "idiom" : "universal",
       "scale" : "3x"
     }

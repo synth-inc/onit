@@ -9,7 +9,7 @@ import Foundation
 
 class FetchingClient {
     var baseURL: URL {
-        URL(string: "10.0.0.17:3000")!
+        URL(string: "https://onit-server-b3c3746e04e9.herokuapp.com")!
     }
 
     let session = URLSession.shared

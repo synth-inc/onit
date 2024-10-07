@@ -12,9 +12,9 @@ struct InputView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            InputTitle(source: input.source)
+            InputTitle(source: input.application)
             divider
-            InputBody(text: input.text)
+            InputBody(text: input.selectedText)
         }
         .background {
             RoundedRectangle(cornerRadius: 10)

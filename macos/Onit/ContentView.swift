@@ -16,7 +16,6 @@ struct ContentView: View {
             divider
             input
             TextInputView()
-            divider
             content
         }
         .background(Color.black)
@@ -42,7 +41,10 @@ struct ContentView: View {
             divider
             GeneratingView()
         case .generated(let result):
+            divider
             GeneratedView(result: result)
+        case .error(let error):
+            GeneratedErrorView(error: error)
         default:
             EmptyView()
         }

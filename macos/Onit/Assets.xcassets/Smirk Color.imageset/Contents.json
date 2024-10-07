@@ -1,15 +1,17 @@
 {
   "images" : [
     {
-      "filename" : "omni-icon-colour-blue-light.svg",
+      "filename" : "Union-5.png",
       "idiom" : "universal",
       "scale" : "1x"
     },
     {
+      "filename" : "Union-6.png",
       "idiom" : "universal",
       "scale" : "2x"
     },
     {
+      "filename" : "Union-7.png",
       "idiom" : "universal",
       "scale" : "3x"
     }

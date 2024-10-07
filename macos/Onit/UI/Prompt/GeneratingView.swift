@@ -30,7 +30,7 @@ struct GeneratingView: View {
     }
 
     var icon: some View {
-        Image("Omni Color")
+        Image("Smirk Color")
     }
 
     var text: some View {

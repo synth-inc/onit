@@ -11,4 +11,8 @@ extension Model {
     func setInput(_ input: Input?) {
         self.input = input
     }
+
+    func focusText() {
+        textFocusTrigger.toggle()
+    }
 }

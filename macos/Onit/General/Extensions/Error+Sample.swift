@@ -6,3 +6,9 @@
 //
 
 import Foundation
+
+extension Error where Self == NSError {
+    static func sample(_ message: String) -> Error {
+        NSError(domain: message, code: 0)
+    }
+}

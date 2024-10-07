@@ -19,7 +19,7 @@ struct MenuOpenOnitButton: View {
             model.showPanel()
         } leading: {
             HStack(spacing: 4) {
-                Image(.smirkIcon)
+                Image(.smirk)
                     .renderingMode(.template)
                     .resizable()
                     .foregroundStyle(.black)

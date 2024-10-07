@@ -41,11 +41,13 @@
       "size" : "256x256"
     },
     {
+      "filename" : "omni-icon-colour-blue-light.png",
       "idiom" : "mac",
       "scale" : "1x",
       "size" : "512x512"
     },
     {
+      "filename" : "omni-icon-colour-blue-light-2.png",
       "idiom" : "mac",
       "scale" : "2x",
       "size" : "512x512"

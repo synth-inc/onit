@@ -18,7 +18,7 @@ struct MenuBarScene: Scene {
     }
 
     var label: some View {
-        Image(.smirkIcon)
+        Image(.smirk)
             .renderingMode(.template)
             .foregroundStyle(.white)
     }

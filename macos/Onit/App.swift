@@ -33,15 +33,11 @@ struct App: SwiftUI.App {
             MenuBarContent()
                 .environment(model)
         } label: {
-            Image(.smirkIcon)
-                .renderingMode(.template)
-                .foregroundStyle(.white)
+            Image(.smirk)
         }
         .menuBarExtraStyle(.window)
         .menuBarExtraAccess(isPresented: $model.showMenuBarExtra)
-        .commands {
-
-        }
+        .commands { }
     }
 }
 

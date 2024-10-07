@@ -1,5 +1,5 @@
 {
-  "originHash" : "dc367781894737da7ca5eeada5a6574e21104842dc356335690c3f4024b92536",
+  "originHash" : "5d530f9836fea3e3eb9603cd609660e70a7094bcbe6f7520921d1eb12899642e",
   "pins" : [
     {
       "identity" : "keyboardshortcuts",
@@ -15,8 +15,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/orchetect/MenuBarExtraAccess",
       "state" : {
-        "revision" : "f5896b47e15e114975897354c7e1082c51a2bffd",
-        "version" : "1.0.5"
+        "revision" : "ada1c2d437272db0f25efc92337a624b69dd7713",
+        "version" : "1.1.1"
       }
     },
     {

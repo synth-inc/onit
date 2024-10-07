@@ -8,11 +8,22 @@
 import SwiftUI
 
 struct GeneratedErrorView: View {
+    var error: Error
+
     var body: some View {
-        Text(/*@START_MENU_TOKEN@*/"Hello, World!"/*@END_MENU_TOKEN@*/)
+        HStack(spacing: 8) {
+            Image(.warning)
+            Text(error.localizedDescription)
+                .appFont(.medium14)
+                .foregroundStyle(.warning)
+            Spacer()
+        }
+        .padding(.horizontal, 16)
+        .padding(.bottom, 20)
+        .padding(.top, 6)
     }
 }
 
 #Preview {
-    GeneratedErrorView()
+    GeneratedErrorView(error: .sample("Message"))
 }

@@ -23,6 +23,9 @@ struct Toolbar: View {
         .foregroundStyle(.gray200)
         .padding(.horizontal, 14)
         .padding(.vertical, 2)
+        .background {
+            escListener
+        }
     }
 
     var esc: some View {
@@ -34,6 +37,20 @@ struct Toolbar: View {
                 .padding(4)
         }
         .buttonStyle(HoverableButtonStyle())
+    }
+
+    var escListener: some View {
+        Button {
+            switch model.generationState {
+            case .idle:
+                model.closePanel()
+            default:
+                model.generationState = .idle
+                model.textFocusTrigger.toggle()
+            }
+        } label: {
+            EmptyView()
+        }
         .keyboardShortcut(.escape, modifiers: [])
     }
 

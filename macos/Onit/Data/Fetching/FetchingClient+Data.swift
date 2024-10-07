@@ -51,39 +51,55 @@ extension FetchingClient {
     }
 
     private func fetchAndHandle(using request: URLRequest) async throws -> Data {
-        let (data, response) = try await fetchDataAndResponse(using: request)
-        try handle(response: response, withData: data)
-        return data
+        do {
+            let (data, response) = try await fetchDataAndResponse(using: request)
+            try handle(response: response, withData: data)
+            return data
+        } catch let error as FetchingError {
+            throw error
+        } catch {
+            throw FetchingError.networkError(error)
+        }
     }
 
     private func fetchDataAndResponse(using request: URLRequest) async throws -> (Data, HTTPURLResponse) {
-        guard let (data, response) = try await URLSession.shared.data(for: request) as? (Data, HTTPURLResponse) else {
+        let (data, response) = try await URLSession.shared.data(for: request)
+
+        guard let httpResponse = response as? HTTPURLResponse else {
             throw FetchingError.invalidResponse
         }
-        return (data, response)
+
+        return (data, httpResponse)
     }
 
     private func handle(response: HTTPURLResponse, withData data: Data) throws {
         switch response.statusCode {
-            case config.logoutStatus:
-                // nil token
+        case 200...299:
+            break
+        case 400...499:
+            let message = parseErrorMessage(from: data) ?? "Client error occurred."
+            if response.statusCode == 401 {
                 throw FetchingError.unauthorized
-            case config.notFoundStatus:
+            } else if response.statusCode == 403 {
+                throw FetchingError.forbidden(message: message)
+            } else if response.statusCode == 404 {
                 throw FetchingError.notFound
-            case _ where config.validStatuses.contains(response.statusCode):
-                return
-            default:
-                try throwAppropriateError(using: data, statusCode: response.statusCode)
+            } else {
+                throw FetchingError.failedRequest(message: message)
+            }
+        case 500...599:
+            let message = parseErrorMessage(from: data) ?? "Server error occurred."
+            throw FetchingError.serverError(statusCode: response.statusCode, message: message)
+        default:
+            let message = parseErrorMessage(from: data) ?? "An unexpected error occurred."
+            throw FetchingError.failedRequest(message: message)
         }
     }
 
-    private func throwAppropriateError(using data: Data, statusCode: Int) throws {
-//        if let errorResponse = try? JSONDecoder().decode(ErrorResponse.self, from: data) {
-//            throw FetchingError.failedRequest(errorResponse.message)
-//        } else {
-            let rawResponse = String(data: data, encoding: .utf8) ?? "No response body"
-            throw FetchingError.failedRequest(
-                "Unknown error occurred. Status Code: \(statusCode), Response: \(rawResponse)")
-//        }
+    private func parseErrorMessage(from data: Data) -> String? {
+        if let errorResponse = try? JSONDecoder().decode(ServerErrorResponse.self, from: data) {
+            return errorResponse.message
+        }
+        return String(data: data, encoding: .utf8)
     }
 }

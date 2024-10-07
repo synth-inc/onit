@@ -47,7 +47,7 @@ struct TextInputView: View {
     var placeholderView: some View {
         HStack {
             Text("New instructions...")
-            Image("Smirk Icon")
+            Image(.smirk)
         }
         .foregroundStyle(.gray300)
         .allowsHitTesting(false)
@@ -56,7 +56,7 @@ struct TextInputView: View {
     var sendButton: some View {
         Button {
             focused = false
-            model.generate()
+            model.generate(instructions)
         } label: {
             Image(.circleArrowUp)
                 .renderingMode(.template)

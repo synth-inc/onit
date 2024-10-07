@@ -15,7 +15,8 @@ struct GeneratedContentView: View {
             .appFont(.medium16)
             .foregroundStyle(.FG)
             .multilineTextAlignment(.leading)
-            .frame(maxWidth: .infinity, alignment: .leading)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+            .fixedSize(horizontal: false, vertical: true)
     }
 }
     
