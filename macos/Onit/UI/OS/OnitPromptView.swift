@@ -6,9 +6,12 @@
 //
 
 import SwiftUI
+import KeyboardShortcuts
 
 struct OnitPromptView: View {
-    let shortcut = KeyboardShortcut("o", modifiers: [.option, .command])
+    var shortcut: KeyboardShortcut? {
+        KeyboardShortcuts.getShortcut(for: .launch)?.native
+    }
 
     var body: some View {
         HStack(spacing: 3) {

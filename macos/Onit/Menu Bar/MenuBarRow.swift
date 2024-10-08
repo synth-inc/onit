@@ -10,7 +10,7 @@ import SwiftUI
 struct MenuBarRow<Leading: View, Trailing: View>: View {
     @Environment(\.model) var model
 
-    var action: () -> Void
+    var type: MenuBarRowType
     var leading: Leading
     var trailing: Trailing
 
@@ -19,28 +19,54 @@ struct MenuBarRow<Leading: View, Trailing: View>: View {
         @ViewBuilder leading: () -> Leading,
         @ViewBuilder trailing: () -> Trailing
     ) {
-        self.action = action
+        self.type = .button(action)
         self.leading = leading()
         self.trailing = trailing()
     }
 
-    var body: some View {
-        Button {
-            action()
+    init(
+        _ type: MenuBarRowType,
+        @ViewBuilder leading: () -> Leading,
+        @ViewBuilder trailing: () -> Trailing
+    ) {
+        self.type = type
+        self.leading = leading()
+        self.trailing = trailing()
+    }
 
-            @Bindable var model = model
-            model.showMenuBarExtra = false
-        } label: {
-            HStack {
-                leading
-                Spacer()
-                trailing
-                    .foregroundStyle(Color.primary.opacity(0.25))
+    enum MenuBarRowType {
+        case button(() -> Void)
+        case settings
+    }
+
+    var body: some View {
+        switch type {
+        case .button(let action):
+            Button {
+                action()
+                @Bindable var model = model
+                model.showMenuBarExtra = false
+            } label: {
+                label
             }
-            .font(.system(size: 13, weight: .medium))
-            .frame(height: 22)
+            .buttonStyle(MenuButtonStyle())
+        case .settings:
+            SettingsLink {
+                label
+            }
+            .buttonStyle(MenuButtonStyle())
         }
-        .buttonStyle(MenuButtonStyle())
+    }
+
+    var label: some View {
+        HStack {
+            leading
+            Spacer()
+            trailing
+                .foregroundStyle(Color.primary.opacity(0.25))
+        }
+        .font(.system(size: 13, weight: .medium))
+        .frame(height: 22)
     }
 }
 

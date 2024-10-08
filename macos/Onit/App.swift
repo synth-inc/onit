@@ -38,6 +38,16 @@ struct App: SwiftUI.App {
         .menuBarExtraStyle(.window)
         .menuBarExtraAccess(isPresented: $model.showMenuBarExtra)
         .commands { }
+
+        Settings {
+            Form {
+                KeyboardShortcuts.Recorder("Launch Onit", name: .launch) { _ in
+                    Accessibility.resetPrompt(with: OnitPromptView())
+                }
+                .padding()
+            }
+            .frame(minWidth: 400, minHeight: 200)
+        }
     }
 }
 

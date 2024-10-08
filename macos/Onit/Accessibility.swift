@@ -52,6 +52,34 @@ class Accessibility {
     }
 
     @MainActor
+    static func resetPrompt<Content: View>(with newView: Content) {
+        shared.resetPrompt(with: newView)
+    }
+
+    @MainActor
+    private func resetPrompt<Content: View>(with newView: Content) {
+        guard let window = self.window else {
+            print("No window available to reset.")
+            return
+        }
+
+        // Create a new NSHostingController with the new view
+        let newHostingController = NSHostingController(rootView: newView)
+
+        // Assign the new hosting controller to the window
+        window.contentViewController = newHostingController
+
+        // If the window is currently visible, bring it to the front again
+        if mode == .highlightTopEdgeMode {
+            window.orderOut(nil)
+        } else {
+            window.makeKeyAndOrderFront(nil)
+        }
+
+        print("Prompt reset with new view content.")
+    }
+
+    @MainActor
     static func setupWindow<Content: View>(withView contentView: Content) {
         shared.setupWindow(withView: contentView)
     }

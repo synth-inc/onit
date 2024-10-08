@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct KeyboardShortcutView: View {
-    var shortcut: KeyboardShortcut
+    var shortcut: KeyboardShortcut?
     var characterWidth: CGFloat = 11
     var spacing: CGFloat = 3
 
@@ -19,16 +19,22 @@ struct KeyboardShortcutView: View {
         }
     }
 
+    @ViewBuilder
     var modifiers: some View {
-        ForEach(shortcut.modifiers.array) { modifier in
-            ModifierView(modifier: modifier)
-                .frame(width: characterWidth, height: characterWidth)
+        if let shortcut {
+            ForEach(shortcut.modifiers.array) { modifier in
+                ModifierView(modifier: modifier)
+                    .frame(width: characterWidth, height: characterWidth)
+            }
         }
     }
 
+    @ViewBuilder
     var key: some View {
-        KeyView(key: shortcut.key)
-            .frame(width: characterWidth, height: characterWidth)
+        if let shortcut {
+            KeyView(key: shortcut.key)
+                .frame(width: characterWidth, height: characterWidth)
+        }
     }
 
     struct KeyView: View {
@@ -59,6 +65,8 @@ struct KeyboardShortcutView: View {
                 Text("⌥")
             case .shift:
                 Text("⇧")
+            case .control:
+                Text("^")
             default:
                 EmptyView()
             }

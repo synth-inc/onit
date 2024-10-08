@@ -13,15 +13,14 @@ struct MenuSettings: View {
     }
 
     var body: some View {
-        MenuBarRow {
-            
-        } leading: {
+        MenuBarRow(.settings) {
             Text("Settings...")
                 .padding(.horizontal, 10)
         } trailing: {
             KeyboardShortcutView(shortcut: shortcut)
                 .padding(.horizontal, 10)
         }
+        .keyboardShortcut(",")
     }
 }
 

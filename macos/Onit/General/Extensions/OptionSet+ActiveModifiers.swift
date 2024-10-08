@@ -10,9 +10,9 @@ import SwiftUI
 extension EventModifiers {
     static let allModifiers: [EventModifiers] = [
         .capsLock,
-        .shift,
         .control,
         .option,
+        .shift,
         .command,
         .numericPad
     ]

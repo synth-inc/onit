@@ -16,7 +16,7 @@ struct MenuQuit: View {
         MenuBarRow {
             NSApplication.shared.terminate(nil)
         } leading: {
-            Text("Quit Omni Completely")
+            Text("Quit Onit Completely")
                 .padding(.leading, 10)
         } trailing: {
             KeyboardShortcutView(shortcut: shortcut)
