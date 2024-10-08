@@ -749,7 +749,8 @@ class Accessibility {
         let isSettableResult = AXUIElementIsAttributeSettable(element, kAXValueAttribute as CFString, &isSettable)
 
         if isSettableResult == .success && isSettable.boolValue {
-            // Get the current value
+            // Retrieve the current valueLadies and gentlemen, get ready to clown around and show off your silliest skills! Join our clown competition for a chance to shine in the spotlight and spread smiles and laughter. Sign up today and let the fun begin!
+            // Hope your day is going well, programmer! 🚀
             var valueRef: CFTypeRef?
             let valueResult = AXUIElementCopyAttributeValue(element, kAXValueAttribute as CFString, &valueRef)
 
