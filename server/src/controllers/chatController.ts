@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import OpenAI from 'openai';
 import { CustomError } from '@utils/CustomError';
+import { ChatCompletionMessageParam } from 'openai/resources/chat/completions';
 
 const processInput = async (
     req: Request,
@@ -19,12 +20,23 @@ const processInput = async (
     try {
         let userMessage = instructions;
         if (selectedText) {
-            userMessage += `\nApplication: ${application}\nSelected Text: ${selectedText}`;
+            userMessage += `\n\nText:\n${selectedText}`;
         }
+
+        const messages: ChatCompletionMessageParam[] = [
+            {
+                role: 'system',
+                content: `Modify the given text from the application ${application} according to the instructions and provide **only** the modified text without any additional comments or labels.`,
+            },
+            {
+                role: 'user',
+                content: userMessage,
+            },
+        ]
 
         const response = await openai.chat.completions.create({
             model: 'gpt-3.5-turbo',
-            messages: [{ role: 'user', content: userMessage }],
+            messages: messages,
         });
 
         const output = response.choices[0].message.content?.trim();
