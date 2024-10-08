@@ -18,24 +18,36 @@ const processInput = async (
     const openai = new OpenAI();
 
     try {
-        let userMessage = instructions;
-        if (selectedText) {
-            userMessage += `\n\nText:\n${selectedText}`;
+        let messages: ChatCompletionMessageParam[] = [];
+
+        if (application && input) {
+            let userMessage = instructions;
+
+            if (selectedText) {
+                userMessage += `\n\nText:\n${selectedText}`;
+            }
+
+            messages = [
+                {
+                    role: 'system',
+                    content: `Modify the given text from the application ${application} according to the instructions and provide **only** the modified text without any additional comments, formatting, coding language, or labels. Provide the text raw and ready to go.`,
+                },
+                {
+                    role: 'user',
+                    content: userMessage,
+                },
+            ];
+        } else {
+            messages = [
+                {
+                    role: 'user',
+                    content: instructions,
+                },
+            ];
         }
 
-        const messages: ChatCompletionMessageParam[] = [
-            {
-                role: 'system',
-                content: `Modify the given text from the application ${application} according to the instructions and provide **only** the modified text without any additional comments or labels.`,
-            },
-            {
-                role: 'user',
-                content: userMessage,
-            },
-        ]
-
         const response = await openai.chat.completions.create({
-            model: 'gpt-4o',
+            model: 'gpt-4',
             messages: messages,
         });
 
