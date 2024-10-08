@@ -42,7 +42,7 @@ struct App: SwiftUI.App {
         Settings {
             Form {
                 KeyboardShortcuts.Recorder("Launch Onit", name: .launch) { _ in
-                    Accessibility.resetPrompt(with: OnitPromptView())
+                    Accessibility.resetPrompt(with: OnitPromptView().environment(model))
                 }
                 .padding()
             }

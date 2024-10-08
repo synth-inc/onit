@@ -20,5 +20,5 @@ struct GeneratedView: View {
 }
 
 #Preview {
-    GeneratedView(result: "Hello world")
+    GeneratedView(result: "Hey there, fabulous world!")
 }

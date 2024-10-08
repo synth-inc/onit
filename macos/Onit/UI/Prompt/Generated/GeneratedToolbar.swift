@@ -56,6 +56,7 @@ struct GeneratedToolbar: View {
         Button {
             if case let .generated(text) = model.generationState {
                 Accessibility.insertText(text)
+                model.closePanel()
             } else {
                 print("Not generated: \(model.generationState)")
             }

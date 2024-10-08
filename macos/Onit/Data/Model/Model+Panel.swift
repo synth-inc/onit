@@ -11,6 +11,7 @@ extension Model: NSWindowDelegate {
     func showPanel() {
         #if !targetEnvironment(simulator)
         setInput(Accessibility.input)
+        generationState = .idle
         #endif
 
         if let existingPanel = panel, existingPanel.isVisible {
