@@ -48,6 +48,7 @@ struct TextInputView: View {
         HStack {
             Text("New instructions...")
             Image(.smirk)
+                .renderingMode(.template)
         }
         .foregroundStyle(.gray300)
         .allowsHitTesting(false)
