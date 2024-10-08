@@ -22,7 +22,7 @@ struct MenuOpenOnitButton: View {
                 Image(.smirk)
                     .renderingMode(.template)
                     .resizable()
-                    .foregroundStyle(.black)
+                    .foregroundStyle(.primary)
                     .scaledToFit()
                     .padding(1)
                     .frame(width: 16, height: 16)

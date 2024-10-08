@@ -14,8 +14,10 @@ struct MenuAppearsInPicker: View {
         } leading: {
             HStack(spacing: 4) {
                 Image(.textQuotations)
+                    .renderingMode(.template)
                     .resizable()
                     .scaledToFit()
+                    .foregroundStyle(.primary)
                     .padding(1.5)
                     .frame(width: 16, height: 16)
                 Text("Appear in Text Fields")
@@ -24,7 +26,7 @@ struct MenuAppearsInPicker: View {
         } trailing: {
             Image(.chevRight)
                 .renderingMode(.template)
-                .foregroundStyle(.black)
+                .foregroundStyle(.primary)
         }
     }
 }
