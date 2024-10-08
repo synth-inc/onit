@@ -33,6 +33,7 @@ class Accessibility {
     private var nsObjectObserver: NSObjectProtocol?
     private var observer: AXObserver?
     private var observedElementForSelection: Unmanaged<AXUIElement>?
+    private var selectedTextElement: AXUIElement?
 
     private var runLoopSource: CFRunLoopSource?
 
@@ -585,6 +586,8 @@ class Accessibility {
         guard mode == .highlightTopEdgeMode else { return }
         handleHighlightTopEdgeMode(element, shouldAnimate: true)
 
+        selectedTextElement = element
+
         // Store the selected text when the selection changes
         selectedText = getSelectedText(from: element)
     }
@@ -729,6 +732,89 @@ class Accessibility {
             // Set the final transform to ensure the layer ends up at the correct scale
             layer.transform = CATransform3DIdentity
         }
+    }
+
+    static func insertText(_ text: String) {
+        shared.insertText(text)
+    }
+
+    func insertText(_ textToInsert: String) {
+        guard let element = selectedTextElement else {
+            print("No element stored to insert text into.")
+            return
+        }
+
+        // Check if the element supports kAXValueAttribute and it's settable
+        var isSettable: DarwinBoolean = false
+        let isSettableResult = AXUIElementIsAttributeSettable(element, kAXValueAttribute as CFString, &isSettable)
+
+        if isSettableResult == .success && isSettable.boolValue {
+            // Get the current value
+            var valueRef: CFTypeRef?
+            let valueResult = AXUIElementCopyAttributeValue(element, kAXValueAttribute as CFString, &valueRef)
+
+            if valueResult == .success, let currentValue = valueRef as? String {
+                // Get the selected text range
+                var selectedRangeRef: CFTypeRef?
+                let rangeResult = AXUIElementCopyAttributeValue(element, kAXSelectedTextRangeAttribute as CFString, &selectedRangeRef)
+
+                if rangeResult == .success {
+                    let selectedRangeValue = selectedRangeRef as! AXValue
+                    // Get the range
+                    var range = CFRange()
+                    if AXValueGetValue(selectedRangeValue, .cfRange, &range) {
+                        // Modify the text by replacing the selected range with the new text
+                        let nsCurrentValue = currentValue as NSString
+                        let newText = nsCurrentValue.replacingCharacters(in: NSRange(location: range.location, length: range.length), with: textToInsert)
+
+                        // Set the new value
+                        let setResult = AXUIElementSetAttributeValue(element, kAXValueAttribute as CFString, newText as CFTypeRef)
+
+                        if setResult == .success {
+                            print("Text inserted successfully.")
+                        } else {
+                            print("Failed to set value: \(setResult.rawValue)")
+                        }
+                    } else {
+                        print("Failed to get CFRange from AXValue.")
+                    }
+                } else {
+                    print("Failed to get selected text range. Error: \(rangeResult.rawValue)")
+                }
+            } else {
+                print("Failed to get current value. Error: \(valueResult.rawValue)")
+            }
+        } else {
+            print("Element's value attribute is not settable or failed to check. Error: \(isSettableResult.rawValue)")
+        }
+    }
+
+    func findTextInputElement(startingFrom element: AXUIElement) -> AXUIElement? {
+        // Check if the element supports kAXValueAttribute and kAXSelectedTextRangeAttribute
+        var attributeNames: CFArray?
+        let result = AXUIElementCopyAttributeNames(element, &attributeNames)
+
+        if result == .success, let attributeNames = attributeNames as? [String] {
+            if attributeNames.contains(kAXValueAttribute as String),
+               attributeNames.contains(kAXSelectedTextRangeAttribute as String) {
+                return element
+            }
+        }
+
+        // If not, check its children
+        var childrenValue: CFTypeRef?
+        let childrenResult = AXUIElementCopyAttributeValue(element, kAXChildrenAttribute as CFString, &childrenValue)
+
+        if childrenResult == .success, let children = childrenValue as? [AXUIElement] {
+            for child in children {
+                if let textInputElement = findTextInputElement(startingFrom: child) {
+                    return textInputElement
+                }
+            }
+        }
+
+        // If the element has no children or none of the children is a text input element, return nil
+        return nil
     }
 }
 #endif

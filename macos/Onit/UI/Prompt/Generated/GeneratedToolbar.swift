@@ -8,6 +8,8 @@
 import SwiftUI
 
 struct GeneratedToolbar: View {
+    @Environment(\.model) var model
+
     var body: some View {
         HStack(spacing: 8) {
             copy
@@ -52,7 +54,11 @@ struct GeneratedToolbar: View {
 
     var insert: some View {
         Button {
-            
+            if case let .generated(text) = model.generationState {
+                Accessibility.insertText(text)
+            } else {
+                print("Not generated: \(model.generationState)")
+            }
         } label: {
             HStack(spacing: 4) {
                 Text("Insert")
@@ -82,4 +88,5 @@ struct GeneratedToolbar: View {
 #Preview {
     GeneratedToolbar()
         .padding()
+        .environment(Model())
 }
