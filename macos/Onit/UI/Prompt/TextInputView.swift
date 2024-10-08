@@ -28,6 +28,7 @@ struct TextInputView: View {
                 .textFieldStyle(PlainTextFieldStyle())
                 .focused($focused)
                 .tint(.blue600.opacity(0.2))
+                .fixedSize(horizontal: false, vertical: true)
             if instructions.isEmpty {
                 placeholderView
             } else {
