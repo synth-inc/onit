@@ -24,6 +24,7 @@ struct InputTitle: View {
             Text(inputString)
                 .appFont(.medium13)
             Spacer()
+            InputButtons()
         }
         .foregroundStyle(.gray100)
         .padding(.horizontal, 12)
