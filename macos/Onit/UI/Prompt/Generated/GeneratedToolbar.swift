@@ -23,7 +23,9 @@ struct GeneratedToolbar: View {
 
     var copy: some View {
         Button {
-
+            if case let .generated(text) = model.generationState {
+                NSPasteboard.general.setString(text, forType: .string)
+            }
         } label: {
             Image(.copy)
                 .padding(4)

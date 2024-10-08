@@ -748,13 +748,16 @@ class Accessibility {
         var isSettable: DarwinBoolean = false
         let isSettableResult = AXUIElementIsAttributeSettable(element, kAXValueAttribute as CFString, &isSettable)
 
+        print("AXValueAttribute is settable: \(isSettable.boolValue)")
+
         if isSettableResult == .success && isSettable.boolValue {
-            // Retrieve the current valueLadies and gentlemen, get ready to clown around and show off your silliest skills! Join our clown competition for a chance to shine in the spotlight and spread smiles and laughter. Sign up today and let the fun begin!
-            // Hope your day is going well, programmer! 🚀
+            // Retrieve the current value
             var valueRef: CFTypeRef?
             let valueResult = AXUIElementCopyAttributeValue(element, kAXValueAttribute as CFString, &valueRef)
 
             if valueResult == .success, let currentValue = valueRef as? String {
+                print("Current value before insertion: \(currentValue)")
+
                 // Get the selected text range
                 var selectedRangeRef: CFTypeRef?
                 let rangeResult = AXUIElementCopyAttributeValue(element, kAXSelectedTextRangeAttribute as CFString, &selectedRangeRef)
