@@ -24,12 +24,18 @@ struct GeneratedToolbar: View {
     var copy: some View {
         Button {
             if case let .generated(text) = model.generationState {
-                NSPasteboard.general.setString(text, forType: .string)
+                let pasteboard = NSPasteboard.general
+                pasteboard.declareTypes([.string], owner: nil)
+                pasteboard.setString(text, forType: .string)
+                model.closePanel()
+            } else {
+                print("SOMETHING WENT WRONG")
             }
         } label: {
             Image(.copy)
                 .padding(4)
         }
+        .keyboardShortcut("c")
     }
 
     var regenerate: some View {

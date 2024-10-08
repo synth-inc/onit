@@ -22,6 +22,9 @@ struct HoverableButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
             .background {
+                clickBackground(configuration.isPressed)
+            }
+            .background {
                 hoverBackground
             }
             .onHover { hovering in
@@ -30,6 +33,12 @@ struct HoverableButtonStyle: ButtonStyle {
             .overlay(alignment: .bottom) {
                 tooltipView
             }
+    }
+
+    private func clickBackground(_ clicked: Bool) -> some View {
+        RoundedRectangle(cornerRadius: 6)
+            .fill(.gray600)
+            .opacity(clicked ? 1 : 0)
     }
 
     private var hoverBackground: some View {
