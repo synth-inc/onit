@@ -40,6 +40,10 @@ const processInput = async (
         } else {
             messages = [
                 {
+                    role: 'system',
+                    content: `Provide **only** the output as per the instructions without any additional comments, formatting, coding language, or labels. Provide the output raw and ready to go.`,
+                },
+                {
                     role: 'user',
                     content: instructions,
                 },
