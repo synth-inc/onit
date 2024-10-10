@@ -6,9 +6,15 @@
 //
 
 import SwiftUI
+import KeyboardShortcuts
 
 struct Toolbar: View {
     @Environment(\.model) var model
+
+//    var recordedShortcut: KeyboardShortcut? {
+//        let shortcut = KeyboardShortcuts.Shortcut(name: .launch)?.native
+//        return shortcut
+//    }
 
     var body: some View {
         HStack(spacing: 4) {
