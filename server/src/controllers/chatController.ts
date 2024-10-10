@@ -30,7 +30,7 @@ const processInput = async (
             messages = [
                 {
                     role: 'system',
-                    content: `Modify the given text from the application ${application} according to the instructions and provide **only** the modified text without any additional comments, formatting, coding language, or labels. Provide the text raw and ready to go.`,
+                    content: `Based on the provided instructions, either modify the given text from the application ${application} or answer any questions related to it. Provide the response without any additional comments, formatting, coding language, or labels. Provide the text raw and ready to go.`,
                 },
                 {
                     role: 'user',
@@ -41,7 +41,7 @@ const processInput = async (
             messages = [
                 {
                     role: 'system',
-                    content: `Provide **only** the output as per the instructions without any additional comments, formatting, coding language, or labels. Provide the output raw and ready to go.`,
+                    content: `Based on the provided instructions, either provide the output or answer any questions related to it. Provide the response without any additional comments, formatting, coding language, or labels. Provide the output raw and ready to go.`,
                 },
                 {
                     role: 'user',

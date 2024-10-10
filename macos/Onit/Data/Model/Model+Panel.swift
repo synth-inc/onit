@@ -71,6 +71,14 @@ extension Model: NSWindowDelegate {
         self.panel = nil
     }
 
+    func togglePanel() {
+        if panel != nil {
+            closePanel()
+        } else {
+            showPanel()
+        }
+    }
+
     func windowDidResignKey(_ notification: Notification) {
         closePanel()
     }

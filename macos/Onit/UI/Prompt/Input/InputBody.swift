@@ -11,7 +11,7 @@ struct InputBody: View {
     var text: String
 
     var body: some View {
-        Text(text)
+        Text(text.trimmingCharacters(in: .whitespacesAndNewlines))
             .foregroundStyle(.white)
             .appFont(.medium16)
             .padding(10)
