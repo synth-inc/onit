@@ -31,6 +31,7 @@ struct GeneratingView: View {
 
     var icon: some View {
         Image("Smirk Color")
+            .shimmering()
     }
 
     var text: some View {
