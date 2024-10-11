@@ -8,7 +8,7 @@ const processInput = async (
     res: Response,
     next: NextFunction
 ): Promise<void> => {
-    const { instructions, input } = req.body;
+    const { instructions, input, model } = req.body;
     const { application, selectedText } = input || {};
 
     if (!instructions) {
@@ -51,7 +51,7 @@ const processInput = async (
         }
 
         const response = await openai.chat.completions.create({
-            model: 'gpt-4',
+            model: model || 'gpt-4',
             messages: messages,
         });
 

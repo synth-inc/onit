@@ -8,12 +8,13 @@
 import SwiftUI
 import SageKit
 
-@MainActor @Observable class Model: NSObject {
+@MainActor @Observable class OnitModel: NSObject {
     var showMenuBarExtra = false
     var generationState: GenerationState = .idle
     var panel: CustomPanel?
     var input: Input?
     var textFocusTrigger = false
+    var selectedModel: GPTModel?
 
     var generateTask: Task<Void, Never>? = nil
 
