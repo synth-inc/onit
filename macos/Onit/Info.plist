@@ -37,5 +37,9 @@
 	<true/>
 	<key>LSApplicationCategoryType</key>
 	<string>public.app-category.utilities</string>
+	<key>SUPublicEDKey</key>
+	<string>gGuBTEsab+N4JYjnp+kqvhChKQiZv69GKThr0ucKEl0=</string>
+	<key>SUFeedURL</key>
+	<string>https://onit-server-b3c3746e04e9.herokuapp.com/appcast.xml</string>
 </dict>
 </plist>

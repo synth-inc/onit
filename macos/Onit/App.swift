@@ -31,7 +31,6 @@ struct App: SwiftUI.App {
 
         MenuBarExtra {
             MenuBarContent()
-                .environment(model)
         } label: {
             Image(.smirk)
         }

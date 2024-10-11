@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		280F35002CB9BF4300D60130 /* Sparkle in Frameworks */ = {isa = PBXBuildFile; productRef = 280F34FF2CB9BF4300D60130 /* Sparkle */; };
 		28BF71682CAB72A200DE7C03 /* SageKit in Frameworks */ = {isa = PBXBuildFile; productRef = 28BF71672CAB72A200DE7C03 /* SageKit */; };
 		28F57E222CAC84AA006AAA8C /* KeyboardShortcuts in Frameworks */ = {isa = PBXBuildFile; productRef = 28F57E212CAC84AA006AAA8C /* KeyboardShortcuts */; };
 		28F57E292CAC9262006AAA8C /* MenuBarExtraAccess in Frameworks */ = {isa = PBXBuildFile; productRef = 28F57E282CAC9262006AAA8C /* MenuBarExtraAccess */; };
@@ -43,6 +44,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				28BF71682CAB72A200DE7C03 /* SageKit in Frameworks */,
+				280F35002CB9BF4300D60130 /* Sparkle in Frameworks */,
 				28F57E292CAC9262006AAA8C /* MenuBarExtraAccess in Frameworks */,
 				28F57E222CAC84AA006AAA8C /* KeyboardShortcuts in Frameworks */,
 			);
@@ -90,6 +92,7 @@
 				28BF71672CAB72A200DE7C03 /* SageKit */,
 				28F57E212CAC84AA006AAA8C /* KeyboardShortcuts */,
 				28F57E282CAC9262006AAA8C /* MenuBarExtraAccess */,
+				280F34FF2CB9BF4300D60130 /* Sparkle */,
 			);
 			productName = Onit;
 			productReference = 2883E4B32CA5ECBB00F79A48 /* Onit.app */;
@@ -123,6 +126,7 @@
 				28BF71662CAB72A200DE7C03 /* XCRemoteSwiftPackageReference "SageKit" */,
 				28F57E202CAC84AA006AAA8C /* XCRemoteSwiftPackageReference "KeyboardShortcuts" */,
 				28F57E272CAC9262006AAA8C /* XCRemoteSwiftPackageReference "MenuBarExtraAccess" */,
+				280F34FE2CB9BF4300D60130 /* XCRemoteSwiftPackageReference "Sparkle" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 2883E4B42CA5ECBB00F79A48 /* Products */;
@@ -357,6 +361,14 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
+		280F34FE2CB9BF4300D60130 /* XCRemoteSwiftPackageReference "Sparkle" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/sparkle-project/Sparkle";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.6.4;
+			};
+		};
 		28BF71662CAB72A200DE7C03 /* XCRemoteSwiftPackageReference "SageKit" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/blsage/SageKit";
@@ -384,6 +396,11 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		280F34FF2CB9BF4300D60130 /* Sparkle */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 280F34FE2CB9BF4300D60130 /* XCRemoteSwiftPackageReference "Sparkle" */;
+			productName = Sparkle;
+		};
 		28BF71672CAB72A200DE7C03 /* SageKit */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 28BF71662CAB72A200DE7C03 /* XCRemoteSwiftPackageReference "SageKit" */;

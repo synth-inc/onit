@@ -7,7 +7,7 @@
 
 import Foundation
 
-extension Model {
+extension OnitModel {
     func generate(_ text: String) {
         cancelGenerate()
         generateTask = Task { [weak self] in
@@ -15,7 +15,7 @@ extension Model {
             self.generationState = .generating
 
             do {
-                let chat = try await client.chat(text, input: input)
+                let chat = try await client.chat(text, input: input, model: preferences.model)
                 self.generationState = .generated(chat)
             } catch let error as FetchingError {
                 print("Fetching Error: \(error.localizedDescription)")

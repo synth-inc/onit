@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-extension Model: NSWindowDelegate {
+extension OnitModel: NSWindowDelegate {
     func showPanel() {
         #if !targetEnvironment(simulator)
         setInput(Accessibility.input)

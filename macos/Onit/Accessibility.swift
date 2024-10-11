@@ -672,21 +672,27 @@ class Accessibility {
     }
 
     func findElementWithAttribute(element: AXUIElement, attribute: CFString) -> AXUIElement? {
-        var attributeNames: CFArray?
-        let result = AXUIElementCopyAttributeNames(element, &attributeNames)
-        if result == .success, let attributeNames = attributeNames as? [String] {
-            if attributeNames.contains(attribute as String) {
+        // Get the attribute names of the element
+        var attributeNamesCFArray: CFArray?
+        let namesResult = AXUIElementCopyAttributeNames(element, &attributeNamesCFArray)
+        if namesResult == .success, let namesCFArray = attributeNamesCFArray {
+            // Cast CFArray to [String]
+            let names = namesCFArray as NSArray as! [String]
+            if names.contains(attribute as String) {
                 return element
             }
         }
-
+        
+        // Get the children of the element
         var childrenValue: CFTypeRef?
         let childrenResult = AXUIElementCopyAttributeValue(element, kAXChildrenAttribute as CFString, &childrenValue)
-
-        if childrenResult == .success, let children = childrenValue as? [AXUIElement] {
+        if childrenResult == .success {
+            let childrenCFArray = childrenValue as! CFArray
+            // Cast CFArray to [AXUIElement]
+            let children = childrenCFArray as NSArray as! [AXUIElement]
             for child in children {
-                if let elementWithAttribute = findElementWithAttribute(element: child, attribute: attribute) {
-                    return elementWithAttribute
+                if let foundElement = findElementWithAttribute(element: child, attribute: attribute) {
+                    return foundElement
                 }
             }
         }

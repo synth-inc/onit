@@ -6,3 +6,7 @@
 //
 
 import Foundation
+
+struct Preferences: Codable {
+    var model: GPTModel?
+}

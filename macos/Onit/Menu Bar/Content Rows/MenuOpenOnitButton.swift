@@ -38,5 +38,5 @@ struct MenuOpenOnitButton: View {
 
 #Preview {
     MenuOpenOnitButton()
-        .environment(Model())
+        .environment(OnitModel())
 }

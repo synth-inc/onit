@@ -76,13 +76,26 @@ struct Toolbar: View {
         .buttonStyle(HoverableButtonStyle())
     }
 
+    @ViewBuilder
     var languageModel: some View {
-        Button {
+        @Bindable var model = model
 
+        Menu {
+            Picker("Choose model", selection: $model.preferences.model) {
+                ForEach(GPTModel.allCases) { model in
+                    Text(model.rawValue)
+                        .tag(model)
+                }
+            }
+            .pickerStyle(.inline)
         } label: {
-            Image(.stars)
-                .renderingMode(.template)
-                .padding(2)
+            HStack(spacing: 0) {
+                Image(.smallChevDown)
+                    .renderingMode(.template)
+                Image(.stars)
+                    .renderingMode(.template)
+            }
+            .padding(2)
         }
         .buttonStyle(HoverableButtonStyle())
     }

@@ -6,3 +6,17 @@
 //
 
 import Foundation
+
+extension OnitModel {
+    var preferences: Preferences {
+        get {
+            access(keyPath: \.preferences)
+            return Preferences.load() ?? Preferences()
+        }
+        set {
+            withMutation (keyPath: \.preferences) {
+                newValue.save()
+            }
+        }
+    }
+}

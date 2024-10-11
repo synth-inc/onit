@@ -7,7 +7,7 @@
 
 import Foundation
 
-extension Model {
+extension OnitModel {
     func setInput(_ input: Input?) {
         self.input = input
     }

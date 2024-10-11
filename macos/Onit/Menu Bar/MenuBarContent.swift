@@ -15,6 +15,7 @@ struct MenuBarContent: View {
             MenuAppearsInPicker()
             MenuDivider()
             MenuSettings()
+            MenuCheckForUpdates()
             MenuHowItWorks()
             MenuDivider()
             MenuQuit()

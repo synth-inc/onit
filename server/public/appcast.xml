@@ -1,0 +1,14 @@
+<?xml version="1.0" standalone="yes"?>
+<rss xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle" version="2.0">
+    <channel>
+        <title>Onit</title>
+        <item>
+            <title>0.0.1</title>
+            <pubDate>Fri, 11 Oct 2024 14:33:30 -0700</pubDate>
+            <sparkle:version>1</sparkle:version>
+            <sparkle:shortVersionString>0.0.1</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+            <enclosure url="https://onit-server-b3c3746e04e9.herokuapp.com/Onit.zip" length="3377568" type="application/octet-stream" sparkle:edSignature="TYkzbZq2cbjG6noMtz9yVEwKx2w3tQgdfPJHhRsxhyGAj8vmINjGJbxNWh3vXAlwPnsZs2saHHCvaDgGgZUgAA=="/>
+        </item>
+    </channel>
+</rss>

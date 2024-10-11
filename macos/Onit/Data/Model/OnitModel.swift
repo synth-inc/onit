@@ -7,16 +7,27 @@
 
 import SwiftUI
 import SageKit
+import SwiftData
+import Sparkle
 
-@MainActor @Observable class OnitModel: NSObject {
-    var showMenuBarExtra = false
+@Observable class OnitModel: NSObject {
+    var showMenuBarExtra: Bool = false
     var generationState: GenerationState = .idle
-    var panel: CustomPanel?
-    var input: Input?
+    var panel: CustomPanel? = nil
+    var input: Input? = nil
     var textFocusTrigger = false
-    var selectedModel: GPTModel?
 
     var generateTask: Task<Void, Never>? = nil
 
-    let client = FetchingClient()
+    var client = FetchingClient()
+    var updater = SPUStandardUpdaterController(startingUpdater: true, updaterDelegate: nil, userDriverDelegate: nil)
+
+    override init() {
+        super.init()
+    }
+}
+
+
+extension String {
+    static let selectedModel = "SelectedModel"
 }

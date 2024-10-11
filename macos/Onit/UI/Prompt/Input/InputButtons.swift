@@ -25,5 +25,5 @@ struct InputButtons: View {
 
 #Preview {
     InputButtons()
-        .environment(Model())
+        .environment(OnitModel())
 }
