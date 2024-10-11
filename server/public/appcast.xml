@@ -3,12 +3,23 @@
     <channel>
         <title>Onit</title>
         <item>
+            <title>0.0.2</title>
+            <pubDate>Fri, 11 Oct 2024 15:37:28 -0700</pubDate>
+            <sparkle:version>2</sparkle:version>
+            <sparkle:shortVersionString>0.0.2</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+            <enclosure url="https://onit-server-b3c3746e04e9.herokuapp.com/Onit%202.zip" length="3378266" type="application/octet-stream" sparkle:edSignature="sfcYCdlwx/wxNAJC6bMGmn9+mKNnd6OIEOEbIe6OC3nYzGXQoVxo+2VvqG4REoMPxJRPXTGPjlWcjSa/OzoHBQ=="/>
+            <sparkle:deltas>
+                <enclosure url="https://onit-server-b3c3746e04e9.herokuapp.com/Onit2-1.delta" sparkle:deltaFrom="1" length="68286" type="application/octet-stream" sparkle:deltaFromSparkleExecutableSize="862784" sparkle:deltaFromSparkleLocales="de,he,ar,el,ja,fa,en" sparkle:edSignature="HJ0cVN9vSGFBFIK9Hnvq1tRdq8rPPGLVaWH4rfEBRSbHbcz9VV29k3sokWHD78VP2zGbrV4beXv94z5y0tcaAQ=="/>
+            </sparkle:deltas>
+        </item>
+        <item>
             <title>0.0.1</title>
             <pubDate>Fri, 11 Oct 2024 14:33:30 -0700</pubDate>
             <sparkle:version>1</sparkle:version>
-            <sparkle:shortVersionString>0.0.1</sparkle:shortVersionString>
+            <sparkle:shortVersionString>0.0.2</sparkle:shortVersionString>
             <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
-            <enclosure url="https://onit-server-b3c3746e04e9.herokuapp.com/Onit.zip" length="3377568" type="application/octet-stream" sparkle:edSignature="TYkzbZq2cbjG6noMtz9yVEwKx2w3tQgdfPJHhRsxhyGAj8vmINjGJbxNWh3vXAlwPnsZs2saHHCvaDgGgZUgAA=="/>
+            <enclosure url="https://onit-server-b3c3746e04e9.herokuapp.com/Onit.zip" length="3377539" type="application/octet-stream" sparkle:edSignature="QUL2PSI98ay8/VzcKIwJke49vpjFx0Zpgxr0ShLCwUetW5rKcJ6L3E/sLFxIyMEgIJ/QIxNw8PrgnJCwlocSBw=="/>
         </item>
     </channel>
 </rss>
