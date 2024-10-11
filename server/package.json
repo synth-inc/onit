@@ -4,7 +4,7 @@
   "main": "index.js",
   "scripts": {
     "start": "node dist/app.js",
-    "build": "tsc",
+    "build": "tsc && cp -r public dist/public",
     "dev": "nodemon --watch 'src/**/*' --exec 'ts-node -r tsconfig-paths/register src/app.ts'"
   },
   "_moduleAliases": {
