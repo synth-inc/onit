@@ -32,9 +32,6 @@ class Accessibility {
 
     private var nsObjectObserver: NSObjectProtocol?
     private var observer: AXObserver?
-    private var observedElementForSelection: Unmanaged<AXUIElement>?
-    private var selectedTextElement: AXUIElement?
-
     private var runLoopSource: CFRunLoopSource?
 
     private init() { }
@@ -107,7 +104,9 @@ class Accessibility {
     }
 
     static func observeActiveApplication() {
-        shared.observeActiveApplication()
+        DispatchQueue.main.async {
+            shared.observeActiveApplication()
+        }
     }
 
     private func observeActiveApplication() {
@@ -119,20 +118,22 @@ class Accessibility {
             object: nil,
             queue: nil
         ) { [weak self] notification in
-            guard let self = self else { return }
-            if let app = notification.userInfo?[NSWorkspace.applicationUserInfoKey] as? NSRunningApplication {
-                // Skip if the activated app is our own app
-                if app.processIdentifier == getpid() {
-                    print("Ignoring activation of our own app.")
-                    return
+            DispatchQueue.main.async {
+                guard let self = self else { return }
+                if let app = notification.userInfo?[NSWorkspace.applicationUserInfoKey] as? NSRunningApplication {
+                    // Skip if the activated app is our own app
+                    if app.processIdentifier == getpid() {
+                        print("Ignoring activation of our own app.")
+                        return
+                    }
+                    print("\nApplication activated: \(app.localizedName ?? "Unknown")")
+                    self.currentSource = app.localizedName
+                    self.setupObserver(for: app.processIdentifier)
                 }
-                print("\nApplication activated: \(app.localizedName ?? "Unknown")")
-                currentSource = app.localizedName
-                self.setupObserver(for: app.processIdentifier)
-            }
 
-            // Handle app activation
-            self.handleAppActivation()
+                // Handle app activation
+                self.handleAppActivation()
+            }
         }
 
         // Observe when any application is deactivated
@@ -141,13 +142,15 @@ class Accessibility {
             object: nil,
             queue: nil
         ) { [weak self] notification in
-            guard let self = self else { return }
-            if let app = notification.userInfo?[NSWorkspace.applicationUserInfoKey] as? NSRunningApplication {
-                print("\nApplication deactivated: \(app.localizedName ?? "Unknown")")
-            }
+            DispatchQueue.main.async {
+                guard let self = self else { return }
+                if let app = notification.userInfo?[NSWorkspace.applicationUserInfoKey] as? NSRunningApplication {
+                    print("\nApplication deactivated: \(app.localizedName ?? "Unknown")")
+                }
 
-            // Handle app deactivation
-            self.handleAppDeactivation()
+                // Handle app deactivation
+                self.handleAppDeactivation()
+            }
         }
     }
 
@@ -174,6 +177,8 @@ class Accessibility {
     }
 
     func handleAccessibilityNotification(_ notification: String, element: AXUIElement) {
+        dispatchPrecondition(condition: .onQueue(.main))
+
         // Check if the notification comes from our own process
         var elementPid: pid_t = 0
         let pidResult = AXUIElementGetPid(element, &elementPid)
@@ -204,9 +209,7 @@ class Accessibility {
         print("Handling value changed...")
 
         // Re-fetch the bounding rectangle for the selected text
-        if let observedElement = observedElementForSelection?.takeUnretainedValue() {
-            handleHighlightTopEdgeMode(observedElement, shouldAnimate: false)
-        }
+        handleHighlightTopEdgeMode(element, shouldAnimate: false)
     }
 
     func handleBoundsChanged(for element: AXUIElement) {
@@ -222,18 +225,11 @@ class Accessibility {
         var observer: AXObserver?
 
         let observerCallback: AXObserverCallback = { _, element, notification, refcon in
-            let accessibilityInstance = Unmanaged<Accessibility>.fromOpaque(refcon!).takeUnretainedValue()
-            // Check if the notification comes from our own process
-            var elementPid: pid_t = 0
-            let pidResult = AXUIElementGetPid(element, &elementPid)
-            if pidResult == .success {
-                if elementPid == getpid() {
-                    print("Ignoring system-wide notification from our own process.")
-                    return
-                }
+            // Dispatch to main thread immediately
+            DispatchQueue.main.async {
+                let accessibilityInstance = Unmanaged<Accessibility>.fromOpaque(refcon!).takeUnretainedValue()
+                accessibilityInstance.handleAccessibilityNotification(notification as String, element: element)
             }
-            print("Received notification: \(notification)")
-            accessibilityInstance.handleAccessibilityNotification(notification as String, element: element)
         }
 
         let result = AXObserverCreate(pid_t(getpid()), observerCallback, &observer)
@@ -257,6 +253,12 @@ class Accessibility {
     }
 
     private func setupObserver(for pid: pid_t) {
+        if !Thread.isMainThread {
+            DispatchQueue.main.async {
+                self.setupObserver(for: pid)
+            }
+            return
+        }
         // Skip if the PID is our own process
         if pid == getpid() {
             print("Not setting up observer for our own process.")
@@ -268,18 +270,11 @@ class Accessibility {
         var observer: AXObserver?
 
         let observerCallback: AXObserverCallback = { _, element, notification, refcon in
-            let accessibilityInstance = Unmanaged<Accessibility>.fromOpaque(refcon!).takeUnretainedValue()
-            // Check if the notification comes from our own process
-            var elementPid: pid_t = 0
-            let pidResult = AXUIElementGetPid(element, &elementPid)
-            if pidResult == .success {
-                if elementPid == getpid() {
-                    print("Ignoring notification from our own process.")
-                    return
-                }
+            // Dispatch to main thread immediately
+            DispatchQueue.main.async {
+                let accessibilityInstance = Unmanaged<Accessibility>.fromOpaque(refcon!).takeUnretainedValue()
+                accessibilityInstance.handleAccessibilityNotification(notification as String, element: element)
             }
-            print("Focus change notification: \(notification)")
-            accessibilityInstance.handleAccessibilityNotification(notification as String, element: element)
         }
 
         let result = AXObserverCreate(pid, observerCallback, &observer)
@@ -321,81 +316,54 @@ class Accessibility {
     }
 
     func handleFocusChange(for focusedElement: AXUIElement, shouldAnimate: Bool = true) {
-        // Check if the focused element comes from our own process
+        // Ensure we're on the main thread
+        dispatchPrecondition(condition: .onQueue(.main))
+
+        // Check if the focused element is valid
         var elementPid: pid_t = 0
         let pidResult = AXUIElementGetPid(focusedElement, &elementPid)
-        if pidResult == .success {
-            if elementPid == getpid() {
-                print("Ignoring focus change from our own process.")
-                return
-            }
-        } else {
-            print("Failed to get pid of focused element. Error: \(pidResult.rawValue)")
+        if pidResult != .success {
+            print("Invalid focused element (cannot get pid). Skipping.")
+            return
+        }
+        if elementPid == getpid() {
+            print("Ignoring focus change from our own process.")
+            return
         }
 
         switch mode {
         case .textfieldMode:
             handleTextFieldMode(for: focusedElement)
         case .highlightTopEdgeMode:
-            // Remove previous selection observer
-            if let previousElement = observedElementForSelection, let observer = observer {
-                AXObserverRemoveNotification(observer, previousElement.takeUnretainedValue(), kAXSelectedTextChangedNotification as CFString)
-                AXObserverRemoveNotification(observer, previousElement.takeUnretainedValue(), kAXBoundsChangedNotification as CFString)
-                previousElement.release()
-                observedElementForSelection = nil
-            }
-
             guard let observer = observer else {
                 print("Observer is nil")
                 return
             }
 
             // Find the text element that supports selection
-            let elementToObserve = findElementWithAttribute(element: focusedElement, attribute: kAXSelectedTextRangeAttribute as CFString) ?? focusedElement
+            if let elementToObserve = findElementWithAttribute(element: focusedElement, attribute: kAXSelectedTextRangeAttribute as CFString) {
 
-            // Retain the element
-            let retainedElement = Unmanaged.passRetained(elementToObserve)
-            observedElementForSelection = retainedElement
+                let refCon = Unmanaged.passUnretained(self).toOpaque()
 
-            // Add observer to new element
-            let result1 = AXObserverAddNotification(observer, elementToObserve, kAXSelectedTextChangedNotification as CFString, Unmanaged.passUnretained(self).toOpaque())
-            let result2 = AXObserverAddNotification(observer, elementToObserve, kAXBoundsChangedNotification as CFString, Unmanaged.passUnretained(self).toOpaque())
+                // Add observer to new element
+                let result1 = AXObserverAddNotification(observer, elementToObserve, kAXSelectedTextChangedNotification as CFString, refCon)
+                let result2 = AXObserverAddNotification(observer, elementToObserve, kAXBoundsChangedNotification as CFString, refCon)
 
-            if result1 == .success && result2 == .success {
-                print("Added selection and bounds changed observers to element.")
+                if result1 == .success && result2 == .success {
+                    print("Added selection and bounds changed observers to element.")
+                } else {
+                    print("Failed to add observers. Errors: \(result1.rawValue), \(result2.rawValue)")
+                }
+
+                // Store the selected text
+                selectedText = getSelectedText(from: elementToObserve)
+
+                // Handle initial selection
+                handleHighlightTopEdgeMode(elementToObserve, shouldAnimate: shouldAnimate)
             } else {
-                print("Failed to add observers. Errors: \(result1.rawValue), \(result2.rawValue)")
-                observedElementForSelection?.release()
-                observedElementForSelection = nil
-            }
-
-            // Store the selected text
-            selectedText = getSelectedText(from: elementToObserve)
-
-            // Handle initial selection
-            handleHighlightTopEdgeMode(elementToObserve, shouldAnimate: shouldAnimate)
-        }
-    }
-
-    func findAncestor(element: AXUIElement, role: String) -> AXUIElement? {
-        var currentElement: AXUIElement? = element
-        while let element = currentElement {
-            var roleValue: CFTypeRef?
-            let roleResult = AXUIElementCopyAttributeValue(element, kAXRoleAttribute as CFString, &roleValue)
-            if roleResult == .success, let roleStr = roleValue as? String, roleStr == role {
-                return element
-            }
-            // Get the parent
-            var parentValue: CFTypeRef?
-            let parentResult = AXUIElementCopyAttributeValue(element, kAXParentAttribute as CFString, &parentValue)
-            if parentResult == .success {
-                let parentElement = parentValue as! AXUIElement
-                currentElement = parentElement
-            } else {
-                break
+                print("No element with AXSelectedTextRange found.")
             }
         }
-        return nil
     }
 
     func handleTextFieldMode(for focusedElement: AXUIElement) {
@@ -438,48 +406,55 @@ class Accessibility {
         }
     }
 
-    private func handleHighlightTopEdgeMode(_ focusedElement: AXUIElement, shouldAnimate: Bool = true) {
+    func handleHighlightTopEdgeMode(_ focusedElement: AXUIElement, shouldAnimate: Bool = true) {
         print("Handling highlight in top edge mode...")
+        dispatchPrecondition(condition: .onQueue(.main))
 
-        // Get the role of the focused element for debugging
-        var roleValue: CFTypeRef?
-        let roleResult = AXUIElementCopyAttributeValue(focusedElement, kAXRoleAttribute as CFString, &roleValue)
-        if roleResult == .success, let role = roleValue as? String {
-            print("Focused element role: \(role)")
-        } else {
-            print("Failed to get role of focused element. Error: \(roleResult.rawValue)")
+        // Check if the focused element is valid
+        var elementPid: pid_t = 0
+        let pidResult = AXUIElementGetPid(focusedElement, &elementPid)
+        if pidResult != .success {
+            print("Invalid element (cannot get pid). Skipping.")
+            return
         }
 
-        // Try to get the selected text range
-        var value: CFTypeRef?
-        let result = AXUIElementCopyAttributeValue(focusedElement, kAXSelectedTextRangeAttribute as CFString, &value)
+        // Check if the element supports kAXSelectedTextRangeAttribute
+        var attributeNamesCFArray: CFArray?
+        let namesResult = AXUIElementCopyAttributeNames(focusedElement, &attributeNamesCFArray)
+        if namesResult == .success {
+            let attributeNames = attributeNamesCFArray as! [String]
+            if attributeNames.contains(kAXSelectedTextRangeAttribute as String) {
+                // Proceed to get the selected text range
+                var valueRef: CFTypeRef?
+                let result = AXUIElementCopyAttributeValue(focusedElement, kAXSelectedTextRangeAttribute as CFString, &valueRef)
+                if result != .success {
+                    print("Failed to get selected text range. Error: \(result.rawValue)")
+                    return
+                }
+                let value = valueRef as! AXValue
 
-        if result == .success {
-            let value = value as! AXValue
-            // Get the range
-            var range = CFRange()
-            if AXValueGetValue(value, .cfRange, &range) {
-                print("Selected text range: \(range)")
+                // Get the range
+                var range = CFRange()
+                if AXValueGetValue(value, .cfRange, &range) {
+                    print("Selected text range: \(range)")
 
-                if range.length > 0 {
-                    // Get the bounding rectangle for the selected text
-                    var boundingValue: CFTypeRef?
-                    let paramResult = AXUIElementCopyParameterizedAttributeValue(
-                        focusedElement,
-                        kAXBoundsForRangeParameterizedAttribute as CFString,
-                        value,
-                        &boundingValue
-                    )
+                    if range.length > 0 {
+                        // Get the bounding rectangle for the selected text
+                        var boundingValue: CFTypeRef?
+                        let paramResult = AXUIElementCopyParameterizedAttributeValue(
+                            focusedElement,
+                            kAXBoundsForRangeParameterizedAttribute as CFString,
+                            value,
+                            &boundingValue
+                        )
 
-                    if paramResult == .success {
-                        let boundingValue = boundingValue as! AXValue
-
-                        var boundingRect = CGRect.zero
-                        if AXValueGetValue(boundingValue, .cgRect, &boundingRect) {
-                            print("Bounding rect for selected text: \(boundingRect)")
-                            // Adjust the window position based on the bounding rect
-                            adjustWindowPosition(with: boundingRect)
-                            DispatchQueue.main.async {
+                        if paramResult == .success {
+                            let boundingValue = boundingValue as! AXValue
+                            var boundingRect = CGRect.zero
+                            if AXValueGetValue(boundingValue, .cgRect, &boundingRect) {
+                                print("Bounding rect for selected text: \(boundingRect)")
+                                // Adjust the window position based on the bounding rect
+                                adjustWindowPosition(with: boundingRect)
                                 if shouldAnimate {
                                     self.showWindowWithAnimation()
                                     print("Window shown at selected text position with animation.")
@@ -487,47 +462,49 @@ class Accessibility {
                                     self.showWindowWithoutAnimation()
                                     print("Window shown at selected text position without animation.")
                                 }
+                            } else {
+                                print("Failed to get CGRect from AXValue.")
                             }
                         } else {
-                            print("Failed to get CGRect from AXValue.")
-                        }
-                    } else {
-                        print("Failed to get bounding rect for selected text. Error: \(paramResult.rawValue)")
-                        // Fallback to hiding the window
-                        DispatchQueue.main.async {
+                            print("Failed to get bounding rect for selected text. Error: \(paramResult.rawValue)")
+                            // Fallback to hiding the window
                             self.window?.orderOut(nil)
                             print("Window hidden; unable to get bounding rect.")
                         }
-                    }
-                } else {
-                    // Hide the window if there's no selection
-                    DispatchQueue.main.async {
+                    } else {
+                        // Hide the window if there's no selection
                         self.window?.orderOut(nil)
                         print("Window hidden; no selection.")
                     }
+                } else {
+                    print("Failed to get CFRange from AXValue.")
                 }
             } else {
-                print("Failed to get CFRange from AXValue.")
+                print("Element does not support kAXSelectedTextRangeAttribute.")
+                // Attempt to find a child element that does
+                if let textElement = findElementWithAttribute(element: focusedElement, attribute: kAXSelectedTextRangeAttribute as CFString) {
+                    print("Found child element with AXSelectedTextRange.")
+                    handleHighlightTopEdgeMode(textElement)
+                } else {
+                    print("No element with AXSelectedTextRange found in focused element.")
+                }
             }
         } else {
-            print("Failed to get selected text range. Error: \(result.rawValue)")
-            // Attempt to find a child element that has AXSelectedTextRange
-            if let textElement = findElementWithAttribute(element: focusedElement, attribute: kAXSelectedTextRangeAttribute as CFString) {
-                print("Found child element with AXSelectedTextRange.")
-                handleHighlightTopEdgeMode(textElement)
-            } else {
-                print("No element with AXSelectedTextRange found in focused element.")
-            }
+            print("Failed to get attribute names. Error: \(namesResult.rawValue)")
+            return
         }
     }
 
     func getSelectedText(from focusedElement: AXUIElement) -> String? {
+        // Ensure we're on the main thread
+        dispatchPrecondition(condition: .onQueue(.main))
+
         // 1. Get the selected text range attribute
         var selectedRangeValue: CFTypeRef?
         let result = AXUIElementCopyAttributeValue(focusedElement, kAXSelectedTextRangeAttribute as CFString, &selectedRangeValue)
 
         guard result == .success else {
-            print("Failed to get the selected text range.")
+            print("Failed to get the selected text range. Error: \(result.rawValue)")
             return nil
         }
 
@@ -571,22 +548,23 @@ class Accessibility {
     }
 
     func handleSelectionChange(for element: AXUIElement) {
-        // Check if the element comes from our own process
+        // Ensure we're on the main thread
+        dispatchPrecondition(condition: .onQueue(.main))
+
+        // Check if the element is valid
         var elementPid: pid_t = 0
         let pidResult = AXUIElementGetPid(element, &elementPid)
-        if pidResult == .success {
-            if elementPid == getpid() {
-                print("Ignoring selection change from our own process.")
-                return
-            }
-        } else {
-            print("Failed to get pid of element. Error: \(pidResult.rawValue)")
+        if pidResult != .success {
+            print("Invalid element (cannot get pid). Skipping.")
+            return
+        }
+        if elementPid == getpid() {
+            print("Ignoring selection change from our own process.")
+            return
         }
 
         guard mode == .highlightTopEdgeMode else { return }
         handleHighlightTopEdgeMode(element, shouldAnimate: true)
-
-        selectedTextElement = element
 
         // Store the selected text when the selection changes
         selectedText = getSelectedText(from: element)
@@ -603,7 +581,7 @@ class Accessibility {
             }
 
             guard let currentScreen = NSScreen.main else {
-                print("NO main screen found")
+                print("No main screen found.")
                 return
             }
 
@@ -671,32 +649,47 @@ class Accessibility {
         return nil
     }
 
-    func findElementWithAttribute(element: AXUIElement, attribute: CFString) -> AXUIElement? {
-        // Get the attribute names of the element
-        var attributeNamesCFArray: CFArray?
-        let namesResult = AXUIElementCopyAttributeNames(element, &attributeNamesCFArray)
-        if namesResult == .success, let namesCFArray = attributeNamesCFArray {
-            // Cast CFArray to [String]
-            let names = namesCFArray as NSArray as! [String]
-            if names.contains(attribute as String) {
-                return element
+    func findElementWithAttribute(element: AXUIElement, attribute: CFString, maxDepth: Int = 5) -> AXUIElement? {
+        func helper(currentElement: AXUIElement, currentDepth: Int) -> AXUIElement? {
+            if currentDepth > maxDepth {
+                return nil
             }
-        }
-        
-        // Get the children of the element
-        var childrenValue: CFTypeRef?
-        let childrenResult = AXUIElementCopyAttributeValue(element, kAXChildrenAttribute as CFString, &childrenValue)
-        if childrenResult == .success {
-            let childrenCFArray = childrenValue as! CFArray
-            // Cast CFArray to [AXUIElement]
-            let children = childrenCFArray as NSArray as! [AXUIElement]
-            for child in children {
-                if let foundElement = findElementWithAttribute(element: child, attribute: attribute) {
-                    return foundElement
+
+            // Check if the element is valid
+            var elementPid: pid_t = 0
+            let pidResult = AXUIElementGetPid(currentElement, &elementPid)
+            if pidResult != .success {
+                print("Invalid element (cannot get pid). Skipping.")
+                return nil
+            }
+
+            // Attempt to get the attribute names
+            var attributeNamesCFArray: CFArray?
+            let namesResult = AXUIElementCopyAttributeNames(currentElement, &attributeNamesCFArray)
+            if namesResult == .success, let namesArray = attributeNamesCFArray as? [String] {
+                if namesArray.contains(attribute as String) {
+                    return currentElement
                 }
+
+                // Get children
+                var childrenValue: CFTypeRef?
+                let childrenResult = AXUIElementCopyAttributeValue(currentElement, kAXChildrenAttribute as CFString, &childrenValue)
+                if childrenResult == .success, let childrenArray = childrenValue as? [AXUIElement] {
+                    for child in childrenArray {
+                        if let foundElement = helper(currentElement: child, currentDepth: currentDepth + 1) {
+                            return foundElement
+                        }
+                    }
+                } else {
+                    print("Failed to get children or no children. Error: \(childrenResult.rawValue)")
+                }
+            } else {
+                print("Failed to get attribute names for element. Skipping. Error: \(namesResult.rawValue)")
             }
+            return nil
         }
-        return nil
+
+        return helper(currentElement: element, currentDepth: 0)
     }
 
     func showWindowWithAnimation() {
@@ -745,16 +738,35 @@ class Accessibility {
     }
 
     func insertText(_ textToInsert: String) {
-        guard let element = selectedTextElement else {
-            print("No element stored to insert text into.")
+        // Ensure we're on the main thread
+        dispatchPrecondition(condition: .onQueue(.main))
+
+        // Get the system-wide element
+        let systemElement = AXUIElementCreateSystemWide()
+
+        // Get the focused UI element
+        var focusedElementRef: CFTypeRef?
+        let result = AXUIElementCopyAttributeValue(systemElement, kAXFocusedUIElementAttribute as CFString, &focusedElementRef)
+
+        guard result == .success else {
+            print("Failed to get focused UI element. Error: \(result.rawValue)")
             return
         }
 
+        let element = focusedElementRef as! AXUIElement
+
+        // Check if the element is valid
+        var elementPid: pid_t = 0
+        let pidResult = AXUIElementGetPid(element, &elementPid)
+        if pidResult != .success {
+            print("Invalid focused element (cannot get pid). Skipping.")
+            return
+        }
+
+        // Proceed with inserting text into 'element'
         // Check if the element supports kAXValueAttribute and it's settable
         var isSettable: DarwinBoolean = false
         let isSettableResult = AXUIElementIsAttributeSettable(element, kAXValueAttribute as CFString, &isSettable)
-
-        print("AXValueAttribute is settable: \(isSettable.boolValue)")
 
         if isSettableResult == .success && isSettable.boolValue {
             // Retrieve the current value
@@ -762,14 +774,13 @@ class Accessibility {
             let valueResult = AXUIElementCopyAttributeValue(element, kAXValueAttribute as CFString, &valueRef)
 
             if valueResult == .success, let currentValue = valueRef as? String {
-                print("Current value before insertion: \(currentValue)")
-
                 // Get the selected text range
                 var selectedRangeRef: CFTypeRef?
                 let rangeResult = AXUIElementCopyAttributeValue(element, kAXSelectedTextRangeAttribute as CFString, &selectedRangeRef)
 
                 if rangeResult == .success {
                     let selectedRangeValue = selectedRangeRef as! AXValue
+
                     // Get the range
                     var range = CFRange()
                     if AXValueGetValue(selectedRangeValue, .cfRange, &range) {
@@ -797,34 +808,6 @@ class Accessibility {
         } else {
             print("Element's value attribute is not settable or failed to check. Error: \(isSettableResult.rawValue)")
         }
-    }
-
-    func findTextInputElement(startingFrom element: AXUIElement) -> AXUIElement? {
-        // Check if the element supports kAXValueAttribute and kAXSelectedTextRangeAttribute
-        var attributeNames: CFArray?
-        let result = AXUIElementCopyAttributeNames(element, &attributeNames)
-
-        if result == .success, let attributeNames = attributeNames as? [String] {
-            if attributeNames.contains(kAXValueAttribute as String),
-               attributeNames.contains(kAXSelectedTextRangeAttribute as String) {
-                return element
-            }
-        }
-
-        // If not, check its children
-        var childrenValue: CFTypeRef?
-        let childrenResult = AXUIElementCopyAttributeValue(element, kAXChildrenAttribute as CFString, &childrenValue)
-
-        if childrenResult == .success, let children = childrenValue as? [AXUIElement] {
-            for child in children {
-                if let textInputElement = findTextInputElement(startingFrom: child) {
-                    return textInputElement
-                }
-            }
-        }
-
-        // If the element has no children or none of the children is a text input element, return nil
-        return nil
     }
 }
 #endif

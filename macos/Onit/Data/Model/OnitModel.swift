@@ -27,7 +27,6 @@ import Sparkle
     }
 }
 
-
 extension String {
     static let selectedModel = "SelectedModel"
 }

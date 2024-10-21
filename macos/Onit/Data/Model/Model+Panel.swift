@@ -8,6 +8,7 @@
 import SwiftUI
 
 extension OnitModel: NSWindowDelegate {
+    @MainActor
     func showPanel() {
         #if !targetEnvironment(simulator)
         setInput(Accessibility.input)
@@ -71,6 +72,7 @@ extension OnitModel: NSWindowDelegate {
         self.panel = nil
     }
 
+    @MainActor
     func togglePanel() {
         if panel != nil {
             closePanel()

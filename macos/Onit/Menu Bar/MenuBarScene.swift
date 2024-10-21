@@ -8,13 +8,19 @@
 import SwiftUI
 
 struct MenuBarScene: Scene {
+    @Environment(\.model) var model
+
     var body: some Scene {
+        @Bindable var model = model
+
         MenuBarExtra {
             MenuBarContent()
         } label: {
-            label
+            Image(.smirk)
         }
         .menuBarExtraStyle(.window)
+        .menuBarExtraAccess(isPresented: $model.showMenuBarExtra)
+        .commands { }
     }
 
     var label: some View {
