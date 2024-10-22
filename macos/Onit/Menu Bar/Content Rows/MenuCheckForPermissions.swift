@@ -8,12 +8,16 @@
 import SwiftUI
 
 struct MenuCheckForPermissions: View {
+    @Environment(\.model) var model
+
     let circleHeight: CGFloat = 5
     let link = "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility"
 
     var body: some View {
-        permissionsRow
-        MenuDivider()
+        if !model.trusted {
+            permissionsRow
+            MenuDivider()
+        }
     }
 
     var permissionsRow: some View {
