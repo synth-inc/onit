@@ -10,12 +10,14 @@ import SageKit
 import SwiftData
 import Sparkle
 
+@MainActor
 @Observable class OnitModel: NSObject {
     var showMenuBarExtra: Bool = false
     var generationState: GenerationState = .idle
     var panel: CustomPanel? = nil
     var input: Input? = nil
     var textFocusTrigger = false
+    var isOpeningSettings = false
 
     var generateTask: Task<Void, Never>? = nil
 

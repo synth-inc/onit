@@ -16,7 +16,10 @@ struct MenuSettings: View {
 
     var body: some View {
         MenuBarRow {
-            openSettings()
+            NSApp.activate()
+            if NSApp.isActive {
+                openSettings()
+            }
         } leading: {
             Text("Settings...")
                 .padding(.horizontal, 10)

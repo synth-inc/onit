@@ -14,6 +14,7 @@ struct App: SwiftUI.App {
     @Environment(\.model) var model
 
     init() {
+
         KeyboardShortcuts.onKeyUp(for: .launch) { [weak model] in
             model?.togglePanel()
         }
@@ -24,6 +25,7 @@ struct App: SwiftUI.App {
         Accessibility.setupWindow(withView: OnitPromptView())
         Accessibility.observeActiveApplication()
         #endif
+
     }
 
     var body: some Scene {
