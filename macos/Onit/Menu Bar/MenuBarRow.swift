@@ -10,7 +10,7 @@ import SwiftUI
 struct MenuBarRow<Leading: View, Trailing: View>: View {
     @Environment(\.model) var model
 
-    var type: MenuBarRowType
+    var action: () -> Void
     var leading: Leading
     var trailing: Trailing
 
@@ -19,43 +19,20 @@ struct MenuBarRow<Leading: View, Trailing: View>: View {
         @ViewBuilder leading: () -> Leading,
         @ViewBuilder trailing: () -> Trailing
     ) {
-        self.type = .button(action)
+        self.action = action
         self.leading = leading()
         self.trailing = trailing()
-    }
-
-    init(
-        _ type: MenuBarRowType,
-        @ViewBuilder leading: () -> Leading,
-        @ViewBuilder trailing: () -> Trailing
-    ) {
-        self.type = type
-        self.leading = leading()
-        self.trailing = trailing()
-    }
-
-    enum MenuBarRowType {
-        case button(() -> Void)
-        case settings
     }
 
     var body: some View {
-        switch type {
-        case .button(let action):
-            Button {
-                action()
-                @Bindable var model = model
-                model.showMenuBarExtra = false
-            } label: {
-                label
-            }
-            .buttonStyle(MenuButtonStyle())
-        case .settings:
-            SettingsLink {
-                label
-            }
-            .buttonStyle(MenuButtonStyle())
+        Button {
+            action()
+            @Bindable var model = model
+            model.showMenuBarExtra = false
+        } label: {
+            label
         }
+        .buttonStyle(MenuButtonStyle())
     }
 
     var label: some View {

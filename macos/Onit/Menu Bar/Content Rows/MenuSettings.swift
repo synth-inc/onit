@@ -8,12 +8,16 @@
 import SwiftUI
 
 struct MenuSettings: View {
+    @Environment(\.openSettings) var openSettings
+
     var shortcut: KeyboardShortcut {
         KeyboardShortcut(",")
     }
 
     var body: some View {
-        MenuBarRow(.settings) {
+        MenuBarRow {
+            openSettings()
+        } leading: {
             Text("Settings...")
                 .padding(.horizontal, 10)
         } trailing: {
