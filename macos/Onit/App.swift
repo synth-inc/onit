@@ -34,7 +34,7 @@ struct App: SwiftUI.App {
         MenuBarExtra {
             MenuBarContent()
         } label: {
-            Image(.smirk)
+            MenuIcon()
         }
         .menuBarExtraStyle(.window)
         .menuBarExtraAccess(isPresented: $model.showMenuBarExtra)

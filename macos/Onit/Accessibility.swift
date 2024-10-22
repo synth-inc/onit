@@ -6,6 +6,7 @@
 
 import ApplicationServices
 import SwiftUI
+import Combine
 
 enum AccessibilityMode {
     case textfieldMode
@@ -47,6 +48,10 @@ class Accessibility {
         } else {
             print("Accessibility Trusted!")
         }
+    }
+
+    static var trusted: Bool {
+        AXIsProcessTrusted()
     }
 
     @MainActor
@@ -192,13 +197,13 @@ class Accessibility {
         }
 
         switch notification {
-        case kAXFocusedUIElementChangedNotification as String:
+        case kAXFocusedUIElementChangedNotification:
             handleFocusChange(for: element)
-        case kAXSelectedTextChangedNotification as String:
+        case kAXSelectedTextChangedNotification:
             handleSelectionChange(for: element)
-        case kAXBoundsChangedNotification as String:
+        case kAXBoundsChangedNotification:
             handleBoundsChanged(for: element)
-        case kAXValueChangedNotification as String:
+        case kAXValueChangedNotification:
             handleValueChanged(for: element)
         default:
             break

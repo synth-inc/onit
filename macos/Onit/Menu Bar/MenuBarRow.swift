@@ -17,7 +17,7 @@ struct MenuBarRow<Leading: View, Trailing: View>: View {
     init(
         action: @escaping () -> Void,
         @ViewBuilder leading: () -> Leading,
-        @ViewBuilder trailing: () -> Trailing
+        @ViewBuilder trailing: () -> Trailing = { EmptyView() }
     ) {
         self.action = action
         self.leading = leading()

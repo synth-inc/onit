@@ -10,6 +10,7 @@ import SwiftUI
 struct MenuBarContent: View {
     var body: some View {
         VStack(spacing: 5) {
+            MenuCheckForPermissions()
             MenuOpenOnitButton()
             MenuDivider()
             MenuAppearsInPicker()

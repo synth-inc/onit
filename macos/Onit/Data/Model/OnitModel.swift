@@ -9,6 +9,7 @@ import SwiftUI
 import SageKit
 import SwiftData
 import Sparkle
+import Combine
 
 @MainActor
 @Observable class OnitModel: NSObject {
@@ -19,6 +20,9 @@ import Sparkle
     var textFocusTrigger = false
     var isOpeningSettings = false
 
+    var trusted: Bool = true
+    private var trustedTimer: AnyCancellable?
+
     var generateTask: Task<Void, Never>? = nil
 
     var client = FetchingClient()
@@ -26,6 +30,18 @@ import Sparkle
 
     override init() {
         super.init()
+        startTrustedTimer()
+    }
+
+    func startTrustedTimer() {
+        trustedTimer = Timer.publish(every: 1.0, on: .main, in: .common)
+            .autoconnect()
+            .sink { [weak self] _ in
+                let currentStatus = Accessibility.trusted
+                if self?.trusted != currentStatus {
+                    self?.trusted = currentStatus
+                }
+            }
     }
 }
 
