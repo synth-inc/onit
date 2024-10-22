@@ -11,11 +11,6 @@ import KeyboardShortcuts
 struct Toolbar: View {
     @Environment(\.model) var model
 
-//    var recordedShortcut: KeyboardShortcut? {
-//        let shortcut = KeyboardShortcuts.Shortcut(name: .launch)?.native
-//        return shortcut
-//    }
-
     var body: some View {
         HStack(spacing: 4) {
             esc
@@ -45,6 +40,8 @@ struct Toolbar: View {
         .buttonStyle(HoverableButtonStyle())
     }
 
+    // We create this so that the esc button has a different
+    // effect when clicked vs keyboard shortcut
     var escListener: some View {
         Button {
             switch model.generationState {
@@ -122,9 +119,10 @@ struct Toolbar: View {
         .buttonStyle(HoverableButtonStyle())
     }
 
+    @Environment(\.openSettings) var openSettings
     var settings: some View {
         Button {
-
+            openSettings()
         } label: {
             Image(.settingsCog)
                 .renderingMode(.template)

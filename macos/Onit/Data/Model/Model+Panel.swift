@@ -18,12 +18,13 @@ extension OnitModel: NSWindowDelegate {
         if let existingPanel = panel, existingPanel.isVisible {
             existingPanel.makeKeyAndOrderFront(nil)
             existingPanel.orderFrontRegardless()
+            NSApp.activate()
             return
         }
 
         let newPanel = CustomPanel(
             contentRect: NSRect(x: 0, y: 0, width: 400, height: 300),
-            styleMask: [.resizable, .nonactivatingPanel, .fullSizeContentView],
+            styleMask: [.resizable, .fullSizeContentView],
             backing: .buffered,
             defer: false
         )
@@ -64,6 +65,7 @@ extension OnitModel: NSWindowDelegate {
 
         newPanel.makeKeyAndOrderFront(nil)
         newPanel.orderFrontRegardless()
+        NSApp.activate()
     }
 
     func closePanel() {
