@@ -18,7 +18,8 @@ struct TextInputView: View {
             textField
             sendButton
         }
-        .padding(.vertical, 12)
+        .padding(.top, 4)
+        .padding(.bottom, 12)
         .padding(.horizontal, 16)
     }
 

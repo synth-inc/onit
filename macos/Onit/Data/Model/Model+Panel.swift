@@ -82,7 +82,7 @@ extension OnitModel: NSWindowDelegate {
     }
 
     func windowDidResignKey(_ notification: Notification) {
-        closePanel()
+//        closePanel()
     }
 }
 

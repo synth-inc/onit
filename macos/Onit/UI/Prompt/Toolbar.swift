@@ -120,7 +120,6 @@ struct Toolbar: View {
     }
 
     @Environment(\.openSettings) var openSettings
-    @State var obs = Obs()
     var settings: some View {
         Button {
             NSApp.activate()
@@ -133,14 +132,6 @@ struct Toolbar: View {
                 .padding(2)
         }
         .buttonStyle(HoverableButtonStyle())
-    }
-}
-
-@Observable class Obs {
-    var notificationObserver: NSObjectProtocol?
-
-    func openSettings() {
-        NSApp.sendAction(Selector(("showPreferencesWindow:")), to: nil, from: nil)
     }
 }
 

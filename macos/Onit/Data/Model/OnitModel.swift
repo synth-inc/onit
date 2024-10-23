@@ -12,16 +12,20 @@ import Sparkle
 import Combine
 
 @MainActor
-@Observable class OnitModel: NSObject {
+@Observable
+class OnitModel: NSObject {
     var showMenuBarExtra: Bool = false
     var generationState: GenerationState = .idle
     var panel: CustomPanel? = nil
     var input: Input? = nil
+    var context: [URL] = []
     var textFocusTrigger = false
     var isOpeningSettings = false
 
     var trusted: Bool = true
     private var trustedTimer: AnyCancellable?
+
+    var droppedItems = [(image: NSImage, filename: String)]()
 
     var generateTask: Task<Void, Never>? = nil
 

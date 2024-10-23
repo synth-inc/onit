@@ -4,7 +4,7 @@
 //  Created by Benjamin Sage on 10/2/24.
 //
 
-import ApplicationServices
+@preconcurrency import ApplicationServices
 import SwiftUI
 import Combine
 
@@ -14,6 +14,7 @@ enum AccessibilityMode {
 }
 
 #if !targetEnvironment(simulator)
+@MainActor
 class Accessibility {
     var selectedText: String?
     var currentSource: String?
@@ -123,7 +124,7 @@ class Accessibility {
             object: nil,
             queue: nil
         ) { [weak self] notification in
-            DispatchQueue.main.async {
+            Task { @MainActor in
                 guard let self = self else { return }
                 if let app = notification.userInfo?[NSWorkspace.applicationUserInfoKey] as? NSRunningApplication {
                     // Skip if the activated app is our own app
@@ -147,7 +148,7 @@ class Accessibility {
             object: nil,
             queue: nil
         ) { [weak self] notification in
-            DispatchQueue.main.async {
+            Task { @MainActor in
                 guard let self = self else { return }
                 if let app = notification.userInfo?[NSWorkspace.applicationUserInfoKey] as? NSRunningApplication {
                     print("\nApplication deactivated: \(app.localizedName ?? "Unknown")")

@@ -8,15 +8,13 @@
 import SwiftUI
 
 struct ContentView: View {
-    @Environment(\.model) var model
+    @State private var isDragging = false
 
     var body: some View {
         VStack(spacing: 0) {
             Toolbar()
-            divider
-            input
-            TextInputView()
-            content
+            PromptDivider()
+            PromptView()
         }
         .background(Color.black)
         .buttonStyle(.plain)
@@ -27,33 +25,6 @@ struct ContentView: View {
         }
     }
 
-    @ViewBuilder
-    var input: some View {
-        if let input = model.input {
-            InputView(input: input)
-        }
-    }
-
-    @ViewBuilder
-    var content: some View {
-        switch model.generationState {
-        case .generating:
-            divider
-            GeneratingView()
-        case .generated(let result):
-            divider
-            GeneratedView(result: result)
-        case .error(let error):
-            GeneratedErrorView(error: error)
-        default:
-            EmptyView()
-        }
-    }
-
-    var divider: some View {
-        Color.gray600
-            .frame(height: 1)
-    }
 }
 
 #Preview {

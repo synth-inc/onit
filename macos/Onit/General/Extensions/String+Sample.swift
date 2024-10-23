@@ -8,5 +8,5 @@
 import SwiftUI
 
 extension LocalizedStringKey {
-    static let sample = LocalizedStringKey("I'm a sample string.")
+    @MainActor static let sample = LocalizedStringKey("I'm a sample string.")
 }

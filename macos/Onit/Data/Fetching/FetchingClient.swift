@@ -7,7 +7,7 @@
 
 import Foundation
 
-class FetchingClient {
+actor FetchingClient {
     var baseURL: URL {
         URL(string: "https://onit-server-b3c3746e04e9.herokuapp.com")!
     }
