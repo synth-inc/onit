@@ -1,7 +1,12 @@
 import { Request, Response, NextFunction } from 'express';
 import OpenAI from 'openai';
+import multer from 'multer';
 import { CustomError } from '@utils/CustomError';
 import { ChatCompletionMessageParam } from 'openai/resources/chat/completions';
+import fs from 'fs';
+import path from 'path';
+
+const upload = multer({ dest: 'uploads/' });
 
 const processInput = async (
     req: Request,
@@ -10,6 +15,7 @@ const processInput = async (
 ): Promise<void> => {
     const { instructions, input, model } = req.body;
     const { application, selectedText } = input || {};
+    const uploadedFiles = req.files as Express.Multer.File[];
 
     if (!instructions) {
         throw new CustomError('Instructions are required', 400);
@@ -19,12 +25,30 @@ const processInput = async (
 
     try {
         let messages: ChatCompletionMessageParam[] = [];
+        let fileContents = '';
+
+        // Loop through each uploaded file and append its content
+        if (uploadedFiles && uploadedFiles.length > 0) {
+            for (const file of uploadedFiles) {
+                const filePath = path.join(__dirname, '..', file.path);
+                const fileContent = fs.readFileSync(filePath, 'utf-8');
+
+                fileContents += `\n\nFile: ${file.originalname}\nContent:\n${fileContent}`;
+
+                // Clean up the temporary file
+                fs.unlinkSync(filePath);
+            }
+        }
 
         if (application && input) {
             let userMessage = instructions;
 
             if (selectedText) {
                 userMessage += `\n\nText:\n${selectedText}`;
+            }
+
+            if (fileContents) {
+                userMessage += fileContents;
             }
 
             messages = [
@@ -38,6 +62,12 @@ const processInput = async (
                 },
             ];
         } else {
+            let userMessage = instructions;
+            
+            if (fileContents) {
+                userMessage += fileContents;
+            }
+
             messages = [
                 {
                     role: 'system',
@@ -45,7 +75,7 @@ const processInput = async (
                 },
                 {
                     role: 'user',
-                    content: instructions,
+                    content: userMessage,
                 },
             ];
         }
@@ -62,4 +92,4 @@ const processInput = async (
     }
 };
 
-export default { processInput };
+export default { processInput, upload };
