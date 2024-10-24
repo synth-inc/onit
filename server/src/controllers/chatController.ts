@@ -13,6 +13,9 @@ const processInput = async (
     res: Response,
     next: NextFunction
 ): Promise<void> => {
+    console.log('Received req.body:', req.body);
+    console.log('Received req.files:', req.files);    
+
     const { instructions } = req.body;
     let { input, model } = req.body
     const uploadedFiles = req.files as Express.Multer.File[];
@@ -27,21 +30,29 @@ const processInput = async (
         let messages: ChatCompletionMessageParam[] = [];
         let fileContents = '';
 
-        if (input && typeof input === 'string') {
+        if (input && typeof input === 'string' && input.trim() !== '') {
             try {
                 input = JSON.parse(input);
             } catch (parseError) {
                 throw new CustomError('Invalid JSON in "input" field', 400);
             }
+        } else {
+            input = null;
         }
 
-        if (model && typeof model === 'string') {
+        if (model && typeof model === 'string' && model.trim() !== '') {
             try {
                 model = JSON.parse(model);
             } catch (parseError) {
                 throw new CustomError('Invalid JSON in "model" field', 400);
             }
+        } else {
+            model = null;
         }
+
+        if (!instructions || typeof instructions !== 'string' || instructions.trim() === '') {
+            throw new CustomError('Instructions are required and cannot be empty', 400);
+        }        
 
         const { application, selectedText } = input || {};
 
