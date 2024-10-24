@@ -40,16 +40,10 @@ const processInput = async (
             input = null;
         }
 
-        if (model && typeof model === 'string' && model.trim() !== '') {
-            try {
-                model = JSON.parse(model);
-            } catch (parseError) {
-                throw new CustomError('Invalid JSON in "model" field', 400);
-            }
-        } else {
-            model = null;
+        if (!model || typeof model !== 'string' || model.trim() === '') {
+            model = 'gpt-4o';
         }
-
+        
         if (!instructions || typeof instructions !== 'string' || instructions.trim() === '') {
             throw new CustomError('Instructions are required and cannot be empty', 400);
         }        
