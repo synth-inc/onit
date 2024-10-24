@@ -50,16 +50,15 @@ const processInput = async (
 
         const { application, selectedText } = input || {};
 
-        // Loop through each uploaded file and append its content
         if (uploadedFiles && uploadedFiles.length > 0) {
             for (const file of uploadedFiles) {
-                const filePath = path.join(__dirname, '..', file.path);
-                const fileContent = fs.readFileSync(filePath, 'utf-8');
+                console.log('Reading file at path:', file.path);
+                const fileContent = fs.readFileSync(file.path, 'utf-8');
 
                 fileContents += `\n\nFile: ${file.originalname}\nContent:\n${fileContent}`;
 
                 // Clean up the temporary file
-                fs.unlinkSync(filePath);
+                fs.unlinkSync(file.path);
             }
         }
 
