@@ -13,8 +13,8 @@ const processInput = async (
     res: Response,
     next: NextFunction
 ): Promise<void> => {
-    const { instructions, input, model } = req.body;
-    const { application, selectedText } = input || {};
+    const { instructions } = req.body;
+    let { input, model } = req.body
     const uploadedFiles = req.files as Express.Multer.File[];
 
     if (!instructions) {
@@ -26,6 +26,24 @@ const processInput = async (
     try {
         let messages: ChatCompletionMessageParam[] = [];
         let fileContents = '';
+
+        if (input && typeof input === 'string') {
+            try {
+                input = JSON.parse(input);
+            } catch (parseError) {
+                throw new CustomError('Invalid JSON in "input" field', 400);
+            }
+        }
+
+        if (model && typeof model === 'string') {
+            try {
+                model = JSON.parse(model);
+            } catch (parseError) {
+                throw new CustomError('Invalid JSON in "model" field', 400);
+            }
+        }
+
+        const { application, selectedText } = input || {};
 
         // Loop through each uploaded file and append its content
         if (uploadedFiles && uploadedFiles.length > 0) {
