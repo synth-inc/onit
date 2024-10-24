@@ -13,11 +13,11 @@ extension OnitModel {
     }
 
     func addContext(urls: [URL]) {
-        context.append(contentsOf: urls)
+        context += urls.map(Context.init)
     }
 
-    func removeContext(url: URL) {
-        context.removeAll { $0 == url }
+    func removeContext(context: Context) {
+        self.context.removeAll { $0 == context }
     }
 
     func focusText() {

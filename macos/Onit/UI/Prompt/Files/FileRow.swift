@@ -30,7 +30,7 @@ struct FileRow: View {
     }
 
     var emptyContext: some View {
-        ContextItem(item: URL(fileURLWithPath: ""))
+        ContextItem(item: .file(URL(fileURLWithPath: "")))
             .opacity(0)
             .overlay(alignment: .leading) {
                 Text("Add file")

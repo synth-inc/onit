@@ -18,7 +18,7 @@ class OnitModel: NSObject {
     var generationState: GenerationState = .idle
     var panel: CustomPanel? = nil
     var input: Input? = nil
-    var context: [URL] = []
+    var context: [Context] = []
     var textFocusTrigger = false
     var isOpeningSettings = false
 

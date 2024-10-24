@@ -8,9 +8,9 @@
 import Foundation
 
 extension FetchingClient {
-    func chat(_ text: String, input: Input?, model: GPTModel?) async throws -> String {
+    func chat(_ text: String, input: Input?, model: GPTModel?, files: [URL]) async throws -> String {
         let endpoint = ChatEndpoint(instructions: text, input: input, model: model)
-        let response = try await execute(endpoint)
+        let response = try await executeMultipart(endpoint, files: files)
         return response.output
     }
 }

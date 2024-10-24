@@ -10,7 +10,7 @@ import SwiftUI
 struct ContextItem: View {
     @Environment(\.model) var model
 
-    var item: URL
+    var item: Context
 
     var imageRect: RoundedRectangle {
         .rect(cornerRadius: 3)
@@ -32,10 +32,13 @@ struct ContextItem: View {
 
     @ViewBuilder
     var image: some View {
-        if isImageFile {
+        switch item {
+        case .image:
             imageImage
-        } else {
+        case .file:
             fileImage
+        default:
+            warningImage
         }
     }
 
@@ -49,7 +52,7 @@ struct ContextItem: View {
         Color.clear
             .frame(width: 16, height: 16)
             .overlay {
-                Image(nsImage: NSImage(byReferencing: item))
+                Image(nsImage: NSImage(byReferencing: item.url))
                     .resizable()
                     .scaledToFill()
             }
@@ -60,19 +63,38 @@ struct ContextItem: View {
             }
     }
 
+    var warningImage: some View {
+        Image(.warning)
+            .resizable()
+            .frame(width: 16, height: 16)
+    }
+
     var text: some View {
         HStack(spacing: 2) {
-            Text(item.lastPathComponent)
+            Text(name)
                 .foregroundStyle(.white)
-            Text(fileType)
-                .foregroundStyle(.gray200)
+            if let fileType = item.fileType {
+                Text(fileType)
+                    .foregroundStyle(.gray200)
+            }
         }
         .appFont(.medium13)
     }
 
+    var name: String {
+        switch item {
+        case .image(let url), .file(let url):
+            url.lastPathComponent
+        case .error(_, let error):
+            error.localizedDescription
+        case .tooBig:
+            "Upload exceeds model limit"
+        }
+    }
+
     var xButton: some View {
         Button {
-            model.removeContext(url: item)
+            model.removeContext(context: item)
         } label: {
             Color.clear
                 .frame(width: 16, height: 16)
@@ -81,18 +103,9 @@ struct ContextItem: View {
                 }
         }
     }
-
-    var isImageFile: Bool {
-        let imageExtensions = ["png", "jpg", "jpeg", "gif", "tiff", "bmp"]
-        return imageExtensions.contains(item.pathExtension.lowercased())
-    }
-
-    var fileType: String {
-        isImageFile ? "Img" : "file"
-    }
 }
 
 #Preview {
-    ContextItem(item: URL(fileURLWithPath: ""))
+    ContextItem(item: .file(URL(fileURLWithPath: "")))
         .environment(OnitModel())
 }
