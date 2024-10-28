@@ -88,6 +88,7 @@ struct TextInputView: View {
             if historyIndex + 1 < prompts.count {
                 historyIndex += 1
                 instructions = prompts[historyIndex].text
+                model.input = prompts[historyIndex].input
             }
         } label: {
             EmptyView()
@@ -100,9 +101,12 @@ struct TextInputView: View {
             if historyIndex > 0 {
                 historyIndex -= 1
                 instructions = prompts[historyIndex].text
+                model.input = prompts[historyIndex].input
             } else if historyIndex == 0 {
                 historyIndex = -1
                 instructions = ""
+                model.input = nil
+                focused = true
             }
         } label: {
             EmptyView()
