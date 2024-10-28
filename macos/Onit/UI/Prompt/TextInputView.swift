@@ -67,6 +67,7 @@ struct TextInputView: View {
                 .padding(3)
         }
         .buttonStyle(.plain)
+        .disabled(instructions.isEmpty)
         .keyboardShortcut(.return, modifiers: [])
     }
 }

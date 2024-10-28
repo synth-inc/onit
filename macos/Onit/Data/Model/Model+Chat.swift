@@ -12,6 +12,7 @@ extension OnitModel {
         cancelGenerate()
         generateTask = Task { [weak self] in
             guard let self = self else { return }
+
             self.generationState = .generating
             let files = context.files
 
