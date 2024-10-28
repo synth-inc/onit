@@ -8,6 +8,17 @@
 import Foundation
 
 extension OnitModel {
+    func save(_ text: String) {
+        let prompt = Prompt(input: input, text: text, timestamp: Date())
+        let modelContext = container.mainContext
+        modelContext.insert(prompt)
+        do {
+            try modelContext.save()
+        } catch {
+            print(error.localizedDescription)
+        }
+    }
+
     func generate(_ text: String) {
         cancelGenerate()
         generateTask = Task { [weak self] in

@@ -6,12 +6,17 @@
 //
 
 import SwiftUI
+import SwiftData
 
 struct TextInputView: View {
     @Environment(\.model) var model
 
     @AppStorage("instructions") private var instructions = ""
     @FocusState var focused: Bool
+
+    @Query(sort: \Prompt.timestamp, order: .reverse) private var prompts: [Prompt]
+
+    @State private var historyIndex = -1
 
     var body: some View {
         HStack {
@@ -21,6 +26,10 @@ struct TextInputView: View {
         .padding(.top, 4)
         .padding(.bottom, 12)
         .padding(.horizontal, 16)
+        .background {
+            upListener
+            downListener
+        }
     }
 
     var textField: some View {
@@ -59,6 +68,7 @@ struct TextInputView: View {
     var sendButton: some View {
         Button {
             focused = false
+            model.save(instructions)
             model.generate(instructions)
         } label: {
             Image(.circleArrowUp)
@@ -69,6 +79,35 @@ struct TextInputView: View {
         .buttonStyle(.plain)
         .disabled(instructions.isEmpty)
         .keyboardShortcut(.return, modifiers: [])
+    }
+
+    var upListener: some View {
+        Button {
+            guard !prompts.isEmpty else { return }
+
+            if historyIndex + 1 < prompts.count {
+                historyIndex += 1
+                instructions = prompts[historyIndex].text
+            }
+        } label: {
+            EmptyView()
+        }
+        .keyboardShortcut(.upArrow, modifiers: [])
+    }
+
+    var downListener: some View {
+        Button {
+            if historyIndex > 0 {
+                historyIndex -= 1
+                instructions = prompts[historyIndex].text
+            } else if historyIndex == 0 {
+                historyIndex = -1
+                instructions = ""
+            }
+        } label: {
+            EmptyView()
+        }
+        .keyboardShortcut(.downArrow, modifiers: [])
     }
 }
 
