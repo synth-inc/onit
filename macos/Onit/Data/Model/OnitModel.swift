@@ -11,9 +11,9 @@ import SwiftData
 import Sparkle
 import Combine
 
-@MainActor
-@Observable
-class OnitModel: NSObject {
+@MainActor @Observable class OnitModel: NSObject {
+    var container: ModelContainer
+
     var showMenuBarExtra: Bool = false
     var generationState: GenerationState = .idle
     var panel: CustomPanel? = nil
@@ -32,7 +32,8 @@ class OnitModel: NSObject {
     var client = FetchingClient()
     var updater = SPUStandardUpdaterController(startingUpdater: true, updaterDelegate: nil, userDriverDelegate: nil)
 
-    override init() {
+    init(container: ModelContainer) {
+        self.container = container
         super.init()
         startTrustedTimer()
     }

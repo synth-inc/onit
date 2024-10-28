@@ -106,6 +106,7 @@ struct ContextItem: View {
 }
 
 #Preview {
-    ContextItem(item: .file(URL(fileURLWithPath: "")))
-        .environment(OnitModel())
+    ModelContainerPreview {
+        ContextItem(item: .file(URL(fileURLWithPath: "")))
+    }
 }

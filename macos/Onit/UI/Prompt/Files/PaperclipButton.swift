@@ -41,6 +41,7 @@ struct PaperclipButton: View {
 }
 
 #Preview {
-    PaperclipButton()
-        .environment(OnitModel())
+    ModelContainerPreview {
+        PaperclipButton()
+    }
 }

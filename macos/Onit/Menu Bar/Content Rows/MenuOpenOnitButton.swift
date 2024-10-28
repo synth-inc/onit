@@ -37,6 +37,7 @@ struct MenuOpenOnitButton: View {
 }
 
 #Preview {
-    MenuOpenOnitButton()
-        .environment(OnitModel())
+    ModelContainerPreview {
+        MenuOpenOnitButton()
+    }
 }

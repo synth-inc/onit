@@ -24,6 +24,7 @@ struct InputButtons: View {
 }
 
 #Preview {
-    InputButtons()
-        .environment(OnitModel())
+    ModelContainerPreview {
+        InputButtons()
+    }
 }

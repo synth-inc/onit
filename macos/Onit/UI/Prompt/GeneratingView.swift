@@ -46,6 +46,7 @@ struct GeneratingView: View {
 }
 
 #Preview {
-    GeneratingView()
-        .environment(OnitModel())
+    ModelContainerPreview {
+        GeneratingView()
+    }
 }

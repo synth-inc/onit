@@ -6,9 +6,14 @@
 //
 
 import SwiftUI
+import SwiftData
 
 private struct ModelEnvironmentKey: @preconcurrency EnvironmentKey {
-    @MainActor static var defaultValue: OnitModel = .init()
+    @MainActor static var defaultValue: OnitModel = {
+        let container = try! ModelContainer(for: Prompt.self)
+        let model = OnitModel(container: container)
+        return model
+    }()
 }
 
 extension EnvironmentValues {

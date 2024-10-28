@@ -19,6 +19,7 @@ struct MenuIcon: View {
 }
 
 #Preview {
-    MenuIcon()
-        .environment(OnitModel())
+    ModelContainerPreview {
+        MenuIcon()
+    }
 }

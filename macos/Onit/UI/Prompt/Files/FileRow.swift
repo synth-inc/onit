@@ -41,6 +41,7 @@ struct FileRow: View {
 }
 
 #Preview {
-    FileRow()
-        .environment(OnitModel())
+    ModelContainerPreview {
+        FileRow()
+    }
 }

@@ -20,13 +20,13 @@ const processInput = async (
     let { input, model } = req.body
     const uploadedFiles = req.files as Express.Multer.File[];
 
-    if (!instructions) {
-        throw new CustomError('Instructions are required', 400);
-    }
-
     const openai = new OpenAI();
 
     try {
+        if (!instructions) {
+            throw new CustomError('Instructions are required', 400);
+        }    
+
         let messages: ChatCompletionMessageParam[] = [];
         let fileContents = '';
 

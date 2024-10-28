@@ -28,6 +28,7 @@ struct ContentView: View {
 }
 
 #Preview {
-    ContentView()
-        .environment(OnitModel())
+    ModelContainerPreview {
+        ContentView()
+    }
 }

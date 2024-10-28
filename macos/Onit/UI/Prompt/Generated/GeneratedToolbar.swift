@@ -95,7 +95,8 @@ struct GeneratedToolbar: View {
 }
 
 #Preview {
-    GeneratedToolbar()
-        .padding()
-        .environment(OnitModel())
+    ModelContainerPreview {
+        GeneratedToolbar()
+            .padding()
+    }
 }

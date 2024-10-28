@@ -25,6 +25,7 @@ struct ContextList: View {
 }
 
 #Preview {
-    ContextList()
-        .environment(OnitModel())
+    ModelContainerPreview {
+        ContextList()
+    }
 }
