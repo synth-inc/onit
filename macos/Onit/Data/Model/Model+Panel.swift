@@ -41,7 +41,11 @@ extension OnitModel: NSWindowDelegate {
         newPanel.standardWindowButton(.zoomButton)?.isHidden = true
         newPanel.isFloatingPanel = true
 
-        let panelContentView = NSHostingView(rootView: ContentView().environment(self))
+        let contentView = ContentView()
+            .modelContainer(container)
+            .environment(self)
+
+        let panelContentView = NSHostingView(rootView: contentView)
         panelContentView.wantsLayer = true
         panelContentView.layer?.cornerRadius = 14
         panelContentView.layer?.cornerCurve = .continuous
@@ -82,7 +86,7 @@ extension OnitModel: NSWindowDelegate {
     }
 
     func windowDidResignKey(_ notification: Notification) {
-//        closePanel()
+        closePanel()
     }
 }
 

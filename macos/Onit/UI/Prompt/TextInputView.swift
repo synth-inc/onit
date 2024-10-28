@@ -10,7 +10,7 @@ import SwiftUI
 struct TextInputView: View {
     @Environment(\.model) var model
 
-    @State private var instructions = ""
+    @AppStorage("instructions") private var instructions = ""
     @FocusState var focused: Bool
 
     var body: some View {
