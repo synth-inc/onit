@@ -3,6 +3,21 @@
     <channel>
         <title>Onit</title>
         <item>
+            <title>0.0.6</title>
+            <pubDate>Mon, 28 Oct 2024 16:03:45 -0700</pubDate>
+            <sparkle:version>6</sparkle:version>
+            <sparkle:shortVersionString>0.0.6</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+            <enclosure url="https://onit-server-b3c3746e04e9.herokuapp.com/Onit%206.zip" length="3517831" type="application/octet-stream" sparkle:edSignature="rreboJCoHAbEZ4MQhfLlZqH0784FXbkj/WaWWXU8VUhmLfpjXWiEYzJC/dr9lkjQK2tJCxkTOJE8+WAMju/QCA=="/>
+            <sparkle:deltas>
+                <enclosure url="https://onit-server-b3c3746e04e9.herokuapp.com/Onit6-5.delta" sparkle:deltaFrom="5" length="187698" type="application/octet-stream" sparkle:deltaFromSparkleExecutableSize="862784" sparkle:deltaFromSparkleLocales="de,he,ar,el,ja,fa,en" sparkle:edSignature="BqaH1Y7EPHdimNCJbIbx3ruZN//wMumPUKzdez7HTL8z5m4hXu4+yoK2IPj+3/QJStDCoPHsw+qd5BaodSKDBQ=="/>
+                <enclosure url="https://onit-server-b3c3746e04e9.herokuapp.com/Onit6-4.delta" sparkle:deltaFrom="4" length="365274" type="application/octet-stream" sparkle:deltaFromSparkleExecutableSize="862784" sparkle:deltaFromSparkleLocales="de,he,ar,el,ja,fa,en" sparkle:edSignature="TXUutddsHNOHBjd5OELc3bvcfs3bMistESBHBkX6T7wJZqhAyLJKqAOrUgjvGRh6JZWy9hfqvqoR0BpEURAUAA=="/>
+                <enclosure url="https://onit-server-b3c3746e04e9.herokuapp.com/Onit6-3.delta" sparkle:deltaFrom="3" length="369990" type="application/octet-stream" sparkle:deltaFromSparkleExecutableSize="862784" sparkle:deltaFromSparkleLocales="de,he,ar,el,ja,fa,en" sparkle:edSignature="HKv7qkYKoSWeObpIj/ZS1kV6U3V7m4hgIN4DiXgunTDEnzuNE6NskFKVobr50zFu8wnDoHjtMKGbi0ICEULBDw=="/>
+                <enclosure url="https://onit-server-b3c3746e04e9.herokuapp.com/Onit6-2.delta" sparkle:deltaFrom="2" length="371606" type="application/octet-stream" sparkle:deltaFromSparkleExecutableSize="862784" sparkle:deltaFromSparkleLocales="de,he,ar,el,ja,fa,en" sparkle:edSignature="BbtUIG+pbRQmHxrkUS8HkgSSEuKWRO5gGVrGkwNa7B0fFIIPKx4ouuScz8vvveNUk0WN1hNjzUPOg8x8QUjiAQ=="/>
+                <enclosure url="https://onit-server-b3c3746e04e9.herokuapp.com/Onit6-1.delta" sparkle:deltaFrom="1" length="371438" type="application/octet-stream" sparkle:deltaFromSparkleExecutableSize="862784" sparkle:deltaFromSparkleLocales="de,he,ar,el,ja,fa,en" sparkle:edSignature="gw2VC7ksy1by75VdCdrqSPwSkGx0GsfvdpsAbO6fbJVRmJVoW0e0cXTgDNIZtKKg0kVDne3UFgss8KyTn7NYDA=="/>
+            </sparkle:deltas>
+        </item>
+        <item>
             <title>0.0.5</title>
             <pubDate>Wed, 23 Oct 2024 17:31:52 -0700</pubDate>
             <sparkle:version>5</sparkle:version>
@@ -27,18 +42,6 @@
                 <enclosure url="https://onit-server-b3c3746e04e9.herokuapp.com/Onit4-3.delta" sparkle:deltaFrom="3" length="106746" type="application/octet-stream" sparkle:deltaFromSparkleExecutableSize="862784" sparkle:deltaFromSparkleLocales="de,he,ar,el,ja,fa,en" sparkle:edSignature="AFDchCfgayu3+urpoulY0iCVcuO9bW4KROwu4zVtjvlm1TfKd7S9FReUi9JxXfHv4FGaNfaUR/x8VM4zSF6ZBw=="/>
                 <enclosure url="https://onit-server-b3c3746e04e9.herokuapp.com/Onit4-2.delta" sparkle:deltaFrom="2" length="114034" type="application/octet-stream" sparkle:deltaFromSparkleExecutableSize="862784" sparkle:deltaFromSparkleLocales="de,he,ar,el,ja,fa,en" sparkle:edSignature="OsdVFcQSB9jbRpjTBy4n6qpFb2Uv4juy4IE8SH6qW1ESpOYmnf16xJoxz3jGmZaIov9rHeC37+f20K+BS1xuCg=="/>
                 <enclosure url="https://onit-server-b3c3746e04e9.herokuapp.com/Onit4-1.delta" sparkle:deltaFrom="1" length="118306" type="application/octet-stream" sparkle:deltaFromSparkleExecutableSize="862784" sparkle:deltaFromSparkleLocales="de,he,ar,el,ja,fa,en" sparkle:edSignature="SaRBTFxglPsHscF0oWNJWaOamQO7gtmluvgLFoxpqXgaX0UX2XiWL4x06Ad39YHRSUhe/j4UeKrTK21WY6e5Dg=="/>
-            </sparkle:deltas>
-        </item>
-        <item>
-            <title>0.0.3</title>
-            <pubDate>Mon, 21 Oct 2024 09:35:06 -0700</pubDate>
-            <sparkle:version>3</sparkle:version>
-            <sparkle:shortVersionString>0.0.3</sparkle:shortVersionString>
-            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
-            <enclosure url="https://onit-server-b3c3746e04e9.herokuapp.com/Onit%203.zip" length="3377915" type="application/octet-stream" sparkle:edSignature="3amSPGCNRbuNBkRPLbYRtSZmIapufwDuLriKanTUtuTexgfHKXFakO6IcUqbLyFZCWnDd25iWvV+e0RNCD0SDg=="/>
-            <sparkle:deltas>
-                <enclosure url="https://onit-server-b3c3746e04e9.herokuapp.com/Onit3-2.delta" sparkle:deltaFrom="2" length="80570" type="application/octet-stream" sparkle:deltaFromSparkleExecutableSize="862784" sparkle:deltaFromSparkleLocales="de,he,ar,el,ja,fa,en" sparkle:edSignature="H7us4SYCbUuniCN++gvR0QFiqVq7jU52mgQuing1qW/TKYjQB3lUG0iPlaoDSgir+j4vq2/J90OIZnD41KhCAg=="/>
-                <enclosure url="https://onit-server-b3c3746e04e9.herokuapp.com/Onit3-1.delta" sparkle:deltaFrom="1" length="89166" type="application/octet-stream" sparkle:deltaFromSparkleExecutableSize="862784" sparkle:deltaFromSparkleLocales="de,he,ar,el,ja,fa,en" sparkle:edSignature="kMG3bzo7KVm401Xe4IZYJ2qWafDkN6dxDWkXbKw2PzmOMG1Ww/VaFzN2iTMhhBrpiwZjuDNViKWXSm+sTdFtCw=="/>
             </sparkle:deltas>
         </item>
     </channel>
