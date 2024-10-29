@@ -15,7 +15,7 @@ const processInput = async (
     console.log('Received req.body:', req.body);
     console.log('Received req.files:', req.files);    
 
-    const { instructions, imageUrls } = req.body;
+    const { instructions, images } = req.body;
     let { input, model } = req.body
     const uploadedFiles = req.files as Express.Multer.File[];
 
@@ -81,7 +81,7 @@ const processInput = async (
                     role: 'user',
                     content: [
                         { type: 'text', text: userMessage },
-                        ...(imageUrls || []).map((url: string) => ({
+                        ...(images || []).map((url: string) => ({
                             type: 'image_url',
                             image_url: { url },
                         })),
