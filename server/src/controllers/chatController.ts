@@ -4,7 +4,6 @@ import multer from 'multer';
 import { CustomError } from '@utils/CustomError';
 import { ChatCompletionMessageParam } from 'openai/resources/chat/completions';
 import fs from 'fs';
-import path from 'path';
 
 const upload = multer({ dest: 'uploads/' });
 
@@ -16,7 +15,7 @@ const processInput = async (
     console.log('Received req.body:', req.body);
     console.log('Received req.files:', req.files);    
 
-    const { instructions } = req.body;
+    const { instructions, imageUrls } = req.body;
     let { input, model } = req.body
     const uploadedFiles = req.files as Express.Multer.File[];
 
@@ -80,7 +79,13 @@ const processInput = async (
                 },
                 {
                     role: 'user',
-                    content: userMessage,
+                    content: [
+                        { type: 'text', text: userMessage },
+                        ...(imageUrls || []).map((url: string) => ({
+                            type: 'image_url',
+                            image_url: { url },
+                        })),
+                    ],
                 },
             ];
         } else {
