@@ -44,8 +44,9 @@ struct CodeBlockView: View {
             copyButton
         }
         .foregroundStyle(.gray100)
-        .padding(.vertical, 8)
-        .padding(.horizontal, 12)
+        .padding(.vertical, 2)
+        .padding(.leading, 12)
+        .padding(.trailing, 8)
     }
 
     var copyButton: some View {
@@ -68,18 +69,19 @@ struct CodeBlockView: View {
     var textView: some View {
         ZStack(alignment: .topLeading) {
             Spacer()
-                .containerRelativeFrame([.horizontal, .vertical])
+                .containerRelativeFrame(.horizontal)
 
             Group {
                 if let language = configuration.language,
                    let language = HighlightLanguage.language(for: language) {
                     CodeText(configuration.content)
+                        .codeFont(AppFont.code.nsFont)
                         .highlightLanguage(language)
                 } else {
                     CodeText(configuration.content)
                 }
             }
-            .appFont(.code)
+            .environment(\.colorScheme, .dark)
             .padding(.bottom, 10)
             .padding(.horizontal, 10)
             .padding(.top, 12)
