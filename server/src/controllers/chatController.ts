@@ -49,6 +49,8 @@ const processInput = async (
 
         const { application, selectedText } = input || {};
 
+        console.log(images);
+
         if (uploadedFiles && uploadedFiles.length > 0) {
             for (const file of uploadedFiles) {
                 console.log('Reading file at path:', file.path);
