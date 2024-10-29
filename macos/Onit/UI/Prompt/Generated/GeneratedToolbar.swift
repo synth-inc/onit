@@ -19,21 +19,13 @@ struct GeneratedToolbar: View {
             insert
         }
         .buttonStyle(HoverableButtonStyle())
+        .foregroundStyle(.FG)
     }
 
+    @ViewBuilder
     var copy: some View {
-        Button {
-            if case let .generated(text) = model.generationState {
-                let pasteboard = NSPasteboard.general
-                pasteboard.declareTypes([.string], owner: nil)
-                pasteboard.setString(text, forType: .string)
-//                model.closePanel()
-            } else {
-                print("SOMETHING WENT WRONG")
-            }
-        } label: {
-            Image(.copy)
-                .padding(4)
+        if case let .generated(text) = model.generationState {
+            CopyButton(text: text)
         }
     }
 

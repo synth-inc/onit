@@ -12,37 +12,56 @@ import HighlightSwift
 struct CodeBlockView: View {
     var configuration: CodeBlockConfiguration
 
+    var rect: RoundedRectangle {
+        .rect(cornerRadius: 10)
+    }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            HStack {
-                if let language = configuration.language {
-                    Text(language)
-                        .appFont(.medium13)
-                }
-
-                Spacer()
-            }
-            .foregroundStyle(.gray100)
-            .padding(.vertical, 8)
-            .padding(.horizontal, 12)
+            top
 
             Color.gray700
                 .frame(height: 1)
 
-            ViewThatFits(in: .vertical) {
-                ScrollView(.horizontal) {
-                    textView
-                }
-                ScrollView([.horizontal, .vertical]) {
-                    textView
-                }
-            }
-            .frame(maxHeight: 150)
+            bottom
         }
         .overlay {
-            RoundedRectangle(cornerRadius: 10)
+            rect
                 .strokeBorder(.gray700)
         }
+        .clipShape(rect)
+    }
+
+    var top: some View {
+        HStack {
+            if let language = configuration.language {
+                Text(language)
+                    .appFont(.medium13)
+            }
+
+            Spacer()
+
+            copyButton
+        }
+        .foregroundStyle(.gray100)
+        .padding(.vertical, 8)
+        .padding(.horizontal, 12)
+    }
+
+    var copyButton: some View {
+        CopyButton(text: configuration.content)
+    }
+
+    var bottom: some View {
+        ViewThatFits(in: .vertical) {
+            ScrollView(.horizontal) {
+                textView
+            }
+            ScrollView([.horizontal, .vertical]) {
+                textView
+            }
+        }
+        .frame(maxHeight: 150)
     }
 
     @ViewBuilder
