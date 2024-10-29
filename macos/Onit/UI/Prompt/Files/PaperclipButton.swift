@@ -40,8 +40,10 @@ struct PaperclipButton: View {
     }
 }
 
+#if DEBUG
 #Preview {
     ModelContainerPreview {
         PaperclipButton()
     }
 }
+#endif

@@ -17,7 +17,11 @@ import Combine
     var showMenuBarExtra: Bool = false
     var generationState: GenerationState = .idle
     var panel: CustomPanel? = nil
-    var input: Input? = nil
+    var input: Input? = nil {
+        didSet {
+            input.save()
+        }
+    }
     var context: [Context] = []
     var textFocusTrigger = false
     var isOpeningSettings = false
@@ -33,6 +37,7 @@ import Combine
     var updater = SPUStandardUpdaterController(startingUpdater: true, updaterDelegate: nil, userDriverDelegate: nil)
 
     init(container: ModelContainer) {
+        self.input = Input?.load()
         self.container = container
         super.init()
         startTrustedTimer()

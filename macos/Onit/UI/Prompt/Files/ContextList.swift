@@ -24,8 +24,10 @@ struct ContextList: View {
     }
 }
 
+#if DEBUG
 #Preview {
     ModelContainerPreview {
         ContextList()
     }
 }
+#endif

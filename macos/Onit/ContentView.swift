@@ -8,8 +8,6 @@
 import SwiftUI
 
 struct ContentView: View {
-    @State private var isDragging = false
-
     var body: some View {
         VStack(spacing: 0) {
             Toolbar()
@@ -24,11 +22,12 @@ struct ContentView: View {
                 .strokeBorder(.gray600, lineWidth: 2)
         }
     }
-
 }
 
+#if DEBUG
 #Preview {
     ModelContainerPreview {
         ContentView()
     }
 }
+#endif

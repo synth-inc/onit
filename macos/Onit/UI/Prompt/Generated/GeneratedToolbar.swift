@@ -27,7 +27,7 @@ struct GeneratedToolbar: View {
                 let pasteboard = NSPasteboard.general
                 pasteboard.declareTypes([.string], owner: nil)
                 pasteboard.setString(text, forType: .string)
-                model.closePanel()
+//                model.closePanel()
             } else {
                 print("SOMETHING WENT WRONG")
             }
@@ -35,7 +35,6 @@ struct GeneratedToolbar: View {
             Image(.copy)
                 .padding(4)
         }
-        .keyboardShortcut("c")
     }
 
     var regenerate: some View {
@@ -94,9 +93,11 @@ struct GeneratedToolbar: View {
     }
 }
 
+#if DEBUG
 #Preview {
     ModelContainerPreview {
         GeneratedToolbar()
             .padding()
     }
 }
+#endif

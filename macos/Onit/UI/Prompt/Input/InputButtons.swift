@@ -23,8 +23,10 @@ struct InputButtons: View {
     }
 }
 
+#if DEBUG
 #Preview {
     ModelContainerPreview {
         InputButtons()
     }
 }
+#endif

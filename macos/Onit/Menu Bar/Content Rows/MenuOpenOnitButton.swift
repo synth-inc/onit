@@ -36,8 +36,10 @@ struct MenuOpenOnitButton: View {
     }
 }
 
+#if DEBUG
 #Preview {
     ModelContainerPreview {
         MenuOpenOnitButton()
     }
 }
+#endif

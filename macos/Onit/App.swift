@@ -25,7 +25,6 @@ struct App: SwiftUI.App {
         Accessibility.setupWindow(withView: OnitPromptView())
         Accessibility.observeActiveApplication()
         #endif
-
     }
 
     var body: some Scene {

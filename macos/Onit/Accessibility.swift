@@ -148,11 +148,12 @@ class Accessibility {
             object: nil,
             queue: nil
         ) { [weak self] notification in
+            if let app = notification.userInfo?[NSWorkspace.applicationUserInfoKey] as? NSRunningApplication {
+                print("\nApplication deactivated: \(app.localizedName ?? "Unknown")")
+            }
+
             Task { @MainActor in
                 guard let self = self else { return }
-                if let app = notification.userInfo?[NSWorkspace.applicationUserInfoKey] as? NSRunningApplication {
-                    print("\nApplication deactivated: \(app.localizedName ?? "Unknown")")
-                }
 
                 // Handle app deactivation
                 self.handleAppDeactivation()

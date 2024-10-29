@@ -45,8 +45,10 @@ struct GeneratingView: View {
     }
 }
 
+#if DEBUG
 #Preview {
     ModelContainerPreview {
         GeneratingView()
     }
 }
+#endif

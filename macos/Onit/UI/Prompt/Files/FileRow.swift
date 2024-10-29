@@ -40,8 +40,10 @@ struct FileRow: View {
     }
 }
 
+#if DEBUG
 #Preview {
     ModelContainerPreview {
         FileRow()
     }
 }
+#endif

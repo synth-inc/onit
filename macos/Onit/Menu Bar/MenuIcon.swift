@@ -18,8 +18,10 @@ struct MenuIcon: View {
     }
 }
 
+#if DEBUG
 #Preview {
     ModelContainerPreview {
         MenuIcon()
     }
 }
+#endif

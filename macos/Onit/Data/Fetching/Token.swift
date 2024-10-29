@@ -9,6 +9,6 @@ import Foundation
 
 class Token {
     static let token = """
-eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6InRlc3RVc2VyIiwiaWF0IjoxNzI5NTI4MDQzLCJleHAiOjE3MzAxMzI4NDN9.AwazgSgJhYlGtpSNntAAILKbgoaL8VNh7oLCpWwrLTk
+eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6InRlc3RVc2VyIiwiaWF0IjoxNzMwMTU3NTA2LCJleHAiOjE3MzI3NDk1MDZ9.xADtQmlLB5dt7hP5zqBmQ4oP_9K_mNH5tkJLDGeNp6g
 """
 }

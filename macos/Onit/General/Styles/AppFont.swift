@@ -12,6 +12,7 @@ enum AppFont {
     case medium13
     case medium14
     case medium16
+    case code
 
     var font: Font {
         .custom(fontName, size: originalPointSize)
@@ -41,7 +42,12 @@ enum AppFont {
 
     // MARK: - Utilities
     private var fontName: String {
-        return "Inter"
+        switch self {
+        case .code:
+            return "Sometype Mono"
+        default:
+            return "Inter"
+        }
     }
 
     private var originalPointSize: CGFloat {
@@ -53,6 +59,8 @@ enum AppFont {
         case .medium14:
             return 14
         case .medium16:
+            return 16
+        case .code:
             return 16
         }
     }
@@ -67,6 +75,8 @@ enum AppFont {
             return 2
         case .medium16:
             return 2.25
+        case .code:
+            return 8
         }
     }
 }
