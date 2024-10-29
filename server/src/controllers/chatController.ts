@@ -49,8 +49,6 @@ const processInput = async (
 
         const { application, selectedText } = input || {};
 
-        console.log(images);
-
         if (uploadedFiles && uploadedFiles.length > 0) {
             for (const file of uploadedFiles) {
                 console.log('Reading file at path:', file.path);
@@ -63,48 +61,44 @@ const processInput = async (
             }
         }
 
-        if (application && input) {
-            let userMessage = instructions;
+        let userMessage = instructions;
 
-            if (selectedText) {
-                userMessage += `\n\nText:\n${selectedText}`;
-            }
+        if (fileContents) {
+            userMessage += fileContents;
+        }
 
-            if (fileContents) {
-                userMessage += fileContents;
-            }
+        if (selectedText) {
+            userMessage += `\n\nSelected Text: ${selectedText}`;
+        }
 
+        const userContent = [
+            { type: 'text', text: userMessage },
+            ...(images || []).map((url: string) => ({
+                type: 'image_url',
+                image_url: { url },
+            })),
+        ];
+
+        if (application) {
             messages = [
                 {
                     role: 'system',
-                    content: `Based on the provided instructions, either modify the given text from the application ${application} or answer any questions related to it. Provide the response without any additional comments, formatting, coding language, or labels. Provide the text raw and ready to go.`,
+                    content: `Based on the provided instructions, either modify the given text from the application ${application} or answer any questions related to it. Provide the response without any additional comments. Provide the text ready to go.`,
                 },
                 {
                     role: 'user',
-                    content: [
-                        { type: 'text', text: userMessage },
-                        ...(images || []).map((url: string) => ({
-                            type: 'image_url',
-                            image_url: { url },
-                        })),
-                    ],
+                    content: userContent,
                 },
             ];
         } else {
-            let userMessage = instructions;
-            
-            if (fileContents) {
-                userMessage += fileContents;
-            }
-
             messages = [
                 {
                     role: 'system',
-                    content: `Based on the provided instructions, either provide the output or answer any questions related to it. Provide the response without any additional comments, formatting, coding language, or labels. Provide the output raw and ready to go.`,
+                    content: `Based on the provided instructions, either provide the output or answer any questions related to it. Provide the response without any additional comments. Provide the output ready to go.`,
                 },
                 {
                     role: 'user',
-                    content: userMessage,
+                    content: userContent,
                 },
             ];
         }
