@@ -85,6 +85,18 @@ extension OnitModel: NSWindowDelegate {
         }
     }
 
+    func keyboardShortcutAction() {
+        if panel != nil {
+            if let input = Accessibility.input {
+                setInput(input)
+            } else {
+                closePanel()
+            }
+        } else {
+            showPanel()
+        }
+    }
+
     func windowDidResignKey(_ notification: Notification) {
 //        closePanel()
     }

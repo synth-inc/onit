@@ -20,7 +20,7 @@ struct InputTitle: View {
     }
 
     var body: some View {
-        HStack {
+        HStack(spacing: 8) {
             Text(inputString)
                 .appFont(.medium13)
             Spacer()

@@ -6,3 +6,9 @@
 //
 
 import Foundation
+
+enum UploadBody {
+    case data(Data)
+    case url(URL)
+    case empty
+}

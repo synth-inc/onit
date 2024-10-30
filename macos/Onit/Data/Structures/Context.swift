@@ -14,6 +14,7 @@ enum Context {
     case error(URL, Error)
 
     static let maxFileSize: Int = 1024 * 1024 * 1
+    static let maxImageSize: Int = 1024 * 1024 * 20
 
     var url: URL {
         switch self {
@@ -37,10 +38,11 @@ enum Context {
 extension Context {
     init(url: URL) {
         do {
-            if try url.size > Self.maxFileSize {
+            let size = try url.size
+            if url.isImage {
+                self = size < Self.maxImageSize ? .image(url) : .tooBig(url)
+            } else if size > Self.maxFileSize {
                 self = .tooBig(url)
-            } else if url.isImage {
-                self = .image(url)
             } else {
                 self = .file(url)
             }
@@ -72,7 +74,7 @@ extension URL {
     }
 
     var isImage: Bool {
-        let imageExtensions = ["png", "jpg", "jpeg", "gif", "tiff", "bmp"]
+        let imageExtensions = ImageExtensions.allCases.map(\.rawValue)
         return imageExtensions.contains(self.pathExtension.lowercased())
     }
 }
@@ -85,7 +87,7 @@ extension [Context] {
     var files: [URL] {
         compactMap {
             switch $0 {
-            case .image(let url), .file(let url):
+            case .file(let url):
                 return url
             default:
                 return nil

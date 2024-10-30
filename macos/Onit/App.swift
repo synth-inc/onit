@@ -16,7 +16,8 @@ struct App: SwiftUI.App {
     init() {
 
         KeyboardShortcuts.onKeyUp(for: .launch) { [weak model] in
-            model?.togglePanel()
+            guard let model else { return }
+            model.keyboardShortcutAction()
         }
         model.showPanel()
 

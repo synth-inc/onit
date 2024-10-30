@@ -26,9 +26,12 @@ extension OnitModel {
 
             self.generationState = .generating
             let files = context.files
+            let images = await remoteImages
 
             do {
-                let chat = try await client.chat(text, input: input, model: preferences.model, files: files)
+                let chat = try await client.chat(
+                    text, input: input, model: preferences.model, files: files, images: images
+                )
                 self.generationState = .generated(chat)
             } catch let error as FetchingError {
                 print("Fetching Error: \(error.localizedDescription)")

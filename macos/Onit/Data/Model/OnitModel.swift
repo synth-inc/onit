@@ -16,6 +16,7 @@ import Combine
 
     var showMenuBarExtra: Bool = false
     var generationState: GenerationState = .idle
+    var inputExpanded = true
     var panel: CustomPanel? = nil
     var input: Input? = nil {
         didSet {
@@ -23,6 +24,8 @@ import Combine
         }
     }
     var context: [Context] = []
+    var imageUploads: [URL: UploadProgress] = [:]
+    var uploadTasks: [URL: Task<URL?, Never>] = [:]
     var textFocusTrigger = false
     var isOpeningSettings = false
 

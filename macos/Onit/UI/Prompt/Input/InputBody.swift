@@ -10,12 +10,36 @@ import SwiftUI
 struct InputBody: View {
     var text: String
 
+    @State var textHeight: CGFloat = 0
+
+    var height: CGFloat {
+        min(textHeight, 73)
+    }
+
     var body: some View {
+        ViewThatFits(in: .vertical) {
+            textView
+            ScrollView {
+                textView
+            }
+        }
+        .frame(height: height)
+    }
+
+    var textView: some View {
         Text(text.trimmingCharacters(in: .whitespacesAndNewlines))
             .foregroundStyle(.white)
             .appFont(.medium16)
             .padding(10)
             .frame(maxWidth: .infinity, alignment: .leading)
+            .background {
+                GeometryReader { proxy in
+                    Color.clear
+                        .onAppear {
+                            textHeight = proxy.size.height
+                        }
+                }
+            }
     }
 }
 

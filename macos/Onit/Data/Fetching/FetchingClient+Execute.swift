@@ -11,9 +11,10 @@ extension FetchingClient {
     func execute<E: Endpoint>(_ endpoint: E) async throws -> E.Response {
         let url = baseURL.appendingPathComponent(endpoint.path)
 
-        var requestBodyData: Data?
+        var requestBodyData: UploadBody = .empty
         if let requestBody = endpoint.requestBody {
-            requestBodyData = try encoder.encode(requestBody)
+            let data = try encoder.encode(requestBody)
+            requestBodyData = .data(data)
         }
 
         do {
@@ -43,14 +44,12 @@ extension FetchingClient {
             request.addValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
         }
 
-        // Create multipart form data
         let boundary = UUID().uuidString
         request.setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
         let body = try createMultipartBody(for: endpoint, files: files, boundary: boundary)
 
         request.httpBody = body
 
-        // Send the request
         let (data, _) = try await URLSession.shared.data(for: request)
         let decodedResponse = try decoder.decode(E.Response.self, from: data)
         return decodedResponse
@@ -59,12 +58,10 @@ extension FetchingClient {
     private func createMultipartBody<E: Endpoint>(for endpoint: E, files: [URL], boundary: String) throws -> Data {
         var body = Data()
 
-        // Add text fields (JSON content)
         if let requestBody = endpoint.requestBody {
             let jsonData = try encoder.encode(requestBody)
             if let jsonDict = try JSONSerialization.jsonObject(with: jsonData) as? [String: Any] {
                 for (key, value) in jsonDict {
-                    // Skip if value is nil or empty
                     if let stringValue = value as? String, stringValue.isEmpty {
                         continue
                     } else if value is NSNull {
@@ -78,7 +75,6 @@ extension FetchingClient {
                     if let stringValue = value as? String {
                         valueString = stringValue
                     } else {
-                        // Serialize object to JSON string
                         let valueData = try JSONSerialization.data(withJSONObject: value)
                         valueString = String(data: valueData, encoding: .utf8) ?? ""
                     }
@@ -89,7 +85,6 @@ extension FetchingClient {
             }
         }
 
-        // Add files
         for fileURL in files {
             let fileName = fileURL.lastPathComponent
             let fileData = try Data(contentsOf: fileURL)

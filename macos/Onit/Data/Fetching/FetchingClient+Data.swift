@@ -11,7 +11,7 @@ extension FetchingClient {
     @discardableResult public func data(
         from url: URL,
         method: HTTPMethod = .get,
-        body: Data? = nil,
+        body: UploadBody = .empty,
         contentType: String? = nil,
         token: String? = nil,
         additionalHeaders: [String: String]? = nil
@@ -28,18 +28,20 @@ extension FetchingClient {
         return try await fetchAndHandle(using: request)
     }
 
-    private func makeRequest(
+    func makeRequest(
         from url: URL,
         method: HTTPMethod,
-        body: Data?,
+        body: UploadBody,
         contentType: String?,
-        token: String?,
+        token: String? = nil,
         additionalHeaders: [String: String]?
     ) -> URLRequest {
         var request = URLRequest(url: url)
 
         request.httpMethod = method.rawValue
-        request.httpBody = body
+        if case let .data(data) = body {
+            request.httpBody = data
+        }
         request.addAuthorization(token: token)
         request.addContentType(for: method, defaultType: contentType ?? "application/json")
 
@@ -50,9 +52,9 @@ extension FetchingClient {
         return request
     }
 
-    private func fetchAndHandle(using request: URLRequest) async throws -> Data {
+    private func fetchAndHandle(using request: URLRequest, file: URL? = nil) async throws -> Data {
         do {
-            let (data, response) = try await fetchDataAndResponse(using: request)
+            let (data, response) = try await fetchDataAndResponse(using: request, file: file)
             try handle(response: response, withData: data)
             return data
         } catch let error as FetchingError {
@@ -62,8 +64,15 @@ extension FetchingClient {
         }
     }
 
-    private func fetchDataAndResponse(using request: URLRequest) async throws -> (Data, HTTPURLResponse) {
-        let (data, response) = try await URLSession.shared.data(for: request)
+    private func fetchDataAndResponse(
+        using request: URLRequest, file: URL? = nil
+    ) async throws -> (Data, HTTPURLResponse) {
+        var (data, response): (Data, URLResponse)
+        if let file {
+            (data, response) = try await URLSession.shared.upload(for: request, fromFile: file)
+        } else {
+            (data, response) = try await URLSession.shared.data(for: request)
+        }
 
         guard let httpResponse = response as? HTTPURLResponse else {
             throw FetchingError.invalidResponse

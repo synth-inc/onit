@@ -7,11 +7,7 @@ import fs from 'fs';
 
 const upload = multer({ dest: 'uploads/' });
 
-const processInput = async (
-    req: Request,
-    res: Response,
-    next: NextFunction
-): Promise<void> => {
+const processInput = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     console.log('Received req.body:', req.body);
     console.log('Received req.files:', req.files);    
 

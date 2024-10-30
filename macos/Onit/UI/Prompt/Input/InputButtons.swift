@@ -11,15 +11,30 @@ struct InputButtons: View {
     @Environment(\.model) var model
 
     var body: some View {
-        Button {
-            @Bindable var model = model
-            model.input = nil
-        } label: {
-            Image(.smallRemove)
-                .renderingMode(.template)
+        @Bindable var model = model
+
+        Group {
+            Button {
+                model.input = nil
+            } label: {
+                Image(.smallRemove)
+                    .renderingMode(.template)
+            }
+            .buttonStyle(DarkerButtonStyle())
+            
+            Button {
+                model.inputExpanded.toggle()
+            } label: {
+                Color.clear
+                    .frame(width: 20, height: 20)
+                    .overlay {
+                        Image(.smallChevRight)
+                            .renderingMode(.template)
+                            .rotationEffect(model.inputExpanded ? .degrees(90) : .zero)
+                    }
+            }
         }
         .foregroundStyle(.gray200)
-        .buttonStyle(DarkerButtonStyle())
     }
 }
 

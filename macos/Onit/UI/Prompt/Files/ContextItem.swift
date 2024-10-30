@@ -56,6 +56,7 @@ struct ContextItem: View {
                     .resizable()
                     .scaledToFill()
             }
+            .imageProgress(url: item.url)
             .clipShape(imageRect)
             .overlay {
                 imageRect
@@ -83,7 +84,7 @@ struct ContextItem: View {
 
     var name: String {
         switch item {
-        case .image(let url), .file(let url):
+        case .file(let url), .image(let url):
             url.lastPathComponent
         case .error(_, let error):
             error.localizedDescription

@@ -6,3 +6,11 @@
 //
 
 import Foundation
+
+enum ImageExtensions: String, CaseIterable {
+    case jpeg
+    case jpg
+    case png
+    case gif
+    case webp
+}

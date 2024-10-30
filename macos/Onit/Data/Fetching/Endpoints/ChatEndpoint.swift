@@ -8,8 +8,8 @@
 import Foundation
 
 extension FetchingClient {
-    func chat(_ text: String, input: Input?, model: GPTModel?, files: [URL]) async throws -> String {
-        let endpoint = ChatEndpoint(instructions: text, input: input, model: model)
+    func chat(_ text: String, input: Input?, model: GPTModel?, files: [URL], images: [URL]) async throws -> String {
+        let endpoint = ChatEndpoint(instructions: text, input: input, model: model, images: images)
         let response = try await {
             if files.isEmpty {
                 try await execute(endpoint)
@@ -28,12 +28,13 @@ struct ChatEndpoint: Endpoint {
     let instructions: String
     let input: Input?
     let model: GPTModel?
+    let images: [URL]
 
     var path: String { "/process" }
     var method: HTTPMethod { .post }
     var token: String? { Token.token }
     var requestBody: ChatRequestJSON? {
-        ChatRequestJSON(instructions: instructions, input: input, model: model)
+        ChatRequestJSON(instructions: instructions, input: input, model: model, images: images)
     }
     var additionalHeaders: [String: String]? { nil }
 }
@@ -42,6 +43,7 @@ struct ChatRequestJSON: Codable {
     let instructions: String
     let input: Input?
     let model: GPTModel?
+    let images: [URL]
 }
 
 struct ProcessResponse: Codable {
