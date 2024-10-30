@@ -14,9 +14,8 @@ struct HoverableButtonStyle: ButtonStyle {
     @State private var hovering = false
     @State private var frame: CGRect = .zero
 
-    var prompt: String?
-    var shortcut: KeyboardShortcut?
     var tooltip: Tooltip?
+    var background: Bool
 
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
@@ -47,16 +46,22 @@ struct HoverableButtonStyle: ButtonStyle {
             }
     }
 
+    @ViewBuilder
     private func clickBackground(_ clicked: Bool) -> some View {
-        RoundedRectangle(cornerRadius: 6)
-            .fill(.gray600)
-            .opacity(clicked ? 1 : 0)
+        if background {
+            RoundedRectangle(cornerRadius: 6)
+                .fill(.gray600)
+                .opacity(clicked ? 1 : 0)
+        }
     }
 
+    @ViewBuilder
     private var hoverBackground: some View {
-        RoundedRectangle(cornerRadius: 6)
-            .fill(.gray800)
-            .opacity(hovering ? 1 : 0)
+        if background {
+            RoundedRectangle(cornerRadius: 6)
+                .fill(.gray800)
+                .opacity(hovering ? 1 : 0)
+        }
     }
 
     private func handleHover(_ hovering: Bool) {
@@ -81,7 +86,9 @@ struct HoverableButtonStyle: ButtonStyle {
                     Text(.sample)
                         .padding()
                 }
-                .buttonStyle(HoverableButtonStyle(tooltip: .sample))
+                .buttonStyle(
+                    HoverableButtonStyle(tooltip: .sample, background: true)
+                )
             }
     }
 }

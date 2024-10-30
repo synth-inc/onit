@@ -37,7 +37,7 @@ struct Toolbar: View {
                 .appFont(.medium13)
                 .padding(4)
         }
-        .buttonStyle(HoverableButtonStyle(tooltip: Tooltip(prompt: "Close Omni", shortcut: .text("ESC ESC"))))
+        .tooltip(prompt: "Close Omni", shortcut: .text("ESC ESC"))
     }
 
     // We create this so that the esc button has a different
@@ -70,7 +70,10 @@ struct Toolbar: View {
                 .renderingMode(.template)
                 .padding(3)
         }
-        .buttonStyle(HoverableButtonStyle())
+        .tooltip(
+            prompt: "Resize Window",
+            shortcut: .keyboard(.init("1", modifiers: .option))
+        )
     }
 
     @ViewBuilder
@@ -94,7 +97,7 @@ struct Toolbar: View {
             }
             .padding(2)
         }
-        .buttonStyle(HoverableButtonStyle())
+        .tooltip(prompt: "Toggle model", shortcut: .keyboard(.init("/")))
     }
 
     var add: some View {
@@ -105,7 +108,7 @@ struct Toolbar: View {
                 .renderingMode(.template)
                 .padding(2)
         }
-        .buttonStyle(HoverableButtonStyle())
+        .tooltip(prompt: "New Prompt")
     }
 
     var history: some View {
@@ -116,7 +119,7 @@ struct Toolbar: View {
                 .renderingMode(.template)
                 .padding(2)
         }
-        .buttonStyle(HoverableButtonStyle())
+        .tooltip(prompt: "History")
     }
 
     @Environment(\.openSettings) var openSettings
@@ -131,7 +134,7 @@ struct Toolbar: View {
                 .renderingMode(.template)
                 .padding(2)
         }
-        .buttonStyle(HoverableButtonStyle())
+        .tooltip(prompt: "Settings", shortcut: .keyboard(.init(",")))
     }
 }
 

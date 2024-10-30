@@ -34,7 +34,7 @@ struct CopyButton: View {
                         .opacity(showCheckmark ? 1 : 0)
                 }
         }
-        .buttonStyle(HoverableButtonStyle())
+        .tooltip(prompt: "Copy")
         .animation(.default, value: showCheckmark)
     }
 }

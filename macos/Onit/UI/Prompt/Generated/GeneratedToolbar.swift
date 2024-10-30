@@ -18,7 +18,6 @@ struct GeneratedToolbar: View {
             Spacer()
             insert
         }
-        .buttonStyle(HoverableButtonStyle())
         .foregroundStyle(.FG)
     }
 
@@ -36,6 +35,7 @@ struct GeneratedToolbar: View {
             Image(.arrowsSpin)
                 .padding(4)
         }
+        .tooltip(prompt: "Retry")
     }
 
     var more: some View {
@@ -45,6 +45,7 @@ struct GeneratedToolbar: View {
             Image(.moreHorizontal)
                 .padding(4)
         }
+        .tooltip(prompt: "More")
     }
 
     var insertShortcut: KeyboardShortcut {
@@ -82,6 +83,11 @@ struct GeneratedToolbar: View {
         }
         .keyboardShortcut(insertShortcut)
         .buttonStyle(.plain)
+        .tooltip(
+            prompt: "Send",
+            shortcut: .keyboard(.init(.return, modifiers: [])),
+            background: false
+        )
     }
 }
 

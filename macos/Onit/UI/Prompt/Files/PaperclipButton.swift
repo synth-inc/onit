@@ -22,7 +22,7 @@ struct PaperclipButton: View {
                     .frame(width: 16, height: 16)
                     .padding(3)
             }
-            .buttonStyle(HoverableButtonStyle(tooltip: Tooltip(prompt: "Upload file")))
+            .tooltip(prompt: "Upload file")
 
             Button {
                 showFileImporter = true
