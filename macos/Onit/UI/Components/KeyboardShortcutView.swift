@@ -48,6 +48,8 @@ struct KeyboardShortcutView: View {
                 Text("⌫")
             case .space:
                 Text("␣")
+            case .escape:
+                Text("ESC")
             default:
                 Text(String(key.character).uppercased())
             }

@@ -8,6 +8,8 @@
 import SwiftUI
 
 struct ContentView: View {
+    @Environment(\.model) var model
+
     var body: some View {
         VStack(spacing: 0) {
             Toolbar()
@@ -20,6 +22,9 @@ struct ContentView: View {
         .overlay {
             RoundedRectangle(cornerRadius: 14)
                 .strokeBorder(.gray600, lineWidth: 2)
+        }
+        .overlay {
+            
         }
     }
 }

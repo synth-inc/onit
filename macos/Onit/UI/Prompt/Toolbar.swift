@@ -37,7 +37,7 @@ struct Toolbar: View {
                 .appFont(.medium13)
                 .padding(4)
         }
-        .buttonStyle(HoverableButtonStyle())
+        .buttonStyle(HoverableButtonStyle(tooltip: Tooltip(prompt: "Close Omni", shortcut: .text("ESC ESC"))))
     }
 
     // We create this so that the esc button has a different

@@ -9,7 +9,23 @@ import SwiftUI
 
 struct Tooltip {
     var prompt: String
-    var shortcut: KeyboardShortcut
+    var shortcut: Shortcut
+
+    enum Shortcut {
+        case keyboard(KeyboardShortcut)
+        case text(String)
+        case none
+    }
+
+    init(prompt: String, shortcut: Shortcut = .none) {
+        self.prompt = prompt
+        self.shortcut = shortcut
+    }
+
+    init(prompt: String, shortcut: KeyboardShortcut) {
+        self.prompt = prompt
+        self.shortcut = .keyboard(shortcut)
+    }
 }
 
 extension Tooltip {

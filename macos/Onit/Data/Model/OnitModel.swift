@@ -14,6 +14,14 @@ import Combine
 @MainActor @Observable class OnitModel: NSObject {
     var container: ModelContainer
 
+    var tooltipWindow: NSWindow?
+    var tooltip: Tooltip?
+    var tooltipTask: Task<Void, Never>?
+    var tooltipWidth: CGFloat = 0
+    var tooltipHeight: CGFloat = 0
+    var showTooltip = false
+    var isTooltipActive = false
+
     var showMenuBarExtra: Bool = false
     var generationState: GenerationState = .idle
     var inputExpanded = true
@@ -23,6 +31,7 @@ import Combine
             input.save()
         }
     }
+    var tooltipFrame: CGRect?
     var context: [Context] = []
     var imageUploads: [URL: UploadProgress] = [:]
     var uploadTasks: [URL: Task<URL?, Never>] = [:]

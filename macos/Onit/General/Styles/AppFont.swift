@@ -8,6 +8,7 @@
 import SwiftUI
 
 enum AppFont {
+    case medium10
     case medium12
     case medium13
     case medium14
@@ -52,6 +53,8 @@ enum AppFont {
 
     private var originalPointSize: CGFloat {
         switch self {
+        case .medium10:
+            return 10
         case .medium12:
             return 12
         case .medium13:
@@ -67,6 +70,8 @@ enum AppFont {
 
     private var originalLineSpacing: CGFloat {
         switch self {
+        case .medium10:
+            return 1
         case .medium12:
             return 1.5
         case .medium13:
