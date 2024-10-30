@@ -13,13 +13,24 @@ struct PaperclipButton: View {
     @State var showFileImporter = false
 
     var body: some View {
-        Button {
-            showFileImporter = true
-        } label: {
-            Image(.paperclip)
-                .resizable()
-                .frame(width: 16, height: 16)
-                .padding(2)
+        HStack(spacing: 6) {
+            Button {
+                showFileImporter = true
+            } label: {
+                Image(.paperclip)
+                    .resizable()
+                    .frame(width: 16, height: 16)
+                    .padding(3)
+            }
+            .buttonStyle(HoverableButtonStyle())
+
+            Button {
+                showFileImporter = true
+            } label: {
+                Text("Add file")
+                    .foregroundStyle(.gray200)
+                    .appFont(.medium13)
+            }
         }
         .fileImporter(
             isPresented: $showFileImporter,

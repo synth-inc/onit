@@ -8,6 +8,8 @@
 import SwiftUI
 
 struct InputView: View {
+    @Environment(\.model) var model
+
     var input: Input
 
     var body: some View {
@@ -27,9 +29,14 @@ struct InputView: View {
     var divider: some View {
         Color.gray600
             .frame(height: 1)
+            .opacity(model.inputExpanded ? 1 : 0)
     }
 }
 
+#if DEBUG
 #Preview {
-    InputView(input: .sample)
+    ModelContainerPreview {
+        InputView(input: .sample)
+    }
 }
+#endif

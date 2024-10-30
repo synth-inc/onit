@@ -32,11 +32,6 @@ struct FileRow: View {
     var emptyContext: some View {
         ContextItem(item: .file(URL(fileURLWithPath: "")))
             .opacity(0)
-            .overlay(alignment: .leading) {
-                Text("Add file")
-                    .foregroundStyle(.gray200)
-                    .appFont(.medium13)
-            }
     }
 }
 
