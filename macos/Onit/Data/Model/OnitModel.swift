@@ -27,11 +27,8 @@ import Combine
     var inputExpanded = true
     var panel: CustomPanel? = nil
     var input: Input? = nil {
-        didSet {
-            input.save()
-        }
+        didSet { input.save() }
     }
-    var tooltipFrame: CGRect?
     var context: [Context] = []
     var imageUploads: [URL: UploadProgress] = [:]
     var uploadTasks: [URL: Task<URL?, Never>] = [:]
@@ -39,7 +36,7 @@ import Combine
     var isOpeningSettings = false
 
     var trusted: Bool = true
-    private var trustedTimer: AnyCancellable?
+    @ObservationIgnored var trustedTimer: AnyCancellable?
 
     var droppedItems = [(image: NSImage, filename: String)]()
 
@@ -55,16 +52,6 @@ import Combine
         startTrustedTimer()
     }
 
-    func startTrustedTimer() {
-        trustedTimer = Timer.publish(every: 1.0, on: .main, in: .common)
-            .autoconnect()
-            .sink { [weak self] _ in
-                let currentStatus = Accessibility.trusted
-                if self?.trusted != currentStatus {
-                    self?.trusted = currentStatus
-                }
-            }
-    }
 }
 
 extension String {

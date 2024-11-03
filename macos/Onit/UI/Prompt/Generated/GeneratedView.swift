@@ -11,6 +11,16 @@ struct GeneratedView: View {
     var result: String
 
     var body: some View {
+        ViewThatFits(in: .vertical) {
+            content
+            ScrollView {
+                content
+            }
+        }
+        .frame(maxHeight: 750)
+    }
+
+    var content: some View {
         VStack(spacing: 16) {
             GeneratedContentView(result: result)
             GeneratedToolbar()

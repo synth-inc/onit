@@ -12,11 +12,13 @@ import SwiftData
     var input: Input?
     var text: String
     var timestamp: Date
+    @Relationship(inverse: \Response.prompt) var responses: [Response] = []
 
-    init(input: Input? = nil, text: String, timestamp: Date) {
+    init(input: Input? = nil, text: String, timestamp: Date, responses: [Response] = []) {
         self.input = input
         self.text = text
         self.timestamp = timestamp
+        self.responses = responses
     }
 }
 
