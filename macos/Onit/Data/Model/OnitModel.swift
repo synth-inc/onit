@@ -29,11 +29,18 @@ import Combine
     var input: Input? = nil {
         didSet { input.save() }
     }
+    var prompt: Prompt?
+    var responses: [Response] = []
     var context: [Context] = []
     var imageUploads: [URL: UploadProgress] = [:]
     var uploadTasks: [URL: Task<URL?, Never>] = [:]
     var textFocusTrigger = false
     var isOpeningSettings = false
+    var historyIndex = -1
+    var generationIndex = 0
+    var instructions = "" {
+        didSet { instructions.save("instructions") }
+    }
 
     var trusted: Bool = true
     @ObservationIgnored var trustedTimer: AnyCancellable?
@@ -47,6 +54,7 @@ import Combine
 
     init(container: ModelContainer) {
         self.input = Input?.load()
+        self.instructions = String.load("instructions") ?? ""
         self.container = container
         super.init()
         startTrustedTimer()

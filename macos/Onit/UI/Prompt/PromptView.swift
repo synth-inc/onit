@@ -33,9 +33,9 @@ struct PromptView: View {
         case .generating:
             PromptDivider()
             GeneratingView()
-        case .generated(let result):
+        case .generated:
             PromptDivider()
-            GeneratedView(result: result)
+            GeneratedView()
         case .error(let error):
             GeneratedErrorView(error: error)
         default:

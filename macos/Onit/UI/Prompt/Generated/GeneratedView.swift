@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct GeneratedView: View {
-    var result: String
+    @Environment(\.model) var model
 
     var body: some View {
         ViewThatFits(in: .vertical) {
@@ -22,13 +22,19 @@ struct GeneratedView: View {
 
     var content: some View {
         VStack(spacing: 16) {
-            GeneratedContentView(result: result)
+            if let result = model.generation {
+                GeneratedContentView(result: result)
+            }
             GeneratedToolbar()
         }
         .padding(16)
     }
 }
 
+#if DEBUG
 #Preview {
-    GeneratedView(result: "Hey there, fabulous world!")
+    ModelContainerPreview {
+        GeneratedView()
+    }
 }
+#endif

@@ -18,6 +18,15 @@ extension OnitModel {
         tryToUpload(contextItems)
     }
 
+    func newPrompt() {
+        historyIndex = -1
+        instructions = ""
+        input = nil
+        prompt = nil
+        generationState = .idle
+        focusText()
+    }
+
     func removeContext(context: Context) {
         self.context.removeAll { $0 == context }
         if case .image(let url) = context {

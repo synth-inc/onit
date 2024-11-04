@@ -8,11 +8,12 @@
 import Foundation
 import SwiftData
 
-@Model final class Prompt {
+@Model final class Prompt: Identifiable {
     var input: Input?
     var text: String
     var timestamp: Date
-    @Relationship(inverse: \Response.prompt) var responses: [Response] = []
+    @Relationship(deleteRule: .cascade, inverse: \Response.prompt)
+    var responses: [Response] = []
 
     init(input: Input? = nil, text: String, timestamp: Date, responses: [Response] = []) {
         self.input = input

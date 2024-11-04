@@ -11,12 +11,9 @@ import SwiftData
 struct TextInputView: View {
     @Environment(\.model) var model
 
-    @AppStorage("instructions") private var instructions = ""
     @FocusState var focused: Bool
 
     @Query(sort: \Prompt.timestamp, order: .reverse) private var prompts: [Prompt]
-
-    @State private var historyIndex = -1
 
     var body: some View {
         HStack {
@@ -32,14 +29,17 @@ struct TextInputView: View {
         }
     }
 
+    @ViewBuilder
     var textField: some View {
+        @Bindable var model = model
+
         ZStack(alignment: .leading) {
-            TextField("", text: $instructions, axis: .vertical)
+            TextField("", text: $model.instructions, axis: .vertical)
                 .textFieldStyle(PlainTextFieldStyle())
                 .focused($focused)
                 .tint(.blue600.opacity(0.2))
                 .fixedSize(horizontal: false, vertical: true)
-            if instructions.isEmpty {
+            if model.instructions.isEmpty {
                 placeholderView
             } else {
                 Text(" ")
@@ -68,16 +68,16 @@ struct TextInputView: View {
     var sendButton: some View {
         Button {
             focused = false
-            model.save(instructions)
-            model.generate(instructions)
+            model.save(model.instructions)
+            model.generate(model.instructions)
         } label: {
             Image(.circleArrowUp)
                 .renderingMode(.template)
-                .foregroundStyle(instructions.isEmpty ? Color.gray700 : .blue400)
+                .foregroundStyle(model.instructions.isEmpty ? Color.gray700 : .blue400)
                 .padding(3)
         }
         .buttonStyle(.plain)
-        .disabled(instructions.isEmpty)
+        .disabled(model.instructions.isEmpty)
         .keyboardShortcut(.return, modifiers: [])
     }
 
@@ -85,10 +85,11 @@ struct TextInputView: View {
         Button {
             guard !prompts.isEmpty else { return }
 
-            if historyIndex + 1 < prompts.count {
-                historyIndex += 1
-                instructions = prompts[historyIndex].text
-                model.input = prompts[historyIndex].input
+            if model.historyIndex + 1 < prompts.count {
+                model.historyIndex += 1
+                model.instructions = prompts[model.historyIndex].text
+                model.input = prompts[model.historyIndex].input
+                model.generationIndex = 0
             }
         } label: {
             EmptyView()
@@ -98,16 +99,17 @@ struct TextInputView: View {
 
     var downListener: some View {
         Button {
-            if historyIndex > 0 {
-                historyIndex -= 1
-                instructions = prompts[historyIndex].text
-                model.input = prompts[historyIndex].input
-            } else if historyIndex == 0 {
-                historyIndex = -1
-                instructions = ""
+            if model.historyIndex > 0 {
+                model.historyIndex -= 1
+                model.instructions = prompts[model.historyIndex].text
+                model.input = prompts[model.historyIndex].input
+            } else if model.historyIndex == 0 {
+                model.historyIndex = -1
+                model.instructions = ""
                 model.input = nil
                 focused = true
             }
+            model.generationIndex = 0
         } label: {
             EmptyView()
         }

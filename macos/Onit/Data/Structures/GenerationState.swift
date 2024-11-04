@@ -10,6 +10,6 @@ import Foundation
 enum GenerationState: Equatable {
     case idle
     case generating
-    case generated(String)
+    case generated
     case error(FetchingError)
 }

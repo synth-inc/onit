@@ -9,7 +9,10 @@ import Foundation
 
 extension OnitModel {
     func save(_ text: String) {
+        guard prompt == nil else { return }
+
         let prompt = Prompt(input: input, text: text, timestamp: Date())
+        self.prompt = prompt
         let modelContext = container.mainContext
         modelContext.insert(prompt)
         do {
@@ -32,7 +35,11 @@ extension OnitModel {
                 let chat = try await client.chat(
                     text, input: input, model: preferences.model, files: files, images: images
                 )
-                self.generationState = .generated(chat)
+                addChat(chat)
+                if let prompt = self.prompt {
+                    self.generationIndex = prompt.responses.count - 1
+                }
+                self.generationState = .generated
             } catch let error as FetchingError {
                 print("Fetching Error: \(error.localizedDescription)")
                 self.generationState = .error(error)
@@ -43,9 +50,41 @@ extension OnitModel {
         }
     }
 
+    func addChat(_ chat: String) {
+        guard let prompt else {
+            print("Tried to add chat with nil promptID")
+            return
+        }
+        let response = Response(text: chat)
+        prompt.responses.append(response)
+    }
+
     func cancelGenerate() {
         generateTask?.cancel()
         generateTask = nil
         self.generationState = .idle
+    }
+
+    var generation: String? {
+        guard case .generated = generationState else { return nil }
+        guard let prompt else { return nil }
+        guard prompt.responses.count > generationIndex else { return nil }
+        return prompt.responses[generationIndex].text
+    }
+
+    var generationCount: Int? {
+        guard case .generated = generationState else { return nil }
+        guard let prompt else { return nil }
+        return prompt.responses.count
+    }
+
+    var canIncrementGeneration: Bool {
+        guard case .generated = generationState else { return false }
+        guard let prompt else { return false }
+        return prompt.responses.count > generationIndex + 1
+    }
+
+    var canDecrementGeneration: Bool {
+        return generationIndex > 0
     }
 }

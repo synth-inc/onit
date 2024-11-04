@@ -16,6 +16,7 @@ struct GeneratedToolbar: View {
             regenerate
             more
             Spacer()
+            selector
             insert
         }
         .foregroundStyle(.FG)
@@ -23,8 +24,8 @@ struct GeneratedToolbar: View {
 
     @ViewBuilder
     var copy: some View {
-        if case let .generated(text) = model.generationState {
-            CopyButton(text: text)
+        if let generation = model.generation {
+            CopyButton(text: generation)
         }
     }
 
@@ -48,13 +49,21 @@ struct GeneratedToolbar: View {
         .tooltip(prompt: "More")
     }
 
+    @ViewBuilder
+    var selector: some View {
+        if let count = model.generationCount, count > 1 {
+            ToggleOutputsView()
+                .padding(.trailing, 8)
+        }
+    }
+
     var insertShortcut: KeyboardShortcut {
         .init("y")
     }
 
     var insert: some View {
         Button {
-            if case let .generated(text) = model.generationState {
+            if let text = model.generation {
                 Accessibility.insertText(text)
                 model.closePanel()
             } else {

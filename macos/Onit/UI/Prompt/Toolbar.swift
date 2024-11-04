@@ -102,7 +102,7 @@ struct Toolbar: View {
 
     var add: some View {
         Button {
-
+            model.newPrompt()
         } label: {
             Image(.circlePlus)
                 .renderingMode(.template)
