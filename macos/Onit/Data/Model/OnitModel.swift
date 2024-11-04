@@ -30,7 +30,6 @@ import Combine
         didSet { input.save() }
     }
     var prompt: Prompt?
-    var responses: [Response] = []
     var context: [Context] = []
     var imageUploads: [URL: UploadProgress] = [:]
     var uploadTasks: [URL: Task<URL?, Never>] = [:]

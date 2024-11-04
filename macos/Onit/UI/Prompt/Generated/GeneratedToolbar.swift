@@ -31,7 +31,8 @@ struct GeneratedToolbar: View {
 
     var regenerate: some View {
         Button {
-
+            model.save(model.instructions)
+            model.generate(model.instructions)
         } label: {
             Image(.arrowsSpin)
                 .padding(4)

@@ -90,6 +90,7 @@ struct TextInputView: View {
                 model.instructions = prompts[model.historyIndex].text
                 model.input = prompts[model.historyIndex].input
                 model.generationIndex = 0
+                model.prompt = prompts[model.historyIndex]
             }
         } label: {
             EmptyView()
@@ -103,10 +104,12 @@ struct TextInputView: View {
                 model.historyIndex -= 1
                 model.instructions = prompts[model.historyIndex].text
                 model.input = prompts[model.historyIndex].input
+                model.prompt = prompts[model.historyIndex]
             } else if model.historyIndex == 0 {
                 model.historyIndex = -1
                 model.instructions = ""
                 model.input = nil
+                model.prompt = nil
                 focused = true
             }
             model.generationIndex = 0
