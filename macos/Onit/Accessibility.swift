@@ -19,6 +19,7 @@ class Accessibility {
     var selectedText: String?
     var currentSource: String?
     var selectedSource: String?
+    var focusedElement: AXUIElement?
 
     static var input: Input? {
         guard let text = shared.selectedText else { return nil }
@@ -35,6 +36,8 @@ class Accessibility {
     private var nsObjectObserver: NSObjectProtocol?
     private var observer: AXObserver?
     private var runLoopSource: CFRunLoopSource?
+    private var tapObserver: CFMachPort?
+
 
     private init() { }
 
@@ -50,7 +53,7 @@ class Accessibility {
             print("Accessibility Trusted!")
         }
     }
-
+    
     static var trusted: Bool {
         AXIsProcessTrusted()
     }
@@ -287,6 +290,12 @@ class Accessibility {
         let result = AXObserverCreate(pid, observerCallback, &observer)
 
         if result == .success, let observer = observer {
+            // Release the previous observer if it exists
+            if let previousObserver = self.observer {
+                CFRunLoopRemoveSource(CFRunLoopGetMain(), AXObserverGetRunLoopSource(previousObserver), .defaultMode)
+                print("Previous observer released.")
+            }
+
             self.observer = observer
             let refCon = Unmanaged.passUnretained(self).toOpaque()
 
@@ -303,6 +312,50 @@ class Accessibility {
         } else {
             print("Failed to create observer for PID: \(pid) with result: \(result)")
         }
+        
+        // Setup mouse click observer
+        let eventMask = (1 << CGEventType.leftMouseUp.rawValue) |
+                        (1 << CGEventType.rightMouseUp.rawValue)
+
+        if let eventTap = CGEvent.tapCreate(
+            tap: .cghidEventTap,
+            place: .headInsertEventTap,
+            options: .defaultTap,
+            eventsOfInterest: CGEventMask(eventMask),
+            callback: { (proxy, type, event, refcon) -> Unmanaged<CGEvent>? in
+                DispatchQueue.main.async {
+                    switch type {
+                    case .leftMouseDown, .rightMouseDown:
+                        print("Mouse down detected!")
+                    case .leftMouseUp, .rightMouseUp:
+                        print("Mouse up detected!")
+                        Task { @MainActor in
+                            Accessibility.shared.handleMouseUp()
+                        }
+                    default:
+                        break
+                    }
+                }
+                return Unmanaged.passUnretained(event) // Ensure the event is returned
+            },
+            userInfo: nil
+        ) {
+            // Release the previous event tap if it exists
+            if let previousEventTap = self.tapObserver {
+                CGEvent.tapEnable(tap: previousEventTap, enable: false)
+                CFRunLoopRemoveSource(CFRunLoopGetMain(), CFMachPortCreateRunLoopSource(kCFAllocatorDefault, previousEventTap, 0), .commonModes)
+                // CFRelease(previousEventTap)
+                print("Previous event tap released.")
+
+            }
+
+            self.tapObserver = eventTap
+            let runLoopSource = CFMachPortCreateRunLoopSource(kCFAllocatorDefault, eventTap, 0)
+            CFRunLoopAddSource(CFRunLoopGetMain(), runLoopSource, .commonModes)
+            CGEvent.tapEnable(tap: eventTap, enable: true)
+        } else {
+            print("Failed to create event tap.")
+        }        
     }
 
     private func handleInitialFocus(for appElement: AXUIElement) {
@@ -325,6 +378,7 @@ class Accessibility {
     func handleFocusChange(for focusedElement: AXUIElement, shouldAnimate: Bool = true) {
         // Ensure we're on the main thread
         dispatchPrecondition(condition: .onQueue(.main))
+        self.focusedElement = focusedElement
 
         // Check if the focused element is valid
         var elementPid: pid_t = 0
@@ -816,5 +870,12 @@ class Accessibility {
             print("Element's value attribute is not settable or failed to check. Error: \(isSettableResult.rawValue)")
         }
     }
+    
+    func handleMouseUp() {
+        if let focusedElement = focusedElement {
+            handleHighlightTopEdgeMode(focusedElement, shouldAnimate: false)
+        }
+    }
 }
+
 #endif
