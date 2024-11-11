@@ -71,7 +71,7 @@ extension OnitModel: NSWindowDelegate {
         }
 
         // Focus the text input when we're activating the panel
-        textFocusTrigger.toggle()
+        textFocusTrigger = true
     }
 
     func closePanel() {
@@ -102,7 +102,7 @@ extension OnitModel: NSWindowDelegate {
             panel.makeKeyAndOrderFront(nil)
             panel.orderFrontRegardless()
         }
-        self.textFocusTrigger.toggle()
+        self.textFocusTrigger = true
     }
 
     func windowDidResignKey(_ notification: Notification) {
