@@ -69,6 +69,9 @@ extension OnitModel: NSWindowDelegate {
             newPanel.makeKeyAndOrderFront(nil)
             newPanel.orderFrontRegardless()
         }
+
+        // Focus the text input when we're activating the panel
+        textFocusTrigger.toggle()
     }
 
     func closePanel() {
@@ -90,12 +93,16 @@ extension OnitModel: NSWindowDelegate {
         if panel != nil {
             if let input = Accessibility.input {
                 setInput(input)
-            } else {
-                closePanel()
             }
         } else {
             showPanel()
         }
+        Accessibility.focusOnit()
+        if let panel = panel {
+            panel.makeKeyAndOrderFront(nil)
+            panel.orderFrontRegardless()
+        }
+        self.textFocusTrigger.toggle()
     }
 
     func windowDidResignKey(_ notification: Notification) {

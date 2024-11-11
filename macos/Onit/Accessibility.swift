@@ -16,6 +16,8 @@ enum AccessibilityMode {
 #if !targetEnvironment(simulator)
 @MainActor
 class Accessibility {
+    @Environment(\.model) var model
+    
     var selectedText: [pid_t: String] = [:]
     var currentApplication: pid_t = 0
     var currentSource: String?
@@ -220,7 +222,8 @@ class Accessibility {
         // Check if there's an existing text selection
         if let focusedApp = NSWorkspace.shared.frontmostApplication, focusedApp.processIdentifier != getpid() {
             let pid = focusedApp.processIdentifier
-            let appElement = AXUIElementCreateApplication(pid)
+            print("Ignoring ")
+//            let appElement = AXUIElementCreateApplication(pid)
 //            handleInitialFocus(for: appElement)
         } else {
             print("Ignoring handleAppActivation for our own app.")
@@ -235,7 +238,7 @@ class Accessibility {
         let pidResult = AXUIElementGetPid(element, &elementPid)
         if pidResult == .success {
             if elementPid == getpid() {
-                print("Ignoring notification from our own process.")
+                print("Ignoring notification from our own process. \(elementPid)")
                 return
             }
         } else {
@@ -260,9 +263,9 @@ class Accessibility {
         case kAXAnnouncementRequestedNotification:
             print("Announcement Requested Notification!")
         case kAXApplicationActivatedNotification:
-            print("Application Activated Notification!")
+            print("Application Activated Notification! \(elementPid)" )
         case kAXApplicationDeactivatedNotification:
-            print("Application Deactivated Notification!")
+            print("Application Deactivated Notification! \(elementPid)")
         case kAXApplicationHiddenNotification:
             print("Application Hidden Notification!")
         case kAXApplicationShownNotification:
@@ -515,7 +518,8 @@ class Accessibility {
         if self.selectedText[self.currentApplication] == nil {
             self.window?.orderOut(nil)
         }
-        
+
+        model.selectedText = self.selectedText[self.currentApplication] ?? ""
         print("Selected text: \(selectedText)")
         print("from PID: \(elementPid)")
     }
@@ -785,6 +789,26 @@ class Accessibility {
         }
     }
     
+    static func focusOnit() {
+        // Create an AXUIElement for the application
+        let appElement = AXUIElementCreateApplication(shared.currentApplication)
+
+        // Get the main window of the application
+        var mainWindow: AnyObject?
+        let result = AXUIElementCopyAttributeValue(appElement, kAXMainWindowAttribute as CFString, &mainWindow)
+
+        if result == .success, let windowElement = mainWindow {
+            // Set the window as the focused element
+            AXUIElementSetAttributeValue(windowElement as! AXUIElement, kAXFocusedAttribute as CFString, kCFBooleanTrue)     
+            // Activate the application using NSRunningApplication
+            if let runningApp = NSRunningApplication(processIdentifier: shared.currentApplication) {
+                runningApp.activate(options: [.activateAllWindows])
+            }
+        }
+        // Not sure why but this needs to be called again to work
+        NSRunningApplication.current.activate(options: [.activateAllWindows])
+    }
+
     func handleMouseUp() {
         if let appElement = self.appElement {
             print("Mouse up!")
