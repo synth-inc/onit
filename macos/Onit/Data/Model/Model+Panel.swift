@@ -53,21 +53,22 @@ extension OnitModel: NSWindowDelegate {
         panelContentView.layer?.backgroundColor = NSColor.windowBackgroundColor.cgColor
 
         newPanel.contentView = panelContentView
-
+        newPanel.contentView?.setFrameOrigin(NSPoint(x: 0, y: 0))
         panel = newPanel
 
         if let screen = NSScreen.main {
             let visibleFrame = screen.visibleFrame
+            let windowWidth = newPanel.frame.width
             let windowHeight = newPanel.frame.height
+            
+            let finalXPosition = visibleFrame.origin.x + visibleFrame.width - 16 - windowWidth 
+            let finalYPosition = visibleFrame.origin.y + visibleFrame.height - 16 - windowHeight
 
-            let xPosition = visibleFrame.origin.x + 16
-            let yPosition = visibleFrame.origin.y + visibleFrame.height - 16 - windowHeight
-
-            newPanel.setFrameOrigin(NSPoint(x: xPosition, y: yPosition))
+            // Start off-screen to the right
+            newPanel.setFrameOrigin(NSPoint(x: finalXPosition, y: finalYPosition))
+            newPanel.makeKeyAndOrderFront(nil)
+            newPanel.orderFrontRegardless()
         }
-
-        newPanel.makeKeyAndOrderFront(nil)
-        newPanel.orderFrontRegardless()
     }
 
     func closePanel() {

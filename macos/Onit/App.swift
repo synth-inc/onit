@@ -23,8 +23,9 @@ struct App: SwiftUI.App {
 
         #if !targetEnvironment(simulator)
         Accessibility.requestPermissions()
-        Accessibility.setupWindow(withView: OnitPromptView())
+        Accessibility.setupWindow(withView: StaticPromptView())
         Accessibility.observeActiveApplication()
+//        Accessibility.observeSystemClicks()
         #endif
     }
 
@@ -43,7 +44,7 @@ struct App: SwiftUI.App {
         Settings {
             Form {
                 KeyboardShortcuts.Recorder("Launch Onit", name: .launch) { _ in
-                    Accessibility.resetPrompt(with: OnitPromptView().environment(model))
+                    Accessibility.resetPrompt(with: StaticPromptView().environment(model))
                 }
                 .padding()
             }

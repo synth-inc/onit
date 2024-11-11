@@ -16,13 +16,15 @@ enum AccessibilityMode {
 #if !targetEnvironment(simulator)
 @MainActor
 class Accessibility {
-    var selectedText: String?
+    var selectedText: [pid_t: String] = [:]
+    var currentApplication: pid_t = 0
     var currentSource: String?
     var selectedSource: String?
     var focusedElement: AXUIElement?
+    var appElement: AXUIElement?
 
     static var input: Input? {
-        guard let text = shared.selectedText else { return nil }
+        guard let text = shared.selectedText[shared.currentApplication] else { return nil }
         return .init(selectedText: text, application: shared.selectedSource)
     }
 
@@ -34,7 +36,7 @@ class Accessibility {
     private var window: NSWindow?
 
     private var nsObjectObserver: NSObjectProtocol?
-    private var observer: AXObserver?
+    private var observers: [pid_t: AXObserver] = [:]
     private var runLoopSource: CFRunLoopSource?
     private var tapObserver: CFMachPort?
 
@@ -112,12 +114,55 @@ class Accessibility {
         }
     }
 
+    static func observeSystemClicks() {
+        DispatchQueue.main.async {
+            shared.observeSystemClicks()
+        }
+    }
+    
+    private func observeSystemClicks() {
+        // Setup mouse click observer
+        let eventMask = (1 << CGEventType.leftMouseUp.rawValue) |
+                        (1 << CGEventType.rightMouseUp.rawValue)
+
+        if let eventTap = CGEvent.tapCreate(
+            tap: .cghidEventTap,
+            place: .headInsertEventTap,
+            options: .defaultTap,
+            eventsOfInterest: CGEventMask(eventMask),
+            callback: { (proxy, type, event, refcon) -> Unmanaged<CGEvent>? in
+                DispatchQueue.main.async {
+                    switch type {
+                    case .leftMouseDown, .rightMouseDown:
+                        print("Mouse down detected!")
+                    case .leftMouseUp, .rightMouseUp:
+                        print("Mouse up detected!")
+                        Task { @MainActor in
+                            Accessibility.shared.handleMouseUp()
+                        }
+                    default:
+                        break
+                    }
+                }
+                return Unmanaged.passUnretained(event) // Ensure the event is returned
+            },
+            userInfo: nil
+        ) {
+            self.tapObserver = eventTap
+            let runLoopSource = CFMachPortCreateRunLoopSource(kCFAllocatorDefault, eventTap, 0)
+            CFRunLoopAddSource(CFRunLoopGetMain(), runLoopSource, .commonModes)
+            CGEvent.tapEnable(tap: eventTap, enable: true)
+        } else {
+            print("Failed to create event tap.")
+        }
+    }
+    
     static func observeActiveApplication() {
         DispatchQueue.main.async {
             shared.observeActiveApplication()
         }
     }
-
+    
     private func observeActiveApplication() {
         let notificationCenter = NSWorkspace.shared.notificationCenter
 
@@ -176,14 +221,10 @@ class Accessibility {
         if let focusedApp = NSWorkspace.shared.frontmostApplication, focusedApp.processIdentifier != getpid() {
             let pid = focusedApp.processIdentifier
             let appElement = AXUIElementCreateApplication(pid)
-            handleInitialFocus(for: appElement)
+//            handleInitialFocus(for: appElement)
         } else {
             print("Ignoring handleAppActivation for our own app.")
         }
-    }
-
-    static func observeFocusChanges() {
-        shared.observeFocusChanges()
     }
 
     func handleAccessibilityNotification(_ notification: String, element: AXUIElement) {
@@ -202,14 +243,85 @@ class Accessibility {
         }
 
         switch notification {
+        case kAXLayoutChangedNotification:
+            print("Layout Changed Notification!")
         case kAXFocusedUIElementChangedNotification:
-            handleFocusChange(for: element)
+            print("Focus Changed Notification!!")
+//            handleFocusChange(for: element)
         case kAXSelectedTextChangedNotification:
+            print("Selected Text Changed Notification!")
             handleSelectionChange(for: element)
         case kAXBoundsChangedNotification:
-            handleBoundsChanged(for: element)
+            print("Bounds changed Notification!")
+//            handleBoundsChanged(for: element)
         case kAXValueChangedNotification:
-            handleValueChanged(for: element)
+            // There are ton of these
+            break
+        case kAXAnnouncementRequestedNotification:
+            print("Announcement Requested Notification!")
+        case kAXApplicationActivatedNotification:
+            print("Application Activated Notification!")
+        case kAXApplicationDeactivatedNotification:
+            print("Application Deactivated Notification!")
+        case kAXApplicationHiddenNotification:
+            print("Application Hidden Notification!")
+        case kAXApplicationShownNotification:
+            print("Application Shown Notification!")
+        case kAXCreatedNotification:
+            print("Created Notification!")
+        case kAXDrawerCreatedNotification:
+            print("Drawer Created Notification!")
+        case kAXFocusedWindowChangedNotification:
+            print("Focused Window Changed Notification!")
+        case kAXHelpTagCreatedNotification:
+            print("Help Tag Created Notification!")
+        case kAXMainWindowChangedNotification:
+            print("Main Window Changed Notification!")
+        case kAXMenuClosedNotification:
+            print("Menu Closed Notification!")
+        case kAXMenuItemSelectedNotification:
+            print("Menu Item Selected Notification!")
+        case kAXMenuOpenedNotification:
+            print("Menu Opened Notification!")
+        case kAXMovedNotification:
+            print("Moved Notification!")
+        case kAXResizedNotification:
+            print("Resized Notification!")
+        case kAXRowCollapsedNotification:
+            print("Row Collapsed Notification!")
+        case kAXRowCountChangedNotification:
+            print("Row Count Changed Notification!")
+        case kAXRowExpandedNotification:
+            print("Row Expanded Notification!")
+        case kAXSelectedCellsChangedNotification:
+            print("Selected Cells Changed Notification!")
+        case kAXSelectedChildrenChangedNotification:
+            print("Selected Children Changed Notification!")
+        case kAXSelectedChildrenMovedNotification:
+            print("Selected Children Moved Notification!")
+        case kAXSelectedColumnsChangedNotification:
+            print("Selected Columns Changed Notification!")
+        case kAXSelectedRowsChangedNotification:
+            print("Selected Rows Changed Notification!")
+        case kAXSheetCreatedNotification:
+            print("Sheet Created Notification!")
+        case kAXTitleChangedNotification:
+            print("Title Changed Notification!")
+        case kAXUIElementDestroyedNotification:
+//            print("UI Element Destroyed Notification!")
+            break
+        case kAXUnitsChangedNotification:
+            print("Units Changed Notification!")
+        case kAXWindowCreatedNotification:
+            print("Window Created Notification!")
+        case kAXWindowDeminiaturizedNotification:
+            print("Window Deminiaturized Notification!")
+        case kAXWindowMiniaturizedNotification:
+            print("Window Miniaturized Notification!")
+        case kAXWindowMovedNotification:
+            print("Window Moved Notification!")
+        case kAXWindowResizedNotification:
+            print("Window Resized Notification!")
         default:
             break
         }
@@ -217,49 +329,10 @@ class Accessibility {
 
     func handleValueChanged(for element: AXUIElement) {
         print("Handling value changed...")
-
-        // Re-fetch the bounding rectangle for the selected text
-        handleHighlightTopEdgeMode(element, shouldAnimate: false)
     }
 
     func handleBoundsChanged(for element: AXUIElement) {
         print("Handling bounds changed...")
-
-        // Re-fetch the bounding rectangle for the selected text
-        handleHighlightTopEdgeMode(element, shouldAnimate: false)
-    }
-
-    private func observeFocusChanges() {
-        let systemElement = AXUIElementCreateSystemWide()
-
-        var observer: AXObserver?
-
-        let observerCallback: AXObserverCallback = { _, element, notification, refcon in
-            // Dispatch to main thread immediately
-            DispatchQueue.main.async {
-                let accessibilityInstance = Unmanaged<Accessibility>.fromOpaque(refcon!).takeUnretainedValue()
-                accessibilityInstance.handleAccessibilityNotification(notification as String, element: element)
-            }
-        }
-
-        let result = AXObserverCreate(pid_t(getpid()), observerCallback, &observer)
-
-        if result == .success, let observer = observer {
-            self.observer = observer
-            let refCon = Unmanaged.passUnretained(self).toOpaque()
-
-            // Observe focused UI element changes
-            AXObserverAddNotification(observer, systemElement, kAXFocusedUIElementChangedNotification as CFString, refCon)
-
-            // Retain the run loop source
-            let runLoopSource = AXObserverGetRunLoopSource(observer)
-            self.runLoopSource = runLoopSource
-            CFRunLoopAddSource(CFRunLoopGetMain(), runLoopSource, .defaultMode)
-
-            print("Observer registered for system-wide focus change notifications")
-        } else {
-            print("Failed to create observer with result: \(result)")
-        }
     }
 
     private func setupObserver(for pid: pid_t) {
@@ -274,8 +347,16 @@ class Accessibility {
             print("Not setting up observer for our own process.")
             return
         }
+        
+        self.currentApplication = pid
+        // Check if the process ID is already in self.observers
+        guard self.observers[pid] == nil else {
+            print("Observer for PID: \(pid) already exists. Skipping setup.")
+            return
+        }
+
         print("Setting up observer for PID: \(pid)")
-        let appElement = AXUIElementCreateApplication(pid)
+        self.appElement = AXUIElementCreateApplication(pid)
 
         var observer: AXObserver?
 
@@ -291,271 +372,61 @@ class Accessibility {
 
         if result == .success, let observer = observer {
             // Release the previous observer if it exists
-            if let previousObserver = self.observer {
-                CFRunLoopRemoveSource(CFRunLoopGetMain(), AXObserverGetRunLoopSource(previousObserver), .defaultMode)
-                print("Previous observer released.")
-            }
-
-            self.observer = observer
+            self.observers[pid] = observer
             let refCon = Unmanaged.passUnretained(self).toOpaque()
+            if let appElement = self.appElement {
+                let notifications = [
+                    kAXAnnouncementRequestedNotification,
+                    kAXApplicationActivatedNotification,
+                    kAXApplicationDeactivatedNotification,
+                    kAXApplicationHiddenNotification,
+                    kAXApplicationShownNotification,
+                    kAXCreatedNotification,
+                    kAXDrawerCreatedNotification,
+                    kAXFocusedUIElementChangedNotification,
+                    kAXFocusedWindowChangedNotification,
+                    kAXHelpTagCreatedNotification,
+                    kAXLayoutChangedNotification,
+                    kAXMainWindowChangedNotification,
+                    kAXMenuClosedNotification,
+                    kAXMenuItemSelectedNotification,
+                    kAXMenuOpenedNotification,
+                    kAXMovedNotification,
+                    kAXResizedNotification,
+                    kAXRowCollapsedNotification,
+                    kAXRowCountChangedNotification,
+                    kAXRowExpandedNotification,
+                    kAXSelectedCellsChangedNotification,
+                    kAXSelectedChildrenChangedNotification,
+                    kAXSelectedChildrenMovedNotification,
+                    kAXSelectedColumnsChangedNotification,
+                    kAXSelectedRowsChangedNotification,
+                    kAXSelectedTextChangedNotification,
+                    kAXSheetCreatedNotification,
+                    kAXTitleChangedNotification,
+                    kAXUIElementDestroyedNotification,
+                    kAXUnitsChangedNotification,
+                    kAXValueChangedNotification,
+                    kAXWindowCreatedNotification,
+                    kAXWindowDeminiaturizedNotification,
+                    kAXWindowMiniaturizedNotification,
+                    kAXWindowMovedNotification,
+                    kAXWindowResizedNotification
+                ]
 
-            // Register for focused UI element changes
-            AXObserverAddNotification(observer, appElement, kAXFocusedUIElementChangedNotification as CFString, refCon)
-
-            // Add the observer to the main run loop
-            CFRunLoopAddSource(CFRunLoopGetMain(), AXObserverGetRunLoopSource(observer), .defaultMode)
-
-            print("Observer registered for PID: \(pid)")
-
-            // Handle initial focus
-            handleInitialFocus(for: appElement)
+                for notification in notifications {
+                    AXObserverAddNotification(observer, appElement, notification as CFString, refCon)
+                }
+                // Add the observer to the main run loop
+                CFRunLoopAddSource(CFRunLoopGetMain(), AXObserverGetRunLoopSource(observer), .defaultMode)
+                print("Observer registered for PID: \(pid)")
+            }
         } else {
             print("Failed to create observer for PID: \(pid) with result: \(result)")
         }
-        
-        // Setup mouse click observer
-        let eventMask = (1 << CGEventType.leftMouseUp.rawValue) |
-                        (1 << CGEventType.rightMouseUp.rawValue)
-
-        if let eventTap = CGEvent.tapCreate(
-            tap: .cghidEventTap,
-            place: .headInsertEventTap,
-            options: .defaultTap,
-            eventsOfInterest: CGEventMask(eventMask),
-            callback: { (proxy, type, event, refcon) -> Unmanaged<CGEvent>? in
-                DispatchQueue.main.async {
-                    switch type {
-                    case .leftMouseDown, .rightMouseDown:
-                        print("Mouse down detected!")
-                    case .leftMouseUp, .rightMouseUp:
-                        print("Mouse up detected!")
-                        Task { @MainActor in
-                            Accessibility.shared.handleMouseUp()
-                        }
-                    default:
-                        break
-                    }
-                }
-                return Unmanaged.passUnretained(event) // Ensure the event is returned
-            },
-            userInfo: nil
-        ) {
-            // Release the previous event tap if it exists
-            if let previousEventTap = self.tapObserver {
-                CGEvent.tapEnable(tap: previousEventTap, enable: false)
-                CFRunLoopRemoveSource(CFRunLoopGetMain(), CFMachPortCreateRunLoopSource(kCFAllocatorDefault, previousEventTap, 0), .commonModes)
-                // CFRelease(previousEventTap)
-                print("Previous event tap released.")
-
-            }
-
-            self.tapObserver = eventTap
-            let runLoopSource = CFMachPortCreateRunLoopSource(kCFAllocatorDefault, eventTap, 0)
-            CFRunLoopAddSource(CFRunLoopGetMain(), runLoopSource, .commonModes)
-            CGEvent.tapEnable(tap: eventTap, enable: true)
-        } else {
-            print("Failed to create event tap.")
-        }        
     }
 
-    private func handleInitialFocus(for appElement: AXUIElement) {
-        // Retrieve the currently focused UI element within the application
-        var focusedElement: CFTypeRef?
-        let result = AXUIElementCopyAttributeValue(appElement, kAXFocusedUIElementAttribute as CFString, &focusedElement)
-        if result == .success, let focusedElement = focusedElement {
-            print("Successfully retrieved focused UI element within application.")
-            if CFGetTypeID(focusedElement) == AXUIElementGetTypeID() {
-                let axElement = focusedElement as! AXUIElement
-                handleFocusChange(for: axElement, shouldAnimate: false)
-            } else {
-                print("Focused element is not an AXUIElement.")
-            }
-        } else {
-            print("Failed to get focused UI element within application. Error: \(result.rawValue)")
-        }
-    }
-
-    func handleFocusChange(for focusedElement: AXUIElement, shouldAnimate: Bool = true) {
-        // Ensure we're on the main thread
-        dispatchPrecondition(condition: .onQueue(.main))
-        self.focusedElement = focusedElement
-
-        // Check if the focused element is valid
-        var elementPid: pid_t = 0
-        let pidResult = AXUIElementGetPid(focusedElement, &elementPid)
-        if pidResult != .success {
-            print("Invalid focused element (cannot get pid). Skipping.")
-            return
-        }
-        if elementPid == getpid() {
-            print("Ignoring focus change from our own process.")
-            return
-        }
-
-        switch mode {
-        case .textfieldMode:
-            handleTextFieldMode(for: focusedElement)
-        case .highlightTopEdgeMode:
-            guard let observer = observer else {
-                print("Observer is nil")
-                return
-            }
-
-            // Find the text element that supports selection
-            if let elementToObserve = findElementWithAttribute(element: focusedElement, attribute: kAXSelectedTextRangeAttribute as CFString) {
-
-                let refCon = Unmanaged.passUnretained(self).toOpaque()
-
-                // Add observer to new element
-                let result1 = AXObserverAddNotification(observer, elementToObserve, kAXSelectedTextChangedNotification as CFString, refCon)
-                let result2 = AXObserverAddNotification(observer, elementToObserve, kAXBoundsChangedNotification as CFString, refCon)
-
-                if result1 == .success && result2 == .success {
-                    print("Added selection and bounds changed observers to element.")
-                } else {
-                    print("Failed to add observers. Errors: \(result1.rawValue), \(result2.rawValue)")
-                }
-
-                // Store the selected text
-                selectedText = getSelectedText(from: elementToObserve)
-
-                // Handle initial selection
-                handleHighlightTopEdgeMode(elementToObserve, shouldAnimate: shouldAnimate)
-            } else {
-                print("No element with AXSelectedTextRange found.")
-            }
-        }
-    }
-
-    func handleTextFieldMode(for focusedElement: AXUIElement) {
-        print("Handling focus change...")
-
-        // Get the role of the focused element
-        var roleValue: CFTypeRef?
-        let roleResult = AXUIElementCopyAttributeValue(focusedElement, kAXRoleAttribute as CFString, &roleValue)
-        if roleResult == .success, let role = roleValue as? String {
-            print("Focused element role: \(role)")
-        } else {
-            print("Failed to get role of focused element. Error: \(roleResult.rawValue)")
-        }
-
-        // Try to get the frame of the focused element
-        var frameValue: CFTypeRef?
-        let frameResult = AXUIElementCopyAttributeValue(
-            focusedElement,
-            kAXFrameAttribute as CFString,
-            &frameValue
-        )
-
-        if frameResult == .success, let frameValue = frameValue, CFGetTypeID(frameValue) == AXValueGetTypeID() {
-            var frame = CGRect.zero
-
-            AXValueGetValue(frameValue as! AXValue, .cgRect, &frame)
-            print("Element frame: \(frame)")
-
-            adjustWindowPosition(with: frame)
-        } else {
-            print("Failed to get frame of focused element. Error: \(frameResult.rawValue)")
-
-            // Attempt to find a text field within the focused element
-            if let textFieldElement = findTextFieldInElement(focusedElement) {
-                print("Text field found within focused element.")
-                moveFloatingWindowToElement(textFieldElement)
-            } else {
-                print("No text field found within focused element.")
-            }
-        }
-    }
-
-    func handleHighlightTopEdgeMode(_ focusedElement: AXUIElement, shouldAnimate: Bool = true) {
-        print("Handling highlight in top edge mode...")
-        dispatchPrecondition(condition: .onQueue(.main))
-
-        // Check if the focused element is valid
-        var elementPid: pid_t = 0
-        let pidResult = AXUIElementGetPid(focusedElement, &elementPid)
-        if pidResult != .success {
-            print("Invalid element (cannot get pid). Skipping.")
-            return
-        }
-
-        // Check if the element supports kAXSelectedTextRangeAttribute
-        var attributeNamesCFArray: CFArray?
-        let namesResult = AXUIElementCopyAttributeNames(focusedElement, &attributeNamesCFArray)
-        if namesResult == .success {
-            let attributeNames = attributeNamesCFArray as! [String]
-            if attributeNames.contains(kAXSelectedTextRangeAttribute as String) {
-                // Proceed to get the selected text range
-                var valueRef: CFTypeRef?
-                let result = AXUIElementCopyAttributeValue(focusedElement, kAXSelectedTextRangeAttribute as CFString, &valueRef)
-                if result != .success {
-                    print("Failed to get selected text range. Error: \(result.rawValue)")
-                    return
-                }
-                let value = valueRef as! AXValue
-
-                // Get the range
-                var range = CFRange()
-                if AXValueGetValue(value, .cfRange, &range) {
-                    print("Selected text range: \(range)")
-
-                    if range.length > 0 {
-                        // Get the bounding rectangle for the selected text
-                        var boundingValue: CFTypeRef?
-                        let paramResult = AXUIElementCopyParameterizedAttributeValue(
-                            focusedElement,
-                            kAXBoundsForRangeParameterizedAttribute as CFString,
-                            value,
-                            &boundingValue
-                        )
-
-                        if paramResult == .success {
-                            let boundingValue = boundingValue as! AXValue
-                            var boundingRect = CGRect.zero
-                            if AXValueGetValue(boundingValue, .cgRect, &boundingRect) {
-                                print("Bounding rect for selected text: \(boundingRect)")
-                                // Adjust the window position based on the bounding rect
-                                adjustWindowPosition(with: boundingRect)
-                                if shouldAnimate {
-                                    self.showWindowWithAnimation()
-                                    print("Window shown at selected text position with animation.")
-                                } else {
-                                    self.showWindowWithoutAnimation()
-                                    print("Window shown at selected text position without animation.")
-                                }
-                            } else {
-                                print("Failed to get CGRect from AXValue.")
-                            }
-                        } else {
-                            print("Failed to get bounding rect for selected text. Error: \(paramResult.rawValue)")
-                            // Fallback to hiding the window
-                            self.window?.orderOut(nil)
-                            print("Window hidden; unable to get bounding rect.")
-                        }
-                    } else {
-                        // Hide the window if there's no selection
-                        self.window?.orderOut(nil)
-                        print("Window hidden; no selection.")
-                    }
-                } else {
-                    print("Failed to get CFRange from AXValue.")
-                }
-            } else {
-                print("Element does not support kAXSelectedTextRangeAttribute.")
-                // Attempt to find a child element that does
-                if let textElement = findElementWithAttribute(element: focusedElement, attribute: kAXSelectedTextRangeAttribute as CFString) {
-                    print("Found child element with AXSelectedTextRange.")
-                    handleHighlightTopEdgeMode(textElement)
-                } else {
-                    print("No element with AXSelectedTextRange found in focused element.")
-                }
-            }
-        } else {
-            print("Failed to get attribute names. Error: \(namesResult.rawValue)")
-            return
-        }
-    }
-
+    
     func getSelectedText(from focusedElement: AXUIElement) -> String? {
         // Ensure we're on the main thread
         dispatchPrecondition(condition: .onQueue(.main))
@@ -624,11 +495,50 @@ class Accessibility {
             return
         }
 
-        guard mode == .highlightTopEdgeMode else { return }
-        handleHighlightTopEdgeMode(element, shouldAnimate: true)
-
         // Store the selected text when the selection changes
-        selectedText = getSelectedText(from: element)
+        let newSelectedText = getSelectedText(from: element)
+        if let newSelectedText = newSelectedText {
+            if newSelectedText.count > 1 {
+                if self.window?.isVisible == false {
+                    self.adjustWindowToTopRight()
+                    self.showWindowWithAnimation()
+                }
+            } else{
+                print("New selected text count is not greater than 1.")
+            }
+        } else {
+            print("No new selected text.")
+        }
+        self.selectedText[self.currentApplication] = newSelectedText
+
+        // If nothing is selected, hide the window. 
+        if self.selectedText[self.currentApplication] == nil {
+            self.window?.orderOut(nil)
+        }
+        
+        print("Selected text: \(selectedText)")
+        print("from PID: \(elementPid)")
+    }
+    
+    private func adjustWindowToTopRight() {
+        DispatchQueue.main.async {
+            guard let currentScreen = NSScreen.main else {
+                print("No main screen found.")
+                return
+            }
+
+            // Get the window's height
+            let windowHeight = self.window?.frame.height ?? 0
+            let windowWidth = self.window?.frame.width ?? 0
+
+            // Calculate the new origin for the window to be at the top right corner of the current screen
+            let newOriginX = currentScreen.visibleFrame.maxX - (windowWidth - 10)
+            let newOriginY = currentScreen.visibleFrame.maxY - (windowHeight + 85)
+            
+            // Set the window's position to the calculated top right corner
+            self.window?.setFrameOrigin(NSPoint(x: newOriginX, y: newOriginY))
+            print("Window moved to top right corner at: \(NSPoint(x: newOriginX, y: newOriginY))")
+        }
     }
 
     private func adjustWindowPosition(with rect: CGRect) {
@@ -659,7 +569,7 @@ class Accessibility {
 
             // Ensure the window doesn't go off-screen vertically
             let visibleFrame = currentScreen.visibleFrame
-
+        
             // If the window would go off the top of the screen, position it below the selection
             if windowOriginY + windowHeight > visibleFrame.maxY {
                 // Position the window below the selection
@@ -710,18 +620,18 @@ class Accessibility {
         return nil
     }
 
-    func findElementWithAttribute(element: AXUIElement, attribute: CFString, maxDepth: Int = 5) -> AXUIElement? {
-        func helper(currentElement: AXUIElement, currentDepth: Int) -> AXUIElement? {
-            if currentDepth > maxDepth {
-                return nil
-            }
+    
+    
+    func findElementsWithAttribute(element: AXUIElement, attribute: CFString) -> [AXUIElement] {
+        var elementsWithAttribute: [AXUIElement] = []
 
+        func helper(currentElement: AXUIElement) {
             // Check if the element is valid
             var elementPid: pid_t = 0
             let pidResult = AXUIElementGetPid(currentElement, &elementPid)
             if pidResult != .success {
                 print("Invalid element (cannot get pid). Skipping.")
-                return nil
+                return
             }
 
             // Attempt to get the attribute names
@@ -729,7 +639,7 @@ class Accessibility {
             let namesResult = AXUIElementCopyAttributeNames(currentElement, &attributeNamesCFArray)
             if namesResult == .success, let namesArray = attributeNamesCFArray as? [String] {
                 if namesArray.contains(attribute as String) {
-                    return currentElement
+                    elementsWithAttribute.append(currentElement)
                 }
 
                 // Get children
@@ -737,20 +647,19 @@ class Accessibility {
                 let childrenResult = AXUIElementCopyAttributeValue(currentElement, kAXChildrenAttribute as CFString, &childrenValue)
                 if childrenResult == .success, let childrenArray = childrenValue as? [AXUIElement] {
                     for child in childrenArray {
-                        if let foundElement = helper(currentElement: child, currentDepth: currentDepth + 1) {
-                            return foundElement
-                        }
+                        helper(currentElement: child)
                     }
-                } else {
-                    print("Failed to get children or no children. Error: \(childrenResult.rawValue)")
                 }
+//                else {
+//                    print("Failed to get children or no children. Error: \(childrenResult.rawValue)")
+//                }
             } else {
                 print("Failed to get attribute names for element. Skipping. Error: \(namesResult.rawValue)")
             }
-            return nil
         }
 
-        return helper(currentElement: element, currentDepth: 0)
+        helper(currentElement: element)
+        return elementsWithAttribute
     }
 
     func showWindowWithAnimation() {
@@ -763,9 +672,9 @@ class Accessibility {
             // Get the contentView's layer
             guard let layer = window.contentView?.layer else { return }
 
-            // Set the anchorPoint to the center and adjust the layer's position
+            // Set the anchorPoint to the right and adjust the layer's position
             let oldFrame = layer.frame
-            layer.anchorPoint = CGPoint(x: 0.5, y: 0.5)
+            layer.anchorPoint = CGPoint(x: 1.0, y: 0.5)
             layer.frame = oldFrame // Reset frame to keep the layer in the same place
 
             // Set initial state
@@ -779,18 +688,18 @@ class Accessibility {
                 window.animator().alphaValue = 1.0
             }
 
-            // Create a scale animation for the layer
-            let scaleAnimation = CABasicAnimation(keyPath: "transform.scale")
-            scaleAnimation.fromValue = 0.95
-            scaleAnimation.toValue = 1.0
-            scaleAnimation.duration = 0.3 // Match duration with alphaValue animation
-            scaleAnimation.timingFunction = CAMediaTimingFunction(name: .easeOut)
+            // Create a width animation for the layer
+            let widthAnimation = CABasicAnimation(keyPath: "bounds.size.width")
+            widthAnimation.fromValue = 0.0
+            widthAnimation.toValue = oldFrame.size.width
+            widthAnimation.duration = 0.3 // Match duration with alphaValue animation
+            widthAnimation.timingFunction = CAMediaTimingFunction(name: .easeOut)
 
             // Apply the animation to the layer
-            layer.add(scaleAnimation, forKey: "scaleUp")
+            layer.add(widthAnimation, forKey: "expandWidth")
 
-            // Set the final transform to ensure the layer ends up at the correct scale
-            layer.transform = CATransform3DIdentity
+            // Set the final bounds to ensure the layer ends up at the correct size
+            layer.bounds.size.width = oldFrame.size.width
         }
     }
 
@@ -829,6 +738,11 @@ class Accessibility {
         var isSettable: DarwinBoolean = false
         let isSettableResult = AXUIElementIsAttributeSettable(element, kAXValueAttribute as CFString, &isSettable)
 
+        // TODO TIM - I don't think this is going to work in many situations, there's no guarentee that "value" settable thing will be the focused element.
+        // I think we probably have to traverse the children of the focused element until we find one where the selectedText matches the currently selected text.
+        // Even that will get pretty messed up if the selection has changed.
+        
+        
         if isSettableResult == .success && isSettable.boolValue {
             // Retrieve the current value
             var valueRef: CFTypeRef?
@@ -872,8 +786,18 @@ class Accessibility {
     }
     
     func handleMouseUp() {
-        if let focusedElement = focusedElement {
-            handleHighlightTopEdgeMode(focusedElement, shouldAnimate: false)
+        if let appElement = self.appElement {
+            print("Mouse up!")
+        }
+        else {
+            print("No app ELement, skipping")
+        }
+    }
+    
+    deinit {
+        for (_, observer) in self.observers {
+            let runLoopSource = AXObserverGetRunLoopSource(observer)
+            CFRunLoopRemoveSource(CFRunLoopGetMain(), runLoopSource, .commonModes)
         }
     }
 }
