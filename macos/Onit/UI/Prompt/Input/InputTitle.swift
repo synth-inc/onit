@@ -8,11 +8,12 @@
 import SwiftUI
 
 struct InputTitle: View {
-    var source: String?
+    @Environment(\.model) var model
+//    var source: String?
 
     var sourceString: String {
-        guard let source else { return "" }
-        return " - \(source)"
+        guard let sourceText = model.sourceText else { return "" }
+        return " - \(sourceText)"
     }
 
     var inputString: String {
@@ -33,5 +34,5 @@ struct InputTitle: View {
 }
 
 #Preview {
-    InputTitle(source: "Xcode")
+    InputTitle()
 }

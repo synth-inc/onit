@@ -31,6 +31,7 @@ import Combine
     }
     var prompt: Prompt?
     var context: [Context] = []
+    var sourceText: String?
     var selectedText: String?
     var imageUploads: [URL: UploadProgress] = [:]
     var uploadTasks: [URL: Task<URL?, Never>] = [:]

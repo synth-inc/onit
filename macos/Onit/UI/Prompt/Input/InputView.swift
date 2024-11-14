@@ -14,7 +14,7 @@ struct InputView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            InputTitle(source: input.application)
+            InputTitle()
             divider
             InputBody(text: model.selectedText ?? "")
         }

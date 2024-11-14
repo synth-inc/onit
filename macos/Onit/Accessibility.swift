@@ -520,6 +520,7 @@ class Accessibility {
         }
 
         model.selectedText = self.selectedText[self.currentApplication] ?? ""
+        model.sourceText = self.currentSource ?? ""
         print("Selected text: \(selectedText)")
         print("from PID: \(elementPid)")
     }
