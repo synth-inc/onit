@@ -9,7 +9,7 @@ import Foundation
 
 extension FetchingClient {
     func execute<E: Endpoint>(_ endpoint: E) async throws -> E.Response {
-        let url = baseURL.appendingPathComponent(endpoint.path)
+        let url = endpoint.baseURL.appendingPathComponent(endpoint.path)
 
         var requestBodyData: UploadBody = .empty
         if let requestBody = endpoint.requestBody {

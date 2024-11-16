@@ -32,9 +32,16 @@ extension OnitModel {
             let images = await remoteImages
 
             do {
-                let chat = try await client.chat(
-                    text, input: input, model: preferences.model, files: files, images: images
-                )
+                let chat : String
+                if preferences.mode == .remote {
+                    chat = try await client.chat(
+                        text, input: input, model: preferences.model, files: files, images: images
+                    )
+                } else {
+                    chat = try await client.localChat(
+                        text, input: input, model: preferences.localModel, files: files, images: images
+                    )
+                }
                 addChat(chat)
                 if let prompt = self.prompt {
                     self.generationIndex = prompt.responses.count - 1

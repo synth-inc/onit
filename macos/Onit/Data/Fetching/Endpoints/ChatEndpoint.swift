@@ -22,6 +22,8 @@ extension FetchingClient {
 }
 
 struct ChatEndpoint: Endpoint {
+    var baseURL: URL = URL(string: "https://onit-server-b3c3746e04e9.herokuapp.com")!
+    
     typealias Request = ChatRequestJSON
     typealias Response = ProcessResponse
 
