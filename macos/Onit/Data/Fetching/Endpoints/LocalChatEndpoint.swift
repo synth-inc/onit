@@ -28,7 +28,13 @@ extension FetchingClient {
             }
         }
 
-        let endpoint = LocalChatEndpoint(model: model, prompt: text, images: base64Strings)
+        var prompt = text
+        if let input = input {
+            let pretext : String = "Here's some text from the application \(input.application ?? ""): \n \(input.selectedText) \n";
+            prompt = pretext + text
+        }
+        
+        let endpoint = LocalChatEndpoint(model: model, prompt: prompt, images: base64Strings)
         let response = try await {
             if files.isEmpty {
                 try await execute(endpoint)
