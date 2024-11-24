@@ -36,7 +36,7 @@ extension FetchingClient {
     }
 
     func executeMultipart<E: Endpoint>(_ endpoint: E, files: [URL]) async throws -> E.Response {
-        let url = baseURL.appendingPathComponent(endpoint.path)
+        let url = endpoint.baseURL.appendingPathComponent(endpoint.path)
 
         var request = URLRequest(url: url)
         request.httpMethod = endpoint.method.rawValue
@@ -50,7 +50,11 @@ extension FetchingClient {
 
         request.httpBody = body
 
-        let (data, _) = try await URLSession.shared.data(for: request)
+        let (data, response) = try await URLSession.shared.data(for: request)
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw FetchingError.invalidResponse
+        }
+        try self.handle(response: httpResponse, withData: data)
         let decodedResponse = try decoder.decode(E.Response.self, from: data)
         return decodedResponse
     }
@@ -74,6 +78,8 @@ extension FetchingClient {
                     let valueString: String
                     if let stringValue = value as? String {
                         valueString = stringValue
+                    } else if let boolValue = value as? Bool {
+                        valueString = boolValue ? "true" : "false"
                     } else {
                         let valueData = try JSONSerialization.data(withJSONObject: value)
                         valueString = String(data: valueData, encoding: .utf8) ?? ""
