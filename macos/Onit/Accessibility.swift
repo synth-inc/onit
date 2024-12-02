@@ -245,8 +245,13 @@ class Accessibility {
         }
     }
 
-    func handleAccessibilityNotification(_ notification: String, element: AXUIElement) {
+    func handleAccessibilityNotification(_ notification: String, info: [String: Any], element: AXUIElement, observer: AXObserver) {
         dispatchPrecondition(condition: .onQueue(.main))
+
+        print("Notification info")
+        for (key, value) in info {
+            print("Notification info;Key: \(key), Value: \(value)")
+        }
 
         // Check if the notification comes from our own process
         var elementPid: pid_t = 0
@@ -438,7 +443,7 @@ class Accessibility {
             kAXTitleChangedNotification,
             kAXUIElementDestroyedNotification,
             kAXUnitsChangedNotification,
-            kAXValueChangedNotification,
+//            kAXValueChangedNotification,
             kAXWindowCreatedNotification,
             kAXWindowDeminiaturizedNotification,
             kAXWindowMiniaturizedNotification,
@@ -458,15 +463,15 @@ class Accessibility {
             
             var observer: AXObserver?
             
-            let observerCallback: AXObserverCallback = { _, element, notification, refcon in
+            let observerCallback: AXObserverCallbackWithInfo = { observer, element, notification, userInfo, refcon in
                 // Dispatch to main thread immediately
                 DispatchQueue.main.async {
                     let accessibilityInstance = Unmanaged<Accessibility>.fromOpaque(refcon!).takeUnretainedValue()
-                    accessibilityInstance.handleAccessibilityNotification(notification as String, element: element)
+                    accessibilityInstance.handleAccessibilityNotification(notification as String, info: userInfo as! Dictionary<String, Any> as Dictionary, element: element, observer: observer)
                 }
             }
             
-            let result = AXObserverCreate(pid, observerCallback, &observer)
+            let result = AXObserverCreateWithInfoCallback(pid, observerCallback, &observer)
             
             if result == .success, let observer = observer {
                 // Release the previous observer if it exists
@@ -854,7 +859,8 @@ class Accessibility {
 class AccessibilityHelper {
     // This class is not MainActor isolated
     static func getAllTextInElement(appElement: AXUIElement) -> String? {
-        let startTime = CFAbsoluteTimeGetCurrent()        
+//        return ""
+        let startTime = CFAbsoluteTimeGetCurrent()
         let (elementsWithText, maxDepth, totalElementsSearched) = findAllVisibleElementsWithAttribute(element: appElement, attribute: kAXValueAttribute as CFString, maxDepth: 1000)
         let endTime = CFAbsoluteTimeGetCurrent()
         let elapsedTime = endTime - startTime

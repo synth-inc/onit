@@ -19,6 +19,7 @@ struct App: SwiftUI.App {
             guard let model else { return }
             model.keyboardShortcutAction()
         }
+        // Do the same for escape... 
         model.showPanel()
 
         #if !targetEnvironment(simulator)
