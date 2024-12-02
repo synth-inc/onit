@@ -16,7 +16,7 @@ enum AccessibilityMode {
 #if !targetEnvironment(simulator)
 @MainActor
 class Accessibility {
-    @Environment(\.model) var model
+    var model: OnitModel?
     
     var selectedText: [pid_t: String] = [:]
     var currentApplication: pid_t = 0
@@ -46,6 +46,10 @@ class Accessibility {
     private init() { }
 
     private static let shared = Accessibility()
+
+    static func setModel(_ model: OnitModel) {
+        shared.model = model
+    }
 
     static func requestPermissions() {
         let trusted = AXIsProcessTrusted()
@@ -176,6 +180,10 @@ class Accessibility {
         ) { [weak self] notification in
             Task { @MainActor in
                 guard let self = self else { return }
+                
+                // Handle app activation
+                self.handleAppActivation()
+                
                 if let app = notification.userInfo?[NSWorkspace.applicationUserInfoKey] as? NSRunningApplication {
                     // Skip if the activated app is our own app
                     if app.processIdentifier == getpid() {
@@ -186,9 +194,6 @@ class Accessibility {
                     self.currentSource = app.localizedName
                     self.setupObserver(for: app.processIdentifier)
                 }
-
-                // Handle app activation
-                self.handleAppActivation()
             }
         }
 
@@ -222,9 +227,19 @@ class Accessibility {
         // Check if there's an existing text selection
         if let focusedApp = NSWorkspace.shared.frontmostApplication, focusedApp.processIdentifier != getpid() {
             let pid = focusedApp.processIdentifier
-            print("Ignoring ")
-//            let appElement = AXUIElementCreateApplication(pid)
-//            handleInitialFocus(for: appElement)
+            
+            let newAppElement = AXUIElementCreateApplication(pid)
+            self.appElement = newAppElement
+            self.currentApplication = pid
+            
+            let textInApplication = AccessibilityHelper.getAllTextInElement(appElement: newAppElement)
+            if let model = self.model {
+                model.debugText = textInApplication
+            }
+            
+            // print("Text in application: \(textInApplication)")
+            // let appElement = AXUIElementCreateApplication(pid)
+            // handleInitialFocus(for: appElement)
         } else {
             print("Ignoring handleAppActivation for our own app.")
         }
@@ -249,8 +264,8 @@ class Accessibility {
         case kAXLayoutChangedNotification:
             print("Layout Changed Notification!")
         case kAXFocusedUIElementChangedNotification:
-            print("Focus Changed Notification!!")
-//            handleFocusChange(for: element)
+//            print("Focus Changed Notification!!")
+            handleFocusChange(for: element)
         case kAXSelectedTextChangedNotification:
             print("Selected Text Changed Notification!")
             handleSelectionChange(for: element)
@@ -258,6 +273,7 @@ class Accessibility {
             print("Bounds changed Notification!")
 //            handleBoundsChanged(for: element)
         case kAXValueChangedNotification:
+//            print("Value changed Notification!")
             // There are ton of these
             break
         case kAXAnnouncementRequestedNotification:
@@ -304,12 +320,15 @@ class Accessibility {
             print("Selected Children Moved Notification!")
         case kAXSelectedColumnsChangedNotification:
             print("Selected Columns Changed Notification!")
+            // These handle tabbed interfaces
+            handleFocusChange(for: element)
         case kAXSelectedRowsChangedNotification:
             print("Selected Rows Changed Notification!")
+            handleFocusChange(for: element)
         case kAXSheetCreatedNotification:
             print("Sheet Created Notification!")
         case kAXTitleChangedNotification:
-            print("Title Changed Notification!")
+            handleTitleChange(for: element)
         case kAXUIElementDestroyedNotification:
 //            print("UI Element Destroyed Notification!")
             break
@@ -330,6 +349,40 @@ class Accessibility {
         }
     }
 
+    func handleFocusChange(for element: AXUIElement) {
+        // Check if the focused element is valid
+        var elementPid: pid_t = 0
+        let pidResult = AXUIElementGetPid(element, &elementPid)
+        if pidResult != .success {
+            print("Invalid focused element (cannot get pid). Skipping.")
+            return
+        }
+        if elementPid == getpid() {
+            print("Ignoring focus change from our own process.")
+            return
+        }
+        print("Focus change from pid: \(elementPid)")
+        // Read in context on FocusChange notifiications
+        if let appElement = self.appElement {
+            let textInElement = AccessibilityHelper.getAllTextInElement(appElement: appElement)
+            if textInElement != "" {
+                if let model = self.model {
+                    model.debugText = textInElement
+                }
+            }
+        }
+    }
+    
+    func handleTitleChange(for element: AXUIElement) {
+        var titleValue: CFTypeRef?
+        let titleResult = AXUIElementCopyAttributeValue(element, kAXTitleAttribute as CFString, &titleValue)
+        if titleResult == .success, let title = titleValue as? String {
+            print("Title Changed Notification! New title : \(title)")
+        } else {
+            print("Failed to get title for element. Error: \(titleResult.rawValue)")
+        }
+    }
+    
     func handleValueChanged(for element: AXUIElement) {
         print("Handling value changed...")
     }
@@ -352,80 +405,83 @@ class Accessibility {
         }
         
         self.currentApplication = pid
-        // Check if the process ID is already in self.observers
-        guard self.observers[pid] == nil else {
-            print("Observer for PID: \(pid) already exists. Skipping setup.")
-            return
-        }
-
         print("Setting up observer for PID: \(pid)")
-        self.appElement = AXUIElementCreateApplication(pid)
-
-        var observer: AXObserver?
-
-        let observerCallback: AXObserverCallback = { _, element, notification, refcon in
-            // Dispatch to main thread immediately
-            DispatchQueue.main.async {
-                let accessibilityInstance = Unmanaged<Accessibility>.fromOpaque(refcon!).takeUnretainedValue()
-                accessibilityInstance.handleAccessibilityNotification(notification as String, element: element)
+        
+        let notifications = [
+            kAXAnnouncementRequestedNotification,
+            kAXApplicationActivatedNotification,
+            kAXApplicationDeactivatedNotification,
+            kAXApplicationHiddenNotification,
+            kAXApplicationShownNotification,
+            kAXCreatedNotification,
+            kAXDrawerCreatedNotification,
+            kAXFocusedUIElementChangedNotification,
+            kAXFocusedWindowChangedNotification,
+            kAXHelpTagCreatedNotification,
+            kAXLayoutChangedNotification,
+            kAXMainWindowChangedNotification,
+            kAXMenuClosedNotification,
+            kAXMenuItemSelectedNotification,
+            kAXMenuOpenedNotification,
+            kAXMovedNotification,
+            kAXResizedNotification,
+            kAXRowCollapsedNotification,
+            kAXRowCountChangedNotification,
+            kAXRowExpandedNotification,
+            kAXSelectedCellsChangedNotification,
+            kAXSelectedChildrenChangedNotification,
+            kAXSelectedChildrenMovedNotification,
+            kAXSelectedColumnsChangedNotification,
+            kAXSelectedRowsChangedNotification,
+            kAXSelectedTextChangedNotification,
+            kAXSheetCreatedNotification,
+            kAXTitleChangedNotification,
+            kAXUIElementDestroyedNotification,
+            kAXUnitsChangedNotification,
+            kAXValueChangedNotification,
+            kAXWindowCreatedNotification,
+            kAXWindowDeminiaturizedNotification,
+            kAXWindowMiniaturizedNotification,
+            kAXWindowMovedNotification,
+            kAXWindowResizedNotification
+        ]
+        
+        if let appElement = self.appElement {
+            // Check if the process ID is already in self.observers
+            if let existingObserver = self.observers[pid] {
+                for notification in notifications {
+                    AXObserverRemoveNotification(existingObserver, appElement, notification as CFString)
+                }
+                self.observers[pid] = nil
+                print("Removed existing observer for PID: \(pid).")
             }
-        }
-
-        let result = AXObserverCreate(pid, observerCallback, &observer)
-
-        if result == .success, let observer = observer {
-            // Release the previous observer if it exists
-            self.observers[pid] = observer
-            let refCon = Unmanaged.passUnretained(self).toOpaque()
-            if let appElement = self.appElement {
-                let notifications = [
-                    kAXAnnouncementRequestedNotification,
-                    kAXApplicationActivatedNotification,
-                    kAXApplicationDeactivatedNotification,
-                    kAXApplicationHiddenNotification,
-                    kAXApplicationShownNotification,
-                    kAXCreatedNotification,
-                    kAXDrawerCreatedNotification,
-                    kAXFocusedUIElementChangedNotification,
-                    kAXFocusedWindowChangedNotification,
-                    kAXHelpTagCreatedNotification,
-                    kAXLayoutChangedNotification,
-                    kAXMainWindowChangedNotification,
-                    kAXMenuClosedNotification,
-                    kAXMenuItemSelectedNotification,
-                    kAXMenuOpenedNotification,
-                    kAXMovedNotification,
-                    kAXResizedNotification,
-                    kAXRowCollapsedNotification,
-                    kAXRowCountChangedNotification,
-                    kAXRowExpandedNotification,
-                    kAXSelectedCellsChangedNotification,
-                    kAXSelectedChildrenChangedNotification,
-                    kAXSelectedChildrenMovedNotification,
-                    kAXSelectedColumnsChangedNotification,
-                    kAXSelectedRowsChangedNotification,
-                    kAXSelectedTextChangedNotification,
-                    kAXSheetCreatedNotification,
-                    kAXTitleChangedNotification,
-                    kAXUIElementDestroyedNotification,
-                    kAXUnitsChangedNotification,
-                    kAXValueChangedNotification,
-                    kAXWindowCreatedNotification,
-                    kAXWindowDeminiaturizedNotification,
-                    kAXWindowMiniaturizedNotification,
-                    kAXWindowMovedNotification,
-                    kAXWindowResizedNotification
-                ]
-
+            
+            var observer: AXObserver?
+            
+            let observerCallback: AXObserverCallback = { _, element, notification, refcon in
+                // Dispatch to main thread immediately
+                DispatchQueue.main.async {
+                    let accessibilityInstance = Unmanaged<Accessibility>.fromOpaque(refcon!).takeUnretainedValue()
+                    accessibilityInstance.handleAccessibilityNotification(notification as String, element: element)
+                }
+            }
+            
+            let result = AXObserverCreate(pid, observerCallback, &observer)
+            
+            if result == .success, let observer = observer {
+                // Release the previous observer if it exists
+                self.observers[pid] = observer
+                let refCon = Unmanaged.passUnretained(self).toOpaque()
                 for notification in notifications {
                     AXObserverAddNotification(observer, appElement, notification as CFString, refCon)
                 }
                 // Add the observer to the main run loop
                 CFRunLoopAddSource(CFRunLoopGetMain(), AXObserverGetRunLoopSource(observer), .defaultMode)
                 print("Observer registered for PID: \(pid)")
+                
+            } else {
+                print("Failed to create observer for PID: \(pid) with result: \(result)")
             }
-        } else {
-            print("Failed to create observer for PID: \(pid) with result: \(result)")
         }
     }
 
@@ -451,7 +507,6 @@ class Accessibility {
             print("Failed to extract CFRange from AXValue.")
             return nil
         }
-        print("Selected text range: \(selectedRange)")
 
         // 3. Use AXStringForRangeParameterizedAttribute to get the text for the range
         var selectedTextValue: CFTypeRef?
@@ -463,7 +518,7 @@ class Accessibility {
         )
 
         if textResult == .success, let selectedText = selectedTextValue as? String, !selectedText.isEmpty {
-            print("Selected text: \(selectedText)")
+            // print("Selected text: \(selectedText)")
             self.selectedSource = currentSource
             return selectedText
         } else {
@@ -519,10 +574,19 @@ class Accessibility {
             self.window?.orderOut(nil)
         }
 
-        model.selectedText = self.selectedText[self.currentApplication] ?? ""
-        model.sourceText = self.currentSource ?? ""
-        print("Selected text: \(selectedText)")
-        print("from PID: \(elementPid)")
+        if let model = self.model {
+            let curSelectedText = self.selectedText[self.currentApplication] ?? ""
+            let curSourceText = self.currentSource ?? ""
+            
+            // Move these on to the model Input!
+            model.selectedText = curSelectedText
+            model.sourceText = curSourceText
+            if curSelectedText != "" {
+                model.input = Input(selectedText: curSelectedText, application: curSourceText)
+            } else {
+                model.input = nil
+            }
+        }
     }
     
     private func adjustWindowToTopRight() {
@@ -623,48 +687,6 @@ class Accessibility {
             }
         }
         return nil
-    }
-
-    
-    
-    func findElementsWithAttribute(element: AXUIElement, attribute: CFString) -> [AXUIElement] {
-        var elementsWithAttribute: [AXUIElement] = []
-
-        func helper(currentElement: AXUIElement) {
-            // Check if the element is valid
-            var elementPid: pid_t = 0
-            let pidResult = AXUIElementGetPid(currentElement, &elementPid)
-            if pidResult != .success {
-                print("Invalid element (cannot get pid). Skipping.")
-                return
-            }
-
-            // Attempt to get the attribute names
-            var attributeNamesCFArray: CFArray?
-            let namesResult = AXUIElementCopyAttributeNames(currentElement, &attributeNamesCFArray)
-            if namesResult == .success, let namesArray = attributeNamesCFArray as? [String] {
-                if namesArray.contains(attribute as String) {
-                    elementsWithAttribute.append(currentElement)
-                }
-
-                // Get children
-                var childrenValue: CFTypeRef?
-                let childrenResult = AXUIElementCopyAttributeValue(currentElement, kAXChildrenAttribute as CFString, &childrenValue)
-                if childrenResult == .success, let childrenArray = childrenValue as? [AXUIElement] {
-                    for child in childrenArray {
-                        helper(currentElement: child)
-                    }
-                }
-//                else {
-//                    print("Failed to get children or no children. Error: \(childrenResult.rawValue)")
-//                }
-            } else {
-                print("Failed to get attribute names for element. Skipping. Error: \(namesResult.rawValue)")
-            }
-        }
-
-        helper(currentElement: element)
-        return elementsWithAttribute
     }
 
     func showWindowWithAnimation() {
@@ -828,3 +850,124 @@ class Accessibility {
 }
 
 #endif
+
+class AccessibilityHelper {
+    // This class is not MainActor isolated
+    static func getAllTextInElement(appElement: AXUIElement) -> String? {
+        let startTime = CFAbsoluteTimeGetCurrent()        
+        let (elementsWithText, maxDepth, totalElementsSearched) = findAllVisibleElementsWithAttribute(element: appElement, attribute: kAXValueAttribute as CFString, maxDepth: 1000)
+        let endTime = CFAbsoluteTimeGetCurrent()
+        let elapsedTime = endTime - startTime
+
+        var cumulativeText = "Time taken to find elements with attribute: \(elapsedTime) seconds \n"
+        cumulativeText = cumulativeText + "Num searched: \(totalElementsSearched) \n"
+        cumulativeText = cumulativeText + "Num found: \(elementsWithText.count) \n"
+        cumulativeText = cumulativeText + "Max depth: \(maxDepth) \n"
+            
+        for element in elementsWithText {
+            if let text = element.value() {
+                cumulativeText = cumulativeText + text + " "
+            }
+            
+        }
+        return cumulativeText
+    }
+
+    static func findRootElementsWithAttribute(element: AXUIElement, attribute: CFString, maxDepth: Int) -> [AXUIElement] {
+        var rootElementsWithAttribute: [AXUIElement] = []
+
+        func helper(currentElement: AXUIElement, currentDepth: Int) {
+            // Check if the current depth exceeds maxDepth
+            if currentDepth > maxDepth {
+                return
+            }
+
+            // Check if the element is valid
+            var elementPid: pid_t = 0
+            let pidResult = AXUIElementGetPid(currentElement, &elementPid)
+            if pidResult != .success {
+                print("Invalid element (cannot get pid). Skipping.")
+                return
+            }
+
+            // Attempt to get the attribute names
+            var attributeNamesCFArray: CFArray?
+            let namesResult = AXUIElementCopyAttributeNames(currentElement, &attributeNamesCFArray)
+            if namesResult == .success, let namesArray = attributeNamesCFArray as? [String] {
+                if namesArray.contains(attribute as String) {
+                    rootElementsWithAttribute.append(currentElement)
+                } else {
+                    // Get children only if the current element does not have the attribute
+                    var childrenValue: CFTypeRef?
+                    let childrenResult = AXUIElementCopyAttributeValue(currentElement, kAXChildrenAttribute as CFString, &childrenValue)
+                    if childrenResult == .success, let childrenArray = childrenValue as? [AXUIElement] {
+                        for child in childrenArray {
+                            helper(currentElement: child, currentDepth: currentDepth + 1)
+                        }
+                    }
+                }
+            } else {
+                print("Failed to get attribute names for element. Skipping. Error: \(namesResult.rawValue)")
+            }
+        }
+
+        helper(currentElement: element, currentDepth: 0)
+        return rootElementsWithAttribute
+    }
+
+
+    static func findAllVisibleElementsWithAttribute(element: AXUIElement, attribute: CFString, maxDepth: Int) -> ([AXUIElement], Int, Int) {
+        var elementsWithAttribute: [AXUIElement] = []
+        var totalElementsSearched = 0
+        var maxDepthReached = 0
+
+        guard let currentScreen = NSScreen.main else {
+            print("No main screen found.")
+            return (elementsWithAttribute, totalElementsSearched, maxDepthReached)
+        }
+        
+        func helper(currentElement: AXUIElement, currentDepth: Int) {
+            // Increment the total elements searched
+            totalElementsSearched += 1
+
+            // Update the maximum depth reached
+            if currentDepth > maxDepthReached {
+                maxDepthReached = currentDepth
+            }
+
+            // Check if the current depth exceeds maxDepth
+            if currentDepth > maxDepth {
+                return
+            }
+
+            // Check if the element is valid
+            var elementPid: pid_t = 0
+            let pidResult = AXUIElementGetPid(currentElement, &elementPid)
+            if pidResult != .success {
+                print("Invalid element (cannot get pid). Skipping.")
+                return
+            }
+
+            // Check if the element is off-screen
+            if let frame = currentElement.frame() {
+                if !currentScreen.visibleFrame.intersects(frame) {
+                    return
+                }
+            }
+
+            if currentElement.attribute(forAttribute: attribute) != nil {
+                elementsWithAttribute.append(currentElement)
+            }
+
+            if let visibleChildren = currentElement.children() {
+                for child in visibleChildren {
+                    helper(currentElement: child, currentDepth: currentDepth + 1)
+                }
+            }
+        }
+
+        helper(currentElement: element, currentDepth: 0)
+        return (elementsWithAttribute, maxDepthReached, totalElementsSearched)
+    }
+}
+

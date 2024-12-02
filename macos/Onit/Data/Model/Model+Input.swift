@@ -8,10 +8,6 @@
 import AppKit
 
 extension OnitModel {
-    func setInput(_ input: Input?) {
-        self.input = input
-    }
-
     func addContext(urls: [URL]) {
         let contextItems = urls.map(Context.init)
         context += contextItems
@@ -23,7 +19,6 @@ extension OnitModel {
     func newPrompt() {
         historyIndex = -1
         instructions = ""
-        input = nil
         prompt = nil
         generationState = .idle
         focusText()

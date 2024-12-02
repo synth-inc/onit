@@ -23,6 +23,7 @@ struct App: SwiftUI.App {
 
         #if !targetEnvironment(simulator)
         Accessibility.requestPermissions()
+        Accessibility.setModel(model)
         Accessibility.setupWindow(withView: StaticPromptView())
         Accessibility.observeActiveApplication()
 //        Accessibility.observeSystemClicks()

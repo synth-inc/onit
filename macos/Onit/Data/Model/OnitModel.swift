@@ -21,7 +21,7 @@ import Combine
     var tooltipHeight: CGFloat = 0
     var showTooltip = false
     var isTooltipActive = false
-
+    
     var showMenuBarExtra: Bool = false
     var generationState: GenerationState = .idle
     var inputExpanded = true
@@ -42,6 +42,10 @@ import Combine
     var instructions = "" {
         didSet { instructions.save("instructions") }
     }
+    
+    var showDebugWindow = false
+    var debugPanel: CustomPanel? = nil
+    var debugText: String?
 
     var trusted: Bool = true
     @ObservationIgnored var trustedTimer: AnyCancellable?
