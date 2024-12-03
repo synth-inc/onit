@@ -293,11 +293,6 @@ class Accessibility {
     func handleAccessibilityNotification(_ notification: String, info: [String: Any], element: AXUIElement, observer: AXObserver) {
         dispatchPrecondition(condition: .onQueue(.main))
 
-        print("Notification info")
-        for (key, value) in info {
-            print("Notification info;Key: \(key), Value: \(value)")
-        }
-
         // Check if the notification comes from our own process
         var elementPid: pid_t = 0
         let pidResult = AXUIElementGetPid(element, &elementPid)

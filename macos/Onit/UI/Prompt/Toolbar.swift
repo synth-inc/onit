@@ -17,8 +17,8 @@ struct Toolbar: View {
             resize
             Spacer()
             languageModel
-            add
-            history
+            localMode
+            incognitoMode
             settings
         }
         .foregroundStyle(.gray200)
@@ -111,6 +111,30 @@ struct Toolbar: View {
         .tooltip(prompt: "New Prompt")
     }
 
+    var localMode: some View {
+        Button {
+            model.localMode.toggle()
+        } label: {
+            Image(model.localMode ? .localModeActive : .localMode)
+                .renderingMode(.template)
+                .padding(2)
+                .foregroundColor(model.localMode ? .green : .primary)
+        }
+        .tooltip(prompt: "Local Mode")
+    }
+    
+    var incognitoMode: some View {
+        Button {
+            model.incognitoMode.toggle()
+        } label: {
+            Image(model.incognitoMode ? .incognitoModeActive : .incognitoMode)
+                .renderingMode(.template)
+                .padding(2)
+                .foregroundColor(model.incognitoMode ? .green : .primary)
+        }
+        .tooltip(prompt: "Incognito Mode")
+    }
+    
     var history: some View {
         Button {
 
