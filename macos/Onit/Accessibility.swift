@@ -42,6 +42,46 @@ class Accessibility {
     private var runLoopSource: CFRunLoopSource?
     private var tapObserver: CFMachPort?
 
+            
+    private var notifications = [
+        kAXAnnouncementRequestedNotification,
+        kAXApplicationActivatedNotification,
+        kAXApplicationDeactivatedNotification,
+        kAXApplicationHiddenNotification,
+        kAXApplicationShownNotification,
+        kAXCreatedNotification,
+        kAXDrawerCreatedNotification,
+        kAXFocusedUIElementChangedNotification,
+        kAXFocusedWindowChangedNotification,
+        kAXHelpTagCreatedNotification,
+        kAXLayoutChangedNotification,
+        kAXMainWindowChangedNotification,
+        kAXMenuClosedNotification,
+        kAXMenuItemSelectedNotification,
+        kAXMenuOpenedNotification,
+        kAXMovedNotification,
+        kAXResizedNotification,
+        kAXRowCollapsedNotification,
+        kAXRowCountChangedNotification,
+        kAXRowExpandedNotification,
+        kAXSelectedCellsChangedNotification,
+        kAXSelectedChildrenChangedNotification,
+        kAXSelectedChildrenMovedNotification,
+        kAXSelectedColumnsChangedNotification,
+        kAXSelectedRowsChangedNotification,
+        kAXSelectedTextChangedNotification,
+        kAXSheetCreatedNotification,
+        kAXTitleChangedNotification,
+        kAXUIElementDestroyedNotification,
+        kAXUnitsChangedNotification,
+//            kAXValueChangedNotification,
+        kAXWindowCreatedNotification,
+        kAXWindowDeminiaturizedNotification,
+        kAXWindowMiniaturizedNotification,
+        kAXWindowMovedNotification,
+        kAXWindowResizedNotification
+    ]
+        
 
     private init() { }
 
@@ -125,7 +165,7 @@ class Accessibility {
             shared.observeSystemClicks()
         }
     }
-    
+
     private func observeSystemClicks() {
         // Setup mouse click observer
         let eventMask = (1 << CGEventType.leftMouseUp.rawValue) |
@@ -180,19 +220,24 @@ class Accessibility {
         ) { [weak self] notification in
             Task { @MainActor in
                 guard let self = self else { return }
-                
-                // Handle app activation
-                self.handleAppActivation()
-                
                 if let app = notification.userInfo?[NSWorkspace.applicationUserInfoKey] as? NSRunningApplication {
                     // Skip if the activated app is our own app
-                    if app.processIdentifier == getpid() {
+                    print("Onit process ID: \(getpid())")
+                    // There's an edge case where the panel somehow has a different processId. 
+                    let appName = Bundle.main.object(forInfoDictionaryKey: "CFBundleName") as? String
+                    print("App name: \(appName)")
+                    if app.processIdentifier == getpid() || app.localizedName == appName {
                         print("Ignoring activation of our own app.")
                         return
                     }
-                    print("\nApplication activated: \(app.localizedName ?? "Unknown")")
-                    self.currentSource = app.localizedName
-                    self.setupObserver(for: app.processIdentifier)
+                    print("\nApplication activated: \(app.localizedName ?? "Unknown") \(app.processIdentifier)")
+                    
+                    // If it's the same as last time, we just toggled between Onit and that app, no need to remove observers and set up new ones. 
+                    if app.processIdentifier != self.currentApplication {
+                        self.removeObservers(for: app.processIdentifier)
+                        self.handleAppActivation(appName: app.localizedName, processID: app.processIdentifier)
+                        self.setupObserver(for: app.processIdentifier)
+                    }
                 }
             }
         }
@@ -223,7 +268,7 @@ class Accessibility {
         }
     }
 
-    private func handleAppActivation() {
+    private func handleAppActivation(appName: String?, processID: pid_t) {
         // Check if there's an existing text selection
         if let focusedApp = NSWorkspace.shared.frontmostApplication, focusedApp.processIdentifier != getpid() {
             let pid = focusedApp.processIdentifier
@@ -231,12 +276,12 @@ class Accessibility {
             let newAppElement = AXUIElementCreateApplication(pid)
             self.appElement = newAppElement
             self.currentApplication = pid
-            
+            self.currentSource = focusedApp.localizedName
+
             let textInApplication = AccessibilityHelper.getAllTextInElement(appElement: newAppElement)
             if let model = self.model {
                 model.debugText = textInApplication
             }
-            
             // print("Text in application: \(textInApplication)")
             // let appElement = AXUIElementCreateApplication(pid)
             // handleInitialFocus(for: appElement)
@@ -396,6 +441,18 @@ class Accessibility {
         print("Handling bounds changed...")
     }
 
+    private func removeObservers(for pid: pid_t) {
+        // Check if the process ID is already in self.observers
+        guard let appElement = self.appElement else { return }
+        if let existingObserver = self.observers[pid] {
+            for notification in self.notifications {
+                AXObserverRemoveNotification(existingObserver, appElement, notification as CFString)
+            }
+            self.observers[pid] = nil
+            print("Removed existing observer for PID: \(pid).")
+        }
+    }
+
     private func setupObserver(for pid: pid_t) {
         if !Thread.isMainThread {
             DispatchQueue.main.async {
@@ -408,59 +465,9 @@ class Accessibility {
             print("Not setting up observer for our own process.")
             return
         }
-        
-        self.currentApplication = pid
+    
         print("Setting up observer for PID: \(pid)")
-        
-        let notifications = [
-            kAXAnnouncementRequestedNotification,
-            kAXApplicationActivatedNotification,
-            kAXApplicationDeactivatedNotification,
-            kAXApplicationHiddenNotification,
-            kAXApplicationShownNotification,
-            kAXCreatedNotification,
-            kAXDrawerCreatedNotification,
-            kAXFocusedUIElementChangedNotification,
-            kAXFocusedWindowChangedNotification,
-            kAXHelpTagCreatedNotification,
-            kAXLayoutChangedNotification,
-            kAXMainWindowChangedNotification,
-            kAXMenuClosedNotification,
-            kAXMenuItemSelectedNotification,
-            kAXMenuOpenedNotification,
-            kAXMovedNotification,
-            kAXResizedNotification,
-            kAXRowCollapsedNotification,
-            kAXRowCountChangedNotification,
-            kAXRowExpandedNotification,
-            kAXSelectedCellsChangedNotification,
-            kAXSelectedChildrenChangedNotification,
-            kAXSelectedChildrenMovedNotification,
-            kAXSelectedColumnsChangedNotification,
-            kAXSelectedRowsChangedNotification,
-            kAXSelectedTextChangedNotification,
-            kAXSheetCreatedNotification,
-            kAXTitleChangedNotification,
-            kAXUIElementDestroyedNotification,
-            kAXUnitsChangedNotification,
-//            kAXValueChangedNotification,
-            kAXWindowCreatedNotification,
-            kAXWindowDeminiaturizedNotification,
-            kAXWindowMiniaturizedNotification,
-            kAXWindowMovedNotification,
-            kAXWindowResizedNotification
-        ]
-        
         if let appElement = self.appElement {
-            // Check if the process ID is already in self.observers
-            if let existingObserver = self.observers[pid] {
-                for notification in notifications {
-                    AXObserverRemoveNotification(existingObserver, appElement, notification as CFString)
-                }
-                self.observers[pid] = nil
-                print("Removed existing observer for PID: \(pid).")
-            }
-            
             var observer: AXObserver?
             
             let observerCallback: AXObserverCallbackWithInfo = { observer, element, notification, userInfo, refcon in
@@ -478,6 +485,7 @@ class Accessibility {
                 self.observers[pid] = observer
                 let refCon = Unmanaged.passUnretained(self).toOpaque()
                 for notification in notifications {
+                    // print("Registering observer for \(notification)...")
                     AXObserverAddNotification(observer, appElement, notification as CFString, refCon)
                 }
                 // Add the observer to the main run loop
@@ -535,7 +543,7 @@ class Accessibility {
 
     func showWindowWithoutAnimation() {
         guard let window = self.window else { return }
-
+        
         DispatchQueue.main.async {
             window.alphaValue = 1.0
             window.makeKeyAndOrderFront(nil)
@@ -612,64 +620,6 @@ class Accessibility {
             // Set the window's position to the calculated top right corner
             self.window?.setFrameOrigin(NSPoint(x: newOriginX, y: newOriginY))
             print("Window moved to top right corner at: \(NSPoint(x: newOriginX, y: newOriginY))")
-        }
-    }
-
-    private func adjustWindowPosition(with rect: CGRect) {
-        DispatchQueue.main.async {
-            var adjustedRect = rect
-
-            // Get the primary screen
-            guard let primaryScreen = NSScreen.screens.first else {
-                print("No primary screen found.")
-                return
-            }
-
-            guard let currentScreen = NSScreen.main else {
-                print("No main screen found.")
-                return
-            }
-
-            // Flip the y-coordinate from Quartz to Cocoa coordinate system
-            adjustedRect.origin.y = primaryScreen.frame.maxY - (adjustedRect.origin.y + adjustedRect.size.height)
-
-            // Now, adjustedRect.origin is in Cocoa coordinate system
-
-            // Get the window's height
-            let windowHeight = self.window?.frame.height ?? 0
-
-            // Calculate the window's y-position to place it above the selection
-            var windowOriginY = adjustedRect.origin.y + adjustedRect.size.height
-
-            // Ensure the window doesn't go off-screen vertically
-            let visibleFrame = currentScreen.visibleFrame
-        
-            // If the window would go off the top of the screen, position it below the selection
-            if windowOriginY + windowHeight > visibleFrame.maxY {
-                // Position the window below the selection
-                windowOriginY = adjustedRect.origin.y - windowHeight
-                print("Adjusting window position to below the selection.")
-            }
-
-            // Set the window's position
-            self.window?.setFrameOrigin(NSPoint(x: adjustedRect.origin.x, y: windowOriginY))
-            print("Window positioned at: \(NSPoint(x: adjustedRect.origin.x, y: windowOriginY))")
-        }
-    }
-
-    func moveFloatingWindowToElement(_ element: AXUIElement) {
-        var frameValue: CFTypeRef?
-        let frameResult = AXUIElementCopyAttributeValue(element, kAXFrameAttribute as CFString, &frameValue)
-
-        if frameResult == .success, let frameValue = frameValue, CFGetTypeID(frameValue) == AXValueGetTypeID() {
-            var frame = CGRect.zero
-
-            AXValueGetValue(frameValue as! AXValue, .cgRect, &frame)
-            print("Child element frame before adjustment: \(frame)")
-
-            adjustWindowPosition(with: frame)
-        } else {
-            print("Failed to retrieve the frame of the child element.")
         }
     }
 
@@ -817,26 +767,6 @@ class Accessibility {
         }
     }
     
-    static func focusOnit() {
-        // Create an AXUIElement for the application
-        let appElement = AXUIElementCreateApplication(shared.currentApplication)
-
-        // Get the main window of the application
-        var mainWindow: AnyObject?
-        let result = AXUIElementCopyAttributeValue(appElement, kAXMainWindowAttribute as CFString, &mainWindow)
-
-        if result == .success, let windowElement = mainWindow {
-            // Set the window as the focused element
-            AXUIElementSetAttributeValue(windowElement as! AXUIElement, kAXFocusedAttribute as CFString, kCFBooleanTrue)     
-            // Activate the application using NSRunningApplication
-            if let runningApp = NSRunningApplication(processIdentifier: shared.currentApplication) {
-                runningApp.activate(options: [.activateAllWindows])
-            }
-        }
-        // Not sure why but this needs to be called again to work
-        NSRunningApplication.current.activate(options: [.activateAllWindows])
-    }
-
     func handleMouseUp() {
         if let appElement = self.appElement {
             print("Mouse up!")

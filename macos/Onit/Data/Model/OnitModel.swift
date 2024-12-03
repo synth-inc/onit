@@ -64,7 +64,6 @@ import Combine
         super.init()
         startTrustedTimer()
     }
-
 }
 
 extension String {

@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import KeyboardShortcuts
 
 extension OnitModel: NSWindowDelegate {
     @MainActor
@@ -112,11 +113,16 @@ extension OnitModel: NSWindowDelegate {
             }
         }
 
+        KeyboardShortcuts.onKeyUp(for: .escape) { [weak self] in
+            guard let self else { return }
+            self.escapeAction()
+        }
         // Focus the text input when we're activating the panel
         textFocusTrigger = true
     }
 
     func closePanel() {
+        KeyboardShortcuts.disable(.escape)
         guard let panel = panel else { return }
         panel.orderOut(nil)
         self.panel = nil
@@ -135,14 +141,20 @@ extension OnitModel: NSWindowDelegate {
         if panel == nil {
             showPanel()
         }
-        Accessibility.focusOnit()
         if let panel = panel {
             panel.makeKeyAndOrderFront(nil)
             panel.orderFrontRegardless()
         }
-        self.textFocusTrigger = true
+        // self.textFocusTrigger = true
     }
 
+    func escapeAction() {
+        if panel != nil {
+            closePanel()
+        }
+        
+    }
+    
     func windowDidResignKey(_ notification: Notification) {
 //        closePanel()
     }

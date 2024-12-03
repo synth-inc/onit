@@ -13,8 +13,12 @@ extension KeyboardShortcuts.Name {
         .launch,
         default: .init(.space, modifiers: [.command, .option, .control])
     )
+    static let escape = KeyboardShortcuts.Name(
+        .escape,
+        default: .init(.escape))
 }
 
 extension String {
     static let launch = "launch"
+    static let escape = "escape"
 }
