@@ -16,9 +16,17 @@ struct App: SwiftUI.App {
     init() {
 
         KeyboardShortcuts.onKeyUp(for: .launch) { [weak model] in
-            guard let model else { return }
-            model.keyboardShortcutAction()
+            model?.launchShortcutAction()
         }
+        KeyboardShortcuts.onKeyUp(for: .launchIncognito) { [weak model] in
+            model?.launchIncognitoShortcutAction()
+        }
+//        KeyboardShortcuts.onKeyUp(for: .launchLocal) { [weak model] in
+//            model?.launchLocalShortcutAction()
+//        }
+//        KeyboardShortcuts.onKeyUp(for: .launchLocalIncognito) { [weak model] in
+//            model?.launchLocalIncognitoShortcutAction()
+//        }
 
         model.showPanel()
 
@@ -46,6 +54,10 @@ struct App: SwiftUI.App {
         Settings {
             Form {
                 KeyboardShortcuts.Recorder("Launch Onit", name: .launch) { _ in
+                    Accessibility.resetPrompt(with: StaticPromptView().environment(model))
+                }
+                .padding()
+                KeyboardShortcuts.Recorder("Launch Onit - Incognito", name: .launchIncognito) { _ in
                     Accessibility.resetPrompt(with: StaticPromptView().environment(model))
                 }
                 .padding()

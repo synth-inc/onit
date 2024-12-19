@@ -35,7 +35,11 @@ class Accessibility {
     let kAXFrameAttribute = "AXFrame"
     let kAXBoundsChangedNotification = "AXBoundsChanged"
 
-    private var window: NSWindow?
+    private var window: NSWindow? {
+        didSet {
+            print("resetting Accessibility Window!")
+        }
+    }
 
     private var nsObjectObserver: NSObjectProtocol?
     private var observers: [pid_t: AXObserver] = [:]
@@ -128,7 +132,7 @@ class Accessibility {
         if mode == .highlightTopEdgeMode {
             window.orderOut(nil)
         } else {
-            window.makeKeyAndOrderFront(nil)
+            adjustWindowToTopRight()
         }
 
         print("Prompt reset with new view content.")
@@ -569,32 +573,33 @@ class Accessibility {
                     self.adjustWindowToTopRight()
                     self.showWindowWithAnimation()
                 }
+                self.selectedText[self.currentApplication] = newSelectedText
+                if let model = self.model {
+                    let curSelectedText = self.selectedText[self.currentApplication] ?? ""
+                    let curSourceText = self.currentSource ?? ""
+                    
+                    // Move these on to the model Input!
+                    model.selectedText = curSelectedText
+                    model.sourceText = curSourceText
+                    if curSelectedText != "" {
+                        model.input = Input(selectedText: curSelectedText, application: curSourceText)
+                    } else {
+                        model.input = nil
+                    }
+                }
             } else{
                 print("New selected text count is not greater than 1.")
+                self.window?.orderOut(nil)
             }
         } else {
             print("No new selected text.")
-        }
-        self.selectedText[self.currentApplication] = newSelectedText
-
-        // If nothing is selected, hide the window. 
-        if self.selectedText[self.currentApplication] == nil {
             self.window?.orderOut(nil)
         }
 
-        if let model = self.model {
-            let curSelectedText = self.selectedText[self.currentApplication] ?? ""
-            let curSourceText = self.currentSource ?? ""
-            
-            // Move these on to the model Input!
-            model.selectedText = curSelectedText
-            model.sourceText = curSourceText
-            if curSelectedText != "" {
-                model.input = Input(selectedText: curSelectedText, application: curSourceText)
-            } else {
-                model.input = nil
-            }
-        }
+    }
+    
+    static func adjustWindowToTopRight() {
+        shared.adjustWindowToTopRight()
     }
     
     private func adjustWindowToTopRight() {
@@ -604,9 +609,9 @@ class Accessibility {
                 return
             }
 
-            // Get the window's height
-            let windowHeight = self.window?.frame.height ?? 0
-            let windowWidth = self.window?.frame.width ?? 0
+            // Get the window's height (or 75x75 beacuse sometimes it's empty?)
+            let windowHeight = max(self.window?.frame.height ?? 0, 75)
+            let windowWidth = max(self.window?.frame.width ?? 0, 75)
 
             // Calculate the new origin for the window to be at the top right corner of the current screen
             let newOriginX = currentScreen.visibleFrame.maxX - (windowWidth - 10)
@@ -614,7 +619,6 @@ class Accessibility {
             
             // Set the window's position to the calculated top right corner
             self.window?.setFrameOrigin(NSPoint(x: newOriginX, y: newOriginY))
-            print("Window moved to top right corner at: \(NSPoint(x: newOriginX, y: newOriginY))")
         }
     }
 
@@ -784,24 +788,24 @@ class Accessibility {
 class AccessibilityHelper {
     // This class is not MainActor isolated
     static func getAllTextInElement(appElement: AXUIElement) -> String? {
-//        return ""
-        let startTime = CFAbsoluteTimeGetCurrent()
-        let (elementsWithText, maxDepth, totalElementsSearched) = findAllVisibleElementsWithAttribute(element: appElement, attribute: kAXValueAttribute as CFString, maxDepth: 1000)
-        let endTime = CFAbsoluteTimeGetCurrent()
-        let elapsedTime = endTime - startTime
+        return ""
+//        let startTime = CFAbsoluteTimeGetCurrent()
+        // let (elementsWithText, maxDepth, totalElementsSearched) = findAllVisibleElementsWithAttribute(element: appElement, attribute: kAXValueAttribute as CFString, maxDepth: 1000)
+        // let endTime = CFAbsoluteTimeGetCurrent()
+        // let elapsedTime = endTime - startTime
 
-        var cumulativeText = "Time taken to find elements with attribute: \(elapsedTime) seconds \n"
-        cumulativeText = cumulativeText + "Num searched: \(totalElementsSearched) \n"
-        cumulativeText = cumulativeText + "Num found: \(elementsWithText.count) \n"
-        cumulativeText = cumulativeText + "Max depth: \(maxDepth) \n"
+        // var cumulativeText = "Time taken to find elements with attribute: \(elapsedTime) seconds \n"
+        // cumulativeText = cumulativeText + "Num searched: \(totalElementsSearched) \n"
+        // cumulativeText = cumulativeText + "Num found: \(elementsWithText.count) \n"
+        // cumulativeText = cumulativeText + "Max depth: \(maxDepth) \n"
             
-        for element in elementsWithText {
-            if let text = element.value() {
-                cumulativeText = cumulativeText + text + " "
-            }
+        // for element in elementsWithText {
+        //     if let text = element.value() {
+        //         cumulativeText = cumulativeText + text + " "
+        //     }
             
-        }
-        return cumulativeText
+        // }
+        // return cumulativeText
     }
 
     static func findRootElementsWithAttribute(element: AXUIElement, attribute: CFString, maxDepth: Int) -> [AXUIElement] {

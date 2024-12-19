@@ -22,7 +22,7 @@ extension OnitModel: NSWindowDelegate {
         }
 
         let newPanel = CustomPanel(
-            contentRect: NSRect(x: 0, y: 0, width: 400, height: 300),
+            contentRect: NSRect(x: 0, y: 0, width: 400, height: 0),
             styleMask: [.resizable, .nonactivatingPanel, .fullSizeContentView],
             backing: .buffered,
             defer: false
@@ -125,6 +125,7 @@ extension OnitModel: NSWindowDelegate {
         KeyboardShortcuts.disable(.escape)
         guard let panel = panel else { return }
         panel.orderOut(nil)
+        Accessibility.adjustWindowToTopRight()
         self.panel = nil
     }
 
@@ -136,8 +137,8 @@ extension OnitModel: NSWindowDelegate {
             showPanel()
         }
     }
-
-    func keyboardShortcutAction() {
+    
+    func launchPanel() {
         if panel == nil {
             showPanel()
         }
@@ -145,14 +146,42 @@ extension OnitModel: NSWindowDelegate {
             panel.makeKeyAndOrderFront(nil)
             panel.orderFrontRegardless()
         }
-        // self.textFocusTrigger = true
+    }
+        
+    func launchShortcutAction() {
+        preferences.incognito = false
+        preferences.mode = .remote
+        launchPanel()
+    }
+    
+    func launchIncognitoShortcutAction() {
+        preferences.incognito = true
+        preferences.mode = .remote
+        launchPanel()
+    }
+    
+    func launchLocalShortcutAction() {
+        preferences.incognito = false
+        preferences.mode = .local
+        launchPanel()
+    }
+    
+    func launchLocalIncognitoShortcutAction() {
+        preferences.incognito = true
+        preferences.mode = .local
+        launchPanel()
     }
 
     func escapeAction() {
         if panel != nil {
-            closePanel()
+            if self.selectedText != "" {
+                self.selectedText = ""
+                self.sourceText = ""
+                self.input = nil
+            } else {
+                closePanel()
+            }
         }
-        
     }
     
     func windowDidResignKey(_ notification: Notification) {

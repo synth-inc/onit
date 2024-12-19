@@ -11,13 +11,9 @@ struct GeneratedView: View {
     @Environment(\.model) var model
 
     var body: some View {
-        ViewThatFits(in: .vertical) {
-            content
-            ScrollView {
-                content
-            }
-        }
-        .frame(maxHeight: 750)
+        content
+            .frame(minHeight: 350)
+            // maxHeight: NSScreen.main?.frame.height ?? 750)
     }
 
     var content: some View {

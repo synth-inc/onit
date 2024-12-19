@@ -9,8 +9,8 @@ import Foundation
 import PhotosUI
 
 extension FetchingClient {
-    func localChat(_ text: String, input: Input?, model: LocalModel?, files: [URL], images: [URL]) async throws -> String {
-        // TODO we should just leave the images local. 
+    func localChat(_ text: String, input: Input?, model: String?, files: [URL], images: [URL]) async throws -> String {
+        // TODO we should just leave the images local.
         var base64Strings: [String] = []
         for image in images {
             if let imageData = try? Data(contentsOf: image) {
@@ -52,7 +52,7 @@ struct LocalChatEndpoint: Endpoint {
     typealias Request = LocalChatRequestJSON
     typealias Response = LocalChatResponseJSON
 
-    let model: LocalModel?
+    let model: String?
     let prompt: String
     let images: [String]
     var baseURL: URL  = URL(string: "http://localhost:11434")!
@@ -67,7 +67,7 @@ struct LocalChatEndpoint: Endpoint {
 
 // TODO change this to match the expected request
 struct LocalChatRequestJSON: Codable {
-    let model: LocalModel?
+    let model: String?
     let prompt: String
     let images: [String]
 //    var format : String = "json"

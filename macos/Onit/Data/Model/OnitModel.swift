@@ -23,7 +23,6 @@ import Combine
     var isTooltipActive = false
     
     var incognitoMode: Bool = false
-    var localMode: Bool = false
     
     var showMenuBarExtra: Bool = false
     var generationState: GenerationState = .idle
@@ -32,6 +31,7 @@ import Combine
     var input: Input? = nil {
         didSet { input.save() }
     }
+    var availableLocalModels: [String] = []
     var prompt: Prompt?
     var context: [Context] = []
     var sourceText: String?
@@ -59,6 +59,26 @@ import Combine
 
     var client = FetchingClient()
     var updater = SPUStandardUpdaterController(startingUpdater: true, updaterDelegate: nil, userDriverDelegate: nil)
+    
+    @MainActor
+    func fetchLocalModels() async {
+        do {
+            availableLocalModels = try await FetchingClient().getLocalModels()
+            
+            // Handle local model selection
+            if availableLocalModels.isEmpty {
+                preferences.localModel = nil
+            } else if preferences.localModel == nil {
+                preferences.localModel = availableLocalModels[0]
+            } else if !availableLocalModels.contains(preferences.localModel!) {
+                preferences.localModel = availableLocalModels[0]
+            }
+        } catch {
+            print("Error fetching local models:", error)
+            availableLocalModels = []
+            preferences.localModel = nil
+        }
+    }
 
     init(container: ModelContainer) {
         self.input = Input?.load()
@@ -66,6 +86,9 @@ import Combine
         self.container = container
         super.init()
         startTrustedTimer()
+        Task {
+            await fetchLocalModels()
+        }
     }
 }
 

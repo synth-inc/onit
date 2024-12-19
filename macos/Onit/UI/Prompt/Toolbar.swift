@@ -81,18 +81,57 @@ struct Toolbar: View {
         @Bindable var model = model
 
         Menu {
-            Picker("Choose model", selection: $model.preferences.model) {
+            Picker("Remote model", selection: Binding(
+                get: { model.preferences.mode == .remote ? model.preferences.model : nil },
+                set: { newValue in
+                    model.preferences.model = newValue
+                    model.preferences.mode = .remote
+                }
+            )) {
                 ForEach(GPTModel.allCases) { model in
+//                    HStack {
                     Text(model.rawValue)
-                        .tag(model)
+//                        Spacer()
+//                        if model == model.preferences.model {
+//                            Text("default")
+//                                .italic()
+//                                .foregroundStyle(.gray400)
+//                        }
+//                    }
+                    .tag(model)
+                }
+            }
+            .pickerStyle(.inline)
+            
+            Picker("Local model", selection: Binding(
+                get: { model.preferences.mode == .local ? model.preferences.localModel : nil },
+                set: { newValue in
+                    model.preferences.localModel = newValue
+                    model.preferences.mode = .local
+                }
+            )) {
+                ForEach(model.availableLocalModels, id: \.self) { modelName in
+                    HStack {
+                        Text(modelName)
+                        Spacer()
+                        if modelName == model.preferences.localModel {
+                            Text("default")
+                                .italic()
+                                .foregroundStyle(.gray400)
+                        }
+                    }
+                    .tag(modelName as String?)
                 }
             }
             .pickerStyle(.inline)
         } label: {
             HStack(spacing: 0) {
+                Text(model.preferences.mode == .local ? 
+                     (model.preferences.localModel?.split(separator: ":").first.map(String.init) ?? "") :
+                     (model.preferences.model?.rawValue ?? ""))
+                    .appFont(.medium13)
+                    .padding(.leading, 2)
                 Image(.smallChevDown)
-                    .renderingMode(.template)
-                Image(.stars)
                     .renderingMode(.template)
             }
             .padding(2)
@@ -113,12 +152,12 @@ struct Toolbar: View {
 
     var localMode: some View {
         Button {
-            model.localMode.toggle()
+            model.preferences.mode = model.preferences.mode == .local ? .remote : .local
         } label: {
-            Image(model.localMode ? .localModeActive : .localMode)
+            Image(model.preferences.mode == .local ? .localModeActive : .localMode)
                 .renderingMode(.template)
                 .padding(2)
-                .foregroundColor(model.localMode ? .green : .primary)
+                .foregroundColor(model.preferences.mode == .local ? .green : .gray200)
         }
         .tooltip(prompt: "Local Mode")
     }
@@ -130,7 +169,7 @@ struct Toolbar: View {
             Image(model.incognitoMode ? .incognitoModeActive : .incognitoMode)
                 .renderingMode(.template)
                 .padding(2)
-                .foregroundColor(model.incognitoMode ? .green : .primary)
+                .foregroundColor(model.incognitoMode ? .green : .gray200)
         }
         .tooltip(prompt: "Incognito Mode")
     }
