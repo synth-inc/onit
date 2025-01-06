@@ -9,4 +9,7 @@ import Foundation
 
 struct Preferences: Codable {
     var model: GPTModel?
+    var localModel: String? = nil
+    var mode: InferenceMode = .remote
+    var incognito: Bool = false
 }

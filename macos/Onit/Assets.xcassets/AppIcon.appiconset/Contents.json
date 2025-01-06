@@ -41,13 +41,13 @@
       "size" : "256x256"
     },
     {
-      "filename" : "Group 162-4.png",
+      "filename" : "app_icon_1x.png",
       "idiom" : "mac",
       "scale" : "1x",
       "size" : "512x512"
     },
     {
-      "filename" : "Group 162-5.png",
+      "filename" : "app_icon_2x.png",
       "idiom" : "mac",
       "scale" : "2x",
       "size" : "512x512"

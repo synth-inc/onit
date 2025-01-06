@@ -81,7 +81,7 @@ extension FetchingClient {
         return (data, httpResponse)
     }
 
-    private func handle(response: HTTPURLResponse, withData data: Data) throws {
+    func handle(response: HTTPURLResponse, withData data: Data) throws {
         switch response.statusCode {
         case 200...299:
             break

@@ -8,8 +8,8 @@
 import Foundation
 
 enum GPTModel: String, CaseIterable, Codable {
-    case gpt4mini = "gpt-4o-mini"
     case gpt4 = "gpt-4o"
+    case gpt4mini = "gpt-4o-mini"
 //    case o1mini = "o1-mini"
 //    case o1Preview = "o1-preview"
 }

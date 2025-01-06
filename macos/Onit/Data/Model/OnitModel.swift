@@ -21,8 +21,8 @@ import Combine
     var tooltipHeight: CGFloat = 0
     var showTooltip = false
     var isTooltipActive = false
-
     var showHistory: Bool = false
+    var incognitoMode: Bool = false
     var showMenuBarExtra: Bool = false
     var generationState: GenerationState = .idle
     var inputExpanded = true
@@ -30,8 +30,11 @@ import Combine
     var input: Input? = nil {
         didSet { input.save() }
     }
+    var availableLocalModels: [String] = []
     var prompt: Prompt?
     var context: [Context] = []
+    var sourceText: String?
+    var selectedText: String?
     var imageUploads: [URL: UploadProgress] = [:]
     var uploadTasks: [URL: Task<URL?, Never>] = [:]
     var textFocusTrigger = false
@@ -41,6 +44,10 @@ import Combine
     var instructions = "" {
         didSet { instructions.save("instructions") }
     }
+    
+    var showDebugWindow = false
+    var debugPanel: CustomPanel? = nil
+    var debugText: String?
 
     var trusted: Bool = true
     @ObservationIgnored var trustedTimer: AnyCancellable?
@@ -51,6 +58,26 @@ import Combine
 
     var client = FetchingClient()
     var updater = SPUStandardUpdaterController(startingUpdater: true, updaterDelegate: nil, userDriverDelegate: nil)
+    
+    @MainActor
+    func fetchLocalModels() async {
+        do {
+            availableLocalModels = try await FetchingClient().getLocalModels()
+            
+            // Handle local model selection
+            if availableLocalModels.isEmpty {
+                preferences.localModel = nil
+            } else if preferences.localModel == nil {
+                preferences.localModel = availableLocalModels[0]
+            } else if !availableLocalModels.contains(preferences.localModel!) {
+                preferences.localModel = availableLocalModels[0]
+            }
+        } catch {
+            print("Error fetching local models:", error)
+            availableLocalModels = []
+            preferences.localModel = nil
+        }
+    }
 
     init(container: ModelContainer) {
         self.input = Input?.load()
@@ -58,8 +85,10 @@ import Combine
         self.container = container
         super.init()
         startTrustedTimer()
+        Task {
+            await fetchLocalModels()
+        }
     }
-
 }
 
 extension String {

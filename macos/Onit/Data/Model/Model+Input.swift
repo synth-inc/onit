@@ -8,20 +8,17 @@
 import AppKit
 
 extension OnitModel {
-    func setInput(_ input: Input?) {
-        self.input = input
-    }
-
     func addContext(urls: [URL]) {
         let contextItems = urls.map(Context.init)
         context += contextItems
-        tryToUpload(contextItems)
+        if preferences.mode == .remote {
+            tryToUpload(contextItems)
+        }
     }
 
     func newPrompt() {
         historyIndex = -1
         instructions = ""
-        input = nil
         prompt = nil
         generationState = .idle
         focusText()
@@ -66,6 +63,18 @@ extension OnitModel {
             var images: [URL] = []
             for task in uploadTasks.values {
                 if let url = await task.value {
+                    images.append(url)
+                }
+            }
+            return images
+        }
+    }
+    
+    var localImages: [URL] {
+        get async {
+            var images: [URL] = []
+            for item in context {
+                if case .image(let url) = item {
                     images.append(url)
                 }
             }

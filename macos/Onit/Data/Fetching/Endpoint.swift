@@ -11,6 +11,7 @@ protocol Endpoint {
     associatedtype Request: Encodable
     associatedtype Response: Decodable
 
+    var baseURL: URL { get }
     var path: String { get }
     var method: HTTPMethod { get }
     var token: String? { get }

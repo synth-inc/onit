@@ -9,14 +9,14 @@ import SwiftUI
 
 struct InputView: View {
     @Environment(\.model) var model
-
+    
     var input: Input
-
+    
     var body: some View {
         VStack(spacing: 0) {
-            InputTitle(source: input.application)
+            InputTitle()
             divider
-            InputBody(text: input.selectedText)
+            InputBody(text: model.selectedText ?? "")
         }
         .background {
             RoundedRectangle(cornerRadius: 10)
@@ -25,7 +25,7 @@ struct InputView: View {
         }
         .padding([.horizontal, .top], 8)
     }
-
+    
     var divider: some View {
         Color.gray600
             .frame(height: 1)

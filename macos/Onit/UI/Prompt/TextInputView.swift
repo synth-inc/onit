@@ -80,12 +80,11 @@ struct TextInputView: View {
             model.save(model.instructions)
             model.generate(model.instructions)
         } label: {
-            Image(.circleArrowUp)
+            Image(model.preferences.mode == .local ? .circleArrowUpDotted : .circleArrowUp)
                 .resizable()
                 .renderingMode(.template)
-                .frame(width: 20, height: 20)
-                .foregroundStyle(model.instructions.isEmpty ? Color.gray700 : .blue400)
-                .padding(3)
+                .foregroundStyle(model.instructions.isEmpty ? Color.gray700 : (model.preferences.mode == .local ? .green : Color.blue400))
+                .frame(width: 18, height: 18)
         }
         .buttonStyle(.plain)
         
