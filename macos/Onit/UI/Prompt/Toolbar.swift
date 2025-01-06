@@ -113,7 +113,7 @@ struct Toolbar: View {
 
     var history: some View {
         Button {
-
+            model.showHistory = true
         } label: {
             Image(.history)
                 .renderingMode(.template)

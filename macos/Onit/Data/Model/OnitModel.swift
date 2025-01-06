@@ -22,6 +22,7 @@ import Combine
     var showTooltip = false
     var isTooltipActive = false
 
+    var showHistory: Bool = false
     var showMenuBarExtra: Bool = false
     var generationState: GenerationState = .idle
     var inputExpanded = true

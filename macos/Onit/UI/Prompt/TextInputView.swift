@@ -34,11 +34,20 @@ struct TextInputView: View {
         @Bindable var model = model
 
         ZStack(alignment: .leading) {
-            TextField("", text: $model.instructions, axis: .vertical)
-                .textFieldStyle(PlainTextFieldStyle())
-                .focused($focused)
-                .tint(.blue600.opacity(0.2))
-                .fixedSize(horizontal: false, vertical: true)
+            HStack(alignment: .firstTextBaseline, spacing: 5) {
+                TextField("", text: $model.instructions, axis: .vertical)
+                    .textFieldStyle(PlainTextFieldStyle())
+                    .focused($focused)
+                    .tint(.blue600.opacity(0.2))
+                    .fixedSize(horizontal: false, vertical: true)
+                if model.generationState == .generated {
+                    Button("Edit") {
+                        focused = true
+                    }
+                    .appFont(.medium16)
+                    .foregroundStyle(.gray300)
+                }
+            }
             if model.instructions.isEmpty {
                 placeholderView
             } else {
@@ -72,11 +81,14 @@ struct TextInputView: View {
             model.generate(model.instructions)
         } label: {
             Image(.circleArrowUp)
+                .resizable()
                 .renderingMode(.template)
+                .frame(width: 20, height: 20)
                 .foregroundStyle(model.instructions.isEmpty ? Color.gray700 : .blue400)
                 .padding(3)
         }
         .buttonStyle(.plain)
+        
         .disabled(model.instructions.isEmpty)
         .keyboardShortcut(.return, modifiers: [])
     }
