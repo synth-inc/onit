@@ -1,9 +1,37 @@
 import { Request, Response, NextFunction } from 'express';
 import OpenAI from 'openai';
+import Anthropic from '@anthropic-ai/sdk';
 import multer from 'multer';
 import { CustomError } from '@utils/CustomError';
 import { ChatCompletionMessageParam } from 'openai/resources/chat/completions';
 import fs from 'fs';
+
+type ModelProvider = 'openai' | 'anthropic';
+
+interface ModelInfo {
+    provider: ModelProvider;
+    capabilities: {
+        vision?: boolean;
+        function_calling?: boolean;
+    };
+}
+
+const MODEL_CONFIGS: Record<string, ModelInfo> = {
+    // OpenAI Models
+    'gpt-4': { provider: 'openai', capabilities: { function_calling: true } },
+    'gpt-4-turbo-preview': { provider: 'openai', capabilities: { function_calling: true } },
+    'gpt-4-vision-preview': { provider: 'openai', capabilities: { vision: true, function_calling: true } },
+    'gpt-3.5-turbo': { provider: 'openai', capabilities: { function_calling: true } },
+    'gpt-3.5-turbo-16k': { provider: 'openai', capabilities: { function_calling: true } },
+    
+    // Anthropic Models
+    'claude-3-opus-20240229': { provider: 'anthropic', capabilities: { vision: true } },
+    'claude-3-sonnet-20240229': { provider: 'anthropic', capabilities: { vision: true } },
+    'claude-3-haiku-20240229': { provider: 'anthropic', capabilities: { vision: true } },
+    'claude-2.1': { provider: 'anthropic', capabilities: {} },
+    'claude-2.0': { provider: 'anthropic', capabilities: {} },
+    'claude-instant-1.2': { provider: 'anthropic', capabilities: {} }
+};
 
 const upload = multer({ dest: 'uploads/' });
 
@@ -16,6 +44,7 @@ const processInput = async (req: Request, res: Response, next: NextFunction): Pr
     const uploadedFiles = req.files as Express.Multer.File[];
 
     const openai = new OpenAI();
+    const anthropic = new Anthropic();
 
     try {
         if (!instructions) {
@@ -36,7 +65,17 @@ const processInput = async (req: Request, res: Response, next: NextFunction): Pr
         }
 
         if (!model || typeof model !== 'string' || model.trim() === '') {
-            model = 'gpt-4o';
+            model = 'gpt-4';
+        }
+
+        const modelConfig = MODEL_CONFIGS[model];
+        if (!modelConfig) {
+            throw new CustomError(`Unsupported model: ${model}`, 400);
+        }
+
+        // Check if model supports vision when images are provided
+        if (images?.length > 0 && !modelConfig.capabilities.vision) {
+            throw new CustomError(`Model ${model} does not support vision/image inputs`, 400);
         }
         
         if (!instructions || typeof instructions !== 'string' || instructions.trim() === '') {
@@ -99,12 +138,38 @@ const processInput = async (req: Request, res: Response, next: NextFunction): Pr
             ];
         }
 
-        const response = await openai.chat.completions.create({
-            model: model || 'gpt-4',
-            messages: messages,
-        });
+        let output: string;
+        
+        if (modelConfig.provider === 'anthropic') {
+            const systemMessage = messages[0].content as string;
+            const userContent = messages[1].content as any[];
+            
+            // For Claude 3 models, we can pass images directly
+            const isVisionModel = modelConfig.capabilities.vision;
+            const userMessage = isVisionModel
+                ? userContent
+                : userContent.map(content => {
+                    if (content.type === 'text') return content.text;
+                    if (content.type === 'image_url') return `[Image: ${content.image_url.url}]`;
+                    return '';
+                }).join('\n');
 
-        const output = response.choices[0].message.content?.trim();
+            const response = await anthropic.messages.create({
+                model: model,
+                system: systemMessage,
+                messages: [{ role: 'user', content: userMessage }],
+                max_tokens: 4096,
+            });
+
+            output = response.content[0].text.trim();
+        } else {
+            const response = await openai.chat.completions.create({
+                model: model,
+                messages: messages,
+            });
+
+            output = response.choices[0].message.content?.trim() || '';
+        }
         res.json({ output });
     } catch (error: any) {
         next(error);
