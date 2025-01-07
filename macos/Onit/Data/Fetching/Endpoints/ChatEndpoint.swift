@@ -8,7 +8,7 @@
 import Foundation
 
 extension FetchingClient {
-    func chat(_ text: String, input: Input?, model: GPTModel?, files: [URL], images: [URL]) async throws -> String {
+    func chat(_ text: String, input: Input?, model: AIModel?, files: [URL], images: [URL]) async throws -> String {
         let endpoint = ChatEndpoint(instructions: text, input: input, model: model, images: images)
         let response = try await {
             if files.isEmpty {
@@ -29,7 +29,7 @@ struct ChatEndpoint: Endpoint {
 
     let instructions: String
     let input: Input?
-    let model: GPTModel?
+    let model: AIModel?
     let images: [URL]
 
     var path: String { "/process" }
@@ -44,7 +44,7 @@ struct ChatEndpoint: Endpoint {
 struct ChatRequestJSON: Codable {
     let instructions: String
     let input: Input?
-    let model: GPTModel?
+    let model: AIModel?
     let images: [URL]
 }
 

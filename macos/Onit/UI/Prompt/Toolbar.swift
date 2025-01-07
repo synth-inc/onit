@@ -88,16 +88,16 @@ struct Toolbar: View {
                     model.preferences.mode = .remote
                 }
             )) {
-                ForEach(GPTModel.allCases) { model in
-//                    HStack {
-                    Text(model.rawValue)
-//                        Spacer()
-//                        if model == model.preferences.model {
-//                            Text("default")
-//                                .italic()
-//                                .foregroundStyle(.gray400)
-//                        }
-//                    }
+                ForEach(model.preferences.visibleModelsList) { model in
+                    HStack {
+                        Text(model.displayName)
+                        Spacer()
+                        if model == model.preferences.model {
+                            Text("default")
+                                .italic()
+                                .foregroundStyle(.gray400)
+                        }
+                    }
                     .tag(model)
                 }
             }
@@ -128,7 +128,7 @@ struct Toolbar: View {
             HStack(spacing: 0) {
                 Text(model.preferences.mode == .local ? 
                      (model.preferences.localModel?.split(separator: ":").first.map(String.init) ?? "") :
-                     (model.preferences.model?.rawValue ?? ""))
+                     (model.preferences.model?.displayName ?? ""))
                     .appFont(.medium13)
                     .padding(.leading, 2)
                 Image(.smallChevDown)
