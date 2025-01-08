@@ -5,6 +5,7 @@ import multer from 'multer';
 import { CustomError } from '@utils/CustomError';
 import { ChatCompletionMessageParam } from 'openai/resources/chat/completions';
 import fs from 'fs';
+import { TextBlock } from '@anthropic-ai/sdk/resources/messages';
 
 type ModelProvider = 'openai' | 'anthropic';
 
@@ -160,8 +161,10 @@ const processInput = async (req: Request, res: Response, next: NextFunction): Pr
                 messages: [{ role: 'user', content: userMessage }],
                 max_tokens: 4096,
             });
-
-            output = response.content[0].text.trim();
+            output = response.content
+                .filter((block) => block.type === 'text')
+                .map((block) => (block as TextBlock).text)
+                .join('');
         } else {
             const response = await openai.chat.completions.create({
                 model: model,

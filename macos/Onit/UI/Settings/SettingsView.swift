@@ -76,7 +76,7 @@ private struct ModelsTab: View {
                 }
             }
         }
-        .padding()
+        .padding(.vertical, 20)
     }
 }
 

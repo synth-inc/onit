@@ -76,54 +76,60 @@ struct Toolbar: View {
         )
     }
 
+    // Helper function to create a picker for models
+    private func createModelPicker<T: Hashable>(
+        title: String,
+        selection: Binding<T?>,
+        models: [T],
+        currentModel: T?
+    ) -> some View {
+        Picker(title, selection: selection) {
+            ForEach(models, id: \.self) { model in
+                HStack {
+                    Text("\(model)")
+                    Spacer()
+                    if model == currentModel {
+                        Text("default")
+                            .italic()
+                            .foregroundStyle(.gray400)
+                    }
+                }
+                .tag(model as T?)
+            }
+        }
+        .pickerStyle(.inline)
+    }
+
     @ViewBuilder
     var languageModel: some View {
         @Bindable var model = model
 
         Menu {
-            Picker("Remote model", selection: Binding(
-                get: { model.preferences.mode == .remote ? model.preferences.model : nil },
-                set: { newValue in
-                    model.preferences.model = newValue
-                    model.preferences.mode = .remote
-                }
-            )) {
-                ForEach(model.preferences.visibleModelsList) { model in
-                    HStack {
-                        Text(model.displayName)
-                        Spacer()
-                        if model == model.preferences.model {
-                            Text("default")
-                                .italic()
-                                .foregroundStyle(.gray400)
-                        }
+            createModelPicker(
+                title: "Remote model",
+                selection: Binding(
+                    get: { model.preferences.mode == .remote ? model.preferences.model : nil },
+                    set: { newValue in
+                        model.preferences.model = newValue
+                        model.preferences.mode = .remote
                     }
-                    .tag(model)
-                }
-            }
-            .pickerStyle(.inline)
+                ),
+                models: model.preferences.visibleModelsList,
+                currentModel: model.preferences.model
+            )
             
-            Picker("Local model", selection: Binding(
-                get: { model.preferences.mode == .local ? model.preferences.localModel : nil },
-                set: { newValue in
-                    model.preferences.localModel = newValue
-                    model.preferences.mode = .local
-                }
-            )) {
-                ForEach(model.availableLocalModels, id: \.self) { modelName in
-                    HStack {
-                        Text(modelName)
-                        Spacer()
-                        if modelName == model.preferences.localModel {
-                            Text("default")
-                                .italic()
-                                .foregroundStyle(.gray400)
-                        }
+            createModelPicker(
+                title: "Local model",
+                selection: Binding(
+                    get: { model.preferences.mode == .local ? model.preferences.localModel : nil },
+                    set: { newValue in
+                        model.preferences.localModel = newValue
+                        model.preferences.mode = .local
                     }
-                    .tag(modelName as String?)
-                }
-            }
-            .pickerStyle(.inline)
+                ),
+                models: model.availableLocalModels,
+                currentModel: model.preferences.localModel
+            )
         } label: {
             HStack(spacing: 0) {
                 Text(model.preferences.mode == .local ? 
