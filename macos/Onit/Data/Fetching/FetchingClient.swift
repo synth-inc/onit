@@ -7,10 +7,11 @@
 
 import Foundation
 
+
 actor FetchingClient {
-    var baseURL: URL {
-        URL(string: "https://onit-server-b3c3746e04e9.herokuapp.com")!
-    }
+    //  URL(string: "http://localhost:3001")! // Uncomment to hit local server
+    var baseURL: URL = URL(string: "https://onit-server-b3c3746e04e9.herokuapp.com")!
+
     let session = URLSession.shared
     let encoder = JSONEncoder()
     let decoder = {
