@@ -23,18 +23,24 @@ enum AIModel: String, CaseIterable, Codable {
     case claude20 = "claude-2.0"
     case claudeInstant = "claude-instant-1.2"
     
+    // xAI Models
+    case grok1 = "grok-1"
+    case grok1Vision = "grok-1-vision"
+    
     var provider: ModelProvider {
         switch self {
         case .gpt4, .gpt4Turbo, .gpt4Vision, .gpt35Turbo, .gpt35Turbo16k:
             return .openAI
         case .claude3Opus, .claude3Sonnet, .claude3Haiku, .claude21, .claude20, .claudeInstant:
             return .anthropic
+        case .grok1, .grok1Vision:
+            return .xAI
         }
     }
     
     var supportsVision: Bool {
         switch self {
-        case .gpt4Vision, .claude3Opus, .claude3Sonnet, .claude3Haiku:
+        case .gpt4Vision, .claude3Opus, .claude3Sonnet, .claude3Haiku, .grok1Vision:
             return true
         default:
             return false
@@ -55,13 +61,15 @@ enum AIModel: String, CaseIterable, Codable {
         case .claude21: return "Claude 2.1"
         case .claude20: return "Claude 2.0"
         case .claudeInstant: return "Claude Instant"
-        }
+        case .grok1: return "Grok-1"
+        case .grok1Vision: return "Grok-1 Vision"
     }
 }
 
 enum ModelProvider: String, Codable {
     case openAI = "openai"
     case anthropic = "anthropic"
+    case xAI = "xai"
 }
 
 extension AIModel: Identifiable {

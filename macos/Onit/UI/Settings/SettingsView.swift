@@ -45,8 +45,10 @@ private struct ModelsTab: View {
     @Environment(\.model) var model
     @State private var openAIKey: String = ""
     @State private var anthropicKey: String = ""
+    @State private var xAIKey: String = ""
     @State private var showOpenAIKey: Bool = false
     @State private var showAnthropicKey: Bool = false
+    @State private var showXAIKey: Bool = false
     
     var body: some View {
         Form {
@@ -138,6 +140,28 @@ private struct ModelsTab: View {
                         ))
                     }
                 }
+            }
+            
+            Section("xAI") {
+                HStack {
+                    if showXAIKey {
+                        TextField("xAI API Key", text: $xAIKey)
+                    } else {
+                        SecureField("xAI API Key", text: $xAIKey)
+                    }
+                    
+                    Button(action: { showXAIKey.toggle() }) {
+                        Image(systemName: showXAIKey ? "eye.slash" : "eye")
+                    }
+                    .buttonStyle(.borderless)
+                }
+                .onChange(of: xAIKey) { _, newValue in
+                    Token.xAIToken = newValue.isEmpty ? nil : newValue
+                }
+                
+                Text("Get your API key from [xAI](https://x.ai/api)")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
             }
         }
         .padding(.vertical, 20)
