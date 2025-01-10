@@ -12,8 +12,8 @@ struct OpenAIChatEndpoint: Endpoint {
     typealias Response = OpenAIChatResponse
     
     let messages: [OpenAIChatMessage]
-    let token: String?
     let model: String
+    let token: String?
     
     var path: String { "/v1/chat/completions" }
     var method: HTTPMethod { .post }
@@ -69,16 +69,30 @@ struct OpenAIChatContentPart: Codable {
 struct OpenAIChatRequest: Codable {
     let model: String
     let messages: [OpenAIChatMessage]
+    let stream: Bool = true
 }
 
 struct OpenAIChatResponse: Codable {
     let choices: [Choice]
+    let created: Int
+    let id: String
+    let model: String
+    let object: String
     
     struct Choice: Codable {
-        let message: Message
+        let delta: Delta
+        let index: Int
+        let finishReason: String?
         
-        struct Message: Codable {
-            let content: String
+        enum CodingKeys: String, CodingKey {
+            case delta
+            case index
+            case finishReason = "finish_reason"
         }
+    }
+    
+    struct Delta: Codable {
+        let content: String?
+        let role: String?
     }
 }

@@ -9,15 +9,35 @@ import SwiftUI
 import MarkdownUI
 
 struct GeneratedContentView: View {
-    var result: String
+    @Environment(\.model) var model
+    @State private var text: String = ""
+    private var stream: Bool = false
+    
+    init(result: String) {
+        self._text = State(initialValue: result)
+    }
+    
+    init(text: String) {
+        self._text = State(initialValue: text)
+    }
+    
+    init(stream: Bool) {
+        self.stream = stream
+        self._text = State(initialValue: model.streamedResponse)
+    }
 
     var body: some View {
-        Markdown(result)
+        Markdown(self.text)
             .markdownTheme(.custom)
             .textSelection(.enabled)
             .multilineTextAlignment(.leading)
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
             .fixedSize(horizontal: false, vertical: true)
+            .onChange(of: model.streamedResponse) { newValue in
+                if self.stream {
+                    self.text = newValue
+                }
+            }
     }
 }
 
@@ -39,14 +59,5 @@ extension Theme {
 }
 
 #Preview {
-    GeneratedContentView(result: """
-```swift
-struct ContentView: View {
-    var body: some View {
-        Text("Hello world")
-    }
-}
-```
-"""
-    )
+    GeneratedContentView(result: "")
 }

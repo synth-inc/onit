@@ -24,7 +24,7 @@ struct PromptView: View {
         switch model.generationState {
         case .generating:
             PromptDivider()
-            GeneratingView()
+            GeneratedView()
         case .generated:
             PromptDivider()
             GeneratedView()

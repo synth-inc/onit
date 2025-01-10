@@ -73,16 +73,30 @@ struct XAIChatContentPart: Codable {
 struct XAIChatRequest: Codable {
     let model: String
     let messages: [XAIChatMessage]
+    let stream: Bool = true
 }
 
 struct XAIChatResponse: Codable {
     let choices: [Choice]
+    let created: Int
+    let id: String
+    let model: String
+    let object: String
     
     struct Choice: Codable {
-        let message: Message
+        let delta: Delta
+        let index: Int
+        let finishReason: String?
         
-        struct Message: Codable {
-            let content: String
+        enum CodingKeys: String, CodingKey {
+            case delta
+            case index
+            case finishReason = "finish_reason"
         }
+    }
+    
+    struct Delta: Codable {
+        let content: String?
+        let role: String?
     }
 }

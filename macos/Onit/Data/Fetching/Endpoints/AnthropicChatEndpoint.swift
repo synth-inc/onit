@@ -58,12 +58,51 @@ struct AnthropicChatRequest: Codable {
     let system: String
     let messages: [AnthropicMessage]
     let max_tokens: Int
+    let stream: Bool = true
 }
 
 struct AnthropicChatResponse: Codable {
-    let content: [AnthropicResponseContent]
+    let type: String
+    let delta: Delta?
+    let message: Message?
     
-    struct AnthropicResponseContent: Codable {
+    struct Delta: Codable {
+        let type: String?
+        let text: String?
+        let stopReason: String?
+        let stopSequence: String?
+    }
+    
+    struct Message: Codable {
+        let id: String
+        let type: String
+        let role: String
+        let content: [Content]
+        let model: String
+        let stopReason: String?
+        let stopSequence: String?
+        let usage: Usage
+        
+        enum CodingKeys: String, CodingKey {
+            case id, type, role, content, model
+            case stopReason = "stop_reason"
+            case stopSequence = "stop_sequence"
+            case usage
+        }
+    }
+    
+    struct Content: Codable {
+        let type: String
         let text: String
+    }
+    
+    struct Usage: Codable {
+        let inputTokens: Int
+        let outputTokens: Int
+        
+        enum CodingKeys: String, CodingKey {
+            case inputTokens = "input_tokens"
+            case outputTokens = "output_tokens"
+        }
     }
 }

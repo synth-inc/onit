@@ -8,6 +8,17 @@
 import Foundation
 
 
+actor ResponseManager {
+    private var response: String = ""
+
+    func append(_ content: String) {
+        response += content
+    }
+    
+    func getResponse() -> String {
+        return response
+    }
+}
 actor FetchingClient {
     let session = URLSession.shared
     let encoder = JSONEncoder()
@@ -19,7 +30,16 @@ actor FetchingClient {
         return decoder
     }()
     
-    func chat(_ text: String, input: Input?, model: AIModel?, apiToken: String?, files: [URL], images: [URL]) async throws -> String {
+    func chat(
+        _ text: String,
+        input: Input?,
+        model: AIModel?,
+        token: String?,
+        files: [URL],
+        images: [URL],
+        onProgress: (@Sendable (String) async -> Void)? = nil,
+        onComplete: (@Sendable (String) async -> Void)? = nil
+    ) async throws -> String {
         guard let model = model else {
             throw FetchingError.invalidRequest(message: "Model is required")
         }
@@ -67,9 +87,20 @@ actor FetchingClient {
                 ]
             }
             
-            let endpoint = OpenAIChatEndpoint(messages: messages, token: apiToken, model: model.rawValue)
-            let response = try await execute(endpoint)
-            return response.choices[0].message.content
+            let endpoint = OpenAIChatEndpoint(messages: messages, model: model.rawValue, token: token)
+            let responseManager = ResponseManager()
+            try await executeStream(endpoint,
+                onReceive: { content in
+                    await responseManager.append(content)
+                    let currentResponse = await responseManager.getResponse()
+                    await onProgress?(currentResponse)
+                },
+                onComplete: {
+                    let finalResponse = await responseManager.getResponse()
+                    await onComplete?(finalResponse)
+                }
+            )
+            return await responseManager.getResponse()
             
         case .anthropic:
             let content: [AnthropicContent]
@@ -97,12 +128,23 @@ actor FetchingClient {
             let endpoint = AnthropicChatEndpoint(
                 model: model.rawValue,
                 system: systemMessage,
-                token: apiToken,
+                token: token,
                 messages: messages,
                 maxTokens: 4096
             )
-            let response = try await execute(endpoint)
-            return response.content[0].text
+            let responseManager = ResponseManager()
+            try await executeStream(endpoint,
+                onReceive: { content in
+                    await responseManager.append(content)
+                    let currentResponse = await responseManager.getResponse()
+                    await onProgress?(currentResponse)
+                },
+                onComplete: {
+                    let finalResponse = await responseManager.getResponse()
+                    await onComplete?(finalResponse)
+                }
+            )
+            return await responseManager.getResponse()
             
         case .xAI:
             let messages: [XAIChatMessage]
@@ -127,9 +169,20 @@ actor FetchingClient {
                 ]
             }
             
-            let endpoint = XAIChatEndpoint(messages: messages, model: model.rawValue, token: apiToken)
-            let response = try await execute(endpoint)
-            return response.choices[0].message.content
+            let endpoint = XAIChatEndpoint(messages: messages, model: model.rawValue, token: token)
+            let responseManager = ResponseManager()
+            try await executeStream(endpoint,
+                onReceive: { content in
+                    await responseManager.append(content)
+                    let currentResponse = await responseManager.getResponse()
+                    await onProgress?(currentResponse)
+                },
+                onComplete: {
+                    let finalResponse = await responseManager.getResponse()
+                    await onComplete?(finalResponse)
+                }
+            )
+            return await responseManager.getResponse()
         }
     }
 }

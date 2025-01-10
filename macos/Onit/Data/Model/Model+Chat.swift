@@ -34,22 +34,37 @@ extension OnitModel {
                 let chat: String
                 if preferences.mode == .remote {
                     let images = await remoteImages
+                    streamedResponse = ""
+                    let onProgress: @Sendable (String) -> Void = { [weak self] text in
+                        DispatchQueue.main.async {
+                            self?.streamedResponse = text
+                        }
+                    }
+                    let onComplete: @Sendable (String) -> Void = { [weak self] text in
+                        DispatchQueue.main.async {
+                            if let self = self {
+                                self.streamedResponse = text
+                                self.finishGeneration(text: text)
+                            }
+                        }
+                    }
                     chat = try await client.chat(
-                        text, input: input, model: preferences.model, apiToken: getTokenForModel(preferences.model ?? nil), files: files, images: images
+                        text,
+                        input: input,
+                        model: preferences.model,
+                        token: getTokenForModel(preferences.model ?? nil),
+                        files: files,
+                        images: images,
+                        onProgress: onProgress,
+                        onComplete: onComplete
                     )
                 } else {
                     let images = await localImages
                     chat = try await client.localChat(
                         text, input: input, model: preferences.localModel, files: files, images: images
                     )
+                    finishGeneration(text: chat)
                 }
-                addChat(chat)
-                if let prompt = self.prompt {
-                    self.generationIndex = prompt.responses.count - 1
-                }
-                self.generationState = .generated
-                setTokenIsValid(true)
-                
             } catch let error as FetchingError {
                 print("Fetching Error: \(error.localizedDescription)")
                 if case .forbidden(let message) = error {
@@ -75,6 +90,15 @@ extension OnitModel {
         prompt.responses.append(response)
     }
 
+    func finishGeneration(text: String) {
+        addChat(text)
+        if let prompt = self.prompt {
+            self.generationIndex = prompt.responses.count - 1
+        }
+        self.generationState = .generated
+        setTokenIsValid(true)
+    }
+    
     func cancelGenerate() {
         generateTask?.cancel()
         generateTask = nil

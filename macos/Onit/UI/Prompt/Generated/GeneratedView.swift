@@ -18,8 +18,12 @@ struct GeneratedView: View {
 
     var content: some View {
         VStack(spacing: 16) {
-            if let result = model.generation {
+            if model.generationState == .generating && !model.streamedResponse.isEmpty {
+                GeneratedContentView(stream: true)
+            } else if let result = model.generation {
                 GeneratedContentView(result: result)
+            } else if model.generationState == .generating {
+                GeneratingView()
             }
             GeneratedToolbar()
         }
