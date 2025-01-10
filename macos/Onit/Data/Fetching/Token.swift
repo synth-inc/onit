@@ -10,6 +10,7 @@ import Foundation
 class Token {
     static var openAIToken: String? = nil
     static var anthropicToken: String? = nil
+    static var xAIToken: String? = nil
     
     static func loadTokens() {
         // TODO: Load tokens from secure storage
