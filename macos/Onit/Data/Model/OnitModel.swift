@@ -58,6 +58,7 @@ import Combine
 
     var client = FetchingClient()
     var updater = SPUStandardUpdaterController(startingUpdater: true, updaterDelegate: nil, userDriverDelegate: nil)
+    var _tokenValidation = TokenValidationState()
     
     @MainActor
     func fetchLocalModels() async {

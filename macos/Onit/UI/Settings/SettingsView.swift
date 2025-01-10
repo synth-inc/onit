@@ -54,25 +54,50 @@ private struct ModelsTab: View {
         ScrollView { // Make the ModelsTab scrollable
             Form {
                 Section("OpenAI") {
-                    HStack {
-                        ZStack(alignment: .trailing) {
-                            if showOpenAIKey {
-                                TextField("OpenAI API Key", text: $openAIKey)
-                            } else {
-                                SecureField("OpenAI API Key", text: $openAIKey)
+                    VStack(alignment: .leading, spacing: 8) {
+                        HStack {
+                            ZStack(alignment: .trailing) {
+                                if showOpenAIKey {
+                                    TextField("OpenAI API Key", text: $openAIKey)
+                                } else {
+                                    SecureField("OpenAI API Key", text: $openAIKey)
+                                }
+                                
+                                Button(action: { showOpenAIKey.toggle() }) {
+                                    Image(systemName: showOpenAIKey ? "eye.slash" : "eye")
+                                }
+                                .buttonStyle(.borderless)
+                                .padding(.trailing, 8)
                             }
                             
-                            Button(action: { showOpenAIKey.toggle() }) {
-                                Image(systemName: showOpenAIKey ? "eye.slash" : "eye")
+                            Button(action: {
+                                guard !openAIKey.isEmpty else { return }
+                                Task {
+                                    await model.validateToken(provider: AIModel.ModelProvider.openAI, token: openAIKey)
+                                }
+                            }) {
+                                switch model.tokenValidation.state(for: AIModel.ModelProvider.openAI) {
+                                case .notValidated:
+                                    Text("Validate")
+                                case .validating:
+                                    ProgressView()
+                                        .controlSize(.small)
+                                case .valid:
+                                    Image(systemName: "checkmark.circle.fill")
+                                        .foregroundStyle(.green)
+                                case .invalid:
+                                    Image(systemName: "exclamationmark.circle.fill")
+                                        .foregroundStyle(.red)
+                                }
                             }
-                            .buttonStyle(.borderless)
-                            .padding(.trailing, 8)
+                            .disabled(openAIKey.isEmpty || model.tokenValidation.state(for: AIModel.ModelProvider.openAI).isValidating)
                         }
-                        
-                        Button("Verify") {
-                            // Add verification logic here
+
+                        if case .invalid(let error) = model.tokenValidation.state(for: .openAI) {
+                            Text(error.localizedDescription)
+                                .font(.caption)
+                                .foregroundStyle(.red)
                         }
-                        .padding(.leading, 8)
                     }
                     .onChange(of: openAIKey) { _, newValue in
                         model.openAIToken = newValue.isEmpty ? nil : newValue
@@ -99,34 +124,58 @@ private struct ModelsTab: View {
                 }
                 
                 Section("Anthropic Models") {
-                    HStack {
-                        ZStack(alignment: .trailing) {
-                            if showAnthropicKey {
-                                TextField("Anthropic API Key", text: $anthropicKey)
-                            } else {
-                                SecureField("Anthropic API Key", text: $anthropicKey)
+                    VStack(alignment: .leading, spacing: 8) {
+                        HStack {
+                            ZStack(alignment: .trailing) {
+                                if showAnthropicKey {
+                                    TextField("Anthropic API Key", text: $anthropicKey)
+                                } else {
+                                    SecureField("Anthropic API Key", text: $anthropicKey)
+                                }
+                                
+                                Button(action: { showAnthropicKey.toggle() }) {
+                                    Image(systemName: showAnthropicKey ? "eye.slash" : "eye")
+                                }
+                                .buttonStyle(.borderless)
+                                .padding(.trailing, 8)
                             }
                             
-                            Button(action: { showAnthropicKey.toggle() }) {
-                                Image(systemName: showAnthropicKey ? "eye.slash" : "eye")
+                            Button(action: {
+                                guard !anthropicKey.isEmpty else { return }
+                                Task {
+                                    await model.validateToken(provider: AIModel.ModelProvider.anthropic, token: anthropicKey)
+                                }
+                            }) {
+                                switch model.tokenValidation.state(for: AIModel.ModelProvider.anthropic) {
+                                case .notValidated:
+                                    Text("Validate")
+                                case .validating:
+                                    ProgressView()
+                                        .controlSize(.small)
+                                case .valid:
+                                    Image(systemName: "checkmark.circle.fill")
+                                        .foregroundStyle(.green)
+                                case .invalid:
+                                    Image(systemName: "exclamationmark.circle.fill")
+                                        .foregroundStyle(.red)
+                                }
                             }
-                            .buttonStyle(.borderless)
-                            .padding(.trailing, 8)
+                            .disabled(anthropicKey.isEmpty || model.tokenValidation.state(for: AIModel.ModelProvider.anthropic).isValidating)
                         }
-                        
-                        Button("Verify") {
-                            // Add verification logic here
+                        if case .invalid(let error) = model.tokenValidation.state(for: .openAI) {
+                            Text(error.localizedDescription)
+                                .font(.caption)
+                                .foregroundStyle(.red)
                         }
-                        .padding(.leading, 8)
                     }
                     .onChange(of: anthropicKey) { _, newValue in
                         model.anthropicToken = newValue.isEmpty ? nil : newValue
                     }
-                    
+                        
                     Text("Get your API key from [Anthropic](https://console.anthropic.com/settings/keys)")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                        
                     if model.isAnthropicTokenValidated {
                         ForEach(AIModel.allCases.filter { $0.provider == .anthropic }) { aiModel in
                             Toggle(aiModel.displayName, isOn: Binding(
@@ -144,34 +193,58 @@ private struct ModelsTab: View {
                 }
                 
                 Section("xAI") {
-                    HStack {
-                        ZStack(alignment: .trailing) {
-                            if showXAIKey {
-                                TextField("xAI API Key", text: $xAIKey)
-                            } else {
-                                SecureField("xAI API Key", text: $xAIKey)
+                    VStack(alignment: .leading, spacing: 8) {
+                        HStack {
+                            ZStack(alignment: .trailing) {
+                                if showXAIKey {
+                                    TextField("xAI API Key", text: $xAIKey)
+                                } else {
+                                    SecureField("xAI API Key", text: $xAIKey)
+                                }
+                                
+                                Button(action: { showXAIKey.toggle() }) {
+                                    Image(systemName: showXAIKey ? "eye.slash" : "eye")
+                                }
+                                .buttonStyle(.borderless)
+                                .padding(.trailing, 8)
                             }
                             
-                            Button(action: { showXAIKey.toggle() }) {
-                                Image(systemName: showXAIKey ? "eye.slash" : "eye")
+                            Button(action: {
+                                guard !xAIKey.isEmpty else { return }
+                                Task {
+                                    await model.validateToken(provider: AIModel.ModelProvider.xAI, token: xAIKey)
+                                }
+                            }) {
+                                switch model.tokenValidation.state(for: AIModel.ModelProvider.xAI) {
+                                case .notValidated:
+                                    Text("Validate")
+                                case .validating:
+                                    ProgressView()
+                                        .controlSize(.small)
+                                case .valid:
+                                    Image(systemName: "checkmark.circle.fill")
+                                        .foregroundStyle(.green)
+                                case .invalid:
+                                    Image(systemName: "exclamationmark.circle.fill")
+                                        .foregroundStyle(.red)
+                                }
                             }
-                            .buttonStyle(.borderless)
-                            .padding(.trailing, 8)
+                            .disabled(xAIKey.isEmpty || model.tokenValidation.state(for: AIModel.ModelProvider.xAI).isValidating)
                         }
-                        
-                        Button("Verify") {
-                            // Add verification logic here
+                        if case .invalid(let error) = model.tokenValidation.state(for: .xAI) {
+                            Text(error.localizedDescription)
+                                .font(.caption)
+                                .foregroundStyle(.red)
                         }
-                        .padding(.leading, 8)
                     }
                     .onChange(of: xAIKey) { _, newValue in
                         model.xAIToken = newValue.isEmpty ? nil : newValue
                     }
-                    
+                        
                     Text("Get your API key from [xAI](https://console.x.ai/)")
                         .font(.caption)
                         .foregroundStyle(.secondary)
-
+                    
                     if model.isXAITokenValidated {
                         ForEach(AIModel.allCases.filter { $0.provider == .xAI }) { aiModel in
                             Toggle(aiModel.displayName, isOn: Binding(
