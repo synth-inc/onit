@@ -9,9 +9,6 @@ import Foundation
 
 
 actor FetchingClient {
-    //  URL(string: "http://localhost:3001")! // Uncomment to hit local server
-    var baseURL: URL = URL(string: "https://onit-server-b3c3746e04e9.herokuapp.com")!
-
     let session = URLSession.shared
     let encoder = JSONEncoder()
     let decoder = {
@@ -21,4 +18,98 @@ actor FetchingClient {
         decoder.dateDecodingStrategy = .formatted(dateFormatter)
         return decoder
     }()
+    
+    func chat(_ text: String, input: Input?, model: AIModel?, files: [URL], images: [URL]) async throws -> String {
+        guard let model = model else {
+            throw FetchingError.invalidRequest("Model is required")
+        }
+        
+        let systemMessage = input?.application != nil
+            ? "Based on the provided instructions, either modify the given text from the application \(input!.application!) or answer any questions related to it. Provide the response without any additional comments. Provide the text ready to go."
+            : "Based on the provided instructions, either provide the output or answer any questions related to it. Provide the response without any additional comments. Provide the output ready to go."
+        
+        // Combine all text inputs
+        var userMessage = text
+        if let selectedText = input?.selectedText {
+            userMessage += "\n\nSelected Text: \(selectedText)"
+        }
+        
+        // Add file contents if any
+        if !files.isEmpty {
+            for file in files {
+                if let fileContent = try? String(contentsOf: file, encoding: .utf8) {
+                    userMessage += "\n\nFile: \(file.lastPathComponent)\nContent:\n\(fileContent)"
+                }
+            }
+        }
+        
+        switch model.provider {
+        case .openAI:
+            guard let token = Token.openAIToken else {
+                throw FetchingError.invalidRequest("OpenAI API key not set")
+            }
+            
+            let messages: [OpenAIChatMessage]
+            if images.isEmpty {
+                messages = [
+                    OpenAIChatMessage(role: "system", content: .text(systemMessage)),
+                    OpenAIChatMessage(role: "user", content: .text(userMessage))
+                ]
+            } else {
+                let parts = [
+                    OpenAIChatContentPart(type: "text", text: userMessage, image_url: nil)
+                ] + images.map { url in
+                    OpenAIChatContentPart(
+                        type: "image_url",
+                        text: nil,
+                        image_url: .init(url: url.absoluteString)
+                    )
+                }
+                messages = [
+                    OpenAIChatMessage(role: "system", content: .text(systemMessage)),
+                    OpenAIChatMessage(role: "user", content: .multiContent(parts))
+                ]
+            }
+            
+            let endpoint = OpenAIChatEndpoint(messages: messages, model: model.rawValue)
+            let response = try await execute(endpoint)
+            return response.choices[0].message.content
+            
+        case .anthropic:
+            guard let token = Token.anthropicToken else {
+                throw FetchingError.invalidRequest("Anthropic API key not set")
+            }
+            
+            let content: [AnthropicContent]
+            if images.isEmpty {
+                content = [AnthropicContent(type: "text", text: userMessage, source: nil)]
+            } else {
+                content = [
+                    AnthropicContent(type: "text", text: userMessage, source: nil)
+                ] + images.map { url in
+                    // Note: Anthropic requires base64 images, we'll need to convert URLs
+                    // For now, we'll just reference them
+                    AnthropicContent(
+                        type: "image",
+                        text: nil,
+                        source: AnthropicImageSource(
+                            type: "base64",
+                            media_type: "image/jpeg",
+                            data: url.absoluteString
+                        )
+                    )
+                }
+            }
+            
+            let messages = [AnthropicMessage(role: "user", content: content)]
+            let endpoint = AnthropicChatEndpoint(
+                model: model.rawValue,
+                system: systemMessage,
+                messages: messages,
+                maxTokens: 4096
+            )
+            let response = try await execute(endpoint)
+            return response.content[0].text
+        }
+    }
 }

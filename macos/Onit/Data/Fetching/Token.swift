@@ -8,7 +8,11 @@
 import Foundation
 
 class Token {
-    static let token = """
-eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6InRlc3RVc2VyIiwiaWF0IjoxNzM2MzY2MjQwLCJleHAiOjE3Mzg5NTgyNDB9.hq_ixR_tTjd9y7cg--ZxBQZfIGdPVwajrvUI8i5uTf0
-"""
+    static var openAIToken: String? = nil
+    static var anthropicToken: String? = nil
+    
+    static func loadTokens() {
+        // TODO: Load tokens from secure storage
+        // For now, they should be set through settings
+    }
 }

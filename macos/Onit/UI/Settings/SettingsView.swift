@@ -15,6 +15,11 @@ struct SettingsView: View {
                 .tabItem {
                     Label("Models", systemImage: "cpu")
                 }
+            
+            APIKeysTab()
+                .tabItem {
+                    Label("API Keys", systemImage: "key")
+                }
         }
         .frame(minWidth: 500, minHeight: 300)
     }
@@ -77,6 +82,62 @@ private struct ModelsTab: View {
             }
         }
         .padding(.vertical, 20)
+    }
+}
+
+private struct APIKeysTab: View {
+    @State private var openAIKey: String = ""
+    @State private var anthropicKey: String = ""
+    @State private var showOpenAIKey: Bool = false
+    @State private var showAnthropicKey: Bool = false
+    
+    var body: some View {
+        Form {
+            Section("OpenAI") {
+                HStack {
+                    if showOpenAIKey {
+                        TextField("OpenAI API Key", text: $openAIKey)
+                    } else {
+                        SecureField("OpenAI API Key", text: $openAIKey)
+                    }
+                    
+                    Button(action: { showOpenAIKey.toggle() }) {
+                        Image(systemName: showOpenAIKey ? "eye.slash" : "eye")
+                    }
+                    .buttonStyle(.borderless)
+                }
+                .onChange(of: openAIKey) { _, newValue in
+                    Token.openAIToken = newValue.isEmpty ? nil : newValue
+                }
+                
+                Text("Get your API key from [OpenAI](https://platform.openai.com/api-keys)")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+            
+            Section("Anthropic") {
+                HStack {
+                    if showAnthropicKey {
+                        TextField("Anthropic API Key", text: $anthropicKey)
+                    } else {
+                        SecureField("Anthropic API Key", text: $anthropicKey)
+                    }
+                    
+                    Button(action: { showAnthropicKey.toggle() }) {
+                        Image(systemName: showAnthropicKey ? "eye.slash" : "eye")
+                    }
+                    .buttonStyle(.borderless)
+                }
+                .onChange(of: anthropicKey) { _, newValue in
+                    Token.anthropicToken = newValue.isEmpty ? nil : newValue
+                }
+                
+                Text("Get your API key from [Anthropic](https://console.anthropic.com/settings/keys)")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+        }
+        .padding()
     }
 }
 
