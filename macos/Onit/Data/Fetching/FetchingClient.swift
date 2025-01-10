@@ -19,7 +19,15 @@ actor FetchingClient {
         return decoder
     }()
     
-    func chat(_ text: String, input: Input?, model: AIModel?, files: [URL], images: [URL]) async throws -> String {
+    func chat(
+        _ text: String,
+        input: Input?,
+        model: AIModel?,
+        files: [URL],
+        images: [URL],
+        onProgress: ((String) -> Void)? = nil,
+        onComplete: ((String) -> Void)? = nil
+    ) async throws -> String {
         guard let model = model else {
             throw FetchingError.invalidRequest("Model is required")
         }
@@ -72,8 +80,17 @@ actor FetchingClient {
             }
             
             let endpoint = OpenAIChatEndpoint(messages: messages, model: model.rawValue)
-            let response = try await execute(endpoint)
-            return response.choices[0].message.content
+            var fullResponse = ""
+            try await executeStream(endpoint,
+                onReceive: { content in
+                    fullResponse += content
+                    onProgress?(fullResponse)
+                },
+                onComplete: {
+                    onComplete?(fullResponse)
+                }
+            )
+            return fullResponse
             
         case .anthropic:
             guard let token = Token.anthropicToken else {
@@ -108,8 +125,17 @@ actor FetchingClient {
                 messages: messages,
                 maxTokens: 4096
             )
-            let response = try await execute(endpoint)
-            return response.content[0].text
+            var fullResponse = ""
+            try await executeStream(endpoint,
+                onReceive: { content in
+                    fullResponse += content
+                    onProgress?(fullResponse)
+                },
+                onComplete: {
+                    onComplete?(fullResponse)
+                }
+            )
+            return fullResponse
             
         case .xAI:
             guard let token = Token.xAIToken else {
@@ -139,8 +165,17 @@ actor FetchingClient {
             }
             
             let endpoint = XAIChatEndpoint(messages: messages, model: model.rawValue)
-            let response = try await execute(endpoint)
-            return response.choices[0].message.content
+            var fullResponse = ""
+            try await executeStream(endpoint,
+                onReceive: { content in
+                    fullResponse += content
+                    onProgress?(fullResponse)
+                },
+                onComplete: {
+                    onComplete?(fullResponse)
+                }
+            )
+            return fullResponse
         }
     }
 }

@@ -25,6 +25,7 @@ import Combine
     var incognitoMode: Bool = false
     var showMenuBarExtra: Bool = false
     var generationState: GenerationState = .idle
+    var streamedResponse: String = ""
     var inputExpanded = true
     var panel: CustomPanel? = nil
     var input: Input? = nil {

@@ -35,8 +35,19 @@ extension OnitModel {
                 let chat : String
                 if preferences.mode == .remote {
                     let images = await remoteImages
+                    streamedResponse = ""
                     chat = try await client.chat(
-                        text, input: input, model: preferences.model, files: files, images: images
+                        text,
+                        input: input,
+                        model: preferences.model,
+                        files: files,
+                        images: images,
+                        onProgress: { text in
+                            streamedResponse = text
+                        },
+                        onComplete: { text in
+                            streamedResponse = text
+                        }
                     )
                 } else {
                     let images = await localImages

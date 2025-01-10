@@ -9,10 +9,18 @@ import SwiftUI
 import MarkdownUI
 
 struct GeneratedContentView: View {
-    var result: String
-
+    let text: String
+    
+    init(result: String) {
+        self.text = result
+    }
+    
+    init(text: String) {
+        self.text = text
+    }
+    
     var body: some View {
-        Markdown(result)
+        Markdown(text)
             .markdownTheme(.custom)
             .textSelection(.enabled)
             .multilineTextAlignment(.leading)
