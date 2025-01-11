@@ -29,7 +29,7 @@ struct App: SwiftUI.App {
 //        }
 
         model.showPanel()
-
+        
         #if !targetEnvironment(simulator)
 //        Accessibility.requestPermissions()
 //        Accessibility.setModel(model)

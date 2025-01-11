@@ -105,10 +105,6 @@ actor FetchingClient {
             return response.content[0].text
             
         case .xAI:
-            guard let token = Token.xAIToken else {
-                throw FetchingError.invalidRequest("xAI API key not set")
-            }
-            
             let messages: [XAIChatMessage]
             if images.isEmpty {
                 messages = [
@@ -131,7 +127,7 @@ actor FetchingClient {
                 ]
             }
             
-            let endpoint = XAIChatEndpoint(messages: messages, model: model.rawValue)
+            let endpoint = XAIChatEndpoint(messages: messages, model: model.rawValue, token: apiToken)
             let response = try await execute(endpoint)
             return response.choices[0].message.content
         }

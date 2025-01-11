@@ -13,10 +13,10 @@ struct XAIChatEndpoint: Endpoint {
     
     let messages: [XAIChatMessage]
     let model: String
+    let token: String?
     
     var path: String { "/v1/chat/completions" }
     var method: HTTPMethod { .post }
-    var token: String? { Token.xAIToken }
     var requestBody: XAIChatRequest? {
         XAIChatRequest(
             model: model,
@@ -24,7 +24,7 @@ struct XAIChatEndpoint: Endpoint {
         )
     }
     var additionalHeaders: [String: String]? {
-        ["Authorization": "Bearer \(Token.xAIToken ?? "")"]
+        ["Authorization": "Bearer \(token ?? "")"]
     }
 }
 

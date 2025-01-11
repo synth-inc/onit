@@ -88,6 +88,8 @@ extension OnitModel {
             isOpenAITokenValidated = isValid
         case .anthropic:
             isAnthropicTokenValidated = isValid
+        case .xAI:
+            isXAITokenValidated = isValid
         case .none:
             break
         }
@@ -100,6 +102,8 @@ extension OnitModel {
                 return openAIToken
             case .anthropic:
                 return anthropicToken
+            case .xAI:
+                return xAIToken
             }
         }
         return nil
