@@ -13,12 +13,13 @@ struct AnthropicChatEndpoint: Endpoint {
     
     let model: String
     let system: String
+    let token: String?
     let messages: [AnthropicMessage]
     let maxTokens: Int
     
     var path: String { "/v1/messages" }
     var method: HTTPMethod { .post }
-    var token: String? { Token.anthropicToken }
+    
     var requestBody: AnthropicChatRequest? {
         AnthropicChatRequest(
             model: model,
@@ -29,7 +30,7 @@ struct AnthropicChatEndpoint: Endpoint {
     }
     var additionalHeaders: [String: String]? {
         [
-            "x-api-key": Token.anthropicToken ?? "",
+            "x-api-key": token ?? "",
             "anthropic-version": "2023-06-01"
         ]
     }

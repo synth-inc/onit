@@ -29,14 +29,13 @@ extension OnitModel {
 
             self.generationState = .generating
             let files = context.files
-            
 
             do {
-                let chat : String
+                let chat: String
                 if preferences.mode == .remote {
                     let images = await remoteImages
                     chat = try await client.chat(
-                        text, input: input, model: preferences.model, files: files, images: images
+                        text, input: input, model: preferences.model, apiToken: getTokenForModel(preferences.model ?? nil), files: files, images: images
                     )
                 } else {
                     let images = await localImages
@@ -49,8 +48,16 @@ extension OnitModel {
                     self.generationIndex = prompt.responses.count - 1
                 }
                 self.generationState = .generated
+                setTokenIsValid(true)
+                
             } catch let error as FetchingError {
                 print("Fetching Error: \(error.localizedDescription)")
+                if case .forbidden(let message) = error {
+                    setTokenIsValid(false)
+                }
+                if case .unauthorized = error {
+                    setTokenIsValid(false)
+                }
                 self.generationState = .error(error)
             } catch {
                 print("Unexpected Error: \(error.localizedDescription)")
@@ -72,6 +79,30 @@ extension OnitModel {
         generateTask?.cancel()
         generateTask = nil
         self.generationState = .idle
+    }
+
+    func setTokenIsValid(_ isValid: Bool) {
+        if preferences.mode == .local { return }
+        switch preferences.model?.provider {
+        case .openAI:
+            isOpenAITokenValidated = isValid
+        case .anthropic:
+            isAnthropicTokenValidated = isValid
+        case .none:
+            break
+        }
+    }
+
+    func getTokenForModel(_ model: AIModel?) -> String? {
+        if let provider = model?.provider {
+            switch provider {
+            case .openAI:
+                return openAIToken
+            case .anthropic:
+                return anthropicToken
+            }
+        }
+        return nil
     }
 
     var generation: String? {

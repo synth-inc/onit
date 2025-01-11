@@ -12,16 +12,16 @@ struct OpenAIChatEndpoint: Endpoint {
     typealias Response = OpenAIChatResponse
     
     let messages: [OpenAIChatMessage]
+    let token: String?
     let model: String
     
     var path: String { "/v1/chat/completions" }
     var method: HTTPMethod { .post }
-    var token: String? { Token.openAIToken }
     var requestBody: OpenAIChatRequest? {
         OpenAIChatRequest(model: model, messages: messages)
     }
     var additionalHeaders: [String: String]? {
-        ["Authorization": "Bearer \(Token.openAIToken ?? "")"]
+        ["Authorization": "Bearer \(token ?? "")"]
     }
 }
 

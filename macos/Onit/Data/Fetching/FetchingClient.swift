@@ -19,9 +19,9 @@ actor FetchingClient {
         return decoder
     }()
     
-    func chat(_ text: String, input: Input?, model: AIModel?, files: [URL], images: [URL]) async throws -> String {
+    func chat(_ text: String, input: Input?, model: AIModel?, apiToken: String?, files: [URL], images: [URL]) async throws -> String {
         guard let model = model else {
-            throw FetchingError.invalidRequest("Model is required")
+            throw FetchingError.invalidRequest(message: "Model is required")
         }
         
         let systemMessage = input?.application != nil
@@ -45,10 +45,6 @@ actor FetchingClient {
         
         switch model.provider {
         case .openAI:
-            guard let token = Token.openAIToken else {
-                throw FetchingError.invalidRequest("OpenAI API key not set")
-            }
-            
             let messages: [OpenAIChatMessage]
             if images.isEmpty {
                 messages = [
@@ -71,15 +67,11 @@ actor FetchingClient {
                 ]
             }
             
-            let endpoint = OpenAIChatEndpoint(messages: messages, model: model.rawValue)
+            let endpoint = OpenAIChatEndpoint(messages: messages, token: apiToken, model: model.rawValue)
             let response = try await execute(endpoint)
             return response.choices[0].message.content
             
         case .anthropic:
-            guard let token = Token.anthropicToken else {
-                throw FetchingError.invalidRequest("Anthropic API key not set")
-            }
-            
             let content: [AnthropicContent]
             if images.isEmpty {
                 content = [AnthropicContent(type: "text", text: userMessage, source: nil)]
@@ -105,6 +97,7 @@ actor FetchingClient {
             let endpoint = AnthropicChatEndpoint(
                 model: model.rawValue,
                 system: systemMessage,
+                token: apiToken,
                 messages: messages,
                 maxTokens: 4096
             )

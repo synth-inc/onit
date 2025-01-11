@@ -15,11 +15,6 @@ struct SettingsView: View {
                 .tabItem {
                     Label("Models", systemImage: "cpu")
                 }
-            
-            APIKeysTab()
-                .tabItem {
-                    Label("API Keys", systemImage: "key")
-                }
         }
         .frame(minWidth: 500, minHeight: 300)
     }
@@ -48,44 +43,6 @@ private struct ShortcutsTab: View {
 
 private struct ModelsTab: View {
     @Environment(\.model) var model
-    
-    var body: some View {
-        Form {
-            Section("OpenAI Models") {
-                ForEach(AIModel.allCases.filter { $0.provider == .openAI }) { aiModel in
-                    Toggle(aiModel.displayName, isOn: Binding(
-                        get: { model.preferences.visibleModels.contains(aiModel) },
-                        set: { isOn in
-                            if isOn {
-                                model.preferences.visibleModels.insert(aiModel)
-                            } else {
-                                model.preferences.visibleModels.remove(aiModel)
-                            }
-                        }
-                    ))
-                }
-            }
-            
-            Section("Anthropic Models") {
-                ForEach(AIModel.allCases.filter { $0.provider == .anthropic }) { aiModel in
-                    Toggle(aiModel.displayName, isOn: Binding(
-                        get: { model.preferences.visibleModels.contains(aiModel) },
-                        set: { isOn in
-                            if isOn {
-                                model.preferences.visibleModels.insert(aiModel)
-                            } else {
-                                model.preferences.visibleModels.remove(aiModel)
-                            }
-                        }
-                    ))
-                }
-            }
-        }
-        .padding(.vertical, 20)
-    }
-}
-
-private struct APIKeysTab: View {
     @State private var openAIKey: String = ""
     @State private var anthropicKey: String = ""
     @State private var showOpenAIKey: Bool = false
@@ -95,49 +52,99 @@ private struct APIKeysTab: View {
         Form {
             Section("OpenAI") {
                 HStack {
-                    if showOpenAIKey {
-                        TextField("OpenAI API Key", text: $openAIKey)
-                    } else {
-                        SecureField("OpenAI API Key", text: $openAIKey)
+                    ZStack(alignment: .trailing) {
+                        if showOpenAIKey {
+                            TextField("OpenAI API Key", text: $openAIKey)
+                        } else {
+                            SecureField("OpenAI API Key", text: $openAIKey)
+                        }
+                        
+                        Button(action: { showOpenAIKey.toggle() }) {
+                            Image(systemName: showOpenAIKey ? "eye.slash" : "eye")
+                        }
+                        .buttonStyle(.borderless)
+                        .padding(.trailing, 8)
                     }
                     
-                    Button(action: { showOpenAIKey.toggle() }) {
-                        Image(systemName: showOpenAIKey ? "eye.slash" : "eye")
+                    Button("Verify") {
+                        // Add verification logic here
                     }
-                    .buttonStyle(.borderless)
+                    .padding(.leading, 8)
                 }
                 .onChange(of: openAIKey) { _, newValue in
-                    Token.openAIToken = newValue.isEmpty ? nil : newValue
+                    model.openAIToken = newValue.isEmpty ? nil : newValue
                 }
                 
                 Text("Get your API key from [OpenAI](https://platform.openai.com/api-keys)")
                     .font(.caption)
                     .foregroundStyle(.secondary)
+
+                if model.isOpenAITokenValidated {
+                    ForEach(AIModel.allCases.filter { $0.provider == .openAI }) { aiModel in
+                        Toggle(aiModel.displayName, isOn: Binding(
+                            get: { model.preferences.visibleModels.contains(aiModel) },
+                            set: { isOn in
+                                if isOn {
+                                    model.preferences.visibleModels.insert(aiModel)
+                                } else {
+                                    model.preferences.visibleModels.remove(aiModel)
+                                }
+                            }
+                        ))
+                    }
+                }
             }
             
-            Section("Anthropic") {
+            Section("Anthropic Models") {
                 HStack {
-                    if showAnthropicKey {
-                        TextField("Anthropic API Key", text: $anthropicKey)
-                    } else {
-                        SecureField("Anthropic API Key", text: $anthropicKey)
+                    ZStack(alignment: .trailing) {
+                        if showAnthropicKey {
+                            TextField("Anthropic API Key", text: $anthropicKey)
+                        } else {
+                            SecureField("Anthropic API Key", text: $anthropicKey)
+                        }
+                        
+                        Button(action: { showAnthropicKey.toggle() }) {
+                            Image(systemName: showAnthropicKey ? "eye.slash" : "eye")
+                        }
+                        .buttonStyle(.borderless)
+                        .padding(.trailing, 8)
                     }
                     
-                    Button(action: { showAnthropicKey.toggle() }) {
-                        Image(systemName: showAnthropicKey ? "eye.slash" : "eye")
+                    Button("Verify") {
+                        // Add verification logic here
                     }
-                    .buttonStyle(.borderless)
+                    .padding(.leading, 8)
                 }
                 .onChange(of: anthropicKey) { _, newValue in
-                    Token.anthropicToken = newValue.isEmpty ? nil : newValue
+                    model.anthropicToken = newValue.isEmpty ? nil : newValue
                 }
                 
                 Text("Get your API key from [Anthropic](https://console.anthropic.com/settings/keys)")
                     .font(.caption)
                     .foregroundStyle(.secondary)
+
+                if model.isAnthropicTokenValidated {
+                    ForEach(AIModel.allCases.filter { $0.provider == .anthropic }) { aiModel in
+                        Toggle(aiModel.displayName, isOn: Binding(
+                            get: { model.preferences.visibleModels.contains(aiModel) },
+                            set: { isOn in
+                                if isOn {
+                                    model.preferences.visibleModels.insert(aiModel)
+                                } else {
+                                    model.preferences.visibleModels.remove(aiModel)
+                                }
+                            }
+                        ))
+                    }
+                }
             }
         }
-        .padding()
+        .padding(.vertical, 20)
+        .onAppear {
+            openAIKey = model.openAIToken ?? ""
+            anthropicKey = model.anthropicToken ?? ""
+        }
     }
 }
 
