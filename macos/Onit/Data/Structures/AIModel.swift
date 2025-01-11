@@ -40,6 +40,7 @@ enum AIModel: String, CaseIterable, Codable {
             return false
         }
     }
+
     
     var displayName: String {
         switch self {
