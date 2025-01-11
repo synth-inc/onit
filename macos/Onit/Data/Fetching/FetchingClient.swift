@@ -103,6 +103,33 @@ actor FetchingClient {
             )
             let response = try await execute(endpoint)
             return response.content[0].text
+            
+        case .xAI:
+            let messages: [XAIChatMessage]
+            if images.isEmpty {
+                messages = [
+                    XAIChatMessage(role: "system", content: .text(systemMessage)),
+                    XAIChatMessage(role: "user", content: .text(userMessage))
+                ]
+            } else {
+                let parts = [
+                    XAIChatContentPart(type: "text", text: userMessage, image: nil)
+                ] + images.map { url in
+                    XAIChatContentPart(
+                        type: "image",
+                        text: nil,
+                        image: .init(url: url.absoluteString, base64: nil)
+                    )
+                }
+                messages = [
+                    XAIChatMessage(role: "system", content: .text(systemMessage)),
+                    XAIChatMessage(role: "user", content: .multiContent(parts))
+                ]
+            }
+            
+            let endpoint = XAIChatEndpoint(messages: messages, model: model.rawValue, token: apiToken)
+            let response = try await execute(endpoint)
+            return response.choices[0].message.content
         }
     }
 }

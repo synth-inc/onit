@@ -18,7 +18,10 @@ struct Preferences: Codable {
         .gpt4Vision,
         // Default Anthropic models
         .claude3Opus,
-        .claude3Sonnet
+        .claude3Sonnet,
+        // Default xAI models
+        .grok2,
+        .grok2Vision,
     ])
     
     var visibleModelsList: [AIModel] {
