@@ -125,7 +125,6 @@ extension OnitModel: NSWindowDelegate {
         KeyboardShortcuts.disable(.escape)
         guard let panel = panel else { return }
         panel.orderOut(nil)
-        Accessibility.adjustWindowToTopRight()
         self.panel = nil
     }
 

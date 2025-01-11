@@ -49,8 +49,7 @@ import Combine
     var debugPanel: CustomPanel? = nil
     var debugText: String?
 
-    var trusted: Bool = true
-    @ObservationIgnored var trustedTimer: AnyCancellable?
+    // Removed Accessibility properties
 
     var droppedItems = [(image: NSImage, filename: String)]()
 

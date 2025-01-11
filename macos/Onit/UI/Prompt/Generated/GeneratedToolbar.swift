@@ -17,7 +17,6 @@ struct GeneratedToolbar: View {
             more
             Spacer()
             selector
-            insert
         }
         .foregroundStyle(.FG)
     }
@@ -58,47 +57,7 @@ struct GeneratedToolbar: View {
         }
     }
 
-    var insertShortcut: KeyboardShortcut {
-        .init("y")
-    }
-
-    var insert: some View {
-        Button {
-            if let text = model.generation {
-                Accessibility.insertText(text)
-                model.closePanel()
-            } else {
-                print("Not generated: \(model.generationState)")
-            }
-        } label: {
-            HStack(spacing: 4) {
-                Text("Insert")
-                    .appFont(.medium14)
-                    .padding(.leading, 4)
-                KeyboardShortcutView(shortcut: insertShortcut)
-                    .appFont(.medium12)
-                    .padding(.horizontal, 4)
-                    .padding(.vertical, 5)
-                    .background {
-                        RoundedRectangle(cornerRadius: 7)
-                            .fill(.blue350)
-                    }
-            }
-            .padding(4)
-            .background {
-                RoundedRectangle(cornerRadius: 10)
-                    .fill(model.preferences.mode == .local ? .green : .blue400)
-            }
-            .foregroundStyle(.FG)
-        }
-        .keyboardShortcut(insertShortcut)
-        .buttonStyle(.plain)
-        .tooltip(
-            prompt: "Send",
-            shortcut: .keyboard(.init(.return, modifiers: [])),
-            background: false
-        )
-    }
+    // Removed insert functionality
 }
 
 #if DEBUG
