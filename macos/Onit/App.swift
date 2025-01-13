@@ -29,12 +29,12 @@ struct App: SwiftUI.App {
 //        }
 
         model.showPanel()
-
+        
         #if !targetEnvironment(simulator)
-        Accessibility.requestPermissions()
-        Accessibility.setModel(model)
-        Accessibility.setupWindow(withView: StaticPromptView())
-        Accessibility.observeActiveApplication()
+//        Accessibility.requestPermissions()
+//        Accessibility.setModel(model)
+//        Accessibility.setupWindow(withView: StaticPromptView())
+//        Accessibility.observeActiveApplication()
 //        Accessibility.observeSystemClicks()
         #endif
     }
@@ -52,17 +52,7 @@ struct App: SwiftUI.App {
         .commands { }
 
         Settings {
-            Form {
-                KeyboardShortcuts.Recorder("Launch Onit", name: .launch) { _ in
-                    Accessibility.resetPrompt(with: StaticPromptView().environment(model))
-                }
-                .padding()
-                KeyboardShortcuts.Recorder("Launch Onit - Incognito", name: .launchIncognito) { _ in
-                    Accessibility.resetPrompt(with: StaticPromptView().environment(model))
-                }
-                .padding()
-            }
-            .frame(minWidth: 400, minHeight: 200)
+            SettingsView()
         }
     }
 }

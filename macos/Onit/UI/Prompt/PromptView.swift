@@ -12,19 +12,11 @@ struct PromptView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            input
             FileRow()
             TextInputView()
             content
         }
         .drag()
-    }
-
-    @ViewBuilder
-    var input: some View {
-        if let input = model.input {
-            InputView(input: input)
-        }
     }
 
     @ViewBuilder
