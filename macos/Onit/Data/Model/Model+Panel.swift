@@ -97,7 +97,7 @@ extension OnitModel: NSWindowDelegate {
             let windowHeight = newPanel.frame.height
             
             let finalXPosition = visibleFrame.origin.x + visibleFrame.width - 16 - windowWidth 
-            let finalYPosition = visibleFrame.origin.y + visibleFrame.height - 16 - windowHeight
+            let finalYPosition = visibleFrame.origin.y + visibleFrame.height - 16 - 100
 
             // Start off-screen to the right
             newPanel.setFrameOrigin(NSPoint(x: finalXPosition, y: finalYPosition))
