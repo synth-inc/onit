@@ -52,7 +52,7 @@ extension OnitModel {
                 
             } catch let error as FetchingError {
                 print("Fetching Error: \(error.localizedDescription)")
-                if case .forbidden(let message) = error {
+                if case .forbidden = error {
                     setTokenIsValid(false)
                 }
                 if case .unauthorized = error {

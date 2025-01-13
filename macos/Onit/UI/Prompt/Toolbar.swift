@@ -163,7 +163,7 @@ struct Toolbar: View {
             Image(model.preferences.mode == .local ? .localModeActive : .localMode)
                 .renderingMode(.template)
                 .padding(2)
-                .foregroundColor(model.preferences.mode == .local ? .green : .gray200)
+                .foregroundColor(model.preferences.mode == .local ? .limeGreen : .gray200)
         }
         .tooltip(prompt: "Local Mode")
     }
@@ -175,7 +175,7 @@ struct Toolbar: View {
             Image(model.incognitoMode ? .incognitoModeActive : .incognitoMode)
                 .renderingMode(.template)
                 .padding(2)
-                .foregroundColor(model.incognitoMode ? .green : .gray200)
+                .foregroundColor(model.incognitoMode ? .limeGreen : .gray200)
         }
         .tooltip(prompt: "Incognito Mode")
     }

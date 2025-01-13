@@ -84,7 +84,7 @@ private struct ModelsTab: View {
                                         .controlSize(.small)
                                 case .valid:
                                     Image(systemName: "checkmark.circle.fill")
-                                        .foregroundStyle(.green)
+                                        .foregroundStyle(.limeGreen)
                                 case .invalid:
                                     Image(systemName: "exclamationmark.circle.fill")
                                         .foregroundStyle(.red)
@@ -154,7 +154,7 @@ private struct ModelsTab: View {
                                         .controlSize(.small)
                                 case .valid:
                                     Image(systemName: "checkmark.circle.fill")
-                                        .foregroundStyle(.green)
+                                        .foregroundStyle(.limeGreen)
                                 case .invalid:
                                     Image(systemName: "exclamationmark.circle.fill")
                                         .foregroundStyle(.red)
@@ -223,7 +223,7 @@ private struct ModelsTab: View {
                                         .controlSize(.small)
                                 case .valid:
                                     Image(systemName: "checkmark.circle.fill")
-                                        .foregroundStyle(.green)
+                                        .foregroundStyle(.limeGreen)
                                 case .invalid:
                                     Image(systemName: "exclamationmark.circle.fill")
                                         .foregroundStyle(.red)

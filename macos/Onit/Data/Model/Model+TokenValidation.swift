@@ -84,7 +84,7 @@ extension OnitModel {
                 state.setValid(provider: provider)
             }
         } catch let error as FetchingError {
-            print("Error: \(error.errorDescription)")
+            print("Error: \(error.localizedDescription)")
             state.setInvalid(provider: provider, error: error)
         } catch {
             state.setInvalid(provider: provider, error: error)

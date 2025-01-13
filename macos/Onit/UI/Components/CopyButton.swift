@@ -30,7 +30,7 @@ struct CopyButton: View {
                 .opacity(showCheckmark ? 0 : 1)
                 .overlay {
                     Image(systemName: "checkmark.circle.fill")
-                        .foregroundStyle(Color.green)
+                        .foregroundStyle(Color.limeGreen)
                         .opacity(showCheckmark ? 1 : 0)
                 }
         }

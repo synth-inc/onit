@@ -229,7 +229,7 @@ class Accessibility {
                     print("Onit process ID: \(getpid())")
                     // There's an edge case where the panel somehow has a different processId. 
                     let appName = Bundle.main.object(forInfoDictionaryKey: "CFBundleName") as? String
-                    print("App name: \(appName)")
+                    print("App name: \(appName ?? "Unknown")")
                     if app.processIdentifier == getpid() || app.localizedName == appName {
                         print("Ignoring activation of our own app.")
                         return
@@ -767,7 +767,7 @@ class Accessibility {
     }
     
     func handleMouseUp() {
-        if let appElement = self.appElement {
+        if appElement != nil {
             print("Mouse up!")
         }
         else {

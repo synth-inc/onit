@@ -83,7 +83,7 @@ struct TextInputView: View {
             Image(model.preferences.mode == .local ? .circleArrowUpDotted : .circleArrowUp)
                 .resizable()
                 .renderingMode(.template)
-                .foregroundStyle(model.instructions.isEmpty ? Color.gray700 : (model.preferences.mode == .local ? .green : Color.blue400))
+                .foregroundStyle(model.instructions.isEmpty ? Color.gray700 : (model.preferences.mode == .local ? .limeGreen : Color.blue400))
                 .frame(width: 18, height: 18)
         }
         .buttonStyle(.plain)

@@ -87,7 +87,7 @@ struct GeneratedToolbar: View {
             .padding(4)
             .background {
                 RoundedRectangle(cornerRadius: 10)
-                    .fill(model.preferences.mode == .local ? .green : .blue400)
+                    .fill(model.preferences.mode == .local ? .limeGreen : .blue400)
             }
             .foregroundStyle(.FG)
         }
