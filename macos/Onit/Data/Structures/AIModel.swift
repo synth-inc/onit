@@ -74,8 +74,34 @@ enum AIModel: String, CaseIterable, Codable {
         case openAI = "openai"
         case anthropic = "anthropic"
         case xAI = "xai"
+
+        var title: String {
+            switch self {
+            case .openAI: return "OpenAI"
+            case .anthropic: return "Anthropic"
+            case .xAI: return "xAI"
+            }
+        }
+
+        var sample: String {
+            switch self {
+            case .openAI: return "GPT-4o"
+            case .anthropic: return "Claude"
+            case .xAI: return "Grok"
+            }
+        }
+
+        var url: URL {
+            switch self {
+            case .openAI:
+                URL(string: "https://platform.openai.com/api-keys")!
+            case .anthropic:
+                URL(string: "https://docs.anthropic.com/en/api/getting-started")!
+            case .xAI:
+                URL(string: "https://accounts.x.ai/account")!
+            }
+        }
     }
-    
 }
 
 extension AIModel: Identifiable {
