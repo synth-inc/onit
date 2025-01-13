@@ -187,6 +187,34 @@ extension OnitModel: NSWindowDelegate {
     func windowDidResignKey(_ notification: Notification) {
 //        closePanel()
     }
+
+    @MainActor
+    func adjustPanelSize() {
+        guard let panel = panel,
+              let contentView = panel.contentView else {
+            return
+        }
+        // Re-measure the SwiftUI hierarchy
+        contentView.layoutSubtreeIfNeeded()
+        let idealSize = contentView.fittingSize
+
+        // Clamp the window height so it doesn’t fall off-screen
+        guard let screen = NSScreen.main else { return }
+        let visibleFrame = screen.visibleFrame
+        let maxAllowedHeight = visibleFrame.height - 16
+        let newHeight = min(idealSize.height, maxAllowedHeight)
+        let currentWidth = panel.frame.width
+
+        // Keep the top edge in place
+        let newX = panel.frame.origin.x
+        let newY = visibleFrame.origin.y + visibleFrame.height - 16 - newHeight
+
+        // Apply changes
+        panel.setFrame(
+            NSRect(x: newX, y: newY, width: currentWidth, height: newHeight),
+            display: true
+        )
+    }
 }
 
 class CustomPanel: NSPanel {

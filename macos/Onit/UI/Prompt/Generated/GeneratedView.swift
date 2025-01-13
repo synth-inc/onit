@@ -12,8 +12,6 @@ struct GeneratedView: View {
 
     var body: some View {
         content
-            .frame(minHeight: 350)
-            // maxHeight: NSScreen.main?.frame.height ?? 750)
     }
 
     var content: some View {
@@ -22,8 +20,8 @@ struct GeneratedView: View {
                 GeneratedContentView(result: result)
             }
             GeneratedToolbar()
+                .padding([.bottom, .horizontal], 16)
         }
-        .padding(16)
     }
 }
 

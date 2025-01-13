@@ -9,15 +9,40 @@ import SwiftUI
 import MarkdownUI
 
 struct GeneratedContentView: View {
+    @State private var contentHeight: CGFloat = 1000
+
     var result: String
 
+    var height: CGFloat {
+        min(contentHeight, 500)
+    }
+
     var body: some View {
+        ViewThatFits(in: .vertical) {
+            content
+            ScrollView {
+                content
+            }
+        }
+        .frame(height: height)
+    }
+
+    var content: some View {
         Markdown(result)
             .markdownTheme(.custom)
             .textSelection(.enabled)
             .multilineTextAlignment(.leading)
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
             .fixedSize(horizontal: false, vertical: true)
+            .padding(16)
+            .background {
+                GeometryReader { proxy in
+                    Color.clear
+                        .onAppear {
+                            contentHeight = proxy.size.height
+                        }
+                }
+            }
     }
 }
 

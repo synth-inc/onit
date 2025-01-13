@@ -24,13 +24,19 @@ struct ContentView: View {
         }
         .background(Color.black)
         .buttonStyle(.plain)
-        .frame(minWidth: 400)
+//        .frame(minWidth: 325, idealWidth: 400)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
         .overlay {
             RoundedRectangle(cornerRadius: 14)
                 .strokeBorder(.gray600, lineWidth: 2)
         }
-        .overlay {
-            
+        .background {
+            GeometryReader { proxy in
+                Color.clear
+                    .onChange(of: proxy.frame(in: .global)) {
+                        print(proxy.frame(in: .global))
+                    }
+            }
         }
     }
 }
