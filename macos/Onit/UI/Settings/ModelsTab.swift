@@ -20,7 +20,6 @@ struct ModelsTab: View {
             .padding(.vertical, 20)
             .padding(.horizontal, 86)
         }
-        .frame(maxWidth: 569)
     }
 }
 

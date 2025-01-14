@@ -16,7 +16,8 @@ struct SettingsView: View {
                     Label("Models", systemImage: "cpu")
                 }
         }
-        .frame(minWidth: 500, minHeight: 300)
+        .frame(idealWidth: 569, minHeight: 500)
+        .fixedSize(horizontal: true, vertical: false)
     }
 }
 
