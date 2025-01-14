@@ -12,6 +12,7 @@ struct RemoteModelSection: View {
 
     @State private var use = false
     @State private var key = ""
+    @State private var validated = false
 
     @State private var loading = false
 
@@ -26,16 +27,7 @@ struct RemoteModelSection: View {
         AIModel.allCases.filter { $0.provider == provider }
     }
 
-    var validated: Bool {
-        switch provider {
-        case .openAI:
-            model.isOpenAITokenValidated
-        case .anthropic:
-            model.isAnthropicTokenValidated
-        case .xAI:
-            model.isXAITokenValidated
-        }
-    }
+    // MARK: - Body
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
@@ -45,10 +37,23 @@ struct RemoteModelSection: View {
             caption
             modelsView
         }
+        .onAppear {
+            fetchKey()
+            checkValidated()
+            checkUse()
+        }
         .onChange(of: key) {
             save(key: key)
         }
+        .onChange(of: state) {
+            updateUse()
+        }
+        .onChange(of: use) {
+            save(use: use)
+        }
     }
+
+    // MARK: - Subviews
 
     var titleView: some View {
         HStack {
@@ -65,7 +70,9 @@ struct RemoteModelSection: View {
     var textField: some View {
         HStack(spacing: 7) {
             TextField("Enter your \(provider.title) API key", text: $key)
+                .textFieldStyle(.roundedBorder)
                 .frame(height: 22)
+                .font(.system(size: 13, weight: .regular))
 
             Button {
                 Task {
@@ -74,12 +81,17 @@ struct RemoteModelSection: View {
                     loading = false
                 }
             } label: {
-                buttonOverlay
+                if validated {
+                    Text("Verified")
+                } else {
+                    buttonOverlay
+                }
             }
-            .disabled(state.isValidating || key.isEmpty)
-            .foregroundStyle(.FG)
+            .disabled(state.isValidating || key.isEmpty || validated || state.isValid)
+            .foregroundStyle(.white)
             .buttonStyle(.borderedProminent)
             .frame(height: 22)
+            .fontWeight(.regular)
         }
         .font(.system(size: 13).weight(.regular))
     }
@@ -93,7 +105,7 @@ struct RemoteModelSection: View {
             ProgressView()
                 .controlSize(.small)
         case .valid:
-            Text("Verified ✔")
+            Text("Verified")
         case .invalid:
             Image(systemName: "exclamationmark.circle.fill")
                 .foregroundStyle(.red)
@@ -110,31 +122,45 @@ struct RemoteModelSection: View {
         }
     }
 
+    var link: String {
+        "[your \(provider.title) key](\(provider.url))"
+    }
+
     var caption: some View {
         (
-            Text("""
-                Add [your \(provider.title) key](\(provider.url)) 
-                """)
+            Text("Add ")
+            +
+            Text(.init(link))
             +
             Text("""
-                to use Onit with \(provider.title) \
+                 to use Onit with \(provider.title) \
                 models like \(provider.sample).
                 """
             )
         )
-        .foregroundStyle(.BG.opacity(0.65))
+        .foregroundStyle(.foreground.opacity(0.65))
         .fontWeight(.regular)
         .font(.system(size: 12))
     }
 
     @ViewBuilder
     var modelsView: some View {
-        if use && validated {
-            List(models) { model in
-                ModelToggle(aiModel: model)
+        if use {
+            GroupBox {
+                VStack(alignment: .leading, spacing: 0) {
+                    ForEach(models) { model in
+                        ModelToggle(aiModel: model)
+                            .frame(height: 36)
+                    }
+                }
+                .padding(.vertical, -4)
+                .padding(.horizontal, 4)
+                .frame(maxWidth: .infinity, alignment: .leading)
             }
         }
     }
+
+    // MARK: - Functions
 
     func validate() async {
         await model.validateToken(provider: provider, token: key)
@@ -149,5 +175,53 @@ struct RemoteModelSection: View {
         case .xAI:
             model.xAIToken = key.isEmpty ? nil : key
         }
+    }
+
+    func fetchKey() {
+        switch provider {
+        case .openAI:
+            key = model.openAIToken ?? ""
+        case .anthropic:
+            key = model.anthropicToken ?? ""
+        case .xAI:
+            key = model.xAIToken ?? ""
+        }
+    }
+
+    func checkUse() {
+        switch provider {
+        case .openAI:
+            use = model.useOpenAI
+        case .anthropic:
+            use = model.useAnthropic
+        case .xAI:
+            use = model.useXAI
+        }
+    }
+
+    func checkValidated() {
+        switch provider {
+        case .openAI:
+            validated = model.isOpenAITokenValidated
+        case .anthropic:
+            validated = model.isAnthropicTokenValidated
+        case .xAI:
+            validated = model.isXAITokenValidated
+        }
+    }
+
+    func save(use: Bool) {
+        switch provider {
+        case .openAI:
+            model.useOpenAI = use
+        case .anthropic:
+            model.useAnthropic = use
+        case .xAI:
+            model.useXAI = use
+        }
+    }
+
+    func updateUse() {
+        if state == .valid { use = true }
     }
 }

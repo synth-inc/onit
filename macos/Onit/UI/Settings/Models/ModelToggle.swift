@@ -25,6 +25,11 @@ struct ModelToggle: View {
     }
 
     var body: some View {
-        Toggle(aiModel.displayName, isOn: isOn)
+        Toggle(isOn: isOn) {
+            Text(aiModel.displayName)
+                .font(.system(size: 13))
+                .fontWeight(.regular)
+                .opacity(0.85)
+        }
     }
 }

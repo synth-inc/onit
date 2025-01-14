@@ -8,7 +8,7 @@ import Foundation
 struct TokenValidationState {
     private var states: [AIModel.ModelProvider: ValidationState] = [:]
     
-    enum ValidationState {
+    enum ValidationState: Equatable {
         case notValidated
         case validating
         case valid
@@ -27,6 +27,16 @@ struct TokenValidationState {
         var error: Error? {
             if case .invalid(let error) = self { return error }
             return nil
+        }
+
+        static func == (lhs: Self, rhs: Self) -> Bool {
+            switch (lhs, rhs) {
+            case (.notValidated, .notValidated): return true
+            case (.validating, .validating): return true
+            case (.valid, .valid): return true
+            case (.invalid, .invalid): return true
+            default: return false
+            }
         }
     }
     
@@ -72,7 +82,7 @@ extension OnitModel {
                 let endpoint = OpenAIValidationEndpoint(apiKey: token)
                 _ = try await FetchingClient().execute(endpoint)
                 state.setValid(provider: provider)
-                
+
             case .anthropic:
                 let endpoint = AnthropicValidationEndpoint(apiKey: token)
                 _ = try await FetchingClient().execute(endpoint)
@@ -83,6 +93,7 @@ extension OnitModel {
                 _ = try await FetchingClient().execute(endpoint)
                 state.setValid(provider: provider)
             }
+            setTokenIsValid(true)
         } catch let error as FetchingError {
             print("Error: \(error.localizedDescription)")
             state.setInvalid(provider: provider, error: error)

@@ -69,4 +69,34 @@ extension OnitModel {
             UserDefaults.standard.setValue(newValue, forKey: TokenValidationKeys.xAITokenValidated.rawValue)
         }
     }
+
+    private enum UseModelKeys: String {
+        case openAITokenValidated = "useOpenAI"
+        case anthropicTokenValidated = "useAnthropic"
+        case xAITokenValidated = "useXAI"
+    }
+    var useOpenAI: Bool {
+        get {
+            UserDefaults.standard.bool(forKey: UseModelKeys.openAITokenValidated.rawValue)
+        }
+        set {
+            UserDefaults.standard.setValue(newValue, forKey: UseModelKeys.openAITokenValidated.rawValue)
+        }
+    }
+    var useAnthropic: Bool {
+        get {
+            UserDefaults.standard.bool(forKey: UseModelKeys.anthropicTokenValidated.rawValue)
+        }
+        set {
+            UserDefaults.standard.setValue(newValue, forKey: UseModelKeys.anthropicTokenValidated.rawValue)
+        }
+    }
+    var useXAI: Bool {
+        get {
+            UserDefaults.standard.bool(forKey: UseModelKeys.xAITokenValidated.rawValue)
+        }
+        set {
+            UserDefaults.standard.setValue(newValue, forKey: UseModelKeys.xAITokenValidated.rawValue)
+        }
+    }
 }
