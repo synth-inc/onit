@@ -8,9 +8,9 @@
 import Foundation
 
 public enum FetchingError: Error {
-    case invalidResponse
+    case invalidResponse(message: String)
     case invalidRequest(message: String)
-    case unauthorized
+    case unauthorized(message: String)
     case forbidden(message: String)
     case notFound(message: String)
     case failedRequest(message: String)
@@ -22,12 +22,12 @@ public enum FetchingError: Error {
 extension FetchingError: LocalizedError {
     public var errorDescription: String? {
         switch self {
-        case .invalidResponse:
-            "Received an invalid response from the server."
+        case .invalidResponse(let message):
+            "Invalid response: \(message)"
         case .invalidRequest(let message):
             "Invalid request: \(message)"
-        case .unauthorized:
-            "You are not authorized to perform this action."
+        case .unauthorized(let message):
+            "Unauthorized: \(message)."
         case .forbidden(let message):
             "Access forbidden: \(message)"
         case .notFound(let message):

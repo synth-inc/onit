@@ -82,19 +82,25 @@ extension OnitModel {
     }
 
     func setTokenIsValid(_ isValid: Bool) {
+        if let provider = preferences.model?.provider {
+            setTokenIsValid(isValid, provider: provider)
+        }
+    }
+
+    func setTokenIsValid(_ isValid: Bool, provider: AIModel.ModelProvider) {
         if preferences.mode == .local { return }
-        switch preferences.model?.provider {
+        switch provider {
         case .openAI:
             isOpenAITokenValidated = isValid
         case .anthropic:
             isAnthropicTokenValidated = isValid
         case .xAI:
             isXAITokenValidated = isValid
-        case .none:
+        default:
             break
         }
     }
-
+    
     func getTokenForModel(_ model: AIModel?) -> String? {
         if let provider = model?.provider {
             switch provider {

@@ -56,8 +56,9 @@ extension FetchingClient {
         request.httpBody = body
 
         let (data, response) = try await URLSession.shared.data(for: request)
+        let message = parseErrorMessage(from: data) ?? "Client error occurred."
         guard let httpResponse = response as? HTTPURLResponse else {
-            throw FetchingError.invalidResponse
+            throw FetchingError.invalidResponse(message: message)
         }
         try self.handle(response: httpResponse, withData: data)
         let decodedResponse = try decoder.decode(E.Response.self, from: data)

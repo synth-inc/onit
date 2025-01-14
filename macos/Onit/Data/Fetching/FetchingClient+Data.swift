@@ -74,8 +74,9 @@ extension FetchingClient {
             (data, response) = try await URLSession.shared.data(for: request)
         }
 
+        let message = parseErrorMessage(from: data) ?? "Client error occurred."
         guard let httpResponse = response as? HTTPURLResponse else {
-            throw FetchingError.invalidResponse
+            throw FetchingError.invalidResponse(message: message)
         }
 
         return (data, httpResponse)
@@ -88,7 +89,7 @@ extension FetchingClient {
         case 400...499:
             let message = parseErrorMessage(from: data) ?? "Client error occurred."
             if response.statusCode == 401 {
-                throw FetchingError.unauthorized
+                throw FetchingError.unauthorized(message: message)
             } else if response.statusCode == 403 {
                 throw FetchingError.forbidden(message: message)
             } else if response.statusCode == 404 {
@@ -105,7 +106,7 @@ extension FetchingClient {
         }
     }
 
-    private func parseErrorMessage(from data: Data) -> String? {
+    func parseErrorMessage(from data: Data) -> String? {
         if let errorResponse = try? JSONDecoder().decode(ServerErrorResponse.self, from: data) {
             return errorResponse.message
         }
