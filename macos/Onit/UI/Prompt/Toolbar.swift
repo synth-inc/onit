@@ -110,8 +110,10 @@ struct Toolbar: View {
                 selection: Binding(
                     get: { model.preferences.mode == .remote ? model.preferences.model : nil },
                     set: { newValue in
-                        model.preferences.model = newValue
-                        model.preferences.mode = .remote
+                        model.updatePreferences { prefs in
+                            prefs.model = newValue
+                            prefs.mode = .remote
+                        }
                     }
                 ),
                 models: model.preferences.visibleModelsList,
@@ -123,8 +125,10 @@ struct Toolbar: View {
                 selection: Binding(
                     get: { model.preferences.mode == .local ? model.preferences.localModel : nil },
                     set: { newValue in
-                        model.preferences.localModel = newValue
-                        model.preferences.mode = .local
+                        model.updatePreferences { prefs in
+                            prefs.localModel = newValue
+                            prefs.mode = .local
+                        }
                     }
                 ),
                 models: model.availableLocalModels,
@@ -158,7 +162,9 @@ struct Toolbar: View {
 
     var localMode: some View {
         Button {
-            model.preferences.mode = model.preferences.mode == .local ? .remote : .local
+            model.updatePreferences { prefs in
+                prefs.mode = prefs.mode == .local ? .remote : .local
+            }
         } label: {
             Image(model.preferences.mode == .local ? .localModeActive : .localMode)
                 .renderingMode(.template)
