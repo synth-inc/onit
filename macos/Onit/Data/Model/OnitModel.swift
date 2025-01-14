@@ -31,6 +31,7 @@ import Combine
         didSet { input.save() }
     }
     var availableLocalModels: [String] = []
+    var youSaid: String?
     var prompt: Prompt?
     var context: [Context] = []
     var sourceText: String?

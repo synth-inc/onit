@@ -30,17 +30,20 @@ extension OnitModel {
             self.generationState = .generating
             let files = context.files
 
+            let response = self.updateYouSaid(text: text)
+            instructions = ""
+
             do {
                 let chat: String
                 if preferences.mode == .remote {
                     let images = await remoteImages
                     chat = try await client.chat(
-                        text, input: input, model: preferences.model, apiToken: getTokenForModel(preferences.model ?? nil), files: files, images: images
+                        response, input: input, model: preferences.model, apiToken: getTokenForModel(preferences.model ?? nil), files: files, images: images
                     )
                 } else {
                     let images = await localImages
                     chat = try await client.localChat(
-                        text, input: input, model: preferences.localModel, files: files, images: images
+                        response, input: input, model: preferences.localModel, files: files, images: images
                     )
                 }
                 addChat(chat)

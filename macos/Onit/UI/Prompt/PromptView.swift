@@ -14,10 +14,11 @@ struct PromptView: View {
 
     var body: some View {
         VStack(spacing: 0) {
+            YouSaidView()
+            content
             SetUpDialogs(seenLocal: seenLocal)
             FileRow()
             TextInputView()
-            content
         }
         .drag()
         .onChange(of: model.availableLocalModels.count) { _, new in
@@ -34,7 +35,6 @@ struct PromptView: View {
             PromptDivider()
             GeneratingView()
         case .generated:
-            PromptDivider()
             GeneratedView()
         case .error(let error):
             GeneratedErrorView(error: error)

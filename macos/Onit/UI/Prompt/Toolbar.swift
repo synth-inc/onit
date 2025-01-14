@@ -46,15 +46,11 @@ struct Toolbar: View {
         Button {
             switch model.generationState {
             case .idle:
-                if model.input == nil {
-                    model.closePanel()
-                } else {
-                    @Bindable var model = model
-                    model.input = nil
-                }
+                model.closePanel()
             default:
                 model.generationState = .idle
                 model.textFocusTrigger.toggle()
+                model.youSaid = nil
             }
         } label: {
             EmptyView()

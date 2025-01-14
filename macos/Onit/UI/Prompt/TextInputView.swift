@@ -26,6 +26,7 @@ struct TextInputView: View {
         .background {
             upListener
             downListener
+            newListener
         }
     }
 
@@ -40,13 +41,13 @@ struct TextInputView: View {
                     .focused($focused)
                     .tint(.blue600.opacity(0.2))
                     .fixedSize(horizontal: false, vertical: true)
-                if model.generationState == .generated {
-                    Button("Edit") {
-                        focused = true
-                    }
-                    .appFont(.medium16)
-                    .foregroundStyle(.gray300)
-                }
+//                if model.generationState == .generated {
+//                    Button("Edit") {
+//                        focused = true
+//                    }
+//                    .appFont(.medium16)
+//                    .foregroundStyle(.gray300)
+//                }
             }
             if model.instructions.isEmpty {
                 placeholderView
@@ -64,9 +65,17 @@ struct TextInputView: View {
         }
     }
 
+    var placeholderText: String {
+        if model.youSaid != nil {
+            "Follow-up... (􀆔N for new)"
+        } else {
+            "New instructions..."
+        }
+    }
+
     var placeholderView: some View {
         HStack {
-            Text("New instructions...")
+            Text(placeholderText)
 //            Image(.smirk)
 //                .renderingMode(.template)
         }
@@ -76,7 +85,7 @@ struct TextInputView: View {
 
     var sendButton: some View {
         Button {
-            focused = false
+//            focused = false
             model.save(model.instructions)
             model.generate(model.instructions)
         } label: {
@@ -128,6 +137,16 @@ struct TextInputView: View {
             EmptyView()
         }
         .keyboardShortcut(.downArrow, modifiers: [])
+    }
+
+    var newListener: some View {
+        Button {
+            model.resetYouSaid()
+            model.cancelGenerate()
+        } label: {
+            EmptyView()
+        }
+        .keyboardShortcut("n")
     }
 }
 

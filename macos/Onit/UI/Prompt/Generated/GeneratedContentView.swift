@@ -34,7 +34,7 @@ struct GeneratedContentView: View {
             .multilineTextAlignment(.leading)
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
             .fixedSize(horizontal: false, vertical: true)
-            .padding(16)
+            .padding(.horizontal, 16)
             .background {
                 GeometryReader { proxy in
                     Color.clear

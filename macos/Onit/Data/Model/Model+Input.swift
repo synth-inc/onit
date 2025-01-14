@@ -81,4 +81,18 @@ extension OnitModel {
             return images
         }
     }
+
+    func updateYouSaid(text: String) -> String {
+        guard let youSaid else {
+            youSaid = text
+            return text
+        }
+        let response = youSaid + ", " + text
+        self.youSaid = response
+        return response
+    }
+
+    func resetYouSaid() {
+        youSaid = nil
+    }
 }

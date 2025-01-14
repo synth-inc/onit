@@ -20,7 +20,8 @@ struct GeneratedView: View {
                 GeneratedContentView(result: result)
             }
             GeneratedToolbar()
-                .padding([.bottom, .horizontal], 16)
+                .padding(.horizontal, 16)
+                .padding(.bottom, 8)
         }
     }
 }

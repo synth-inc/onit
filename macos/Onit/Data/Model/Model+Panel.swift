@@ -113,10 +113,10 @@ extension OnitModel: NSWindowDelegate {
             }
         }
 
-        KeyboardShortcuts.onKeyUp(for: .escape) { [weak self] in
-            guard let self else { return }
-            self.escapeAction()
-        }
+//        KeyboardShortcuts.onKeyUp(for: .escape) { [weak self] in
+//            guard let self else { return }
+//            self.escapeAction()
+//        }
         // Focus the text input when we're activating the panel
         textFocusTrigger = true
     }
