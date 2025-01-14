@@ -56,15 +56,8 @@ struct RemoteModelSection: View {
     // MARK: - Subviews
 
     var titleView: some View {
-        HStack {
-            Text(provider.title)
-                .font(.system(size: 13))
-            Spacer()
-            Toggle("", isOn: $use)
-                .toggleStyle(.switch)
-                .controlSize(.small)
-                .disabled(!validated)
-        }
+        ModelTitle(title: provider.title, isOn: $use)
+            .disabled(!validated)
     }
 
     var textField: some View {
