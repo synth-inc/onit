@@ -92,7 +92,7 @@ extension FetchingClient {
             } else if response.statusCode == 403 {
                 throw FetchingError.forbidden(message: message)
             } else if response.statusCode == 404 {
-                throw FetchingError.notFound
+                throw FetchingError.notFound(message: message)
             } else {
                 throw FetchingError.failedRequest(message: message)
             }

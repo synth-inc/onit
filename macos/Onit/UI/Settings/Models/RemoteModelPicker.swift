@@ -10,7 +10,7 @@ import SwiftUI
 struct RemoteModelPicker: View {
     @Environment(\.model) var model
 
-    @State private var aiModel: AIModel = .claude20
+    @State private var aiModel: AIModel = .claude35SonnetLatest
 
     var body: some View {
         Picker("Model", selection: $aiModel) {

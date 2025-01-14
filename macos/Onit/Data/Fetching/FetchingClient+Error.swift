@@ -12,7 +12,7 @@ public enum FetchingError: Error {
     case invalidRequest(message: String)
     case unauthorized
     case forbidden(message: String)
-    case notFound
+    case notFound(message: String)
     case failedRequest(message: String)
     case serverError(statusCode: Int, message: String)
     case decodingError(Error)
@@ -30,8 +30,8 @@ extension FetchingError: LocalizedError {
             "You are not authorized to perform this action."
         case .forbidden(let message):
             "Access forbidden: \(message)"
-        case .notFound:
-            "The requested resource was not found."
+        case .notFound(let message):
+            "Not found: \(message)"
         case .failedRequest(let message):
             "Request failed: \(message)"
         case .serverError(let statusCode, let message):

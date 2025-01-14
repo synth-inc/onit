@@ -13,9 +13,11 @@ struct GeneratedErrorView: View {
     var body: some View {
         HStack(spacing: 8) {
             Image(.warning)
-            Text(error.localizedDescription)
-                .appFont(.medium14)
-                .foregroundStyle(.warning)
+            ScrollView {
+                Text(error.localizedDescription)
+                    .appFont(.medium14)
+                    .foregroundStyle(.warning)
+            }
             Spacer()
         }
         .padding(.horizontal, 16)

@@ -32,11 +32,12 @@ struct Preferences: Codable {
     var incognito: Bool = false
     var visibleModels: Set<AIModel> = Set([
         // Default OpenAI models
-        .gpt4Turbo,
-        .gpt4Vision,
+        .o1,
+        .o1Mini,
+        .gpt4o,
         // Default Anthropic models
-        .claude3Opus,
-        .claude3Sonnet,
+        .claude35SonnetLatest,
+        .claude35HaikuLatest,
         // Default xAI models
         .grok2,
         .grok2Vision,

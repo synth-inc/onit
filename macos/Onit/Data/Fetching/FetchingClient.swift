@@ -7,7 +7,6 @@
 
 import Foundation
 
-
 actor FetchingClient {
     let session = URLSession.shared
     let encoder = JSONEncoder()
@@ -31,7 +30,9 @@ actor FetchingClient {
         // Combine all text inputs
         var userMessage = text
         if let selectedText = input?.selectedText {
-            userMessage += "\n\nSelected Text: \(selectedText)"
+            if selectedText != "" {
+                userMessage += "\n\nSelected Text: \(selectedText)"
+            }
         }
         
         // Add file contents if any
@@ -45,13 +46,13 @@ actor FetchingClient {
         
         switch model.provider {
         case .openAI:
-            let messages: [OpenAIChatMessage]
-            if images.isEmpty {
-                messages = [
-                    OpenAIChatMessage(role: "system", content: .text(systemMessage)),
-                    OpenAIChatMessage(role: "user", content: .text(userMessage))
-                ]
-            } else {
+            var messages: [OpenAIChatMessage] = [
+                OpenAIChatMessage(role: "user", content: .text(userMessage))
+            ]
+            if model.supportsSystemPrompts {
+                messages.insert(OpenAIChatMessage(role: "system", content: .text(systemMessage)), at: 0)
+            }
+            if !images.isEmpty {
                 let parts = [
                     OpenAIChatContentPart(type: "text", text: userMessage, image_url: nil)
                 ] + images.map { url in
@@ -61,10 +62,7 @@ actor FetchingClient {
                         image_url: .init(url: url.absoluteString)
                     )
                 }
-                messages = [
-                    OpenAIChatMessage(role: "system", content: .text(systemMessage)),
-                    OpenAIChatMessage(role: "user", content: .multiContent(parts))
-                ]
+                messages[1] = OpenAIChatMessage(role: "user", content: .multiContent(parts))
             }
             
             let endpoint = OpenAIChatEndpoint(messages: messages, token: apiToken, model: model.rawValue)
@@ -96,7 +94,7 @@ actor FetchingClient {
             let messages = [AnthropicMessage(role: "user", content: content)]
             let endpoint = AnthropicChatEndpoint(
                 model: model.rawValue,
-                system: systemMessage,
+                system: model.supportsSystemPrompts ? systemMessage : "",
                 token: apiToken,
                 messages: messages,
                 maxTokens: 4096
@@ -105,13 +103,13 @@ actor FetchingClient {
             return response.content[0].text
             
         case .xAI:
-            let messages: [XAIChatMessage]
-            if images.isEmpty {
-                messages = [
-                    XAIChatMessage(role: "system", content: .text(systemMessage)),
-                    XAIChatMessage(role: "user", content: .text(userMessage))
-                ]
-            } else {
+            var messages: [XAIChatMessage] = [
+                XAIChatMessage(role: "user", content: .text(userMessage))
+            ]
+            if model.supportsSystemPrompts {
+                messages.insert(XAIChatMessage(role: "system", content: .text(systemMessage)), at: 0)
+            }
+            if !images.isEmpty {
                 let parts = [
                     XAIChatContentPart(type: "text", text: userMessage, image: nil)
                 ] + images.map { url in
@@ -121,10 +119,7 @@ actor FetchingClient {
                         image: .init(url: url.absoluteString, base64: nil)
                     )
                 }
-                messages = [
-                    XAIChatMessage(role: "system", content: .text(systemMessage)),
-                    XAIChatMessage(role: "user", content: .multiContent(parts))
-                ]
+                messages[1] = XAIChatMessage(role: "user", content: .multiContent(parts))
             }
             
             let endpoint = XAIChatEndpoint(messages: messages, model: model.rawValue, token: apiToken)
