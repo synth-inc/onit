@@ -74,6 +74,7 @@ extension OnitModel {
         case openAITokenValidated = "useOpenAI"
         case anthropicTokenValidated = "useAnthropic"
         case xAITokenValidated = "useXAI"
+        case localModelValidated = "useLocalModel"
     }
     var useOpenAI: Bool {
         get {
@@ -97,6 +98,14 @@ extension OnitModel {
         }
         set {
             UserDefaults.standard.setValue(newValue, forKey: UseModelKeys.xAITokenValidated.rawValue)
+        }
+    }
+    var useLocal: Bool {
+        get {
+            UserDefaults.standard.bool(forKey: UseModelKeys.localModelValidated.rawValue)
+        }
+        set {
+            UserDefaults.standard.setValue(newValue, forKey: UseModelKeys.localModelValidated.rawValue)
         }
     }
 

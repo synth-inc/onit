@@ -33,6 +33,7 @@ struct DefaultModelsSection: View {
         HStack {
             Text("Local")
             Spacer()
+            LocalModelPicker()
         }
     }
 }

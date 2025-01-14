@@ -8,6 +8,8 @@
 import SwiftUI
 
 struct LocalModelsSection: View {
+    @Environment(\.model) var model
+
     @State private var isOn: Bool = false
 
     var body: some View {
@@ -18,17 +20,28 @@ struct LocalModelsSection: View {
             }
             .frame(maxWidth: .infinity, alignment: .leading)
         }
+        .onAppear {
+            isOn = model.useLocal
+        }
+        .onChange(of: isOn) {
+            model.useLocal = isOn
+        }
     }
 
     var title: some View {
         ModelTitle(title: "Ollama", isOn: $isOn)
     }
 
+    @ViewBuilder
     var content: some View {
-        HStack(spacing: 0) {
-            text
-            Spacer(minLength: 8)
-            button
+        if model.availableLocalModels.isEmpty {
+            HStack(spacing: 0) {
+                text
+                Spacer(minLength: 8)
+                button
+            }
+        } else {
+            modelsView
         }
     }
 
@@ -48,6 +61,28 @@ struct LocalModelsSection: View {
         .foregroundStyle(.primary.opacity(0.65))
         .font(.system(size: 12))
         .fontWeight(.regular)
+    }
+
+    @ViewBuilder
+    var modelsView: some View {
+        if isOn {
+            GroupBox {
+                VStack(alignment: .leading, spacing: 0) {
+                    ForEach(model.availableLocalModels, id: \.self) { model in
+                        Toggle(isOn: .constant(true)) {
+                            Text(model)
+                                .font(.system(size: 13))
+                                .fontWeight(.regular)
+                                .opacity(0.85)
+                        }
+                        .frame(height: 36)
+                    }
+                }
+                .padding(.vertical, -4)
+                .padding(.horizontal, 4)
+                .frame(maxWidth: .infinity, alignment: .leading)
+            }
+        }
     }
 
     var button: some View {

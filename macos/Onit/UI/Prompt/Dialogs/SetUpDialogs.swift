@@ -18,7 +18,7 @@ struct SetUpDialogs: View {
         if model.remoteNeedsSetup && !closedRemote {
             remote
         }
-        if closedLocal {
+        if closedLocal && model.availableLocalModels.isEmpty {
             local
         }
     }

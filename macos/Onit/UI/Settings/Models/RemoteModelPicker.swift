@@ -22,9 +22,3 @@ struct RemoteModelPicker: View {
         .labelsHidden()
     }
 }
-
-struct SelectorMenuStyle: MenuStyle {
-    func makeBody(configuration: Configuration) -> some View {
-
-    }
-}
