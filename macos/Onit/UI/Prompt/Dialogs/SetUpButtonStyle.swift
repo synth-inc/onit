@@ -8,13 +8,17 @@
 import SwiftUI
 
 struct SetUpButtonStyle: ButtonStyle {
+    var showArrow: Bool
+
     @State private var hovering = false
 
     func makeBody(configuration: Configuration) -> some View {
         HStack(spacing: 3) {
             configuration.label
-            Text("→")
-                .offset(x: hovering ? 2 : 0)
+            if showArrow {
+                Text("→")
+                    .offset(x: hovering ? 2 : 0)
+            }
         }
         
         .padding(8)

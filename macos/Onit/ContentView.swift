@@ -10,6 +10,14 @@ import SwiftUI
 struct ContentView: View {
     @Environment(\.model) var model
 
+    var maxHeight: CGFloat? {
+        if let height = NSScreen.main?.visibleFrame.height {
+            return height - 16 * 2
+        } else {
+            return nil
+        }
+    }
+
     var body: some View {
         VStack(spacing: 0) {
             Toolbar()

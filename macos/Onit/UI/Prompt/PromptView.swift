@@ -10,14 +10,21 @@ import SwiftUI
 struct PromptView: View {
     @Environment(\.model) var model
 
+    @AppStorage("seenLocal") var seenLocal = false
+
     var body: some View {
         VStack(spacing: 0) {
-            SetUpDialogs()
+            SetUpDialogs(seenLocal: seenLocal)
             FileRow()
             TextInputView()
             content
         }
         .drag()
+        .onChange(of: model.availableLocalModels.count) { _, new in
+            if new != 0 {
+                seenLocal = true
+            }
+        }
     }
 
     @ViewBuilder

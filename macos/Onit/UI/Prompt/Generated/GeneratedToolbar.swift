@@ -17,7 +17,7 @@ struct GeneratedToolbar: View {
             more
             Spacer()
             selector
-            insert
+//            insert
         }
         .foregroundStyle(.FG)
     }
