@@ -16,7 +16,6 @@ struct RemoteModelSection: View {
 
     @State private var loading = false
 
-    var error: String?
     var provider: AIModel.ModelProvider
 
     var state: TokenValidationState.ValidationState {
@@ -92,25 +91,25 @@ struct RemoteModelSection: View {
     @ViewBuilder
     var buttonOverlay: some View {
         switch state {
-        case .notValidated:
+        case .notValidated, .invalid:
             Text("Verify →")
         case .validating:
             ProgressView()
                 .controlSize(.small)
         case .valid:
             Text("Verified")
-        case .invalid:
-            Image(systemName: "exclamationmark.circle.fill")
-                .foregroundStyle(.red)
         }
     }
 
     @ViewBuilder
     var errorView: some View {
-        if let error {
+        if case .invalid(let error) = state {
             HStack(spacing: 8) {
-                Image(.warning)
-                Text(error)
+                Image(.warningSettings)
+                Text(error.localizedDescription)
+                    .opacity(0.65)
+                    .fontWeight(.regular)
+                    .font(.system(size: 12))
             }
         }
     }
