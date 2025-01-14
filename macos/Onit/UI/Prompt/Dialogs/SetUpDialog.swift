@@ -71,14 +71,9 @@ struct SetUpDialog<Subtitle: View>: View {
     }
 
     var button: some View {
-        Button {
+        Button("Set up") {
             action()
-        } label: {
-            Text("Set up →")
-                .padding(8)
-                .foregroundStyle(.FG)
-                .background(.blue400, in: .rect(cornerRadius: 8))
-                .fontWeight(.semibold)
         }
+        .buttonStyle(SetUpButtonStyle())
     }
 }
