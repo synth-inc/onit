@@ -99,4 +99,8 @@ extension OnitModel {
             UserDefaults.standard.setValue(newValue, forKey: UseModelKeys.xAITokenValidated.rawValue)
         }
     }
+
+    var remoteNeedsSetup: Bool {
+        !useOpenAI && !useAnthropic && !useXAI
+    }
 }

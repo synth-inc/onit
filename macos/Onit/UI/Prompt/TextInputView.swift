@@ -67,8 +67,8 @@ struct TextInputView: View {
     var placeholderView: some View {
         HStack {
             Text("New instructions...")
-            Image(.smirk)
-                .renderingMode(.template)
+//            Image(.smirk)
+//                .renderingMode(.template)
         }
         .foregroundStyle(.gray300)
         .allowsHitTesting(false)

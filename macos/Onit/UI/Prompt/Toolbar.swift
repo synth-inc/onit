@@ -18,7 +18,7 @@ struct Toolbar: View {
             Spacer()
             languageModel
             localMode
-            incognitoMode
+//            incognitoMode
             settings
         }
         .foregroundStyle(.gray200)

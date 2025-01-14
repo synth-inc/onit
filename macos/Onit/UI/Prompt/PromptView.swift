@@ -12,6 +12,7 @@ struct PromptView: View {
 
     var body: some View {
         VStack(spacing: 0) {
+            SetUpDialogs()
             FileRow()
             TextInputView()
             content

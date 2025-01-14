@@ -215,6 +215,9 @@ struct RemoteModelSection: View {
     }
 
     func updateUse() {
-        if state == .valid { use = true }
+        if state == .valid {
+            use = true
+            validated = true
+        }
     }
 }
