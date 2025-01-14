@@ -13,7 +13,7 @@ import Combine
 
 @MainActor @Observable class OnitModel: NSObject {
     var container: ModelContainer
-
+    
     var tooltipWindow: NSWindow?
     var tooltip: Tooltip?
     var tooltipTask: Task<Void, Never>?
@@ -86,10 +86,16 @@ import Combine
         self.instructions = String.load("instructions") ?? ""
         self.container = container
         super.init()
+        self.preferences = Preferences.shared
         startTrustedTimer()
         Task {
             await fetchLocalModels()
         }
+    }
+    
+    func updatePreferences(_ update: (inout Preferences) -> Void) {
+        update(&preferences)
+        Preferences.save(preferences)
     }
 }
 

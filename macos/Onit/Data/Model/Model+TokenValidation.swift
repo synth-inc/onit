@@ -40,6 +40,10 @@ struct TokenValidationState {
         }
     }
     
+    mutating func setNotValidated(provider: AIModel.ModelProvider) {
+        states[provider] = .notValidated
+    }
+    
     mutating func setValidating(provider: AIModel.ModelProvider) {
         states[provider] = .validating
     }

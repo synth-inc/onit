@@ -17,6 +17,11 @@ extension FetchingClient {
             requestBodyData = .data(data)
         }
 
+        // Helpful debugging method- put in the endpoint name and you can see the full request
+        if endpoint.path == "" {
+            printCurlRequest(endpoint: endpoint, url: url)
+        }
+
         do {
             let data = try await self.data(
                 from: url,
@@ -51,8 +56,9 @@ extension FetchingClient {
         request.httpBody = body
 
         let (data, response) = try await URLSession.shared.data(for: request)
+        let message = parseErrorMessage(from: data) ?? "Client error occurred."
         guard let httpResponse = response as? HTTPURLResponse else {
-            throw FetchingError.invalidResponse
+            throw FetchingError.invalidResponse(message: message)
         }
         try self.handle(response: httpResponse, withData: data)
         let decodedResponse = try decoder.decode(E.Response.self, from: data)
@@ -103,5 +109,26 @@ extension FetchingClient {
 
         body.append("--\(boundary)--\r\n".data(using: .utf8) ?? Data())
         return body
+    }
+
+    private func printCurlRequest<E: Endpoint>(endpoint: E, url: URL) {
+        // Helpful debugging method
+        if let requestBody = endpoint.requestBody {
+            if let jsonData = try? encoder.encode(requestBody),
+                let jsonString = String(data: jsonData, encoding: .utf8) {
+                print("CURL Request:")
+                print("curl -X \(endpoint.method.rawValue) \(url.absoluteString) \\")
+                print("  -H 'Content-Type: application/json' \\")
+                if let token = endpoint.token {
+                    print("  -H 'Authorization: Bearer \(token)' \\")
+                }
+                if let additionalHeaders = endpoint.additionalHeaders {
+                    for (header, value) in additionalHeaders {
+                        print("  -H '\(header): \(value)' \\")
+                    }
+                }
+                print("  -d '\(jsonString)'")
+            }
+        }
     }
 }

@@ -40,9 +40,10 @@ struct RemoteModelSection: View {
             fetchKey()
             checkValidated()
             checkUse()
+            validated = state == .valid
         }
         .onChange(of: key) {
-            save(key: key)
+            validated = false
         }
         .onChange(of: state) {
             updateUse()
@@ -69,6 +70,9 @@ struct RemoteModelSection: View {
             Button {
                 Task {
                     loading = true
+                    save(key: key)
+                    model.tokenValidation.setNotValidated(provider: provider)
+                    model.setTokenIsValid(false, provider: provider)
                     await validate()
                     loading = false
                 }
@@ -79,7 +83,7 @@ struct RemoteModelSection: View {
                     buttonOverlay
                 }
             }
-            .disabled(state.isValidating || key.isEmpty || validated || state.isValid)
+            .disabled(state.isValidating || key.isEmpty)
             .foregroundStyle(.white)
             .buttonStyle(.borderedProminent)
             .frame(height: 22)
@@ -97,7 +101,11 @@ struct RemoteModelSection: View {
             ProgressView()
                 .controlSize(.small)
         case .valid:
-            Text("Verified")
+            if validated {
+                Text("Verified")
+            } else {
+                Text("Verify →")
+            }
         }
     }
 

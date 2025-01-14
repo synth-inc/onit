@@ -9,19 +9,23 @@ import Foundation
 
 enum AIModel: String, CaseIterable, Codable {
     // OpenAI Models
-    case gpt4 = "gpt-4"
-    case gpt4Turbo = "gpt-4-turbo-preview"
-    case gpt4Vision = "gpt-4-vision-preview"
-    case gpt35Turbo = "gpt-3.5-turbo"
-    case gpt35Turbo16k = "gpt-3.5-turbo-16k"
+    case gpt4o = "gpt-4o"
+    case chatgpt4oLatest = "chatgpt-4o-latest"
+    case gpt4oMini = "gpt-4o-mini"
+    case o1 = "o1"
+    case o1Mini = "o1-mini"
+    case o1Preview = "o1-preview"
+    
+    // These are not chat models
+//    case gpt4oRealtimePreview = "gpt-4o-realtime-preview"
+//    case gpt4oMiniRealtimePreview = "gpt-4o-mini-realtime-preview"
     
     // Anthropic Models
-    case claude3Opus = "claude-3-opus-20240229"
+    case claude35SonnetLatest = "claude-3-5-sonnet-latest"
+    case claude35HaikuLatest = "claude-3-5-haiku-latest"
+    case claude3OpusLatest = "claude-3-opus-latest"
     case claude3Sonnet = "claude-3-sonnet-20240229"
-    case claude3Haiku = "claude-3-haiku-20240229"
-    case claude21 = "claude-2.1"
-    case claude20 = "claude-2.0"
-    case claudeInstant = "claude-instant-1.2"
+    case claude3Haiku = "claude-3-haiku-20240307"
     
     // xAI Models
     case grok2 = "grok-2-1212"
@@ -31,9 +35,9 @@ enum AIModel: String, CaseIterable, Codable {
     
     var provider: ModelProvider {
         switch self {
-        case .gpt4, .gpt4Turbo, .gpt4Vision, .gpt35Turbo, .gpt35Turbo16k:
+        case .gpt4o, .chatgpt4oLatest, .gpt4oMini, .o1, .o1Mini, .o1Preview:
             return .openAI
-        case .claude3Opus, .claude3Sonnet, .claude3Haiku, .claude21, .claude20, .claudeInstant:
+        case .claude35SonnetLatest, .claude35HaikuLatest, .claude3OpusLatest, .claude3Sonnet, .claude3Haiku:
             return .anthropic
         case .grok2, .grok2Vision, .grokBeta, .grokBetaVision:
             return .xAI
@@ -42,27 +46,37 @@ enum AIModel: String, CaseIterable, Codable {
     
     var supportsVision: Bool {
         switch self {
-        case .gpt4Vision, .claude3Opus, .claude3Sonnet, .claude3Haiku, .grok2Vision, .grokBetaVision:
+        case .gpt4o, .chatgpt4oLatest, .gpt4oMini, .o1, .o1Mini, .o1Preview, .grok2Vision, .grokBetaVision, .claude35SonnetLatest, .claude3OpusLatest, .claude3Sonnet, .claude3Haiku:
             return true
         default:
             return false
         }
     }
     
+    var supportsSystemPrompts: Bool {
+        switch self {
+        case .o1, .o1Mini, .o1Preview:
+            return false
+        default :
+            return true
+        }
+    }
     
     var displayName: String {
         switch self {
-        case .gpt4: return "GPT-4"
-        case .gpt4Turbo: return "GPT-4 Turbo"
-        case .gpt4Vision: return "GPT-4 Vision"
-        case .gpt35Turbo: return "GPT-3.5 Turbo"
-        case .gpt35Turbo16k: return "GPT-3.5 Turbo 16K"
-        case .claude3Opus: return "Claude 3 Opus"
+        case .gpt4o: return "GPT-4o"
+        case .chatgpt4oLatest: return "ChatGPT-4o Latest"
+        case .gpt4oMini: return "GPT-4o Mini"
+        case .o1: return "O1"
+        case .o1Mini: return "O1 Mini"
+        case .o1Preview: return "O1 Preview"
+            
+        case .claude35SonnetLatest: return "Claude 3.5 Sonnet Latest"
+        case .claude35HaikuLatest: return "Claude 3.5 Haiku Latest"
+        case .claude3OpusLatest: return "Claude 3 Opus Latest"
         case .claude3Sonnet: return "Claude 3 Sonnet"
         case .claude3Haiku: return "Claude 3 Haiku"
-        case .claude21: return "Claude 2.1"
-        case .claude20: return "Claude 2.0"
-        case .claudeInstant: return "Claude Instant"
+            
         case .grok2: return "Grok 2"
         case .grok2Vision: return "Grok 2 Vision"
         case .grokBeta: return "Grok Beta"
@@ -94,11 +108,11 @@ enum AIModel: String, CaseIterable, Codable {
         var url: URL {
             switch self {
             case .openAI:
-                URL(string: "https://platform.openai.com/api-keys")!
+                return URL(string: "https://platform.openai.com/api-keys")!
             case .anthropic:
-                URL(string: "https://docs.anthropic.com/en/api/getting-started")!
+                return URL(string: "https://docs.anthropic.com/en/api/getting-started")!
             case .xAI:
-                URL(string: "https://accounts.x.ai/account")!
+                return URL(string: "https://accounts.x.ai/account")!
             }
         }
     }
