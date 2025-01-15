@@ -50,6 +50,8 @@ import Combine
     var debugPanel: CustomPanel? = nil
     var debugText: String?
 
+    var modelSelectionWindowController: ModelSelectionWindowController?
+
     var trusted: Bool = true
     @ObservationIgnored var trustedTimer: AnyCancellable?
 
@@ -61,6 +63,8 @@ import Combine
     var updater = SPUStandardUpdaterController(startingUpdater: true, updaterDelegate: nil, userDriverDelegate: nil)
     var _tokenValidation = TokenValidationState()
     
+    var modelSelectionOverlayWindow: NSWindow?
+
     @MainActor
     func fetchLocalModels() async {
         do {

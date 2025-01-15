@@ -100,39 +100,11 @@ struct Toolbar: View {
     var languageModel: some View {
         @Bindable var model = model
 
-        Menu {
-            createModelPicker(
-                title: "Remote model",
-                selection: Binding(
-                    get: { model.preferences.mode == .remote ? model.preferences.model : nil },
-                    set: { newValue in
-                        model.updatePreferences { prefs in
-                            prefs.model = newValue
-                            prefs.mode = .remote
-                        }
-                    }
-                ),
-                models: model.preferences.visibleModelsList,
-                currentModel: model.preferences.model
-            )
-            
-            createModelPicker(
-                title: "Local model",
-                selection: Binding(
-                    get: { model.preferences.mode == .local ? model.preferences.localModel : nil },
-                    set: { newValue in
-                        model.updatePreferences { prefs in
-                            prefs.localModel = newValue
-                            prefs.mode = .local
-                        }
-                    }
-                ),
-                models: model.availableLocalModels,
-                currentModel: model.preferences.localModel
-            )
+        Button {
+            model.showModelSelectionOverlay()
         } label: {
             HStack(spacing: 0) {
-                Text(model.preferences.mode == .local ? 
+                Text(model.preferences.mode == .local ?
                      (model.preferences.localModel?.split(separator: ":").first.map(String.init) ?? "") :
                      (model.preferences.model?.displayName ?? ""))
                     .appFont(.medium13)
@@ -142,6 +114,7 @@ struct Toolbar: View {
             }
             .padding(2)
         }
+        .buttonStyle(.plain)
         .tooltip(prompt: "Toggle model", shortcut: .keyboard(.init("/")))
     }
 
