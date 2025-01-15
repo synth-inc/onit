@@ -119,7 +119,6 @@ struct Toolbar: View {
                     .fill(model.modelSelectionWindowController == nil ? Color.clear : .gray800)
             }
         }
-        .buttonStyle(.plain)
         .tooltip(prompt: "Toggle model", shortcut: .keyboard(.init("/")))
     }
 

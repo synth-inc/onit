@@ -84,7 +84,7 @@ enum AIModel: String, CaseIterable, Codable {
         }
     }
     
-    enum ModelProvider: String, Codable {
+    enum ModelProvider: String, Codable, Equatable {
         case openAI = "openai"
         case anthropic = "anthropic"
         case xAI = "xai"

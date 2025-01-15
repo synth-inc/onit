@@ -14,7 +14,7 @@ struct RemoteModelPicker: View {
         @Bindable var model = model
 
         Picker("Model", selection: $model.defaultRemoteModel) {
-            ForEach(model.preferences.visibleModelsList) { aiModel in
+            ForEach(model.listedModels) { aiModel in
                 Text(aiModel.displayName)
                     .tag(aiModel)
             }

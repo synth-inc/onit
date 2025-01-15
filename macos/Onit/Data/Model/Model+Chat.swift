@@ -99,8 +99,6 @@ extension OnitModel {
             isAnthropicTokenValidated = isValid
         case .xAI:
             isXAITokenValidated = isValid
-        default:
-            break
         }
     }
     

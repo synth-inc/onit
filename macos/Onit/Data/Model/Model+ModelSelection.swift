@@ -91,4 +91,20 @@ extension OnitModel {
             Preferences.save(preferences)
         }
     }
+
+    var listedModels: [AIModel] {
+        var models = preferences.visibleModelsList
+
+        if !useOpenAI {
+            models = models.filter { $0.provider != .openAI }
+        }
+        if !useAnthropic {
+            models = models.filter { $0.provider != .anthropic }
+        }
+        if !useXAI {
+            models = models.filter { $0.provider != .xAI }
+        }
+
+        return models
+    }
 }

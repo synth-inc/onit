@@ -9,6 +9,7 @@ import SwiftUI
 
 struct ModelSelectionView: View {
     @Environment(\.model) var model
+    @Environment(\.openSettings) var openSettings
 
     var body: some View {
         VStack(spacing: 0) {
@@ -16,7 +17,7 @@ struct ModelSelectionView: View {
             divider
             local
             divider
-//            advanced
+            advanced
         }
         .foregroundStyle(.FG)
         .padding(.vertical, 12)
@@ -41,7 +42,7 @@ struct ModelSelectionView: View {
 
     var remoteModels: some View {
         Picker("", selection: model.selectedModel) {
-            ForEach(model.preferences.visibleModelsList) { model in
+            ForEach(model.listedModels) { model in
                 Text(model.displayName)
                     .appFont(.medium14)
                     .tag(SelectedModel.remote(model))
@@ -107,10 +108,43 @@ struct ModelSelectionView: View {
         .background(.gray400, in: .rect(cornerRadius: 5))
         .opacity(0.3)
     }
-//
-//    var advanced: some View {
-//
-//    }
+
+    var advanced: some View {
+        Button {
+            NSApp.activate()
+            if NSApp.isActive {
+                openSettings()
+                model.closeModelSelectionOverlay()
+            }
+        } label: {
+            HStack {
+                Text("Advanced settings")
+                Spacer()
+                Image(.chevRight)
+            }
+            .padding(6)
+            .contentShape(.rect)
+        }
+        .padding(.horizontal, 6)
+        .padding(.top, 6)
+        .buttonStyle(AdvancedSettingsButtonStyle())
+    }
+}
+
+struct AdvancedSettingsButtonStyle: ButtonStyle {
+    @State private var hovering = false
+
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .background(Color.white.opacity(hovering ? 0.1 : 0))
+            .onContinuousHover { state in
+                if case .active = state {
+                    hovering = true
+                } else {
+                    hovering = false
+                }
+            }
+    }
 }
 
 #Preview {

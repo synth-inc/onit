@@ -40,10 +40,6 @@ struct RemoteModelSection: View {
             fetchKey()
             checkValidated()
             checkUse()
-            validated = state == .valid
-        }
-        .onChange(of: key) {
-            validated = false
         }
         .onChange(of: state) {
             updateUse()
