@@ -76,7 +76,8 @@ struct ModelSelectionView: View {
 
             localModels
         }
-        .padding(.vertical, 8)
+        .padding(.top, 8)
+        .padding(.bottom, 4)
     }
 
     var localModels: some View {

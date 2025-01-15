@@ -27,11 +27,19 @@ struct DragModifier: ViewModifier {
             .background(background)
             .overlay {
                 Color.clear
-                    .dropDestination(for: URL.self) { items, location in
-                        model.addContext(urls: items)
-                        return true
+                    .dropDestination(for: DropItem.self) { items, location in
+                        guard let item = items.first else { return false }
+                        if let image = item.image {
+                            model.addContext(images: [image])
+                            return true
+                        } else if let url = item.url {
+                            model.addContext(urls: [url])
+                            return true
+                        } else {
+                            return false
+                        }
                     } isTargeted: { isHovering in
-                        self.dragging = isHovering
+                        dragging = isHovering
                     }
             }
     }

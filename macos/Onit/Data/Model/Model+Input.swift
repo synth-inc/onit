@@ -16,6 +16,29 @@ extension OnitModel {
         }
     }
 
+    func addContext(images: [NSImage]) {
+        let tempDirectory = FileManager.default.temporaryDirectory
+
+        var imageURLs: [URL] = []
+        for image in images {
+            let uniqueFileName = UUID().uuidString + ".png"
+            let fileURL = tempDirectory.appendingPathComponent(uniqueFileName)
+
+            if let tiffData = image.tiffRepresentation,
+               let bitmap = NSBitmapImageRep(data: tiffData),
+               let pngData = bitmap.representation(using: .png, properties: [:]) {
+                do {
+                    try pngData.write(to: fileURL)
+                    imageURLs.append(fileURL)
+                } catch {
+                    print("Error saving image: \(error.localizedDescription)")
+                }
+            }
+        }
+
+        addContext(urls: imageURLs)
+    }
+
     func newPrompt() {
         historyIndex = -1
         instructions = ""
