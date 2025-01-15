@@ -10,6 +10,7 @@ import SageKit
 import SwiftData
 import Sparkle
 import Combine
+import AppKit
 
 @MainActor @Observable class OnitModel: NSObject {
     var container: ModelContainer
@@ -63,8 +64,6 @@ import Combine
     var updater = SPUStandardUpdaterController(startingUpdater: true, updaterDelegate: nil, userDriverDelegate: nil)
     var _tokenValidation = TokenValidationState()
     
-    var modelSelectionOverlayWindow: NSWindow?
-
     @MainActor
     func fetchLocalModels() async {
         do {

@@ -21,11 +21,11 @@ struct ModelSelectionView: View {
         .foregroundStyle(.FG)
         .padding(.vertical, 12)
         .background(.gray600, in: .rect(cornerRadius: 12))
-        .shadow(color: .BG.opacity(0.36), radius: 5)
+        .frame(minWidth: 218, alignment: .leading)
     }
 
     var remote: some View {
-        VStack(spacing: 2) {
+        VStack(alignment: .leading, spacing: 2) {
             HStack {
                 Text("Remote models")
                     .appFont(.medium13)
@@ -33,26 +33,27 @@ struct ModelSelectionView: View {
                 Spacer()
                 Image(.warningSettings)
             }
+            .padding(.horizontal, 12)
+
             remoteModels
-        }
-        .padding(.horizontal, 12)
-    }
-
-    var modelBinding: Binding<AIModel> {
-        .init {
-            .chatgpt4oLatest
-        } set: { value in
-
         }
     }
 
     var remoteModels: some View {
-        Picker("", selection: modelBinding) {
+        Picker("", selection: model.selectedModel) {
             ForEach(model.preferences.visibleModelsList) { model in
-
+                Text(model.displayName)
+                    .appFont(.medium14)
+                    .tag(SelectedModel.remote(model))
+                    .padding(.vertical, 4)
             }
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
         .pickerStyle(.inline)
+        .padding(.vertical, 4)
+        .padding(.bottom, 5)
+        .padding(.leading, 5)
+        .tint(.blue600)
     }
 
     var divider: some View {
@@ -62,7 +63,7 @@ struct ModelSelectionView: View {
 
     var local: some View {
         VStack(spacing: 2) {
-            HStack {
+            HStack(spacing: 4) {
                 Text("Local models")
                     .foregroundStyle(.FG.opacity(0.6))
                     .appFont(.medium13)
@@ -70,22 +71,41 @@ struct ModelSelectionView: View {
                 Spacer()
                 add
             }
-            .padding(.horizontal, 6)
+            .padding(.horizontal, 12)
+
+            localModels
         }
-        .padding(.horizontal, 6)
         .padding(.vertical, 8)
     }
 
+    var localModels: some View {
+        Picker("", selection: model.selectedModel) {
+            ForEach(model.availableLocalModels, id: \.self) { localModelName in
+                Text(localModelName)
+                    .appFont(.medium14)
+                    .tag(SelectedModel.local(localModelName))
+                    .padding(.vertical, 4)
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .pickerStyle(.inline)
+        .padding(.vertical, 4)
+        .padding(.bottom, 5)
+        .padding(.leading, 5)
+        .tint(.blue600)
+    }
+
     var add: some View {
-        HStack(spacing: 0) {
+        HStack(spacing: 4) {
             Text("Add")
                 .appFont(.medium13)
             Image(.plus)
         }
-        .padding(.vertical, 1)
+        .padding(.vertical, 2)
         .padding(.leading, 4)
-        .padding(.trailing, 1)
+        .padding(.trailing, 4)
         .background(.gray400, in: .rect(cornerRadius: 5))
+        .opacity(0.3)
     }
 //
 //    var advanced: some View {

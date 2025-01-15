@@ -12,35 +12,65 @@ import AppKit
 class ModelSelectionWindowController: NSObject, NSWindowDelegate {
     var overlayWindow: NSWindow?
     weak var model: OnitModel?
+    var eventMonitor: Any?
 
     init(model: OnitModel) {
         self.model = model
         super.init()
         createOverlayWindow()
+        startEventMonitoring()
     }
 
     func createOverlayWindow() {
         let contentView = ModelSelectionView()
             .environment(\.model, model!)
-            .frame(width: 300, height: 400)
-
+            .fixedSize()
         let hostingController = NSHostingController(rootView: contentView)
 
-        let window = ModelSelectionWindow(contentViewController: hostingController)
+        let window = NSWindow(contentViewController: hostingController)
         window.styleMask = [.borderless]
         window.isOpaque = false
         window.backgroundColor = NSColor.clear
-        window.level = .floating
+        window.level = .modalPanel
         window.hasShadow = true
-        window.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
+        window.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary, .ignoresCycle]
         window.isReleasedWhenClosed = false
         window.delegate = self
+        window.ignoresMouseEvents = false
+        window.hidesOnDeactivate = false
 
         overlayWindow = window
-
-        overlayWindow?.alphaValue = 1.0
+        updateOverlayWindowSize()
         positionWindow()
-        overlayWindow?.makeKeyAndOrderFront(nil)
+        overlayWindow?.alphaValue = 1.0
+        overlayWindow?.orderFront(nil)
+    }
+
+    func startEventMonitoring() {
+        eventMonitor = NSEvent.addGlobalMonitorForEvents(matching: [.leftMouseDown, .rightMouseDown]) { [weak self] event in
+            self?.handleMouseDownOutside(event)
+        }
+    }
+
+    func handleMouseDownOutside(_ event: NSEvent) {
+        guard let overlayWindow = overlayWindow else { return }
+
+        let clickLocation = NSEvent.mouseLocation
+
+        if !overlayWindow.frame.contains(clickLocation) {
+            closeOverlay()
+        }
+    }
+
+    func stopEventMonitoring() {
+        if let eventMonitor = eventMonitor {
+            NSEvent.removeMonitor(eventMonitor)
+            self.eventMonitor = nil
+        }
+    }
+
+    func windowWillClose(_ notification: Notification) {
+        stopEventMonitoring()
     }
 
     func positionWindow() {
@@ -65,12 +95,15 @@ class ModelSelectionWindowController: NSObject, NSWindowDelegate {
             y: mouseLocation.y - screenFrame.origin.y
         )
 
+        // Adjust mouse Y-coordinate to position the window lower
+        let adjustedMouseY = localMouseLocation.y - 15 // Adjust this value as needed
+
         let overlayWidth = overlayWindow.frame.width
         let overlayHeight = overlayWindow.frame.height
 
         // Calculate the overlay's origin point
         var overlayOriginX = localMouseLocation.x - overlayWidth / 2
-        var overlayOriginY = localMouseLocation.y - overlayHeight - 10 // Offset below the cursor
+        var overlayOriginY = adjustedMouseY - overlayHeight
 
         // Ensure the overlay doesn't go off-screen horizontally
         overlayOriginX = max(
@@ -78,9 +111,9 @@ class ModelSelectionWindowController: NSObject, NSWindowDelegate {
             min(overlayOriginX, visibleFrame.maxX - screenFrame.origin.x - overlayWidth)
         )
 
-        // If the overlay goes off the bottom of the screen, position it above the cursor
+        // If the overlay would go off the bottom of the screen, position it above the cursor
         if overlayOriginY < visibleFrame.minY - screenFrame.origin.y {
-            overlayOriginY = localMouseLocation.y + 10 // Offset above the cursor
+            overlayOriginY = adjustedMouseY + overlayHeight + 10 // Position above the cursor
         }
 
         // Convert overlay origin back to global screen coordinates
@@ -90,6 +123,14 @@ class ModelSelectionWindowController: NSObject, NSWindowDelegate {
         )
 
         overlayWindow.setFrameOrigin(globalOverlayOrigin)
+    }
+
+    func updateOverlayWindowSize() {
+        guard let overlayWindow = overlayWindow else { return }
+        guard let contentView = overlayWindow.contentViewController?.view else { return }
+        contentView.layoutSubtreeIfNeeded()
+        let contentSize = contentView.fittingSize
+        overlayWindow.setContentSize(contentSize)
     }
 
     func windowDidResignKey(_ notification: Notification) {
@@ -108,6 +149,7 @@ class ModelSelectionWindowController: NSObject, NSWindowDelegate {
             overlayWindow.alphaValue = 1.0
             self.overlayWindow = nil
             self.model?.modelSelectionWindowController = nil
+            self.stopEventMonitoring()
         })
     }
 }

@@ -10,11 +10,11 @@ import SwiftUI
 struct RemoteModelPicker: View {
     @Environment(\.model) var model
 
-    @State private var aiModel: AIModel = .claude35SonnetLatest
-
     var body: some View {
-        Picker("Model", selection: $aiModel) {
-            ForEach(AIModel.allCases) { aiModel in
+        @Bindable var model = model
+
+        Picker("Model", selection: $model.defaultRemoteModel) {
+            ForEach(model.preferences.visibleModelsList) { aiModel in
                 Text(aiModel.displayName)
                     .tag(aiModel)
             }
