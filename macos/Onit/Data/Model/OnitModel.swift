@@ -33,7 +33,7 @@ import AppKit
     }
     var availableLocalModels: [String] = []
     var youSaid: String?
-    var prompt: Prompt?
+    var currentChat: Chat?
     var context: [Context] = []
     var sourceText: String?
     var selectedText: String?

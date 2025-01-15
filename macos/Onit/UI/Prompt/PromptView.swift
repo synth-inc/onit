@@ -9,41 +9,46 @@ import SwiftUI
 
 struct PromptView: View {
     @Environment(\.model) var model
-
-    @AppStorage("seenLocal") var seenLocal = false
+    let prompt: Prompt
 
     var body: some View {
         VStack(spacing: 0) {
-            YouSaidView()
-            content
-            SetUpDialogs(seenLocal: seenLocal)
-            FileRow()
-            TextInputView()
-        }
-        .drag()
-        .onChange(of: model.availableLocalModels.count) { _, new in
-            if new != 0 {
-                seenLocal = true
+            // User's prompt
+            Text(prompt.text)
+                .appFont(.medium14)
+                .foregroundStyle(.FG)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.horizontal, 8)
+                .padding(.vertical, 12)
+                .background(.gray800, in: .rect(cornerRadius: 8))
+                .overlay {
+                    RoundedRectangle(cornerRadius: 8)
+                        .strokeBorder(.gray500)
+                }
+                .padding(.vertical, 8)
+                .padding(.horizontal, 16)
+            
+            // AI responses
+            ForEach(prompt.responses) { response in
+                Text(response.text)
+                    .appFont(.medium14)
+                    .foregroundStyle(.FG)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 12)
+                    .background(.gray700, in: .rect(cornerRadius: 8))
+                    .overlay {
+                        RoundedRectangle(cornerRadius: 8)
+                            .strokeBorder(.gray400)
+                    }
+                    .padding(.vertical, 8)
+                    .padding(.horizontal, 16)
             }
         }
-    }
-
-    @ViewBuilder
-    var content: some View {
-        switch model.generationState {
-        case .generating:
-            PromptDivider()
-            GeneratingView()
-        case .generated:
-            GeneratedView()
-        case .error(let error):
-            GeneratedErrorView(error: error)
-        default:
-            EmptyView()
-        }
+        .padding(.vertical, 8)
     }
 }
 
 #Preview {
-    PromptView()
+    PromptView(prompt: Prompt(input: nil, text: "Hello, how are you?", timestamp: Date()))
 }

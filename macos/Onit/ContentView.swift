@@ -22,7 +22,7 @@ struct ContentView: View {
         VStack(spacing: 0) {
             Toolbar()
             PromptDivider()
-            PromptView()
+            ChatView()
         }
         .opacity(model.showHistory ? 0 : 1)
         .overlay {

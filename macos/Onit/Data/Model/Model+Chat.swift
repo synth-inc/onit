@@ -9,14 +9,21 @@ import Foundation
 
 extension OnitModel {
     func save(_ text: String) {
-        guard prompt == nil else { return }
-
+        // Create a new prompt
         let prompt = Prompt(input: input, text: text, timestamp: Date())
-        self.prompt = prompt
-        let modelContext = container.mainContext
-        modelContext.insert(prompt)
+        
+        // If there's no current chat, create one
+        if currentChat == nil {
+            currentChat = Chat()
+            let modelContext = container.mainContext
+            modelContext.insert(currentChat!)
+        }
+        
+        // Add the prompt to the current chat
+        currentChat?.prompts.append(prompt)
+        
         do {
-            try modelContext.save()
+            try container.mainContext.save()
         } catch {
             print(error.localizedDescription)
         }
@@ -47,8 +54,8 @@ extension OnitModel {
                     )
                 }
                 addChat(chat)
-                if let prompt = self.prompt {
-                    self.generationIndex = prompt.responses.count - 1
+                if let lastPrompt = currentChat?.prompts.last {
+                    self.generationIndex = lastPrompt.responses.count - 1
                 }
                 self.generationState = .generated
                 setTokenIsValid(true)
@@ -70,12 +77,12 @@ extension OnitModel {
     }
 
     func addChat(_ chat: String) {
-        guard let prompt else {
-            print("Tried to add chat with nil promptID")
+        guard let lastPrompt = currentChat?.prompts.last else {
+            print("Tried to add chat with no prompts")
             return
         }
         let response = Response(text: chat)
-        prompt.responses.append(response)
+        lastPrompt.responses.append(response)
     }
 
     func cancelGenerate() {
