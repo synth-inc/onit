@@ -19,6 +19,10 @@ actor FetchingClient {
         return decoder
     }()
     
+    private var openAIMessageHistory: [OpenAIChatMessage] = []
+    private var anthropicMessageHistory: [AnthropicMessage] = []
+    private var xAIMessageHistory: [XAIChatMessage] = []
+    
     func chat(_ text: String, input: Input?, model: AIModel?, apiToken: String?, files: [URL], images: [URL]) async throws -> String {
         guard let model = model else {
             throw FetchingError.invalidRequest(message: "Model is required")
@@ -47,12 +51,12 @@ actor FetchingClient {
         
         switch model.provider {
         case .openAI:
-            var messages: [OpenAIChatMessage] = [
-                OpenAIChatMessage(role: "user", content: .text(userMessage))
-            ]
-            if model.supportsSystemPrompts {
-                messages.insert(OpenAIChatMessage(role: "system", content: .text(systemMessage)), at: 0)
+            // Initialize messages with system prompt if needed
+            if openAIMessageHistory.isEmpty && model.supportsSystemPrompts {
+                openAIMessageHistory.append(OpenAIChatMessage(role: "system", content: .text(systemMessage)))
             }
+            
+            // Add user message
             if !images.isEmpty {
                 let parts = [
                     OpenAIChatContentPart(type: "text", text: userMessage, image_url: nil)
@@ -63,12 +67,16 @@ actor FetchingClient {
                         image_url: .init(url: url.absoluteString)
                     )
                 }
-                messages[1] = OpenAIChatMessage(role: "user", content: .multiContent(parts))
+                openAIMessageHistory.append(OpenAIChatMessage(role: "user", content: .multiContent(parts)))
+            } else {
+                openAIMessageHistory.append(OpenAIChatMessage(role: "user", content: .text(userMessage)))
             }
             
-            let endpoint = OpenAIChatEndpoint(messages: messages, token: apiToken, model: model.rawValue)
+            let endpoint = OpenAIChatEndpoint(messages: openAIMessageHistory, token: apiToken, model: model.rawValue)
             let response = try await execute(endpoint)
-            return response.choices[0].message.content
+            let assistantMessage = response.choices[0].message
+            openAIMessageHistory.append(assistantMessage)
+            return assistantMessage.content
             
         case .anthropic:
             let content: [AnthropicContent]
@@ -96,24 +104,28 @@ actor FetchingClient {
                 }
             }
             
-            let messages = [AnthropicMessage(role: "user", content: content)]
+            // Add user message to history
+            anthropicMessageHistory.append(AnthropicMessage(role: "user", content: content))
+            
             let endpoint = AnthropicChatEndpoint(
                 model: model.rawValue,
                 system: model.supportsSystemPrompts ? systemMessage : "",
                 token: apiToken,
-                messages: messages,
+                messages: anthropicMessageHistory,
                 maxTokens: 4096
             )
             let response = try await execute(endpoint)
+            let assistantMessage = AnthropicMessage(role: "assistant", content: response.content)
+            anthropicMessageHistory.append(assistantMessage)
             return response.content[0].text
             
         case .xAI:
-            var messages: [XAIChatMessage] = [
-                XAIChatMessage(role: "user", content: .text(userMessage))
-            ]
-            if model.supportsSystemPrompts {
-                messages.insert(XAIChatMessage(role: "system", content: .text(systemMessage)), at: 0)
+            // Initialize messages with system prompt if needed
+            if xAIMessageHistory.isEmpty && model.supportsSystemPrompts {
+                xAIMessageHistory.append(XAIChatMessage(role: "system", content: .text(systemMessage)))
             }
+            
+            // Add user message
             if !images.isEmpty {
                 let parts = [
                     XAIChatContentPart(type: "text", text: userMessage, image: nil)
@@ -124,12 +136,16 @@ actor FetchingClient {
                         image: .init(url: url.absoluteString, base64: nil)
                     )
                 }
-                messages[1] = XAIChatMessage(role: "user", content: .multiContent(parts))
+                xAIMessageHistory.append(XAIChatMessage(role: "user", content: .multiContent(parts)))
+            } else {
+                xAIMessageHistory.append(XAIChatMessage(role: "user", content: .text(userMessage)))
             }
             
-            let endpoint = XAIChatEndpoint(messages: messages, model: model.rawValue, token: apiToken)
+            let endpoint = XAIChatEndpoint(messages: xAIMessageHistory, model: model.rawValue, token: apiToken)
             let response = try await execute(endpoint)
-            return response.choices[0].message.content
+            let assistantMessage = response.choices[0].message
+            xAIMessageHistory.append(assistantMessage)
+            return assistantMessage.content
         }
     }
     
@@ -140,5 +156,11 @@ actor FetchingClient {
             return mimeType
         }
         return "application/octet-stream" // Fallback if MIME type is not found
+    }
+    
+    func clearChatHistory() {
+        openAIMessageHistory.removeAll()
+        anthropicMessageHistory.removeAll()
+        xAIMessageHistory.removeAll()
     }
 }
