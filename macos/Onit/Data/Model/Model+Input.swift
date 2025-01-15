@@ -45,6 +45,7 @@ extension OnitModel {
         prompt = nil
         generationState = .idle
         focusText()
+        youSaid = nil
     }
 
     func removeContext(context: Context) {
@@ -113,9 +114,5 @@ extension OnitModel {
         let response = youSaid + ", " + text
         self.youSaid = response
         return response
-    }
-
-    func resetYouSaid() {
-        youSaid = nil
     }
 }

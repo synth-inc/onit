@@ -48,9 +48,8 @@ struct Toolbar: View {
             case .idle:
                 model.closePanel()
             default:
-                model.generationState = .idle
+                model.newPrompt()
                 model.textFocusTrigger.toggle()
-                model.youSaid = nil
             }
         } label: {
             EmptyView()

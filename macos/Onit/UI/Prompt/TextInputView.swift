@@ -141,8 +141,7 @@ struct TextInputView: View {
 
     var newListener: some View {
         Button {
-            model.resetYouSaid()
-            model.cancelGenerate()
+            model.newPrompt()
         } label: {
             EmptyView()
         }

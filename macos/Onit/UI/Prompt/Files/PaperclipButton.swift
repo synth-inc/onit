@@ -24,12 +24,14 @@ struct PaperclipButton: View {
             }
             .tooltip(prompt: "Upload file")
 
-            Button {
-                showFileImporter = true
-            } label: {
-                Text("Add file")
-                    .foregroundStyle(.gray200)
-                    .appFont(.medium13)
+            if model.context.isEmpty {
+                Button {
+                    showFileImporter = true
+                } label: {
+                    Text("Add file")
+                        .foregroundStyle(.gray200)
+                        .appFont(.medium13)
+                }
             }
         }
         .fileImporter(
