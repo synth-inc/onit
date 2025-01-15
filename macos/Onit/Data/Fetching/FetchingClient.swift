@@ -74,9 +74,10 @@ actor FetchingClient {
             
             let endpoint = OpenAIChatEndpoint(messages: openAIMessageHistory, token: apiToken, model: model.rawValue)
             let response = try await execute(endpoint)
-            let assistantMessage = response.choices[0].message
+            let responseMessage = response.choices[0].message
+            let assistantMessage = OpenAIChatMessage(role: "assistant", content: .text(responseMessage.content))
             openAIMessageHistory.append(assistantMessage)
-            return assistantMessage.content
+            return responseMessage.content
             
         case .anthropic:
             let content: [AnthropicContent]
@@ -115,7 +116,9 @@ actor FetchingClient {
                 maxTokens: 4096
             )
             let response = try await execute(endpoint)
-            let assistantMessage = AnthropicMessage(role: "assistant", content: response.content)
+            // Convert response content to the correct format
+            let assistantContent = [AnthropicContent(type: "text", text: response.content[0].text, source: nil)]
+            let assistantMessage = AnthropicMessage(role: "assistant", content: assistantContent)
             anthropicMessageHistory.append(assistantMessage)
             return response.content[0].text
             
@@ -143,9 +146,10 @@ actor FetchingClient {
             
             let endpoint = XAIChatEndpoint(messages: xAIMessageHistory, model: model.rawValue, token: apiToken)
             let response = try await execute(endpoint)
-            let assistantMessage = response.choices[0].message
+            let responseMessage = response.choices[0].message
+            let assistantMessage = XAIChatMessage(role: "assistant", content: .text(responseMessage.content))
             xAIMessageHistory.append(assistantMessage)
-            return assistantMessage.content
+            return responseMessage.content
         }
     }
     
