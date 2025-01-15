@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import UniformTypeIdentifiers
 
 actor FetchingClient {
     let session = URLSession.shared
@@ -76,16 +77,20 @@ actor FetchingClient {
             } else {
                 content = [
                     AnthropicContent(type: "text", text: userMessage, source: nil)
-                ] + images.map { url in
-                    // Note: Anthropic requires base64 images, we'll need to convert URLs
-                    // For now, we'll just reference them
-                    AnthropicContent(
+                ] + images.compactMap { url in
+                    guard let imageData = try? Data(contentsOf: url) else {
+                        print("Unable to read image data from URL: \(url)")
+                        return nil
+                    }
+                    let base64EncodedData = imageData.base64EncodedString()
+                    let mimeType = mimeType(for: url)
+                    return AnthropicContent(
                         type: "image",
                         text: nil,
                         source: AnthropicImageSource(
                             type: "base64",
-                            media_type: "image/jpeg",
-                            data: url.absoluteString
+                            media_type: mimeType,
+                            data: base64EncodedData
                         )
                     )
                 }
@@ -126,5 +131,14 @@ actor FetchingClient {
             let response = try await execute(endpoint)
             return response.choices[0].message.content
         }
+    }
+    
+    func mimeType(for url: URL) -> String {
+        let pathExtension = url.pathExtension
+        if let uti = UTType(filenameExtension: pathExtension),
+           let mimeType = uti.preferredMIMEType {
+            return mimeType
+        }
+        return "application/octet-stream" // Fallback if MIME type is not found
     }
 }
