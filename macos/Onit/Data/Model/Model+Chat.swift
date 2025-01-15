@@ -38,12 +38,12 @@ extension OnitModel {
                 if preferences.mode == .remote {
                     let images = await remoteImages
                     chat = try await client.chat(
-                        response, input: input, model: preferences.model, apiToken: getTokenForModel(preferences.model ?? nil), files: files, images: images
+                        response, input: nil /*input*/, model: preferences.model, apiToken: getTokenForModel(preferences.model ?? nil), files: files, images: images
                     )
                 } else {
                     let images = await localImages
                     chat = try await client.localChat(
-                        response, input: input, model: preferences.localModel, files: files, images: images
+                        response, input: nil /*input*/, model: preferences.localModel, files: files, images: images
                     )
                 }
                 addChat(chat)
