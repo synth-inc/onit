@@ -8,11 +8,14 @@
 import SwiftUI
 import KeyboardShortcuts
 import MenuBarExtraAccess
+import FirebaseCore
+import Foundation
 
 @main
 struct App: SwiftUI.App {
     @Environment(\.model) var model
-
+    @NSApplicationDelegateAdaptor(AppDelegate.self) var delegate
+    
     init() {
 
         KeyboardShortcuts.onKeyUp(for: .launch) { [weak model] in
@@ -55,6 +58,12 @@ struct App: SwiftUI.App {
             SettingsView()
         }
     }
+}
+
+class AppDelegate: NSObject, NSApplicationDelegate {
+    func applicationDidFinishLaunching(_ notification: Notification) {
+        FirebaseApp.configure()
+  }
 }
 
 // MARK: - Testing
