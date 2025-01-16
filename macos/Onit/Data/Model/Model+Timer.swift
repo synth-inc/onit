@@ -12,7 +12,8 @@ extension OnitModel {
         trustedTimer = Timer.publish(every: 1.0, on: .main, in: .common)
             .autoconnect()
             .sink { [weak self] _ in
-                let currentStatus = Accessibility.trusted
+                let currentStatus = AccessibilityPermissionManager.isProcessTrusted
+                
                 if self?.trusted != currentStatus {
                     self?.trusted = currentStatus
                 }

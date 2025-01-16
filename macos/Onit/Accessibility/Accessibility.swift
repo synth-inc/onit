@@ -95,21 +95,6 @@ class Accessibility {
         shared.model = model
     }
 
-    static func requestPermissions() {
-        let trusted = AXIsProcessTrusted()
-        if !trusted {
-            let options = [kAXTrustedCheckOptionPrompt.takeUnretainedValue(): true] as CFDictionary
-            AXIsProcessTrustedWithOptions(options)
-            print("Requesting Accessibility Permissions...")
-        } else {
-            print("Accessibility Trusted!")
-        }
-    }
-    
-    static var trusted: Bool {
-        AXIsProcessTrusted()
-    }
-
     @MainActor
     static func resetPrompt<Content: View>(with newView: Content) {
         shared.resetPrompt(with: newView)
@@ -282,9 +267,11 @@ class Accessibility {
             self.currentApplication = pid
             self.currentSource = focusedApp.localizedName
 
-            let textInApplication = AccessibilityHelper.getAllTextInElement(appElement: newAppElement)
-            if let model = self.model {
-                model.debugText = textInApplication
+            Task {
+                let textInApplication = await AccessibilityReader.getAllTextInElement(appElement: newAppElement)
+                if let model = self.model {
+                    model.debugText = textInApplication
+                }
             }
             // print("Text in application: \(textInApplication)")
             // let appElement = AXUIElementCreateApplication(pid)
@@ -322,6 +309,7 @@ class Accessibility {
             print("Bounds changed Notification!")
 //            handleBoundsChanged(for: element)
         case kAXValueChangedNotification:
+            handleValueChanged(for: element)
 //            print("Value changed Notification!")
             // There are ton of these
             break
@@ -413,10 +401,12 @@ class Accessibility {
         print("Focus change from pid: \(elementPid)")
         // Read in context on FocusChange notifiications
         if let appElement = self.appElement {
-            let textInElement = AccessibilityHelper.getAllTextInElement(appElement: appElement)
-            if textInElement != "" {
-                if let model = self.model {
-                    model.debugText = textInElement
+            Task {
+                let textInElement = await AccessibilityReader.getAllTextInElement(appElement: appElement)
+                if textInElement != "" {
+                    if let model = self.model {
+                        model.debugText = textInElement
+                    }
                 }
             }
         }
@@ -433,7 +423,13 @@ class Accessibility {
     }
     
     func handleValueChanged(for element: AXUIElement) {
-        print("Handling value changed...")
+        var valueValue: CFTypeRef?
+        let valueResult = AXUIElementCopyAttributeValue(element, kAXValueAttribute as CFString, &valueValue)
+        if valueResult == .success, let value = valueValue as? String {
+            print("Value Changed Notification! New value : \(value)")
+        } else {
+            print("Failed to get value for element. Error: \(valueResult.rawValue)")
+        }
     }
 
     func handleBoundsChanged(for element: AXUIElement) {
@@ -782,125 +778,4 @@ class Accessibility {
 }
 
 #endif
-
-class AccessibilityHelper {
-    // This class is not MainActor isolated
-    static func getAllTextInElement(appElement: AXUIElement) -> String? {
-        return ""
-//        let startTime = CFAbsoluteTimeGetCurrent()
-        // let (elementsWithText, maxDepth, totalElementsSearched) = findAllVisibleElementsWithAttribute(element: appElement, attribute: kAXValueAttribute as CFString, maxDepth: 1000)
-        // let endTime = CFAbsoluteTimeGetCurrent()
-        // let elapsedTime = endTime - startTime
-
-        // var cumulativeText = "Time taken to find elements with attribute: \(elapsedTime) seconds \n"
-        // cumulativeText = cumulativeText + "Num searched: \(totalElementsSearched) \n"
-        // cumulativeText = cumulativeText + "Num found: \(elementsWithText.count) \n"
-        // cumulativeText = cumulativeText + "Max depth: \(maxDepth) \n"
-            
-        // for element in elementsWithText {
-        //     if let text = element.value() {
-        //         cumulativeText = cumulativeText + text + " "
-        //     }
-            
-        // }
-        // return cumulativeText
-    }
-
-    static func findRootElementsWithAttribute(element: AXUIElement, attribute: CFString, maxDepth: Int) -> [AXUIElement] {
-        var rootElementsWithAttribute: [AXUIElement] = []
-
-        func helper(currentElement: AXUIElement, currentDepth: Int) {
-            // Check if the current depth exceeds maxDepth
-            if currentDepth > maxDepth {
-                return
-            }
-
-            // Check if the element is valid
-            var elementPid: pid_t = 0
-            let pidResult = AXUIElementGetPid(currentElement, &elementPid)
-            if pidResult != .success {
-                print("Invalid element (cannot get pid). Skipping.")
-                return
-            }
-
-            // Attempt to get the attribute names
-            var attributeNamesCFArray: CFArray?
-            let namesResult = AXUIElementCopyAttributeNames(currentElement, &attributeNamesCFArray)
-            if namesResult == .success, let namesArray = attributeNamesCFArray as? [String] {
-                if namesArray.contains(attribute as String) {
-                    rootElementsWithAttribute.append(currentElement)
-                } else {
-                    // Get children only if the current element does not have the attribute
-                    var childrenValue: CFTypeRef?
-                    let childrenResult = AXUIElementCopyAttributeValue(currentElement, kAXChildrenAttribute as CFString, &childrenValue)
-                    if childrenResult == .success, let childrenArray = childrenValue as? [AXUIElement] {
-                        for child in childrenArray {
-                            helper(currentElement: child, currentDepth: currentDepth + 1)
-                        }
-                    }
-                }
-            } else {
-                print("Failed to get attribute names for element. Skipping. Error: \(namesResult.rawValue)")
-            }
-        }
-
-        helper(currentElement: element, currentDepth: 0)
-        return rootElementsWithAttribute
-    }
-
-
-    static func findAllVisibleElementsWithAttribute(element: AXUIElement, attribute: CFString, maxDepth: Int) -> ([AXUIElement], Int, Int) {
-        var elementsWithAttribute: [AXUIElement] = []
-        var totalElementsSearched = 0
-        var maxDepthReached = 0
-
-        guard let currentScreen = NSScreen.main else {
-            print("No main screen found.")
-            return (elementsWithAttribute, totalElementsSearched, maxDepthReached)
-        }
-        
-        func helper(currentElement: AXUIElement, currentDepth: Int) {
-            // Increment the total elements searched
-            totalElementsSearched += 1
-
-            // Update the maximum depth reached
-            if currentDepth > maxDepthReached {
-                maxDepthReached = currentDepth
-            }
-
-            // Check if the current depth exceeds maxDepth
-            if currentDepth > maxDepth {
-                return
-            }
-
-            // Check if the element is valid
-            var elementPid: pid_t = 0
-            let pidResult = AXUIElementGetPid(currentElement, &elementPid)
-            if pidResult != .success {
-                print("Invalid element (cannot get pid). Skipping.")
-                return
-            }
-
-            // Check if the element is off-screen
-            if let frame = currentElement.frame() {
-                if !currentScreen.visibleFrame.intersects(frame) {
-                    return
-                }
-            }
-
-            if currentElement.attribute(forAttribute: attribute) != nil {
-                elementsWithAttribute.append(currentElement)
-            }
-
-            if let visibleChildren = currentElement.children() {
-                for child in visibleChildren {
-                    helper(currentElement: child, currentDepth: currentDepth + 1)
-                }
-            }
-        }
-
-        helper(currentElement: element, currentDepth: 0)
-        return (elementsWithAttribute, maxDepthReached, totalElementsSearched)
-    }
-}
 

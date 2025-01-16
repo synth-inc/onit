@@ -13,6 +13,9 @@ import Foundation
 
 @main
 struct App: SwiftUI.App {
+    
+    private let accessibilityPermissionMngr = AccessibilityPermissionManager()
+    
     @Environment(\.model) var model
     @NSApplicationDelegateAdaptor(AppDelegate.self) var delegate
     
@@ -40,11 +43,17 @@ struct App: SwiftUI.App {
         model.showPanel()
         
         #if !targetEnvironment(simulator)
-//        Accessibility.requestPermissions()
-//        Accessibility.setModel(model)
-//        Accessibility.setupWindow(withView: StaticPromptView())
-//        Accessibility.observeActiveApplication()
-//        Accessibility.observeSystemClicks()
+        
+        Accessibility.setModel(model)
+        Accessibility.setupWindow(withView: StaticPromptView())
+        
+        accessibilityPermissionMngr.requestPermission(onUntrusted: {
+            // TODO: KNA - Stop listening and remove any observers
+        }, onTrusted: {
+            Accessibility.observeActiveApplication()
+            Accessibility.observeSystemClicks()
+        })
+        
         #endif
     }
 
