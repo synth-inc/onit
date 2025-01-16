@@ -112,4 +112,6 @@ extension OnitModel {
     var remoteNeedsSetup: Bool {
         !useOpenAI && !useAnthropic && !useXAI
     }
+
+    
 }
