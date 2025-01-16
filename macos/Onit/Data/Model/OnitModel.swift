@@ -64,6 +64,8 @@ import AppKit
     var updater = SPUStandardUpdaterController(startingUpdater: true, updaterDelegate: nil, userDriverDelegate: nil)
     var _tokenValidation = TokenValidationState()
     
+    @ObservationIgnored var panelEventMonitor: Any?
+    
     @MainActor
     func fetchLocalModels() async {
         do {

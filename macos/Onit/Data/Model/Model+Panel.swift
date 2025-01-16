@@ -122,6 +122,11 @@ extension OnitModel: NSWindowDelegate {
     }
 
     func closePanel() {
+        if let eventMonitor = panelEventMonitor {
+            NSEvent.removeMonitor(eventMonitor)
+            panelEventMonitor = nil
+        }
+
         KeyboardShortcuts.disable(.escape)
         guard let panel = panel else { return }
         panel.orderOut(nil)
