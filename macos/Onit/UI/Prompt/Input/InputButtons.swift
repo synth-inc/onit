@@ -15,7 +15,7 @@ struct InputButtons: View {
 
         Group {
             Button {
-                model.input = nil
+                model.pendingInput = nil
             } label: {
                 Image(.smallRemove)
                     .renderingMode(.template)

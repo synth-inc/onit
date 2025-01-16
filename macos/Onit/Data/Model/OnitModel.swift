@@ -25,27 +25,30 @@ import AppKit
     var showHistory: Bool = false
     var incognitoMode: Bool = false
     var showMenuBarExtra: Bool = false
-    var generationState: GenerationState = .idle
     var inputExpanded = true
     var panel: CustomPanel? = nil
-    var input: Input? = nil {
-        didSet { input.save() }
-    }
+
     var availableLocalModels: [String] = []
-    var youSaid: String?
+    
     var currentChat: Chat?
-    var context: [Context] = []
-    var sourceText: String?
-    var selectedText: String?
+    var currentPrompts: [Prompt]?
+    
+    // User inputs that have not yet been submitted
+    var pendingInstruction = "" {
+        didSet { pendingInstruction.save("pendingInstruction") }
+    }
+    var pendingContextList : [Context] = [] {
+        didSet { pendingContextList.save("pendingContext") }
+    }
+    var pendingInput: Input? =  nil {
+        didSet { pendingInput.save("pendingInput") }
+    }
+        
     var imageUploads: [URL: UploadProgress] = [:]
     var uploadTasks: [URL: Task<URL?, Never>] = [:]
     var textFocusTrigger = false
     var isOpeningSettings = false
     var historyIndex = -1
-    var generationIndex = 0
-    var instructions = "" {
-        didSet { instructions.save("instructions") }
-    }
     
     var showDebugWindow = false
     var debugPanel: CustomPanel? = nil
@@ -59,6 +62,8 @@ import AppKit
     var droppedItems = [(image: NSImage, filename: String)]()
 
     var generateTask: Task<Void, Never>? = nil
+    var generatingPrompt: Prompt?
+    var generatingPromptPriorState: GenerationState?
 
     var client = FetchingClient()
     var updater = SPUStandardUpdaterController(startingUpdater: true, updaterDelegate: nil, userDriverDelegate: nil)
@@ -85,8 +90,8 @@ import AppKit
     }
 
     init(container: ModelContainer) {
-        self.input = Input?.load()
-        self.instructions = String.load("instructions") ?? ""
+        self.pendingInput = Input?.load()
+        self.pendingInstruction = String.load("instructions") ?? ""
         self.container = container
         super.init()
         self.preferences = Preferences.shared

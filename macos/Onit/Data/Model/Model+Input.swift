@@ -10,10 +10,12 @@ import AppKit
 extension OnitModel {
     func addContext(urls: [URL]) {
         let contextItems = urls.map(Context.init)
-        context += contextItems
-        if preferences.mode == .remote {
-            tryToUpload(contextItems)
-        }
+        pendingContextList += contextItems
+
+        // We are going to upload the images to
+//        if preferences.mode == .remote {
+//            tryToUpload(contextItems)
+//        }
     }
 
     func addContext(images: [NSImage]) {
@@ -39,17 +41,18 @@ extension OnitModel {
         addContext(urls: imageURLs)
     }
 
-    func newPrompt() {
+    func newChat() {
         historyIndex = -1
-        instructions = ""
-        prompt = nil
-        generationState = .idle
+        currentChat = nil
+        currentPrompts = nil
+        pendingInstruction = ""
+        pendingContextList.removeAll()
+        pendingInput = nil
         focusText()
-        youSaid = nil
     }
 
     func removeContext(context: Context) {
-        self.context.removeAll { $0 == context }
+        self.pendingContextList.removeAll { $0 == context }
         if case .image(let url) = context {
             uploadTasks[url]?.cancel()
             uploadTasks[url] = nil
@@ -82,37 +85,26 @@ extension OnitModel {
         uploadTasks[url] = uploadTask
     }
 
-    var remoteImages: [URL] {
-        get async {
-            var images: [URL] = []
-            for task in uploadTasks.values {
-                if let url = await task.value {
-                    images.append(url)
-                }
-            }
-            return images
-        }
-    }
+    // TODO removing these unless we move back to an upload model
+//    var remoteImages: [URL] {
+//        get async {
+//            var images: [URL] = []
+//            for task in uploadTasks.values {
+//                if let url = await task.value {
+//                    images.append(url)
+//                }
+//            }
+//            return images
+//        }
+//    }
     
-    var localImages: [URL] {
-        get async {
-            var images: [URL] = []
-            for item in context {
-                if case .image(let url) = item {
-                    images.append(url)
-                }
-            }
-            return images
-        }
-    }
-
-    func updateYouSaid(text: String) -> String {
-        guard let youSaid else {
-            youSaid = text
-            return text
-        }
-        let response = youSaid + ", " + text
-        self.youSaid = response
-        return response
-    }
+//    var localImages: [URL] {
+//        var images: [URL] = []
+//        for item in pendingContextList {
+//            if case .image(let url) = item {
+//                images.append(url)
+//            }
+//        }
+//        return images
+//    }
 }

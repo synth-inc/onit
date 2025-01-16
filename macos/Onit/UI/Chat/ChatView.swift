@@ -7,21 +7,14 @@ struct ChatView: View {
     var body: some View {
         VStack(spacing: 0) {
             ScrollView {
-                LazyVStack(spacing: 16) {
-                    if let chat = model.currentChat {
-                        ForEach(chat.prompts) { prompt in
-                            PromptView(prompt: prompt)
-                        }
+                LazyVStack() {
+                    ForEach(model.currentPrompts ?? []) { prompt in
+                        PromptView(prompt: prompt)
                     }
                 }
-                .padding(.vertical, 16)
-            }
-            
-            if case .error(let error) = model.generationState {
-                GeneratedErrorView(error: error)
             }
             SetUpDialogs(seenLocal: seenLocal)
-            FileRow()
+            FileRow(contextList: model.pendingContextList)
             TextInputView()
         }
         .drag()
@@ -30,5 +23,12 @@ struct ChatView: View {
                 seenLocal = true
             }
         }
+        .onChange(of: model.currentPrompts) { _, new in
+            // Trigger a UI update when currentPrompts changes
+        }
     }
+}
+
+#Preview {
+    ChatView()
 }

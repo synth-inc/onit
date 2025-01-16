@@ -11,10 +11,6 @@ import KeyboardShortcuts
 extension OnitModel: NSWindowDelegate {
     @MainActor
     func showPanel() {
-        #if !targetEnvironment(simulator)
-        generationState = .idle
-        #endif
-
         if let existingPanel = panel, existingPanel.isVisible {
             existingPanel.makeKeyAndOrderFront(nil)
             existingPanel.orderFrontRegardless()
@@ -182,10 +178,8 @@ extension OnitModel: NSWindowDelegate {
 
     func escapeAction() {
         if panel != nil {
-            if self.selectedText != "" {
-                self.selectedText = ""
-                self.sourceText = ""
-                self.input = nil
+            if self.pendingInput != nil {
+                self.pendingInput = nil
             } else {
                 closePanel()
             }

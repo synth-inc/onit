@@ -13,7 +13,7 @@ struct TextInputView: View {
 
     @FocusState var focused: Bool
 
-    @Query(sort: \Prompt.timestamp, order: .reverse) private var prompts: [Prompt]
+    @Query(sort: \Chat.timestamp, order: .reverse) private var chats: [Chat]
 
     var body: some View {
         HStack {
@@ -36,20 +36,13 @@ struct TextInputView: View {
 
         ZStack(alignment: .leading) {
             HStack(alignment: .firstTextBaseline, spacing: 5) {
-                TextField("", text: $model.instructions, axis: .vertical)
+                TextField("", text: $model.pendingInstruction, axis: .vertical)
                     .textFieldStyle(PlainTextFieldStyle())
                     .focused($focused)
                     .tint(.blue600.opacity(0.2))
                     .fixedSize(horizontal: false, vertical: true)
-//                if model.generationState == .generated {
-//                    Button("Edit") {
-//                        focused = true
-//                    }
-//                    .appFont(.medium16)
-//                    .foregroundStyle(.gray300)
-//                }
             }
-            if model.instructions.isEmpty {
+            if model.pendingInstruction.isEmpty {
                 placeholderView
             } else {
                 Text(" ")
@@ -66,8 +59,12 @@ struct TextInputView: View {
     }
 
     var placeholderText: String {
-        if model.youSaid != nil {
-            "Follow-up... (􀆔N for new)"
+        if let currentChat = model.currentChat {
+            if (!currentChat.isEmpty) {
+                "Follow-up... (􀆔N for new)"
+            } else {
+                "New instructions..."
+            }
         } else {
             "New instructions..."
         }
@@ -86,31 +83,29 @@ struct TextInputView: View {
     var sendButton: some View {
         Button {
 //            focused = false
-            model.save(model.instructions)
-            model.generate(model.instructions)
+            let newPrompt = model.createAndSavePrompt()
+            model.generate(newPrompt)
         } label: {
             Image(model.preferences.mode == .local ? .circleArrowUpDotted : .circleArrowUp)
                 .resizable()
                 .renderingMode(.template)
-                .foregroundStyle(model.instructions.isEmpty ? Color.gray700 : (model.preferences.mode == .local ? .limeGreen : Color.blue400))
+                .foregroundStyle(model.pendingInstruction.isEmpty ? Color.gray700 : (model.preferences.mode == .local ? .limeGreen : Color.blue400))
                 .frame(width: 18, height: 18)
         }
         .buttonStyle(.plain)
         
-        .disabled(model.instructions.isEmpty)
+        .disabled(model.pendingInstruction.isEmpty)
         .keyboardShortcut(.return, modifiers: [])
     }
 
     var upListener: some View {
         Button {
-            guard !prompts.isEmpty else { return }
+            guard !chats.isEmpty else { return }
 
-            if model.historyIndex + 1 < prompts.count {
+            if model.historyIndex + 1 < chats.count {
                 model.historyIndex += 1
-                model.instructions = prompts[model.historyIndex].text
-                model.input = prompts[model.historyIndex].input
-                model.generationIndex = 0
-                model.prompt = prompts[model.historyIndex]
+                model.currentChat = chats[model.historyIndex]
+                model.currentPrompts = chats[model.historyIndex].prompts
             }
         } label: {
             EmptyView()
@@ -122,17 +117,14 @@ struct TextInputView: View {
         Button {
             if model.historyIndex > 0 {
                 model.historyIndex -= 1
-                model.instructions = prompts[model.historyIndex].text
-                model.input = prompts[model.historyIndex].input
-                model.prompt = prompts[model.historyIndex]
+                model.currentChat = chats[model.historyIndex]
+                model.currentPrompts = chats[model.historyIndex].prompts
             } else if model.historyIndex == 0 {
                 model.historyIndex = -1
-                model.instructions = ""
-                model.input = nil
-                model.prompt = nil
+                model.currentChat = nil
+                model.currentPrompts = nil
                 focused = true
             }
-            model.generationIndex = 0
         } label: {
             EmptyView()
         }
@@ -141,7 +133,7 @@ struct TextInputView: View {
 
     var newListener: some View {
         Button {
-            model.newPrompt()
+            model.newChat()
         } label: {
             EmptyView()
         }

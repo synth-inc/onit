@@ -44,13 +44,7 @@ struct Toolbar: View {
     // effect when clicked vs keyboard shortcut
     var escListener: some View {
         Button {
-            switch model.generationState {
-            case .idle:
-                model.closePanel()
-            default:
-                model.newPrompt()
-                model.textFocusTrigger.toggle()
-            }
+            model.closePanel()
         } label: {
             EmptyView()
         }
@@ -123,7 +117,7 @@ struct Toolbar: View {
 
     var add: some View {
         Button {
-            model.newPrompt()
+            model.newChat()
         } label: {
             Image(.circlePlus)
                 .renderingMode(.template)

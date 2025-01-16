@@ -12,11 +12,11 @@ import Foundation
 class Response {
     var text: String
     var timestamp: Date
-    var prompt: Prompt?
+//    var prompt: Prompt?
 
-    init(text: String, time: Date = .now, prompt: Prompt? = nil) {
+    init(text: String, time: Date = .now) { // , prompt: Prompt? = nil) {
         self.text = text
         self.timestamp = time
-        self.prompt = prompt
+//        self.prompt = prompt
     }
 }

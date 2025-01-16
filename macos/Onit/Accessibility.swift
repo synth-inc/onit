@@ -579,12 +579,10 @@ class Accessibility {
                     let curSourceText = self.currentSource ?? ""
                     
                     // Move these on to the model Input!
-                    model.selectedText = curSelectedText
-                    model.sourceText = curSourceText
                     if curSelectedText != "" {
-                        model.input = Input(selectedText: curSelectedText, application: curSourceText)
+                        model.pendingInput = Input(selectedText: curSelectedText, application: curSourceText)
                     } else {
-                        model.input = nil
+                        model.pendingInput = nil
                     }
                 }
             } else{

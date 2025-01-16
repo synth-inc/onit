@@ -10,4 +10,16 @@ final class Chat {
         self.prompts = prompts
         self.timestamp = timestamp
     }
+    
+    var isEmpty: Bool {
+        prompts.isEmpty
+    }
+    
+    var responseCount: Int {
+        prompts.reduce(0) { $0 + ($1.responses.count) }
+    }
+
+    var fullText: String {
+        prompts.map { $0.fullText }.joined(separator: "\n")
+    }
 }

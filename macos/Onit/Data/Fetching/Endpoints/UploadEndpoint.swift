@@ -17,6 +17,7 @@ enum UploadProgress {
 extension FetchingClient {
     func upload(image: URL) -> AsyncStream<UploadProgress> {
         AsyncStream { continuation in
+            
             let fileExtension = image.pathExtension.lowercased()
             let name = "\(UUID()).\(fileExtension)"
             let urlString = "\(String.azureBase)/\(String.azureBucket)/\(name)?\(String.sasKey)"
@@ -105,6 +106,7 @@ enum UploadError: Error {
 
 // MARK: - Keys
 
+// TODO we need to revoke this key so people can't use the bucket after we open-source this
 extension String {
     fileprivate static let azureBase = "https://onit.blob.core.windows.net"
     fileprivate static let azureBucket = "onit"
