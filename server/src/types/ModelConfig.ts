@@ -1,4 +1,4 @@
-export type ModelProvider = 'openai' | 'anthropic';
+export type ModelProvider = 'openai' | 'anthropic' | 'perplexity';
 
 export interface ModelCapabilities {
     vision?: boolean;
@@ -24,5 +24,13 @@ export const MODEL_CONFIGS: Record<string, ModelConfig> = {
     'claude-3-haiku-20240229': { provider: 'anthropic', capabilities: { vision: true } },
     'claude-2.1': { provider: 'anthropic', capabilities: {} },
     'claude-2.0': { provider: 'anthropic', capabilities: {} },
-    'claude-instant-1.2': { provider: 'anthropic', capabilities: {} }
+    'claude-instant-1.2': { provider: 'anthropic', capabilities: {} },
+    
+    // Perplexity Models
+    'pplx-70b-online': { provider: 'perplexity', capabilities: {} },
+    'pplx-7b-online': { provider: 'perplexity', capabilities: {} },
+    'pplx-7b-chat': { provider: 'perplexity', capabilities: {} },
+    'mixtral-8x7b-online': { provider: 'perplexity', capabilities: {} },
+    'codellama-70b-instruct': { provider: 'perplexity', capabilities: {} },
+    'llama-2-70b-online': { provider: 'perplexity', capabilities: {} }
 };

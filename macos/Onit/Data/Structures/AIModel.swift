@@ -33,6 +33,14 @@ enum AIModel: String, CaseIterable, Codable {
     case grokBeta = "grok-beta"
     case grokBetaVision = "grok-vision-beta"
     
+    // Perplexity Models
+    case pplx70b = "pplx-70b-online"
+    case pplx7b = "pplx-7b-online"
+    case pplx7bChat = "pplx-7b-chat"
+    case mixtral8x7b = "mixtral-8x7b-online"
+    case codellama70b = "codellama-70b-instruct"
+    case llama270b = "llama-2-70b-online"
+    
     var provider: ModelProvider {
         switch self {
         case .gpt4o, .chatgpt4oLatest, .gpt4oMini, .o1, .o1Mini, .o1Preview:
@@ -41,6 +49,8 @@ enum AIModel: String, CaseIterable, Codable {
             return .anthropic
         case .grok2, .grok2Vision, .grokBeta, .grokBetaVision:
             return .xAI
+        case .pplx70b, .pplx7b, .pplx7bChat, .mixtral8x7b, .codellama70b, .llama270b:
+            return .perplexity
         }
     }
     
@@ -81,6 +91,13 @@ enum AIModel: String, CaseIterable, Codable {
         case .grok2Vision: return "Grok 2 Vision"
         case .grokBeta: return "Grok Beta"
         case .grokBetaVision: return "Grok Vision Beta"
+            
+        case .pplx70b: return "PPLX-70B"
+        case .pplx7b: return "PPLX-7B"
+        case .pplx7bChat: return "PPLX-7B Chat"
+        case .mixtral8x7b: return "Mixtral 8x7B"
+        case .codellama70b: return "CodeLlama 70B"
+        case .llama270b: return "Llama 2 70B"
         }
     }
     
@@ -88,12 +105,14 @@ enum AIModel: String, CaseIterable, Codable {
         case openAI = "openai"
         case anthropic = "anthropic"
         case xAI = "xai"
+        case perplexity = "perplexity"
 
         var title: String {
             switch self {
             case .openAI: return "OpenAI"
             case .anthropic: return "Anthropic"
             case .xAI: return "xAI"
+            case .perplexity: return "Perplexity"
             }
         }
 
@@ -102,6 +121,7 @@ enum AIModel: String, CaseIterable, Codable {
             case .openAI: return "GPT-4o"
             case .anthropic: return "Claude"
             case .xAI: return "Grok"
+            case .perplexity: return "Pplx"
             }
         }
 
@@ -113,8 +133,9 @@ enum AIModel: String, CaseIterable, Codable {
                 return URL(string: "https://docs.anthropic.com/en/api/getting-started")!
             case .xAI:
                 return URL(string: "https://accounts.x.ai/account")!
+            case .perplexity:
+                return URL(string: "https://www.perplexity.ai/settings/api")!
             }
-        }
     }
 }
 
