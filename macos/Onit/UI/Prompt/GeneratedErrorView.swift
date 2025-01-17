@@ -8,13 +8,13 @@
 import SwiftUI
 
 struct GeneratedErrorView: View {
-    var error: Error
+    var errorDescription: String
 
     var body: some View {
         HStack(spacing: 8) {
             Image(.warning)
             ScrollView {
-                Text(error.localizedDescription)
+                Text(errorDescription)
                     .appFont(.medium14)
                     .foregroundStyle(.warning)
             }
@@ -27,5 +27,5 @@ struct GeneratedErrorView: View {
 }
 
 #Preview {
-    GeneratedErrorView(error: .sample("Message"))
+    GeneratedErrorView(errorDescription: "Message")
 }

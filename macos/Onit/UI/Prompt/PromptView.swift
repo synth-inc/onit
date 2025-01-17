@@ -23,10 +23,8 @@ struct PromptView: View {
           case .generating:
               PromptDivider()
               GeneratingView(prompt: prompt)
-          case .generated:
+          case .done:
               GeneratedView(prompt: prompt)
-          case .error(let error):
-              GeneratedErrorView(error: error)
           default:
               EmptyView()
           }

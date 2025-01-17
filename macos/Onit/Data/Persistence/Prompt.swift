@@ -22,7 +22,7 @@ import SwiftData
     var priorPrompt: Prompt? 
     var nextPrompt: Prompt? 
 
-    @Transient @Published var generationState: GenerationState? = GenerationState.idle
+    @Transient @Published var generationState: GenerationState? = GenerationState.done
     var generationIndex = -1
     
     init (instruction: String, timestamp: Date, input: Input? = nil, contextList: [Context] = [], responses: [Response] = []) {
@@ -31,22 +31,22 @@ import SwiftData
         self.input = input
         self.contextList = contextList
         self.responses = responses
-        self.generationState = responses.isEmpty ? GenerationState.idle : GenerationState.generated
+        self.generationState =  GenerationState.done
     }
     
     var generation: String? {
-        guard case .generated = generationState else { return nil }
-        guard responses.count > generationIndex else { return nil }
+        guard case .done = generationState else { return nil }
+        guard responses.count > 0 && responses.count > generationIndex else { return nil }
         return responses[generationIndex].text
     }
 
     var generationCount: Int? {
-        guard case .generated = generationState else { return nil }
+        guard case .done = generationState else { return nil }
         return responses.count
     }
 
     var canIncrementGeneration: Bool {
-        guard case .generated = generationState else { return false }
+        guard case .done = generationState else { return false }
         return responses.count > generationIndex + 1
     }
 

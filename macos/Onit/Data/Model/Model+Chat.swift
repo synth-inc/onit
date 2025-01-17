@@ -62,12 +62,17 @@ extension OnitModel {
             // Go through prior prompts and add them to the history
             var currentPrompt: Prompt? = prompt.priorPrompt
             while currentPrompt != nil {
-                instructionsHistory.insert(currentPrompt!.instruction, at: 0)
-                inputsHistory.insert(currentPrompt!.input, at: 0)
-                filesHistory.insert(currentPrompt!.contextList.files, at: 0)
-                imagesHistory.insert(currentPrompt!.contextList.images, at: 0)
-                responsesHistory.insert(currentPrompt!.responses[currentPrompt!.generationIndex].text, at: 0)
-                currentPrompt = currentPrompt!.priorPrompt
+                let response = currentPrompt!.responses[currentPrompt!.generationIndex]
+                if response.type != .error {
+                    instructionsHistory.insert(currentPrompt!.instruction, at: 0)
+                    inputsHistory.insert(currentPrompt!.input, at: 0)
+                    filesHistory.insert(currentPrompt!.contextList.files, at: 0)
+                    imagesHistory.insert(currentPrompt!.contextList.images, at: 0)
+                    responsesHistory.insert(currentPrompt!.responses[currentPrompt!.generationIndex].text, at: 0)
+                    currentPrompt = currentPrompt!.priorPrompt
+                } else {
+                    print("Skipping failed response from prior prompt.")
+                }
             }
             
             do {
@@ -90,11 +95,8 @@ extension OnitModel {
                     )
                 }
 
-                let response = Response(text: chat)
-                prompt.priorInstructions.append(curInstruction)
-                prompt.responses.append(response)
-                prompt.generationIndex = (prompt.responses.count - 1)
-                prompt.generationState = .generated
+                let response = Response(text: chat, type:.success)
+                updatePrompt(prompt: prompt, response: response, instruction: curInstruction)
                 setTokenIsValid(true)
                 
             } catch let error as FetchingError {
@@ -105,10 +107,12 @@ extension OnitModel {
                 if case .unauthorized = error {
                     setTokenIsValid(false)
                 }
-                prompt.generationState = .error(error)
+                let response = Response(text: error.localizedDescription, type:.error)
+                updatePrompt(prompt: prompt, response: response, instruction: curInstruction)
             } catch {
                 print("Unexpected Error: \(error.localizedDescription)")
-                prompt.generationState = .error(.networkError(error))
+                let response = Response(text: error.localizedDescription, type:.error)
+                updatePrompt(prompt: prompt, response: response, instruction: curInstruction)
             }
 
             generatingPrompt = nil
@@ -154,5 +158,12 @@ extension OnitModel {
             }
         }
         return nil
+    }
+    
+    func updatePrompt(prompt: Prompt, response: Response, instruction: String) {
+        prompt.priorInstructions.append(instruction)
+        prompt.responses.append(response)
+        prompt.generationIndex = (prompt.responses.count - 1)
+        prompt.generationState = .done
     }
 }
