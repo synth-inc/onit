@@ -31,10 +31,10 @@ struct SetUpDialogs: View {
         if model.remoteNeedsSetup && !closedRemote {
             remote
         }
-        if !closedLocal && model.availableLocalModels.isEmpty && !seenLocal {
+        if !closedLocal && model.preferences.availableLocalModels.isEmpty && !seenLocal {
             local
         }
-        if !closedNoLocalModels && model.availableLocalModels.isEmpty && seenLocal {
+        if !closedNoLocalModels && model.preferences.availableLocalModels.isEmpty && seenLocal {
             restartLocal
         }
         if false && !closedOpenAI {

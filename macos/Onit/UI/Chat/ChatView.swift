@@ -11,7 +11,7 @@ struct ChatView: View {
             InputBarView()
         }
         .drag()
-        .onChange(of: model.availableLocalModels.count) { _, new in
+        .onChange(of: model.preferences.availableLocalModels.count) { _, new in
             if new != 0 {
                 seenLocal = true
             }

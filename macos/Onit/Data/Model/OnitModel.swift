@@ -28,8 +28,6 @@ import AppKit
     var inputExpanded = true
     var panel: CustomPanel? = nil
 
-    var availableLocalModels: [String] = []
-    
     var currentChat: Chat?
     var currentPrompts: [Prompt]?
 
@@ -76,19 +74,19 @@ import AppKit
     @MainActor
     func fetchLocalModels() async {
         do {
-            availableLocalModels = try await FetchingClient().getLocalModels()
-            
+            preferences.availableLocalModels = try await FetchingClient().getLocalModels()
+
             // Handle local model selection
-            if availableLocalModels.isEmpty {
+            if preferences.availableLocalModels.isEmpty {
                 preferences.localModel = nil
             } else if preferences.localModel == nil {
-                preferences.localModel = availableLocalModels[0]
-            } else if !availableLocalModels.contains(preferences.localModel!) {
-                preferences.localModel = availableLocalModels[0]
+                preferences.localModel = preferences.availableLocalModels[0]
+            } else if !preferences.availableLocalModels.contains(preferences.localModel!) {
+                preferences.localModel = preferences.availableLocalModels[0]
             }
         } catch {
             print("Error fetching local models:", error)
-            availableLocalModels = []
+            preferences.availableLocalModels = []
             preferences.localModel = nil
         }
     }

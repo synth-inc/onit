@@ -14,7 +14,7 @@ struct LocalModelPicker: View {
         @Bindable var model = model
 
         Picker("Model", selection: $model.defaultLocalModel) {
-            ForEach(model.availableLocalModels, id: \.self) { localModel in
+            ForEach(model.preferences.availableLocalModels, id: \.self) { localModel in
                 Text(localModel)
                     .tag(localModel)
             }

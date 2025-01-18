@@ -34,7 +34,7 @@ struct LocalModelsSection: View {
 
     @ViewBuilder
     var content: some View {
-        if model.availableLocalModels.isEmpty {
+        if model.preferences.availableLocalModels.isEmpty {
             HStack(spacing: 0) {
                 text
                 Spacer(minLength: 8)
@@ -68,7 +68,7 @@ struct LocalModelsSection: View {
         if isOn {
             GroupBox {
                 VStack(alignment: .leading, spacing: 0) {
-                    ForEach(model.availableLocalModels, id: \.self) { model in
+                    ForEach(model.preferences.availableLocalModels, id: \.self) { model in
                         Toggle(isOn: .constant(true)) {
                             Text(model)
                                 .font(.system(size: 13))
