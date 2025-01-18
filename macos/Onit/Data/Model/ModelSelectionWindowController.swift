@@ -13,6 +13,7 @@ class ModelSelectionWindowController: NSObject, NSWindowDelegate {
     var overlayWindow: NSWindow?
     weak var model: OnitModel?
     var eventMonitor: Any?
+    var localEventMonitor: Any?
 
     init(model: OnitModel) {
         self.model = model
@@ -50,6 +51,11 @@ class ModelSelectionWindowController: NSObject, NSWindowDelegate {
         eventMonitor = NSEvent.addGlobalMonitorForEvents(matching: [.leftMouseDown, .rightMouseDown]) { [weak self] event in
             self?.handleMouseDownOutside(event)
         }
+
+        localEventMonitor = NSEvent.addLocalMonitorForEvents(matching: [.leftMouseDown, .rightMouseDown]) { [weak self] event in
+            self?.handleMouseDownOutside(event)
+            return event
+        }
     }
 
     func handleMouseDownOutside(_ event: NSEvent) {
@@ -66,6 +72,11 @@ class ModelSelectionWindowController: NSObject, NSWindowDelegate {
         if let eventMonitor = eventMonitor {
             NSEvent.removeMonitor(eventMonitor)
             self.eventMonitor = nil
+        }
+
+        if let localEventMonitor = localEventMonitor {
+            NSEvent.removeMonitor(localEventMonitor)
+            self.localEventMonitor = nil
         }
     }
 

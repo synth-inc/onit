@@ -10,6 +10,7 @@ import SwiftUI
 struct SetUpDialog<Subtitle: View>: View {
     var title: String
     var buttonText: String? = nil
+    var showArrow: Bool = true
     @ViewBuilder var subtitle: () -> Subtitle
     var action: () -> Void
     var closeAction: () -> Void
@@ -75,6 +76,6 @@ struct SetUpDialog<Subtitle: View>: View {
         Button(buttonText ?? "Set up") {
             action()
         }
-        .buttonStyle(SetUpButtonStyle(showArrow: buttonText == nil))
+        .buttonStyle(SetUpButtonStyle(showArrow: showArrow))
     }
 }

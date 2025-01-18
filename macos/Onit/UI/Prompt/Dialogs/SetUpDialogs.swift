@@ -18,6 +18,10 @@ struct SetUpDialogs: View {
     @AppStorage("closedRemote") var closedRemote = false
     @AppStorage("closedLocal") var closedLocal = false
 
+    @AppStorage("closedOpenAI") var closedOpenAI = false
+    @AppStorage("closedAnthropic") var closedAnthropic = false
+    @AppStorage("closedXAI") var closedXAI = false
+
     var body: some View {
         content
     }
@@ -32,6 +36,15 @@ struct SetUpDialogs: View {
         }
         if !closedNoLocalModels && model.availableLocalModels.isEmpty && seenLocal {
             restartLocal
+        }
+        if false && !closedOpenAI {
+            expired(.openAI)
+        }
+        if false && !closedAnthropic {
+            expired(.anthropic)
+        }
+        if false && !closedXAI {
+            expired(.xAI)
         }
     }
 
@@ -80,6 +93,23 @@ struct SetUpDialogs: View {
         NSApp.activate()
         if NSApp.isActive {
             openSettings()
+        }
+    }
+
+    func expired(_ provider: AIModel.ModelProvider) -> some View {
+        SetUpDialog(title: "Couldn’t connect to \(provider.title)", buttonText: "Go to Settings") {
+            Text("Onit couldn’t connect to remote API providers - your tokens may have expired.")
+        } action: {
+            settings()
+        } closeAction: {
+            switch provider {
+            case .openAI:
+                closedOpenAI = true
+            case .anthropic:
+                closedAnthropic = true
+            case .xAI:
+                closedXAI = true
+            }
         }
     }
 }

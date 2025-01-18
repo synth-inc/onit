@@ -13,6 +13,7 @@
 		28BF71682CAB72A200DE7C03 /* SageKit in Frameworks */ = {isa = PBXBuildFile; productRef = 28BF71672CAB72A200DE7C03 /* SageKit */; };
 		28F57E222CAC84AA006AAA8C /* KeyboardShortcuts in Frameworks */ = {isa = PBXBuildFile; productRef = 28F57E212CAC84AA006AAA8C /* KeyboardShortcuts */; };
 		28F57E292CAC9262006AAA8C /* MenuBarExtraAccess in Frameworks */ = {isa = PBXBuildFile; productRef = 28F57E282CAC9262006AAA8C /* MenuBarExtraAccess */; };
+		A782C1982D383493009976F8 /* FirebaseCrashlytics in Frameworks */ = {isa = PBXBuildFile; productRef = A782C1972D383493009976F8 /* FirebaseCrashlytics */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -48,6 +49,7 @@
 				28BF71682CAB72A200DE7C03 /* SageKit in Frameworks */,
 				280F35002CB9BF4300D60130 /* Sparkle in Frameworks */,
 				28F57E292CAC9262006AAA8C /* MenuBarExtraAccess in Frameworks */,
+				A782C1982D383493009976F8 /* FirebaseCrashlytics in Frameworks */,
 				2842875E2CD0B6A5000C6C67 /* HighlightSwift in Frameworks */,
 				28F57E222CAC84AA006AAA8C /* KeyboardShortcuts in Frameworks */,
 				282E9A1E2CD06218003F3617 /* MarkdownUI in Frameworks */,
@@ -83,6 +85,7 @@
 				2883E4AF2CA5ECBB00F79A48 /* Sources */,
 				2883E4B02CA5ECBB00F79A48 /* Frameworks */,
 				2883E4B12CA5ECBB00F79A48 /* Resources */,
+				A782C1992D3836ED009976F8 /* ShellScript */,
 			);
 			buildRules = (
 			);
@@ -99,6 +102,7 @@
 				280F34FF2CB9BF4300D60130 /* Sparkle */,
 				282E9A1D2CD06218003F3617 /* MarkdownUI */,
 				2842875D2CD0B6A5000C6C67 /* HighlightSwift */,
+				A782C1972D383493009976F8 /* FirebaseCrashlytics */,
 			);
 			productName = Onit;
 			productReference = 2883E4B32CA5ECBB00F79A48 /* Onit.app */;
@@ -135,6 +139,7 @@
 				280F34FE2CB9BF4300D60130 /* XCRemoteSwiftPackageReference "Sparkle" */,
 				282E9A1C2CD06218003F3617 /* XCRemoteSwiftPackageReference "swift-markdown-ui" */,
 				2842875C2CD0B6A5000C6C67 /* XCRemoteSwiftPackageReference "HighlightSwift" */,
+				A782C1962D383493009976F8 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 2883E4B42CA5ECBB00F79A48 /* Products */;
@@ -155,6 +160,32 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		A782C1992D3836ED009976F8 /* ShellScript */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+				"${DWARF_DSYM_FOLDER_PATH}/${DWARF_DSYM_FILE_NAME}",
+				"${DWARF_DSYM_FOLDER_PATH}/${DWARF_DSYM_FILE_NAME}/Contents/Resources/DWARF/${PRODUCT_NAME}",
+				"${DWARF_DSYM_FOLDER_PATH}/${DWARF_DSYM_FILE_NAME}/Contents/Info.plist",
+				"$(TARGET_BUILD_DIR)/$(UNLOCALIZED_RESOURCES_FOLDER_PATH)/GoogleService-Info.plist",
+				"$(TARGET_BUILD_DIR)/$(EXECUTABLE_PATH)",
+				"${DWARF_DSYM_FOLDER_PATH}/${DWARF_DSYM_FILE_NAME}/Contents/Resources/DWARF/${PRODUCT_NAME}.debug.dylib",
+			);
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "# Type a script or drag a script file from your workspace to insert its path.\n\"${BUILD_DIR%/Build/*}/SourcePackages/checkouts/firebase-ios-sdk/Crashlytics/run\"\n";
+		};
+/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		2883E4AF2CA5ECBB00F79A48 /* Sources */ = {
@@ -298,6 +329,7 @@
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 12;
 				DEAD_CODE_STRIPPING = YES;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_ASSET_PATHS = "\"Onit/Preview Content\"";
 				DEVELOPMENT_TEAM = TYC9PKBMB6;
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -427,6 +459,14 @@
 				minimumVersion = 1.0.5;
 			};
 		};
+		A782C1962D383493009976F8 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/firebase/firebase-ios-sdk";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 11.7.0;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -459,6 +499,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 28F57E272CAC9262006AAA8C /* XCRemoteSwiftPackageReference "MenuBarExtraAccess" */;
 			productName = MenuBarExtraAccess;
+		};
+		A782C1972D383493009976F8 /* FirebaseCrashlytics */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A782C1962D383493009976F8 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseCrashlytics;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};
