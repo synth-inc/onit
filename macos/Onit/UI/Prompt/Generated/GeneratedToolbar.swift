@@ -69,7 +69,7 @@ struct GeneratedToolbar: View {
                 Accessibility.insertText(text)
                 model.closePanel()
             } else {
-                print("Not generated: \(prompt.generationState)")
+                print("Not generated: \(prompt.generationState ?? .done)")
             }
         } label: {
             HStack(spacing: 4) {

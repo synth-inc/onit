@@ -27,6 +27,9 @@ struct Toolbar: View {
         .background {
             escListener
         }
+        .background {
+            heightListener
+        }
     }
 
     var esc: some View {
@@ -176,6 +179,18 @@ struct Toolbar: View {
                 .padding(2)
         }
         .tooltip(prompt: "Settings", shortcut: .keyboard(.init(",")))
+    }
+
+    var heightListener: some View {
+        GeometryReader { proxy in
+            Color.clear
+                .onAppear {
+                    model.headerHeight = proxy.size.height
+                }
+                .onChange(of: proxy.size.height) { _, new in
+                    model.headerHeight = new
+                }
+        }
     }
 }
 

@@ -49,7 +49,11 @@ import AppKit
     var textFocusTrigger = false
     var isOpeningSettings = false
     var historyIndex = -1
-    
+
+    var headerHeight: CGFloat = 0
+    var inputHeight: CGFloat = 0
+    var contentHeight: CGFloat = 0
+
     var showDebugWindow = false
     var debugPanel: CustomPanel? = nil
     var debugText: String?
