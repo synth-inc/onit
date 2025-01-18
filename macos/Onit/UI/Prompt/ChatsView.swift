@@ -23,10 +23,14 @@ struct ChatsView: View {
         model.contentHeight
     }
 
+    var lastGenerationSate: GenerationState {
+        model.currentPrompts?.last?.generationState ?? .done
+    }
+
     var body: some View {
         ScrollViewReader { proxy in
             ScrollView {
-                LazyVStack(spacing: 0) {
+                LazyVStack(spacing: -16) {
                     ForEach(model.currentPrompts ?? []) { prompt in
                         PromptView(prompt: prompt)
                     }
@@ -37,6 +41,11 @@ struct ChatsView: View {
                 }
             }
             .onChange(of: model.currentPrompts?.count) {
+                withAnimation {
+                    proxy.scrollTo(chatsID, anchor: .bottom)
+                }
+            }
+            .onChange(of: lastGenerationSate) {
                 withAnimation {
                     proxy.scrollTo(chatsID, anchor: .bottom)
                 }

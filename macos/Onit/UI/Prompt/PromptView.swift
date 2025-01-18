@@ -15,6 +15,7 @@ struct PromptView: View {
         VStack(spacing: 0) {
             content
         }
+        .padding(.bottom, 16)
       }
 
       @ViewBuilder
