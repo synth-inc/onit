@@ -45,7 +45,7 @@ struct SetUpDialog<Subtitle: View>: View {
             RoundedRectangle(cornerRadius: 16)
                 .strokeBorder(borderGrad, lineWidth: 1)
         }
-        .padding(.vertical, 8)
+        .padding(.vertical, 16)
         .padding(.horizontal, 16)
     }
 
@@ -63,7 +63,7 @@ struct SetUpDialog<Subtitle: View>: View {
             } label: {
                 Image(.smallCross)
             }
-            .buttonStyle(ButtonStyle)
+//            .buttonStyle(ButtonStyle)
         }
     }
 
