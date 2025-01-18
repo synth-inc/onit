@@ -26,7 +26,7 @@ struct GeneratedView: View {
                 }
             }
             GeneratedToolbar(prompt: prompt)
-                .padding(.horizontal, 16)
+                .padding([.horizontal, .bottom], 16)
         }
     }
 }
