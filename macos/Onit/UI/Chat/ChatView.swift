@@ -6,13 +6,7 @@ struct ChatView: View {
     
     var body: some View {
         VStack(spacing: 0) {
-            ScrollView {
-                LazyVStack() {
-                    ForEach(model.currentPrompts ?? []) { prompt in
-                        PromptView(prompt: prompt)
-                    }
-                }
-            }
+            ChatsView()
             SetUpDialogs(seenLocal: seenLocal)
             FileRow(contextList: model.pendingContextList)
             TextInputView()

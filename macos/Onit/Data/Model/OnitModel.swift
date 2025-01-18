@@ -32,7 +32,7 @@ import AppKit
     
     var currentChat: Chat?
     var currentPrompts: [Prompt]?
-    
+
     // User inputs that have not yet been submitted
     var pendingInstruction = "" {
         didSet { pendingInstruction.save("pendingInstruction") }
