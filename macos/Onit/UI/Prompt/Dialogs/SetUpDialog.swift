@@ -62,8 +62,9 @@ struct SetUpDialog<Subtitle: View>: View {
                 closeAction()
             } label: {
                 Image(.smallCross)
+                    .padding(2)
             }
-//            .buttonStyle(ButtonStyle)
+            .buttonStyle(HoverableButtonStyle(background: true))
         }
     }
 
@@ -71,6 +72,7 @@ struct SetUpDialog<Subtitle: View>: View {
         subtitle()
             .appFont(.medium13)
             .foregroundStyle(.gray100)
+            .fixedSize(horizontal: false, vertical: true)
     }
 
     var button: some View {
