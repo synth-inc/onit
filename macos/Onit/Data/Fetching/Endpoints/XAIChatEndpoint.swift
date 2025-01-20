@@ -62,11 +62,11 @@ enum XAIChatContent: Codable {
 struct XAIChatContentPart: Codable {
     let type: String
     let text: String?
-    let image: ImageData?
+    let image_url: ImageBase64Url?
     
-    struct ImageData: Codable {
+    struct ImageBase64Url: Codable {
         let url: String?
-        let base64: String?
+        let detail: String?
     }
 }
 

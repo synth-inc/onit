@@ -25,28 +25,35 @@ import AppKit
     var showHistory: Bool = false
     var incognitoMode: Bool = false
     var showMenuBarExtra: Bool = false
-    var generationState: GenerationState = .idle
     var inputExpanded = true
     var panel: CustomPanel? = nil
-    var input: Input? = nil {
-        didSet { input.save() }
+
+    var currentChat: Chat?
+    var currentPrompts: [Prompt]?
+
+    // User inputs that have not yet been submitted
+    var pendingInstruction = "" {
+        didSet { pendingInstruction.save("pendingInstruction") }
     }
-    var availableLocalModels: [String] = []
-    var youSaid: String?
-    var prompt: Prompt?
-    var context: [Context] = []
-    var sourceText: String?
-    var selectedText: String?
+    var pendingContextList : [Context] = [] {
+        didSet { pendingContextList.save("pendingContext") }
+    }
+    var pendingInput: Input? =  nil {
+        didSet { pendingInput.save("pendingInput") }
+    }
+        
     var imageUploads: [URL: UploadProgress] = [:]
     var uploadTasks: [URL: Task<URL?, Never>] = [:]
     var textFocusTrigger = false
     var isOpeningSettings = false
     var historyIndex = -1
-    var generationIndex = 0
-    var instructions = "" {
-        didSet { instructions.save("instructions") }
-    }
-    
+
+    var headerHeight: CGFloat = 0
+    var inputHeight: CGFloat = 0
+    var contentHeight: CGFloat = 0
+    var setUpHeight: CGFloat = 0
+    var resizing = false
+
     var showDebugWindow = false
     var debugPanel: CustomPanel? = nil
     var debugText: String?
@@ -59,6 +66,8 @@ import AppKit
     var droppedItems = [(image: NSImage, filename: String)]()
 
     var generateTask: Task<Void, Never>? = nil
+    var generatingPrompt: Prompt?
+    var generatingPromptPriorState: GenerationState?
 
     var client = FetchingClient()
     var updater = SPUStandardUpdaterController(startingUpdater: true, updaterDelegate: nil, userDriverDelegate: nil)
@@ -67,26 +76,37 @@ import AppKit
     @MainActor
     func fetchLocalModels() async {
         do {
-            availableLocalModels = try await FetchingClient().getLocalModels()
-            
+            let models = try await FetchingClient().getLocalModels()
+            updatePreferences { preferences in
+                preferences.availableLocalModels = models
+            }
+
             // Handle local model selection
-            if availableLocalModels.isEmpty {
-                preferences.localModel = nil
+            if preferences.availableLocalModels.isEmpty {
+                updatePreferences { prefs in
+                    prefs.localModel = nil
+                }
             } else if preferences.localModel == nil {
-                preferences.localModel = availableLocalModels[0]
-            } else if !availableLocalModels.contains(preferences.localModel!) {
-                preferences.localModel = availableLocalModels[0]
+                updatePreferences { prefs in
+                    prefs.localModel = preferences.availableLocalModels[0]
+                }
+            } else if !preferences.availableLocalModels.contains(preferences.localModel!) {
+                updatePreferences { prefs in
+                    prefs.localModel = preferences.availableLocalModels[0]
+                }
             }
         } catch {
             print("Error fetching local models:", error)
-            availableLocalModels = []
-            preferences.localModel = nil
+            updatePreferences { prefs in
+                prefs.availableLocalModels = []
+                prefs.localModel = nil
+            }
         }
     }
 
     init(container: ModelContainer) {
-        self.input = Input?.load()
-        self.instructions = String.load("instructions") ?? ""
+        self.pendingInput = Input?.load()
+        self.pendingInstruction = String.load("instructions") ?? ""
         self.container = container
         super.init()
         self.preferences = Preferences.shared

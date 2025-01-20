@@ -18,13 +18,13 @@ struct GeneratedContentView: View {
     }
 
     var body: some View {
-        ViewThatFits(in: .vertical) {
+//        ViewThatFits(in: .vertical) {
             content
-            ScrollView {
-                content
-            }
-        }
-        .frame(height: height)
+//            ScrollView {
+//                content
+//            }
+//        }
+//        .frame(height: height)
     }
 
     var content: some View {

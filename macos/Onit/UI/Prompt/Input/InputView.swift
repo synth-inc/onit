@@ -16,7 +16,7 @@ struct InputView: View {
         VStack(spacing: 0) {
             InputTitle()
             divider
-            InputBody(text: model.selectedText ?? "")
+            InputBody(text: model.pendingInput?.selectedText ?? "")
         }
         .background {
             RoundedRectangle(cornerRadius: 10)

@@ -30,6 +30,7 @@ struct Preferences: Codable {
     var localModel: String? = nil
     var mode: InferenceMode = .remote
     var incognito: Bool = false
+    var availableLocalModels: [String] = []
     var visibleModels: Set<AIModel> = Set([
         // Default OpenAI models
         .o1,

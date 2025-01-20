@@ -7,9 +7,7 @@
 
 import Foundation
 
-enum GenerationState: Equatable {
-    case idle
+enum GenerationState: Equatable, Codable {
     case generating
-    case generated
-    case error(FetchingError)
+    case done
 }

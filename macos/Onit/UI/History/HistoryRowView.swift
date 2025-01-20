@@ -10,21 +10,20 @@ import SwiftUI
 struct HistoryRowView: View {
     @Environment(\.model) var model
 
-    var prompt: Prompt
+    var chat: Chat
 
     var body: some View {
         Button {
-            model.prompt = prompt
-            model.instructions = prompt.text
-            model.generationIndex = prompt.responses.count - 1
+            model.currentChat = chat
+            model.currentPrompts = chat.prompts
             model.showHistory = false
         } label: {
             HStack {
-                Text(prompt.text)
+                Text(chat.prompts.first?.instruction ?? "")
                     .appFont(.medium16)
                     .foregroundStyle(.FG)
                 Spacer()
-                Text("\(prompt.responses.count)")
+                Text("\(chat.responseCount)")
                     .appFont(.medium13)
                     .monospacedDigit()
                     .foregroundStyle(.gray200)
@@ -39,7 +38,8 @@ struct HistoryRowView: View {
 #if DEBUG
 #Preview {
     ModelContainerPreview {
-        HistoryRowView(prompt: .sample)
+        // TODO make samples
+//        HistoryRowView(chat: .sample)
     }
 }
 #endif

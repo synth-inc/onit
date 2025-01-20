@@ -65,3 +65,87 @@ extension FetchingError: Equatable {
         }
     }
 }
+
+extension FetchingError: Codable {
+     
+    enum CodingKeys: String, CodingKey {
+        case type, message, statusCode, description
+    }
+    
+    enum FetchingErrorType: String, Codable {
+        case invalidResponse, invalidRequest, unauthorized, forbidden, notFound, failedRequest, serverError, decodingError, networkError
+    }
+    
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        let type = try container.decode(FetchingErrorType.self, forKey: .type)
+        
+        switch type {
+        case .invalidResponse:
+            let message = try container.decode(String.self, forKey: .message)
+            self = .invalidResponse(message: message)
+        case .invalidRequest:
+            let message = try container.decode(String.self, forKey: .message)
+            self = .invalidRequest(message: message)
+        case .unauthorized:
+            let message = try container.decode(String.self, forKey: .message)
+            self = .unauthorized(message: message)
+        case .forbidden:
+            let message = try container.decode(String.self, forKey: .message)
+            self = .forbidden(message: message)
+        case .notFound:
+            let message = try container.decode(String.self, forKey: .message)
+            self = .notFound(message: message)
+        case .failedRequest:
+            let message = try container.decode(String.self, forKey: .message)
+            self = .failedRequest(message: message)
+        case .serverError:
+            let statusCode = try container.decode(Int.self, forKey: .statusCode)
+            let message = try container.decode(String.self, forKey: .message)
+            self = .serverError(statusCode: statusCode, message: message)
+        case .decodingError:
+            let errorDescription = try container.decode(String.self, forKey: .description)
+            let error = NSError(domain: "", code: 0, userInfo: [NSLocalizedDescriptionKey: errorDescription])
+            self = .decodingError(error)
+        case .networkError:
+            let errorDescription = try container.decode(String.self, forKey: .description)
+            let error = NSError(domain: "", code: 0, userInfo: [NSLocalizedDescriptionKey: errorDescription])
+            self = .networkError(error)
+        }
+    }
+    
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        
+        switch self {
+        case .invalidResponse(let message):
+            try container.encode(FetchingErrorType.invalidResponse, forKey: .type)
+            try container.encode(message, forKey: .message)
+        case .invalidRequest(let message):
+            try container.encode(FetchingErrorType.invalidRequest, forKey: .type)
+            try container.encode(message, forKey: .message)
+        case .unauthorized(let message):
+            try container.encode(FetchingErrorType.unauthorized, forKey: .type)
+            try container.encode(message, forKey: .message)
+        case .forbidden(let message):
+            try container.encode(FetchingErrorType.forbidden, forKey: .type)
+            try container.encode(message, forKey: .message)
+        case .notFound(let message):
+            try container.encode(FetchingErrorType.notFound, forKey: .type)
+            try container.encode(message, forKey: .message)
+        case .failedRequest(let message):
+            try container.encode(FetchingErrorType.failedRequest, forKey: .type)
+            try container.encode(message, forKey: .message)
+        case .serverError(let statusCode, let message):
+            try container.encode(FetchingErrorType.serverError, forKey: .type)
+            try container.encode(statusCode, forKey: .statusCode)
+            try container.encode(message, forKey: .message)
+        case .decodingError(let error):
+            try container.encode(FetchingErrorType.decodingError, forKey: .type)
+            try container.encode(error.localizedDescription, forKey: .description)
+        case .networkError(let error):
+            try container.encode(FetchingErrorType.networkError, forKey: .type)
+            try container.encode(error.localizedDescription, forKey: .description)
+        }
+    }
+}

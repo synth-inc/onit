@@ -12,7 +12,7 @@ struct InputTitle: View {
 //    var source: String?
 
     var sourceString: String {
-        guard let sourceText = model.sourceText else { return "" }
+        guard let sourceText = model.pendingInput?.application else { return "" }
         return " - \(sourceText)"
     }
 

@@ -17,6 +17,7 @@ struct Toolbar: View {
             resize
             Spacer()
             languageModel
+            add
             localMode
 //            incognitoMode
             settings
@@ -26,6 +27,9 @@ struct Toolbar: View {
         .padding(.vertical, 2)
         .background {
             escListener
+        }
+        .background {
+            heightListener
         }
     }
 
@@ -44,13 +48,7 @@ struct Toolbar: View {
     // effect when clicked vs keyboard shortcut
     var escListener: some View {
         Button {
-            switch model.generationState {
-            case .idle:
-                model.closePanel()
-            default:
-                model.newPrompt()
-                model.textFocusTrigger.toggle()
-            }
+            model.closePanel()
         } label: {
             EmptyView()
         }
@@ -59,15 +57,16 @@ struct Toolbar: View {
 
     var resize: some View {
         Button {
-
+            model.togglePanelSize()
         } label: {
             Image(.resize)
                 .renderingMode(.template)
                 .padding(3)
         }
+        .keyboardShortcut("1")
         .tooltip(
             prompt: "Resize Window",
-            shortcut: .keyboard(.init("1", modifiers: .option))
+            shortcut: .keyboard(.init("1"))
         )
     }
 
@@ -123,7 +122,7 @@ struct Toolbar: View {
 
     var add: some View {
         Button {
-            model.newPrompt()
+            model.newChat()
         } label: {
             Image(.circlePlus)
                 .renderingMode(.template)
@@ -182,6 +181,18 @@ struct Toolbar: View {
                 .padding(2)
         }
         .tooltip(prompt: "Settings", shortcut: .keyboard(.init(",")))
+    }
+
+    var heightListener: some View {
+        GeometryReader { proxy in
+            Color.clear
+                .onAppear {
+                    model.headerHeight = proxy.size.height
+                }
+                .onChange(of: proxy.size.height) { _, new in
+                    model.headerHeight = new
+                }
+        }
     }
 }
 

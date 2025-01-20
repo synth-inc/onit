@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct FileRow: View {
-    @Environment(\.model) var model
+    var contextList: [Context]
 
     var body: some View {
         HStack(spacing: 6) {
@@ -22,10 +22,10 @@ struct FileRow: View {
 
     @ViewBuilder
     var context: some View {
-        if model.context.isEmpty {
+        if contextList.isEmpty {
             emptyContext
         } else {
-            ContextList()
+            ContextList(contextList: contextList)
         }
     }
 
@@ -38,7 +38,7 @@ struct FileRow: View {
 #if DEBUG
 #Preview {
     ModelContainerPreview {
-        FileRow()
+        FileRow(contextList: [])
     }
 }
 #endif

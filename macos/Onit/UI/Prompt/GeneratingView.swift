@@ -9,12 +9,14 @@ import SwiftUI
 
 struct GeneratingView: View {
     @Environment(\.model) var model
+    var prompt: Prompt
 
     var delete: KeyboardShortcut {
         .init(.delete, modifiers: [.command])
     }
 
     var body: some View {
+        UserInputView(prompt: prompt)
         Button {
             model.cancelGenerate()
             model.textFocusTrigger.toggle()
@@ -48,7 +50,7 @@ struct GeneratingView: View {
 #if DEBUG
 #Preview {
     ModelContainerPreview {
-        GeneratingView()
+//        GeneratingView()
     }
 }
 #endif

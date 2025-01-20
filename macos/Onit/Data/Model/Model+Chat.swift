@@ -8,49 +8,100 @@
 import Foundation
 
 extension OnitModel {
-    func save(_ text: String) {
-        guard prompt == nil else { return }
+    func createAndSavePrompt() -> Prompt {
+        // Create a new prompt
+        
+        // This would actually be a good place to do the images
+        
+        let prompt = Prompt(instruction: pendingInstruction, timestamp: .now, input: pendingInput, contextList: pendingContextList)
 
-        let prompt = Prompt(input: input, text: text, timestamp: Date())
-        self.prompt = prompt
-        let modelContext = container.mainContext
-        modelContext.insert(prompt)
+        // If there's no current chat, create one
+        if currentChat == nil {
+            currentChat = Chat(prompts: [], timestamp: .now)
+            currentPrompts = []
+            let modelContext = container.mainContext
+            modelContext.insert(currentChat!)
+        }
+        
+        // If there's a last prompt, set the prior and next prompts
+        if let lastPrompt = currentChat?.prompts.last {
+            prompt.priorPrompt = lastPrompt
+            lastPrompt.nextPrompt = prompt
+        }
+        
+        // Add the prompt to the current chat
+        currentChat?.prompts.append(prompt)
+        currentPrompts?.append(prompt)
+    
         do {
-            try modelContext.save()
+            try container.mainContext.save()
         } catch {
             print(error.localizedDescription)
         }
+
+        return prompt
     }
 
-    func generate(_ text: String) {
+    func generate(_ prompt: Prompt) {
         cancelGenerate()
+        generatingPrompt = prompt
+        generatingPromptPriorState = prompt.generationState
+        
         generateTask = Task { [weak self] in
             guard let self = self else { return }
 
-            self.generationState = .generating
-            let files = context.files
-
-            let response = self.updateYouSaid(text: text)
-            instructions = ""
-
+            
+            prompt.generationState = .generating
+            let curInstruction = prompt.instruction
+            var filesHistory : [[URL]] = [prompt.contextList.files]
+            var inputsHistory : [Input?] = [prompt.input]
+            var imagesHistory : [[URL]] = [prompt.contextList.images]
+            var instructionsHistory: [String] = [curInstruction]
+            var responsesHistory: [String] = []
+        
+            // Go through prior prompts and add them to the history
+            var currentPrompt: Prompt? = prompt.priorPrompt
+            while currentPrompt != nil {
+                let response = currentPrompt!.responses[currentPrompt!.generationIndex]
+                if response.type != .error {
+                    instructionsHistory.insert(currentPrompt!.instruction, at: 0)
+                    inputsHistory.insert(currentPrompt!.input, at: 0)
+                    filesHistory.insert(currentPrompt!.contextList.files, at: 0)
+                    imagesHistory.insert(currentPrompt!.contextList.images, at: 0)
+                    responsesHistory.insert(currentPrompt!.responses[currentPrompt!.generationIndex].text, at: 0)
+                } else {
+                    print("Skipping failed response from prior prompt.")
+                }
+                currentPrompt = currentPrompt!.priorPrompt
+            }
+            
             do {
                 let chat: String
                 if preferences.mode == .remote {
-                    let images = await remoteImages
+                    // chat(instructions: [String], inputs: [Input?], files: [[URL]], images[[URL]], responses: [String], model: AIModel?, apiToken: String?)
                     chat = try await client.chat(
-                        response, input: nil /*input*/, model: preferences.model, apiToken: getTokenForModel(preferences.model ?? nil), files: files, images: images
+                        instructions: instructionsHistory,
+                        inputs: inputsHistory.map { _ in nil }, // Add back in inputs once we have accessibility
+                        files: filesHistory,
+                        images: imagesHistory,
+                        responses: responsesHistory,
+                        model: preferences.model,
+                        apiToken: getTokenForModel(preferences.model ?? nil)
                     )
                 } else {
-                    let images = await localImages
+                    // TODO implement history for local chat!
                     chat = try await client.localChat(
-                        response, input: nil /*input*/, model: preferences.localModel, files: files, images: images
+                        instructions: instructionsHistory,
+                        inputs: inputsHistory.map { _ in nil },
+                        files: filesHistory,
+                        images: imagesHistory,
+                        responses: responsesHistory,
+                        model: preferences.localModel
                     )
                 }
-                addChat(chat)
-                if let prompt = self.prompt {
-                    self.generationIndex = prompt.responses.count - 1
-                }
-                self.generationState = .generated
+
+                let response = Response(text: chat, type:.success)
+                updatePrompt(prompt: prompt, response: response, instruction: curInstruction)
                 setTokenIsValid(true)
                 
             } catch let error as FetchingError {
@@ -61,27 +112,25 @@ extension OnitModel {
                 if case .unauthorized = error {
                     setTokenIsValid(false)
                 }
-                self.generationState = .error(error)
+                let response = Response(text: error.localizedDescription, type:.error)
+                updatePrompt(prompt: prompt, response: response, instruction: curInstruction)
             } catch {
                 print("Unexpected Error: \(error.localizedDescription)")
-                self.generationState = .error(.networkError(error))
+                let response = Response(text: error.localizedDescription, type:.error)
+                updatePrompt(prompt: prompt, response: response, instruction: curInstruction)
             }
-        }
-    }
 
-    func addChat(_ chat: String) {
-        guard let prompt else {
-            print("Tried to add chat with nil promptID")
-            return
+            generatingPrompt = nil
+            generatingPromptPriorState = nil
         }
-        let response = Response(text: chat)
-        prompt.responses.append(response)
     }
 
     func cancelGenerate() {
         generateTask?.cancel()
         generateTask = nil
-        self.generationState = .idle
+        if let curPrompt = generatingPrompt, let priorState = generatingPromptPriorState {
+            curPrompt.generationState = priorState
+        }
     }
 
     func setTokenIsValid(_ isValid: Bool) {
@@ -115,27 +164,11 @@ extension OnitModel {
         }
         return nil
     }
-
-    var generation: String? {
-        guard case .generated = generationState else { return nil }
-        guard let prompt else { return nil }
-        guard prompt.responses.count > generationIndex else { return nil }
-        return prompt.responses[generationIndex].text
-    }
-
-    var generationCount: Int? {
-        guard case .generated = generationState else { return nil }
-        guard let prompt else { return nil }
-        return prompt.responses.count
-    }
-
-    var canIncrementGeneration: Bool {
-        guard case .generated = generationState else { return false }
-        guard let prompt else { return false }
-        return prompt.responses.count > generationIndex + 1
-    }
-
-    var canDecrementGeneration: Bool {
-        return generationIndex > 0
+    
+    func updatePrompt(prompt: Prompt, response: Response, instruction: String) {
+        prompt.priorInstructions.append(instruction)
+        prompt.responses.append(response)
+        prompt.generationIndex = (prompt.responses.count - 1)
+        prompt.generationState = .done
     }
 }

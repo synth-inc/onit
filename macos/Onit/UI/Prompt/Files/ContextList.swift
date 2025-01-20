@@ -8,12 +8,13 @@
 import SwiftUI
 
 struct ContextList: View {
-    @Environment(\.model) var model
+
+    var contextList: [Context]
 
     var body: some View {
         ScrollView(.horizontal) {
             HStack(spacing: 6) {
-                ForEach(model.context, id: \.self) { context in
+                ForEach(contextList, id: \.self) { context in
                     ContextItem(item: context)
                         .scrollTargetLayout()
                 }
@@ -27,7 +28,7 @@ struct ContextList: View {
 #if DEBUG
 #Preview {
     ModelContainerPreview {
-        ContextList()
+        ContextList(contextList: [])
     }
 }
 #endif

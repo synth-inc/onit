@@ -19,115 +19,180 @@ actor FetchingClient {
         return decoder
     }()
     
-    func chat(_ text: String, input: Input?, model: AIModel?, apiToken: String?, files: [URL], images: [URL]) async throws -> String {
+ 
+    func chat(instructions: [String], inputs: [Input?], files: [[URL]], images: [[URL]], responses: [String], model: AIModel?, apiToken: String?) async throws -> String {
         guard let model = model else {
             throw FetchingError.invalidRequest(message: "Model is required")
         }
         
-        let systemMessage = input?.application != nil
-            ? "Based on the provided instructions, either modify the given text from the application \(input!.application!) or answer any questions related to it. Provide the response without any additional comments. Provide the text ready to go."
-            : "Based on the provided instructions, either provide the output or answer any questions related to it. Provide the response without any additional comments. Provide the output ready to go."
-        
-        // Combine all text inputs
-        var userMessage = text
-        if let selectedText = input?.selectedText {
-            if selectedText != "" {
-                userMessage += "\n\nSelected Text: \(selectedText)"
-            }
+        guard instructions.count == inputs.count,
+              inputs.count == files.count,
+              files.count == images.count,
+              images.count == responses.count + 1 else {
+            throw FetchingError.invalidRequest(message: "Mismatched array lengths: instructions, inputs, files, and images must be the same length, and one longer than responses.")
         }
+
+        let systemMessage = "Based on the provided instructions, either provide the output or answer any questions related to it. Provide the response without any additional comments. Provide the output ready to go."
         
-        // Add file contents if any
-        if !files.isEmpty {
-            for file in files {
-                if let fileContent = try? String(contentsOf: file, encoding: .utf8) {
-                    userMessage += "\n\nFile: \(file.lastPathComponent)\nContent:\n\(fileContent)"
+        // Create the user messages by appending any text files
+        var userMessages: [String] = []
+        for (index, instruction) in instructions.enumerated() {
+            var message = ""
+            
+            if let input = inputs[index], !input.selectedText.isEmpty {
+                if let application = input.application {
+                    message += "\n\nSelected Text from \(application): \(input.selectedText)"
+                } else {
+                    message += "\n\nSelected Text: \(input.selectedText)"
                 }
             }
+            
+            if !files[index].isEmpty {
+                for file in files[index] {
+                    if let fileContent = try? String(contentsOf: file, encoding: .utf8) {
+                        message += "\n\nFile: \(file.lastPathComponent)\nContent:\n\(fileContent)"
+                    }
+                }
+            }
+
+            // Intuitively, I (tim) think the message should be the last thing. 
+            // TODO: evaluate this 
+            message += "\n\n\(instruction)"
+            
+            userMessages.append(message)
         }
         
         switch model.provider {
         case .openAI:
-            var messages: [OpenAIChatMessage] = [
-                OpenAIChatMessage(role: "user", content: .text(userMessage))
-            ]
+
+            var openAIMessageStack: [OpenAIChatMessage] = []
+
+            // Initialize messages with system prompt if needed
             if model.supportsSystemPrompts {
-                messages.insert(OpenAIChatMessage(role: "system", content: .text(systemMessage)), at: 0)
-            }
-            if !images.isEmpty {
-                let parts = [
-                    OpenAIChatContentPart(type: "text", text: userMessage, image_url: nil)
-                ] + images.map { url in
-                    OpenAIChatContentPart(
-                        type: "image_url",
-                        text: nil,
-                        image_url: .init(url: url.absoluteString)
-                    )
-                }
-                messages[1] = OpenAIChatMessage(role: "user", content: .multiContent(parts))
+                openAIMessageStack.append(OpenAIChatMessage(role: "system", content: .text(systemMessage)))
             }
             
-            let endpoint = OpenAIChatEndpoint(messages: messages, token: apiToken, model: model.rawValue)
+            for (index, userMessage) in userMessages.enumerated() {
+                if images[index].isEmpty {
+                    let openAIMessage = OpenAIChatMessage(role: "user", content: .text(userMessage))
+                    openAIMessageStack.append(openAIMessage)
+                } else {
+                    var parts = [OpenAIChatContentPart(type: "text", text: userMessage, image_url: nil)]
+                    for url in images[index] {
+                        if let imageData = try? Data(contentsOf: url) {
+                            let base64EncodedData = imageData.base64EncodedString()
+                            let mimeType = mimeType(for: url)
+                            let imagePart = OpenAIChatContentPart(
+                                type: "image_url",
+                                text: nil,
+                                image_url: .init(url: "data:\(mimeType);base64,\(base64EncodedData)")
+                            )
+                            parts.append(imagePart)
+                        } else {
+                            print("Unable to read image data from URL: \(url)")
+                        }
+                    }
+                    let openAIMessage = OpenAIChatMessage(role: "user", content: .multiContent(parts))
+                    openAIMessageStack.append(openAIMessage)
+                }
+                
+                // If there is a corresponding response, add it as an assistant message
+                if index < responses.count {
+                    let responseMessage = OpenAIChatMessage(role: "assistant", content: .text(responses[index]))
+                    openAIMessageStack.append(responseMessage)
+                }
+            }
+
+            let endpoint = OpenAIChatEndpoint(messages: openAIMessageStack, token: apiToken, model: model.rawValue)
             let response = try await execute(endpoint)
             return response.choices[0].message.content
             
         case .anthropic:
-            let content: [AnthropicContent]
-            if images.isEmpty {
-                content = [AnthropicContent(type: "text", text: userMessage, source: nil)]
-            } else {
-                content = [
-                    AnthropicContent(type: "text", text: userMessage, source: nil)
-                ] + images.compactMap { url in
-                    guard let imageData = try? Data(contentsOf: url) else {
-                        print("Unable to read image data from URL: \(url)")
-                        return nil
-                    }
-                    let base64EncodedData = imageData.base64EncodedString()
-                    let mimeType = mimeType(for: url)
-                    return AnthropicContent(
-                        type: "image",
-                        text: nil,
-                        source: AnthropicImageSource(
-                            type: "base64",
-                            media_type: mimeType,
-                            data: base64EncodedData
+            var anthropicMessageStack: [AnthropicMessage] = []
+            for (index, userMessage) in userMessages.enumerated() {
+                let content: [AnthropicContent]
+                if images[index].isEmpty {
+                    content = [AnthropicContent(type: "text", text: userMessage, source: nil)]
+                } else {
+                    content = [
+                        AnthropicContent(type: "text", text: userMessage, source: nil)
+                    ] + images[index].compactMap { url in
+                        guard let imageData = try? Data(contentsOf: url) else {
+                            print("Unable to read image data from URL: \(url)")
+                            return nil
+                        }
+                        let base64EncodedData = imageData.base64EncodedString()
+                        let mimeType = mimeType(for: url)
+                        return AnthropicContent(
+                            type: "image",
+                            text: nil,
+                            source: AnthropicImageSource(
+                                type: "base64",
+                                media_type: mimeType,
+                                data: base64EncodedData
+                            )
                         )
-                    )
+                    }
+                }
+                
+                anthropicMessageStack.append(AnthropicMessage(role: "user", content: content))
+                
+                // If there is a corresponding response, add it as an assistant message
+                if index < responses.count {
+                    let assistantContent = [AnthropicContent(type: "text", text: responses[index], source: nil)]
+                    let assistantMessage = AnthropicMessage(role: "assistant", content: assistantContent)
+                    anthropicMessageStack.append(assistantMessage)
                 }
             }
             
-            let messages = [AnthropicMessage(role: "user", content: content)]
             let endpoint = AnthropicChatEndpoint(
                 model: model.rawValue,
                 system: model.supportsSystemPrompts ? systemMessage : "",
                 token: apiToken,
-                messages: messages,
+                messages: anthropicMessageStack,
                 maxTokens: 4096
             )
             let response = try await execute(endpoint)
             return response.content[0].text
             
         case .xAI:
-            var messages: [XAIChatMessage] = [
-                XAIChatMessage(role: "user", content: .text(userMessage))
-            ]
+            var xAIMessageStack: [XAIChatMessage] = []
+
+            // Initialize messages with system prompt if needed
             if model.supportsSystemPrompts {
-                messages.insert(XAIChatMessage(role: "system", content: .text(systemMessage)), at: 0)
-            }
-            if !images.isEmpty {
-                let parts = [
-                    XAIChatContentPart(type: "text", text: userMessage, image: nil)
-                ] + images.map { url in
-                    XAIChatContentPart(
-                        type: "image",
-                        text: nil,
-                        image: .init(url: url.absoluteString, base64: nil)
-                    )
-                }
-                messages[1] = XAIChatMessage(role: "user", content: .multiContent(parts))
+                xAIMessageStack.append(XAIChatMessage(role: "system", content: .text(systemMessage)))
             }
             
-            let endpoint = XAIChatEndpoint(messages: messages, model: model.rawValue, token: apiToken)
+            for (index, userMessage) in userMessages.enumerated() {
+                if images[index].isEmpty {
+                    xAIMessageStack.append(XAIChatMessage(role: "user", content: .text(userMessage)))
+                } else {
+                    let parts = [
+                        XAIChatContentPart(type: "text", text: userMessage, image_url: nil)
+                    ] + images[index].compactMap { url in
+                        guard let imageData = try? Data(contentsOf: url) else {
+                            print("Unable to read image data from URL: \(url)")
+                            return nil
+                        }
+                        let base64EncodedData = imageData.base64EncodedString()
+                        let mimeType = mimeType(for: url)
+                        return XAIChatContentPart(
+                            type: "image_url",
+                            text: nil,
+                            image_url: .init(url: "data:\(mimeType);base64,\(base64EncodedData)", detail: "high")
+                        )
+                    }
+                    xAIMessageStack.append(XAIChatMessage(role: "user", content: .multiContent(parts)))
+                }
+                
+                // If there is a corresponding response, add it as an assistant message
+                if index < responses.count {
+                    let responseMessage = XAIChatMessage(role: "assistant", content: .text(responses[index]))
+                    xAIMessageStack.append(responseMessage)
+                }
+            }
+            
+            let endpoint = XAIChatEndpoint(messages: xAIMessageStack, model: model.rawValue, token: apiToken)
             let response = try await execute(endpoint)
             return response.choices[0].message.content
         }

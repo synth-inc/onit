@@ -24,7 +24,7 @@ struct PaperclipButton: View {
             }
             .tooltip(prompt: "Upload file")
 
-            if model.context.isEmpty {
+            if model.pendingContextList.isEmpty {
                 Button {
                     showFileImporter = true
                 } label: {

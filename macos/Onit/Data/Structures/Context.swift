@@ -52,6 +52,54 @@ extension Context {
     }
 }
 
+
+extension Context: Codable {
+    enum CodingKeys: String, CodingKey {
+        case type, url, error
+    }
+
+    enum ContextType: String, Codable {
+        case file, image, tooBig, error
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        let type = try container.decode(ContextType.self, forKey: .type)
+        let url = try container.decode(URL.self, forKey: .url)
+        
+        switch type {
+        case .file:
+            self = .file(url)
+        case .image:
+            self = .image(url)
+        case .tooBig:
+            self = .tooBig(url)
+        case .error:
+            let errorDescription = try container.decode(String.self, forKey: .error)
+            let error = NSError(domain: "", code: 0, userInfo: [NSLocalizedDescriptionKey: errorDescription])
+            self = .error(url, error)
+        }
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(url, forKey: .url)
+        
+        switch self {
+        case .file:
+            try container.encode(ContextType.file, forKey: .type)
+        case .image:
+            try container.encode(ContextType.image, forKey: .type)
+        case .tooBig:
+            try container.encode(ContextType.tooBig, forKey: .type)
+        case .error(_, let error):
+            try container.encode(ContextType.error, forKey: .type)
+            let errorDescription = (error as NSError).localizedDescription
+            try container.encode(errorDescription, forKey: .error)
+        }
+    }
+}
+
 extension Context: Equatable, Hashable {
     static func == (lhs: Context, rhs: Context) -> Bool {
         lhs.url == rhs.url
@@ -88,6 +136,17 @@ extension [Context] {
         compactMap {
             switch $0 {
             case .file(let url):
+                return url
+            default:
+                return nil
+            }
+        }
+    }
+    
+    var images : [URL] {
+        compactMap {
+            switch $0 {
+            case .image(let url):
                 return url
             default:
                 return nil

@@ -8,8 +8,9 @@
 import SwiftUI
 
 struct ToggleOutputsView: View {
-    @Environment(\.model) var model
-
+//    @Environment(\.model) var model
+    var prompt: Prompt
+    
     var body: some View {
         HStack(spacing: 0) {
             `left`
@@ -21,7 +22,7 @@ struct ToggleOutputsView: View {
 
     var left: some View {
         Button {
-            model.generationIndex -= 1
+            prompt.generationIndex -= 1
         } label: {
             Color.clear
                 .frame(width: 20, height: 20)
@@ -30,14 +31,14 @@ struct ToggleOutputsView: View {
                 }
         }
         .keyboardShortcut(.leftArrow, modifiers: [])
-        .foregroundStyle(model.canDecrementGeneration ? .FG : .gray300)
-        .disabled(!model.canDecrementGeneration)
+        .foregroundStyle(prompt.canDecrementGeneration ? .FG : .gray300)
+        .disabled(!prompt.canDecrementGeneration)
     }
 
     @ViewBuilder
     var text: some View {
-        if let total = model.generationCount {
-            Text("\(model.generationIndex + 1)/\(total)")
+        if let total = prompt.generationCount {
+            Text("\(prompt.generationIndex + 1)/\(total)")
                 .appFont(.medium14)
                 .monospacedDigit()
         }
@@ -45,7 +46,7 @@ struct ToggleOutputsView: View {
 
     var right: some View {
         Button {
-            model.generationIndex += 1
+            prompt.generationIndex += 1
         } label: {
             Color.clear
                 .frame(width: 20, height: 20)
@@ -54,15 +55,15 @@ struct ToggleOutputsView: View {
                 }
         }
         .keyboardShortcut(.rightArrow, modifiers: [])
-        .foregroundStyle(model.canIncrementGeneration ? .FG : .gray300)
-        .disabled(!model.canIncrementGeneration)
+        .foregroundStyle(prompt.canIncrementGeneration ? .FG : .gray300)
+        .disabled(!prompt.canIncrementGeneration)
     }
 }
 
 #if DEBUG
 #Preview {
     ModelContainerPreview {
-        ToggleOutputsView()
+//        ToggleOutputsView()
     }
 }
 #endif

@@ -82,7 +82,7 @@ struct ModelSelectionView: View {
 
     var localModels: some View {
         Picker("", selection: model.selectedModel) {
-            ForEach(model.availableLocalModels, id: \.self) { localModelName in
+            ForEach(model.preferences.availableLocalModels, id: \.self) { localModelName in
                 Text(localModelName)
                     .appFont(.medium14)
                     .tag(SelectedModel.local(localModelName))

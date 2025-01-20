@@ -9,6 +9,7 @@ import SwiftUI
 
 struct GeneratedToolbar: View {
     @Environment(\.model) var model
+    var prompt: Prompt
 
     var body: some View {
         HStack(spacing: 8) {
@@ -24,15 +25,14 @@ struct GeneratedToolbar: View {
 
     @ViewBuilder
     var copy: some View {
-        if let generation = model.generation {
+        if let generation = prompt.generation {
             CopyButton(text: generation)
         }
     }
 
     var regenerate: some View {
         Button {
-            model.save(model.instructions)
-            model.generate(model.instructions)
+            model.generate(prompt)
         } label: {
             Image(.arrowsSpin)
                 .padding(4)
@@ -52,8 +52,8 @@ struct GeneratedToolbar: View {
 
     @ViewBuilder
     var selector: some View {
-        if let count = model.generationCount, count > 1 {
-            ToggleOutputsView()
+        if prompt.responses.count > 1 {
+            ToggleOutputsView(prompt: prompt)
                 .padding(.trailing, 8)
         }
     }
@@ -64,11 +64,12 @@ struct GeneratedToolbar: View {
 
     var insert: some View {
         Button {
-            if let text = model.generation {
+            if prompt.generationIndex != -1 && !prompt.responses.isEmpty {
+                let text = prompt.responses[prompt.generationIndex].text
                 Accessibility.insertText(text)
                 model.closePanel()
             } else {
-                print("Not generated: \(model.generationState)")
+                print("Not generated: \(prompt.generationState ?? .done)")
             }
         } label: {
             HStack(spacing: 4) {
@@ -104,8 +105,9 @@ struct GeneratedToolbar: View {
 #if DEBUG
 #Preview {
     ModelContainerPreview {
-        GeneratedToolbar()
-            .padding()
+        // TODO bring 'em back
+//        GeneratedToolbar()
+//            .padding()
     }
 }
 #endif

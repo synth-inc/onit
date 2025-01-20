@@ -9,30 +9,30 @@ import SwiftData
 import SwiftUI
 
 struct HistoryView: View {
-    @Query(sort: \Prompt.timestamp, order: .reverse) var prompts: [Prompt]
+    @Query(sort: \Chat.timestamp, order: .reverse) private var chats: [Chat]
 
     @State private var searchQuery: String = ""
 
-    var filteredPrompts: [Prompt] {
+    var filteredChats: [Chat] {
         if searchQuery.isEmpty {
-            return prompts
+            return chats
         } else {
-            return prompts.filter {
-                $0.text.localizedCaseInsensitiveContains(searchQuery)
+            return chats.filter {
+                $0.fullText.localizedCaseInsensitiveContains(searchQuery)
             }
         }
     }
 
-    var groupedPrompts: [String: [Prompt]] {
-        Dictionary(grouping: filteredPrompts) { prompt in
+    var groupedChats: [String: [Chat]] {
+        Dictionary(grouping: filteredChats) { chat in
             let calendar = Calendar.current
             let now = Date()
 
-            if calendar.isDateInToday(prompt.timestamp) {
+            if calendar.isDateInToday(chat.timestamp) {
                 return "Today"
-            } else if calendar.isDate(prompt.timestamp, equalTo: now, toGranularity: .weekOfYear) {
+            } else if calendar.isDate(chat.timestamp, equalTo: now, toGranularity: .weekOfYear) {
                 return "This Week"
-            } else if calendar.isDate(prompt.timestamp, equalTo: now, toGranularity: .month) {
+            } else if calendar.isDate(chat.timestamp, equalTo: now, toGranularity: .month) {
                 return "This Month"
             } else {
                 return "Earlier"
@@ -40,8 +40,8 @@ struct HistoryView: View {
         }
     }
 
-    var sortedPrompts: [(key: String, value: [Prompt])] {
-        groupedPrompts.sorted(by: { $0.key > $1.key })
+     var sortedChats: [(key: String, value: [Chat])] {
+        groupedChats.sorted(by: { $0.key > $1.key })
     }
 
     var body: some View {
@@ -51,7 +51,7 @@ struct HistoryView: View {
             ScrollView {
                 LazyVStack(alignment: .leading) {
                     Spacer().frame(height: 12)
-                    ForEach(sortedPrompts, id: \.key) { section, prompts in
+                    ForEach(sortedChats, id: \.key) { section, chats in
                         VStack(alignment: .leading, spacing: 8) {
                             Text(section)
                                 .appFont(.medium13)
@@ -59,8 +59,8 @@ struct HistoryView: View {
                                 .padding(.top, 4)
                                 .padding(.leading, 4)
 
-                            ForEach(prompts) { prompt in
-                                HistoryRowView(prompt: prompt)
+                            ForEach(chats) { chat in
+                                HistoryRowView(chat: chat)
                             }
                         }
                     }

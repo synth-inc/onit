@@ -45,7 +45,7 @@ struct SetUpDialog<Subtitle: View>: View {
             RoundedRectangle(cornerRadius: 16)
                 .strokeBorder(borderGrad, lineWidth: 1)
         }
-        .padding(.top, 8)
+        .padding(.vertical, 16)
         .padding(.horizontal, 16)
     }
 
@@ -62,7 +62,9 @@ struct SetUpDialog<Subtitle: View>: View {
                 closeAction()
             } label: {
                 Image(.smallCross)
+                    .padding(2)
             }
+            .buttonStyle(HoverableButtonStyle(background: true))
         }
     }
 
@@ -70,6 +72,7 @@ struct SetUpDialog<Subtitle: View>: View {
         subtitle()
             .appFont(.medium13)
             .foregroundStyle(.gray100)
+            .fixedSize(horizontal: false, vertical: true)
     }
 
     var button: some View {

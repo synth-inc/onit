@@ -8,42 +8,30 @@
 import SwiftUI
 
 struct PromptView: View {
-    @Environment(\.model) var model
 
-    @AppStorage("seenLocal") var seenLocal = false
-
+    @ObservedObject var prompt: Prompt
+    
     var body: some View {
         VStack(spacing: 0) {
-            YouSaidView()
             content
-            SetUpDialogs(seenLocal: seenLocal)
-            FileRow()
-            TextInputView()
         }
-        .drag()
-        .onChange(of: model.availableLocalModels.count) { _, new in
-            if new != 0 {
-                seenLocal = true
-            }
-        }
-    }
+        .padding(.bottom, 16)
+      }
 
-    @ViewBuilder
-    var content: some View {
-        switch model.generationState {
-        case .generating:
-            PromptDivider()
-            GeneratingView()
-        case .generated:
-            GeneratedView()
-        case .error(let error):
-            GeneratedErrorView(error: error)
-        default:
-            EmptyView()
-        }
-    }
-}
+      @ViewBuilder
+      var content: some View {
+          switch prompt.generationState {
+          case .generating:
+              GeneratingView(prompt: prompt)
+          case .done:
+              GeneratedView(prompt: prompt)
+          default:
+              EmptyView()
+          }
+      }
+  }
 
-#Preview {
-    PromptView()
-}
+  #Preview {
+      // TODO bring back the previews.. 
+//      PromptView()
+  }
