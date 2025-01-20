@@ -56,7 +56,7 @@ struct Toolbar: View {
 
     var resize: some View {
         Button {
-
+            model.togglePanelSize()
         } label: {
             Image(.resize)
                 .renderingMode(.template)

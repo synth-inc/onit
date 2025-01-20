@@ -115,6 +115,9 @@ extension OnitModel: NSWindowDelegate {
 //        }
         // Focus the text input when we're activating the panel
         textFocusTrigger = true
+
+        // Set the defaultPanelFrame to the initial frame of the panel
+        defaultPanelFrame = newPanel.frame
     }
 
     func closePanel() {
@@ -200,7 +203,7 @@ extension OnitModel: NSWindowDelegate {
         contentView.layoutSubtreeIfNeeded()
         let idealSize = contentView.fittingSize
 
-        // Clamp the window height so it doesn’t fall off-screen
+        // Clamp the window height so it doesn't fall off-screen
         guard let screen = NSScreen.main else { return }
         let visibleFrame = screen.visibleFrame
         let maxAllowedHeight = visibleFrame.height - 16
@@ -216,6 +219,50 @@ extension OnitModel: NSWindowDelegate {
             NSRect(x: newX, y: newY, width: currentWidth, height: newHeight),
             display: true
         )
+    }
+
+    // Property to track if the panel is expanded
+    var isPanelExpanded: Bool {
+        get { UserDefaults.standard.bool(forKey: "isPanelExpanded") }
+        set { UserDefaults.standard.set(newValue, forKey: "isPanelExpanded") }
+    }
+    
+    // Property to store the default panel frame
+    var defaultPanelFrame: NSRect {
+        get {
+            if let data = UserDefaults.standard.data(forKey: "defaultPanelFrame"),
+               let rect = try? NSKeyedUnarchiver.unarchiveTopLevelObjectWithData(data) as? NSRect {
+                return rect
+            }
+            return NSRect(x: 0, y: 0, width: 400, height: 600)
+        }
+        set {
+            if let data = try? NSKeyedArchiver.archivedData(withRootObject: newValue, requiringSecureCoding: false) {
+                UserDefaults.standard.set(data, forKey: "defaultPanelFrame")
+            }
+        }
+    }
+
+    @MainActor
+    func togglePanelSize() {
+        guard let panel = panel else { return }
+
+        if let screen = panel.screen ?? NSScreen.main {
+            let visibleFrame = screen.visibleFrame
+
+            if isPanelExpanded {
+                // Restore the panel to its default size and position
+                panel.setFrame(defaultPanelFrame, display: true, animate: true)
+                // Optionally reposition the panel to its original location
+                panel.setFrameOrigin(defaultPanelFrame.origin)
+            } else {
+                // Save the current panel frame as the default size
+                defaultPanelFrame = panel.frame
+                // Expand the panel to fit the screen's visible frame
+                panel.setFrame(visibleFrame, display: true, animate: true)
+            }
+            isPanelExpanded.toggle()
+        }
     }
 }
 
