@@ -18,7 +18,7 @@ extension FetchingClient {
         }
 
         // Helpful debugging method- put in the endpoint name and you can see the full request
-        if endpoint.path == "/api/generate" {
+        if endpoint.path == "/api/chat" {
             printCurlRequest(endpoint: endpoint, url: url)
         }
 
