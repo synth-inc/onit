@@ -91,7 +91,7 @@ extension OnitModel {
                 } else {
                     // TODO implement history for local chat!
                     chat = try await client.localChat(
-                        instructionsHistory.last ?? "", input: inputsHistory.last ?? nil, model: preferences.localModel, files: filesHistory.last ?? [], images: imagesHistory.last ?? []
+                        instructionsHistory.last ?? "", input: /*inputsHistory.last ??*/ nil, model: preferences.localModel, files: filesHistory.last ?? [], images: imagesHistory.last ?? []
                     )
                 }
 

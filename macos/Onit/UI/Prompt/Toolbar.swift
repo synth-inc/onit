@@ -62,9 +62,10 @@ struct Toolbar: View {
                 .renderingMode(.template)
                 .padding(3)
         }
+        .keyboardShortcut("1")
         .tooltip(
             prompt: "Resize Window",
-            shortcut: .keyboard(.init("1", modifiers: .option))
+            shortcut: .keyboard(.init("1"))
         )
     }
 
