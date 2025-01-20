@@ -12,7 +12,9 @@ struct InputBarView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            PromptDivider()
+            if model.currentPrompts?.count ?? 0 > 0 {
+                PromptDivider()
+            }
             FileRow(contextList: model.pendingContextList)
             TextInputView()
         }

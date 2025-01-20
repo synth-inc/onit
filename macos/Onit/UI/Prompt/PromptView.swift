@@ -22,7 +22,6 @@ struct PromptView: View {
       var content: some View {
           switch prompt.generationState {
           case .generating:
-              PromptDivider()
               GeneratingView(prompt: prompt)
           case .done:
               GeneratedView(prompt: prompt)
