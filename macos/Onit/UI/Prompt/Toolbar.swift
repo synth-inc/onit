@@ -17,6 +17,7 @@ struct Toolbar: View {
             resize
             Spacer()
             languageModel
+            add
             localMode
 //            incognitoMode
             settings
