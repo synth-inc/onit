@@ -49,6 +49,12 @@ extension OnitModel {
         pendingContextList.removeAll()
         pendingInput = nil
         focusText()
+        contentHeight = 0
+        resizing = true
+        Task {
+            try? await Task.sleep(for: .seconds(0.01))
+            resizing = false
+        }
     }
 
     func removeContext(context: Context) {
