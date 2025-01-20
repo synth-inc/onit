@@ -51,6 +51,7 @@ import AppKit
     var headerHeight: CGFloat = 0
     var inputHeight: CGFloat = 0
     var contentHeight: CGFloat = 0
+    var setUpHeight: CGFloat = 0
 
     var showDebugWindow = false
     var debugPanel: CustomPanel? = nil

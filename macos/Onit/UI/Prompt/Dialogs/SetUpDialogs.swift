@@ -28,23 +28,39 @@ struct SetUpDialogs: View {
 
     @ViewBuilder
     var content: some View {
-        if model.remoteNeedsSetup && !closedRemote {
-            remote
+        Group {
+            if model.remoteNeedsSetup && !closedRemote {
+                remote
+            }
+            if !closedLocal && model.preferences.availableLocalModels.isEmpty && !seenLocal {
+                local
+            }
+            if !closedNoLocalModels && model.preferences.availableLocalModels.isEmpty && seenLocal {
+                restartLocal
+            }
+            if false && !closedOpenAI {
+                expired(.openAI)
+            }
+            if false && !closedAnthropic {
+                expired(.anthropic)
+            }
+            if false && !closedXAI {
+                expired(.xAI)
+            }
         }
-        if !closedLocal && model.preferences.availableLocalModels.isEmpty && !seenLocal {
-            local
-        }
-        if !closedNoLocalModels && model.preferences.availableLocalModels.isEmpty && seenLocal {
-            restartLocal
-        }
-        if false && !closedOpenAI {
-            expired(.openAI)
-        }
-        if false && !closedAnthropic {
-            expired(.anthropic)
-        }
-        if false && !closedXAI {
-            expired(.xAI)
+        .background {
+            GeometryReader { g in
+                Color.clear
+                    .onAppear {
+                        model.setUpHeight = g.size.height
+                    }
+                    .onChange(of: g.size.height) {
+                        model.setUpHeight = g.size.height
+                    }
+                    .onDisappear {
+                        model.setUpHeight = 0
+                    }
+            }
         }
     }
 

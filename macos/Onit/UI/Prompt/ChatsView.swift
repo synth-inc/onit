@@ -15,7 +15,7 @@ struct ChatsView: View {
 
     var maxHeight: CGFloat {
         let screenHeight = NSScreen.main!.frame.height
-        let availableHeight = screenHeight - windowTopOffset - model.headerHeight - model.inputHeight
+        let availableHeight = screenHeight - windowTopOffset - model.headerHeight - model.inputHeight - model.setUpHeight
         return availableHeight
     }
 
@@ -33,11 +33,24 @@ struct ChatsView: View {
                 LazyVStack(spacing: -16) {
                     ForEach(model.currentPrompts ?? []) { prompt in
                         PromptView(prompt: prompt)
+                            .background {
+                                if prompt == model.currentPrompts?.last {
+                                    GeometryReader { proxy in
+                                        Color.clear
+                                            .onAppear {
+                                                model.contentHeight = proxy.size.height
+                                            }
+                                            .onChange(of: proxy.size.height) {
+                                                model.contentHeight = proxy.size.height
+                                            }
+                                    }
+                                }
+                            }
                     }
                 }
                 .id(chatsID)
                 .background {
-                    heightReader
+//                    heightReader
                 }
             }
             .onChange(of: model.currentPrompts?.count) {
@@ -51,7 +64,11 @@ struct ChatsView: View {
                 }
             }
         }
-        .frame(height: min(maxHeight, contentHeight))
+        .frame(
+            minHeight: min(maxHeight, contentHeight),
+            idealHeight: min(maxHeight, contentHeight),
+            maxHeight: maxHeight
+        )
         .onAppear {
             updateWindowTopOffset()
         }

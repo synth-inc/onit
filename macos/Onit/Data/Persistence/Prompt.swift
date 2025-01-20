@@ -60,6 +60,12 @@ import SwiftData
     }
 }
 
+extension Prompt: Equatable {
+    static func == (lhs: Prompt, rhs: Prompt) -> Bool {
+        lhs.timestamp == rhs.timestamp
+    }
+}
+
 extension Prompt {
     @MainActor static let sample = Prompt(instruction: "Hello, world!", timestamp: .now)
 }
