@@ -20,7 +20,7 @@ struct ChatsView: View {
     }
 
     var contentHeight: CGFloat {
-        model.contentHeight
+        max(1, model.contentHeight)
     }
 
     var lastGenerationSate: GenerationState {
@@ -49,9 +49,6 @@ struct ChatsView: View {
                     }
                 }
                 .id(chatsID)
-                .background {
-//                    heightReader
-                }
             }
             .onChange(of: model.currentPrompts?.count) {
                 withAnimation {

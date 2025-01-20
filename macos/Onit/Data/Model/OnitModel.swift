@@ -75,20 +75,31 @@ import AppKit
     @MainActor
     func fetchLocalModels() async {
         do {
-            preferences.availableLocalModels = try await FetchingClient().getLocalModels()
+            let models = try await FetchingClient().getLocalModels()
+            updatePreferences { preferences in
+                preferences.availableLocalModels = models
+            }
 
             // Handle local model selection
             if preferences.availableLocalModels.isEmpty {
-                preferences.localModel = nil
+                updatePreferences { prefs in
+                    prefs.localModel = nil
+                }
             } else if preferences.localModel == nil {
-                preferences.localModel = preferences.availableLocalModels[0]
+                updatePreferences { prefs in
+                    prefs.localModel = preferences.availableLocalModels[0]
+                }
             } else if !preferences.availableLocalModels.contains(preferences.localModel!) {
-                preferences.localModel = preferences.availableLocalModels[0]
+                updatePreferences { prefs in
+                    prefs.localModel = preferences.availableLocalModels[0]
+                }
             }
         } catch {
             print("Error fetching local models:", error)
-            preferences.availableLocalModels = []
-            preferences.localModel = nil
+            updatePreferences { prefs in
+                prefs.availableLocalModels = []
+                prefs.localModel = nil
+            }
         }
     }
 
