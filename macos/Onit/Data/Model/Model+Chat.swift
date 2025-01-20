@@ -32,6 +32,7 @@ extension OnitModel {
         // Add the prompt to the current chat
         currentChat?.prompts.append(prompt)
         currentPrompts?.append(prompt)
+        pendingInstruction = ""
     
         do {
             try container.mainContext.save()
