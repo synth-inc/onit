@@ -35,13 +35,18 @@ struct TextInputView: View {
         @Bindable var model = model
 
         ZStack(alignment: .leading) {
-            HStack(alignment: .firstTextBaseline, spacing: 5) {
-                TextField("", text: $model.pendingInstruction, axis: .vertical)
-                    .textFieldStyle(PlainTextFieldStyle())
-                    .focused($focused)
-                    .tint(.blue600.opacity(0.2))
-                    .fixedSize(horizontal: false, vertical: true)
-            }
+            TextField("", text: $model.pendingInstruction, axis: .vertical)
+                .textFieldStyle(PlainTextFieldStyle())
+                .focused($focused)
+                .tint(.blue600.opacity(0.2))
+                .fixedSize(horizontal: false, vertical: true)
+                .onAppear {
+                    focused = true
+                }
+                .onChange(of: model.textFocusTrigger) {
+                    focused = true
+                }
+
             if model.pendingInstruction.isEmpty {
                 placeholderView
             } else {
@@ -50,18 +55,12 @@ struct TextInputView: View {
         }
         .appFont(.medium16)
         .foregroundStyle(.white)
-        .onAppear {
-            focused = true
-        }
-        .onChange(of: model.textFocusTrigger) {
-            focused = true
-        }
     }
 
     var placeholderText: String {
         if let currentChat = model.currentChat {
-            if (!currentChat.isEmpty) {
-                "Follow-up... (􀆔N for new)"
+            if !currentChat.isEmpty {
+                "Follow-up... (⌃N for new)"
             } else {
                 "New instructions..."
             }
@@ -73,19 +72,18 @@ struct TextInputView: View {
     var placeholderView: some View {
         HStack {
             Text(placeholderText)
-//            Image(.smirk)
-//                .renderingMode(.template)
         }
         .foregroundStyle(.gray300)
         .allowsHitTesting(false)
     }
 
+    func sendAction() {
+        let newPrompt = model.createAndSavePrompt()
+        model.generate(newPrompt)
+    }
+
     var sendButton: some View {
-        Button {
-//            focused = false
-            let newPrompt = model.createAndSavePrompt()
-            model.generate(newPrompt)
-        } label: {
+        Button(action: sendAction) {
             Image(model.preferences.mode == .local ? .circleArrowUpDotted : .circleArrowUp)
                 .resizable()
                 .renderingMode(.template)
@@ -93,7 +91,6 @@ struct TextInputView: View {
                 .frame(width: 18, height: 18)
         }
         .buttonStyle(.plain)
-        
         .disabled(model.pendingInstruction.isEmpty)
         .keyboardShortcut(.return, modifiers: [])
     }
