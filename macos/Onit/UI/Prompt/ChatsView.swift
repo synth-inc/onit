@@ -35,15 +35,7 @@ struct ChatsView: View {
                         PromptView(prompt: prompt)
                             .background {
                                 if prompt == model.currentPrompts?.last {
-                                    GeometryReader { proxy in
-                                        Color.clear
-                                            .onAppear {
-                                                model.contentHeight = proxy.size.height
-                                            }
-                                            .onChange(of: proxy.size.height) {
-                                                model.contentHeight = proxy.size.height
-                                            }
-                                    }
+                                    heightReader
                                 }
                             }
                     }
@@ -91,8 +83,8 @@ struct ChatsView: View {
                 .onAppear {
                     model.contentHeight = proxy.size.height
                 }
-                .onChange(of: proxy.size.height) { _, newHeight in
-                    model.contentHeight = newHeight
+                .onChange(of: proxy.size.height) {
+                    model.contentHeight = proxy.size.height
                 }
         }
     }
