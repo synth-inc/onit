@@ -69,10 +69,10 @@ extension OnitModel {
                     filesHistory.insert(currentPrompt!.contextList.files, at: 0)
                     imagesHistory.insert(currentPrompt!.contextList.images, at: 0)
                     responsesHistory.insert(currentPrompt!.responses[currentPrompt!.generationIndex].text, at: 0)
-                    currentPrompt = currentPrompt!.priorPrompt
                 } else {
                     print("Skipping failed response from prior prompt.")
                 }
+                currentPrompt = currentPrompt!.priorPrompt
             }
             
             do {
