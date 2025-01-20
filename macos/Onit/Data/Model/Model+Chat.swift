@@ -81,7 +81,7 @@ extension OnitModel {
                     // chat(instructions: [String], inputs: [Input?], files: [[URL]], images[[URL]], responses: [String], model: AIModel?, apiToken: String?)
                     chat = try await client.chat(
                         instructions: instructionsHistory,
-                        inputs: inputsHistory,
+                        inputs: inputsHistory.map { _ in nil }, // Add back in inputs once we have accessibility
                         files: filesHistory,
                         images: imagesHistory,
                         responses: responsesHistory,
