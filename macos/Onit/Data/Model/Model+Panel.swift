@@ -121,7 +121,6 @@ extension OnitModel: NSWindowDelegate {
     }
 
     func closePanel() {
-        KeyboardShortcuts.disable(.escape)
         guard let panel = panel else { return }
         panel.orderOut(nil)
         Accessibility.adjustWindowToTopRight()
@@ -191,6 +190,25 @@ extension OnitModel: NSWindowDelegate {
     
     func windowDidResignKey(_ notification: Notification) {
 //        closePanel()
+    }
+    
+    func resetPrompt() {
+        pendingInput = nil
+        if let panel = panel {
+            panel.makeKeyAndOrderFront(nil)
+            panel.orderFrontRegardless()
+        } else {
+            showPanel()
+        }
+        textFocusTrigger = true
+    }
+    
+    func resizeWindow() {
+        togglePanelSize()
+    }
+    
+    func toggleModelsPanel() {
+        showModelSelectionOverlay()
     }
 
     @MainActor

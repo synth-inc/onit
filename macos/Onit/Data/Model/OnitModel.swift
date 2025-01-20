@@ -23,7 +23,6 @@ import AppKit
     var showTooltip = false
     var isTooltipActive = false
     var showHistory: Bool = false
-    var incognitoMode: Bool = false
     var showMenuBarExtra: Bool = false
     var inputExpanded = true
     var panel: CustomPanel? = nil

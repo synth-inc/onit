@@ -21,15 +21,24 @@ struct App: SwiftUI.App {
         KeyboardShortcuts.onKeyUp(for: .launch) { [weak model] in
             model?.launchShortcutAction()
         }
-        KeyboardShortcuts.onKeyUp(for: .launchIncognito) { [weak model] in
-            model?.launchIncognitoShortcutAction()
+        KeyboardShortcuts.onKeyUp(for: .openSettings) { [weak model] in
+            NSApp.sendAction(Selector(("showSettingsWindow:")), to: nil, from: nil)
         }
-//        KeyboardShortcuts.onKeyUp(for: .launchLocal) { [weak model] in
-//            model?.launchLocalShortcutAction()
-//        }
-//        KeyboardShortcuts.onKeyUp(for: .launchLocalIncognito) { [weak model] in
-//            model?.launchLocalIncognitoShortcutAction()
-//        }
+        KeyboardShortcuts.onKeyUp(for: .newChat) { [weak model] in
+            model?.resetPrompt()
+        }
+        KeyboardShortcuts.onKeyUp(for: .resizeWindow) { [weak model] in
+            model?.resizeWindow()
+        }
+        KeyboardShortcuts.onKeyUp(for: .toggleModels) { [weak model] in
+            model?.toggleModelsPanel()
+        }
+        KeyboardShortcuts.onKeyUp(for: .openLocalMode) { [weak model] in
+            model?.launchLocalShortcutAction()
+        }
+        KeyboardShortcuts.onKeyUp(for: .escape) { [weak model] in
+            model?.escapeAction()
+        }
 
         model.showPanel()
         

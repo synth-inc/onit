@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import KeyboardShortcuts
 
 struct Tooltip {
     var prompt: String
@@ -14,6 +15,7 @@ struct Tooltip {
     enum Shortcut {
         case keyboard(KeyboardShortcut)
         case text(String)
+        case keyboardShortcuts(KeyboardShortcuts.Name)
         case none
     }
 

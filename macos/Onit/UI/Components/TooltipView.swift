@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import KeyboardShortcuts
 
 struct TooltipView: View {
     var tooltip: Tooltip
@@ -25,6 +26,15 @@ struct TooltipView: View {
                         .background(.gray400, in: .rect(cornerRadius: 6))
                         .padding(4)
                         .fixedSize()
+                case .keyboardShortcuts(let name):
+                    if let shortcut = KeyboardShortcuts.getShortcut(for: name) {
+                        KeyboardShortcutView(shortcut: shortcut)
+                            .padding(.horizontal, 4)
+                            .padding(.vertical, 6)
+                            .background(.gray400, in: .rect(cornerRadius: 6))
+                            .padding(4)
+                            .fixedSize()
+                    }
                 case .text(let text):
                     Text(text)
                         .padding(.horizontal, 4)
