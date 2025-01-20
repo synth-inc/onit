@@ -1,5 +1,5 @@
 //
-//  AccessibilityReaderConfig.swift
+//  AccessibilityParserConfig.swift
 //  Onit
 //
 //  Created by Kévin Naudin on 16/01/2025.
@@ -7,7 +7,7 @@
 
 import ApplicationServices.HIServices.AXAttributeConstants
 
-struct AccessibilityReaderConfig {
+struct AccessibilityParserConfig {
     
     /**
      * Accessibility's attributes to read
@@ -26,7 +26,7 @@ struct AccessibilityReaderConfig {
 //            kAXMinValueAttribute,
 //            kAXMaxValueAttribute,
 //            kAXEnabledAttribute,
-//            kAXFocusedAttribute,
+//        kAXFocusedAttribute,
 //            kAXSelectedChildrenAttribute,
 //            kAXVisibleChildrenAttribute,
 //            kAXWindowAttribute,
@@ -87,7 +87,8 @@ struct AccessibilityReaderConfig {
         kAXMenuItemCmdGlyphAttribute,
         kAXMenuItemCmdModifiersAttribute,
         kAXPlaceholderValueAttribute,
-//            kAXAlternateUIVisibleAttribute
+//            kAXAlternateUIVisibleAttribute,
+        kAXFocusedUIElementAttribute
     ]
     
     /**

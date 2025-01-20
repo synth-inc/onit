@@ -51,6 +51,22 @@ extension AXUIElement {
             return nil
         }
     }
+    
+    func role() -> String? {
+        return self.attribute(forAttribute: kAXRoleAttribute as CFString) as? String
+    }
+    
+    func description() -> String? {
+        return self.attribute(forAttribute: kAXDescriptionAttribute as CFString) as? String
+    }
+    
+    func subrole() -> String? {
+        return self.attribute(forAttribute: kAXSubroleAttribute as CFString) as? String
+    }
+    
+    func title() -> String? {
+        return self.attribute(forAttribute: kAXTitleAttribute as CFString) as? String
+    }
 
     func children() -> [AXUIElement]? {
         return self.attribute(forAttribute: kAXChildrenAttribute as CFString) as? [AXUIElement]

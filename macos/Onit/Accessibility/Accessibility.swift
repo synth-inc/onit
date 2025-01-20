@@ -73,7 +73,7 @@ class Accessibility {
         kAXSelectedChildrenMovedNotification,
         kAXSelectedColumnsChangedNotification,
         kAXSelectedRowsChangedNotification,
-        kAXSelectedTextChangedNotification,
+//        TODO: KNA - kAXSelectedTextChangedNotification,
         kAXSheetCreatedNotification,
         kAXTitleChangedNotification,
         kAXUIElementDestroyedNotification,
@@ -268,7 +268,8 @@ class Accessibility {
             self.currentSource = focusedApp.localizedName
 
             Task {
-                let textInApplication = await AccessibilityReader.getAllTextInElement(appElement: newAppElement)
+                let textInApplication = await AccessibilityParser.shared.getAllTextInElement(appElement: newAppElement)
+                
                 if let model = self.model {
                     model.debugText = textInApplication
                 }
@@ -402,7 +403,8 @@ class Accessibility {
         // Read in context on FocusChange notifiications
         if let appElement = self.appElement {
             Task {
-                let textInElement = await AccessibilityReader.getAllTextInElement(appElement: appElement)
+                let textInElement = await AccessibilityParser.shared.getAllTextInElement(appElement: appElement)
+                
                 if textInElement != "" {
                     if let model = self.model {
                         model.debugText = textInElement
