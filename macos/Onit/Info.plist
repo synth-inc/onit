@@ -43,5 +43,9 @@
 	<string>https://onit-server-b3c3746e04e9.herokuapp.com/appcast.xml</string>
 	<key>SUPublicEDKey</key>
 	<string>gGuBTEsab+N4JYjnp+kqvhChKQiZv69GKThr0ucKEl0=</string>
+	<key>PostHogApiKey</key>
+	<string>phc_AJyj4BpqxAyiE2T11hD1NKMLH6vlvnqUrpZD6aIJGNf</string>
+	<key>PostHogHost</key>
+	<string>https://us.i.posthog.com</string>
 </dict>
 </plist>

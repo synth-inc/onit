@@ -12,7 +12,12 @@
  *
  * The `@preconcurrency` annotation is used because of `kAXTrustedCheckOptionPrompt` usage.
  */
+@MainActor
 class AccessibilityPermissionManager {
+    
+    // MARK: Singleton instance
+    
+    static let shared = AccessibilityPermissionManager()
     
     // MARK: Properties
     
@@ -77,10 +82,5 @@ class AccessibilityPermissionManager {
                 onProcessUntrusted?()
             }
         }
-    }
-    
-    deinit {
-        processTrustedTimer?.invalidate()
-        processTrustedTimer = nil
     }
 }

@@ -8,19 +8,17 @@
 import SwiftUI
 import KeyboardShortcuts
 import MenuBarExtraAccess
-import FirebaseCore
 import Foundation
 
 @main
 struct App: SwiftUI.App {
     
-    private let accessibilityPermissionMngr = AccessibilityPermissionManager()
-    
     @Environment(\.model) var model
     @NSApplicationDelegateAdaptor(AppDelegate.self) var delegate
     
+    @State var isLoadingDone = false
+    
     init() {
-
         KeyboardShortcuts.onKeyUp(for: .launch) { [weak model] in
             model?.launchShortcutAction()
         }
@@ -40,20 +38,12 @@ struct App: SwiftUI.App {
             model?.escapeAction()
         }
 
-        model.showPanel()
+        showLoadingScreen()
         
+        // TODO: KNA - Replace this
         #if !targetEnvironment(simulator)
-        
         Accessibility.setModel(model)
         Accessibility.setupWindow(withView: StaticPromptView())
-        
-        accessibilityPermissionMngr.requestPermission(onUntrusted: {
-            // TODO: KNA - Stop listening and remove any observers
-        }, onTrusted: {
-            Accessibility.observeActiveApplication()
-            Accessibility.observeSystemClicks()
-        })
-        
         #endif
     }
 
@@ -73,12 +63,26 @@ struct App: SwiftUI.App {
             SettingsView()
         }
     }
-}
-
-class AppDelegate: NSObject, NSApplicationDelegate {
-    func applicationDidFinishLaunching(_ notification: Notification) {
-        FirebaseApp.configure()
-  }
+    
+    @MainActor private func showLoadingScreen() {
+        let loadingWindow = NSWindow(
+            contentRect: NSRect(x: 0, y: 0, width: 400, height: 300),
+            styleMask: [.titled, .closable],
+            backing: .buffered,
+            defer: false
+        )
+        
+        let loadingView = LoadingView(onLoadingFinished: {
+            loadingWindow.close()
+            model.showPanel()
+        })
+        
+        let launchView = NSHostingController(rootView: loadingView)
+        loadingWindow.contentViewController = launchView
+        loadingWindow.title = "Loading"
+        loadingWindow.center()
+        loadingWindow.makeKeyAndOrderFront(nil)
+    }
 }
 
 // MARK: - Testing
