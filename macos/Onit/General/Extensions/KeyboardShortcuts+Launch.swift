@@ -10,12 +10,19 @@ import AppKit
 
 extension KeyboardShortcuts.Name {
     static let launch = Self("launch", default: .init(.o, modifiers: [.command]))
-    static let launchIncognito = Self("launchIncognito", default: .init(.o, modifiers: [.command, .shift]))
     static let escape = Self("escape", default: .init(.escape))
+    static let enter = Self("enter", default: .init(.return, modifiers: []))
+    static let newChat = Self("newChat", default: .init(.n, modifiers: [.command]))
+    static let resizeWindow = Self("resizeWindow", default: .init(.r, modifiers: [.command]))
+    static let toggleModels = Self("toggleModels", default: .init(.m, modifiers: [.command]))
+    static let toggleLocalMode = Self("toggleLocalMode", default: .init(.l, modifiers: [.command]))
 }
 
 extension String {
     static let launch = "launch"
-    static let launchIncognito = "launchIncognit"
     static let escape = "escape"
+    static let newChat = "newChat"
+    static let resizeWindow = "resizeWindow"
+    static let toggleModels = "toggleModels"
+    static let toggleLocalMode = "toggleLocalMode"
 }

@@ -7,6 +7,7 @@
 
 import SwiftUI
 import SwiftData
+import KeyboardShortcuts
 
 struct TextInputView: View {
     @Environment(\.model) var model
@@ -60,7 +61,13 @@ struct TextInputView: View {
     var placeholderText: String {
         if let currentChat = model.currentChat {
             if !currentChat.isEmpty {
-                "Follow-up... (⌃N for new)"
+                
+                if let keyboardShortcutString = KeyboardShortcuts.getShortcut(for: .newChat)?.description {
+                    "Follow-up... (" + keyboardShortcutString + " for new)"
+                } else {
+                    "Follow-up..."
+                }
+                
             } else {
                 "New instructions..."
             }

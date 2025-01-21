@@ -96,7 +96,7 @@ struct GeneratedToolbar: View {
         .buttonStyle(.plain)
         .tooltip(
             prompt: "Send",
-            shortcut: .keyboard(.init(.return, modifiers: [])),
+            shortcut: .keyboardShortcuts(.enter),
             background: false
         )
     }

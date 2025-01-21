@@ -20,13 +20,28 @@ struct ShortcutsTab: View {
                     resetPrompt()
                 }
                 .padding()
+                
+                KeyboardShortcuts.Recorder(
+                    "Switch Local vs Remote", name: .toggleLocalMode
+                )
+                .padding()
 
                 KeyboardShortcuts.Recorder(
-                    "Launch Onit - Incognito", name: .launchIncognito
-                ) { _ in
-                    resetPrompt()
-                }
+                    "New Chat", name: .newChat
+                )
                 .padding()
+
+                KeyboardShortcuts.Recorder(
+                    "Resize Window", name: .resizeWindow
+                )
+                .padding()
+
+                KeyboardShortcuts.Recorder(
+                    "Toggle Models", name: .toggleModels
+                )
+                .padding()
+
+                
             }
         }
         .padding()

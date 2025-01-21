@@ -19,7 +19,6 @@ struct Toolbar: View {
             languageModel
             add
             localMode
-//            incognitoMode
             settings
         }
         .foregroundStyle(.gray200)
@@ -41,18 +40,12 @@ struct Toolbar: View {
                 .appFont(.medium13)
                 .padding(4)
         }
-        .tooltip(prompt: "Close Omni", shortcut: .text("ESC ESC"))
+        .tooltip(prompt: "Close Omni", shortcut: .keyboardShortcuts(.escape))
     }
 
-    // We create this so that the esc button has a different
-    // effect when clicked vs keyboard shortcut
+    // Empty view for layout purposes
     var escListener: some View {
-        Button {
-            model.closePanel()
-        } label: {
-            EmptyView()
-        }
-        .keyboardShortcut(.escape, modifiers: [])
+        EmptyView()
     }
 
     var resize: some View {
@@ -63,10 +56,9 @@ struct Toolbar: View {
                 .renderingMode(.template)
                 .padding(3)
         }
-        .keyboardShortcut("1")
         .tooltip(
             prompt: "Resize Window",
-            shortcut: .keyboard(.init("1"))
+            shortcut: .keyboardShortcuts(.resizeWindow)
         )
     }
 
@@ -117,7 +109,7 @@ struct Toolbar: View {
                     .fill(model.modelSelectionWindowController == nil ? Color.clear : .gray800)
             }
         }
-        .tooltip(prompt: "Toggle model", shortcut: .keyboard(.init("/")))
+        .tooltip(prompt: "Toggle model", shortcut: .keyboardShortcuts(.toggleModels))
     }
 
     var add: some View {
@@ -128,7 +120,7 @@ struct Toolbar: View {
                 .renderingMode(.template)
                 .padding(2)
         }
-        .tooltip(prompt: "New Prompt")
+        .tooltip(prompt: "New Chat", shortcut: .keyboardShortcuts(.newChat))
     }
 
     var localMode: some View {
@@ -142,20 +134,9 @@ struct Toolbar: View {
                 .padding(2)
                 .foregroundColor(model.preferences.mode == .local ? .limeGreen : .gray200)
         }
-        .tooltip(prompt: "Local Mode")
+        .tooltip(prompt: "Local Mode", shortcut: .keyboardShortcuts(.toggleLocalMode))
     }
     
-    var incognitoMode: some View {
-        Button {
-            model.incognitoMode.toggle()
-        } label: {
-            Image(model.incognitoMode ? .incognitoModeActive : .incognitoMode)
-                .renderingMode(.template)
-                .padding(2)
-                .foregroundColor(model.incognitoMode ? .limeGreen : .gray200)
-        }
-        .tooltip(prompt: "Incognito Mode")
-    }
     
     var history: some View {
         Button {
@@ -180,7 +161,7 @@ struct Toolbar: View {
                 .renderingMode(.template)
                 .padding(2)
         }
-        .tooltip(prompt: "Settings", shortcut: .keyboard(.init(",")))
+        .tooltip(prompt: "Settings", shortcut: .none)
     }
 
     var heightListener: some View {

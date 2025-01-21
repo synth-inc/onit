@@ -121,7 +121,6 @@ extension OnitModel: NSWindowDelegate {
     }
 
     func closePanel() {
-        KeyboardShortcuts.disable(.escape)
         guard let panel = panel else { return }
         panel.orderOut(nil)
         Accessibility.adjustWindowToTopRight()
@@ -148,37 +147,15 @@ extension OnitModel: NSWindowDelegate {
     }
         
     func launchShortcutAction() {
-        updatePreferences { prefs in
-            prefs.incognito = false
-            prefs.mode = .remote
-        }
         launchPanel()
+    }
+        
+    func toggleLocalVsRemoteShortcutAction() {
+        updatePreferences { prefs in
+            prefs.mode = prefs.mode == .local ? .remote : .local
+        }
     }
     
-    func launchIncognitoShortcutAction() {
-        updatePreferences { prefs in
-            prefs.incognito = true
-            prefs.mode = .remote
-        }
-        launchPanel()
-    }
-    
-    func launchLocalShortcutAction() {
-        updatePreferences { prefs in
-            prefs.incognito = false
-            prefs.mode = .local
-        }
-        launchPanel()
-    }
-    
-    func launchLocalIncognitoShortcutAction() {
-        updatePreferences { prefs in
-            prefs.incognito = true
-            prefs.mode = .local
-        }
-        launchPanel()
-    }
-
     func escapeAction() {
         if panel != nil {
             if self.pendingInput != nil {
@@ -191,6 +168,14 @@ extension OnitModel: NSWindowDelegate {
     
     func windowDidResignKey(_ notification: Notification) {
 //        closePanel()
+    }
+    
+    func resizeWindow() {
+        togglePanelSize()
+    }
+    
+    func toggleModelsPanel() {
+        showModelSelectionOverlay()
     }
 
     @MainActor

@@ -6,14 +6,11 @@
 //
 
 import SwiftUI
+import KeyboardShortcuts
 
 struct MenuSettings: View {
     @Environment(\.openSettings) var openSettings
-
-    var shortcut: KeyboardShortcut {
-        KeyboardShortcut(",")
-    }
-
+    
     var body: some View {
         MenuBarRow {
             NSApp.activate()
@@ -23,11 +20,7 @@ struct MenuSettings: View {
         } leading: {
             Text("Settings...")
                 .padding(.horizontal, 10)
-        } trailing: {
-            KeyboardShortcutView(shortcut: shortcut)
-                .padding(.horizontal, 10)
-        }
-        .keyboardShortcut(",")
+        } 
     }
 }
 

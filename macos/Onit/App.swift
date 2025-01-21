@@ -10,6 +10,7 @@ import KeyboardShortcuts
 import MenuBarExtraAccess
 import FirebaseCore
 import Foundation
+import SettingsAccess
 
 @main
 struct App: SwiftUI.App {
@@ -21,15 +22,21 @@ struct App: SwiftUI.App {
         KeyboardShortcuts.onKeyUp(for: .launch) { [weak model] in
             model?.launchShortcutAction()
         }
-        KeyboardShortcuts.onKeyUp(for: .launchIncognito) { [weak model] in
-            model?.launchIncognitoShortcutAction()
+        KeyboardShortcuts.onKeyUp(for: .toggleLocalMode) { [weak model] in
+            model?.toggleLocalVsRemoteShortcutAction()
         }
-//        KeyboardShortcuts.onKeyUp(for: .launchLocal) { [weak model] in
-//            model?.launchLocalShortcutAction()
-//        }
-//        KeyboardShortcuts.onKeyUp(for: .launchLocalIncognito) { [weak model] in
-//            model?.launchLocalIncognitoShortcutAction()
-//        }
+        KeyboardShortcuts.onKeyUp(for: .newChat) { [weak model] in
+            model?.newChat()
+        }
+        KeyboardShortcuts.onKeyUp(for: .resizeWindow) { [weak model] in
+            model?.resizeWindow()
+        }
+        KeyboardShortcuts.onKeyUp(for: .toggleModels) { [weak model] in
+            model?.toggleModelsPanel()
+        }
+        KeyboardShortcuts.onKeyUp(for: .escape) { [weak model] in
+            model?.escapeAction()
+        }
 
         model.showPanel()
         
