@@ -3,9 +3,9 @@ import SwiftUI
 struct AboutTab: View {
     var body: some View {
         VStack(spacing: 24) {
-            Image("AppIcon")
+            Image("Onit")
                 .resizable()
-                .frame(width: 128, height: 128)
+                .frame(width: 56, height: 56)
             
             VStack(spacing: 4) {
                 Text("Onit")
@@ -15,7 +15,7 @@ struct AboutTab: View {
                     .foregroundColor(.secondary)
             }
             
-            VStack(spacing: 12) {
+            HStack(spacing: 12) {
                 Button("Visit Website") {
                     if let url = URL(string: "https://www.getonit.ai") {
                         NSWorkspace.shared.open(url)

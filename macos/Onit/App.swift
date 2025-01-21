@@ -10,7 +10,6 @@ import KeyboardShortcuts
 import MenuBarExtraAccess
 import FirebaseCore
 import Foundation
-import SettingsAccess
 
 @main
 struct App: SwiftUI.App {
