@@ -71,17 +71,8 @@ struct AnthropicSection: View {
                     .foregroundStyle(.secondary)
 
             if model.isAnthropicTokenValidated {
-                ForEach(AIModel.allCases.filter { $0.provider == .anthropic }) { aiModel in
-                    Toggle(aiModel.displayName, isOn: Binding(
-                        get: { model.preferences.visibleModels.contains(aiModel) },
-                        set: { isOn in
-                            if isOn {
-                                model.preferences.visibleModels.insert(aiModel)
-                            } else {
-                                model.preferences.visibleModels.remove(aiModel)
-                            }
-                        }
-                    ))
+                ForEach(model.preferences.visibleModelsList.filter { $0.provider == .anthropic }) { aiModel in
+                    ModelToggle(aiModel: aiModel)
                 }
             }
     }

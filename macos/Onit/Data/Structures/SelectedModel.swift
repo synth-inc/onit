@@ -14,7 +14,7 @@ enum SelectedModel: Equatable, Identifiable, Hashable {
     var id: String {
         switch self {
         case .remote(let aiModel):
-            return "remote-\(aiModel.rawValue)"
+            return "remote-\(aiModel.id)"
         case .local(let localModel):
             return "local-\(localModel)"
         }

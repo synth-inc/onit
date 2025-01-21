@@ -14,12 +14,12 @@ struct ModelToggle: View {
 
     var isOn: Binding<Bool> {
         Binding {
-            model.preferences.visibleModels.contains(aiModel)
+            model.preferences.visibleModelIds.contains(aiModel.id)
         } set: { isOn in
             if isOn {
-                model.preferences.visibleModels.insert(aiModel)
+                model.preferences.visibleModelIds.insert(aiModel.id)
             } else {
-                model.preferences.visibleModels.remove(aiModel)
+                model.preferences.visibleModelIds.remove(aiModel.id)
             }
         }
     }

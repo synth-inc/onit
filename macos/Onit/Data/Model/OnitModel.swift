@@ -112,6 +112,11 @@ import AppKit
         startTrustedTimer()
         Task {
             await fetchLocalModels()
+            do {
+                try await refreshModels()
+            } catch {
+                print("Error fetching remote models:", error)
+            }
         }
     }
     

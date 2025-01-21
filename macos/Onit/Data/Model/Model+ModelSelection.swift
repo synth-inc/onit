@@ -107,4 +107,11 @@ extension OnitModel {
 
         return models
     }
+    
+    func refreshModels() async throws {
+        let models = try await AIModel.fetchModels()
+        updatePreferences { prefs in
+            prefs.updateCachedModels(models)
+        }
+    }
 }
