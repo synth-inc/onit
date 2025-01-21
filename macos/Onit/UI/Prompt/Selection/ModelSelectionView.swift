@@ -32,7 +32,9 @@ struct ModelSelectionView: View {
                     .appFont(.medium13)
                     .foregroundStyle(.white.opacity(0.6))
                 Spacer()
-                Image(.warningSettings)
+                if model.remoteNeedsSetup {
+                    Image(.warningSettings)
+                }
             }
             .padding(.horizontal, 12)
 
@@ -68,7 +70,9 @@ struct ModelSelectionView: View {
                 Text("Local models")
                     .foregroundStyle(.FG.opacity(0.6))
                     .appFont(.medium13)
-                Image(.warningSettings)
+                if (model.preferences.availableLocalModels.isEmpty) {
+                    Image(.warningSettings)
+                } 
                 Spacer()
                 add
             }
