@@ -22,6 +22,9 @@ struct App: SwiftUI.App {
         KeyboardShortcuts.onKeyUp(for: .launch) { [weak model] in
             model?.launchShortcutAction()
         }
+        KeyboardShortcuts.onKeyUp(for: .toggleLocalMode) { [weak model] in
+            model?.toggleLocalVsRemoteShortcutAction()
+        }
         KeyboardShortcuts.onKeyUp(for: .newChat) { [weak model] in
             model?.newChat()
         }
@@ -30,9 +33,6 @@ struct App: SwiftUI.App {
         }
         KeyboardShortcuts.onKeyUp(for: .toggleModels) { [weak model] in
             model?.toggleModelsPanel()
-        }
-        KeyboardShortcuts.onKeyUp(for: .openLocalMode) { [weak model] in
-            model?.launchLocalShortcutAction()
         }
         KeyboardShortcuts.onKeyUp(for: .escape) { [weak model] in
             model?.escapeAction()

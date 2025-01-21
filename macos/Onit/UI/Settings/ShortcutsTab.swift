@@ -20,6 +20,11 @@ struct ShortcutsTab: View {
                     resetPrompt()
                 }
                 .padding()
+                
+                KeyboardShortcuts.Recorder(
+                    "Switch Local vs Remote", name: .toggleLocalMode
+                )
+                .padding()
 
                 KeyboardShortcuts.Recorder(
                     "New Chat", name: .newChat
@@ -36,10 +41,7 @@ struct ShortcutsTab: View {
                 )
                 .padding()
 
-                KeyboardShortcuts.Recorder(
-                    "Open in Local Mode", name: .openLocalMode
-                )
-                .padding()
+                
             }
         }
         .padding()

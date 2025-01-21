@@ -147,33 +147,15 @@ extension OnitModel: NSWindowDelegate {
     }
         
     func launchShortcutAction() {
-        updatePreferences { prefs in
-            prefs.mode = .remote
-        }
         launchPanel()
+    }
+        
+    func toggleLocalVsRemoteShortcutAction() {
+        updatePreferences { prefs in
+            prefs.mode = prefs.mode == .local ? .remote : .local
+        }
     }
     
-    func launchIncognitoShortcutAction() {
-        updatePreferences { prefs in
-            prefs.mode = .remote
-        }
-        launchPanel()
-    }
-    
-    func launchLocalShortcutAction() {
-        updatePreferences { prefs in
-            prefs.mode = .local
-        }
-        launchPanel()
-    }
-    
-    func launchLocalIncognitoShortcutAction() {
-        updatePreferences { prefs in
-            prefs.mode = .local
-        }
-        launchPanel()
-    }
-
     func escapeAction() {
         if panel != nil {
             if self.pendingInput != nil {

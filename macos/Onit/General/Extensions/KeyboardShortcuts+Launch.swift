@@ -15,7 +15,7 @@ extension KeyboardShortcuts.Name {
     static let newChat = Self("newChat", default: .init(.n, modifiers: [.command]))
     static let resizeWindow = Self("resizeWindow", default: .init(.r, modifiers: [.command]))
     static let toggleModels = Self("toggleModels", default: .init(.m, modifiers: [.command]))
-    static let openLocalMode = Self("openLocalMode", default: .init(.l, modifiers: [.command]))
+    static let toggleLocalMode = Self("toggleLocalMode", default: .init(.l, modifiers: [.command]))
 }
 
 extension String {
@@ -24,5 +24,5 @@ extension String {
     static let newChat = "newChat"
     static let resizeWindow = "resizeWindow"
     static let toggleModels = "toggleModels"
-    static let openLocalMode = "openLocalMode"
+    static let toggleLocalMode = "toggleLocalMode"
 }

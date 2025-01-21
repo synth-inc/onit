@@ -134,7 +134,7 @@ struct Toolbar: View {
                 .padding(2)
                 .foregroundColor(model.preferences.mode == .local ? .limeGreen : .gray200)
         }
-        .tooltip(prompt: "Local Mode", shortcut: .keyboardShortcuts(.openLocalMode))
+        .tooltip(prompt: "Local Mode", shortcut: .keyboardShortcuts(.toggleLocalMode))
     }
     
     
