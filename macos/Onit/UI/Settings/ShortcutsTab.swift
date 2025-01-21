@@ -22,11 +22,6 @@ struct ShortcutsTab: View {
                 .padding()
 
                 KeyboardShortcuts.Recorder(
-                    "Open Settings", name: .openSettings
-                )
-                .padding()
-
-                KeyboardShortcuts.Recorder(
                     "New Chat", name: .newChat
                 )
                 .padding()

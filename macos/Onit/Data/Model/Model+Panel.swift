@@ -148,7 +148,6 @@ extension OnitModel: NSWindowDelegate {
         
     func launchShortcutAction() {
         updatePreferences { prefs in
-            prefs.incognito = false
             prefs.mode = .remote
         }
         launchPanel()
@@ -156,7 +155,6 @@ extension OnitModel: NSWindowDelegate {
     
     func launchIncognitoShortcutAction() {
         updatePreferences { prefs in
-            prefs.incognito = true
             prefs.mode = .remote
         }
         launchPanel()
@@ -164,7 +162,6 @@ extension OnitModel: NSWindowDelegate {
     
     func launchLocalShortcutAction() {
         updatePreferences { prefs in
-            prefs.incognito = false
             prefs.mode = .local
         }
         launchPanel()
@@ -172,7 +169,6 @@ extension OnitModel: NSWindowDelegate {
     
     func launchLocalIncognitoShortcutAction() {
         updatePreferences { prefs in
-            prefs.incognito = true
             prefs.mode = .local
         }
         launchPanel()
@@ -190,17 +186,6 @@ extension OnitModel: NSWindowDelegate {
     
     func windowDidResignKey(_ notification: Notification) {
 //        closePanel()
-    }
-    
-    func resetPrompt() {
-        pendingInput = nil
-        if let panel = panel {
-            panel.makeKeyAndOrderFront(nil)
-            panel.orderFrontRegardless()
-        } else {
-            showPanel()
-        }
-        textFocusTrigger = true
     }
     
     func resizeWindow() {

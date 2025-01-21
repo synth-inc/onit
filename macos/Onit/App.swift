@@ -10,6 +10,7 @@ import KeyboardShortcuts
 import MenuBarExtraAccess
 import FirebaseCore
 import Foundation
+import SettingsAccess
 
 @main
 struct App: SwiftUI.App {
@@ -21,11 +22,8 @@ struct App: SwiftUI.App {
         KeyboardShortcuts.onKeyUp(for: .launch) { [weak model] in
             model?.launchShortcutAction()
         }
-        KeyboardShortcuts.onKeyUp(for: .openSettings) { [weak model] in
-            NSApp.sendAction(Selector(("showSettingsWindow:")), to: nil, from: nil)
-        }
         KeyboardShortcuts.onKeyUp(for: .newChat) { [weak model] in
-            model?.resetPrompt()
+            model?.newChat()
         }
         KeyboardShortcuts.onKeyUp(for: .resizeWindow) { [weak model] in
             model?.resizeWindow()

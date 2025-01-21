@@ -161,7 +161,7 @@ struct Toolbar: View {
                 .renderingMode(.template)
                 .padding(2)
         }
-        .tooltip(prompt: "Settings", shortcut: .keyboardShortcuts(.openSettings))
+        .tooltip(prompt: "Settings", shortcut: .none)
     }
 
     var heightListener: some View {

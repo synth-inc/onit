@@ -13,8 +13,6 @@ struct Tooltip {
     var shortcut: Shortcut
 
     enum Shortcut {
-        case keyboard(KeyboardShortcut)
-        case text(String)
         case keyboardShortcuts(KeyboardShortcuts.Name)
         case none
     }
@@ -24,15 +22,15 @@ struct Tooltip {
         self.shortcut = shortcut
     }
 
-    init(prompt: String, shortcut: KeyboardShortcut) {
+    init(prompt: String, shortcut: KeyboardShortcuts.Name) {
         self.prompt = prompt
-        self.shortcut = .keyboard(shortcut)
+        self.shortcut = .keyboardShortcuts(shortcut)
     }
 }
 
 extension Tooltip {
     static let sample = Tooltip(
         prompt: "Settings",
-        shortcut: .init("K", modifiers: .command)
+        shortcut: .keyboardShortcuts(.escape)
     )
 }

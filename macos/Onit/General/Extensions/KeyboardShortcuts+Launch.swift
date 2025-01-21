@@ -11,7 +11,7 @@ import AppKit
 extension KeyboardShortcuts.Name {
     static let launch = Self("launch", default: .init(.o, modifiers: [.command]))
     static let escape = Self("escape", default: .init(.escape))
-    static let openSettings = Self("openSettings", default: .init(.comma, modifiers: [.command]))
+    static let enter = Self("enter", default: .init(.return, modifiers: []))
     static let newChat = Self("newChat", default: .init(.n, modifiers: [.command]))
     static let resizeWindow = Self("resizeWindow", default: .init(.r, modifiers: [.command]))
     static let toggleModels = Self("toggleModels", default: .init(.m, modifiers: [.command]))
@@ -21,7 +21,6 @@ extension KeyboardShortcuts.Name {
 extension String {
     static let launch = "launch"
     static let escape = "escape"
-    static let openSettings = "openSettings"
     static let newChat = "newChat"
     static let resizeWindow = "resizeWindow"
     static let toggleModels = "toggleModels"
