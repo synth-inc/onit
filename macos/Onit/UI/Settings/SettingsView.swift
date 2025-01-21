@@ -15,6 +15,11 @@ struct SettingsView: View {
                 .tabItem {
                     Label("Models", systemImage: "cpu")
                 }
+            
+            AboutTab()
+                .tabItem {
+                    Label("About", systemImage: "info.circle")
+                }
         }
         .frame(idealWidth: 569, minHeight: 500)
         .fixedSize(horizontal: true, vertical: false)
