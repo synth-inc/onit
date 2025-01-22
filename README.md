@@ -1,17 +1,17 @@
-# Onit
-
-Onit is an open-source AI chat assistant that lives in your desktop. It's ChatGPT Desktop, but with local mode and multi-provider support. It's also Cursor Chat, but not just in your IDE. 
-
 <div align="center">
   <a href="https://www.getonit.ai">
     <img src="macos/Onit/Assets.xcassets/AppIcon.appiconset/app_icon_1x.png" alt="Onit Logo" width="128" height="128">
   </a>
 </div>
 
+# Onit
+
+Onit is an open-source AI chat assistant that lives in your desktop. It's ChatGPT Desktop, but with local mode and multi-provider support. It's also Cursor Chat, but not just in your IDE. 
+
 ## 🚀 Quick Start
 
 - **Download:** Get the pre-built version from [www.getonit.ai](https://www.getonit.ai)
-- **Build from source:** Clone this repository and follow the [build instructions](#building-from-source)
+- **Build from source:** Clone this repository and run in Xcode
 
 ## 🎯 Why Onit?
 
