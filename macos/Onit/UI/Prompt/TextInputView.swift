@@ -1,6 +1,6 @@
 //
 //  PreferencesView.swift
-//  Omni
+//  Onit
 //
 //  Created by Benjamin Sage on 9/17/24.
 //

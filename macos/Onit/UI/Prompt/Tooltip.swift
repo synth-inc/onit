@@ -1,6 +1,6 @@
 //
 //  Tooltip.swift
-//  Omni
+//  Onit
 //
 //  Created by Benjamin Sage on 9/20/24.
 //

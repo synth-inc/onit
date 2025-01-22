@@ -1,6 +1,6 @@
 //
 //  Toolbar.swift
-//  Omni
+//  Onit
 //
 //  Created by Benjamin Sage on 9/20/24.
 //
@@ -40,7 +40,7 @@ struct Toolbar: View {
                 .appFont(.medium13)
                 .padding(4)
         }
-        .tooltip(prompt: "Close Omni", shortcut: .keyboardShortcuts(.escape))
+        .tooltip(prompt: "Close Onit", shortcut: .keyboardShortcuts(.escape))
     }
 
     // Empty view for layout purposes
