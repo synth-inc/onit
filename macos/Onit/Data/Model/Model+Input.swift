@@ -49,6 +49,10 @@ extension OnitModel {
         pendingContextList.removeAll()
         pendingInput = nil
         focusText()
+        shrinkContent()
+    }
+
+    func shrinkContent() {
         contentHeight = 0
         resizing = true
         Task {
