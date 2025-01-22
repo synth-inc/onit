@@ -1,6 +1,6 @@
 # Onit
 
-Onit is an open-source AI chat assistant that lives in your desktop. Think ChatGPT Desktop, but with local mode and multi-provider support.
+Onit is an open-source AI chat assistant that lives in your desktop. It's ChatGPT Desktop, but with local mode and multi-provider support. It's also Cursor Chat, but not just in your IDE. 
 
 <div align="center">
   <a href="https://www.getonit.ai">
