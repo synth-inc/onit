@@ -15,21 +15,22 @@ Onit is an open-source AI chat assistant that lives in your desktop. Think ChatG
 
 ## 🎯 Why Onit?
 
-We built Onit based on three core beliefs:
+We are building Onit based on these core beliefs:
 
-1. **Universal Access:** AI assistants should be accessible from anywhere on your computer, not just in browsers or specific apps
-2. **Provider Freedom:** Users should have the choice between model providers (Anthropic, OpenAI, xAI, etc.), not be locked into a single provider
-3. **Local First:** Local mode should always be an option
+1. **Universal Access:** AI assistants should be accessible from anywhere on your computer, not just in browsers or specific apps.
+2. **Provider Freedom:** Users should have the choice between models and model providers (Anthropic, OpenAI, xAI, etc.) and not be locked into a single provider.
+3. **Local First:** AI is _much_ more useful with access to your data. But that doesn't count for much if you have to upload personal files to an untrusted server first. Onit will always provide options for local processing. No personal data will leave your computer without explicit approval. 
+4. **Customizability:** Onit is your assistant. You should be able to configure it to your liking.
+5. **Extensibility:** Onit should allow the community to build and share extensions, making it more useful for everyone. 
 
 ## ✨ Features
 
 - **🤖 Local Mode:** Chat with any model running locally on Ollama - no internet required
 - **🔄 Multi-Provider Support:** Toggle between top models from OpenAI, Anthropic, and xAI
 - **📜 History:** Access previous chats through history view or up/down arrow shortcuts
-- **🕶️ Incognito Mode:** Chat without storing history
 - **⌨️ Customizable Shortcuts:** Choose your hotkey to launch the chat window
-  - Default: `Command+O`
-  - Incognito: `Command+Shift+O`
+  - Default: `Command+U`
+  - Incognito: `Command+Shift+U`
 - **📎 File Upload:** Add context through images or files (with drag & drop support)
 
 ## 🛠️ Technical Details
