@@ -11,6 +11,7 @@ struct LocalModelsSection: View {
     @Environment(\.model) var model
 
     @State private var isOn: Bool = false
+    @State private var fetching: Bool = false
 
     var body: some View {
         ModelsSection(title: "Local Models") {
@@ -86,8 +87,19 @@ struct LocalModelsSection: View {
     }
 
     var button: some View {
-        Button("Reload") {
-
+        Button(action: {
+            fetching = true
+            Task {
+                await model.fetchLocalModels()
+                fetching = false
+            }
+        }) {
+            if fetching {
+                ProgressView()
+                    .controlSize(.small)
+            } else {
+                Text("Reload")
+            }
         }
         .buttonStyle(.borderedProminent)
     }
