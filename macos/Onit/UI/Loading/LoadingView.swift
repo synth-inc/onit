@@ -33,7 +33,7 @@ struct LoadingView: View {
 
     /** Initialize all libraries and wait for some async responses */
     private func initializeLibraries() {
-        PostHogFeatureFlagManager.shared.configure()
+        FeatureFlagManager.shared.configure()
     }
     
     /**
@@ -42,7 +42,7 @@ struct LoadingView: View {
      * - Notify the app that the loading is finished
      */
     private func featureFlagsReceived() {
-        if PostHogFeatureFlagManager.shared.isAccessibilityEnabled() {
+        if FeatureFlagManager.shared.isAccessibilityEnabled() {
             initializeAccessibility()
         }
         
@@ -53,12 +53,7 @@ struct LoadingView: View {
     private func initializeAccessibility() {
         #if !targetEnvironment(simulator)
         
-        AccessibilityPermissionManager.shared.requestPermission(onUntrusted: {
-            // TODO: KNA - Stop listening and remove any observers
-        }, onTrusted: {
-            Accessibility.observeActiveApplication()
-            Accessibility.observeSystemClicks()
-        })
+        AccessibilityPermissionManager.shared.requestPermission()
         
         #endif
     }

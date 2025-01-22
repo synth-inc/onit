@@ -15,6 +15,7 @@
 		28F57E292CAC9262006AAA8C /* MenuBarExtraAccess in Frameworks */ = {isa = PBXBuildFile; productRef = 28F57E282CAC9262006AAA8C /* MenuBarExtraAccess */; };
 		863817352D3FB5F700919BC7 /* PostHog in Frameworks */ = {isa = PBXBuildFile; productRef = 863817342D3FB5F700919BC7 /* PostHog */; };
 		863817372D3FB5F700919BC7 /* phlibwebp in Frameworks */ = {isa = PBXBuildFile; productRef = 863817362D3FB5F700919BC7 /* phlibwebp */; };
+		864A53EF2D410306000B96AB /* SwiftyBeaver in Frameworks */ = {isa = PBXBuildFile; productRef = 864A53EE2D410306000B96AB /* SwiftyBeaver */; };
 		A782C1982D383493009976F8 /* FirebaseCrashlytics in Frameworks */ = {isa = PBXBuildFile; productRef = A782C1972D383493009976F8 /* FirebaseCrashlytics */; };
 /* End PBXBuildFile section */
 
@@ -55,6 +56,7 @@
 				A782C1982D383493009976F8 /* FirebaseCrashlytics in Frameworks */,
 				863817372D3FB5F700919BC7 /* phlibwebp in Frameworks */,
 				2842875E2CD0B6A5000C6C67 /* HighlightSwift in Frameworks */,
+				864A53EF2D410306000B96AB /* SwiftyBeaver in Frameworks */,
 				28F57E222CAC84AA006AAA8C /* KeyboardShortcuts in Frameworks */,
 				282E9A1E2CD06218003F3617 /* MarkdownUI in Frameworks */,
 			);
@@ -109,6 +111,7 @@
 				A782C1972D383493009976F8 /* FirebaseCrashlytics */,
 				863817342D3FB5F700919BC7 /* PostHog */,
 				863817362D3FB5F700919BC7 /* phlibwebp */,
+				864A53EE2D410306000B96AB /* SwiftyBeaver */,
 			);
 			productName = Onit;
 			productReference = 2883E4B32CA5ECBB00F79A48 /* Onit.app */;
@@ -147,6 +150,7 @@
 				2842875C2CD0B6A5000C6C67 /* XCRemoteSwiftPackageReference "HighlightSwift" */,
 				A782C1962D383493009976F8 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
 				863817332D3FB5F700919BC7 /* XCRemoteSwiftPackageReference "posthog-ios" */,
+				864A53ED2D410306000B96AB /* XCRemoteSwiftPackageReference "SwiftyBeaver" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 2883E4B42CA5ECBB00F79A48 /* Products */;
@@ -478,6 +482,14 @@
 				minimumVersion = 3.19.1;
 			};
 		};
+		864A53ED2D410306000B96AB /* XCRemoteSwiftPackageReference "SwiftyBeaver" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/SwiftyBeaver/SwiftyBeaver.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.1.1;
+			};
+		};
 		A782C1962D383493009976F8 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/firebase/firebase-ios-sdk";
@@ -528,6 +540,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 863817332D3FB5F700919BC7 /* XCRemoteSwiftPackageReference "posthog-ios" */;
 			productName = phlibwebp;
+		};
+		864A53EE2D410306000B96AB /* SwiftyBeaver */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 864A53ED2D410306000B96AB /* XCRemoteSwiftPackageReference "SwiftyBeaver" */;
+			productName = SwiftyBeaver;
 		};
 		A782C1972D383493009976F8 /* FirebaseCrashlytics */ = {
 			isa = XCSwiftPackageProductDependency;

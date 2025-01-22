@@ -12,9 +12,16 @@ struct MenuIcon: View {
     @Environment(\.model) var model
 
     var body: some View {
-        Image(model.trusted ? .smirk : .untrusted)
-            .renderingMode(model.trusted ? .template : .original)
-            .animation(.default, value: model.trusted)
+        if FeatureFlagManager.shared.isAccessibilityEnabled() {
+            let statusGranted = model.accessibilityPermissionStatus == .granted
+            Image(statusGranted ? .smirk : .untrusted)
+                .renderingMode(statusGranted ? .template : .original)
+                .animation(.default, value: statusGranted)
+        } else {
+            Image(.smirk)
+                .renderingMode(.template)
+                .animation(.default, value: true)
+        }
     }
 }
 

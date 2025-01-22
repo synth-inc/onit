@@ -14,7 +14,7 @@ struct MenuCheckForPermissions: View {
     let link = "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility"
 
     var body: some View {
-        if !model.trusted {
+        if FeatureFlagManager.shared.isAccessibilityEnabled() && model.accessibilityPermissionStatus != .granted {
             permissionsRow
             MenuDivider()
         }

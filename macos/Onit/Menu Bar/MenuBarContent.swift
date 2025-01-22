@@ -8,13 +8,17 @@
 import SwiftUI
 
 struct MenuBarContent: View {
+    @Environment(\.model) var model
+    
     var body: some View {
         VStack(spacing: 5) {
             MenuCheckForPermissions()
             MenuOpenOnitButton()
             MenuDivider()
-            MenuAppearsInPicker()
-            MenuDivider()
+            if FeatureFlagManager.shared.isAccessibilityEnabled() && model.accessibilityPermissionStatus == .granted {
+                MenuAppearsInPicker()
+                MenuDivider()
+            }
             MenuSettings()
             MenuCheckForUpdates()
             MenuHowItWorks()

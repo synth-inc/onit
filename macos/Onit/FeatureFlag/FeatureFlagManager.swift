@@ -1,5 +1,5 @@
 //
-//  PostHogFeatureFlagManager.swift
+//  FeatureFlagManager.swift
 //  Onit
 //
 //  Created by Kévin Naudin on 21/01/2025.
@@ -9,21 +9,21 @@ import PostHog
 import Foundation
 
 /**
- * PostHog implementation of the `FeatureFlagManagerLogic`
+ * Class which manages feature flags with PostHog SDK
  */
-final class PostHogFeatureFlagManager: FeatureFlagManagerLogic, Sendable {
+final class FeatureFlagManager: Sendable {
     
     // MARK: - Singleton instance
     
-    static let shared = PostHogFeatureFlagManager()
+    static let shared = FeatureFlagManager()
     
-    // MARK: - FeatureFlagManagerLogic
+    // MARK: - Functions
     
-    /** See ``FeatureFlagManagerLogic`` protocol */
+    /** Configure the SDK */
     func configure() {
         guard let apiKey = Bundle.main.object(forInfoDictionaryKey: "PostHogApiKey") as? String,
               let host = Bundle.main.object(forInfoDictionaryKey: "PostHogHost") as? String else {
-            print("PostHog -> Error not initialized due to missing API key or host")
+            log.error("PostHog -> Error not initialized due to missing API key or host")
             return
         }
         
@@ -32,11 +32,17 @@ final class PostHogFeatureFlagManager: FeatureFlagManagerLogic, Sendable {
         PostHogSDK.shared.setup(config)
     }
     
+    /** Reload / Fetch configuration */
     func reload() {
         PostHogSDK.shared.reloadFeatureFlags()
     }
     
+    /**
+     * Check if accessibility feature is enabled
+     * - returns: True if accessibility is enabled, false otherwise
+     */
     func isAccessibilityEnabled() -> Bool {
+        // TODO: KNA - Add a fallback
         return PostHogSDK.shared.isFeatureEnabled("accessibility")
     }
 }

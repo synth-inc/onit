@@ -134,9 +134,9 @@ extension OnitModel {
      */
     private func trackEventGeneration(prompt: Prompt) {
         let eventName = "user_prompted"
-        var eventProperties: [String: Any] = [
+        let eventProperties: [String: Any] = [
             "prompt_instruction": prompt.instruction,
-            "prompt_mode": preferences.mode == .remote ? "remote" : "local",
+            "prompt_mode": preferences.mode.rawValue,
             "prompt_model": preferences.mode == .remote ? preferences.model?.displayName ?? "" : preferences.localModel ?? ""
         ]
         PostHogSDK.shared.capture(eventName, properties: eventProperties)

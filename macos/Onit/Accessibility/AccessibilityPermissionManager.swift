@@ -15,11 +15,11 @@
 @MainActor
 class AccessibilityPermissionManager {
     
-    // MARK: Singleton instance
+    // MARK: - Singleton instance
     
     static let shared = AccessibilityPermissionManager()
     
-    // MARK: Properties
+    // MARK: - Properties
     
     /** Get the actual state of permission. True means trusted, otherwise it's false */
     static var isProcessTrusted: Bool { AXIsProcessTrusted() }
@@ -30,30 +30,26 @@ class AccessibilityPermissionManager {
     /** Get the state of permission managed by the `Timer` */
     private var isProcessTrustedFromTimer: Bool?
     
-    /** Optional closure to execute when permission untrusted */
-    private var onProcessUntrusted: (() -> Void)?
+    /** Reference to `OnitModel` used to update the `accessibilityPermissionStatus` property */
+    private var model: OnitModel?
     
-    /** Optional closure to execute when permission trusted */
-    private var onProcessTrusted: (() -> Void)?
+    // MARK: - Initializers
     
-    // MARK: Functions
+    private init() { }
+    
+    // MARK: - Functions
+    
+    func setModel(_ model: OnitModel) {
+        self.model = model
+    }
     
     /**
      * Requests accessibility permissions if they are not already granted.
      *
      * This function monitors whether the application has the required accessibility permissions,
      * accessible through **System Preferences > Security & Privacy > Accessibility**.
-     *
-     * If the permissions are granted, the `onTrusted` closure is called.
-     * If the permissions are not granted,  the `onUntrusted` closure is called.
-     *
-     * - parameter onUntrusted: optional closure to execute when permission untrusted
-     * - parameter onTrusted: optional closure to execute when permission trusted
      */
-    func requestPermission(onUntrusted: (() -> Void)?, onTrusted: (() -> Void)?) {
-        onProcessUntrusted = onUntrusted
-        onProcessTrusted = onTrusted
-        
+    func requestPermission() {
         processTrustedTimer = Timer.scheduledTimer(timeInterval: 0.5,
                                                    target: self,
                                                    selector: #selector(checkProcessTrusted),
@@ -67,7 +63,7 @@ class AccessibilityPermissionManager {
         AXIsProcessTrustedWithOptions(options)
     }
     
-    // MARK: Obj-c Functions
+    // MARK: - Obj-c Functions
     
     /** Timer callback method */
     @objc private func checkProcessTrusted() {
@@ -77,9 +73,9 @@ class AccessibilityPermissionManager {
             isProcessTrustedFromTimer = isProcessTrusted
             
             if isProcessTrusted {
-                onProcessTrusted?()
+                model?.accessibilityPermissionStatus = .granted
             } else {
-                onProcessUntrusted?()
+                model?.accessibilityPermissionStatus = .denied
             }
         }
     }

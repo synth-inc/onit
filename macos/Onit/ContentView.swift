@@ -45,6 +45,19 @@ struct ContentView: View {
                     }
             }
         }
+        .onChange(of: model.accessibilityPermissionStatus, initial: true) { oldValue, newValue in
+            log.error("AccessibilityGranted changes oldValue: \(oldValue) newValue: \(newValue)")
+            
+//            if oldValue != newValue {
+//                if newValue {
+//                    // TODO: KNA - Add observers
+//                     Accessibility.observeActiveApplication()
+//                     Accessibility.observeSystemClicks()
+//                } else {
+//                    // TODO: KNA - Remove observers
+//                }
+//            }
+        }
     }
 }
 

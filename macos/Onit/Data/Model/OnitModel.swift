@@ -59,8 +59,7 @@ import AppKit
 
     var modelSelectionWindowController: ModelSelectionWindowController?
 
-    var trusted: Bool = true
-    @ObservationIgnored var trustedTimer: AnyCancellable?
+    var accessibilityPermissionStatus: AccessibilityPermissionStatus = .notDetermined
 
     var droppedItems = [(image: NSImage, filename: String)]()
 
@@ -109,7 +108,6 @@ import AppKit
         self.container = container
         super.init()
         self.preferences = Preferences.shared
-        startTrustedTimer()
         Task {
             await fetchLocalModels()
         }

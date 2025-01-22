@@ -9,6 +9,9 @@ import SwiftUI
 import KeyboardShortcuts
 import MenuBarExtraAccess
 import Foundation
+import SwiftyBeaver
+
+let log = SwiftyBeaver.self
 
 @main
 struct App: SwiftUI.App {
@@ -17,6 +20,9 @@ struct App: SwiftUI.App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) var delegate
     
     init() {
+        let console = ConsoleDestination()
+        log.addDestination(console)
+        
         KeyboardShortcuts.onKeyUp(for: .launch) { [weak model] in
             model?.launchShortcutAction()
         }
@@ -37,6 +43,8 @@ struct App: SwiftUI.App {
         }
 
         showLoadingScreen()
+        
+        AccessibilityPermissionManager.shared.setModel(model)
         
         // TODO: KNA - Replace this
         #if !targetEnvironment(simulator)
