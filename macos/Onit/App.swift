@@ -16,8 +16,6 @@ struct App: SwiftUI.App {
     @Environment(\.model) var model
     @NSApplicationDelegateAdaptor(AppDelegate.self) var delegate
     
-    @State var isLoadingDone = false
-    
     init() {
         KeyboardShortcuts.onKeyUp(for: .launch) { [weak model] in
             model?.launchShortcutAction()
