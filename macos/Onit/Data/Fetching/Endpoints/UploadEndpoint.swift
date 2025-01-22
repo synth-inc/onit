@@ -107,11 +107,9 @@ enum UploadError: Error {
 // MARK: - Keys
 
 // TODO we need to revoke this key so people can't use the bucket after we open-source this
+// No such thing as free buckets
 extension String {
-    fileprivate static let azureBase = "https://onit.blob.core.windows.net"
-    fileprivate static let azureBucket = "onit"
-    fileprivate static let sasKey = """
-sv=2022-11-02&ss=bfqt&srt=o&sp=rwdlacupiytfx&se=2025-10-29T15:06:42Z&st=2024-10-29T07:06:42Z&spr=https&sig=kleAK3lON2b6\
-kIk6UCQ%2FXOXH15k8HFjjMUwPWxMpptk%3D
-"""
+    fileprivate static let azureBase = ""
+    fileprivate static let azureBucket = ""
+    fileprivate static let sasKey = ""
 }
