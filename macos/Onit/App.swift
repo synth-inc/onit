@@ -9,9 +9,7 @@ import SwiftUI
 import KeyboardShortcuts
 import MenuBarExtraAccess
 import Foundation
-import SwiftyBeaver
-
-let log = SwiftyBeaver.self
+import PostHog
 
 @main
 struct App: SwiftUI.App {
@@ -20,9 +18,6 @@ struct App: SwiftUI.App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) var delegate
     
     init() {
-        let console = ConsoleDestination()
-        log.addDestination(console)
-        
         KeyboardShortcuts.onKeyUp(for: .launch) { [weak model] in
             model?.launchShortcutAction()
         }
@@ -42,16 +37,30 @@ struct App: SwiftUI.App {
             model?.escapeAction()
         }
 
-        showLoadingScreen()
+        FeatureFlagManager.shared.configure()
+        model.showPanel()
+        
+        #if !targetEnvironment(simulator)
+        
+        let hostingController = NSHostingController(rootView: StaticPromptView())
+        let window = NSWindow(contentViewController: hostingController)
+        
+        window.styleMask = [.borderless]
+        window.isOpaque = false
+        window.backgroundColor = NSColor.clear
+        window.level = .floating
+        window.hasShadow = false
+        window.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
         
         AccessibilityPermissionManager.shared.setModel(model)
+        AccessibilityNotificationsManager.shared.setModel(model)
+        AccessibilityNotificationsManager.shared.setupWindow(window)
+        WindowHelper.shared.setupWindow(window)
         
-        // TODO: KNA - Replace this
-        #if !targetEnvironment(simulator)
-        Accessibility.setModel(model)
-        Accessibility.setupWindow(withView: StaticPromptView())
         #endif
     }
+    
+    let featureFlagsReceivedPub = NotificationCenter.default.publisher(for: PostHogSDK.didReceiveFeatureFlags)
 
     var body: some Scene {
         @Bindable var model = model
@@ -60,6 +69,19 @@ struct App: SwiftUI.App {
             MenuBarContent()
         } label: {
             MenuIcon()
+                .onChange(of: model.accessibilityPermissionStatus, initial: true) { oldValue, newValue in
+                    switch newValue {
+                    case .granted:
+                        AccessibilityNotificationsManager.shared.start()
+                        TapListener.shared.start()
+                    case .denied:
+                        AccessibilityNotificationsManager.shared.stop()
+                        TapListener.shared.stop()
+                    default:
+                        break
+                    }
+                }
+                .onReceive(featureFlagsReceivedPub) { _ in featureFlagsReceived() }
         }
         .menuBarExtraStyle(.window)
         .menuBarExtraAccess(isPresented: $model.showMenuBarExtra)
@@ -70,24 +92,21 @@ struct App: SwiftUI.App {
         }
     }
     
-    @MainActor private func showLoadingScreen() {
-        let loadingWindow = NSWindow(
-            contentRect: NSRect(x: 0, y: 0, width: 400, height: 300),
-            styleMask: [.titled, .closable],
-            backing: .buffered,
-            defer: false
-        )
+    /**
+     * On feature flags received event :
+     * - Initialize stuff depending on feature flag
+     * - Notify the app that the loading is finished
+     */
+    private func featureFlagsReceived() {
+        if FeatureFlagManager.shared.isAccessibilityEnabled() {
+            #if !targetEnvironment(simulator)
+            
+            AccessibilityPermissionManager.shared.requestPermission()
+            
+            #endif
+        }
         
-        let loadingView = LoadingView(onLoadingFinished: {
-            loadingWindow.close()
-            model.showPanel()
-        })
-        
-        let launchView = NSHostingController(rootView: loadingView)
-        loadingWindow.contentViewController = launchView
-        loadingWindow.title = "Loading"
-        loadingWindow.center()
-        loadingWindow.makeKeyAndOrderFront(nil)
+        // TODO: KNA - Refresh UI ?
     }
 }
 

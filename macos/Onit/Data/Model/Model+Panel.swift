@@ -123,7 +123,7 @@ extension OnitModel: NSWindowDelegate {
     func closePanel() {
         guard let panel = panel else { return }
         panel.orderOut(nil)
-        Accessibility.adjustWindowToTopRight()
+        WindowHelper.shared.adjustWindowToTopRight()
         self.panel = nil
     }
 
