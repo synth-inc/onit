@@ -24,9 +24,9 @@ class AccessibilityParserBase: AccessibilityParserLogic {
         if let role = element.role(), let title = element.title() {
             switch role {
             case kAXApplicationRole:
-                return ["applicationName": title]
+                return [AccessibilityParsedElements.applicationName: title]
             case kAXWindowRole:
-                return ["applicationTitle": title]
+                return [AccessibilityParsedElements.applicationTitle: title]
             default:
                 return nil
             }
