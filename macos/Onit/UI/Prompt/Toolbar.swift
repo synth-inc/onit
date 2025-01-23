@@ -96,7 +96,7 @@ struct Toolbar: View {
             HStack(spacing: 0) {
                 Text(model.preferences.mode == .local ?
                      (model.preferences.localModel?.split(separator: ":").first.map(String.init) ?? "") :
-                     (model.preferences.model?.displayName ?? ""))
+                     (model.preferences.remoteModel?.displayName ?? ""))
                     .appFont(.medium13)
                     .padding(.leading, 2)
                 Image(.smallChevDown)

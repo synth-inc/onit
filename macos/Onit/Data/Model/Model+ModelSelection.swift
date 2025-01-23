@@ -25,7 +25,7 @@ extension OnitModel {
 
     func selectModel(_ modelItem: AIModel) {
         updatePreferences { prefs in
-            prefs.model = modelItem
+            prefs.remoteModel = modelItem
             prefs.mode = .remote
         }
         closeModelSelectionOverlay()
@@ -50,7 +50,7 @@ extension OnitModel {
         .init { [self] in
             if preferences.mode == .local, let localModelName = preferences.localModel {
                 return .local(localModelName)
-            } else if let aiModel = preferences.model {
+            } else if let aiModel = preferences.remoteModel {
                 return .remote(aiModel)
             } else {
                 return nil
@@ -60,7 +60,7 @@ extension OnitModel {
             switch newValue {
             case .remote(let aiModel):
                 updatePreferences { prefs in
-                    prefs.model = aiModel
+                    prefs.remoteModel = aiModel
                     prefs.mode = .remote
                 }
             case .local(let localModelName):
@@ -74,10 +74,10 @@ extension OnitModel {
 
     var defaultRemoteModel: AIModel? {
         get {
-            preferences.model
+            preferences.remoteModel
         }
         set {
-            preferences.model = newValue
+            preferences.remoteModel = newValue
             Preferences.save(preferences)
         }
     }
@@ -106,12 +106,5 @@ extension OnitModel {
         }
 
         return models
-    }
-    
-    func refreshModels() async throws {
-        let models = try await AIModel.fetchModels()
-        updatePreferences { prefs in
-            prefs.updateCachedModels(models)
-        }
     }
 }
