@@ -6,7 +6,7 @@
 
 # Onit
 
-Onit is an open-source AI chat assistant that lives in your desktop. It's ChatGPT Desktop, but with local mode and multi-provider support. It's also Cursor Chat, but not just in your IDE. 
+Onit is an open-source AI chat assistant that lives in your desktop. It's like ChatGPT Desktop but with local mode and support for _other_ model providers (Anthropic, xAI, etc). It's also like Cursor Chat but everywhere on your computer, not just in your IDE!
 
 ## 🚀 Quick Start
 
@@ -29,8 +29,8 @@ We are building Onit based on these core beliefs:
 - **🔄 Multi-Provider Support:** Toggle between top models from OpenAI, Anthropic, and xAI
 - **📜 History:** Access previous chats through history view or up/down arrow shortcuts
 - **⌨️ Customizable Shortcuts:** Choose your hotkey to launch the chat window
-  - Default: `Command+U`
-  - Incognito: `Command+Shift+U`
+  - Default: `Command+0`
+  - Local: `Command+Shift+0`
 - **📎 File Upload:** Add context through images or files (with drag & drop support)
 
 ## 🛠️ Technical Details
@@ -51,7 +51,7 @@ We are building Onit based on these core beliefs:
 - No server component in V1
 - Local requests are handled locally
 - Remote requests go directly to model providers' APIs
-- Only crash reports are collected (via Firebase)
+- Only crash reports are collected (via Firebase) and non-personal analytics (via PostHog)
 
 ## 💡 Future Roadmap
 
