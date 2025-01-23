@@ -17,10 +17,9 @@ class AccessibilityParserXCode: AccessibilityParserBase {
     /** See ``AccessibilityParserLogic`` parse function */
     override func parse(element: AXUIElement) -> [String : String] {
         var result: [String: String] = [:]
-        let maxDepth = AccessibilityParserConfig.recursiveDepthMax
         
         return AccessibilityParserUtility.recursivelyParse(element: element,
-                                                           maxDepth: maxDepth) { element in
+                                                           maxDepth: Config.recursiveDepthMax) { element in
             if let parentResult = super.parse(element: element) {
                 result.merge(parentResult) { _, new in new }
             }
@@ -35,9 +34,9 @@ class AccessibilityParserXCode: AccessibilityParserBase {
             
             switch description {
             case "Source Editor":
-                result["editor"] = value
+                result[AccessibilityParsedElements.Xcode.editor] = value
             case "Console":
-                result["console"] = value
+                result[AccessibilityParsedElements.Xcode.console] = value
             default:
                 break
             }

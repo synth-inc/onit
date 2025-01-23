@@ -21,7 +21,7 @@ class AccessibilityParserGeneric: AccessibilityParserBase {
 //        let biggestElement = findElementWithBiggestArea(appElement: element, result: &result)
         var screen: String = ""
         _ = AccessibilityParserUtility.recursivelyParse(element: element,
-                                                        maxDepth: AccessibilityParserConfig.recursiveDepthMax) { element in
+                                                        maxDepth: Config.recursiveDepthMax) { element in
             if let parentResult = super.parse(element: element) {
                 result.merge(parentResult) { _, new in new }
             }
@@ -39,7 +39,7 @@ class AccessibilityParserGeneric: AccessibilityParserBase {
             return nil
         }
         
-        result["screen"] = screen
+        result[AccessibilityParsedElements.screen] = screen
         
         return result
     }
@@ -55,7 +55,7 @@ class AccessibilityParserGeneric: AccessibilityParserBase {
         var biggestFrame: CGRect?
         
         _ = AccessibilityParserUtility.recursivelyParse(element: appElement,
-                                                        maxDepth: AccessibilityParserConfig.recursiveDepthMax) { element in
+                                                        maxDepth: Config.recursiveDepthMax) { element in
             
             if let parentResult = super.parse(element: element) {
                 result.merge(parentResult) { _, new in new }
