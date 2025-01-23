@@ -24,23 +24,30 @@ struct DebugModeTab: View {
             VStack(alignment: .leading, spacing: 20) {
                 Text("Feature flags")
                     .font(.system(size: 14))
-                HStack {
-                    Text("Accessibility")
-                        .font(.system(size: 13))
-                    Spacer()
-                    Toggle("", isOn: Binding(
-                        get: { featureFlagsManager.flags.accessibility },
-                        set: { featureFlagsManager.setFeatureFlag($0, for: .accessibility) }
-                    ))
-                    .toggleStyle(.switch)
-                    .controlSize(.small)
-                }
+                
+                featureFlagsView
             }
             .fontWeight(.medium)
             .frame(maxWidth: .infinity, alignment: .leading)
         }
         .padding(.vertical, 20)
         .padding(.horizontal, 86)
+    }
+    
+    var featureFlagsView: some View {
+        ForEach(FeatureFlagManager.FeatureFlagKey.allCases) { key in
+            HStack {
+                Text(key.rawValue)
+                    .font(.system(size: 13))
+                Spacer()
+                Toggle("", isOn: Binding(
+                    get: { featureFlagsManager.getFeatureFlag(key) },
+                    set: { featureFlagsManager.setFeatureFlag($0, for: key) }
+                ))
+                .toggleStyle(.switch)
+                .controlSize(.small)
+            }
+        }
     }
 }
 

@@ -29,8 +29,10 @@ class FeatureFlagManager: ObservableObject {
     
     // MARK: - Feature Flag Keys
     
-    enum FeatureFlagKey {
-        case accessibility
+    enum FeatureFlagKey: String, CaseIterable, Identifiable {
+        var id : String { UUID().uuidString }
+        
+        case accessibility = "Accessibility"
     }
     
     // MARK: - Functions
@@ -52,6 +54,13 @@ class FeatureFlagManager: ObservableObject {
         let config = PostHogConfig(apiKey: apiKey, host: host)
         
         PostHogSDK.shared.setup(config)
+    }
+    
+    func getFeatureFlag(_ key: FeatureFlagKey) -> Bool {
+        switch key {
+        case .accessibility:
+            return flags.accessibility
+        }
     }
     
     /** Override feature flag value (for testing or manual control) */
