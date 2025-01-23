@@ -15,6 +15,7 @@ struct RemoteModelsSection: View {
             RemoteModelSection(provider: .openAI)
             RemoteModelSection(provider: .anthropic)
             RemoteModelSection(provider: .xAI)
+            RemoteModelSection(provider: .googleAI)
         }
     }
 }

@@ -96,6 +96,11 @@ extension OnitModel {
                 let endpoint = XAIValidationEndpoint(apiKey: token)
                 _ = try await FetchingClient().execute(endpoint)
                 state.setValid(provider: provider)
+                
+            case .googleAI:
+                let endpoint = GoogleAIValidationEndpoint(apiKey: token)
+                _ = try await FetchingClient().execute(endpoint)
+                state.setValid(provider: provider)
             }
             setTokenIsValid(true)
         } catch let error as FetchingError {

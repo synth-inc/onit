@@ -37,12 +37,14 @@ struct AIModel: Codable, Identifiable, Hashable {
         case openAI = "openai"
         case anthropic = "anthropic"
         case xAI = "xai"
+        case googleAI = "googleai"
 
         var title: String {
             switch self {
             case .openAI: return "OpenAI"
             case .anthropic: return "Anthropic"
             case .xAI: return "xAI"
+            case .googleAI: return "Google AI"
             }
         }
 
@@ -51,6 +53,7 @@ struct AIModel: Codable, Identifiable, Hashable {
             case .openAI: return "GPT-4o"
             case .anthropic: return "Claude"
             case .xAI: return "Grok"
+            case .googleAI: return "Gemini"
             }
         }
 
@@ -62,6 +65,8 @@ struct AIModel: Codable, Identifiable, Hashable {
                 return URL(string: "https://docs.anthropic.com/en/api/getting-started")!
             case .xAI:
                 return URL(string: "https://accounts.x.ai/account")!
+            case .googleAI:
+                return URL(string: "https://makersuite.google.com/app/apikey")!
             }
         }
     }

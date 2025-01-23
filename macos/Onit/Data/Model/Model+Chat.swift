@@ -149,6 +149,8 @@ extension OnitModel {
             isAnthropicTokenValidated = isValid
         case .xAI:
             isXAITokenValidated = isValid
+        case .googleAI:
+            isGoogleAITokenValidated = isValid
         }
     }
     
@@ -161,6 +163,8 @@ extension OnitModel {
                 return anthropicToken
             case .xAI:
                 return xAIToken
+            case .googleAI:
+                return googleAIToken
             }
         }
         return nil

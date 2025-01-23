@@ -195,6 +195,49 @@ actor FetchingClient {
             let endpoint = XAIChatEndpoint(messages: xAIMessageStack, model: model.id, token: apiToken)
             let response = try await execute(endpoint)
             return response.choices[0].message.content
+            
+        case .googleAI:
+            var googleAIMessageStack: [GoogleAIChatMessage] = []
+            
+            for (index, userMessage) in userMessages.enumerated() {
+                var parts: [GoogleAIChatPart] = []
+                
+                // Add text part
+                parts.append(GoogleAIChatPart(text: userMessage, inlineData: nil))
+                
+                // Add image parts if any
+                for url in images[index] {
+                    if let imageData = try? Data(contentsOf: url) {
+                        let base64EncodedData = imageData.base64EncodedString()
+                        let mimeType = mimeType(for: url)
+                        parts.append(GoogleAIChatPart(
+                            text: nil,
+                            inlineData: GoogleAIChatInlineData(
+                                mimeType: mimeType,
+                                data: base64EncodedData
+                            )
+                        ))
+                    } else {
+                        print("Unable to read image data from URL: \(url)")
+                    }
+                }
+                
+                // Add user message
+                googleAIMessageStack.append(GoogleAIChatMessage(role: "user", parts: parts))
+                
+                // If there is a corresponding response, add it as a model message
+                if index < responses.count {
+                    let responseMessage = GoogleAIChatMessage(
+                        role: "model",
+                        parts: [GoogleAIChatPart(text: responses[index], inlineData: nil)]
+                    )
+                    googleAIMessageStack.append(responseMessage)
+                }
+            }
+            
+            let endpoint = GoogleAIChatEndpoint(messages: googleAIMessageStack, model: model.id, token: apiToken)
+            let response = try await execute(endpoint)
+            return response.candidates[0].content.parts[0].text
         }
     }
     

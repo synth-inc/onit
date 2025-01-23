@@ -173,6 +173,8 @@ struct RemoteModelSection: View {
             model.anthropicToken = key.isEmpty ? nil : key
         case .xAI:
             model.xAIToken = key.isEmpty ? nil : key
+        case .googleAI:
+            model.googleAIToken = key.isEmpty ? nil : key
         }
     }
 
@@ -184,6 +186,8 @@ struct RemoteModelSection: View {
             key = model.anthropicToken ?? ""
         case .xAI:
             key = model.xAIToken ?? ""
+        case .googleAI:
+            key = model.googleAIToken ?? ""
         }
     }
 
@@ -195,6 +199,8 @@ struct RemoteModelSection: View {
             use = model.useAnthropic
         case .xAI:
             use = model.useXAI
+        case .googleAI:
+            use = model.useGoogleAI
         }
     }
 
@@ -206,6 +212,8 @@ struct RemoteModelSection: View {
             validated = model.isAnthropicTokenValidated
         case .xAI:
             validated = model.isXAITokenValidated
+        case .googleAI:
+            validated = model.isGoogleAITokenValidated
         }
     }
 
@@ -217,6 +225,8 @@ struct RemoteModelSection: View {
             model.useAnthropic = use
         case .xAI:
             model.useXAI = use
+        case .googleAI:
+            model.useGoogleAI = use
         }
     }
 
