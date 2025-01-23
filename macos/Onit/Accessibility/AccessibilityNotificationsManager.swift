@@ -5,6 +5,7 @@
 //  Created by Kévin Naudin on 22/01/2025.
 //
 
+import ApplicationServices
 import Foundation
 import SwiftUI
 
@@ -87,8 +88,6 @@ class AccessibilityNotificationsManager {
     }
     
     func stop() {
-        // TODO: KNA - Find a way to remove AXObserver
-        // Actually when we grant/deny in loop permission, the observers stack
         for pid in observers.keys {
             stopAccessibilityObservers(for: pid)
         }
@@ -98,7 +97,7 @@ class AccessibilityNotificationsManager {
         currentApplication = 0
         currentSource = nil
         appElement = nil
-        observers = [:]
+        observers.removeAll()
     }
     
     func setupWindow(_ window: NSWindow) {
@@ -176,15 +175,18 @@ class AccessibilityNotificationsManager {
     
     private func stopAccessibilityObservers(for pid: pid_t) {
         // Check if the process ID is already in self.observers
-        guard let appElement = self.appElement else { return }
+        guard let appElement = self.appElement,
+              let existingObserver = self.observers[pid] else { return }
         
-        if let existingObserver = self.observers[pid] {
-            for notification in self.notifications {
-                AXObserverRemoveNotification(existingObserver, appElement, notification as CFString)
-            }
-            self.observers[pid] = nil
-            print("Removed existing observer for PID: \(pid).")
+        let runLoopSource = AXObserverGetRunLoopSource(existingObserver)
+        CFRunLoopRemoveSource(CFRunLoopGetMain(), runLoopSource, .defaultMode)
+        
+        for notification in self.notifications {
+            AXObserverRemoveNotification(existingObserver, appElement, notification as CFString)
         }
+    
+        self.observers.removeValue(forKey: pid)
+        print("Removed existing observer for PID: \(pid).")
     }
     
     // MARK: - Notifications handling
