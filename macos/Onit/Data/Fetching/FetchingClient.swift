@@ -103,7 +103,7 @@ actor FetchingClient {
                 }
             }
 
-            let endpoint = OpenAIChatEndpoint(messages: openAIMessageStack, token: apiToken, model: model.rawValue)
+            let endpoint = OpenAIChatEndpoint(messages: openAIMessageStack, token: apiToken, model: model.id)
             let response = try await execute(endpoint)
             return response.choices[0].message.content
             
@@ -146,7 +146,7 @@ actor FetchingClient {
             }
             
             let endpoint = AnthropicChatEndpoint(
-                model: model.rawValue,
+                model: model.id,
                 system: model.supportsSystemPrompts ? systemMessage : "",
                 token: apiToken,
                 messages: anthropicMessageStack,
@@ -192,7 +192,7 @@ actor FetchingClient {
                 }
             }
             
-            let endpoint = XAIChatEndpoint(messages: xAIMessageStack, model: model.rawValue, token: apiToken)
+            let endpoint = XAIChatEndpoint(messages: xAIMessageStack, model: model.id, token: apiToken)
             let response = try await execute(endpoint)
             return response.choices[0].message.content
         }

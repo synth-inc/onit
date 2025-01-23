@@ -19,31 +19,38 @@ struct Preferences: Codable {
     }
     
     static func load() -> Preferences {
+        // Never commit this uncommented!!
+        // UserDefaults.standard.removeObject(forKey: key)
+
         if let data = UserDefaults.standard.data(forKey: key),
            let preferences = try? JSONDecoder().decode(Preferences.self, from: data) {
             return preferences
         }
+
+
         return Preferences()
     }
     
-    var model: AIModel?
+    var remoteModel: AIModel?
     var localModel: String? = nil
     var mode: InferenceMode = .remote
     var availableLocalModels: [String] = []
-    var visibleModels: Set<AIModel> = Set([
-        // Default OpenAI models
-        .o1,
-        .o1Mini,
-        .gpt4o,
-        // Default Anthropic models
-        .claude35SonnetLatest,
-        .claude35HaikuLatest,
-        // Default xAI models
-        .grok2,
-        .grok2Vision,
-    ])
+    var availableRemoteModels: [AIModel] = []
+    var visibleModelIds: Set<String> = Set([])
     
+    mutating func markRemoteModelAsNotNew(modelId: String) {
+        if let index = availableRemoteModels.firstIndex(where: { $0.id == modelId }) {
+            availableRemoteModels[index].isNew = false
+        }
+    }
+
+    mutating func initializeVisibleModelIds(from models: [AIModel]) {
+        if visibleModelIds.isEmpty {
+            visibleModelIds = Set(models.filter { $0.defaultOn }.map { $0.id })
+        }
+    }
+
     var visibleModelsList: [AIModel] {
-        AIModel.allCases.filter { visibleModels.contains($0) }
+        return availableRemoteModels.filter { visibleModelIds.contains($0.id) }
     }
 }

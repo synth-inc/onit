@@ -32,7 +32,7 @@ struct ModelSelectionView: View {
                     .appFont(.medium13)
                     .foregroundStyle(.white.opacity(0.6))
                 Spacer()
-                if model.remoteNeedsSetup {
+                if model.remoteNeedsSetup || (!model.remoteNeedsSetup && model.preferences.availableRemoteModels.isEmpty) {
                     Image(.warningSettings)
                 }
             }

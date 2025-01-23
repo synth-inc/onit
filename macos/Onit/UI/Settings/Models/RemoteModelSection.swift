@@ -16,6 +16,9 @@ struct RemoteModelSection: View {
 
     @State private var loading = false
 
+    @AppStorage("closedNewRemoteData") private var closedNewRemoteData: Data = Data()
+    @AppStorage("closedDeprecatedRemoteData") private var closedDeprecatedRemoteData: Data = Data()
+
     var provider: AIModel.ModelProvider
 
     var state: TokenValidationState.ValidationState {
@@ -23,7 +26,7 @@ struct RemoteModelSection: View {
     }
 
     var models: [AIModel] {
-        AIModel.allCases.filter { $0.provider == provider }
+        model.preferences.availableRemoteModels.filter { $0.provider == provider }
     }
 
     // MARK: - Body

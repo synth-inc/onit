@@ -14,13 +14,37 @@ struct SetUpDialogs: View {
     var seenLocal: Bool
 
     @State var closedNoLocalModels = false
+    @State var closedNoRemoteModels = false
 
+    @State private var fetchingRemote = false
+    @State private var fetchingLocal = false
+    
     @AppStorage("closedRemote") var closedRemote = false
     @AppStorage("closedLocal") var closedLocal = false
 
     @AppStorage("closedOpenAI") var closedOpenAI = false
     @AppStorage("closedAnthropic") var closedAnthropic = false
     @AppStorage("closedXAI") var closedXAI = false
+
+    @AppStorage("closedNewRemoteData") private var closedNewRemoteData: Data = Data()
+    var closedNewRemote: [String: Bool] {
+        get {
+             if let decoded = try? JSONDecoder().decode([String: Bool].self, from: closedNewRemoteData) {
+                 return decoded
+             }
+            return [:]
+        }
+    }
+        
+    @AppStorage("closedDeprecatedRemoteData") private var closedDeprecatedRemoteData: Data = Data()
+    var closedDeprecatedRemote: [String: Bool] {
+        get {
+             if let decoded = try? JSONDecoder().decode([String: Bool].self, from: closedDeprecatedRemoteData) {
+                 return decoded
+             }
+            return [:]
+        }
+    }
 
     var body: some View {
         content
@@ -29,8 +53,19 @@ struct SetUpDialogs: View {
     @ViewBuilder
     var content: some View {
         Group {
+            if model.preferences.availableRemoteModels.isEmpty && !closedNoRemoteModels {
+                noRemote
+            }
             if model.remoteNeedsSetup && !closedRemote {
                 remote
+            }
+            if model.preferences.availableRemoteModels.contains(where: { $0.isDeprecated && !(closedDeprecatedRemote[$0.id] ?? false) }) {
+                let deprecatedModels = model.preferences.availableRemoteModels.filter { $0.isDeprecated && !(closedDeprecatedRemote[$0.id] ?? false) }
+                deprecatedRemote(models: deprecatedModels)
+            }
+            if model.preferences.availableRemoteModels.contains(where: { $0.isNew && !(closedNewRemote[$0.id] ?? false) }) {
+                let newModels = model.preferences.availableRemoteModels.filter { $0.isNew && !(closedNewRemote[$0.id] ?? false) }
+                newRemote(models: newModels)
             }
             if !closedLocal && model.preferences.availableLocalModels.isEmpty && !seenLocal {
                 local
@@ -73,7 +108,77 @@ struct SetUpDialogs: View {
             closedRemote = true
         }
     }
+    
+    var noRemote: some View {
+        SetUpDialog(title: "Couldn't Get Remote Models", buttonText: fetchingRemote ? "Loading..." : "Retry") {
+            Text("Onit couldn't load remote models - check your internet connection and try again!")
+        } action: {
+            Task {
+                fetchingRemote = true
+                await model.fetchRemoteModels()
+                fetchingRemote = false
+            }
+        } closeAction: {
+            closedNoRemoteModels = true
+        }
+    }
 
+    func newRemote(models: [AIModel]) -> some View {
+        SetUpDialog(title: "NEW Models Available!", buttonText: "Enable in Settings") {
+            let newModelsByProvider = Dictionary(grouping: models.filter { $0.isNew }) { $0.provider }
+            let newModelsText = newModelsByProvider.map { provider, models in
+                "\(provider.title): " + models.map { $0.displayName }.joined(separator: ", ")
+            }.joined(separator: " and ")
+            Text("New models from \(newModelsText). View and enable them in settings.")
+        } action: {
+            settings()
+            handleModelClosure(models: models, closureType: .new)
+        } closeAction: {
+            handleModelClosure(models: models, closureType: .new)
+        }
+    }
+
+    func deprecatedRemote(models: [AIModel]) -> some View {
+        SetUpDialog(title: "Deprecated Models", buttonText: "Disable in Settings") {
+            let deprecatedModelsByProvider = Dictionary(grouping: models.filter { $0.isDeprecated }) { $0.provider }
+            let deprecatedModelsText = deprecatedModelsByProvider.map { provider, models in
+                "\(provider.title)'s: " + models.map { $0.displayName }.joined(separator: ", ")
+            }.joined(separator: " and ")
+            Text("The following models are deprecated \(deprecatedModelsText). You can disable them in settings.")
+        } action: {
+            settings()
+            handleModelClosure(models: models, closureType: .deprecated)
+        } closeAction: {
+            handleModelClosure(models: models, closureType: .deprecated)
+        }
+    }
+
+    func handleModelClosure(models: [AIModel], closureType: ClosureType) {
+        var updatedClosureData: [String: Bool]
+        switch closureType {
+        case .new:
+            updatedClosureData = closedNewRemote
+        case .deprecated:
+            updatedClosureData = closedDeprecatedRemote
+        }
+        for model in models {
+            updatedClosureData[model.id] = true
+        }
+        if let encoded = try? JSONEncoder().encode(updatedClosureData) {
+            switch closureType {
+            case .new:
+                closedNewRemoteData = encoded
+            case .deprecated:
+                closedDeprecatedRemoteData = encoded
+            }
+        }
+    }
+
+    enum ClosureType {
+        case new
+        case deprecated
+    }
+    
     var local: some View {
         SetUpDialog(title: "Set Up Local Models") {
             Text("Get ")
@@ -90,15 +195,14 @@ struct SetUpDialogs: View {
         .fixedSize(horizontal: false, vertical: true)
     }
 
-    @State private var fetching = false
     var restartLocal: some View {
-        SetUpDialog(title: "No Local Models Found", buttonText: fetching ? "Loading..." : "Try again") {
+        SetUpDialog(title: "No Local Models Found", buttonText: fetchingLocal ? "Loading..." : "Try again") {
             Text("Onit couldn’t connect to local models - you may need to restart Ollama.")
         } action: {
             Task {
-                fetching = true
+                fetchingLocal = true
                 await model.fetchLocalModels()
-                fetching = false
+                fetchingLocal = false
             }
         } closeAction: {
             closedNoLocalModels = true
@@ -129,4 +233,3 @@ struct SetUpDialogs: View {
         }
     }
 }
-

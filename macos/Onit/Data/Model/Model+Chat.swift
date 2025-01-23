@@ -86,8 +86,8 @@ extension OnitModel {
                         files: filesHistory,
                         images: imagesHistory,
                         responses: responsesHistory,
-                        model: preferences.model,
-                        apiToken: getTokenForModel(preferences.model ?? nil)
+                        model: preferences.remoteModel,
+                        apiToken: getTokenForModel(preferences.remoteModel ?? nil)
                     )
                 } else {
                     // TODO implement history for local chat!
@@ -135,7 +135,7 @@ extension OnitModel {
     }
 
     func setTokenIsValid(_ isValid: Bool) {
-        if let provider = preferences.model?.provider {
+        if let provider = preferences.remoteModel?.provider {
             setTokenIsValid(isValid, provider: provider)
         }
     }

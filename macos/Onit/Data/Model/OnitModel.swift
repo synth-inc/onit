@@ -102,6 +102,53 @@ import AppKit
             }
         }
     }
+    
+    @MainActor
+    func fetchRemoteModels() async {
+        do {
+            // if
+            var models = try await AIModel.fetchModels()
+            
+            // This means we've never successfully fetched before
+            if preferences.availableRemoteModels.isEmpty {
+                updatePreferences { prefs in
+                    prefs.initializeVisibleModelIds(from: models)
+                    prefs.availableRemoteModels = models
+                    prefs.remoteModel = models.first(where: { $0.defaultOn })
+                }
+            } else {
+                updatePreferences { prefs in
+                    // Update the availableRemoteModels with the newly fetched models
+                    let newModelIds = Set(models.map { $0.id })
+                    let existingModelIds = Set(prefs.availableRemoteModels.map { $0.id })
+                    
+                    var newModels = models.filter { !existingModelIds.contains($0.id) }
+                    var deprecatedModels = prefs.availableRemoteModels.filter { !newModelIds.contains($0.id) }
+                    for index in models.indices where newModels.contains(models[index]) {
+                        models[index].isNew = true
+                    }
+                    
+                    for index in deprecatedModels.indices {
+                        deprecatedModels[index].isDeprecated = true
+                    }
+
+                    // We only save deprecated models if the user has them visibile. Otherwise, quietly remove them from the list. 
+                    let visibleModelIds = Set(prefs.visibleModelIds)
+                    let visibleDeprecatedModels = deprecatedModels.filter { visibleModelIds.contains($0.id) }
+                    
+                    prefs.availableRemoteModels = models + visibleDeprecatedModels
+                    prefs.initializeVisibleModelIds(from: (models + visibleDeprecatedModels))
+
+                    if preferences.remoteModel == nil || !preferences.availableRemoteModels.contains(preferences.remoteModel!) {
+                        prefs.remoteModel = preferences.availableRemoteModels[0]
+                    }
+                }        
+            }
+        } catch {
+            print("Error fetching local models:", error)
+            
+        }
+    }
 
     init(container: ModelContainer) {
         self.pendingInput = Input?.load()
@@ -112,6 +159,14 @@ import AppKit
         startTrustedTimer()
         Task {
             await fetchLocalModels()
+            await fetchRemoteModels()
+            
+            // This handles an edge case where Ollama is running but there is no internet connection
+            // We put the user in localmode so they can use the product.
+            // We don't do the opposite, becuase we don't want to put the product in remote mode without them knowing.
+            if !preferences.availableLocalModels.isEmpty && preferences.availableRemoteModels.isEmpty {
+                preferences.mode = .local
+            }
         }
     }
     

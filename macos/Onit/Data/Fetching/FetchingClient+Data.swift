@@ -43,6 +43,7 @@ extension FetchingClient {
             request.httpBody = data
         }
         request.addAuthorization(token: token)
+        request.cachePolicy = .reloadIgnoringLocalCacheData
         request.addContentType(for: method, defaultType: contentType ?? "application/json")
 
         additionalHeaders?.forEach { key, value in
