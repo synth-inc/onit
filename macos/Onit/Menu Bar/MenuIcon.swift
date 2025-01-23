@@ -10,9 +10,10 @@ import Combine
 
 struct MenuIcon: View {
     @Environment(\.model) var model
+    @ObservedObject private var featureFlagsManager = FeatureFlagManager.shared
 
     var body: some View {
-        if FeatureFlagManager.shared.isAccessibilityEnabled() {
+        if featureFlagsManager.flags.accessibility {
             let statusGranted = model.accessibilityPermissionStatus == .granted
             Image(statusGranted ? .smirk : .untrusted)
                 .renderingMode(statusGranted ? .template : .original)

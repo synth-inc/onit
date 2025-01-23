@@ -16,6 +16,9 @@ struct App: SwiftUI.App {
     
     @Environment(\.model) var model
     @NSApplicationDelegateAdaptor(AppDelegate.self) var delegate
+    @ObservedObject private var featureFlagsManager = FeatureFlagManager.shared
+    
+    @State var accessibilityPermissionRequested = false
     
     init() {
         KeyboardShortcuts.onKeyUp(for: .launch) { [weak model] in
@@ -37,7 +40,7 @@ struct App: SwiftUI.App {
             model?.escapeAction()
         }
 
-        FeatureFlagManager.shared.configure()
+        featureFlagsManager.configure()
         model.showPanel()
         
         #if !targetEnvironment(simulator)
@@ -59,8 +62,6 @@ struct App: SwiftUI.App {
         
         #endif
     }
-    
-    let featureFlagsReceivedPub = NotificationCenter.default.publisher(for: PostHogSDK.didReceiveFeatureFlags)
 
     var body: some Scene {
         @Bindable var model = model
@@ -81,7 +82,24 @@ struct App: SwiftUI.App {
                         break
                     }
                 }
-                .onReceive(featureFlagsReceivedPub) { _ in featureFlagsReceived() }
+                .onChange(of: featureFlagsManager.flags.accessibility, initial: true) { oldValue, newValue in
+                    if newValue {
+                        if !accessibilityPermissionRequested {
+                            accessibilityPermissionRequested = true
+                            AccessibilityPermissionManager.shared.requestPermission()
+                        }
+                        AccessibilityPermissionManager.shared.startListeningPermission()
+                    } else {
+                        AccessibilityPermissionManager.shared.stopListeningPermission()
+                    }
+                }
+                .onChange(of: model.showDebugWindow, initial: true) { oldValue, newValue in
+                    if newValue {
+                        model.openDebugWindow()
+                    } else {
+                        model.closeDebugWindow()
+                    }
+                }
         }
         .menuBarExtraStyle(.window)
         .menuBarExtraAccess(isPresented: $model.showMenuBarExtra)
@@ -90,23 +108,6 @@ struct App: SwiftUI.App {
         Settings {
             SettingsView()
         }
-    }
-    
-    /**
-     * On feature flags received event :
-     * - Initialize stuff depending on feature flag
-     * - Notify the app that the loading is finished
-     */
-    private func featureFlagsReceived() {
-        if FeatureFlagManager.shared.isAccessibilityEnabled() {
-            #if !targetEnvironment(simulator)
-            
-            AccessibilityPermissionManager.shared.requestPermission()
-            
-            #endif
-        }
-        
-        // TODO: KNA - Refresh UI ?
     }
 }
 

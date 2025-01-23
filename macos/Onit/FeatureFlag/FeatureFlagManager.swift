@@ -7,18 +7,31 @@
 
 import PostHog
 import Foundation
+import SwiftUI
 
 /**
  * Class which manages feature flags with PostHog SDK
  */
 @MainActor
-class FeatureFlagManager {
+class FeatureFlagManager: ObservableObject {
     
     // MARK: - Singleton instance
     
     static let shared = FeatureFlagManager()
     
-    private var isReadyToUse = false
+    // MARK: - Feature Flags
+    
+    @Published private(set) var flags: FeatureFlags = .init()
+    
+    struct FeatureFlags {
+        var accessibility: Bool = false
+    }
+    
+    // MARK: - Feature Flag Keys
+    
+    enum FeatureFlagKey {
+        case accessibility
+    }
     
     // MARK: - Functions
     
@@ -41,22 +54,31 @@ class FeatureFlagManager {
         PostHogSDK.shared.setup(config)
     }
     
-    /** Reload / Fetch configuration */
-    func reload() {
-        PostHogSDK.shared.reloadFeatureFlags()
-    }
-    
-    /**
-     * Check if accessibility feature is enabled
-     * - returns: True if accessibility is enabled, false otherwise
-     */
-    func isAccessibilityEnabled() -> Bool {
-        guard isReadyToUse else { return false }
+    /** Override feature flag value (for testing or manual control) */
+    func setFeatureFlag(_ value: Bool, for key: FeatureFlagKey) {
+        var newFlags = flags
         
-        return PostHogSDK.shared.isFeatureEnabled("accessibility")
+        switch key {
+        case .accessibility:
+            newFlags.accessibility = value
+        }
+        
+        flags = newFlags
     }
     
-    @objc func receiveFeatureFlags() {
-        self.isReadyToUse = true
+    // MARK: - Objective-C Functions
+    
+    @objc private func receiveFeatureFlags() {
+        setFeatureFlagsFromRemote()
+    }
+    
+    // MARK: - Private functions
+    
+    private func setFeatureFlagsFromRemote() {
+        let newFlags = FeatureFlags(
+            accessibility: PostHogSDK.shared.isFeatureEnabled("accessibility")
+        )
+        
+        self.flags = newFlags
     }
 }

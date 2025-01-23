@@ -51,41 +51,6 @@ extension OnitModel: NSWindowDelegate {
         newPanel.contentView = panelContentView
         newPanel.contentView?.setFrameOrigin(NSPoint(x: 0, y: 0))
         panel = newPanel
-
-        if showDebugWindow {
-            let debugPanel = CustomPanel(
-                contentRect: NSRect(x: 0, y: 0, width: 400, height: 800),
-                styleMask: [.resizable, .nonactivatingPanel, .fullSizeContentView],
-                backing: .buffered,
-                defer: false)
-            debugPanel.isOpaque = false
-            debugPanel.backgroundColor = NSColor.clear
-            debugPanel.level = .floating
-            debugPanel.titleVisibility = .hidden
-            debugPanel.titlebarAppearsTransparent = true
-            debugPanel.isMovableByWindowBackground = true
-            debugPanel.delegate = self
-
-            debugPanel.standardWindowButton(.closeButton)?.isHidden = true
-            debugPanel.standardWindowButton(.miniaturizeButton)?.isHidden = true
-            debugPanel.standardWindowButton(.zoomButton)?.isHidden = true
-            debugPanel.isFloatingPanel = true
-            
-            let debugView = DebugView()
-                .modelContainer(container)
-                .environment(self)
-            
-            let debugPanelContentView = NSHostingView(rootView: debugView)
-            debugPanelContentView.wantsLayer = true
-            debugPanelContentView.layer?.cornerRadius = 14
-            debugPanelContentView.layer?.cornerCurve = .continuous
-            debugPanelContentView.layer?.masksToBounds = true
-            debugPanelContentView.layer?.backgroundColor = NSColor.windowBackgroundColor.cgColor
-            
-            debugPanel.contentView = debugPanelContentView
-            debugPanel.contentView?.setFrameOrigin(NSPoint(x: 0, y: 0))
-            self.debugPanel = debugPanel
-        }
         
         if let screen = NSScreen.main {
             let visibleFrame = screen.visibleFrame
@@ -99,14 +64,6 @@ extension OnitModel: NSWindowDelegate {
             newPanel.setFrameOrigin(NSPoint(x: finalXPosition, y: finalYPosition))
             newPanel.makeKeyAndOrderFront(nil)
             newPanel.orderFrontRegardless()
-            
-            if showDebugWindow {
-                if let debugPanel = self.debugPanel {
-                    debugPanel.setFrameOrigin(NSPoint(x: finalXPosition, y: finalYPosition - (windowHeight * 2.0) - 16))
-                    debugPanel.makeKeyAndOrderFront(nil)
-                    debugPanel.orderFrontRegardless()
-                }
-            }
         }
 
 //        KeyboardShortcuts.onKeyUp(for: .escape) { [weak self] in
@@ -118,6 +75,61 @@ extension OnitModel: NSWindowDelegate {
 
         // Set the defaultPanelFrame to the initial frame of the panel
         defaultPanelFrame = newPanel.frame
+    }
+    
+    func openDebugWindow() {
+        let debugPanel = CustomPanel(
+            contentRect: NSRect(x: 0, y: 0, width: 400, height: 800),
+            styleMask: [.resizable, .nonactivatingPanel, .fullSizeContentView],
+            backing: .buffered,
+            defer: false)
+        debugPanel.isOpaque = false
+        debugPanel.backgroundColor = NSColor.clear
+        debugPanel.level = .floating
+        debugPanel.titleVisibility = .hidden
+        debugPanel.titlebarAppearsTransparent = true
+        debugPanel.isMovableByWindowBackground = true
+        debugPanel.delegate = self
+
+        debugPanel.standardWindowButton(.closeButton)?.isHidden = true
+        debugPanel.standardWindowButton(.miniaturizeButton)?.isHidden = true
+        debugPanel.standardWindowButton(.zoomButton)?.isHidden = true
+        debugPanel.isFloatingPanel = true
+        
+        let debugView = DebugView()
+            .modelContainer(container)
+            .environment(self)
+        
+        let debugPanelContentView = NSHostingView(rootView: debugView)
+        debugPanelContentView.wantsLayer = true
+        debugPanelContentView.layer?.cornerRadius = 14
+        debugPanelContentView.layer?.cornerCurve = .continuous
+        debugPanelContentView.layer?.masksToBounds = true
+        debugPanelContentView.layer?.backgroundColor = NSColor.windowBackgroundColor.cgColor
+        
+        debugPanel.contentView = debugPanelContentView
+        debugPanel.contentView?.setFrameOrigin(NSPoint(x: 0, y: 0))
+        
+        if let screen = NSScreen.main {
+            let visibleFrame = screen.visibleFrame
+            let windowWidth = defaultPanelFrame.width
+            let windowHeight = defaultPanelFrame.height
+            
+            let finalXPosition = visibleFrame.origin.x + visibleFrame.width - 16 - windowWidth
+            let finalYPosition = visibleFrame.origin.y + visibleFrame.height - 16 - 100
+            debugPanel.setFrameOrigin(NSPoint(x: finalXPosition, y: finalYPosition - (windowHeight * 2.0) - 16))
+            debugPanel.makeKeyAndOrderFront(nil)
+            debugPanel.orderFrontRegardless()
+        }
+        
+        self.debugPanel = debugPanel
+    }
+    
+    func closeDebugWindow() {
+        guard let panel = debugPanel else { return }
+        panel.orderOut(nil)
+        WindowHelper.shared.adjustWindowToTopRight()
+        self.debugPanel = nil
     }
 
     func closePanel() {

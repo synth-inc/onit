@@ -12,9 +12,10 @@ import AppKit
  * This class is used for parsing accessibility attributes using `Accessibility` API.
  * Starting by the root `AXUIElement`
  */
+@MainActor
 class AccessibilityParser {
     
-    @MainActor static let shared = AccessibilityParser()
+    static let shared = AccessibilityParser()
     
     private let genericParser = AccessibilityParserGeneric()
     private let parsers: [String: AccessibilityParserLogic] = [

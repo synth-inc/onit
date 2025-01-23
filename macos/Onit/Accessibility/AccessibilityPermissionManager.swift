@@ -43,6 +43,21 @@ class AccessibilityPermissionManager {
         self.model = model
     }
     
+    /** Start the accessibility permission listener */
+    func startListeningPermission() {
+        processTrustedTimer = Timer.scheduledTimer(timeInterval: 0.5,
+                                                   target: self,
+                                                   selector: #selector(checkProcessTrusted),
+                                                   userInfo: nil,
+                                                   repeats: true)
+    }
+    
+    /** Stop the accessibility permission listener */
+    func stopListeningPermission() {
+        processTrustedTimer?.invalidate()
+        processTrustedTimer = nil
+    }
+    
     /**
      * Requests accessibility permissions if they are not already granted.
      *
@@ -50,12 +65,6 @@ class AccessibilityPermissionManager {
      * accessible through **System Preferences > Security & Privacy > Accessibility**.
      */
     func requestPermission() {
-        processTrustedTimer = Timer.scheduledTimer(timeInterval: 0.5,
-                                                   target: self,
-                                                   selector: #selector(checkProcessTrusted),
-                                                   userInfo: nil,
-                                                   repeats: true)
-        
         guard !AccessibilityPermissionManager.isProcessTrusted else { return }
         
         let options = [kAXTrustedCheckOptionPrompt.takeUnretainedValue(): true] as CFDictionary
