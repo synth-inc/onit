@@ -24,7 +24,6 @@ import AppKit
     var isTooltipActive = false
     var showHistory: Bool = false
     var showMenuBarExtra: Bool = false
-    var inputExpanded = true
     var panel: CustomPanel? = nil
 
     var currentChat: Chat?

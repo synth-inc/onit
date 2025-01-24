@@ -9,28 +9,33 @@ import SwiftUI
 
 struct InputButtons: View {
     @Environment(\.model) var model
+    @Binding var inputExpanded: Bool
+    
+    var input: Input
 
     var body: some View {
         @Bindable var model = model
 
         Group {
-            Button {
-                model.pendingInput = nil
-            } label: {
-                Image(.smallRemove)
-                    .renderingMode(.template)
+            if input == model.pendingInput {
+                Button {
+                    model.pendingInput = nil
+                } label: {
+                    Image(.smallRemove)
+                        .renderingMode(.template)
+                }
+                .buttonStyle(DarkerButtonStyle())
             }
-            .buttonStyle(DarkerButtonStyle())
-            
+                
             Button {
-                model.inputExpanded.toggle()
+                inputExpanded.toggle()
             } label: {
                 Color.clear
                     .frame(width: 20, height: 20)
                     .overlay {
                         Image(.smallChevRight)
                             .renderingMode(.template)
-                            .rotationEffect(model.inputExpanded ? .degrees(90) : .zero)
+                            .rotationEffect(inputExpanded ? .degrees(90) : .zero)
                     }
             }
         }
@@ -41,7 +46,7 @@ struct InputButtons: View {
 #if DEBUG
 #Preview {
     ModelContainerPreview {
-        InputButtons()
+        InputButtons(inputExpanded: .constant(true), input: .sample)
     }
 }
 #endif
