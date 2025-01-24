@@ -12,6 +12,7 @@ struct RemoteModelsEndpoint: Endpoint {
     var path: String {
         "/onit/models.json"
     }
+    var getParams: [String: String]? { nil }
     
     var method: HTTPMethod { .get }
     var token: String? { nil }

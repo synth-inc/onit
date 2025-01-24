@@ -13,6 +13,7 @@ extension OnitModel {
         case openAIToken = "openAIToken"
         case anthropicToken = "anthropicToken"
         case xAIToken = "xAIToken"
+        case googleAIToken = "googleAIToken"
     }
     var openAIToken: String? {
         get {
@@ -38,11 +39,20 @@ extension OnitModel {
             UserDefaults.standard.setValue(newValue, forKey: TokenKeys.xAIToken.rawValue)
         }
     }
+    var googleAIToken: String? {
+        get {
+            UserDefaults.standard.string(forKey: TokenKeys.googleAIToken.rawValue)
+        }
+        set {
+            UserDefaults.standard.setValue(newValue, forKey: TokenKeys.googleAIToken.rawValue)
+        }
+    }
 
     private enum TokenValidationKeys: String {
         case openAITokenValidated = "openAITokenValidated"
         case anthropicTokenValidated = "anthropicTokenValidated"
         case xAITokenValidated = "xAITokenValidated"
+        case googleAITokenValidated = "googleAITokenValidated"
     }
     var isOpenAITokenValidated: Bool {
         get {
@@ -69,11 +79,20 @@ extension OnitModel {
             UserDefaults.standard.setValue(newValue, forKey: TokenValidationKeys.xAITokenValidated.rawValue)
         }
     }
+    var isGoogleAITokenValidated: Bool {
+        get {
+            UserDefaults.standard.bool(forKey: TokenValidationKeys.googleAITokenValidated.rawValue)
+        }
+        set {
+            UserDefaults.standard.setValue(newValue, forKey: TokenValidationKeys.googleAITokenValidated.rawValue)
+        }
+    }
 
     private enum UseModelKeys: String {
         case openAITokenValidated = "useOpenAI"
         case anthropicTokenValidated = "useAnthropic"
         case xAITokenValidated = "useXAI"
+        case googleAITokenValidated = "useGoogleAI"
         case localModelValidated = "useLocalModel"
     }
     var useOpenAI: Bool {
@@ -100,6 +119,14 @@ extension OnitModel {
             UserDefaults.standard.setValue(newValue, forKey: UseModelKeys.xAITokenValidated.rawValue)
         }
     }
+    var useGoogleAI: Bool {
+        get {
+            UserDefaults.standard.bool(forKey: UseModelKeys.googleAITokenValidated.rawValue)
+        }
+        set {
+            UserDefaults.standard.setValue(newValue, forKey: UseModelKeys.googleAITokenValidated.rawValue)
+        }
+    }
     var useLocal: Bool {
         get {
             UserDefaults.standard.bool(forKey: UseModelKeys.localModelValidated.rawValue)
@@ -110,7 +137,7 @@ extension OnitModel {
     }
 
     var remoteNeedsSetup: Bool {
-        !useOpenAI && !useAnthropic && !useXAI
+        !useOpenAI && !useAnthropic && !useXAI && !useGoogleAI
     }
 
     

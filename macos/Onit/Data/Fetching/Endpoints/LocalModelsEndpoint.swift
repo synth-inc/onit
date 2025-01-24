@@ -26,6 +26,7 @@ struct LocalModelsEndpoint: Endpoint {
     var baseURL: URL = URL(string: "http://localhost:11434")!
 
     var path: String { "/api/tags" }
+    var getParams: [String: String]? { nil }
     var method: HTTPMethod { .get }
     var token: String? { nil }
 }

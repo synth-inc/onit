@@ -25,6 +25,7 @@ struct SetUpDialogs: View {
     @AppStorage("closedOpenAI") var closedOpenAI = false
     @AppStorage("closedAnthropic") var closedAnthropic = false
     @AppStorage("closedXAI") var closedXAI = false
+    @AppStorage("closedGoogleAI") var closedGoogleAI = false
 
     @AppStorage("closedNewRemoteData") private var closedNewRemoteData: Data = Data()
     var closedNewRemote: [String: Bool] {
@@ -81,6 +82,9 @@ struct SetUpDialogs: View {
             }
             if false && !closedXAI {
                 expired(.xAI)
+            }
+            if false && !closedGoogleAI {
+                expired(.googleAI)
             }
         }
         .background {
@@ -229,6 +233,8 @@ struct SetUpDialogs: View {
                 closedAnthropic = true
             case .xAI:
                 closedXAI = true
+            case .googleAI:
+                closedGoogleAI = true
             }
         }
     }

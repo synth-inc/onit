@@ -18,6 +18,7 @@ struct AnthropicChatEndpoint: Endpoint {
     let maxTokens: Int
     
     var path: String { "/v1/messages" }
+    var getParams: [String: String]? { nil }
     var method: HTTPMethod { .post }
     
     var requestBody: AnthropicChatRequest? {

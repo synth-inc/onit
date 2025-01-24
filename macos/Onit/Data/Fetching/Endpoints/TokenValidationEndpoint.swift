@@ -13,6 +13,7 @@ struct OpenAIValidationEndpoint: Endpoint {
     typealias Response = OpenAIValidationResponse
     
     var path: String { "/v1/models" }
+    var getParams: [String: String]? { nil }
     var method: HTTPMethod { .get }
     var token: String? { nil }
     var requestBody: Never? { nil }
@@ -39,6 +40,7 @@ struct AnthropicValidationEndpoint: Endpoint {
     typealias Response = AnthropicValidationResponse
     
     var path: String { "/v1/models" }
+    var getParams: [String: String]? { nil }
     var method: HTTPMethod { .get }
     var token: String? { nil }
     var requestBody: Never? { nil }
@@ -74,6 +76,7 @@ struct XAIValidationEndpoint: Endpoint {
     typealias Response = XAIValidationResponse
     
     var path: String { "/v1/models" }
+    var getParams: [String: String]? { nil }
     var method: HTTPMethod { .get }
     var token: String? { nil }
     var requestBody: Never? { nil }

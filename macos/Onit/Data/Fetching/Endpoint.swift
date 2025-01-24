@@ -13,6 +13,7 @@ protocol Endpoint {
 
     var baseURL: URL { get }
     var path: String { get }
+    var getParams: [String: String]? { get }
     var method: HTTPMethod { get }
     var token: String? { get }
     var requestBody: Request? { get }
