@@ -12,9 +12,9 @@ extension KeyboardShortcuts.Name {
     static let launch = Self("launch", default: .init(.zero, modifiers: [.command]))
     static let escape = Self("escape", default: .init(.escape))
     static let enter = Self("enter", default: .init(.return, modifiers: []))
-    static let newChat = Self("newChat", default: .init(.n, modifiers: [.command]))
-    static let resizeWindow = Self("resizeWindow", default: .init(.o, modifiers: [.command]))
-    static let toggleModels = Self("toggleModels", default: .init(.t, modifiers: [.command]))
+    static let newChat = Self("newChat", default: .init(.nine, modifiers: [.command]))
+    static let resizeWindow = Self("resizeWindow", default: .init(.eight, modifiers: [.command]))
+    static let toggleModels = Self("toggleModels", default: .init(.seven, modifiers: [.command]))
     static let toggleLocalMode = Self("toggleLocalMode", default: .init(.zero, modifiers: [.shift, .command]))
 }
 
