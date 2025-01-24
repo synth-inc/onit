@@ -89,8 +89,9 @@ struct LocalChatEndpoint: Endpoint {
     let model: String?
     let messages: [LocalChatMessage]
     var baseURL: URL  = URL(string: "http://localhost:11434")!
-    
+
     var path: String { "/api/chat" }
+    var getParams: [String: String]? { nil }
     var method: HTTPMethod { .post }
     var token: String? { nil }
     var requestBody: LocalChatRequestJSON? {

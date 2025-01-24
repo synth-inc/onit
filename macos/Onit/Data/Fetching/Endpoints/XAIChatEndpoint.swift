@@ -16,6 +16,7 @@ struct XAIChatEndpoint: Endpoint {
     let token: String?
     
     var path: String { "/v1/chat/completions" }
+    var getParams: [String: String]? { nil }
     var method: HTTPMethod { .post }
     var requestBody: XAIChatRequest? {
         XAIChatRequest(

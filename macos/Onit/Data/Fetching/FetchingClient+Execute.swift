@@ -9,7 +9,17 @@ import Foundation
 
 extension FetchingClient {
     func execute<E: Endpoint>(_ endpoint: E) async throws -> E.Response {
-        let url = endpoint.baseURL.appendingPathComponent(endpoint.path)
+        var url = endpoint.baseURL.appendingPathComponent(endpoint.path)
+        
+        if let getParams = endpoint.getParams {
+            if !getParams.isEmpty {
+                var urlComponents = URLComponents(url: url, resolvingAgainstBaseURL: false)
+                urlComponents?.queryItems = getParams.map { URLQueryItem(name: $0.key, value: $0.value) }
+                if let updatedURL = urlComponents?.url {
+                    url = updatedURL
+                }
+            }
+        }
 
         var requestBodyData: UploadBody = .empty
         if let requestBody = endpoint.requestBody {
@@ -18,8 +28,9 @@ extension FetchingClient {
         }
 
         // Helpful debugging method- put in the endpoint name and you can see the full request
-        if endpoint.path == "/api/chat" {
+        if endpoint.path.contains("/v1beta/models") {
             printCurlRequest(endpoint: endpoint, url: url)
+            print("here")
         }
 
         do {

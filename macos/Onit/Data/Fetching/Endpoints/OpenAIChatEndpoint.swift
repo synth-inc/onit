@@ -16,6 +16,7 @@ struct OpenAIChatEndpoint: Endpoint {
     let model: String
     
     var path: String { "/v1/chat/completions" }
+    var getParams: [String: String]? { nil }
     var method: HTTPMethod { .post }
     var requestBody: OpenAIChatRequest? {
         OpenAIChatRequest(model: model, messages: messages)

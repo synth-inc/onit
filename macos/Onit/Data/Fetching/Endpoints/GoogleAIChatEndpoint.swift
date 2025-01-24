@@ -15,13 +15,14 @@ struct GoogleAIChatEndpoint: Endpoint {
     let model: String
     let token: String?
     
-    var path: String { "/v1beta/models/\(model):generateContent" }
+    var path: String { "/v1beta:chatCompletions" } // models/\(model):generateContent" }
+    var getParams: [String: String]? { nil }
+
     var method: HTTPMethod { .post }
     var requestBody: GoogleAIChatRequest? {
-        GoogleAIChatRequest(
-            contents: messages
-        )
+        GoogleAIChatRequest(model:model, messages: messages, n: 1)
     }
+    
     var additionalHeaders: [String: String]? {
         ["Authorization": "Bearer \(token ?? "")"]
     }
@@ -29,35 +30,84 @@ struct GoogleAIChatEndpoint: Endpoint {
 
 struct GoogleAIChatMessage: Codable {
     let role: String
-    let parts: [GoogleAIChatPart]
+    let content: GoogleAIChatContent
 }
 
-struct GoogleAIChatPart: Codable {
+enum GoogleAIChatContent: Codable {
+    case text(String)
+    case multiContent([GoogleAIChatContentPart])
+    
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.singleValueContainer()
+        switch self {
+        case .text(let str):
+            try container.encode(str)
+        case .multiContent(let parts):
+            try container.encode(parts)
+        }
+    }
+    
+    init(from decoder: Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        if let str = try? container.decode(String.self) {
+            self = .text(str)
+        } else if let parts = try? container.decode([GoogleAIChatContentPart].self) {
+            self = .multiContent(parts)
+        } else {
+            throw DecodingError.dataCorruptedError(in: container, debugDescription: "Invalid content format")
+        }
+    }
+}
+
+struct GoogleAIChatContentPart: Codable {
+    let type: String
     let text: String?
-    let inlineData: GoogleAIChatInlineData?
-}
-
-struct GoogleAIChatInlineData: Codable {
-    let mimeType: String
-    let data: String
+    let image_url: ImageURL?
+    
+    struct ImageURL: Codable {
+        let url: String
+    }
 }
 
 struct GoogleAIChatRequest: Codable {
-    let contents: [GoogleAIChatMessage]
+    let model: String
+    let messages: [GoogleAIChatMessage]
+    let n : Int
 }
 
 struct GoogleAIChatResponse: Codable {
-    let candidates: [Candidate]
-    
-    struct Candidate: Codable {
-        let content: Content
-        
-        struct Content: Codable {
-            let parts: [Part]
-            
-            struct Part: Codable {
-                let text: String
-            }
+    let choices: [Choice]
+    let created: Int
+    let model: String
+    let object: String
+    let usage: Usage
+
+    struct Choice: Codable {
+        let finishReason: String
+        let index: Int
+        let message: Message
+
+        enum CodingKeys: String, CodingKey {
+            case finishReason = "finish_reason"
+            case index
+            case message
+        }
+    }
+
+    struct Message: Codable {
+        let content: String
+        let role: String
+    }
+
+    struct Usage: Codable {
+        let completionTokens: Int
+        let promptTokens: Int
+        let totalTokens: Int
+
+        enum CodingKeys: String, CodingKey {
+            case completionTokens = "completion_tokens"
+            case promptTokens = "prompt_tokens"
+            case totalTokens = "total_tokens"
         }
     }
 }

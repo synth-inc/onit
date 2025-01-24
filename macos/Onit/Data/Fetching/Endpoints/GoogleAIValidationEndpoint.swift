@@ -16,11 +16,16 @@ struct GoogleAIValidationEndpoint: Endpoint {
     let apiKey: String
     
     var path: String { "/v1beta/models" }
+    var getParams: [String: String]? {
+        ["key": apiKey]
+    }
     var method: HTTPMethod { .get }
     var requestBody: EmptyRequest? { nil }
     var additionalHeaders: [String: String]? {
-        ["Authorization": "Bearer \(apiKey)"]
+        nil
     }
+    //     ["Authorization": "Bearer \(apiKey)"]
+    // }
 }
 
 struct GoogleAIValidationResponse: Codable {

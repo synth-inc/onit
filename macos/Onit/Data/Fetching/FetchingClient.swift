@@ -199,45 +199,42 @@ actor FetchingClient {
         case .googleAI:
             var googleAIMessageStack: [GoogleAIChatMessage] = []
             
+            if model.supportsSystemPrompts {
+                googleAIMessageStack.append(GoogleAIChatMessage(role: "system", content: .text(systemMessage)))
+            }
+
             for (index, userMessage) in userMessages.enumerated() {
-                var parts: [GoogleAIChatPart] = []
-                
-                // Add text part
-                parts.append(GoogleAIChatPart(text: userMessage, inlineData: nil))
-                
-                // Add image parts if any
-                for url in images[index] {
-                    if let imageData = try? Data(contentsOf: url) {
+                if images[index].isEmpty {
+                    googleAIMessageStack.append(GoogleAIChatMessage(role: "user", content: .text(userMessage)))
+                } else {
+                    let parts = [
+                        GoogleAIChatContentPart(type: "text", text: userMessage, image_url: nil)
+                    ] + images[index].compactMap { url in
+                        guard let imageData = try? Data(contentsOf: url) else {
+                            print("Unable to read image data from URL: \(url)")
+                            return nil
+                        }
                         let base64EncodedData = imageData.base64EncodedString()
                         let mimeType = mimeType(for: url)
-                        parts.append(GoogleAIChatPart(
+                        return GoogleAIChatContentPart(
+                            type: "image_url",
                             text: nil,
-                            inlineData: GoogleAIChatInlineData(
-                                mimeType: mimeType,
-                                data: base64EncodedData
-                            )
-                        ))
-                    } else {
-                        print("Unable to read image data from URL: \(url)")
+                            image_url: .init(url: "data:\(mimeType);base64,\(base64EncodedData)")
+                        )
                     }
+                    googleAIMessageStack.append(GoogleAIChatMessage(role: "user", content: .multiContent(parts)))
                 }
                 
-                // Add user message
-                googleAIMessageStack.append(GoogleAIChatMessage(role: "user", parts: parts))
-                
-                // If there is a corresponding response, add it as a model message
+                // If there is a corresponding response, add it as an assistant message
                 if index < responses.count {
-                    let responseMessage = GoogleAIChatMessage(
-                        role: "model",
-                        parts: [GoogleAIChatPart(text: responses[index], inlineData: nil)]
-                    )
+                    let responseMessage = GoogleAIChatMessage(role: "assistant", content: .text(responses[index]))
                     googleAIMessageStack.append(responseMessage)
                 }
-            }
-            
+            } 
+
             let endpoint = GoogleAIChatEndpoint(messages: googleAIMessageStack, model: model.id, token: apiToken)
             let response = try await execute(endpoint)
-            return response.candidates[0].content.parts[0].text
+            return response.choices[0].message.content
         }
     }
     
