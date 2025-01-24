@@ -66,10 +66,22 @@ extension OnitModel: NSWindowDelegate {
             newPanel.orderFrontRegardless()
         }
 
-//        KeyboardShortcuts.onKeyUp(for: .escape) { [weak self] in
-//            guard let self else { return }
-//            self.escapeAction()
-//        }
+        KeyboardShortcuts.onKeyUp(for: .toggleLocalMode) { [weak self] in
+            self?.toggleLocalVsRemoteShortcutAction()
+        }
+        KeyboardShortcuts.onKeyUp(for: .newChat) { [weak self] in
+            self?.newChat()
+        }
+        KeyboardShortcuts.onKeyUp(for: .resizeWindow) { [weak self] in
+            self?.resizeWindow()
+        }
+        KeyboardShortcuts.onKeyUp(for: .toggleModels) { [weak self] in
+            self?.toggleModelsPanel()
+        }
+        KeyboardShortcuts.onKeyUp(for: .escape) { [weak self] in
+            self?.escapeAction()
+        }
+
         // Focus the text input when we're activating the panel
         textFocusTrigger = true
 
@@ -137,6 +149,13 @@ extension OnitModel: NSWindowDelegate {
         panel.orderOut(nil)
         WindowHelper.shared.adjustWindowToTopRight()
         self.panel = nil
+
+            // Remove keyboard shortcuts
+        KeyboardShortcuts.disable(.toggleLocalMode)
+        KeyboardShortcuts.disable(.newChat)
+        KeyboardShortcuts.disable(.resizeWindow)
+        KeyboardShortcuts.disable(.toggleModels)
+        KeyboardShortcuts.disable(.escape)
     }
 
     @MainActor
