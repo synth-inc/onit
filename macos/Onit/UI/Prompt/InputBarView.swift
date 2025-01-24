@@ -24,12 +24,6 @@ struct InputBarView: View {
         .background {
             heightListener
         }
-        .onChange(of: model.pendingInput) { _, _ in
-            model.adjustPanelSize()
-        }
-        .onChange(of: model.inputExpanded) { _, _ in
-            model.adjustPanelSize()
-        }
     }
 
     var heightListener: some View {
@@ -37,9 +31,11 @@ struct InputBarView: View {
             Color.clear
                 .onAppear {
                     model.inputHeight = proxy.size.height
+                    model.adjustPanelSize()
                 }
                 .onChange(of: proxy.size.height) { _, new in
                     model.inputHeight = new
+                    model.adjustPanelSize()
                 }
         }
     }

@@ -47,7 +47,7 @@ class AccessibilityNotificationsManager {
     
     private var selectedSource: String?
     
-    private var selectedText: [pid_t: String] = [:]
+    private var selectedTextByApp: [String: String] = [:]
     
     private var valueDebounceWorkItem: DispatchWorkItem?
     
@@ -198,25 +198,31 @@ class AccessibilityNotificationsManager {
             }
         }
     }
+    
+    // MARK: Handling app activated/deactived
 
     private func handleAppActivation(appName: String?, processID: pid_t) {
-        if let focusedApp = NSWorkspace.shared.frontmostApplication, focusedApp.processIdentifier != getpid() {
-            print("\nApplication activated: \(appName ?? "Unknown") \(processID)")
-            let pid = focusedApp.processIdentifier
-            
-            let newAppElement = AXUIElementCreateApplication(pid)
-            self.appElement = newAppElement
-            self.currentApplication = pid
-            self.currentSource = focusedApp.localizedName
-
-            parseAccessibility(for: newAppElement)
-            
-            // print("Text in application: \(textInApplication)")
-            // let appElement = AXUIElementCreateApplication(pid)
-            // handleInitialFocus(for: appElement)
-        } else {
+        guard processID != getpid() else {
             print("Ignoring handleAppActivation for our own app.")
+            return
         }
+        
+        let selectedText = selectedTextByApp[appName ?? "Unknown"]
+        
+        print("\nApplication activated: \(appName ?? "Unknown") \(processID) selected text: \"\(selectedText ?? "")\"")
+        
+        let newAppElement = processID.getAXUIElement()
+        self.appElement = newAppElement
+        self.currentApplication = processID
+        self.currentSource = appName
+        
+        processSelectedText(selectedText)
+
+        parseAccessibility(for: newAppElement)
+            
+        // print("Text in application: \(textInApplication)")
+        // let appElement = pid.getAXUIElement()
+        // handleInitialFocus(for: appElement)
     }
     
     private func handleAccessibilityNotifications(_ notification: String, info: [String: Any], element: AXUIElement, observer: AXObserver) {
@@ -403,30 +409,32 @@ class AccessibilityNotificationsManager {
         // Ensure we're on the main thread
         dispatchPrecondition(condition: .onQueue(.main))
         
-        handleExternalElement(element) { [weak self] _ in
-            guard let selectedTextExtracted = self?.extractSelectedText(from: element),
-                !selectedTextExtracted.isEmpty else {
-                self?.selectedSource = nil
-                self?.model?.pendingInput = nil
-                WindowHelper.shared.hide()
-                
-                return
-            }
+        handleExternalElement(element) { [weak self] pid in
+            let selectedTextExtracted = self?.extractSelectedText(from: element)
             
-            self?.screenResult.userInteraction.selectedText = selectedTextExtracted
-            
+            self?.processSelectedText(selectedTextExtracted)
+            self?.selectedTextByApp[pid.getAppName() ?? "Unknown"] = selectedTextExtracted
             self?.showDebug()
-            
-            self?.selectedSource = self?.currentSource
-
-            WindowHelper.shared.show()
-            
-            if let pid = self?.currentApplication {
-                self?.selectedText[pid] = selectedTextExtracted
-            }
-
-            self?.model?.pendingInput = Input(selectedText: selectedTextExtracted, application: self?.currentSource ?? "")
         }
+    }
+    
+    private func processSelectedText(_ text: String?) {
+        guard let selectedText = text,
+            !selectedText.isEmpty else {
+            selectedSource = nil
+            model?.pendingInput = nil
+            WindowHelper.shared.hide()
+            
+            return
+        }
+        
+        screenResult.userInteraction.selectedText = selectedText
+        
+        selectedSource = currentSource
+
+        WindowHelper.shared.show()
+
+        model?.pendingInput = Input(selectedText: selectedText, application: currentSource ?? "")
     }
     
     private func extractSelectedText(from element: AXUIElement) -> String? {
