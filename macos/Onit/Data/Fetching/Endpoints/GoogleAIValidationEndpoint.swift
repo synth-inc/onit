@@ -6,6 +6,8 @@
 import Foundation
 
 struct GoogleAIValidationEndpoint: Endpoint {
+    var token: String?
+    
     var baseURL: URL = URL(string: "https://generativelanguage.googleapis.com")!
     
     typealias Request = EmptyRequest

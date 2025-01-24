@@ -16,9 +16,6 @@ struct RemoteModelSection: View {
 
     @State private var loading = false
 
-    @AppStorage("closedNewRemoteData") private var closedNewRemoteData: Data = Data()
-    @AppStorage("closedDeprecatedRemoteData") private var closedDeprecatedRemoteData: Data = Data()
-
     var provider: AIModel.ModelProvider
 
     var state: TokenValidationState.ValidationState {
@@ -55,8 +52,8 @@ struct RemoteModelSection: View {
     // MARK: - Subviews
 
     var titleView: some View {
-        ModelTitle(title: provider.title, isOn: $use)
-            .disabled(!validated)
+        ModelTitle(title: provider.title, isOn: $use, showToggle: $validated)
+            // .disabled(!validated)
     }
 
     var textField: some View {
@@ -82,7 +79,7 @@ struct RemoteModelSection: View {
                     buttonOverlay
                 }
             }
-            .disabled(state.isValidating || key.isEmpty)
+            .disabled(state.isValidating)
             .foregroundStyle(.white)
             .buttonStyle(.borderedProminent)
             .frame(height: 22)
@@ -176,6 +173,7 @@ struct RemoteModelSection: View {
         case .googleAI:
             model.googleAIToken = key.isEmpty ? nil : key
         }
+        
     }
 
     func fetchKey() {
