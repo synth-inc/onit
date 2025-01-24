@@ -197,6 +197,8 @@ actor FetchingClient {
             return response.choices[0].message.content
             
         case .googleAI:
+            // For compatibility, the Google AI API is set up to respond to messages in the same format as OpenAI
+            // So this exactly duplicates the OpenAI API structure. 
             var googleAIMessageStack: [GoogleAIChatMessage] = []
             
             if model.supportsSystemPrompts {

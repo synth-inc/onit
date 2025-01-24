@@ -15,7 +15,8 @@ struct GoogleAIChatEndpoint: Endpoint {
     let model: String
     let token: String?
     
-    var path: String { "/v1beta:chatCompletions" } // models/\(model):generateContent" }
+
+    var path: String { "/v1beta:chatCompletions" } 
     var getParams: [String: String]? { nil }
 
     var method: HTTPMethod { .post }
