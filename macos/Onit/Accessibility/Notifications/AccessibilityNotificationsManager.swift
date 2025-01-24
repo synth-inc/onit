@@ -47,8 +47,8 @@ class AccessibilityNotificationsManager {
     
     private var selectedSource: String?
     
-    private var selectedElementByApp: [String: AXUIElement] = [:]
     private var selectedTextByApp: [String: String] = [:]
+    private var selectedElementByApp: [String: AXUIElement] = [:]
     
     private var valueDebounceWorkItem: DispatchWorkItem?
     
