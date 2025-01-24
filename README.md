@@ -26,12 +26,22 @@ We are building Onit based on these core beliefs:
 ## ✨ Features
 
 - **🤖 Local Mode:** Chat with any model running locally on Ollama - no internet required
+
+![Local Mode Demo](https://syntheticco.blob.core.windows.net/onit-media/local_mode_demo.gif)
+
 - **🔄 Multi-Provider Support:** Toggle between top models from OpenAI, Anthropic, and xAI
+
+![Multi-Provider Demo](https://syntheticco.blob.core.windows.net/onit-media/40s_multi_provider_demo.gif)
+
+- **📎 File Upload:** Add context through images or files (with drag & drop support)
+
+![File Upload Demo](https://syntheticco.blob.core.windows.net/onit-media/drag_and_drop_demo.gif)
+
 - **📜 History:** Access previous chats through history view or up/down arrow shortcuts
 - **⌨️ Customizable Shortcuts:** Choose your hotkey to launch the chat window
   - Default: `Command+0`
   - Local: `Command+Shift+0`
-- **📎 File Upload:** Add context through images or files (with drag & drop support)
+
 
 ## 🛠️ Technical Details
 
@@ -58,6 +68,7 @@ We are building Onit based on these core beliefs:
 - [ ] Autocontext: Automatically pull context from your computer
 - [ ] Local-RAG: Index and create context from files without uploading
 - [ ] Local-typeahead: Like Cursor Tab, but everywhere
+- [ ] Computer Use & Agents
 - [ ] Additional platform support (Linux/Windows)
 - [ ] More model providers (Mistral, Deepseek, etc.)
 - [ ] Bundled Ollama integration
