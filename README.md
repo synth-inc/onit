@@ -6,7 +6,13 @@
 
 # Onit
 
-Onit is an open-source AI chat assistant that lives in your desktop. It's like ChatGPT Desktop but with local mode and support for _other_ model providers (Anthropic, xAI, etc). It's also like Cursor Chat but everywhere on your computer, not just in your IDE!
+Onit is an open-source AI chat assistant that lives in your desktop! 
+
+It's like ChatGPT Desktop, but with **local mode** and support for _other_ model providers (Anthropic, GoogleAI, xAI, etc). It's also like Cursor Chat, but everywhere on your computer - not just in your IDE!
+
+<div align="center">
+    <img src="https://syntheticco.blob.core.windows.net/onit-media/onit_main_demo.gif" alt="Onit Main Demo" width="800" height="510">
+</div>
 
 ## 🚀 Quick Start
 
@@ -27,15 +33,21 @@ We are building Onit based on these core beliefs:
 
 - **🤖 Local Mode:** Chat with any model running locally on Ollama - no internet required
 
-![Local Mode Demo](https://syntheticco.blob.core.windows.net/onit-media/local_mode_demo.gif)
+<div align="center">
+  <img src="https://syntheticco.blob.core.windows.net/onit-media/local_mode_demo.gif" alt="Local Mode Demo" width="800" height="510">
+</div>
 
 - **🔄 Multi-Provider Support:** Toggle between top models from OpenAI, Anthropic, and xAI
 
-![Multi-Provider Demo](https://syntheticco.blob.core.windows.net/onit-media/40s_multi_provider_demo.gif)
+<div align="center">
+  <img src="https://syntheticco.blob.core.windows.net/onit-media/40s_multi_provider_demo.gif" alt="Multi-Provider Demo" width="800" height="510">
+</div>
 
 - **📎 File Upload:** Add context through images or files (with drag & drop support)
 
-![File Upload Demo](https://syntheticco.blob.core.windows.net/onit-media/drag_and_drop_demo.gif)
+<div align="center">
+  <img src="https://syntheticco.blob.core.windows.net/onit-media/drag_and_drop_demo.gif"  alt="File Upload Demo" width="800" height="510">
+</div>
 
 - **📜 History:** Access previous chats through history view or up/down arrow shortcuts
 - **⌨️ Customizable Shortcuts:** Choose your hotkey to launch the chat window
