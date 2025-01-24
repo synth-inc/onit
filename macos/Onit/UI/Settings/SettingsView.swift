@@ -6,14 +6,14 @@ struct SettingsView: View {
     
     var body: some View {
         TabView {
-            ShortcutsTab()
-                .tabItem {
-                    Label("Shortcuts", systemImage: "keyboard")
-                }
-            
             ModelsTab()
                 .tabItem {
                     Label("Models", systemImage: "cpu")
+                }
+            
+            ShortcutsTab()
+                .tabItem {
+                    Label("Shortcuts", systemImage: "keyboard")
                 }
             
             #if DEBUG

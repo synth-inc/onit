@@ -29,15 +29,9 @@ struct LocalModelsSection: View {
         }
     }
 
-    var showToggleBinding: Binding<Bool> {
-        Binding(
-            get: { !model.preferences.availableLocalModels.isEmpty },
-            set: { _ in } // No-op setter since you don't need to modify this value directly
-        )
-    }
-
     var title: some View {
-        ModelTitle(title: "Ollama", isOn: $isOn, showToggle: showToggleBinding)
+        // The implementation to turn off local models doesn't exist, so we never show the toggle.
+        ModelTitle(title: "Ollama", isOn: $isOn, showToggle: .constant(false))
     }
 
     @ViewBuilder

@@ -46,6 +46,17 @@ struct RemoteModelSection: View {
         }
         .onChange(of: use) {
             save(use: use)
+            // If we've turned off everything go into local mode.
+            if model.listedModels.isEmpty {
+                model.preferences.mode = .local
+            } else {
+                // If it's our first time adding models, set the remoteModel
+                if model.preferences.remoteModel == nil {
+                    model.preferences.remoteModel = model.listedModels.first
+                }
+            }
+            // This will collapse SetupDialogs if they're no longer needed
+            model.shrinkContent()
         }
     }
 
@@ -62,6 +73,7 @@ struct RemoteModelSection: View {
                 .textFieldStyle(.roundedBorder)
                 .frame(height: 22)
                 .font(.system(size: 13, weight: .regular))
+                .foregroundColor(.primary) // Ensure placeholder text is not dimmed
 
             Button {
                 Task {

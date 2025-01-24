@@ -36,6 +36,7 @@ struct Preferences: Codable {
     var mode: InferenceMode = .remote
     var availableLocalModels: [String] = []
     var availableRemoteModels: [AIModel] = []
+    var remoteFetchFailed: Bool = false
     var visibleModelIds: Set<String> = Set([])
     
     mutating func markRemoteModelAsNotNew(modelId: String) {

@@ -80,19 +80,19 @@ import AppKit
             }
 
             // Handle local model selection
-            if preferences.availableLocalModels.isEmpty {
-                updatePreferences { prefs in
+            updatePreferences { prefs in
+                if preferences.availableLocalModels.isEmpty {
                     prefs.localModel = nil
-                }
-            } else if preferences.localModel == nil {
-                updatePreferences { prefs in
+                
+                } else if preferences.localModel == nil || !preferences.availableLocalModels.contains(preferences.localModel!) {
                     prefs.localModel = preferences.availableLocalModels[0]
                 }
-            } else if !preferences.availableLocalModels.contains(preferences.localModel!) {
-                updatePreferences { prefs in
-                    prefs.localModel = preferences.availableLocalModels[0]
+                if listedModels.isEmpty {
+                    prefs.mode = .local
                 }
             }
+            // If relevant shrink the dialog box to account for the removed SetupDialog. 
+            shrinkContent()
         } catch {
             print("Error fetching local models:", error)
             updatePreferences { prefs in
@@ -113,7 +113,12 @@ import AppKit
                 updatePreferences { prefs in
                     prefs.initializeVisibleModelIds(from: models)
                     prefs.availableRemoteModels = models
-                    prefs.remoteModel = models.first(where: { $0.defaultOn })
+                    if !listedModels.isEmpty {
+                        prefs.remoteModel = listedModels.first
+                    }
+
+                    // If relevant shrink the dialog box to account for the removed SetupDialog.
+                    shrinkContent()
                 }
             } else {
                 updatePreferences { prefs in
@@ -135,17 +140,26 @@ import AppKit
                     let visibleModelIds = Set(prefs.visibleModelIds)
                     let visibleDeprecatedModels = deprecatedModels.filter { visibleModelIds.contains($0.id) }
                     
+                    prefs.remoteFetchFailed = false
                     prefs.availableRemoteModels = models + visibleDeprecatedModels
                     prefs.initializeVisibleModelIds(from: (models + visibleDeprecatedModels))
 
-                    if preferences.remoteModel == nil || !preferences.availableRemoteModels.contains(preferences.remoteModel!) {
+                    
+                    if !listedModels.isEmpty && (preferences.remoteModel == nil || !preferences.availableRemoteModels.contains(preferences.remoteModel!)) {
                         prefs.remoteModel = preferences.availableRemoteModels[0]
                     }
-                }        
+
+                    // If relevant shrink the dialog box to account for the removed SetupDialog.
+                    shrinkContent()
+                }
             }
+
+            
         } catch {
             print("Error fetching local models:", error)
-            
+            updatePreferences { prefs in
+                prefs.remoteFetchFailed = true
+            }
         }
     }
 

@@ -104,6 +104,9 @@ extension OnitModel {
         if !useXAI {
             models = models.filter { $0.provider != .xAI }
         }
+        if !useGoogleAI {
+            models = models.filter { $0.provider != .googleAI }
+        }
 
         return models
     }

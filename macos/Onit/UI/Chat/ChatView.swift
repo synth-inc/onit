@@ -6,8 +6,8 @@ struct ChatView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            ChatsView()
             SetUpDialogs(seenLocal: seenLocal)
+            ChatsView()
             InputBarView()
         }
         .drag()

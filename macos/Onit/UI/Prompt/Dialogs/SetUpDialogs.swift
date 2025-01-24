@@ -54,7 +54,7 @@ struct SetUpDialogs: View {
     @ViewBuilder
     var content: some View {
         Group {
-            if model.preferences.availableRemoteModels.isEmpty && !closedNoRemoteModels {
+            if model.preferences.availableRemoteModels.isEmpty && model.preferences.remoteFetchFailed && !closedNoRemoteModels {
                 noRemote
             }
             if model.remoteNeedsSetup && !closedRemote {
@@ -176,6 +176,7 @@ struct SetUpDialogs: View {
                 closedDeprecatedRemoteData = encoded
             }
         }
+        model.shrinkContent()
     }
 
     enum ClosureType {

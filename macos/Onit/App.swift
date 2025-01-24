@@ -107,6 +107,11 @@ struct App: SwiftUI.App {
 
         Settings {
             SettingsView()
+            .onAppear {
+                if let window = NSApplication.shared.windows.first(where: { $0.contentViewController is NSHostingController<SettingsView> }) {
+                    window.level = .floating
+                }
+            }
         }
     }
 }
