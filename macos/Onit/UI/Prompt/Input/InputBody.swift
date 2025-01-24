@@ -6,14 +6,15 @@
 //
 
 import SwiftUI
+import HighlightSwift
+import MarkdownUI
 
 struct InputBody: View {
     @Environment(\.model) var model
-
     @Binding var inputExpanded: Bool
-    var input: Input
-    
     @State var textHeight: CGFloat = 0
+    
+    var input: Input
 
     var height: CGFloat {
         min(textHeight, 73)
@@ -28,13 +29,14 @@ struct InputBody: View {
         }
         .frame(height: inputExpanded ? height : 0)
     }
-
+    
     var textView: some View {
-        Text(input.selectedText.trimmingCharacters(in: .whitespacesAndNewlines))
-            .foregroundStyle(.white)
-            .appFont(.medium16)
-            .padding(10)
+        Markdown(formattedText)
+            .markdownTheme(customTheme)
+            .multilineTextAlignment(.leading)
             .frame(maxWidth: .infinity, alignment: .leading)
+            .fixedSize(horizontal: false, vertical: true)
+            .padding(10)
             .background {
                 GeometryReader { proxy in
                     Color.clear
@@ -43,6 +45,32 @@ struct InputBody: View {
                         }
                 }
             }
+    }
+    
+    private let customTheme = Theme()
+        .text {
+            FontFamily(.custom("Inter"))
+            FontSize(16)
+            ForegroundColor(.FG)
+        }
+        .code {
+            FontFamily(.custom("SometypeMono"))
+            FontFamilyVariant(.monospaced)
+            ForegroundColor(.pink)
+        }
+        .codeBlock { configuration in
+            if let language = configuration.language,
+               let language = HighlightLanguage.language(for: language) {
+                CodeText(configuration.content)
+                    .codeFont(AppFont.code.nsFont)
+                    .highlightLanguage(language)
+            } else {
+                CodeText(configuration.content)
+            }
+        }
+    
+    private var formattedText: String {
+        "```\n" + input.selectedText + "\n```"
     }
 }
 
