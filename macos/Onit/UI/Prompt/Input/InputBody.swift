@@ -10,8 +10,9 @@ import SwiftUI
 struct InputBody: View {
     @Environment(\.model) var model
 
-    var text: String
-
+    @Binding var inputExpanded: Bool
+    var input: Input
+    
     @State var textHeight: CGFloat = 0
 
     var height: CGFloat {
@@ -25,11 +26,11 @@ struct InputBody: View {
                 textView
             }
         }
-        .frame(height: model.inputExpanded ? height : 0)
+        .frame(height: inputExpanded ? height : 0)
     }
 
     var textView: some View {
-        Text(text.trimmingCharacters(in: .whitespacesAndNewlines))
+        Text(input.selectedText.trimmingCharacters(in: .whitespacesAndNewlines))
             .foregroundStyle(.white)
             .appFont(.medium16)
             .padding(10)
@@ -48,7 +49,7 @@ struct InputBody: View {
 #if DEBUG
 #Preview {
     ModelContainerPreview {
-        InputBody(text: "This is a long sample string")
+        InputBody(inputExpanded: .constant(true), input: .sample)
     }
 }
 #endif

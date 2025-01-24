@@ -8,15 +8,16 @@
 import SwiftUI
 
 struct InputView: View {
-    @Environment(\.model) var model
+    
+    @State var inputExpanded: Bool = true
     
     var input: Input
     
     var body: some View {
         VStack(spacing: 0) {
-            InputTitle()
+            InputTitle(inputExpanded: $inputExpanded, input: input)
             divider
-            InputBody(text: input.selectedText)
+            InputBody(inputExpanded: $inputExpanded, input: input)
         }
         .background {
             RoundedRectangle(cornerRadius: 10)
@@ -29,7 +30,7 @@ struct InputView: View {
     var divider: some View {
         Color.gray600
             .frame(height: 1)
-            .opacity(model.inputExpanded ? 1 : 0)
+            .opacity(inputExpanded ? 1 : 0)
     }
 }
 

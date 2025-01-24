@@ -11,6 +11,9 @@ struct GeneratedView: View {
     var prompt: Prompt
 
     var body: some View {
+        if let input = prompt.input {
+            InputView(input: input)
+        }
         UserInputView(prompt: prompt, isSent: true)
         content
     }
