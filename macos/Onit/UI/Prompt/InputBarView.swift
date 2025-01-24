@@ -24,6 +24,12 @@ struct InputBarView: View {
         .background {
             heightListener
         }
+        .onChange(of: model.pendingInput) { _, _ in
+            model.adjustPanelSize()
+        }
+        .onChange(of: model.inputExpanded) { _, _ in
+            model.adjustPanelSize()
+        }
     }
 
     var heightListener: some View {
