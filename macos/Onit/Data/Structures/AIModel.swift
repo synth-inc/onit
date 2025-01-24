@@ -17,10 +17,13 @@ struct AIModel: Codable, Identifiable, Hashable {
     var isNew: Bool = false
     var isDeprecated: Bool = false
 
-    init(from modelInfo: ModelInfo) {
+    init?(from modelInfo: ModelInfo) {
+        guard let provider = ModelProvider(rawValue: modelInfo.provider.lowercased()) else {
+            return nil
+        }
         self.id = modelInfo.id
         self.displayName = modelInfo.displayName
-        self.provider = ModelProvider(rawValue: modelInfo.provider.lowercased()) ?? .openAI
+        self.provider = provider
         self.defaultOn = modelInfo.defaultOn
         self.supportsVision = modelInfo.supportsVision
         self.supportsSystemPrompts = modelInfo.supportsSystemPrompts
@@ -30,7 +33,7 @@ struct AIModel: Codable, Identifiable, Hashable {
         let client = FetchingClient()
         let endpoint = RemoteModelsEndpoint()
         let response = try await client.execute(endpoint)
-        return response.models.map { AIModel(from: $0) }
+        return response.models.compactMap { AIModel(from: $0) }
     }
     
     enum ModelProvider: String, Codable, Equatable, Hashable {
