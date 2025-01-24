@@ -11,7 +11,7 @@ Onit is an open-source AI chat assistant that lives in your desktop!
 It's like ChatGPT Desktop, but with **local mode** and support for _other_ model providers (Anthropic, GoogleAI, xAI, etc). It's also like Cursor Chat, but everywhere on your computer - not just in your IDE!
 
 <div align="center">
-    <img src="https://syntheticco.blob.core.windows.net/onit-media/onit_main_demo.gif" alt="Onit Main Demo" width="800" height="510">
+    <img src="https://syntheticco.blob.core.windows.net/onit-media/onit_main_demo.gif" alt="Onit Main Demo" width="800" height="auto">
 </div>
 
 ## 🚀 Quick Start
@@ -34,19 +34,19 @@ We are building Onit based on these core beliefs:
 - **🤖 Local Mode:** Chat with any model running locally on Ollama - no internet required
 
 <div align="center">
-  <img src="https://syntheticco.blob.core.windows.net/onit-media/local_mode_demo.gif" alt="Local Mode Demo" width="800" height="510">
+  <img src="https://syntheticco.blob.core.windows.net/onit-media/local_mode_demo.gif" alt="Local Mode Demo" width="800" height="auto">
 </div>
 
 - **🔄 Multi-Provider Support:** Toggle between top models from OpenAI, Anthropic, and xAI
 
 <div align="center">
-  <img src="https://syntheticco.blob.core.windows.net/onit-media/40s_multi_provider_demo.gif" alt="Multi-Provider Demo" width="800" height="510">
+  <img src="https://syntheticco.blob.core.windows.net/onit-media/40s_multi_provider_demo.gif" alt="Multi-Provider Demo" width="800" height="auto">
 </div>
 
 - **📎 File Upload:** Add context through images or files (with drag & drop support)
 
 <div align="center">
-  <img src="https://syntheticco.blob.core.windows.net/onit-media/drag_and_drop_demo.gif"  alt="File Upload Demo" width="800" height="510">
+  <img src="https://syntheticco.blob.core.windows.net/onit-media/drag_and_drop_demo.gif"  alt="File Upload Demo" width="800" height="auto">
 </div>
 
 - **📜 History:** Access previous chats through history view or up/down arrow shortcuts
