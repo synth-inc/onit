@@ -48,20 +48,8 @@ struct App: SwiftUI.App {
 
         #if !targetEnvironment(simulator)
         
-        let hostingController = NSHostingController(rootView: StaticPromptView())
-        let window = NSWindow(contentViewController: hostingController)
-        
-        window.styleMask = [.borderless]
-        window.isOpaque = false
-        window.backgroundColor = NSColor.clear
-        window.level = .floating
-        window.hasShadow = false
-        window.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
-        
         AccessibilityPermissionManager.shared.setModel(model)
         AccessibilityNotificationsManager.shared.setModel(model)
-        AccessibilityNotificationsManager.shared.setupWindow(window)
-        WindowHelper.shared.setupWindow(window)
         
         #endif
     }

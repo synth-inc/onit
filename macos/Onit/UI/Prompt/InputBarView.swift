@@ -15,6 +15,9 @@ struct InputBarView: View {
             if model.currentPrompts?.count ?? 0 > 0 {
                 PromptDivider()
             }
+            if let pendingInput = model.pendingInput {
+                InputView(input: pendingInput)
+            }
             FileRow(contextList: model.pendingContextList, isSent: false)
             TextInputView()
         }
