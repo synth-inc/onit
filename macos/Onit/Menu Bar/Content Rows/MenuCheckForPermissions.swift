@@ -9,12 +9,13 @@ import SwiftUI
 
 struct MenuCheckForPermissions: View {
     @Environment(\.model) var model
+    @ObservedObject private var featureFlagsManager = FeatureFlagManager.shared
 
     let circleHeight: CGFloat = 5
     let link = "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility"
 
     var body: some View {
-        if !model.trusted {
+        if featureFlagsManager.flags.accessibility && model.accessibilityPermissionStatus != .granted {
             permissionsRow
             MenuDivider()
         }

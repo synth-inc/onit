@@ -10,11 +10,19 @@ import Combine
 
 struct MenuIcon: View {
     @Environment(\.model) var model
+    @ObservedObject private var featureFlagsManager = FeatureFlagManager.shared
 
     var body: some View {
-        Image(model.trusted ? .smirk : .untrusted)
-            .renderingMode(model.trusted ? .template : .original)
-            .animation(.default, value: model.trusted)
+        if featureFlagsManager.flags.accessibility {
+            let statusGranted = model.accessibilityPermissionStatus == .granted
+            Image(statusGranted ? .smirk : .untrusted)
+                .renderingMode(statusGranted ? .template : .original)
+                .animation(.default, value: statusGranted)
+        } else {
+            Image(.smirk)
+                .renderingMode(.template)
+                .animation(.default, value: true)
+        }
     }
 }
 

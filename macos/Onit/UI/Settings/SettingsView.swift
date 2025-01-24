@@ -16,6 +16,13 @@ struct SettingsView: View {
                     Label("Models", systemImage: "cpu")
                 }
             
+            #if DEBUG
+            DebugModeTab()
+                .tabItem {
+                    Label("Debug", systemImage: "wrench.and.screwdriver")
+                }
+            #endif
+            
             AboutTab()
                 .tabItem {
                     Label("About", systemImage: "info.circle")

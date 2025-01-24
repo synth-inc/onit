@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import PostHog
 
 extension OnitModel {
     func createAndSavePrompt() -> Prompt {
@@ -47,6 +48,7 @@ extension OnitModel {
         cancelGenerate()
         generatingPrompt = prompt
         generatingPromptPriorState = prompt.generationState
+        trackEventGeneration(prompt: prompt)
         
         generateTask = Task { [weak self] in
             guard let self = self else { return }
@@ -124,6 +126,20 @@ extension OnitModel {
             generatingPrompt = nil
             generatingPromptPriorState = nil
         }
+    }
+    
+    /**
+     * Track an event when user prompted
+     * - parameter prompt: The current prompt
+     */
+    private func trackEventGeneration(prompt: Prompt) {
+        let eventName = "user_prompted"
+        let eventProperties: [String: Any] = [
+            "prompt_instruction": prompt.instruction,
+            "prompt_mode": preferences.mode.rawValue,
+            "prompt_model": preferences.mode == .remote ? preferences.model?.displayName ?? "" : preferences.localModel ?? ""
+        ]
+        PostHogSDK.shared.capture(eventName, properties: eventProperties)
     }
 
     func cancelGenerate() {

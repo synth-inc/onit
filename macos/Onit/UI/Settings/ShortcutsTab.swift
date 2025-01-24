@@ -49,7 +49,7 @@ struct ShortcutsTab: View {
 
     func resetPrompt() {
         let view = StaticPromptView().environment(model)
-        Accessibility.resetPrompt(with: view)
+        WindowHelper.shared.resetPrompt(with: view)
     }
 }
 

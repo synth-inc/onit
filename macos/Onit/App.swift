@@ -8,16 +8,19 @@
 import SwiftUI
 import KeyboardShortcuts
 import MenuBarExtraAccess
-import FirebaseCore
 import Foundation
+import PostHog
 
 @main
 struct App: SwiftUI.App {
+    
     @Environment(\.model) var model
     @NSApplicationDelegateAdaptor(AppDelegate.self) var delegate
+    @ObservedObject private var featureFlagsManager = FeatureFlagManager.shared
+    
+    @State var accessibilityPermissionRequested = false
     
     init() {
-
         KeyboardShortcuts.onKeyUp(for: .launch) { [weak model] in
             model?.launchShortcutAction()
         }
@@ -37,14 +40,26 @@ struct App: SwiftUI.App {
             model?.escapeAction()
         }
 
+        featureFlagsManager.configure()
         model.showPanel()
         
         #if !targetEnvironment(simulator)
-//        Accessibility.requestPermissions()
-//        Accessibility.setModel(model)
-//        Accessibility.setupWindow(withView: StaticPromptView())
-//        Accessibility.observeActiveApplication()
-//        Accessibility.observeSystemClicks()
+        
+        let hostingController = NSHostingController(rootView: StaticPromptView())
+        let window = NSWindow(contentViewController: hostingController)
+        
+        window.styleMask = [.borderless]
+        window.isOpaque = false
+        window.backgroundColor = NSColor.clear
+        window.level = .floating
+        window.hasShadow = false
+        window.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
+        
+        AccessibilityPermissionManager.shared.setModel(model)
+        AccessibilityNotificationsManager.shared.setModel(model)
+        AccessibilityNotificationsManager.shared.setupWindow(window)
+        WindowHelper.shared.setupWindow(window)
+        
         #endif
     }
 
@@ -55,6 +70,36 @@ struct App: SwiftUI.App {
             MenuBarContent()
         } label: {
             MenuIcon()
+                .onChange(of: model.accessibilityPermissionStatus, initial: true) { oldValue, newValue in
+                    switch newValue {
+                    case .granted:
+                        AccessibilityNotificationsManager.shared.start()
+                        TapListener.shared.start()
+                    case .denied:
+                        AccessibilityNotificationsManager.shared.stop()
+                        TapListener.shared.stop()
+                    default:
+                        break
+                    }
+                }
+                .onChange(of: featureFlagsManager.flags.accessibility, initial: true) { oldValue, newValue in
+                    if newValue {
+                        if !accessibilityPermissionRequested {
+                            accessibilityPermissionRequested = true
+                            AccessibilityPermissionManager.shared.requestPermission()
+                        }
+                        AccessibilityPermissionManager.shared.startListeningPermission()
+                    } else {
+                        AccessibilityPermissionManager.shared.stopListeningPermission()
+                    }
+                }
+                .onChange(of: model.showDebugWindow, initial: true) { oldValue, newValue in
+                    if newValue {
+                        model.openDebugWindow()
+                    } else {
+                        model.closeDebugWindow()
+                    }
+                }
         }
         .menuBarExtraStyle(.window)
         .menuBarExtraAccess(isPresented: $model.showMenuBarExtra)
@@ -64,12 +109,6 @@ struct App: SwiftUI.App {
             SettingsView()
         }
     }
-}
-
-class AppDelegate: NSObject, NSApplicationDelegate {
-    func applicationDidFinishLaunching(_ notification: Notification) {
-        FirebaseApp.configure()
-  }
 }
 
 // MARK: - Testing
