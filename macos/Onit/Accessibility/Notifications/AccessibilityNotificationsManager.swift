@@ -192,10 +192,6 @@ class AccessibilityNotificationsManager {
             print("\nApplication deactivated: \(app.localizedName ?? "Unknown") \(app.processIdentifier)")
             
             self.stopAccessibilityObservers(for: app.processIdentifier)
-            
-            DispatchQueue.main.async {
-                WindowHelper.shared.hide()
-            }
         }
     }
     

@@ -49,8 +49,8 @@ class WindowHelper {
             return
         }
         
-        WindowHelper.shared.adjustWindowToTopRight()
-        WindowHelper.shared.showWindowWithAnimation()
+        adjustWindowToTopRight()
+        showWindowWithAnimation()
     }
     
     /** Hide the open app's shortcut window */
@@ -78,7 +78,7 @@ class WindowHelper {
         }
     }
     
-    func showWindowWithAnimation() {
+    private func showWindowWithAnimation() {
         DispatchQueue.main.async {
             // Ensure the contentView is layer-backed
             self.window.contentView?.wantsLayer = true
