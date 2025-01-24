@@ -35,12 +35,6 @@ class AccessibilityNotificationsManager {
     
     // MARK: - Properties
     
-    private var window: NSWindow? {
-        didSet {
-            print("resetting Accessibility Window!")
-        }
-    }
-    
     private var model: OnitModel?
     
     private var currentApplication: pid_t = 0
@@ -64,10 +58,6 @@ class AccessibilityNotificationsManager {
     private init() { }
     
     // MARK: - Functions
-    
-    func setupWindow(_ window: NSWindow) {
-        self.window = window
-    }
     
     func setModel(_ model: OnitModel) {
         self.model = model
@@ -204,8 +194,7 @@ class AccessibilityNotificationsManager {
             self.stopAccessibilityObservers(for: app.processIdentifier)
             
             DispatchQueue.main.async {
-                self.window?.orderOut(nil)
-                print("Window hidden; application deactivated.")
+                WindowHelper.shared.hide()
             }
         }
     }
@@ -418,7 +407,8 @@ class AccessibilityNotificationsManager {
             guard let selectedTextExtracted = self?.extractSelectedText(from: element),
                 !selectedTextExtracted.isEmpty else {
                 self?.selectedSource = nil
-                self?.window?.orderOut(nil)
+                self?.model?.pendingInput = nil
+                WindowHelper.shared.hide()
                 
                 return
             }
@@ -427,23 +417,15 @@ class AccessibilityNotificationsManager {
             
             self?.showDebug()
             
-//            self.selectedSource = currentSource
-//
-//            if self.window?.isVisible == false {
-//                WindowHelper.shared.adjustWindowToTopRight()
-//                WindowHelper.shared.showWindowWithAnimation()
-//            }
-//
-//            self.selectedText[self.currentApplication] = selectedTextExtracted
-//
-//            if let model = self.model {
-//                // Move these on to the model Input!
-//                if !selectedTextExtracted.isEmpty {
-//                    model.pendingInput = Input(selectedText: selectedTextExtracted, application: currentSource ?? "")
-//                } else {
-//                    model.pendingInput = nil
-//                }
-//            }
+            self?.selectedSource = self?.currentSource
+
+            WindowHelper.shared.show()
+            
+            if let pid = self?.currentApplication {
+                self?.selectedText[pid] = selectedTextExtracted
+            }
+
+            self?.model?.pendingInput = Input(selectedText: selectedTextExtracted, application: self?.currentSource ?? "")
         }
     }
     
@@ -474,7 +456,8 @@ class AccessibilityNotificationsManager {
         )
         
         guard textResult == .success,
-              let selectedText = selectedTextValue as? String else {
+              let selectedText = selectedTextValue as? String,
+              !selectedText.isEmpty else {
             return nil
         }
         
