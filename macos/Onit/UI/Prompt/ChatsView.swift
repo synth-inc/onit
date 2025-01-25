@@ -15,8 +15,9 @@ struct ChatsView: View {
 
     var maxHeight: CGFloat {
         guard !model.resizing else { return 0 }
-        let screenHeight = NSScreen.main!.frame.height
-        let availableHeight = screenHeight - windowTopOffset - model.headerHeight - model.inputHeight - model.setUpHeight
+        let screenHeight = NSScreen.main?.visibleFrame.height ?? 0
+        let availableHeight = screenHeight
+        - model.headerHeight - model.inputHeight - model.setUpHeight
         return availableHeight
     }
 
