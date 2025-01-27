@@ -38,6 +38,7 @@ struct Preferences: Codable {
     var availableRemoteModels: [AIModel] = []
     var remoteFetchFailed: Bool = false
     var visibleModelIds: Set<String> = Set([])
+    var localEndpointURL: String = "http://localhost:11434"
     
     mutating func markRemoteModelAsNotNew(modelId: String) {
         if let index = availableRemoteModels.firstIndex(where: { $0.id == modelId }) {

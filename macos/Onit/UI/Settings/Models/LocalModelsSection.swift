@@ -30,8 +30,30 @@ struct LocalModelsSection: View {
     }
 
     var title: some View {
-        // The implementation to turn off local models doesn't exist, so we never show the toggle.
-        ModelTitle(title: "Ollama", isOn: $isOn, showToggle: .constant(false))
+        VStack(alignment: .leading, spacing: 8) {
+            // The implementation to turn off local models doesn't exist, so we never show the toggle.
+            ModelTitle(title: "Ollama", isOn: $isOn, showToggle: .constant(false))
+            
+            HStack {
+                Text("Endpoint URL:")
+                    .foregroundStyle(.primary.opacity(0.65))
+                    .font(.system(size: 12))
+                    .fontWeight(.regular)
+                
+                TextField("", text: Binding(
+                    get: { model.preferences.localEndpointURL },
+                    set: { newValue in
+                        model.updatePreferences { prefs in
+                            prefs.localEndpointURL = newValue
+                        }
+                    }
+                ))
+                .textFieldStyle(.roundedBorder)
+                .font(.system(size: 12))
+                .frame(maxWidth: 250)
+            }
+            .padding(.leading, 4)
+        }
     }
 
     @ViewBuilder

@@ -23,7 +23,9 @@ struct LocalModelsEndpoint: Endpoint {
     typealias Request = EmptyRequest
     typealias Response = LocalModelsResponse
 
-    var baseURL: URL = URL(string: "http://localhost:11434")!
+    var baseURL: URL {
+        URL(string: Preferences.shared.localEndpointURL)!
+    }
 
     var path: String { "/api/tags" }
     var getParams: [String: String]? { nil }
