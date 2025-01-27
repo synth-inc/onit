@@ -10,7 +10,7 @@ import Foundation
 import SwiftUI
 
 @MainActor
-class AccessibilityNotificationsManager {
+class AccessibilityNotificationsManager: ObservableObject {
     
     // MARK: - Singleton instance
     

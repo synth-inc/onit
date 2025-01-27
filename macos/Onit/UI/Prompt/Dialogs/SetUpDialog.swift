@@ -11,6 +11,7 @@ struct SetUpDialog<Subtitle: View>: View {
     @Environment(\.model) var model
 
     var title: String
+    var showButton: Bool = true
     var buttonText: String? = nil
     var showArrow: Bool = true
     @ViewBuilder var subtitle: () -> Subtitle
@@ -36,7 +37,10 @@ struct SetUpDialog<Subtitle: View>: View {
             Spacer().frame(height: 10)
             main
             Spacer().frame(height: 11)
-            button
+            
+            if showButton {
+                button
+            }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.horizontal, 14)
