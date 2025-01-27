@@ -8,7 +8,7 @@
 import Foundation
 
 enum Context {
-    case auto(String, String)
+    case auto(String, [String: String])
     case file(URL)
     case image(URL)
     case tooBig(URL)
@@ -38,10 +38,19 @@ enum Context {
             nil
         }
     }
+    
+    var isAutoContext: Bool {
+        switch self {
+        case .auto:
+            return true
+        default:
+            return false
+        }
+    }
 }
 
 extension Context {
-    init(appName: String, appContent: String) {
+    init(appName: String, appContent: [String: String]) {
         self = .auto(appName, appContent)
     }
     
@@ -78,7 +87,7 @@ extension Context: Codable {
         switch type {
         case .auto:
             let appName = try container.decode(String.self, forKey: .appName)
-            let appContent = try container.decode(String.self, forKey: .appContent)
+            let appContent = try container.decode([String: String].self, forKey: .appContent)
             self = .auto(appName, appContent)
         case .file:
             let url = try container.decode(URL.self, forKey: .url)

@@ -9,9 +9,12 @@ import AppKit
 
 extension OnitModel {
     func addAutoContext() {
-        // TODO: KNA - Replace by real values
-        let autoContext = Context(appName: "Test", appContent: "Blah blah blah")
+        guard let appName = AccessibilityNotificationsManager.shared.screenResult.applicationName,
+              let appContent = AccessibilityNotificationsManager.shared.screenResult.others else {
+            return
+        }
         
+        let autoContext = Context(appName: appName, appContent: appContent)
         pendingContextList.insert(autoContext, at: 0)
     }
     

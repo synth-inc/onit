@@ -9,8 +9,12 @@ import SwiftUI
 
 struct PaperclipButton: View {
     @Environment(\.model) var model
-    
     @ObservedObject var featureFlagsManager = FeatureFlagManager.shared
+    @ObservedObject var notificationsManager = AccessibilityNotificationsManager.shared
+    
+    var autoContextEnabled: Bool {
+        featureFlagsManager.flags.accessibility && notificationsManager.screenResult.others?.isEmpty == false
+    }
 
     var body: some View {
         HStack(spacing: 6) {
@@ -22,17 +26,13 @@ struct PaperclipButton: View {
                     .frame(width: 16, height: 16)
                     .padding(3)
             }
-            .tooltip(prompt: featureFlagsManager.flags.accessibility ? "Add context" : "Upload file")
+            .tooltip(prompt: autoContextEnabled ? "Add context" : "Upload file")
 
             if model.pendingContextList.isEmpty {
                 Button {
-                    if featureFlagsManager.flags.accessibility {
-                        handleAddContext()
-                    } else {
-                        model.showFileImporter = true
-                    }
+                    handleAddContext()
                 } label: {
-                    Text(featureFlagsManager.flags.accessibility ? "Add context" : "Add file")
+                    Text(autoContextEnabled ? "Add context" : "Add file")
                         .foregroundStyle(.gray200)
                         .appFont(.medium13)
                 }
@@ -41,7 +41,7 @@ struct PaperclipButton: View {
     }
     
     private func handleAddContext() {
-        if featureFlagsManager.flags.accessibility {
+        if autoContextEnabled {
             model.showContextPickerOverlay()
         } else {
             model.showFileImporter = true

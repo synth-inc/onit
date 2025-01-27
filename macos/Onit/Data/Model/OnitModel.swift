@@ -58,6 +58,7 @@ import AppKit
 
     var modelSelectionWindowController: OverlayWindowController<ModelSelectionView>?
     var contextPickerWindowController: OverlayWindowController<ContextPickerView>?
+    var autoContextWindowControllers: [Context: AutoContextWindowController] = [:]
     
     var showFileImporter = false
 

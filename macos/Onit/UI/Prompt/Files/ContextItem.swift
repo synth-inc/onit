@@ -19,18 +19,35 @@ struct ContextItem: View {
 
     var body: some View {
         HStack(spacing: 0) {
-            image
-
-            Spacer()
-                .frame(width: 4)
-
-            text
+            switch item {
+            case .auto:
+                Button {
+                    model.showAutoContextWindow(context: item)
+                } label: {
+                    contentView
+                }
+                .tooltip(prompt: "View auto-context file")
+            default:
+                contentView
+            }
+            
             if !isSent {
                 xButton
             }
         }
         .padding(3)
         .background(.gray700, in: .rect(cornerRadius: 4))
+    }
+    
+    var contentView: some View {
+        HStack(spacing: 0) {
+            image
+            
+            Spacer()
+                .frame(width: 4)
+            
+            text
+        }
     }
 
     @ViewBuilder
@@ -50,18 +67,18 @@ struct ContextItem: View {
     var autoImage: some View {
         Image(.stars)
             .resizable()
-            .frame(width: 16, height: 16)
+            .frame(width: 20, height: 20)
     }
 
     var fileImage: some View {
         Image(.file)
-            .padding(.horizontal, 2)
-            .padding(.vertical, 1)
+            .resizable()
+            .frame(width: 20, height: 20)
     }
 
     var imageImage: some View {
         Color.clear
-            .frame(width: 16, height: 16)
+            .frame(width: 20, height: 20)
             .overlay {
                 Image(nsImage: NSImage(byReferencing: item.url!))
                     .resizable()
@@ -78,7 +95,7 @@ struct ContextItem: View {
     var warningImage: some View {
         Image(.warning)
             .resizable()
-            .frame(width: 16, height: 16)
+            .frame(width: 20, height: 20)
     }
 
     var text: some View {
@@ -108,6 +125,7 @@ struct ContextItem: View {
 
     var xButton: some View {
         Button {
+            model.closeAutoContextWindow(context: item)
             model.removeContext(context: item)
         } label: {
             Color.clear
