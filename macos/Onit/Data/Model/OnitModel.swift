@@ -56,7 +56,10 @@ import AppKit
     var debugPanel: CustomPanel? = nil
     var debugText: String?
 
-    var modelSelectionWindowController: ModelSelectionWindowController?
+    var modelSelectionWindowController: OverlayWindowController<ModelSelectionView>?
+    var contextPickerWindowController: OverlayWindowController<ContextPickerView>?
+    
+    var showFileImporter = false
 
     var accessibilityPermissionStatus: AccessibilityPermissionStatus = .notDetermined
 

@@ -36,6 +36,8 @@ struct ContextItem: View {
     @ViewBuilder
     var image: some View {
         switch item {
+        case .auto:
+            autoImage
         case .image:
             imageImage
         case .file:
@@ -43,6 +45,12 @@ struct ContextItem: View {
         default:
             warningImage
         }
+    }
+    
+    var autoImage: some View {
+        Image(.stars)
+            .resizable()
+            .frame(width: 16, height: 16)
     }
 
     var fileImage: some View {
@@ -55,11 +63,11 @@ struct ContextItem: View {
         Color.clear
             .frame(width: 16, height: 16)
             .overlay {
-                Image(nsImage: NSImage(byReferencing: item.url))
+                Image(nsImage: NSImage(byReferencing: item.url!))
                     .resizable()
                     .scaledToFill()
             }
-            .imageProgress(url: item.url)
+            .imageProgress(url: item.url!)
             .clipShape(imageRect)
             .overlay {
                 imageRect
@@ -87,6 +95,8 @@ struct ContextItem: View {
 
     var name: String {
         switch item {
+        case .auto(let appName, _):
+            appName
         case .file(let url), .image(let url):
             url.lastPathComponent
         case .error(_, let error):

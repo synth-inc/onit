@@ -1,29 +1,33 @@
 //
-//  ModelSelectionWindowController.swift
+//  OverlayWindowController.swift
 //  Onit
 //
-//  Created by Benjamin Sage on 1/14/25.
+//  Created by Kévin Naudin on 25/01/2025.
 //
+
 
 import SwiftUI
 import AppKit
 
 @MainActor
-class ModelSelectionWindowController: NSObject, NSWindowDelegate {
+class OverlayWindowController<Content: View>: NSObject, NSWindowDelegate {
     var overlayWindow: NSWindow?
     weak var model: OnitModel?
     var eventMonitor: Any?
     var localEventMonitor: Any?
+    
+    private let contentView: Content
 
-    init(model: OnitModel) {
+    init(model: OnitModel, content: Content) {
         self.model = model
+        contentView = content
         super.init()
         createOverlayWindow()
         startEventMonitoring()
     }
 
     func createOverlayWindow() {
-        let contentView = ModelSelectionView()
+        let contentView = contentView
             .environment(\.model, model!)
             .fixedSize()
         let hostingController = NSHostingController(rootView: contentView)
@@ -159,7 +163,7 @@ class ModelSelectionWindowController: NSObject, NSWindowDelegate {
             overlayWindow.orderOut(nil)
             overlayWindow.alphaValue = 1.0
             self.overlayWindow = nil
-            self.model?.modelSelectionWindowController = nil
+            self.model?.contextPickerWindowController = nil
             self.stopEventMonitoring()
         })
     }
