@@ -15,6 +15,9 @@ struct InputBarView: View {
             if model.currentPrompts?.count ?? 0 > 0 {
                 PromptDivider()
             }
+            if let pendingInput = model.pendingInput {
+                InputView(input: pendingInput)
+            }
             FileRow(contextList: model.pendingContextList)
             TextInputView()
         }
@@ -28,9 +31,11 @@ struct InputBarView: View {
             Color.clear
                 .onAppear {
                     model.inputHeight = proxy.size.height
+                    model.adjustPanelSize()
                 }
                 .onChange(of: proxy.size.height) { _, new in
                     model.inputHeight = new
+                    model.adjustPanelSize()
                 }
         }
     }

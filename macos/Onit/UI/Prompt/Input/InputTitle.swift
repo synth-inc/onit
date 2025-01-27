@@ -8,11 +8,11 @@
 import SwiftUI
 
 struct InputTitle: View {
-    @Environment(\.model) var model
-//    var source: String?
+    @Binding var inputExpanded: Bool
+    var input: Input
 
     var sourceString: String {
-        guard let sourceText = model.pendingInput?.application else { return "" }
+        guard let sourceText = input.application else { return "" }
         return " - \(sourceText)"
     }
 
@@ -25,7 +25,7 @@ struct InputTitle: View {
             Text(inputString)
                 .appFont(.medium13)
             Spacer()
-            InputButtons()
+            InputButtons(inputExpanded: $inputExpanded, input: input)
         }
         .foregroundStyle(.gray100)
         .padding(.horizontal, 12)
@@ -34,5 +34,5 @@ struct InputTitle: View {
 }
 
 #Preview {
-    InputTitle()
+    InputTitle(inputExpanded: .constant(true), input: .sample)
 }

@@ -34,6 +34,7 @@ extension OnitModel {
         currentChat?.prompts.append(prompt)
         currentPrompts?.append(prompt)
         pendingInstruction = ""
+        pendingInput = nil
     
         do {
             try container.mainContext.save()
@@ -84,7 +85,7 @@ extension OnitModel {
                     // chat(instructions: [String], inputs: [Input?], files: [[URL]], images[[URL]], responses: [String], model: AIModel?, apiToken: String?)
                     chat = try await client.chat(
                         instructions: instructionsHistory,
-                        inputs: inputsHistory.map { _ in nil }, // Add back in inputs once we have accessibility
+                        inputs: inputsHistory,
                         files: filesHistory,
                         images: imagesHistory,
                         responses: responsesHistory,
@@ -95,7 +96,7 @@ extension OnitModel {
                     // TODO implement history for local chat!
                     chat = try await client.localChat(
                         instructions: instructionsHistory,
-                        inputs: inputsHistory.map { _ in nil },
+                        inputs: inputsHistory,
                         files: filesHistory,
                         images: imagesHistory,
                         responses: responsesHistory,

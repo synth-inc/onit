@@ -35,12 +35,6 @@ class AccessibilityNotificationsManager {
     
     // MARK: - Properties
     
-    private var window: NSWindow? {
-        didSet {
-            print("resetting Accessibility Window!")
-        }
-    }
-    
     private var model: OnitModel?
     
     private var currentApplication: pid_t = 0
@@ -53,7 +47,7 @@ class AccessibilityNotificationsManager {
     
     private var selectedSource: String?
     
-    private var selectedText: [pid_t: String] = [:]
+    private var selectedTextByApp: [String: String] = [:]
     
     private var valueDebounceWorkItem: DispatchWorkItem?
     
@@ -64,10 +58,6 @@ class AccessibilityNotificationsManager {
     private init() { }
     
     // MARK: - Functions
-    
-    func setupWindow(_ window: NSWindow) {
-        self.window = window
-    }
     
     func setModel(_ model: OnitModel) {
         self.model = model
@@ -202,32 +192,33 @@ class AccessibilityNotificationsManager {
             print("\nApplication deactivated: \(app.localizedName ?? "Unknown") \(app.processIdentifier)")
             
             self.stopAccessibilityObservers(for: app.processIdentifier)
-            
-            DispatchQueue.main.async {
-                self.window?.orderOut(nil)
-                print("Window hidden; application deactivated.")
-            }
         }
     }
+    
+    // MARK: Handling app activated/deactived
 
     private func handleAppActivation(appName: String?, processID: pid_t) {
-        if let focusedApp = NSWorkspace.shared.frontmostApplication, focusedApp.processIdentifier != getpid() {
-            print("\nApplication activated: \(appName ?? "Unknown") \(processID)")
-            let pid = focusedApp.processIdentifier
-            
-            let newAppElement = AXUIElementCreateApplication(pid)
-            self.appElement = newAppElement
-            self.currentApplication = pid
-            self.currentSource = focusedApp.localizedName
-
-            parseAccessibility(for: newAppElement)
-            
-            // print("Text in application: \(textInApplication)")
-            // let appElement = AXUIElementCreateApplication(pid)
-            // handleInitialFocus(for: appElement)
-        } else {
+        guard processID != getpid() else {
             print("Ignoring handleAppActivation for our own app.")
+            return
         }
+        
+        let selectedText = selectedTextByApp[appName ?? "Unknown"]
+        
+        print("\nApplication activated: \(appName ?? "Unknown") \(processID) selected text: \"\(selectedText ?? "")\"")
+        
+        let newAppElement = processID.getAXUIElement()
+        self.appElement = newAppElement
+        self.currentApplication = processID
+        self.currentSource = appName
+        
+        processSelectedText(selectedText)
+
+        parseAccessibility(for: newAppElement)
+            
+        // print("Text in application: \(textInApplication)")
+        // let appElement = pid.getAXUIElement()
+        // handleInitialFocus(for: appElement)
     }
     
     private func handleAccessibilityNotifications(_ notification: String, info: [String: Any], element: AXUIElement, observer: AXObserver) {
@@ -414,37 +405,32 @@ class AccessibilityNotificationsManager {
         // Ensure we're on the main thread
         dispatchPrecondition(condition: .onQueue(.main))
         
-        handleExternalElement(element) { [weak self] _ in
-            guard let selectedTextExtracted = self?.extractSelectedText(from: element),
-                !selectedTextExtracted.isEmpty else {
-                self?.selectedSource = nil
-                self?.window?.orderOut(nil)
-                
-                return
-            }
+        handleExternalElement(element) { [weak self] pid in
+            let selectedTextExtracted = self?.extractSelectedText(from: element)
             
-            self?.screenResult.userInteraction.selectedText = selectedTextExtracted
-            
+            self?.processSelectedText(selectedTextExtracted)
+            self?.selectedTextByApp[pid.getAppName() ?? "Unknown"] = selectedTextExtracted
             self?.showDebug()
-            
-//            self.selectedSource = currentSource
-//
-//            if self.window?.isVisible == false {
-//                WindowHelper.shared.adjustWindowToTopRight()
-//                WindowHelper.shared.showWindowWithAnimation()
-//            }
-//
-//            self.selectedText[self.currentApplication] = selectedTextExtracted
-//
-//            if let model = self.model {
-//                // Move these on to the model Input!
-//                if !selectedTextExtracted.isEmpty {
-//                    model.pendingInput = Input(selectedText: selectedTextExtracted, application: currentSource ?? "")
-//                } else {
-//                    model.pendingInput = nil
-//                }
-//            }
         }
+    }
+    
+    private func processSelectedText(_ text: String?) {
+        guard let selectedText = text,
+            !selectedText.isEmpty else {
+            selectedSource = nil
+            model?.pendingInput = nil
+            WindowHelper.shared.hide()
+            
+            return
+        }
+        
+        screenResult.userInteraction.selectedText = selectedText
+        
+        selectedSource = currentSource
+
+        WindowHelper.shared.show()
+
+        model?.pendingInput = Input(selectedText: selectedText, application: currentSource ?? "")
     }
     
     private func extractSelectedText(from element: AXUIElement) -> String? {
@@ -474,7 +460,8 @@ class AccessibilityNotificationsManager {
         )
         
         guard textResult == .success,
-              let selectedText = selectedTextValue as? String else {
+              let selectedText = selectedTextValue as? String,
+              !selectedText.isEmpty else {
             return nil
         }
         
