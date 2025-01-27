@@ -9,46 +9,42 @@ import SwiftUI
 
 struct PaperclipButton: View {
     @Environment(\.model) var model
-
-    @State var showFileImporter = false
+    
+    @ObservedObject var featureFlagsManager = FeatureFlagManager.shared
 
     var body: some View {
         HStack(spacing: 6) {
             Button {
-                showFileImporter = true
+                handleAddContext()
             } label: {
                 Image(.paperclip)
                     .resizable()
                     .frame(width: 16, height: 16)
                     .padding(3)
             }
-            .tooltip(prompt: "Upload file")
+            .tooltip(prompt: featureFlagsManager.flags.accessibility ? "Add context" : "Upload file")
 
             if model.pendingContextList.isEmpty {
                 Button {
-                    showFileImporter = true
+                    if featureFlagsManager.flags.accessibility {
+                        handleAddContext()
+                    } else {
+                        model.showFileImporter = true
+                    }
                 } label: {
-                    Text("Add file")
+                    Text(featureFlagsManager.flags.accessibility ? "Add context" : "Add file")
                         .foregroundStyle(.gray200)
                         .appFont(.medium13)
                 }
             }
         }
-        .fileImporter(
-            isPresented: $showFileImporter,
-            allowedContentTypes: [.item],
-            allowsMultipleSelection: true
-        ) { result in
-            handle(result)
-        }
     }
-
-    func handle(_ result: Result<[URL], any Error>) {
-        switch result {
-        case .success(let urls):
-            model.addContext(urls: urls)
-        case .failure(let error):
-            print(error.localizedDescription)
+    
+    private func handleAddContext() {
+        if featureFlagsManager.flags.accessibility {
+            model.showContextPickerOverlay()
+        } else {
+            model.showFileImporter = true
         }
     }
 }

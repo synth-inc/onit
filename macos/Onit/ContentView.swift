@@ -10,6 +10,13 @@ import SwiftUI
 struct ContentView: View {
     @Environment(\.model) var model
 
+    var showFileImporterBinding: Binding<Bool> {
+        Binding(
+            get: { self.model.showFileImporter },
+            set: { self.model.showFileImporter = $0 }
+        )
+    }
+    
     var maxHeight: CGFloat? {
         if let height = NSScreen.main?.visibleFrame.height {
             return height - 16 * 2
@@ -44,6 +51,22 @@ struct ContentView: View {
                         print(proxy.frame(in: .global))
                     }
             }
+        }
+        .fileImporter(
+            isPresented: showFileImporterBinding,
+            allowedContentTypes: [.item],
+            allowsMultipleSelection: true
+        ) { result in
+            handleFileImport(result)
+        }
+    }
+    
+    private func handleFileImport(_ result: Result<[URL], any Error>) {
+        switch result {
+        case .success(let urls):
+            model.addContext(urls: urls)
+        case .failure(let error):
+            print(error.localizedDescription)
         }
     }
 }

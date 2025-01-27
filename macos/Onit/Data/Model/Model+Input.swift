@@ -8,6 +8,13 @@
 import AppKit
 
 extension OnitModel {
+    func addAutoContext() {
+        // TODO: KNA - Replace by real values
+        let autoContext = Context(appName: "Test", appContent: "Blah blah blah")
+        
+        pendingContextList.insert(autoContext, at: 0)
+    }
+    
     func addContext(urls: [URL]) {
         let contextItems = urls.map(Context.init)
         pendingContextList += contextItems
