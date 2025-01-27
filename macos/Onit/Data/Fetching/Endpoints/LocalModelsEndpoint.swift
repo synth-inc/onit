@@ -52,7 +52,7 @@ struct ModelDetails: Codable {
     let parentModel: String?
     let format: String?
     let family: String?
-    let families: [String]
+    let families: [String]?
     let parameterSize: String?
     let quantizationLevel: String?
 }
