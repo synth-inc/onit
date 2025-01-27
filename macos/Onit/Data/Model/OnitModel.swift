@@ -45,6 +45,7 @@ import AppKit
     var uploadTasks: [URL: Task<URL?, Never>] = [:]
     var textFocusTrigger = false
     var isOpeningSettings = false
+    var settingsTab: SettingsTab = .models
     var historyIndex = -1
 
     var headerHeight: CGFloat = 0
@@ -185,6 +186,11 @@ import AppKit
     func updatePreferences(_ update: (inout Preferences) -> Void) {
         update(&preferences)
         Preferences.save(preferences)
+    }
+    
+    func openSettings(tab: SettingsTab) {
+        settingsTab = tab
+        isOpeningSettings = true
     }
 }
 

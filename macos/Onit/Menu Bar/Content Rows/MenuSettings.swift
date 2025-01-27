@@ -10,11 +10,13 @@ import KeyboardShortcuts
 
 struct MenuSettings: View {
     @Environment(\.openSettings) var openSettings
+    @Environment(\.model) var model
     
     var body: some View {
         MenuBarRow {
             NSApp.activate()
             if NSApp.isActive {
+                model.openSettings(tab: .models)
                 openSettings()
             }
         } leading: {
