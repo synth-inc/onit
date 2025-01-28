@@ -131,7 +131,7 @@ import AppKit
                     let newModelIds = Set(models.map { $0.id })
                     let existingModelIds = Set(prefs.availableRemoteModels.map { $0.id })
                     
-                    var newModels = models.filter { !existingModelIds.contains($0.id) }
+                    let newModels = models.filter { !existingModelIds.contains($0.id) }
                     var deprecatedModels = prefs.availableRemoteModels.filter { !newModelIds.contains($0.id) }
                     for index in models.indices where newModels.contains(models[index]) {
                         models[index].isNew = true
@@ -163,9 +163,6 @@ import AppKit
         } catch {
             print("Error fetching local models:", error)
             remoteFetchFailed = true
-//            updatePreferences { prefs in
-//                prefs.remoteFetchFailed = true
-//            }
         }
     }
 
