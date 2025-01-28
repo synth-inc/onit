@@ -12,6 +12,7 @@ struct InputView: View {
     @State var inputExpanded: Bool = true
     
     var input: Input
+    var isEditing: Bool = true
     
     var body: some View {
         VStack(spacing: 0) {
@@ -24,7 +25,7 @@ struct InputView: View {
                 .fill(.gray800)
                 .strokeBorder(.gray600)
         }
-        .padding([.horizontal, .top], 8)
+        .padding([.horizontal, .top], isEditing ? 8 : 0)
     }
     
     var divider: some View {

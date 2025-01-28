@@ -11,11 +11,7 @@ struct ContextItem: View {
     @Environment(\.model) var model
 
     var item: Context
-    var isSent: Bool
-
-    var imageRect: RoundedRectangle {
-        .rect(cornerRadius: 3)
-    }
+    var isEditing: Bool = true
 
     var body: some View {
         HStack(spacing: 0) {
@@ -31,71 +27,23 @@ struct ContextItem: View {
                 contentView
             }
             
-            if !isSent {
+            if isEditing {
                 xButton
             }
         }
         .padding(3)
-        .background(.gray700, in: .rect(cornerRadius: 4))
+        .background(isEditing ? .gray700 : .clear, in: .rect(cornerRadius: 4))
     }
     
     var contentView: some View {
         HStack(spacing: 0) {
-            image
+            ContextImage(context: item)
             
             Spacer()
                 .frame(width: 4)
             
             text
         }
-    }
-
-    @ViewBuilder
-    var image: some View {
-        switch item {
-        case .auto:
-            autoImage
-        case .image:
-            imageImage
-        case .file:
-            fileImage
-        default:
-            warningImage
-        }
-    }
-    
-    var autoImage: some View {
-        Image(.stars)
-            .resizable()
-            .frame(width: 20, height: 20)
-    }
-
-    var fileImage: some View {
-        Image(.file)
-            .resizable()
-            .frame(width: 20, height: 20)
-    }
-
-    var imageImage: some View {
-        Color.clear
-            .frame(width: 20, height: 20)
-            .overlay {
-                Image(nsImage: NSImage(byReferencing: item.url!))
-                    .resizable()
-                    .scaledToFill()
-            }
-            .imageProgress(url: item.url!)
-            .clipShape(imageRect)
-            .overlay {
-                imageRect
-                    .strokeBorder(.gray500)
-            }
-    }
-
-    var warningImage: some View {
-        Image(.warning)
-            .resizable()
-            .frame(width: 20, height: 20)
     }
 
     var text: some View {

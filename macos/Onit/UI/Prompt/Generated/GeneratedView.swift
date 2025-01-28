@@ -11,11 +11,10 @@ struct GeneratedView: View {
     var prompt: Prompt
 
     var body: some View {
-        if let input = prompt.input {
-            InputView(input: input)
+        VStack(alignment: .leading, spacing: 0) {
+            FinalContextView(prompt: prompt)
+            content
         }
-        UserInputView(prompt: prompt, isSent: true)
-        content
     }
 
     var content: some View {
