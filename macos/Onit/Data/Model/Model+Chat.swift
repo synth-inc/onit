@@ -61,6 +61,7 @@ extension OnitModel {
             var inputsHistory : [Input?] = [prompt.input]
             var imagesHistory : [[URL]] = [prompt.contextList.images]
             var instructionsHistory: [String] = [curInstruction]
+            var autoContextsHistory: [[String: String]] = [prompt.contextList.autoContexts]
             var responsesHistory: [String] = []
         
             // Go through prior prompts and add them to the history
@@ -72,6 +73,7 @@ extension OnitModel {
                     inputsHistory.insert(currentPrompt!.input, at: 0)
                     filesHistory.insert(currentPrompt!.contextList.files, at: 0)
                     imagesHistory.insert(currentPrompt!.contextList.images, at: 0)
+                    autoContextsHistory.insert(currentPrompt!.contextList.autoContexts, at:0)
                     responsesHistory.insert(currentPrompt!.responses[currentPrompt!.generationIndex].text, at: 0)
                 } else {
                     print("Skipping failed response from prior prompt.")
@@ -88,6 +90,7 @@ extension OnitModel {
                         inputs: inputsHistory,
                         files: filesHistory,
                         images: imagesHistory,
+                        autoContexts: autoContextsHistory,
                         responses: responsesHistory,
                         model: preferences.remoteModel,
                         apiToken: getTokenForModel(preferences.remoteModel ?? nil)
@@ -99,6 +102,7 @@ extension OnitModel {
                         inputs: inputsHistory,
                         files: filesHistory,
                         images: imagesHistory,
+                        autoContexts: autoContextsHistory,
                         responses: responsesHistory,
                         model: preferences.localModel
                     )
