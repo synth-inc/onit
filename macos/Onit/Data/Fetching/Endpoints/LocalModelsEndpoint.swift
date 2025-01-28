@@ -10,6 +10,7 @@ import Foundation
 extension FetchingClient {
     func getLocalModels() async throws -> [String] {
         let endpoint = LocalModelsEndpoint()
+
         let response = try await execute(endpoint)
         let names = response.models.map { $0.name }
         return names
@@ -24,7 +25,11 @@ struct LocalModelsEndpoint: Endpoint {
     typealias Response = LocalModelsResponse
 
     var baseURL: URL {
-        URL(string: Preferences.shared.localEndpointURL)!
+        var url: URL!
+        DispatchQueue.main.sync {
+            url = Preferences.shared.localEndpointURL
+        }
+        return url
     }
 
     var path: String { "/api/tags" }

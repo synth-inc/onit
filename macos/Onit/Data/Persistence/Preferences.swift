@@ -7,10 +7,12 @@
 
 import Foundation
 
-struct Preferences: Codable {
-    static let shared = Preferences.load()
+class Preferences: Codable {
+    @MainActor static let shared = Preferences.load()
     
     private static let key = "app_preferences"
+    
+    let id: UUID = UUID()
     
     static func save(_ preferences: Preferences) {
         if let data = try? JSONEncoder().encode(preferences) {
@@ -36,17 +38,16 @@ struct Preferences: Codable {
     var mode: InferenceMode = .remote
     var availableLocalModels: [String] = []
     var availableRemoteModels: [AIModel] = []
-    var remoteFetchFailed: Bool = false
     var visibleModelIds: Set<String> = Set([])
-    var localEndpointURL: String = "http://localhost:11434"
-    
-    mutating func markRemoteModelAsNotNew(modelId: String) {
+    var localEndpointURL: URL = URL(string: "http://localhost:11434")!
+
+    func markRemoteModelAsNotNew(modelId: String) {
         if let index = availableRemoteModels.firstIndex(where: { $0.id == modelId }) {
             availableRemoteModels[index].isNew = false
         }
     }
 
-    mutating func initializeVisibleModelIds(from models: [AIModel]) {
+    func initializeVisibleModelIds(from models: [AIModel]) {
         if visibleModelIds.isEmpty {
             visibleModelIds = Set(models.filter { $0.defaultOn }.map { $0.id })
         }

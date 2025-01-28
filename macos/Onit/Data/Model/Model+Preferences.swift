@@ -11,7 +11,7 @@ extension OnitModel {
     var preferences: Preferences {
         get {
             access(keyPath: \.preferences)
-            return Preferences.load() ?? Preferences()
+            return Preferences.shared
         }
         set {
             withMutation (keyPath: \.preferences) {

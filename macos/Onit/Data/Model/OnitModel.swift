@@ -71,16 +71,18 @@ import AppKit
     var updater = SPUStandardUpdaterController(startingUpdater: true, updaterDelegate: nil, userDriverDelegate: nil)
     var _tokenValidation = TokenValidationState()
     
+    var remoteFetchFailed: Bool = false
+    var localFetchFailed: Bool = false
+    
     @MainActor
     func fetchLocalModels() async {
         do {
             let models = try await FetchingClient().getLocalModels()
-            updatePreferences { preferences in
-                preferences.availableLocalModels = models
-            }
 
             // Handle local model selection
             updatePreferences { prefs in
+                preferences.availableLocalModels = models
+
                 if preferences.availableLocalModels.isEmpty {
                     prefs.localModel = nil
                 
@@ -90,12 +92,15 @@ import AppKit
                 if listedModels.isEmpty {
                     prefs.mode = .local
                 }
+                localFetchFailed = false
             }
-            // If relevant shrink the dialog box to account for the removed SetupDialog. 
+            
+            // If relevant shrink the dialog box to account for the removed SetupDialog.
             shrinkContent()
         } catch {
             print("Error fetching local models:", error)
             updatePreferences { prefs in
+                localFetchFailed = true
                 prefs.availableLocalModels = []
                 prefs.localModel = nil
             }
@@ -140,7 +145,7 @@ import AppKit
                     let visibleModelIds = Set(prefs.visibleModelIds)
                     let visibleDeprecatedModels = deprecatedModels.filter { visibleModelIds.contains($0.id) }
                     
-                    prefs.remoteFetchFailed = false
+                    remoteFetchFailed = false
                     prefs.availableRemoteModels = models + visibleDeprecatedModels
                     prefs.initializeVisibleModelIds(from: (models + visibleDeprecatedModels))
 
@@ -157,9 +162,10 @@ import AppKit
             
         } catch {
             print("Error fetching local models:", error)
-            updatePreferences { prefs in
-                prefs.remoteFetchFailed = true
-            }
+            remoteFetchFailed = true
+//            updatePreferences { prefs in
+//                prefs.remoteFetchFailed = true
+//            }
         }
     }
 
