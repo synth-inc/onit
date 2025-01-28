@@ -202,4 +202,13 @@ extension [Context] {
             }
         }
     }
+    
+    var autoContexts: [String: String] {
+        Dictionary(uniqueKeysWithValues: compactMap { context in
+            if case .auto(let appName, let content) = context {
+                return (appName, content.values.joined(separator: "\n"))
+            }
+            return nil
+        })
+    }
 }
