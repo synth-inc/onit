@@ -10,12 +10,13 @@ import SwiftUI
 struct ContextList: View {
 
     var contextList: [Context]
+    var isSent: Bool
 
     var body: some View {
         ScrollView(.horizontal) {
             HStack(spacing: 6) {
                 ForEach(contextList, id: \.self) { context in
-                    ContextItem(item: context)
+                    ContextItem(item: context, isSent: isSent)
                         .scrollTargetLayout()
                 }
             }
@@ -28,7 +29,7 @@ struct ContextList: View {
 #if DEBUG
 #Preview {
     ModelContainerPreview {
-        ContextList(contextList: [])
+        ContextList(contextList: [], isSent: false)
     }
 }
 #endif

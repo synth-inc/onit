@@ -15,7 +15,7 @@ struct InputBarView: View {
             if model.currentPrompts?.count ?? 0 > 0 {
                 PromptDivider()
             }
-            FileRow(contextList: model.pendingContextList)
+            FileRow(contextList: model.pendingContextList, isSent: false)
             TextInputView()
         }
         .background {

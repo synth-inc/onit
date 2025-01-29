@@ -11,6 +11,7 @@ struct ContextItem: View {
     @Environment(\.model) var model
 
     var item: Context
+    var isSent: Bool
 
     var imageRect: RoundedRectangle {
         .rect(cornerRadius: 3)
@@ -24,7 +25,9 @@ struct ContextItem: View {
                 .frame(width: 4)
 
             text
-            xButton
+            if !isSent {
+                xButton
+            }
         }
         .padding(3)
         .background(.gray700, in: .rect(cornerRadius: 4))
@@ -109,7 +112,7 @@ struct ContextItem: View {
 #if DEBUG
 #Preview {
     ModelContainerPreview {
-        ContextItem(item: .file(URL(fileURLWithPath: "")))
+        ContextItem(item: .file(URL(fileURLWithPath: "")), isSent: false)
     }
 }
 #endif

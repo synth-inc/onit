@@ -11,10 +11,11 @@ struct UserInputView: View {
     @Environment(\.model) var model
 
     let prompt: Prompt
-    
+    let isSent: Bool
+
     var body: some View {
         VStack(spacing: 0) {
-            ContextList(contextList: prompt.contextList)
+            ContextList(contextList: prompt.contextList, isSent: isSent)
             Text(prompt.instruction)
                 .appFont(.medium14)
                 .foregroundStyle(.FG)

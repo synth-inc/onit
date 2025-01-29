@@ -11,7 +11,7 @@ struct GeneratedView: View {
     var prompt: Prompt
 
     var body: some View {
-        UserInputView(prompt: prompt)
+        UserInputView(prompt: prompt, isSent: true)
         content
     }
 
