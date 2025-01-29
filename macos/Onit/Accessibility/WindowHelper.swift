@@ -80,40 +80,27 @@ class WindowHelper {
     
     private func showWindowWithAnimation() {
         DispatchQueue.main.async {
-            // Ensure the contentView is layer-backed
-            self.window.contentView?.wantsLayer = true
-
-            // Get the contentView's layer
-            guard let layer = self.window.contentView?.layer else { return }
-
-            // Set the anchorPoint to the right and adjust the layer's position
-            let oldFrame = layer.frame
-            layer.anchorPoint = CGPoint(x: 1.0, y: 0.5)
-            layer.frame = oldFrame // Reset frame to keep the layer in the same place
-
-            // Set initial state
-            self.window.alphaValue = 0.0
+            guard let screen = NSScreen.main else { return }
+            
+            let screenFrame = screen.frame
+            var windowFrame = self.window.frame
+            
+            // Set initial position (not visible)
+            windowFrame.origin.x = screenFrame.maxX
+            self.window.setFrame(windowFrame, display: false)
+            self.window.alphaValue = 0
             self.window.makeKeyAndOrderFront(nil)
 
-            // Animate the window's alphaValue
+            // Set initial position (visible)
+            windowFrame.origin.x = screenFrame.maxX - windowFrame.width
+            
+            // Apply animation
             NSAnimationContext.runAnimationGroup { context in
-                context.duration = 0.3 // Adjust duration as needed
+                context.duration = 0.15
                 context.timingFunction = CAMediaTimingFunction(name: .easeOut)
+                self.window.animator().setFrame(windowFrame, display: true)
                 self.window.animator().alphaValue = 1.0
             }
-
-            // Create a width animation for the layer
-            let widthAnimation = CABasicAnimation(keyPath: "bounds.size.width")
-            widthAnimation.fromValue = 0.0
-            widthAnimation.toValue = oldFrame.size.width
-            widthAnimation.duration = 0.3 // Match duration with alphaValue animation
-            widthAnimation.timingFunction = CAMediaTimingFunction(name: .easeOut)
-
-            // Apply the animation to the layer
-            layer.add(widthAnimation, forKey: "expandWidth")
-
-            // Set the final bounds to ensure the layer ends up at the correct size
-            layer.bounds.size.width = oldFrame.size.width
         }
     }
     
