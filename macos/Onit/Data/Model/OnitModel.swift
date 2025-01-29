@@ -72,6 +72,11 @@ import Defaults
     var remoteFetchFailed: Bool = false
     var localFetchFailed: Bool = false
     
+    func getCustomEndpoint(for provider: CustomProvider, messages: [OpenAIChatMessage], model: String) -> CustomChatEndpoint? {
+        guard let url = URL(string: provider.baseURL) else { return nil }
+        return CustomChatEndpoint(baseURL: url, messages: messages, token: provider.token, model: model)
+    }
+    
     @MainActor
     func fetchLocalModels() async {
         do {

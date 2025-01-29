@@ -85,17 +85,35 @@ extension OnitModel {
             do {
                 let chat: String
                 if Defaults[.mode] == .remote {
-                    // chat(instructions: [String], inputs: [Input?], files: [[URL]], images[[URL]], responses: [String], model: AIModel?, apiToken: String?)
-                    chat = try await client.chat(
-                        instructions: instructionsHistory,
-                        inputs: inputsHistory,
-                        files: filesHistory,
-                        images: imagesHistory,
-                        autoContexts: autoContextsHistory,
-                        responses: responsesHistory,
-                        model: Defaults[.remoteModel],
-                        apiToken: getTokenForModel(Defaults[.remoteModel] ?? nil)
-                    )
+                    if let customProvider = Defaults[.remoteModel]?.customProvider {
+                        // Handle custom provider chat
+                        let messages = createOpenAIMessages(
+                            instructions: instructionsHistory,
+                            responses: responsesHistory
+                        )
+                        if let endpoint = getCustomEndpoint(
+                            for: customProvider,
+                            messages: messages,
+                            model: Defaults[.remoteModel]?.id ?? ""
+                        ) {
+                            let response = try await client.execute(endpoint)
+                            chat = response.choices[0].message.content
+                        } else {
+                            throw FetchingError.invalidURL
+                        }
+                    } else {
+                        // Regular remote model chat
+                        chat = try await client.chat(
+                        	instructions: instructionsHistory,
+                        	inputs: inputsHistory,
+                        	files: filesHistory,
+                        	images: imagesHistory,
+                        	autoContexts: autoContextsHistory,
+                        	responses: responsesHistory,
+                        	model: Defaults[.remoteModel],
+                        	apiToken: getTokenForModel(Defaults[.remoteModel] ?? nil)
+                    	)
+                    }
                 } else {
                     // TODO implement history for local chat!
                     chat = try await client.localChat(
@@ -140,9 +158,23 @@ extension OnitModel {
      */
     private func trackEventGeneration(prompt: Prompt) {
         let eventName = "user_prompted"
+        var modelName = ""
+        
+        if Defaults[.mode] == .remote {
+            if let model = Defaults[.remoteModel] {
+                if model.provider == .custom {
+                    modelName = "\(model.customProvider?.name ?? "Custom")/\(model.displayName)"
+                } else {
+                    modelName = model.displayName
+                }
+            }
+        } else {
+            modelName = Defaults[.localModel] ?? ""
+        }
+        
         let eventProperties: [String: Any] = [
             "prompt_mode": Defaults[.mode].rawValue,
-            "prompt_model": Defaults[.mode] == .remote ? Defaults[.remoteModel]?.displayName ?? "" : Defaults[.localModel] ?? ""
+            "prompt_model": modelName
         ]
         PostHogSDK.shared.capture(eventName, properties: eventProperties)
     }
@@ -172,6 +204,8 @@ extension OnitModel {
             Defaults[.isXAITokenValidated] = isValid
         case .googleAI:
             Defaults[.isGoogleAITokenValidated] = isValid
+        case .custom:
+            break // TODO: KNA -
         }
     }
     
@@ -186,6 +220,8 @@ extension OnitModel {
                 return Defaults[.xAIToken]
             case .googleAI:
                 return Defaults[.googleAIToken]
+            case .custom:
+                return nil // TODO: KNA -
             }
         }
         return nil
@@ -196,5 +232,19 @@ extension OnitModel {
         prompt.responses.append(response)
         prompt.generationIndex = (prompt.responses.count - 1)
         prompt.generationState = .done
+    }
+    
+    private func createOpenAIMessages(instructions: [String], responses: [String]) -> [OpenAIChatMessage] {
+        var messages: [OpenAIChatMessage] = []
+        
+        for (index, instruction) in instructions.enumerated() {
+            messages.append(OpenAIChatMessage(role: "user", content: .text(instruction)))
+            
+            if index < responses.count {
+                messages.append(OpenAIChatMessage(role: "assistant", content: .text(responses[index])))
+            }
+        }
+        
+        return messages
     }
 }

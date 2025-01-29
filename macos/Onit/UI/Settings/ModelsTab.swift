@@ -16,6 +16,7 @@ struct ModelsTab: View {
                 RemoteModelsSection()
                 LocalModelsSection()
                 DefaultModelsSection()
+                CustomProvidersSection()
             }
             .padding(.vertical, 20)
             .padding(.horizontal, 86)

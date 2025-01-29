@@ -203,6 +203,8 @@ struct RemoteModelSection: View {
             xAIToken = key.isEmpty ? nil : key
         case .googleAI:
             googleAIToken = key.isEmpty ? nil : key
+        case .custom:
+            break // TODO: KNA -
         }
     }
 
@@ -216,6 +218,8 @@ struct RemoteModelSection: View {
             key = xAIToken ?? ""
         case .googleAI:
             key = googleAIToken ?? ""
+        case .custom:
+            break // TODO: KNA -
         }
     }
 
@@ -229,6 +233,8 @@ struct RemoteModelSection: View {
             use = useXAI
         case .googleAI:
             use = useGoogleAI
+        case .custom:
+            break // TODO: KNA -
         }
     }
 
@@ -242,6 +248,8 @@ struct RemoteModelSection: View {
             validated = isXAITokenValidated
         case .googleAI:
             validated = isGoogleAITokenValidated
+        case .custom:
+            break // TODO: KNA -
         }
     }
 
@@ -255,6 +263,8 @@ struct RemoteModelSection: View {
             useXAI = use
         case .googleAI:
             useGoogleAI = use
+        case .custom:
+            break // TODO: KNA -
         }
     }
 
@@ -268,6 +278,8 @@ struct RemoteModelSection: View {
             isXAITokenValidated = validated
         case .googleAI:
             isGoogleAITokenValidated = validated
+        case .custom:
+            break // TODO: KNA -
         }
     }
 

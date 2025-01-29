@@ -17,6 +17,7 @@ public enum FetchingError: Error {
     case serverError(statusCode: Int, message: String)
     case decodingError(Error)
     case networkError(Error)
+    case invalidURL
 }
 
 extension FetchingError: LocalizedError {
@@ -40,6 +41,8 @@ extension FetchingError: LocalizedError {
             "Failed to decode response: \(error.localizedDescription)"
         case .networkError(let error):
             "Network error: \(error.localizedDescription)"
+        case .invalidURL:
+            "Invalid URL"
         }
     }
 }
@@ -49,7 +52,8 @@ extension FetchingError: Equatable {
         switch (lhs, rhs) {
         case (.invalidResponse, .invalidResponse),
              (.unauthorized, .unauthorized),
-             (.notFound, .notFound):
+             (.notFound, .notFound),
+             (.invalidURL, .invalidURL):
             return true
         case (.forbidden(let lhsMessage), .forbidden(let rhsMessage)):
             return lhsMessage == rhsMessage
@@ -73,7 +77,7 @@ extension FetchingError: Codable {
     }
     
     enum FetchingErrorType: String, Codable {
-        case invalidResponse, invalidRequest, unauthorized, forbidden, notFound, failedRequest, serverError, decodingError, networkError
+        case invalidResponse, invalidRequest, unauthorized, forbidden, notFound, failedRequest, serverError, decodingError, networkError, invalidURL
     }
     
     public init(from decoder: Decoder) throws {
@@ -111,6 +115,8 @@ extension FetchingError: Codable {
             let errorDescription = try container.decode(String.self, forKey: .description)
             let error = NSError(domain: "", code: 0, userInfo: [NSLocalizedDescriptionKey: errorDescription])
             self = .networkError(error)
+        case .invalidURL:
+            self = .invalidURL
         }
     }
     
@@ -146,6 +152,8 @@ extension FetchingError: Codable {
         case .networkError(let error):
             try container.encode(FetchingErrorType.networkError, forKey: .type)
             try container.encode(error.localizedDescription, forKey: .description)
+        case .invalidURL:
+            try container.encode(FetchingErrorType.invalidURL, forKey: .type)
         }
     }
 }

@@ -17,6 +17,24 @@ struct AIModel: Codable, Identifiable, Hashable, Defaults.Serializable {
     let supportsSystemPrompts: Bool
     var isNew: Bool = false
     var isDeprecated: Bool = false
+    var customProvider: CustomProvider?
+    
+    var formattedDisplayName: String {
+        if provider == .custom, let provider = customProvider {
+            return "\(provider.name) / \(displayName)"
+        }
+        return displayName
+    }
+    
+    init(from customModel: CustomModelInfo, provider: CustomProvider) {
+        self.id = customModel.id
+        self.displayName = customModel.id
+        self.provider = .custom
+        self.defaultOn = false
+        self.supportsVision = false
+        self.supportsSystemPrompts = true
+        self.customProvider = provider
+    }
 
     init?(from modelInfo: ModelInfo) {
         guard let provider = ModelProvider(rawValue: modelInfo.provider.lowercased()) else {
@@ -30,6 +48,7 @@ struct AIModel: Codable, Identifiable, Hashable, Defaults.Serializable {
         self.supportsSystemPrompts = modelInfo.supportsSystemPrompts
     }
     
+    @MainActor
     static func fetchModels() async throws -> [AIModel] {
         let client = FetchingClient()
         let endpoint = RemoteModelsEndpoint()
@@ -42,6 +61,7 @@ struct AIModel: Codable, Identifiable, Hashable, Defaults.Serializable {
         case anthropic = "anthropic"
         case xAI = "xai"
         case googleAI = "googleai"
+        case custom = "custom"
 
         var title: String {
             switch self {
@@ -49,6 +69,7 @@ struct AIModel: Codable, Identifiable, Hashable, Defaults.Serializable {
             case .anthropic: return "Anthropic"
             case .xAI: return "xAI"
             case .googleAI: return "Google AI"
+            case .custom: return "Custom Providers"
             }
         }
 
@@ -58,6 +79,7 @@ struct AIModel: Codable, Identifiable, Hashable, Defaults.Serializable {
             case .anthropic: return "Claude"
             case .xAI: return "Grok"
             case .googleAI: return "Gemini"
+            case .custom: return "Custom Model"
             }
         }
 
@@ -71,6 +93,8 @@ struct AIModel: Codable, Identifiable, Hashable, Defaults.Serializable {
                 return URL(string: "https://accounts.x.ai/account")!
             case .googleAI:
                 return URL(string: "https://makersuite.google.com/app/apikey")!
+            case .custom:
+                return URL(string: "about:blank")!
             }
         }
     }

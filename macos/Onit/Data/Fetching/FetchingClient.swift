@@ -244,6 +244,8 @@ actor FetchingClient {
             let endpoint = GoogleAIChatEndpoint(messages: googleAIMessageStack, model: model.id, token: apiToken)
             let response = try await execute(endpoint)
             return response.choices[0].message.content
+        case .custom:
+            return "" // TODO: KNA -
         }
     }
     

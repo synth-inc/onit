@@ -55,6 +55,15 @@ final class RemoteModelsState: ObservableObject {
             models = models.filter { $0.provider != .googleAI }
         }
         
+        // Filter out models from disabled custom providers
+        models = models.filter { model in
+            if model.provider == .custom,
+               let provider = model.customProvider {
+                return provider.isEnabled
+            }
+            return true
+        }
+        
         return models
     }
 }
