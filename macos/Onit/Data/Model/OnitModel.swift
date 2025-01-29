@@ -44,7 +44,6 @@ import AppKit
     var imageUploads: [URL: UploadProgress] = [:]
     var uploadTasks: [URL: Task<URL?, Never>] = [:]
     var textFocusTrigger = false
-    var isOpeningSettings = false
     var settingsTab: SettingsTab = .models
     var historyIndex = -1
 
@@ -188,9 +187,8 @@ import AppKit
         Preferences.save(preferences)
     }
     
-    func openSettings(tab: SettingsTab) {
+    func setSettingsTab(tab: SettingsTab) {
         settingsTab = tab
-        isOpeningSettings = true
     }
 }
 

@@ -217,7 +217,7 @@ struct SetUpDialogs: View {
     func settings() {
         NSApp.activate()
         if NSApp.isActive {
-            model.openSettings(tab: .models)
+            model.setSettingsTab(tab: .models)
             openSettings()
         }
     }

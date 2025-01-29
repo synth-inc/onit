@@ -118,7 +118,7 @@ struct ModelSelectionView: View {
         Button {
             NSApp.activate()
             if NSApp.isActive {
-                model.openSettings(tab: .models)
+                model.setSettingsTab(tab: .models)
                 openSettings()
                 model.closeModelSelectionOverlay()
             }
