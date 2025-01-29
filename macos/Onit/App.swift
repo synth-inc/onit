@@ -41,6 +41,8 @@ struct App: SwiftUI.App {
         }
 
         featureFlagsManager.configure()
+        // For testing new user experience
+        // model.clearTokens()
         model.showPanel()
         
 

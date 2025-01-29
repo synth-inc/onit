@@ -38,7 +38,19 @@ struct ModelSelectionView: View {
             }
             .padding(.horizontal, 12)
 
-            remoteModels
+            if model.listedModels.isEmpty {
+                Button("Setup remote models") {
+                    openSettings()
+                }
+                .buttonStyle(SetUpButtonStyle(showArrow: true))
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.horizontal, 12)
+                .padding(.top, 6)
+                .padding(.bottom, 10)
+                
+            } else {
+                remoteModels
+            }
         }
     }
 
@@ -78,7 +90,19 @@ struct ModelSelectionView: View {
             }
             .padding(.horizontal, 12)
 
-            localModels
+            if model.preferences.availableLocalModels.isEmpty {
+                Button("Setup local models") {
+                    openSettings()
+                }
+                .buttonStyle(SetUpButtonStyle(showArrow: true))
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.horizontal, 12)
+                .padding(.top, 6)
+                .padding(.bottom, 10)
+                
+            } else {
+                localModels
+            }
         }
         .padding(.top, 8)
         .padding(.bottom, 4)
