@@ -66,21 +66,7 @@ extension OnitModel: NSWindowDelegate {
             newPanel.orderFrontRegardless()
         }
 
-        KeyboardShortcuts.onKeyUp(for: .toggleLocalMode) { [weak self] in
-            self?.toggleLocalVsRemoteShortcutAction()
-        }
-        KeyboardShortcuts.onKeyUp(for: .newChat) { [weak self] in
-            self?.newChat()
-        }
-        KeyboardShortcuts.onKeyUp(for: .resizeWindow) { [weak self] in
-            self?.resizeWindow()
-        }
-        KeyboardShortcuts.onKeyUp(for: .toggleModels) { [weak self] in
-            self?.toggleModelsPanel()
-        }
-        KeyboardShortcuts.onKeyUp(for: .escape) { [weak self] in
-            self?.escapeAction()
-        }
+        enableKeyboardShortcuts()
 
         // Focus the text input when we're activating the panel
         textFocusTrigger = true
@@ -149,13 +135,8 @@ extension OnitModel: NSWindowDelegate {
         panel.orderOut(nil)
         WindowHelper.shared.adjustWindowToTopRight()
         self.panel = nil
-
-            // Remove keyboard shortcuts
-        KeyboardShortcuts.disable(.toggleLocalMode)
-        KeyboardShortcuts.disable(.newChat)
-        KeyboardShortcuts.disable(.resizeWindow)
-        KeyboardShortcuts.disable(.toggleModels)
-        KeyboardShortcuts.disable(.escape)
+        
+        disableKeyboardShortcuts()
     }
 
     @MainActor
@@ -279,6 +260,24 @@ extension OnitModel: NSWindowDelegate {
             }
             isPanelExpanded.toggle()
         }
+    }
+    
+    // MARK: - Keyboard Shortcuts
+    
+    private func enableKeyboardShortcuts() {
+        KeyboardShortcuts.enable([.toggleLocalMode,
+                                  .newChat,
+                                  .resizeWindow,
+                                  .toggleModels,
+                                  .escape])
+    }
+    
+    private func disableKeyboardShortcuts() {
+        KeyboardShortcuts.disable([.toggleLocalMode,
+                                   .newChat,
+                                   .resizeWindow,
+                                   .toggleModels,
+                                   .escape])
     }
 }
 
