@@ -19,7 +19,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		2883E4B32CA5ECBB00F79A48 /* Onit-Dev.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Onit-Dev.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		2883E4B32CA5ECBB00F79A48 /* Onit.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Onit.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -74,7 +74,7 @@
 		2883E4B42CA5ECBB00F79A48 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				2883E4B32CA5ECBB00F79A48 /* Onit-Dev.app */,
+				2883E4B32CA5ECBB00F79A48 /* Onit.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -111,7 +111,7 @@
 				863817362D3FB5F700919BC7 /* phlibwebp */,
 			);
 			productName = Onit;
-			productReference = 2883E4B32CA5ECBB00F79A48 /* Onit-Dev.app */;
+			productReference = 2883E4B32CA5ECBB00F79A48 /* Onit.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -344,7 +344,7 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = ./Onit/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = "onit dev";
+				INFOPLIST_KEY_CFBundleDisplayName = onit;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -353,8 +353,8 @@
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
 				MARKETING_VERSION = 0.1.2;
 				OTHER_LDFLAGS = "-ObjC";
-				PRODUCT_BUNDLE_IDENTIFIER = "inc.synth.Onit-Dev";
-				PRODUCT_NAME = "Onit-Dev";
+				PRODUCT_BUNDLE_IDENTIFIER = inc.synth.Onit.dev;
+				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_STRICT_CONCURRENCY = complete;
