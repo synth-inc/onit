@@ -349,6 +349,8 @@ class AccessibilityNotificationsManager {
     }
     
     private func handleSelectionChange(for element: AXUIElement) {
+        guard AccessibilityTextSelectionFilter.filter(element: element) == false else { return }
+        
         selectionDebounceWorkItem?.cancel()
         
         let workItem = DispatchWorkItem { [weak self] in
