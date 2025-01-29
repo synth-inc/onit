@@ -42,7 +42,7 @@ struct DebugModeTab: View {
                 Spacer()
                 Toggle("", isOn: Binding(
                     get: { featureFlagsManager.getFeatureFlag(key) },
-                    set: { featureFlagsManager.setFeatureFlag($0, for: key) }
+                    set: { featureFlagsManager.overrideFeatureFlag($0, for: key) }
                 ))
                 .toggleStyle(.switch)
                 .controlSize(.small)

@@ -23,7 +23,7 @@ class FeatureFlagManager: ObservableObject {
     
     @Published private(set) var flags: FeatureFlags = .init()
     
-    struct FeatureFlags {
+    struct FeatureFlags: Codable {
         var accessibility: Bool = false
     }
     
@@ -64,7 +64,7 @@ class FeatureFlagManager: ObservableObject {
     }
     
     /** Override feature flag value (for testing or manual control) */
-    func setFeatureFlag(_ value: Bool, for key: FeatureFlagKey) {
+    func overrideFeatureFlag(_ value: Bool, for key: FeatureFlagKey) {
         var newFlags = flags
         
         switch key {
@@ -73,6 +73,10 @@ class FeatureFlagManager: ObservableObject {
         }
         
         flags = newFlags
+        
+        let preferences = Preferences.shared
+        preferences.featureFlags = newFlags
+        Preferences.save(preferences)
     }
     
     // MARK: - Objective-C Functions
@@ -84,10 +88,15 @@ class FeatureFlagManager: ObservableObject {
     // MARK: - Private functions
     
     private func setFeatureFlagsFromRemote() {
-        let newFlags = FeatureFlags(
-            accessibility: PostHogSDK.shared.isFeatureEnabled("accessibility")
-        )
+        guard let localFeatureFlags = Preferences.shared.featureFlags else {
+            let newFlags = FeatureFlags(
+                accessibility: PostHogSDK.shared.isFeatureEnabled("accessibility")
+            )
+            
+            self.flags = newFlags
+            return
+        }
         
-        self.flags = newFlags
+        self.flags = localFeatureFlags
     }
 }

@@ -12,8 +12,6 @@ class Preferences: Codable {
     
     private static let key = "app_preferences"
     
-    let id: UUID = UUID()
-    
     static func save(_ preferences: Preferences) {
         if let data = try? JSONEncoder().encode(preferences) {
             UserDefaults.standard.set(data, forKey: key)
@@ -40,6 +38,7 @@ class Preferences: Codable {
     var availableRemoteModels: [AIModel] = []
     var visibleModelIds: Set<String> = Set([])
     var localEndpointURL: URL = URL(string: "http://localhost:11434")!
+    var featureFlags: FeatureFlagManager.FeatureFlags? = nil
 
     func markRemoteModelAsNotNew(modelId: String) {
         if let index = availableRemoteModels.firstIndex(where: { $0.id == modelId }) {
