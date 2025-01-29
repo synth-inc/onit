@@ -12,17 +12,25 @@ struct LocalModelsSection: View {
 
     @State private var isOn: Bool = false
     @State private var fetching: Bool = false
+    @State private var message: String? = nil
+    @State private var localEndpointString: String = ""
 
     var body: some View {
         ModelsSection(title: "Local Models") {
             VStack(alignment: .leading, spacing: 10) {
                 title
+                if let message = message {
+                    Text(message)
+                        .font(.system(size: 12))
+                        .padding(.top, 5)
+                }
                 content
             }
             .frame(maxWidth: .infinity, alignment: .leading)
         }
         .onAppear {
             isOn = model.useLocal
+            localEndpointString = model.preferences.localEndpointURL.absoluteString
         }
         .onChange(of: isOn) {
             model.useLocal = isOn
@@ -30,8 +38,50 @@ struct LocalModelsSection: View {
     }
 
     var title: some View {
-        // The implementation to turn off local models doesn't exist, so we never show the toggle.
-        ModelTitle(title: "Ollama", isOn: $isOn, showToggle: .constant(false))
+        VStack(alignment: .leading, spacing: 8) {
+            // The implementation to turn off local models doesn't exist, so we never show the toggle.
+            ModelTitle(title: "Ollama", isOn: $isOn, showToggle: .constant(false))
+            
+            HStack {
+                Text("Endpoint URL:")
+                    .foregroundStyle(.primary.opacity(0.65))
+                    .font(.system(size: 12))
+                    .fontWeight(.regular)
+                TextField("", text: $localEndpointString)
+                    .textFieldStyle(.roundedBorder)
+                    .font(.system(size: 12))
+                    .frame(maxWidth: 250)
+                Spacer()
+                Button {
+                    Task {
+                        fetching = true
+                        if let localEndpointURL = URL(string: localEndpointString) {
+                            model.updatePreferences { prefs in
+                                prefs.localEndpointURL = localEndpointURL
+                            }
+                            
+                            await model.fetchLocalModels()
+                            
+                            if model.localFetchFailed {
+                                message = "Couldn't find any models at the provided URL."
+                            } else {
+                                message = "Models loaded successfully!"
+                            }
+                        } else {
+                            message = "Local endpoint must be a valid URL"
+                        }
+                        fetching = false
+                    }
+                } label: {
+                    Text("Set")
+                }
+                .disabled(fetching)
+                .foregroundStyle(.white)
+                .buttonStyle(.borderedProminent)
+                .frame(height: 22)
+                .fontWeight(.regular)
+            }
+        }
     }
 
     @ViewBuilder

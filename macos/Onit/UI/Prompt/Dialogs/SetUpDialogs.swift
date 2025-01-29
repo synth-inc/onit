@@ -54,7 +54,7 @@ struct SetUpDialogs: View {
     @ViewBuilder
     var content: some View {
         Group {
-            if model.preferences.availableRemoteModels.isEmpty && model.preferences.remoteFetchFailed && !closedNoRemoteModels {
+            if model.preferences.availableRemoteModels.isEmpty && model.remoteFetchFailed && !closedNoRemoteModels {
                 noRemote
             }
             if model.remoteNeedsSetup && !closedRemote {

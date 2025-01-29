@@ -10,6 +10,7 @@ import Foundation
 extension FetchingClient {
     func getLocalModels() async throws -> [String] {
         let endpoint = LocalModelsEndpoint()
+
         let response = try await execute(endpoint)
         let names = response.models.map { $0.name }
         return names
@@ -23,7 +24,13 @@ struct LocalModelsEndpoint: Endpoint {
     typealias Request = EmptyRequest
     typealias Response = LocalModelsResponse
 
-    var baseURL: URL = URL(string: "http://localhost:11434")!
+    var baseURL: URL {
+        var url: URL!
+        DispatchQueue.main.sync {
+            url = Preferences.shared.localEndpointURL
+        }
+        return url
+    }
 
     var path: String { "/api/tags" }
     var getParams: [String: String]? { nil }
@@ -50,7 +57,7 @@ struct ModelDetails: Codable {
     let parentModel: String?
     let format: String?
     let family: String?
-    let families: [String]
+    let families: [String]?
     let parameterSize: String?
     let quantizationLevel: String?
 }

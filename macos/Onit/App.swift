@@ -43,6 +43,7 @@ struct App: SwiftUI.App {
         featureFlagsManager.configure()
         model.showPanel()
         
+
         #if !targetEnvironment(simulator)
         
         let hostingController = NSHostingController(rootView: StaticPromptView())

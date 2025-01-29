@@ -88,7 +88,13 @@ struct LocalChatEndpoint: Endpoint {
 
     let model: String?
     let messages: [LocalChatMessage]
-    var baseURL: URL  = URL(string: "http://localhost:11434")!
+    var baseURL: URL {
+        var url: URL!
+        DispatchQueue.main.sync {
+            url = Preferences.shared.localEndpointURL
+        }
+        return url
+    }
 
     var path: String { "/api/chat" }
     var getParams: [String: String]? { nil }
