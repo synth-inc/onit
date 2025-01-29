@@ -46,6 +46,7 @@ struct RemoteModelSection: View {
         }
         .onChange(of: use) {
             save(use: use)
+            save(validated: validated)
             // If we've turned off everything go into local mode.
             if model.listedModels.isEmpty {
                 model.preferences.mode = .local
@@ -240,10 +241,26 @@ struct RemoteModelSection: View {
         }
     }
 
+    func save(validated: Bool) {
+        switch provider {
+        case .openAI:
+            model.isOpenAITokenValidated = validated
+        case .anthropic:
+            model.isAnthropicTokenValidated = validated
+        case .xAI:
+            model.isXAITokenValidated = validated
+        case .googleAI:
+            model.isGoogleAITokenValidated = validated
+        }
+    }
+
     func updateUse() {
         if state == .valid {
             use = true
             validated = true
+        } else if case .invalid(_) = state {
+            use = false
+            validated = false
         }
     }
 }
