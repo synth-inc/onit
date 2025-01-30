@@ -18,7 +18,7 @@ struct InputBarView: View {
             if let pendingInput = model.pendingInput {
                 InputView(input: pendingInput)
             }
-            FileRow(contextList: model.pendingContextList, isSent: false)
+            FileRow(contextList: model.pendingContextList)
             TextInputView()
         }
         .background {

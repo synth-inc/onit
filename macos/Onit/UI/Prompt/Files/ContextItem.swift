@@ -88,7 +88,7 @@ struct ContextItem: View {
 #if DEBUG
 #Preview {
     ModelContainerPreview {
-        ContextItem(item: .file(URL(fileURLWithPath: "")), isSent: false)
+        ContextItem(item: .file(URL(fileURLWithPath: "")))
     }
 }
 #endif

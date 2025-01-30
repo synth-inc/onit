@@ -45,7 +45,7 @@ struct ContextList: View {
 #if DEBUG
 #Preview {
     ModelContainerPreview {
-        ContextList(contextList: [], isSent: false)
+        ContextList(contextList: [])
     }
 }
 #endif
