@@ -10,6 +10,7 @@ import KeyboardShortcuts
 
 struct MenuSettings: View {
     @Environment(\.openSettings) var openSettings
+    @Environment(\.model) var model
     
     var body: some View {
         MenuBarRow {
