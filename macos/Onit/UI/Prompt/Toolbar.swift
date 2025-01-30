@@ -95,8 +95,8 @@ struct Toolbar: View {
         } label: {
             HStack(spacing: 0) {
                 Text(model.preferences.mode == .local ?
-                     (model.preferences.localModel?.split(separator: ":").first.map(String.init) ?? "") :
-                     (model.preferences.remoteModel?.displayName ?? ""))
+                     (model.preferences.localModel?.split(separator: ":").first.map(String.init) ?? "Choose model") :
+                     (model.preferences.remoteModel?.displayName ?? "Choose model"))
                     .appFont(.medium13)
                     .padding(.leading, 2)
                 Image(.smallChevDown)

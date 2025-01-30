@@ -140,5 +140,22 @@ extension OnitModel {
         !useOpenAI && !useAnthropic && !useXAI && !useGoogleAI
     }
 
-    
+    func clearTokens() {
+        // Helpful for debugging the new-user-experience
+        UserDefaults.standard.removeObject(forKey: TokenKeys.openAIToken.rawValue)
+        UserDefaults.standard.removeObject(forKey: TokenKeys.anthropicToken.rawValue)
+        UserDefaults.standard.removeObject(forKey: TokenKeys.xAIToken.rawValue)
+        UserDefaults.standard.removeObject(forKey: TokenKeys.googleAIToken.rawValue)
+        
+        UserDefaults.standard.removeObject(forKey: TokenValidationKeys.openAITokenValidated.rawValue)
+        UserDefaults.standard.removeObject(forKey: TokenValidationKeys.anthropicTokenValidated.rawValue)
+        UserDefaults.standard.removeObject(forKey: TokenValidationKeys.xAITokenValidated.rawValue)
+        UserDefaults.standard.removeObject(forKey: TokenValidationKeys.googleAITokenValidated.rawValue)
+
+        UserDefaults.standard.removeObject(forKey: UseModelKeys.openAITokenValidated.rawValue)
+        UserDefaults.standard.removeObject(forKey: UseModelKeys.anthropicTokenValidated.rawValue)
+        UserDefaults.standard.removeObject(forKey: UseModelKeys.xAITokenValidated.rawValue)
+        UserDefaults.standard.removeObject(forKey: UseModelKeys.googleAITokenValidated.rawValue)
+        UserDefaults.standard.removeObject(forKey: UseModelKeys.localModelValidated.rawValue)
+    }
 }
