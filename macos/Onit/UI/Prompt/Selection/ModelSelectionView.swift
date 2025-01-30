@@ -40,6 +40,7 @@ struct ModelSelectionView: View {
 
             if model.listedModels.isEmpty {
                 Button("Setup remote models") {
+                    model.settingsTab = .models
                     openSettings()
                 }
                 .buttonStyle(SetUpButtonStyle(showArrow: true))
@@ -92,6 +93,7 @@ struct ModelSelectionView: View {
 
             if model.preferences.availableLocalModels.isEmpty {
                 Button("Setup local models") {
+                    model.settingsTab = .models
                     openSettings()
                 }
                 .buttonStyle(SetUpButtonStyle(showArrow: true))
