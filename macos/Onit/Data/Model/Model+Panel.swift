@@ -126,14 +126,14 @@ extension OnitModel: NSWindowDelegate {
     func closeDebugWindow() {
         guard let panel = debugPanel else { return }
         panel.orderOut(nil)
-        WindowHelper.shared.adjustWindowToTopRight()
+        HighlightHintWindowController.shared.adjustWindow()
         self.debugPanel = nil
     }
 
     func closePanel() {
         guard let panel = panel else { return }
         panel.orderOut(nil)
-        WindowHelper.shared.adjustWindowToTopRight()
+        HighlightHintWindowController.shared.adjustWindow()
         self.panel = nil
         
         disableKeyboardShortcuts()

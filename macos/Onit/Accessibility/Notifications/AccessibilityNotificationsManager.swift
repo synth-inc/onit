@@ -47,6 +47,7 @@ class AccessibilityNotificationsManager {
     
     private var selectedSource: String?
     
+    private var selectedElementByApp: [String: AXUIElement] = [:]
     private var selectedTextByApp: [String: String] = [:]
     
     private var valueDebounceWorkItem: DispatchWorkItem?
@@ -204,6 +205,7 @@ class AccessibilityNotificationsManager {
         }
         
         let selectedText = selectedTextByApp[appName ?? "Unknown"]
+        let selectedElement = selectedElementByApp[appName ?? "Unknown"]
         
         print("\nApplication activated: \(appName ?? "Unknown") \(processID) selected text: \"\(selectedText ?? "")\"")
         
@@ -212,7 +214,7 @@ class AccessibilityNotificationsManager {
         self.currentApplication = processID
         self.currentSource = appName
         
-        processSelectedText(selectedText)
+        processSelectedText(selectedText, for: selectedElement)
 
         parseAccessibility(for: newAppElement)
             
@@ -410,27 +412,30 @@ class AccessibilityNotificationsManager {
         handleExternalElement(element) { [weak self] pid in
             let selectedTextExtracted = self?.extractSelectedText(from: element)
             
-            self?.processSelectedText(selectedTextExtracted)
+            self?.processSelectedText(selectedTextExtracted, for: element)
             self?.selectedTextByApp[pid.getAppName() ?? "Unknown"] = selectedTextExtracted
+            self?.selectedElementByApp[pid.getAppName() ?? "Unknown"] = element
             self?.showDebug()
         }
     }
     
-    private func processSelectedText(_ text: String?) {
+    private func processSelectedText(_ text: String?, for element: AXUIElement?) {
         guard let selectedText = text,
-            !selectedText.isEmpty else {
+              let selectedElement = element,
+              !selectedText.isEmpty else {
+            
             selectedSource = nil
             model?.pendingInput = nil
-            WindowHelper.shared.hide()
+            HighlightHintWindowController.shared.hide()
             
             return
         }
-        
         screenResult.userInteraction.selectedText = selectedText
         
         selectedSource = currentSource
 
-        WindowHelper.shared.show()
+        let bound = selectedElement.selectedTextBound()
+        HighlightHintWindowController.shared.show(bound)
 
         model?.pendingInput = Input(selectedText: selectedText, application: currentSource ?? "")
     }

@@ -16,8 +16,8 @@ struct ShortcutsTab: View {
             Section {
                 KeyboardShortcuts.Recorder(
                     "Launch Onit", name: .launch
-                ) { _ in
-                    resetPrompt()
+                ) {
+                    resetPrompt(empty: $0 == nil)
                 }
                 .padding()
                 
@@ -47,9 +47,9 @@ struct ShortcutsTab: View {
         .padding()
     }
 
-    func resetPrompt() {
-        let view = StaticPromptView().environment(model)
-        WindowHelper.shared.resetPrompt(with: view)
+    func resetPrompt(empty: Bool) {
+        //let view = StaticPromptView().environment(model)
+        HighlightHintWindowController.shared.shortcutChanges(empty: empty)
     }
 }
 

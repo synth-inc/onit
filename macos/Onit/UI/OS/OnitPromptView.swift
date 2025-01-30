@@ -9,27 +9,31 @@ import SwiftUI
 import KeyboardShortcuts
 
 struct OnitPromptView: View {
+    @Environment(\.model) var model
+    
     var shortcut: KeyboardShortcut? {
         KeyboardShortcuts.getShortcut(for: .launch)?.native
     }
 
     var body: some View {
-        HStack(spacing: 3) {
-            Image(.smirk)
-                .resizable()
-                .renderingMode(.template)
-                .scaledToFit()
-                .frame(width: 14, height: 14)
-            KeyboardShortcutView(shortcut: shortcut, characterWidth: 12, spacing: 3)
-                .font(.system(size: 13, weight: .light))
+        if model.panel == nil {
+            HStack(spacing: 3) {
+                Image(.smirk)
+                    .resizable()
+                    .renderingMode(.template)
+                    .scaledToFit()
+                    .frame(width: 14, height: 14)
+                KeyboardShortcutView(shortcut: shortcut, characterWidth: 12, spacing: 3)
+                    .font(.system(size: 13, weight: .light))
+            }
+            .foregroundStyle(Color.secondary)
+            .padding(4)
+            .background {
+                RoundedRectangle(cornerRadius: 6)
+                    .fill(.thickMaterial)
+            }
+            .padding(.vertical, 5)
         }
-        .foregroundStyle(Color.secondary)
-        .padding(4)
-        .background {
-            RoundedRectangle(cornerRadius: 6)
-                .fill(.thickMaterial)
-        }
-        .padding(.vertical, 5)
     }
 }
 

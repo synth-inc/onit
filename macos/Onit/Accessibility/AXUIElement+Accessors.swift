@@ -75,6 +75,33 @@ extension AXUIElement {
     func visibleChildren() -> [AXUIElement]? {
         return self.attribute(forAttribute: kAXVisibleChildrenAttribute as CFString) as? [AXUIElement]
     }
+    
+    func selectedTextBound() -> CGRect? {
+        var rangeValue: CFTypeRef?
+        guard AXUIElementCopyAttributeValue(self, kAXSelectedTextRangeAttribute as CFString, &rangeValue) == .success else {
+            return nil
+        }
+        
+        var textRange = CFRange()
+        AXValueGetValue(rangeValue as! AXValue, .cfRange, &textRange)
+        
+        var bounds: CFTypeRef?
+        guard AXUIElementCopyParameterizedAttributeValue(
+            self,
+            kAXBoundsForRangeParameterizedAttribute as CFString,
+            rangeValue as CFTypeRef,
+            &bounds
+        ) == .success else {
+            return nil
+        }
+        
+        let boundsValue = bounds as! AXValue
+        
+        var rect = CGRect.zero
+        AXValueGetValue(boundsValue, .cgRect, &rect)
+        
+        return rect
+    }
 }
 
 //

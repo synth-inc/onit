@@ -66,7 +66,7 @@ struct GeneratedToolbar: View {
         Button {
             if prompt.generationIndex != -1 && !prompt.responses.isEmpty {
                 let text = prompt.responses[prompt.generationIndex].text
-                WindowHelper.shared.insertText(text)
+                HighlightHintWindowController.shared.insertText(text)
                 model.closePanel()
             } else {
                 print("Not generated: \(prompt.generationState ?? .done)")
