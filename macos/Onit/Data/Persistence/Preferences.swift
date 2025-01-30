@@ -52,6 +52,7 @@ class Preferences: Codable {
     var localTopP: Double?
     var localTopK: Int?
     var featureFlags: FeatureFlagManager.FeatureFlags? = nil
+    var highlightHintMode: HighlightHintMode? = nil
 
     func markRemoteModelAsNotNew(modelId: String) {
         if let index = availableRemoteModels.firstIndex(where: { $0.id == modelId }) {

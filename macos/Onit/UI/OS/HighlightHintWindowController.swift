@@ -1,5 +1,5 @@
 //
-//  WindowHelper.swift
+//  HighlightHintWindowController.swift
 //  Onit
 //
 //  Created by Kévin Naudin on 22/01/2025.
@@ -8,30 +8,41 @@
 import Foundation
 import SwiftUI
 
-enum AccessibilityMode {
-    case textfieldMode
-    case highlightTopEdgeMode
+enum HighlightHintMode: Codable {
+    case textfield
+    case topRight
 }
 
 @MainActor
-class WindowHelper {
+class HighlightHintWindowController {
     
     // MARK: - Singleton instance
     
-    static let shared = WindowHelper()
+    static let shared = HighlightHintWindowController()
     
     // MARK: - Private properties
     
-    private var mode: AccessibilityMode = .highlightTopEdgeMode
-    
     private let window: NSWindow
+    
+    private let staticHostingController = NSHostingController(rootView: StaticPromptView())
+    
+    private let onitHostingController = NSHostingController(rootView: OnitPromptView())
+    
+    private var mode: HighlightHintMode? = Preferences.shared.highlightHintMode
+    
+    private var uiElementBound: CGRect?
     
     // MARK: - Initializers
     
     private init() {
-        let hostingController = NSHostingController(rootView: StaticPromptView())
-        
-        window = NSWindow(contentViewController: hostingController)
+        switch mode {
+        case .textfield:
+            window = NSWindow(contentViewController: onitHostingController)
+        case .topRight:
+            window = NSWindow(contentViewController: staticHostingController)
+        case nil:
+            window = NSWindow()
+        }
         
         window.styleMask = [.borderless]
         window.isOpaque = false
@@ -44,12 +55,16 @@ class WindowHelper {
     // MARK: - Functions
     
     /** Show the open app's shortcut window */
-    func show() {
-        guard window.isVisible == false else {
+    func show(_ bound: CGRect?) {
+        uiElementBound = bound
+        
+        guard mode != nil else { return }
+        
+        if mode == .topRight && window.isVisible {
             return
         }
         
-        adjustWindowToTopRight()
+        adjustWindow()
         showWindowWithAnimation()
     }
     
@@ -58,23 +73,55 @@ class WindowHelper {
         window.orderOut(nil)
     }
     
-    func adjustWindowToTopRight() {
+    func changeMode(_ mode: HighlightHintMode?) {
+        self.mode = mode
+        
+        switch mode {
+        case .topRight:
+            window.contentViewController = staticHostingController
+            break
+        case .textfield:
+            window.contentViewController = onitHostingController
+        default:
+            window.contentViewController = nil
+            return
+        }
+        
+        adjustWindow()
+    }
+    
+    func adjustWindow() {
         DispatchQueue.main.async {
             guard let currentScreen = NSScreen.main else {
                 print("No main screen found.")
                 return
             }
-
-            // Get the window's height (or 75x75 beacuse sometimes it's empty?)
-            let windowHeight = max(self.window.frame.height, 75)
-            let windowWidth = max(self.window.frame.width, 75)
-
-            // Calculate the new origin for the window to be at the top right corner of the current screen
-            let newOriginX = currentScreen.visibleFrame.maxX - (windowWidth - 10)
-            let newOriginY = currentScreen.visibleFrame.maxY - (windowHeight + 85)
             
-            // Set the window's position to the calculated top right corner
-            self.window.setFrameOrigin(NSPoint(x: newOriginX, y: newOriginY))
+            if self.mode == .topRight {
+                
+                // Get the window's height (or 75x75 beacuse sometimes it's empty?)
+                let windowHeight = max(self.window.frame.height, 75)
+                let windowWidth = max(self.window.frame.width, 75)
+                
+                // Calculate the new origin for the window to be at the top right corner of the current screen
+                let newOriginX = currentScreen.visibleFrame.maxX - (windowWidth - 10)
+                let newOriginY = currentScreen.visibleFrame.maxY - (windowHeight + 85)
+                
+                // Set the window's position to the calculated top right corner
+                self.window.setFrameOrigin(NSPoint(x: newOriginX, y: newOriginY))
+            } else {
+                // TODO: KNA - Filter if uiElementBound weird (origin minY = maxY)
+                if let bound = self.uiElementBound {
+                    let elementScreenY = currentScreen.frame.height - bound.origin.y
+                    
+                    let newOriginX = bound.origin.x
+                    let newOriginY = elementScreenY + 0
+                    
+                    self.window.setFrameOrigin(NSPoint(x: newOriginX, y: newOriginY))
+                } else {
+                    // TODO: KNA - What to do
+                }
+            }
         }
     }
     
@@ -85,40 +132,52 @@ class WindowHelper {
             let screenFrame = screen.frame
             var windowFrame = self.window.frame
             
-            // Set initial position (not visible)
-            windowFrame.origin.x = screenFrame.maxX
-            self.window.setFrame(windowFrame, display: false)
-            self.window.alphaValue = 0
-            self.window.makeKeyAndOrderFront(nil)
-
-            // Set initial position (visible)
-            windowFrame.origin.x = screenFrame.maxX - windowFrame.width
-            
-            // Apply animation
-            NSAnimationContext.runAnimationGroup { context in
-                context.duration = 0.15
-                context.timingFunction = CAMediaTimingFunction(name: .easeOut)
-                self.window.animator().setFrame(windowFrame, display: true)
-                self.window.animator().alphaValue = 1.0
+            if self.mode == .topRight {
+                // Set initial position (not visible)
+                windowFrame.origin.x = screenFrame.maxX
+                self.window.setFrame(windowFrame, display: false)
+                self.window.alphaValue = 0
+                self.window.makeKeyAndOrderFront(nil)
+                
+                // Set initial position (visible)
+                windowFrame.origin.x = screenFrame.maxX - windowFrame.width
+                
+                // Apply animation
+                NSAnimationContext.runAnimationGroup { context in
+                    context.duration = 0.15
+                    context.timingFunction = CAMediaTimingFunction(name: .easeOut)
+                    self.window.animator().setFrame(windowFrame, display: true)
+                    self.window.animator().alphaValue = 1.0
+                }
+            } else {
+                self.window.alphaValue = 0
+                self.window.makeKeyAndOrderFront(nil)
+                
+                // Apply animation
+                NSAnimationContext.runAnimationGroup { context in
+                    context.duration = 0.15
+                    context.timingFunction = CAMediaTimingFunction(name: .easeOut)
+                    self.window.animator().alphaValue = 1.0
+                }
             }
         }
     }
     
-    @MainActor
-    func resetPrompt<Content: View>(with newView: Content) {
-        // Create a new NSHostingController with the new view
-        let newHostingController = NSHostingController(rootView: newView)
-
-        // Assign the new hosting controller to the window
-        window.contentViewController = newHostingController
-
-        // If the window is currently visible, bring it to the front again
-        if mode == .highlightTopEdgeMode {
-            window.orderOut(nil)
-        } else {
-            adjustWindowToTopRight()
+    func shortcutChanges(empty: Bool) {
+        guard !empty else {
+            // hide()
+            print("Prompt hide")
+            return
         }
+        
+//        let hostingController = mode == .topRight ?
+//            NSHostingController(rootView: StaticPromptView()) :
+//            NSHostingController(rootView: OnitPromptView())
+//
+//        window.contentViewController = hostingController
 
+        // window.orderFront(nil)
+        // adjustWindow()
         print("Prompt reset with new view content.")
     }
     
