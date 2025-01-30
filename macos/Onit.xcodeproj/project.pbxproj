@@ -15,6 +15,7 @@
 		28F57E292CAC9262006AAA8C /* MenuBarExtraAccess in Frameworks */ = {isa = PBXBuildFile; productRef = 28F57E282CAC9262006AAA8C /* MenuBarExtraAccess */; };
 		863817352D3FB5F700919BC7 /* PostHog in Frameworks */ = {isa = PBXBuildFile; productRef = 863817342D3FB5F700919BC7 /* PostHog */; };
 		863817372D3FB5F700919BC7 /* phlibwebp in Frameworks */ = {isa = PBXBuildFile; productRef = 863817362D3FB5F700919BC7 /* phlibwebp */; };
+		86A974C12D4A76F800CF6FCE /* Markdown in Frameworks */ = {isa = PBXBuildFile; productRef = 86A974C02D4A76F800CF6FCE /* Markdown */; };
 		A782C1982D383493009976F8 /* FirebaseCrashlytics in Frameworks */ = {isa = PBXBuildFile; productRef = A782C1972D383493009976F8 /* FirebaseCrashlytics */; };
 /* End PBXBuildFile section */
 
@@ -51,6 +52,7 @@
 				28BF71682CAB72A200DE7C03 /* SageKit in Frameworks */,
 				280F35002CB9BF4300D60130 /* Sparkle in Frameworks */,
 				28F57E292CAC9262006AAA8C /* MenuBarExtraAccess in Frameworks */,
+				86A974C12D4A76F800CF6FCE /* Markdown in Frameworks */,
 				863817352D3FB5F700919BC7 /* PostHog in Frameworks */,
 				A782C1982D383493009976F8 /* FirebaseCrashlytics in Frameworks */,
 				863817372D3FB5F700919BC7 /* phlibwebp in Frameworks */,
@@ -109,6 +111,7 @@
 				A782C1972D383493009976F8 /* FirebaseCrashlytics */,
 				863817342D3FB5F700919BC7 /* PostHog */,
 				863817362D3FB5F700919BC7 /* phlibwebp */,
+				86A974C02D4A76F800CF6FCE /* Markdown */,
 			);
 			productName = Onit;
 			productReference = 2883E4B32CA5ECBB00F79A48 /* Onit.app */;
@@ -147,6 +150,7 @@
 				2842875C2CD0B6A5000C6C67 /* XCRemoteSwiftPackageReference "HighlightSwift" */,
 				A782C1962D383493009976F8 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
 				863817332D3FB5F700919BC7 /* XCRemoteSwiftPackageReference "posthog-ios" */,
+				86A974BF2D4A76F800CF6FCE /* XCRemoteSwiftPackageReference "swift-markdown" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 2883E4B42CA5ECBB00F79A48 /* Products */;
@@ -478,6 +482,14 @@
 				minimumVersion = 3.19.1;
 			};
 		};
+		86A974BF2D4A76F800CF6FCE /* XCRemoteSwiftPackageReference "swift-markdown" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/apple/swift-markdown.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 0.5.0;
+			};
+		};
 		A782C1962D383493009976F8 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/firebase/firebase-ios-sdk";
@@ -528,6 +540,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 863817332D3FB5F700919BC7 /* XCRemoteSwiftPackageReference "posthog-ios" */;
 			productName = phlibwebp;
+		};
+		86A974C02D4A76F800CF6FCE /* Markdown */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 86A974BF2D4A76F800CF6FCE /* XCRemoteSwiftPackageReference "swift-markdown" */;
+			productName = Markdown;
 		};
 		A782C1972D383493009976F8 /* FirebaseCrashlytics */ = {
 			isa = XCSwiftPackageProductDependency;

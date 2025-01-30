@@ -8,15 +8,20 @@
 import SwiftUI
 
 struct CopyButton: View {
-    var text: String
-
     @State var showCheckmark = false
+    
+    var text: String
+    var stripMarkdown = false
+    
+    private var textToCopy: String {
+        stripMarkdown ? text.stripMarkdown() : text
+    }
 
     var body: some View {
         Button {
             let pasteboard = NSPasteboard.general
             pasteboard.declareTypes([.string], owner: nil)
-            pasteboard.setString(text, forType: .string)
+            pasteboard.setString(textToCopy, forType: .string)
             showCheckmark = true
 
             Task {

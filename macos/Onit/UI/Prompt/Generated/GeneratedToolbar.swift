@@ -26,7 +26,7 @@ struct GeneratedToolbar: View {
     @ViewBuilder
     var copy: some View {
         if let generation = prompt.generation {
-            CopyButton(text: generation)
+            CopyButton(text: generation, stripMarkdown: true)
         }
     }
 
