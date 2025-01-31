@@ -190,7 +190,7 @@ class AccessibilityNotificationsManager: ObservableObject {
     
     @objc private func appDeactivationReceived(notification: Notification) {
         if let app = notification.userInfo?[NSWorkspace.applicationUserInfoKey] as? NSRunningApplication {
-            print("\nApplication deactivated: \(app.localizedName ?? "Unknown") \(app.processIdentifier)")
+            print("Application deactivated: \(app.localizedName ?? "Unknown") \(app.processIdentifier)")
             
             self.stopAccessibilityObservers(for: app.processIdentifier)
         }
@@ -207,7 +207,7 @@ class AccessibilityNotificationsManager: ObservableObject {
         let selectedText = selectedTextByApp[appName ?? "Unknown"]
         let selectedElement = selectedElementByApp[appName ?? "Unknown"]
         
-        print("\nApplication activated: \(appName ?? "Unknown") \(processID) selected text: \"\(selectedText ?? "")\"")
+        print("\nApplication activated: \(appName ?? "Unknown") \(processID)")
         
         let newAppElement = processID.getAXUIElement()
         self.appElement = newAppElement
@@ -217,10 +217,6 @@ class AccessibilityNotificationsManager: ObservableObject {
         processSelectedText(selectedText, for: selectedElement)
 
         parseAccessibility(for: newAppElement)
-            
-        // print("Text in application: \(textInApplication)")
-        // let appElement = pid.getAXUIElement()
-        // handleInitialFocus(for: appElement)
     }
     
     private func handleAccessibilityNotifications(_ notification: String, info: [String: Any], element: AXUIElement, observer: AXObserver) {
@@ -228,60 +224,12 @@ class AccessibilityNotificationsManager: ObservableObject {
 
         handleExternalElement(element) { [weak self] elementPid in
             switch notification {
-            case kAXLayoutChangedNotification:
-                print("Layout Changed Notification!")
             case kAXFocusedUIElementChangedNotification:
                 self?.handleFocusChange(for: element)
             case kAXSelectedTextChangedNotification:
                 self?.handleSelectionChange(for: element)
-            case "AXBoundsChanged":
-                print("Bounds changed Notification!")
-    //            handleBoundsChanged(for: element)
             case kAXValueChangedNotification:
                 self?.handleValueChanged(for: element)
-                break
-            case kAXAnnouncementRequestedNotification:
-                print("Announcement Requested Notification!")
-            case kAXApplicationActivatedNotification:
-                print("Application Activated Notification! \(elementPid)" )
-            case kAXApplicationDeactivatedNotification:
-                print("Application Deactivated Notification! \(elementPid)")
-            case kAXApplicationHiddenNotification:
-                print("Application Hidden Notification!")
-            case kAXApplicationShownNotification:
-                print("Application Shown Notification!")
-            case kAXCreatedNotification:
-                print("Created Notification!")
-            case kAXDrawerCreatedNotification:
-                print("Drawer Created Notification!")
-            case kAXFocusedWindowChangedNotification:
-                print("Focused Window Changed Notification!")
-            case kAXHelpTagCreatedNotification:
-                print("Help Tag Created Notification!")
-            case kAXMainWindowChangedNotification:
-                print("Main Window Changed Notification!")
-            case kAXMenuClosedNotification:
-                print("Menu Closed Notification!")
-            case kAXMenuItemSelectedNotification:
-                print("Menu Item Selected Notification!")
-            case kAXMenuOpenedNotification:
-                print("Menu Opened Notification!")
-            case kAXMovedNotification:
-                print("Moved Notification!")
-            case kAXResizedNotification:
-                print("Resized Notification!")
-            case kAXRowCollapsedNotification:
-                print("Row Collapsed Notification!")
-            case kAXRowCountChangedNotification:
-                print("Row Count Changed Notification!")
-            case kAXRowExpandedNotification:
-                print("Row Expanded Notification!")
-            case kAXSelectedCellsChangedNotification:
-                print("Selected Cells Changed Notification!")
-            case kAXSelectedChildrenChangedNotification:
-                print("Selected Children Changed Notification!")
-            case kAXSelectedChildrenMovedNotification:
-                print("Selected Children Moved Notification!")
             case kAXSelectedColumnsChangedNotification:
                 print("Selected Columns Changed Notification!")
                 // These handle tabbed interfaces
@@ -289,25 +237,6 @@ class AccessibilityNotificationsManager: ObservableObject {
             case kAXSelectedRowsChangedNotification:
                 print("Selected Rows Changed Notification!")
                 self?.handleFocusChange(for: element)
-            case kAXSheetCreatedNotification:
-                print("Sheet Created Notification!")
-            case kAXTitleChangedNotification:
-                self?.handleTitleChange(for: element)
-            case kAXUIElementDestroyedNotification:
-    //            print("UI Element Destroyed Notification!")
-                break
-            case kAXUnitsChangedNotification:
-                print("Units Changed Notification!")
-            case kAXWindowCreatedNotification:
-                print("Window Created Notification!")
-            case kAXWindowDeminiaturizedNotification:
-                print("Window Deminiaturized Notification!")
-            case kAXWindowMiniaturizedNotification:
-                print("Window Miniaturized Notification!")
-            case kAXWindowMovedNotification:
-                print("Window Moved Notification!")
-            case kAXWindowResizedNotification:
-                print("Window Resized Notification!")
             default:
                 break
             }
@@ -321,16 +250,6 @@ class AccessibilityNotificationsManager: ObservableObject {
             if let appElement = self?.appElement {
                 self?.parseAccessibility(for: appElement)
             }
-        }
-    }
-    
-    func handleTitleChange(for element: AXUIElement) {
-        var titleValue: CFTypeRef?
-        let titleResult = AXUIElementCopyAttributeValue(element, kAXTitleAttribute as CFString, &titleValue)
-        if titleResult == .success, let title = titleValue as? String {
-            print("Title Changed Notification! New title : \(title)")
-        } else {
-            print("Failed to get title for element. Error: \(titleResult.rawValue)")
         }
     }
     

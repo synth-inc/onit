@@ -12,9 +12,16 @@ import MarkdownUI
 struct InputBody: View {
     @Environment(\.model) var model
     @Binding var inputExpanded: Bool
+    @State var text: String?
     @State var textHeight: CGFloat = 0
     
     var input: Input
+    
+    init(inputExpanded: Binding<Bool>, input: Input) {
+        _inputExpanded = inputExpanded
+        text = input.selectedText.count <= 500 ? input.selectedText : nil
+        self.input = input
+    }
 
     var height: CGFloat {
         min(textHeight, 73)
@@ -22,55 +29,46 @@ struct InputBody: View {
 
     var body: some View {
         ViewThatFits(in: .vertical) {
-            textView
-            ScrollView {
-                textView
+            if let text = text {
+                textView(text: text)
+                ScrollView {
+                    textView(text: text)
+                }
+            } else {
+                ProgressView("Loading highlighted text...")
+                    .controlSize(.small)
+                    .padding(.vertical, 16)
+                    .background {
+                        geometryReader
+                    }
             }
         }
         .frame(height: inputExpanded ? height : 0)
+        .onChange(of: input.selectedText, initial: true) {
+            DispatchQueue.main.async {
+                text = input.selectedText
+            }
+        }
     }
     
-    var textView: some View {
-        Markdown(formattedText)
-            .markdownTheme(customTheme)
+    func textView(text: String) -> some View {
+        Text(text)
             .multilineTextAlignment(.leading)
             .frame(maxWidth: .infinity, alignment: .leading)
             .fixedSize(horizontal: false, vertical: true)
             .padding(10)
             .background {
-                GeometryReader { proxy in
-                    Color.clear
-                        .onAppear {
-                            textHeight = proxy.size.height
-                        }
-                }
+                geometryReader
             }
     }
     
-    private let customTheme = Theme()
-        .text {
-            FontFamily(.custom("Inter"))
-            FontSize(16)
-            ForegroundColor(.FG)
+    var geometryReader: some View {
+        GeometryReader { proxy in
+            Color.clear
+                .onAppear {
+                    textHeight = proxy.size.height
+                }
         }
-        .code {
-            FontFamily(.custom("SometypeMono"))
-            FontFamilyVariant(.monospaced)
-            ForegroundColor(.pink)
-        }
-        .codeBlock { configuration in
-            if let language = configuration.language,
-               let language = HighlightLanguage.language(for: language) {
-                CodeText(configuration.content)
-                    .codeFont(AppFont.code.nsFont)
-                    .highlightLanguage(language)
-            } else {
-                CodeText(configuration.content)
-            }
-        }
-    
-    private var formattedText: String {
-        "```\n" + input.selectedText + "\n```"
     }
 }
 

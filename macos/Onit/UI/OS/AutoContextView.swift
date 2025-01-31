@@ -9,6 +9,7 @@ import SwiftUI
 
 struct AutoContextView: View {
     @AppStorage("closedAutoContext") var closedDialog = false
+    @State private var text: String? = nil
     
     var context: Context
     
@@ -19,11 +20,19 @@ struct AutoContextView: View {
                     dialog
                 }
                 
-                Text(readableContent)
-                    .appFont(.medium14)
-                    .padding(.top, !closedDialog ? 0: 16)
-                    .padding(.bottom, 16)
-                    .padding(.horizontal, 16)
+                if let text = text {
+                    Text(text)
+                        .appFont(.medium14)
+                        .padding(.top, !closedDialog ? 0: 16)
+                        .padding(.bottom, 16)
+                        .padding(.horizontal, 16)
+                } else {
+                    ProgressView("Loading auto context from \(readableTitle)...")
+                        .controlSize(.small)
+                }
+            }
+            .task {
+                text = readableContent
             }
         }
         .frame(idealWidth: 569, minHeight: 370, maxHeight: 569)
@@ -39,6 +48,14 @@ struct AutoContextView: View {
             closedDialog = true
         }
         .fixedSize(horizontal: false, vertical: true)
+    }
+    
+    private var readableTitle: String {
+        guard case let .auto(appTitle, _) = context else {
+            return ""
+        }
+        
+        return appTitle
     }
     
     private var readableContent: String {
