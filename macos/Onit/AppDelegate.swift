@@ -6,6 +6,7 @@
 //
 
 import FirebaseCore
+import PostHog
 import SwiftUI
 
 class AppDelegate: NSObject, NSApplicationDelegate {
@@ -19,5 +20,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 //            UserDefaults.standard.removePersistentDomain(forName: appDomain)
 //            UserDefaults.standard.synchronize()
 //        }
+    }
+    
+    func applicationWillTerminate(_ notification: Notification) {
+        PostHogSDK.shared.capture("app_quit")
     }
 }

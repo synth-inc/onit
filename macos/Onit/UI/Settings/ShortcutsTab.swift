@@ -14,7 +14,7 @@ struct ShortcutsTab: View {
     @ObservedObject private var featureFlagsManager = FeatureFlagManager.shared
     
     private var accessibilityAutoContextEnabled: Bool {
-        featureFlagsManager.flags.accessibility && featureFlagsManager.flags.accessibilityAutoContext
+        featureFlagsManager.accessibility && featureFlagsManager.accessibilityAutoContext
     }
 
     var body: some View {

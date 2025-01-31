@@ -22,6 +22,13 @@ struct App: SwiftUI.App {
     
     init() {
         KeyboardShortcuts.onKeyUp(for: .launch) { [weak model] in
+            let eventProperties: [String: Any] = [
+                "app_hidden": model?.panel == nil,
+                "highlight_hint_visible": HighlightHintWindowController.shared.isVisible(),
+                "highlight_hint_mode": FeatureFlagManager.shared.highlightHintMode
+            ]
+            PostHogSDK.shared.capture("shortcut_launch", properties: eventProperties)
+            
             model?.launchShortcutAction()
         }
         KeyboardShortcuts.onKeyUp(for: .toggleLocalMode) { [weak model] in
@@ -76,7 +83,7 @@ struct App: SwiftUI.App {
                         break
                     }
                 }
-                .onChange(of: featureFlagsManager.flags.accessibility, initial: true) { oldValue, newValue in
+                .onChange(of: featureFlagsManager.accessibility, initial: true) { oldValue, newValue in
                     if newValue {
                         if !accessibilityPermissionRequested {
                             accessibilityPermissionRequested = true

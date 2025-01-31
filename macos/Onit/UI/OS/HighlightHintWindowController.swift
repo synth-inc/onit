@@ -8,7 +8,8 @@
 import Foundation
 import SwiftUI
 
-enum HighlightHintMode: Codable {
+enum HighlightHintMode: String, Codable {
+    case none
     case textfield
     case topRight
 }
@@ -28,7 +29,7 @@ class HighlightHintWindowController {
     
     private let onitHostingController = NSHostingController(rootView: OnitPromptView())
     
-    private var mode: HighlightHintMode? = Preferences.shared.highlightHintMode
+    private var mode: HighlightHintMode = FeatureFlagManager.shared.highlightHintMode
     
     private var uiElementBound: CGRect?
     
@@ -40,7 +41,7 @@ class HighlightHintWindowController {
             window = NSWindow(contentViewController: onitHostingController)
         case .topRight:
             window = NSWindow(contentViewController: staticHostingController)
-        case nil:
+        case .none:
             window = NSWindow()
         }
         
@@ -58,7 +59,7 @@ class HighlightHintWindowController {
     func show(_ bound: CGRect?) {
         uiElementBound = bound
         
-        guard mode != nil else { return }
+        guard mode != .none else { return }
         
         if mode == .topRight && window.isVisible {
             return
@@ -73,16 +74,22 @@ class HighlightHintWindowController {
         window.orderOut(nil)
     }
     
-    func changeMode(_ mode: HighlightHintMode?) {
+    func isVisible() -> Bool {
+        return window.isVisible
+    }
+    
+    func changeMode(_ mode: HighlightHintMode) {
         self.mode = mode
         
         switch mode {
         case .topRight:
             window.contentViewController = staticHostingController
             break
+        
         case .textfield:
             window.contentViewController = onitHostingController
-        default:
+        
+        case .none:
             window.contentViewController = nil
             return
         }
@@ -97,8 +104,8 @@ class HighlightHintWindowController {
                 return
             }
             
-            if self.mode == .topRight {
-                
+            switch self.mode {
+            case .topRight:
                 // Get the window's height (or 75x75 beacuse sometimes it's empty?)
                 let windowHeight = max(self.window.frame.height, 75)
                 let windowWidth = max(self.window.frame.width, 75)
@@ -109,7 +116,8 @@ class HighlightHintWindowController {
                 
                 // Set the window's position to the calculated top right corner
                 self.window.setFrameOrigin(NSPoint(x: newOriginX, y: newOriginY))
-            } else {
+                
+            case .textfield:
                 // TODO: KNA - Filter if uiElementBound weird (origin minY = maxY)
                 if let bound = self.uiElementBound {
                     let elementScreenY = currentScreen.frame.height - bound.origin.y
@@ -121,6 +129,9 @@ class HighlightHintWindowController {
                 } else {
                     // TODO: KNA - What to do
                 }
+                
+            case .none:
+                break
             }
         }
     }
@@ -132,7 +143,8 @@ class HighlightHintWindowController {
             let screenFrame = screen.frame
             var windowFrame = self.window.frame
             
-            if self.mode == .topRight {
+            switch self.mode {
+            case .topRight:
                 // Set initial position (not visible)
                 windowFrame.origin.x = screenFrame.maxX
                 self.window.setFrame(windowFrame, display: false)
@@ -149,7 +161,8 @@ class HighlightHintWindowController {
                     self.window.animator().setFrame(windowFrame, display: true)
                     self.window.animator().alphaValue = 1.0
                 }
-            } else {
+            
+            case .textfield:
                 self.window.alphaValue = 0
                 self.window.makeKeyAndOrderFront(nil)
                 
@@ -159,6 +172,9 @@ class HighlightHintWindowController {
                     context.timingFunction = CAMediaTimingFunction(name: .easeOut)
                     self.window.animator().alphaValue = 1.0
                 }
+                
+            case .none:
+                break
             }
         }
     }

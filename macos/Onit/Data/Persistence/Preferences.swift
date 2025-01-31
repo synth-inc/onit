@@ -39,6 +39,12 @@ class Preferences: Codable {
     var visibleModelIds: Set<String> = Set([])
     var localEndpointURL: URL = URL(string: "http://localhost:11434")!
     
+    // Feature flags
+    var accessibilityEnabled: Bool? = nil
+    var accessibilityInputEnabled: Bool? = nil
+    var accessibilityAutoContextEnabled: Bool? = nil
+    var highlightHintMode: HighlightHintMode? = nil
+
     // Window state
     var contentViewFrame: CGRect?
     
@@ -51,8 +57,6 @@ class Preferences: Codable {
     var localTemperature: Double?
     var localTopP: Double?
     var localTopK: Int?
-    var featureFlags: FeatureFlagManager.FeatureFlags? = nil
-    var highlightHintMode: HighlightHintMode? = nil
 
     func markRemoteModelAsNotNew(modelId: String) {
         if let index = availableRemoteModels.firstIndex(where: { $0.id == modelId }) {

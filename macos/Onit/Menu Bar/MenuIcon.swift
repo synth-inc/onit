@@ -13,7 +13,7 @@ struct MenuIcon: View {
     @ObservedObject private var featureFlagsManager = FeatureFlagManager.shared
 
     var body: some View {
-        if featureFlagsManager.flags.accessibility {
+        if featureFlagsManager.accessibility {
             let statusGranted = model.accessibilityPermissionStatus == .granted
             Image(statusGranted ? .smirk : .untrusted)
                 .renderingMode(statusGranted ? .template : .original)

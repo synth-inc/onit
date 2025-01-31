@@ -21,23 +21,10 @@ class FeatureFlagManager: ObservableObject {
     
     // MARK: - Feature Flags
     
-    @Published private(set) var flags: FeatureFlags = .init()
-    
-    struct FeatureFlags: Codable {
-        var accessibility: Bool = false
-        var accessibilityInput: Bool = false
-        var accessibilityAutoContext: Bool = false
-    }
-    
-    // MARK: - Feature Flag Keys
-    
-    enum FeatureFlagKey: String, CaseIterable, Identifiable {
-        var id : String { UUID().uuidString }
-        
-        case accessibility = "Accessibility"
-        case accessibilityInput = "Accessibility Input"
-        case accessibilityAutoContext = "Accessibility Auto Context"
-    }
+    @Published private(set) var accessibility: Bool = false
+    @Published private(set) var accessibilityInput: Bool = false
+    @Published private(set) var accessibilityAutoContext: Bool = false
+    @Published private(set) var highlightHintMode: HighlightHintMode = .none
     
     // MARK: - Functions
     
@@ -60,35 +47,36 @@ class FeatureFlagManager: ObservableObject {
         PostHogSDK.shared.setup(config)
     }
     
-    func getFeatureFlag(_ key: FeatureFlagKey) -> Bool {
-        switch key {
-        case .accessibility:
-            return flags.accessibility
-        case .accessibilityInput:
-            return flags.accessibilityInput
-        case .accessibilityAutoContext:
-            return flags.accessibilityAutoContext
-        }
+    func overrideAccessibility(_ value: Bool) {
+        let preferences = Preferences.shared
+        preferences.accessibilityEnabled = value
+        Preferences.save(preferences)
+        
+        accessibility = value
     }
     
-    /** Override feature flag value (for testing or manual control) */
-    func overrideFeatureFlag(_ value: Bool, for key: FeatureFlagKey) {
-        var newFlags = flags
-        
-        switch key {
-        case .accessibility:
-            newFlags.accessibility = value
-        case .accessibilityInput:
-            newFlags.accessibilityInput = value
-        case .accessibilityAutoContext:
-            newFlags.accessibilityAutoContext = value
-        }
-        
-        flags = newFlags
-        
+    func overrideAccessibilityInput(_ value: Bool) {
         let preferences = Preferences.shared
-        preferences.featureFlags = newFlags
+        preferences.accessibilityInputEnabled = value
         Preferences.save(preferences)
+        
+        accessibilityInput = value
+    }
+    
+    func overrideAccessibilityAutoContext(_ value: Bool) {
+        let preferences = Preferences.shared
+        preferences.accessibilityAutoContextEnabled = value
+        Preferences.save(preferences)
+        
+        accessibilityAutoContext = value
+    }
+    
+    func overrideHighlightHintMode(_ value: HighlightHintMode) {
+        let preferences = Preferences.shared
+        preferences.highlightHintMode = value
+        Preferences.save(preferences)
+        
+        highlightHintMode = value
     }
     
     // MARK: - Objective-C Functions
@@ -100,17 +88,33 @@ class FeatureFlagManager: ObservableObject {
     // MARK: - Private functions
     
     private func setFeatureFlagsFromRemote() {
-        guard let localFeatureFlags = Preferences.shared.featureFlags else {
-            let newFlags = FeatureFlags(
-                accessibility: PostHogSDK.shared.isFeatureEnabled("accessibility"),
-                accessibilityInput: PostHogSDK.shared.isFeatureEnabled("accessibility_input"),
-                accessibilityAutoContext: PostHogSDK.shared.isFeatureEnabled("accessibility_autocontext")
-            )
-            
-            self.flags = newFlags
-            return
+        if let accessibilityEnabled = Preferences.shared.accessibilityEnabled {
+            accessibility = accessibilityEnabled
+        } else {
+            accessibility = PostHogSDK.shared.isFeatureEnabled("accessibility")
         }
         
-        self.flags = localFeatureFlags
+        if let accessibilityInputEnabled = Preferences.shared.accessibilityInputEnabled {
+            accessibilityInput = accessibilityInputEnabled
+        } else {
+            accessibilityInput = PostHogSDK.shared.isFeatureEnabled("accessibility_input")
+        }
+        
+        if let accessibilityAutoContextEnabled = Preferences.shared.accessibilityAutoContextEnabled {
+            accessibilityAutoContext = accessibilityAutoContextEnabled
+        } else {
+            accessibilityAutoContext = PostHogSDK.shared.isFeatureEnabled("accessibility_autocontext")
+        }
+        
+        if let highlightHintMode = Preferences.shared.highlightHintMode {
+            self.highlightHintMode = highlightHintMode
+        } else {
+            if let value = PostHogSDK.shared.getFeatureFlag("highlight_hint_mode") as? String,
+               let mode = HighlightHintMode(rawValue: value) {
+                self.highlightHintMode = mode
+            } else {
+                self.highlightHintMode = .none
+            }
+        }
     }
 }

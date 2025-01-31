@@ -1,81 +1,77 @@
+import PostHog
 import SwiftUI
 
 struct AccessibilityTab: View {
     
-    struct HighlightHintModeUI: Hashable {
+    struct HighlightHintModeUI: Identifiable, Hashable, Equatable {
         let mode: HighlightHintMode
         let text: String
+        
+        var id: String { text }
+        
+        static func from(mode: HighlightHintMode) -> Self {
+            let text: String
+            
+            switch mode {
+            case .topRight:
+                text = "Top-right corner of the screen"
+            case .textfield:
+                text = "Above the highlighted text"
+            case .none:
+                text = "No hint"
+            }
+            
+            return .init(mode: mode, text: text)
+        }
+        
+        static func == (lhs: HighlightHintModeUI, rhs: HighlightHintModeUI) -> Bool {
+            return lhs.mode == rhs.mode
+        }
     }
     
     private let modes: [HighlightHintModeUI] = [
-        .init(mode: .topRight,
-              text: "Top-right corner of the screen"),
-        .init(mode: .textfield,
-              text: "Above the highlighted text"),
+        HighlightHintModeUI.from(mode: .none),
+        HighlightHintModeUI.from(mode: .topRight),
+        HighlightHintModeUI.from(mode: .textfield)
     ]
     
     @Environment(\.model) var model
     
-    @State private var selectedMode: HighlightHintMode? = Preferences.shared.highlightHintMode
-    @State private var showHint: Bool = Preferences.shared.highlightHintMode != nil
+    @State private var selectedMode: HighlightHintModeUI = HighlightHintModeUI.from(mode: FeatureFlagManager.shared.highlightHintMode)
     
     var body: some View {
         VStack(spacing: 25) {
-            highlightTextView
+            Picker("Choose hint position", selection: $selectedMode) {
+                ForEach(modes, id: \.self) { mode in
+                    Text(mode.text)
+                        .appFont(.medium14)
+                        .padding(.vertical, 4)
+                }
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .pickerStyle(MenuPickerStyle())
+            .padding(.vertical, 4)
+            .padding(.bottom, 5)
+            .padding(.leading, 5)
+            .tint(.blue600)
         }
         .padding(.vertical, 20)
         .padding(.horizontal, 86)
-    }
-    
-    var highlightTextView: some View {
-        VStack(alignment: .leading, spacing: 20) {
-            Text("Display hint when highlighting text")
-                .font(.system(size: 14))
-            
-            HStack {
-                Text("Show hint")
-                    .font(.system(size: 13))
-                Spacer()
-                Toggle("", isOn: $showHint)
-                .toggleStyle(.switch)
-                .controlSize(.small)
-                .onChange(of: showHint, initial: false) { old, new in
-                    print("KNA - onChange \(old) \(new)")
-                    if new {
-                        highlightModeChange(mode: .topRight)
-                    } else {
-                        highlightModeChange(mode: nil)
-                    }
-                }
-            }
-            
-            if showHint {
-                VStack(alignment: .leading, spacing: 10) {
-                    Text("Choose hint position")
-                        .font(.system(size: 13))
-                    ForEach(modes, id: \.self) { option in
-                        HStack {
-                            Image(systemName: selectedMode == option.mode ? "largecircle.fill.circle" : "circle")
-                                .foregroundColor(.blue)
-                            Text(option.text)
-                        }
-                        .onTapGesture {
-                            highlightModeChange(mode: option.mode)
-                        }
-                    }
-                }
-            }
+        .onChange(of: selectedMode, initial: false) { old, new in
+            highlightModeChange(oldValue: old, newValue: new)
         }
     }
     
-    private func highlightModeChange(mode: HighlightHintMode?) {
-        let preferences = Preferences.shared
-        preferences.highlightHintMode = mode
-        Preferences.save(preferences)
+    private func highlightModeChange(oldValue: HighlightHintModeUI, newValue: HighlightHintModeUI) {
+        FeatureFlagManager.shared.overrideHighlightHintMode(newValue.mode)
+        HighlightHintWindowController.shared.changeMode(newValue.mode)
         
-        selectedMode = mode
+        let eventProperties: [String: Any] = [
+            "old": oldValue.mode,
+            "new": newValue.mode
+        ]
         
-        HighlightHintWindowController.shared.changeMode(mode)
+        PostHogSDK.shared.capture("highlight_hint_mode_change", properties: eventProperties)
     }
 }
 

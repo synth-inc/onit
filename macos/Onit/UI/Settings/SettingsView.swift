@@ -6,7 +6,7 @@ struct SettingsView: View {
     @ObservedObject private var featureFlagsManager = FeatureFlagManager.shared
     
     private var accessibilityInputEnabled: Bool {
-        featureFlagsManager.flags.accessibility && featureFlagsManager.flags.accessibilityInput
+        featureFlagsManager.accessibility && featureFlagsManager.accessibilityInput
     }
     
     var body: some View {

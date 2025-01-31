@@ -285,7 +285,7 @@ class AccessibilityNotificationsManager: ObservableObject {
     // MARK: Parsing
     
     private func parseAccessibility(for element: AXUIElement) {
-        guard FeatureFlagManager.shared.flags.accessibilityAutoContext else {
+        guard FeatureFlagManager.shared.accessibilityAutoContext else {
             self.screenResult = .init()
             
             return
@@ -344,7 +344,7 @@ class AccessibilityNotificationsManager: ObservableObject {
     }
     
     private func processSelectedText(_ text: String?, for element: AXUIElement?) {
-        guard FeatureFlagManager.shared.flags.accessibilityInput,
+        guard FeatureFlagManager.shared.accessibilityInput,
               let selectedText = text,
               let selectedElement = element,
               !selectedText.isEmpty else {
