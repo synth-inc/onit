@@ -49,7 +49,7 @@ struct ShortcutsTab: View {
 
                 if accessibilityAutoContextEnabled {
                     KeyboardShortcuts.Recorder(
-                        "Add auto-context", name: .addAutoContext
+                        "Launch Onit with auto-context", name: .launchWithAutoContext
                     )
                     .padding()
                 }

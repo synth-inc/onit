@@ -16,6 +16,6 @@ extension KeyboardShortcuts.Name {
     static let resizeWindow = Self("resizeWindow", default: .init(.eight, modifiers: [.command]))
     static let toggleModels = Self("toggleModels", default: .init(.seven, modifiers: [.command]))
     static let toggleLocalMode = Self("toggleLocalMode", default: .init(.l, modifiers: [.shift, .command]))
-    static let addAutoContext = Self("addAutoContext", default: .init(.zero, modifiers: [.shift, .command]))
+    static let launchWithAutoContext = Self("launchWithAutoContext", default: .init(.zero, modifiers: [.shift, .command]))
 }
 

@@ -46,8 +46,13 @@ struct App: SwiftUI.App {
         KeyboardShortcuts.onKeyUp(for: .escape) { [weak model] in
             model?.escapeAction()
         }
-        KeyboardShortcuts.onKeyUp(for: .addAutoContext) { [weak model] in
+        KeyboardShortcuts.onKeyUp(for: .launchWithAutoContext) { [weak model] in
+            let eventProperties: [String: Any] = [
+                "app_hidden": model?.panel == nil
+            ]
+            PostHogSDK.shared.capture("shortcut_launch_with_auto_context", properties: eventProperties)
             model?.addAutoContext()
+            model?.launchPanel()
         }
 
         featureFlagsManager.configure()
