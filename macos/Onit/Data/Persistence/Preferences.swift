@@ -40,7 +40,6 @@ class Preferences: Codable {
     var localEndpointURL: URL = URL(string: "http://localhost:11434")!
     
     // Feature flags
-    var accessibilityEnabled: Bool? = nil
     var accessibilityInputEnabled: Bool? = nil
     var accessibilityAutoContextEnabled: Bool? = nil
     var highlightHintMode: HighlightHintMode? = nil

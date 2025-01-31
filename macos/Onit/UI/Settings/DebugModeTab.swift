@@ -9,7 +9,6 @@ struct DebugModeTab: View {
     enum FeatureFlagKey: String, CaseIterable, Identifiable {
         var id : String { UUID().uuidString }
         
-        case accessibility = "Accessibility"
         case accessibilityInput = "Accessibility Input"
         case accessibilityAutoContext = "Accessibility Auto Context"
     }
@@ -35,7 +34,6 @@ struct DebugModeTab: View {
                 Text("Feature flags")
                     .font(.system(size: 14))
                 
-                featureFlagView(key: .accessibility)
                 featureFlagView(key: .accessibilityInput)
                 featureFlagView(key: .accessibilityAutoContext)
                 
@@ -55,8 +53,6 @@ struct DebugModeTab: View {
             Toggle("", isOn: Binding(
                 get: {
                     switch key {
-                    case .accessibility:
-                        featureFlagsManager.accessibility
                     case .accessibilityInput:
                         featureFlagsManager.accessibilityInput
                     case .accessibilityAutoContext:
@@ -65,8 +61,6 @@ struct DebugModeTab: View {
                 },
                 set: {
                     switch key {
-                    case .accessibility:
-                        featureFlagsManager.overrideAccessibility($0)
                     case .accessibilityInput:
                         featureFlagsManager.overrideAccessibilityInput($0)
                     case .accessibilityAutoContext:

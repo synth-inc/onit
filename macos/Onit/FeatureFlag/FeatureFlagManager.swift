@@ -21,10 +21,13 @@ class FeatureFlagManager: ObservableObject {
     
     // MARK: - Feature Flags
     
-    @Published private(set) var accessibility: Bool = false
     @Published private(set) var accessibilityInput: Bool = false
     @Published private(set) var accessibilityAutoContext: Bool = false
     @Published private(set) var highlightHintMode: HighlightHintMode = .none
+    
+    var accessibility: Bool {
+        accessibilityInput || accessibilityAutoContext
+    }
     
     // MARK: - Functions
     
@@ -45,14 +48,6 @@ class FeatureFlagManager: ObservableObject {
         let config = PostHogConfig(apiKey: apiKey, host: host)
         
         PostHogSDK.shared.setup(config)
-    }
-    
-    func overrideAccessibility(_ value: Bool) {
-        let preferences = Preferences.shared
-        preferences.accessibilityEnabled = value
-        Preferences.save(preferences)
-        
-        accessibility = value
     }
     
     func overrideAccessibilityInput(_ value: Bool) {
@@ -88,12 +83,6 @@ class FeatureFlagManager: ObservableObject {
     // MARK: - Private functions
     
     private func setFeatureFlagsFromRemote() {
-        if let accessibilityEnabled = Preferences.shared.accessibilityEnabled {
-            accessibility = accessibilityEnabled
-        } else {
-            accessibility = PostHogSDK.shared.isFeatureEnabled("accessibility")
-        }
-        
         if let accessibilityInputEnabled = Preferences.shared.accessibilityInputEnabled {
             accessibilityInput = accessibilityInputEnabled
         } else {

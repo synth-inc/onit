@@ -13,7 +13,7 @@ struct PaperclipButton: View {
     @ObservedObject var notificationsManager = AccessibilityNotificationsManager.shared
     
     var accessibilityAutoContextEnabled: Bool {
-        featureFlagsManager.accessibility && featureFlagsManager.accessibilityAutoContext
+        featureFlagsManager.accessibilityAutoContext
     }
 
     var body: some View {
