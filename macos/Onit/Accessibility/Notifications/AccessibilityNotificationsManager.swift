@@ -231,7 +231,6 @@ class AccessibilityNotificationsManager: ObservableObject {
             case kAXLayoutChangedNotification:
                 print("Layout Changed Notification!")
             case kAXFocusedUIElementChangedNotification:
-    //            print("Focus Changed Notification!!")
                 self?.handleFocusChange(for: element)
             case kAXSelectedTextChangedNotification:
                 self?.handleSelectionChange(for: element)
@@ -367,6 +366,12 @@ class AccessibilityNotificationsManager: ObservableObject {
     // MARK: Parsing
     
     private func parseAccessibility(for element: AXUIElement) {
+        guard FeatureFlagManager.shared.flags.accessibilityAutoContext else {
+            self.screenResult = .init()
+            
+            return
+        }
+        
         Task {
             var results = await AccessibilityParser.shared.getAllTextInElement(appElement: element)
             
@@ -420,7 +425,8 @@ class AccessibilityNotificationsManager: ObservableObject {
     }
     
     private func processSelectedText(_ text: String?, for element: AXUIElement?) {
-        guard let selectedText = text,
+        guard FeatureFlagManager.shared.flags.accessibilityInput,
+              let selectedText = text,
               let selectedElement = element,
               !selectedText.isEmpty else {
             

@@ -28,7 +28,7 @@ struct SettingsView: View {
                 }
                 .tag(SettingsTab.shortcuts)
             
-            if featureFlagsManager.flags.accessibility {
+            if featureFlagsManager.flags.accessibility && featureFlagsManager.flags.accessibilityInput {
                 AccessibilityTab()
                     .tabItem {
                         Label("Accessibility", systemImage: "accessibility")

@@ -13,14 +13,7 @@ struct PaperclipButton: View {
     @ObservedObject var notificationsManager = AccessibilityNotificationsManager.shared
     
     var autoContextEnabled: Bool {
-        featureFlagsManager.flags.accessibility &&
-        notificationsManager.screenResult.others?.isEmpty == false &&
-        !model.pendingContextList.contains(where: { context in
-            guard case let .auto(appName, appContent) = context else { return false }
-            
-            return appName == notificationsManager.screenResult.applicationName &&
-                appContent == notificationsManager.screenResult.others
-        })
+        featureFlagsManager.flags.accessibility && featureFlagsManager.flags.accessibilityAutoContext
     }
 
     var body: some View {

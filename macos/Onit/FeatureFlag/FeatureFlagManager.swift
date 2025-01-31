@@ -25,6 +25,8 @@ class FeatureFlagManager: ObservableObject {
     
     struct FeatureFlags: Codable {
         var accessibility: Bool = false
+        var accessibilityInput: Bool = false
+        var accessibilityAutoContext: Bool = false
     }
     
     // MARK: - Feature Flag Keys
@@ -33,6 +35,8 @@ class FeatureFlagManager: ObservableObject {
         var id : String { UUID().uuidString }
         
         case accessibility = "Accessibility"
+        case accessibilityInput = "Accessibility Input"
+        case accessibilityAutoContext = "Accessibility Auto Context"
     }
     
     // MARK: - Functions
@@ -60,6 +64,10 @@ class FeatureFlagManager: ObservableObject {
         switch key {
         case .accessibility:
             return flags.accessibility
+        case .accessibilityInput:
+            return flags.accessibilityInput
+        case .accessibilityAutoContext:
+            return flags.accessibilityAutoContext
         }
     }
     
@@ -70,6 +78,10 @@ class FeatureFlagManager: ObservableObject {
         switch key {
         case .accessibility:
             newFlags.accessibility = value
+        case .accessibilityInput:
+            newFlags.accessibilityInput = value
+        case .accessibilityAutoContext:
+            newFlags.accessibilityAutoContext = value
         }
         
         flags = newFlags
@@ -90,7 +102,9 @@ class FeatureFlagManager: ObservableObject {
     private func setFeatureFlagsFromRemote() {
         guard let localFeatureFlags = Preferences.shared.featureFlags else {
             let newFlags = FeatureFlags(
-                accessibility: PostHogSDK.shared.isFeatureEnabled("accessibility")
+                accessibility: PostHogSDK.shared.isFeatureEnabled("accessibility"),
+                accessibilityInput: PostHogSDK.shared.isFeatureEnabled("accessibility_input"),
+                accessibilityAutoContext: PostHogSDK.shared.isFeatureEnabled("accessibility_autocontext")
             )
             
             self.flags = newFlags
