@@ -5,6 +5,10 @@ struct SettingsView: View {
     @Environment(\.model) var model
     @ObservedObject private var featureFlagsManager = FeatureFlagManager.shared
     
+    private var accessibilityInputEnabled: Bool {
+        featureFlagsManager.flags.accessibility && featureFlagsManager.flags.accessibilityInput
+    }
+    
     var body: some View {
         TabView(selection: Binding(
             get: { model.settingsTab },
@@ -28,7 +32,7 @@ struct SettingsView: View {
                 }
                 .tag(SettingsTab.shortcuts)
             
-            if featureFlagsManager.flags.accessibility && featureFlagsManager.flags.accessibilityInput {
+            if accessibilityInputEnabled {
                 AccessibilityTab()
                     .tabItem {
                         Label("Accessibility", systemImage: "accessibility")

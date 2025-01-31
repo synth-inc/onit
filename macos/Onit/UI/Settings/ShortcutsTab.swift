@@ -10,6 +10,12 @@ import KeyboardShortcuts
 
 struct ShortcutsTab: View {
     @Environment(\.model) var model
+    
+    @ObservedObject private var featureFlagsManager = FeatureFlagManager.shared
+    
+    private var accessibilityAutoContextEnabled: Bool {
+        featureFlagsManager.flags.accessibility && featureFlagsManager.flags.accessibilityAutoContext
+    }
 
     var body: some View {
         Form {
@@ -41,7 +47,12 @@ struct ShortcutsTab: View {
                 )
                 .padding()
 
-                
+                if accessibilityAutoContextEnabled {
+                    KeyboardShortcuts.Recorder(
+                        "Add auto-context", name: .addAutoContext
+                    )
+                    .padding()
+                }
             }
         }
         .padding()

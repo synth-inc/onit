@@ -303,7 +303,8 @@ extension OnitModel: NSWindowDelegate {
                                   .newChat,
                                   .resizeWindow,
                                   .toggleModels,
-                                  .escape])
+                                  .escape,
+                                  .addAutoContext])
     }
     
     private func disableKeyboardShortcuts() {
@@ -311,7 +312,8 @@ extension OnitModel: NSWindowDelegate {
                                    .newChat,
                                    .resizeWindow,
                                    .toggleModels,
-                                   .escape])
+                                   .escape,
+                                   .addAutoContext])
     }
 }
 

@@ -9,7 +9,9 @@ import AppKit
 
 extension OnitModel {
     func addAutoContext() {
-        guard let appName = AccessibilityNotificationsManager.shared.screenResult.applicationName,
+        guard FeatureFlagManager.shared.flags.accessibility,
+              FeatureFlagManager.shared.flags.accessibilityAutoContext,
+              let appName = AccessibilityNotificationsManager.shared.screenResult.applicationName,
               let appContent = AccessibilityNotificationsManager.shared.screenResult.others else {
             return
         }

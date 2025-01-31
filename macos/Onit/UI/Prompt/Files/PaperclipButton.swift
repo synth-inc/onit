@@ -12,7 +12,7 @@ struct PaperclipButton: View {
     @ObservedObject var featureFlagsManager = FeatureFlagManager.shared
     @ObservedObject var notificationsManager = AccessibilityNotificationsManager.shared
     
-    var autoContextEnabled: Bool {
+    var accessibilityAutoContextEnabled: Bool {
         featureFlagsManager.flags.accessibility && featureFlagsManager.flags.accessibilityAutoContext
     }
 
@@ -26,13 +26,13 @@ struct PaperclipButton: View {
                     .frame(width: 16, height: 16)
                     .padding(3)
             }
-            .tooltip(prompt: autoContextEnabled ? "Add context" : "Upload file")
+            .tooltip(prompt: accessibilityAutoContextEnabled ? "Add context" : "Upload file")
 
             if model.pendingContextList.isEmpty {
                 Button {
                     handleAddContext()
                 } label: {
-                    Text(autoContextEnabled ? "Add context" : "Add file")
+                    Text(accessibilityAutoContextEnabled ? "Add context" : "Add file")
                         .foregroundStyle(.gray200)
                         .appFont(.medium13)
                 }
@@ -41,7 +41,7 @@ struct PaperclipButton: View {
     }
     
     private func handleAddContext() {
-        if autoContextEnabled {
+        if accessibilityAutoContextEnabled {
             model.showContextPickerOverlay()
         } else {
             model.showFileImporter = true

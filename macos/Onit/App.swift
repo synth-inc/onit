@@ -39,6 +39,9 @@ struct App: SwiftUI.App {
         KeyboardShortcuts.onKeyUp(for: .escape) { [weak model] in
             model?.escapeAction()
         }
+        KeyboardShortcuts.onKeyUp(for: .addAutoContext) { [weak model] in
+            model?.addAutoContext()
+        }
 
         featureFlagsManager.configure()
         // For testing new user experience
