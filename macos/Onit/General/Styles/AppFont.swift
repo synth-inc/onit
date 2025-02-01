@@ -16,15 +16,33 @@ enum AppFont {
     case code
 
     var font: Font {
-        .custom(fontName, size: originalPointSize)
+        .custom(fontName, size: pointSize)
     }
 
     var nsFont: NSFont {
-        NSFont(name: fontName, size: originalPointSize) ?? systemUIFont
+        NSFont(name: fontName, size: pointSize) ?? systemUIFont
     }
 
     var systemUIFont: NSFont {
-        .systemFont(ofSize: originalPointSize)
+        .systemFont(ofSize: pointSize)
+    }
+    
+    private var pointSize: CGFloat {
+        let baseFontSize = Preferences.shared.fontSize
+        switch self {
+        case .medium10:
+            return baseFontSize - 4
+        case .medium12:
+            return baseFontSize - 2
+        case .medium13:
+            return baseFontSize - 1
+        case .medium14:
+            return baseFontSize
+        case .medium16:
+            return baseFontSize + 2
+        case .code:
+            return baseFontSize
+        }
     }
 
     var lineSpacing: CGFloat {
