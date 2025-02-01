@@ -14,6 +14,12 @@ struct LocalModelsSection: View {
     @State private var fetching: Bool = false
     @State private var message: String? = nil
     @State private var localEndpointString: String = ""
+    @State private var showAdvanced: Bool = false
+    @State private var keepAlive: Bool = false
+    @State private var numCtx: String = ""
+    @State private var temperature: String = ""
+    @State private var topP: String = ""
+    @State private var minP: String = ""
 
     var body: some View {
         ModelsSection(title: "Local Models") {
@@ -31,6 +37,11 @@ struct LocalModelsSection: View {
         .onAppear {
             isOn = model.useLocal
             localEndpointString = model.preferences.localEndpointURL.absoluteString
+            keepAlive = model.preferences.localKeepAlive
+            if let value = model.preferences.localNumCtx { numCtx = String(value) }
+            if let value = model.preferences.localTemperature { temperature = String(value) }
+            if let value = model.preferences.localTopP { topP = String(value) }
+            if let value = model.preferences.localMinP { minP = String(value) }
         }
         .onChange(of: isOn) {
             model.useLocal = isOn
@@ -81,6 +92,96 @@ struct LocalModelsSection: View {
                 .frame(height: 22)
                 .fontWeight(.regular)
             }
+            
+            DisclosureGroup("Advanced", isExpanded: $showAdvanced) {
+                VStack(alignment: .leading, spacing: 8) {
+                    Toggle("Keep model alive", isOn: $keepAlive)
+                        .onChange(of: keepAlive) {
+                            model.updatePreferences { prefs in
+                                prefs.localKeepAlive = keepAlive
+                            }
+                        }
+                    
+                    Group {
+                        HStack {
+                            Text("Context window:")
+                            TextField("", text: $numCtx)
+                                .textFieldStyle(.roundedBorder)
+                                .frame(maxWidth: 100)
+                                .onChange(of: numCtx) {
+                                    if let value = Int(numCtx) {
+                                        model.updatePreferences { prefs in
+                                            prefs.localNumCtx = value
+                                        }
+                                    } else if numCtx.isEmpty {
+                                        model.updatePreferences { prefs in
+                                            prefs.localNumCtx = nil
+                                        }
+                                    }
+                                }
+                        }
+                        
+                        HStack {
+                            Text("Temperature:")
+                            TextField("", text: $temperature)
+                                .textFieldStyle(.roundedBorder)
+                                .frame(maxWidth: 100)
+                                .onChange(of: temperature) {
+                                    if let value = Double(temperature) {
+                                        model.updatePreferences { prefs in
+                                            prefs.localTemperature = value
+                                        }
+                                    } else if temperature.isEmpty {
+                                        model.updatePreferences { prefs in
+                                            prefs.localTemperature = nil
+                                        }
+                                    }
+                                }
+                        }
+                        
+                        HStack {
+                            Text("Top P:")
+                            TextField("", text: $topP)
+                                .textFieldStyle(.roundedBorder)
+                                .frame(maxWidth: 100)
+                                .onChange(of: topP) {
+                                    if let value = Double(topP) {
+                                        model.updatePreferences { prefs in
+                                            prefs.localTopP = value
+                                        }
+                                    } else if topP.isEmpty {
+                                        model.updatePreferences { prefs in
+                                            prefs.localTopP = nil
+                                        }
+                                    }
+                                }
+                        }
+                        
+                        HStack {
+                            Text("Min P:")
+                            TextField("", text: $minP)
+                                .textFieldStyle(.roundedBorder)
+                                .frame(maxWidth: 100)
+                                .onChange(of: minP) {
+                                    if let value = Double(minP) {
+                                        model.updatePreferences { prefs in
+                                            prefs.localMinP = value
+                                        }
+                                    } else if minP.isEmpty {
+                                        model.updatePreferences { prefs in
+                                            prefs.localMinP = nil
+                                        }
+                                    }
+                                }
+                        }
+                    }
+                    .font(.system(size: 12))
+                }
+                .padding(.leading, 8)
+                .padding(.top, 4)
+            }
+            .font(.system(size: 12))
+            .fontWeight(.regular)
         }
     }
 

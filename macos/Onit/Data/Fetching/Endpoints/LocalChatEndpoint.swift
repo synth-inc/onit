@@ -101,7 +101,31 @@ struct LocalChatEndpoint: Endpoint {
     var method: HTTPMethod { .post }
     var token: String? { nil }
     var requestBody: LocalChatRequestJSON? {
-        LocalChatRequestJSON(model: model, messages: messages)
+        var options: LocalChatOptions?
+        var keepAlive: Bool?
+        
+        DispatchQueue.main.sync {
+            let prefs = Preferences.shared
+            keepAlive = prefs.localKeepAlive
+            
+            // Only create options if at least one parameter is set
+            if prefs.localNumCtx != nil || prefs.localTemperature != nil || 
+               prefs.localTopP != nil || prefs.localMinP != nil {
+                options = LocalChatOptions(
+                    num_ctx: prefs.localNumCtx,
+                    temperature: prefs.localTemperature,
+                    top_p: prefs.localTopP,
+                    min_p: prefs.localMinP
+                )
+            }
+        }
+        
+        return LocalChatRequestJSON(
+            model: model,
+            messages: messages,
+            keep_alive: keepAlive,
+            options: options
+        )
     }
 
 }
@@ -110,8 +134,16 @@ struct LocalChatEndpoint: Endpoint {
 struct LocalChatRequestJSON: Codable {
     let model: String?
     let messages: [LocalChatMessage]
-//    var format : String = "json"
-    var stream : Bool = false
+    var stream: Bool = false
+    var keep_alive: Bool?
+    var options: LocalChatOptions?
+}
+
+struct LocalChatOptions: Codable {
+    var num_ctx: Int?
+    var temperature: Double?
+    var top_p: Double?
+    var min_p: Double?
 }
 
 struct LocalChatMessage: Codable {

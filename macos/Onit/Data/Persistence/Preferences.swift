@@ -40,6 +40,13 @@ class Preferences: Codable {
     var availableRemoteModels: [AIModel] = []
     var visibleModelIds: Set<String> = Set([])
     var localEndpointURL: URL = URL(string: "http://localhost:11434")!
+    
+    // Local model advanced options
+    var localKeepAlive: Bool = false
+    var localNumCtx: Int?
+    var localTemperature: Double?
+    var localTopP: Double?
+    var localMinP: Double?
 
     func markRemoteModelAsNotNew(modelId: String) {
         if let index = availableRemoteModels.firstIndex(where: { $0.id == modelId }) {
