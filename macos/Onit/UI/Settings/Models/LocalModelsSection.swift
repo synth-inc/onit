@@ -21,12 +21,19 @@ struct LocalModelsSection: View {
     @State private var topP: String = ""
     @State private var topK: String = ""
     
-    // Validation states
-    @State private var keepAliveValid: Bool = true
-    @State private var numCtxValid: Bool = true
-    @State private var temperatureValid: Bool = true
-    @State private var topPValid: Bool = true
-    @State private var topKValid: Bool = true
+    // Validation states and errors
+    @State private var keepAliveError: String? = nil
+    @State private var numCtxError: String? = nil
+    @State private var temperatureError: String? = nil
+    @State private var topPError: String? = nil
+    @State private var topKError: String? = nil
+    
+    // Default values
+    private let defaultKeepAlive = "5m"
+    private let defaultNumCtx = 2048
+    private let defaultTemperature = 0.8
+    private let defaultTopP = 0.9
+    private let defaultTopK = 40
 
     var body: some View {
         ModelsSection(title: "Local Models") {
@@ -102,28 +109,35 @@ struct LocalModelsSection: View {
             
             DisclosureGroup("Advanced", isExpanded: $showAdvanced) {
                 VStack(alignment: .leading, spacing: 8) {
-                    Group {
+                    VStack(alignment: .leading, spacing: 8) {
                         HStack {
                             Text("Keep alive:")
                             TextField("e.g. 10m, 24h, -1, 3600", text: $keepAlive)
                                 .textFieldStyle(.roundedBorder)
                                 .frame(maxWidth: 150)
                                 .onChange(of: keepAlive) {
-                                    keepAliveValid = LocalModelValidation.validateKeepAlive(keepAlive)
-                                    if keepAliveValid {
+                                    if keepAlive.isEmpty {
+                                        keepAliveError = nil
                                         model.updatePreferences { prefs in
-                                            prefs.localKeepAlive = keepAlive.isEmpty ? nil : keepAlive
+                                            prefs.localKeepAlive = nil
                                         }
+                                    } else if LocalModelValidation.validateKeepAlive(keepAlive) {
+                                        keepAliveError = nil
+                                        model.updatePreferences { prefs in
+                                            prefs.localKeepAlive = keepAlive
+                                        }
+                                    } else {
+                                        keepAliveError = "Invalid format. Use duration (e.g. 10m, 24h) or seconds"
                                     }
                                 }
-                                .foregroundStyle(keepAliveValid ? .primary : .red)
                             SettingInfoButton(
                                 title: "Keep Alive",
                                 description: "Controls how long the model will stay loaded into memory following the request",
-                                defaultValue: "5m",
+                                defaultValue: defaultKeepAlive,
                                 valueType: "Duration string (e.g. '10m', '24h') or integer seconds"
                             )
                         }
+                        SettingErrorMessage(message: keepAliveError)
                         
                         HStack {
                             Text("Context window:")
@@ -131,27 +145,30 @@ struct LocalModelsSection: View {
                                 .textFieldStyle(.roundedBorder)
                                 .frame(maxWidth: 100)
                                 .onChange(of: numCtx) {
-                                    numCtxValid = LocalModelValidation.validateInt(numCtx, min: 1)
-                                    if numCtxValid {
+                                    if numCtx.isEmpty {
+                                        numCtxError = nil
+                                        model.updatePreferences { prefs in
+                                            prefs.localNumCtx = nil
+                                        }
+                                    } else if LocalModelValidation.validateInt(numCtx, min: 1) {
+                                        numCtxError = nil
                                         if let value = Int(numCtx) {
                                             model.updatePreferences { prefs in
                                                 prefs.localNumCtx = value
                                             }
-                                        } else if numCtx.isEmpty {
-                                            model.updatePreferences { prefs in
-                                                prefs.localNumCtx = nil
-                                            }
                                         }
+                                    } else {
+                                        numCtxError = "Must be a positive integer"
                                     }
                                 }
-                                .foregroundStyle(numCtxValid ? .primary : .red)
                             SettingInfoButton(
                                 title: "Context Window",
                                 description: "Sets the size of the context window used to generate the next token",
-                                defaultValue: "2048",
+                                defaultValue: String(defaultNumCtx),
                                 valueType: "Integer"
                             )
                         }
+                        SettingErrorMessage(message: numCtxError)
                         
                         HStack {
                             Text("Temperature:")
@@ -159,27 +176,30 @@ struct LocalModelsSection: View {
                                 .textFieldStyle(.roundedBorder)
                                 .frame(maxWidth: 100)
                                 .onChange(of: temperature) {
-                                    temperatureValid = LocalModelValidation.validateFloat(temperature, min: 0.0, max: 2.0)
-                                    if temperatureValid {
+                                    if temperature.isEmpty {
+                                        temperatureError = nil
+                                        model.updatePreferences { prefs in
+                                            prefs.localTemperature = nil
+                                        }
+                                    } else if LocalModelValidation.validateFloat(temperature, min: 0.0, max: 2.0) {
+                                        temperatureError = nil
                                         if let value = Double(temperature) {
                                             model.updatePreferences { prefs in
                                                 prefs.localTemperature = value
                                             }
-                                        } else if temperature.isEmpty {
-                                            model.updatePreferences { prefs in
-                                                prefs.localTemperature = nil
-                                            }
                                         }
+                                    } else {
+                                        temperatureError = "Must be a number between 0.0 and 2.0"
                                     }
                                 }
-                                .foregroundStyle(temperatureValid ? .primary : .red)
                             SettingInfoButton(
                                 title: "Temperature",
                                 description: "The temperature of the model. Increasing the temperature will make the model answer more creatively",
-                                defaultValue: "0.8",
+                                defaultValue: String(defaultTemperature),
                                 valueType: "Float (0.0 - 2.0)"
                             )
                         }
+                        SettingErrorMessage(message: temperatureError)
                         
                         HStack {
                             Text("Top K:")
@@ -187,27 +207,30 @@ struct LocalModelsSection: View {
                                 .textFieldStyle(.roundedBorder)
                                 .frame(maxWidth: 100)
                                 .onChange(of: topK) {
-                                    topKValid = LocalModelValidation.validateInt(topK, min: 1)
-                                    if topKValid {
+                                    if topK.isEmpty {
+                                        topKError = nil
+                                        model.updatePreferences { prefs in
+                                            prefs.localTopK = nil
+                                        }
+                                    } else if LocalModelValidation.validateInt(topK, min: 1) {
+                                        topKError = nil
                                         if let value = Int(topK) {
                                             model.updatePreferences { prefs in
                                                 prefs.localTopK = value
                                             }
-                                        } else if topK.isEmpty {
-                                            model.updatePreferences { prefs in
-                                                prefs.localTopK = nil
-                                            }
                                         }
+                                    } else {
+                                        topKError = "Must be a positive integer"
                                     }
                                 }
-                                .foregroundStyle(topKValid ? .primary : .red)
                             SettingInfoButton(
                                 title: "Top K",
                                 description: "Reduces the probability of generating nonsense. A higher value (e.g. 100) will give more diverse answers, while a lower value (e.g. 10) will be more conservative",
-                                defaultValue: "40",
+                                defaultValue: String(defaultTopK),
                                 valueType: "Integer"
                             )
                         }
+                        SettingErrorMessage(message: topKError)
                         
                         HStack {
                             Text("Top P:")
@@ -215,27 +238,62 @@ struct LocalModelsSection: View {
                                 .textFieldStyle(.roundedBorder)
                                 .frame(maxWidth: 100)
                                 .onChange(of: topP) {
-                                    topPValid = LocalModelValidation.validateFloat(topP, min: 0.0, max: 1.0)
-                                    if topPValid {
+                                    if topP.isEmpty {
+                                        topPError = nil
+                                        model.updatePreferences { prefs in
+                                            prefs.localTopP = nil
+                                        }
+                                    } else if LocalModelValidation.validateFloat(topP, min: 0.0, max: 1.0) {
+                                        topPError = nil
                                         if let value = Double(topP) {
                                             model.updatePreferences { prefs in
                                                 prefs.localTopP = value
                                             }
-                                        } else if topP.isEmpty {
-                                            model.updatePreferences { prefs in
-                                                prefs.localTopP = nil
-                                            }
                                         }
+                                    } else {
+                                        topPError = "Must be a number between 0.0 and 1.0"
                                     }
                                 }
-                                .foregroundStyle(topPValid ? .primary : .red)
                             SettingInfoButton(
                                 title: "Top P",
                                 description: "Works together with top-k. A higher value (e.g., 0.95) will lead to more diverse text, while a lower value (e.g., 0.5) will generate more focused and conservative text",
-                                defaultValue: "0.9",
+                                defaultValue: String(defaultTopP),
                                 valueType: "Float (0.0 - 1.0)"
                             )
                         }
+                        SettingErrorMessage(message: topPError)
+                        
+                        Divider()
+                            .padding(.vertical, 4)
+                        
+                        Button {
+                            // Restore defaults
+                            keepAlive = defaultKeepAlive
+                            numCtx = String(defaultNumCtx)
+                            temperature = String(defaultTemperature)
+                            topK = String(defaultTopK)
+                            topP = String(defaultTopP)
+                            
+                            // Update preferences
+                            model.updatePreferences { prefs in
+                                prefs.localKeepAlive = defaultKeepAlive
+                                prefs.localNumCtx = defaultNumCtx
+                                prefs.localTemperature = defaultTemperature
+                                prefs.localTopK = defaultTopK
+                                prefs.localTopP = defaultTopP
+                            }
+                            
+                            // Clear any errors
+                            keepAliveError = nil
+                            numCtxError = nil
+                            temperatureError = nil
+                            topKError = nil
+                            topPError = nil
+                        } label: {
+                            Text("Restore Defaults")
+                        }
+                        .buttonStyle(.borderedProminent)
+                        .controlSize(.small)
                     }
                     .font(.system(size: 12))
                 }
