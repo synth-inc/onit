@@ -41,6 +41,9 @@ class Preferences: Codable {
     var visibleModelIds: Set<String> = Set([])
     var localEndpointURL: URL = URL(string: "http://localhost:11434")!
     
+    // Window state
+    var contentViewFrame: CGRect?
+    
     // Local model advanced options
     var localKeepAlive: String?
     var localNumCtx: Int?

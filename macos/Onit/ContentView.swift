@@ -37,14 +37,16 @@ struct ContentView: View {
             RoundedRectangle(cornerRadius: 14)
                 .strokeBorder(.gray600, lineWidth: 2)
         }
-        .background {
-            GeometryReader { proxy in
-                Color.clear
-                    .onChange(of: proxy.frame(in: .global)) {
-                        print(proxy.frame(in: .global))
+        .gesture(
+            DragGesture(minimumDistance: 1)
+                .onEnded { value in
+                    if let panel = model.panel {
+                        model.updatePreferences { prefs in
+                            prefs.contentViewFrame = panel.frame
+                        }
                     }
-            }
-        }
+                }
+        )
     }
 }
 
