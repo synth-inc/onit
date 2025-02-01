@@ -19,7 +19,14 @@ struct LocalModelsSection: View {
     @State private var numCtx: String = ""
     @State private var temperature: String = ""
     @State private var topP: String = ""
-    @State private var minP: String = ""
+    @State private var topK: String = ""
+    
+    // Validation states
+    @State private var keepAliveValid: Bool = true
+    @State private var numCtxValid: Bool = true
+    @State private var temperatureValid: Bool = true
+    @State private var topPValid: Bool = true
+    @State private var topKValid: Bool = true
 
     var body: some View {
         ModelsSection(title: "Local Models") {
@@ -41,7 +48,7 @@ struct LocalModelsSection: View {
             if let value = model.preferences.localNumCtx { numCtx = String(value) }
             if let value = model.preferences.localTemperature { temperature = String(value) }
             if let value = model.preferences.localTopP { topP = String(value) }
-            if let value = model.preferences.localMinP { minP = String(value) }
+            if let value = model.preferences.localTopK { topK = String(value) }
         }
         .onChange(of: isOn) {
             model.useLocal = isOn
@@ -95,35 +102,55 @@ struct LocalModelsSection: View {
             
             DisclosureGroup("Advanced", isExpanded: $showAdvanced) {
                 VStack(alignment: .leading, spacing: 8) {
-                    HStack {
-                        Text("Keep alive:")
-                        TextField("e.g. 10m, 24h, -1, 3600", text: $keepAlive)
-                            .textFieldStyle(.roundedBorder)
-                            .frame(maxWidth: 150)
-                            .onChange(of: keepAlive) {
-                                model.updatePreferences { prefs in
-                                    prefs.localKeepAlive = keepAlive.isEmpty ? nil : keepAlive
-                                }
-                            }
-                    }
-                    
                     Group {
+                        HStack {
+                            Text("Keep alive:")
+                            TextField("e.g. 10m, 24h, -1, 3600", text: $keepAlive)
+                                .textFieldStyle(.roundedBorder)
+                                .frame(maxWidth: 150)
+                                .onChange(of: keepAlive) {
+                                    keepAliveValid = LocalModelValidation.validateKeepAlive(keepAlive)
+                                    if keepAliveValid {
+                                        model.updatePreferences { prefs in
+                                            prefs.localKeepAlive = keepAlive.isEmpty ? nil : keepAlive
+                                        }
+                                    }
+                                }
+                                .foregroundStyle(keepAliveValid ? .primary : .red)
+                            SettingInfoButton(
+                                title: "Keep Alive",
+                                description: "Controls how long the model will stay loaded into memory following the request",
+                                defaultValue: "5m",
+                                valueType: "Duration string (e.g. '10m', '24h') or integer seconds"
+                            )
+                        }
+                        
                         HStack {
                             Text("Context window:")
                             TextField("", text: $numCtx)
                                 .textFieldStyle(.roundedBorder)
                                 .frame(maxWidth: 100)
                                 .onChange(of: numCtx) {
-                                    if let value = Int(numCtx) {
-                                        model.updatePreferences { prefs in
-                                            prefs.localNumCtx = value
-                                        }
-                                    } else if numCtx.isEmpty {
-                                        model.updatePreferences { prefs in
-                                            prefs.localNumCtx = nil
+                                    numCtxValid = LocalModelValidation.validateInt(numCtx, min: 1)
+                                    if numCtxValid {
+                                        if let value = Int(numCtx) {
+                                            model.updatePreferences { prefs in
+                                                prefs.localNumCtx = value
+                                            }
+                                        } else if numCtx.isEmpty {
+                                            model.updatePreferences { prefs in
+                                                prefs.localNumCtx = nil
+                                            }
                                         }
                                     }
                                 }
+                                .foregroundStyle(numCtxValid ? .primary : .red)
+                            SettingInfoButton(
+                                title: "Context Window",
+                                description: "Sets the size of the context window used to generate the next token",
+                                defaultValue: "2048",
+                                valueType: "Integer"
+                            )
                         }
                         
                         HStack {
@@ -132,16 +159,54 @@ struct LocalModelsSection: View {
                                 .textFieldStyle(.roundedBorder)
                                 .frame(maxWidth: 100)
                                 .onChange(of: temperature) {
-                                    if let value = Double(temperature) {
-                                        model.updatePreferences { prefs in
-                                            prefs.localTemperature = value
-                                        }
-                                    } else if temperature.isEmpty {
-                                        model.updatePreferences { prefs in
-                                            prefs.localTemperature = nil
+                                    temperatureValid = LocalModelValidation.validateFloat(temperature, min: 0.0, max: 2.0)
+                                    if temperatureValid {
+                                        if let value = Double(temperature) {
+                                            model.updatePreferences { prefs in
+                                                prefs.localTemperature = value
+                                            }
+                                        } else if temperature.isEmpty {
+                                            model.updatePreferences { prefs in
+                                                prefs.localTemperature = nil
+                                            }
                                         }
                                     }
                                 }
+                                .foregroundStyle(temperatureValid ? .primary : .red)
+                            SettingInfoButton(
+                                title: "Temperature",
+                                description: "The temperature of the model. Increasing the temperature will make the model answer more creatively",
+                                defaultValue: "0.8",
+                                valueType: "Float (0.0 - 2.0)"
+                            )
+                        }
+                        
+                        HStack {
+                            Text("Top K:")
+                            TextField("", text: $topK)
+                                .textFieldStyle(.roundedBorder)
+                                .frame(maxWidth: 100)
+                                .onChange(of: topK) {
+                                    topKValid = LocalModelValidation.validateInt(topK, min: 1)
+                                    if topKValid {
+                                        if let value = Int(topK) {
+                                            model.updatePreferences { prefs in
+                                                prefs.localTopK = value
+                                            }
+                                        } else if topK.isEmpty {
+                                            model.updatePreferences { prefs in
+                                                prefs.localTopK = nil
+                                            }
+                                        }
+                                    }
+                                }
+                                .foregroundStyle(topKValid ? .primary : .red)
+                            SettingInfoButton(
+                                title: "Top K",
+                                description: "Reduces the probability of generating nonsense. A higher value (e.g. 100) will give more diverse answers, while a lower value (e.g. 10) will be more conservative",
+                                defaultValue: "40",
+                                valueType: "Integer"
+                            )
                         }
                         
                         HStack {
@@ -150,34 +215,26 @@ struct LocalModelsSection: View {
                                 .textFieldStyle(.roundedBorder)
                                 .frame(maxWidth: 100)
                                 .onChange(of: topP) {
-                                    if let value = Double(topP) {
-                                        model.updatePreferences { prefs in
-                                            prefs.localTopP = value
-                                        }
-                                    } else if topP.isEmpty {
-                                        model.updatePreferences { prefs in
-                                            prefs.localTopP = nil
-                                        }
-                                    }
-                                }
-                        }
-                        
-                        HStack {
-                            Text("Min P:")
-                            TextField("", text: $minP)
-                                .textFieldStyle(.roundedBorder)
-                                .frame(maxWidth: 100)
-                                .onChange(of: minP) {
-                                    if let value = Double(minP) {
-                                        model.updatePreferences { prefs in
-                                            prefs.localMinP = value
-                                        }
-                                    } else if minP.isEmpty {
-                                        model.updatePreferences { prefs in
-                                            prefs.localMinP = nil
+                                    topPValid = LocalModelValidation.validateFloat(topP, min: 0.0, max: 1.0)
+                                    if topPValid {
+                                        if let value = Double(topP) {
+                                            model.updatePreferences { prefs in
+                                                prefs.localTopP = value
+                                            }
+                                        } else if topP.isEmpty {
+                                            model.updatePreferences { prefs in
+                                                prefs.localTopP = nil
+                                            }
                                         }
                                     }
                                 }
+                                .foregroundStyle(topPValid ? .primary : .red)
+                            SettingInfoButton(
+                                title: "Top P",
+                                description: "Works together with top-k. A higher value (e.g., 0.95) will lead to more diverse text, while a lower value (e.g., 0.5) will generate more focused and conservative text",
+                                defaultValue: "0.9",
+                                valueType: "Float (0.0 - 1.0)"
+                            )
                         }
                     }
                     .font(.system(size: 12))

@@ -46,7 +46,7 @@ class Preferences: Codable {
     var localNumCtx: Int?
     var localTemperature: Double?
     var localTopP: Double?
-    var localMinP: Double?
+    var localTopK: Int?
 
     func markRemoteModelAsNotNew(modelId: String) {
         if let index = availableRemoteModels.firstIndex(where: { $0.id == modelId }) {

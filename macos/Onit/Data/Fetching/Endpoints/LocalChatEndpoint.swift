@@ -110,12 +110,12 @@ struct LocalChatEndpoint: Endpoint {
             
             // Only create options if at least one parameter is set
             if prefs.localNumCtx != nil || prefs.localTemperature != nil || 
-               prefs.localTopP != nil || prefs.localMinP != nil {
+               prefs.localTopP != nil || prefs.localTopK != nil {
                 options = LocalChatOptions(
                     num_ctx: prefs.localNumCtx,
                     temperature: prefs.localTemperature,
                     top_p: prefs.localTopP,
-                    min_p: prefs.localMinP
+                    top_k: prefs.localTopK
                 )
             }
         }
@@ -143,7 +143,7 @@ struct LocalChatOptions: Codable {
     var num_ctx: Int?
     var temperature: Double?
     var top_p: Double?
-    var min_p: Double?
+    var top_k: Int?
 }
 
 struct LocalChatMessage: Codable {
