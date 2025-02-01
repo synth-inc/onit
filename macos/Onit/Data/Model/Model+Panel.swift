@@ -302,7 +302,6 @@ extension OnitModel: NSWindowDelegate {
         KeyboardShortcuts.enable([.toggleLocalMode,
                                   .newChat,
                                   .resizeWindow,
-                                  .toggleModels,
                                   .escape])
     }
     
@@ -310,7 +309,6 @@ extension OnitModel: NSWindowDelegate {
         KeyboardShortcuts.disable([.toggleLocalMode,
                                    .newChat,
                                    .resizeWindow,
-                                   .toggleModels,
                                    .escape])
     }
 }

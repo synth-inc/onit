@@ -109,7 +109,7 @@ struct Toolbar: View {
                     .fill(model.modelSelectionWindowController == nil ? Color.clear : .gray800)
             }
         }
-        .tooltip(prompt: "Toggle model", shortcut: .keyboardShortcuts(.toggleModels))
+        .tooltip(prompt: "Change model")
     }
 
     var add: some View {

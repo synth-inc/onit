@@ -26,12 +26,14 @@ struct ShortcutsTab: View {
                     resetPrompt(empty: $0 == nil)
                 }
                 .padding()
-                
-                KeyboardShortcuts.Recorder(
-                    "Switch Local vs Remote", name: .toggleLocalMode
-                )
-                .padding()
 
+                if accessibilityAutoContextEnabled {
+                    KeyboardShortcuts.Recorder(
+                        "Launch Onit with Auto-Context", name: .launchWithAutoContext
+                    )
+                    .padding()
+                }
+                
                 KeyboardShortcuts.Recorder(
                     "New Chat", name: .newChat
                 )
@@ -41,18 +43,11 @@ struct ShortcutsTab: View {
                     "Resize Window", name: .resizeWindow
                 )
                 .padding()
-
+                
                 KeyboardShortcuts.Recorder(
-                    "Toggle Models", name: .toggleModels
+                    "Switch Local vs Remote", name: .toggleLocalMode
                 )
                 .padding()
-
-                if accessibilityAutoContextEnabled {
-                    KeyboardShortcuts.Recorder(
-                        "Launch Onit with auto-context", name: .launchWithAutoContext
-                    )
-                    .padding()
-                }
             }
         }
         .padding()

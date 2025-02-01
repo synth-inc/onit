@@ -31,8 +31,8 @@ struct AccessibilityTab: View {
     
     private let modes: [HighlightHintModeUI] = [
         HighlightHintModeUI.from(mode: .none),
-        HighlightHintModeUI.from(mode: .topRight),
-        HighlightHintModeUI.from(mode: .textfield)
+        HighlightHintModeUI.from(mode: .topRight)
+//        HighlightHintModeUI.from(mode: .textfield)
     ]
     
     @Environment(\.model) var model

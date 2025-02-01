@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import KeyboardShortcuts
 
 struct PaperclipButton: View {
     @Environment(\.model) var model
@@ -32,9 +33,20 @@ struct PaperclipButton: View {
                 Button {
                     handleAddContext()
                 } label: {
-                    Text(accessibilityAutoContextEnabled ? "Add context" : "Add file")
-                        .foregroundStyle(.gray200)
-                        .appFont(.medium13)
+                    HStack(spacing: 0) {
+                        Text(accessibilityAutoContextEnabled ? "Add context (" : "Add file")
+                            .foregroundStyle(.gray200)
+                            .appFont(.medium13)
+                        
+                        if accessibilityAutoContextEnabled {
+                            KeyboardShortcutView(shortcut: KeyboardShortcuts.getShortcut(for: .launchWithAutoContext)?.native)
+                                .foregroundStyle(.gray200)
+                                .appFont(.medium13)
+                            Text(" for autocontext)")
+                                .foregroundStyle(.gray200)
+                                .appFont(.medium13)
+                        }
+                    }
                 }
             }
         }

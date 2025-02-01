@@ -40,9 +40,6 @@ struct App: SwiftUI.App {
         KeyboardShortcuts.onKeyUp(for: .resizeWindow) { [weak model] in
             model?.resizeWindow()
         }
-        KeyboardShortcuts.onKeyUp(for: .toggleModels) { [weak model] in
-            model?.toggleModelsPanel()
-        }
         KeyboardShortcuts.onKeyUp(for: .escape) { [weak model] in
             model?.escapeAction()
         }
