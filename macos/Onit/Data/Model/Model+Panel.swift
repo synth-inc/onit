@@ -55,7 +55,9 @@ extension OnitModel: NSWindowDelegate {
         // Position the panel
         if let savedFrame = preferences.contentViewFrame {
             // Use the saved frame
-            newPanel.setFrame(savedFrame, display: false)
+            var adjustedFrame = savedFrame
+            adjustedFrame.size.height = newPanel.frame.height
+            newPanel.setFrame(adjustedFrame, display: false)
         } else if let screen = NSScreen.main {
             // Default position if no saved frame exists
             let visibleFrame = screen.visibleFrame
