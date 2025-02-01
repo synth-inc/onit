@@ -42,7 +42,7 @@ class Preferences: Codable {
     var localEndpointURL: URL = URL(string: "http://localhost:11434")!
     
     // Local model advanced options
-    var localKeepAlive: Bool = false
+    var localKeepAlive: String?
     var localNumCtx: Int?
     var localTemperature: Double?
     var localTopP: Double?

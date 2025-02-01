@@ -135,7 +135,7 @@ struct LocalChatRequestJSON: Codable {
     let model: String?
     let messages: [LocalChatMessage]
     var stream: Bool = false
-    var keep_alive: Bool?
+    var keep_alive: String?
     var options: LocalChatOptions?
 }
 

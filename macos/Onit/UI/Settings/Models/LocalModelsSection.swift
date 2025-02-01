@@ -15,7 +15,7 @@ struct LocalModelsSection: View {
     @State private var message: String? = nil
     @State private var localEndpointString: String = ""
     @State private var showAdvanced: Bool = false
-    @State private var keepAlive: Bool = false
+    @State private var keepAlive: String = ""
     @State private var numCtx: String = ""
     @State private var temperature: String = ""
     @State private var topP: String = ""
@@ -37,7 +37,7 @@ struct LocalModelsSection: View {
         .onAppear {
             isOn = model.useLocal
             localEndpointString = model.preferences.localEndpointURL.absoluteString
-            keepAlive = model.preferences.localKeepAlive
+            if let value = model.preferences.localKeepAlive { keepAlive = value }
             if let value = model.preferences.localNumCtx { numCtx = String(value) }
             if let value = model.preferences.localTemperature { temperature = String(value) }
             if let value = model.preferences.localTopP { topP = String(value) }
@@ -95,12 +95,17 @@ struct LocalModelsSection: View {
             
             DisclosureGroup("Advanced", isExpanded: $showAdvanced) {
                 VStack(alignment: .leading, spacing: 8) {
-                    Toggle("Keep model alive", isOn: $keepAlive)
-                        .onChange(of: keepAlive) {
-                            model.updatePreferences { prefs in
-                                prefs.localKeepAlive = keepAlive
+                    HStack {
+                        Text("Keep alive:")
+                        TextField("e.g. 10m, 24h, -1, 3600", text: $keepAlive)
+                            .textFieldStyle(.roundedBorder)
+                            .frame(maxWidth: 150)
+                            .onChange(of: keepAlive) {
+                                model.updatePreferences { prefs in
+                                    prefs.localKeepAlive = keepAlive.isEmpty ? nil : keepAlive
+                                }
                             }
-                        }
+                    }
                     
                     Group {
                         HStack {
