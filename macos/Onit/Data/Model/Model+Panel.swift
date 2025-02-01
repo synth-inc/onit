@@ -52,7 +52,12 @@ extension OnitModel: NSWindowDelegate {
         newPanel.contentView?.setFrameOrigin(NSPoint(x: 0, y: 0))
         panel = newPanel
         
-        if let screen = NSScreen.main {
+        // Position the panel
+        if let savedFrame = preferences.contentViewFrame {
+            // Use the saved frame
+            newPanel.setFrame(savedFrame, display: false)
+        } else if let screen = NSScreen.main {
+            // Default position if no saved frame exists
             let visibleFrame = screen.visibleFrame
             let windowWidth = newPanel.frame.width
             let windowHeight = newPanel.frame.height
@@ -60,11 +65,33 @@ extension OnitModel: NSWindowDelegate {
             let finalXPosition = visibleFrame.origin.x + visibleFrame.width - 16 - windowWidth 
             let finalYPosition = visibleFrame.origin.y + visibleFrame.height - windowHeight
 
-            // Start off-screen to the right
             newPanel.setFrameOrigin(NSPoint(x: finalXPosition, y: finalYPosition))
-            newPanel.makeKeyAndOrderFront(nil)
-            newPanel.orderFrontRegardless()
         }
+        
+        // Ensure the panel is visible on screen
+        if let screen = NSScreen.main {
+            let visibleFrame = screen.visibleFrame
+            var panelFrame = newPanel.frame
+            
+            // Adjust if panel is outside visible area
+            if panelFrame.maxX > visibleFrame.maxX {
+                panelFrame.origin.x = visibleFrame.maxX - panelFrame.width - 16
+            }
+            if panelFrame.minX < visibleFrame.minX {
+                panelFrame.origin.x = visibleFrame.minX + 16
+            }
+            if panelFrame.maxY > visibleFrame.maxY {
+                panelFrame.origin.y = visibleFrame.maxY - panelFrame.height - 16
+            }
+            if panelFrame.minY < visibleFrame.minY {
+                panelFrame.origin.y = visibleFrame.minY + 16
+            }
+            
+            newPanel.setFrame(panelFrame, display: false)
+        }
+        
+        newPanel.makeKeyAndOrderFront(nil)
+        newPanel.orderFrontRegardless()
 
         enableKeyboardShortcuts()
 

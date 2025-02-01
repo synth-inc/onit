@@ -40,8 +40,11 @@ struct ContentView: View {
         .background {
             GeometryReader { proxy in
                 Color.clear
-                    .onChange(of: proxy.frame(in: .global)) {
-                        print(proxy.frame(in: .global))
+                    .onChange(of: proxy.frame(in: .global)) { frame in
+                        // Save the frame to preferences
+                        model.updatePreferences { prefs in
+                            prefs.contentViewFrame = frame
+                        }
                     }
             }
         }
