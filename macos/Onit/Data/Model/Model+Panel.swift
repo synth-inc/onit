@@ -56,7 +56,9 @@ extension OnitModel: NSWindowDelegate {
         if let savedFrame = preferences.contentViewFrame {
             // Use the saved frame
             var adjustedFrame = savedFrame
+            let heightDifference = savedFrame.height - 100 // This will break if/when default components of window are changed. 
             adjustedFrame.size.height = newPanel.frame.height
+            adjustedFrame.origin.y += heightDifference
             newPanel.setFrame(adjustedFrame, display: false)
         } else if let screen = NSScreen.main {
             // Default position if no saved frame exists
@@ -161,6 +163,9 @@ extension OnitModel: NSWindowDelegate {
 
     func closePanel() {
         guard let panel = panel else { return }
+        updatePreferences { prefs in
+            prefs.contentViewFrame = panel.frame
+        }
         panel.orderOut(nil)
         WindowHelper.shared.adjustWindowToTopRight()
         self.panel = nil
