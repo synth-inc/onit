@@ -102,7 +102,7 @@ struct LocalChatEndpoint: Endpoint {
     var token: String? { nil }
     var requestBody: LocalChatRequestJSON? {
         var options: LocalChatOptions?
-        var keepAlive: Bool?
+        var keepAlive: String?
         
         DispatchQueue.main.sync {
             let prefs = Preferences.shared
