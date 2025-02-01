@@ -1,10 +1,3 @@
-//
-//  Model+Panel.swift
-//  Onit
-//
-//  Created by Benjamin Sage on 10/3/24.
-//
-
 import SwiftUI
 import KeyboardShortcuts
 
@@ -52,56 +45,48 @@ extension OnitModel: NSWindowDelegate {
         newPanel.contentView?.setFrameOrigin(NSPoint(x: 0, y: 0))
         panel = newPanel
         
-        // Position the panel
-        if let savedFrame = preferences.contentViewFrame {
-            // Use the saved frame
-            var adjustedFrame = savedFrame
-            adjustedFrame.size.height = newPanel.frame.height
-            newPanel.setFrame(adjustedFrame, display: false)
-        } else if let screen = NSScreen.main {
-            // Default position if no saved frame exists
-            let visibleFrame = screen.visibleFrame
-            let windowWidth = newPanel.frame.width
-            let windowHeight = newPanel.frame.height
-            
-            let finalXPosition = visibleFrame.origin.x + visibleFrame.width - 16 - windowWidth 
-            let finalYPosition = visibleFrame.origin.y + visibleFrame.height - windowHeight
-
-            newPanel.setFrameOrigin(NSPoint(x: finalXPosition, y: finalYPosition))
-        }
-        
-        // Ensure the panel is visible on screen
+        // Position the panel based on mode
         if let screen = NSScreen.main {
-            let visibleFrame = screen.visibleFrame
+            let newFrame: WindowFrame = {
+                switch preferences.windowSizeMode {
+                case .default:
+                    return getDefaultFrame(for: screen)
+                case .userLast:
+                    return preferences.contentViewFrame ?? getDefaultFrame(for: screen)
+                case .fullScreen:
+                    return getFullScreenFrame(for: screen)
+                }
+            }()
+            
+            newPanel.setFrame(newFrame.rect, display: false)
+            
+            // Ensure the panel is visible on screen
             var panelFrame = newPanel.frame
+            let visibleFrame = screen.visibleFrame
             
             // Adjust if panel is outside visible area
-            if panelFrame.maxX > visibleFrame.maxX {
+            if panelFrame.maxX > visibleFrame.maxX - 16 {
                 panelFrame.origin.x = visibleFrame.maxX - panelFrame.width - 16
             }
-            if panelFrame.minX < visibleFrame.minX {
+            if panelFrame.minX < visibleFrame.minX + 16 {
                 panelFrame.origin.x = visibleFrame.minX + 16
             }
-            if panelFrame.maxY > visibleFrame.maxY {
+            if panelFrame.maxY > visibleFrame.maxY - 16 {
                 panelFrame.origin.y = visibleFrame.maxY - panelFrame.height - 16
             }
-            if panelFrame.minY < visibleFrame.minY {
+            if panelFrame.minY < visibleFrame.minY + 16 {
                 panelFrame.origin.y = visibleFrame.minY + 16
             }
             
             newPanel.setFrame(panelFrame, display: false)
+            newPanel.makeKeyAndOrderFront(nil)
+            newPanel.orderFrontRegardless()
         }
-        
-        newPanel.makeKeyAndOrderFront(nil)
-        newPanel.orderFrontRegardless()
 
         enableKeyboardShortcuts()
 
         // Focus the text input when we're activating the panel
         textFocusTrigger = true
-
-        // Set the defaultPanelFrame to the initial frame of the panel
-        defaultPanelFrame = newPanel.frame
     }
     
     func openDebugWindow() {
@@ -139,8 +124,8 @@ extension OnitModel: NSWindowDelegate {
         
         if let screen = NSScreen.main {
             let visibleFrame = screen.visibleFrame
-            let windowWidth = defaultPanelFrame.width
-            let windowHeight = defaultPanelFrame.height
+            let windowWidth = 400
+            let windowHeight = 600
             
             let finalXPosition = visibleFrame.origin.x + visibleFrame.width - 16 - windowWidth
             let finalYPosition = visibleFrame.origin.y + visibleFrame.height - 16 - 100
@@ -247,48 +232,70 @@ extension OnitModel: NSWindowDelegate {
         )
     }
 
-    // Property to track if the panel is expanded
-    var isPanelExpanded: Bool {
-        get { UserDefaults.standard.bool(forKey: "isPanelExpanded") }
-        set { UserDefaults.standard.set(newValue, forKey: "isPanelExpanded") }
+    // Get the default window frame in the top-right corner
+    private func getDefaultFrame(for screen: NSScreen) -> WindowFrame {
+        let visibleFrame = screen.visibleFrame
+        let width: CGFloat = 400
+        let height: CGFloat = 600
+        
+        let x = visibleFrame.maxX - width - 16
+        let y = visibleFrame.maxY - height - 16
+        
+        return WindowFrame(x: x, y: y, width: width, height: height)
     }
     
-    // Property to store the default panel frame
-    var defaultPanelFrame: NSRect {
-        get {
-            if let data = UserDefaults.standard.data(forKey: "defaultPanelFrame"),
-               let rect = try? NSKeyedUnarchiver.unarchiveTopLevelObjectWithData(data) as? NSRect {
-                return rect
-            }
-            return NSRect(x: 0, y: 0, width: 400, height: 600)
-        }
-        set {
-            if let data = try? NSKeyedArchiver.archivedData(withRootObject: newValue, requiringSecureCoding: false) {
-                UserDefaults.standard.set(data, forKey: "defaultPanelFrame")
-            }
-        }
+    // Get the full screen frame with padding
+    private func getFullScreenFrame(for screen: NSScreen) -> WindowFrame {
+        let visibleFrame = screen.visibleFrame
+        return WindowFrame(
+            x: visibleFrame.minX + 16,
+            y: visibleFrame.minY + 16,
+            width: visibleFrame.width - 32,
+            height: visibleFrame.height - 32
+        )
     }
 
     @MainActor
     func togglePanelSize() {
-        guard let panel = panel else { return }
-
-        if let screen = panel.screen ?? NSScreen.main {
-            let visibleFrame = screen.visibleFrame
-
-            if isPanelExpanded {
-                // Restore the panel to its default size and position
-                panel.setFrame(defaultPanelFrame, display: true, animate: true)
-                // Optionally reposition the panel to its original location
-                panel.setFrameOrigin(defaultPanelFrame.origin)
-            } else {
-                // Save the current panel frame as the default size
-                defaultPanelFrame = panel.frame
-                // Expand the panel to fit the screen's visible frame
-                panel.setFrame(visibleFrame, display: true, animate: true)
+        guard let panel = panel,
+              let screen = panel.screen ?? NSScreen.main else { return }
+        
+        // Cycle through modes
+        let nextMode: WindowSizeMode = {
+            switch preferences.windowSizeMode {
+            case .default:
+                return .userLast
+            case .userLast:
+                return .fullScreen
+            case .fullScreen:
+                return .default
             }
-            isPanelExpanded.toggle()
+        }()
+        
+        // Save current frame before changing modes if we're in userLast mode
+        if preferences.windowSizeMode == .userLast {
+            preferences.contentViewFrame = WindowFrame(from: panel.frame)
         }
+        
+        // Update the mode
+        updatePreferences { prefs in
+            prefs.windowSizeMode = nextMode
+        }
+        
+        // Apply the new frame based on mode
+        let newFrame: WindowFrame = {
+            switch nextMode {
+            case .default:
+                return getDefaultFrame(for: screen)
+            case .userLast:
+                return preferences.contentViewFrame ?? getDefaultFrame(for: screen)
+            case .fullScreen:
+                return getFullScreenFrame(for: screen)
+            }
+        }()
+        
+        // Animate to new position
+        panel.setFrame(newFrame.rect, display: true, animate: true)
     }
     
     // MARK: - Keyboard Shortcuts
