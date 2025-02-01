@@ -42,7 +42,7 @@ class Preferences: Codable {
     var localEndpointURL: URL = URL(string: "http://localhost:11434")!
     
     // Window state
-    var contentViewFrame: WindowFrame?
+    var contentViewFrame: CGRect?
     var windowSizeMode: WindowSizeMode = .default
     
     // Local model advanced options

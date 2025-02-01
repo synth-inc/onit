@@ -47,7 +47,7 @@ extension OnitModel: NSWindowDelegate {
         
         // Position the panel based on mode
         if let screen = NSScreen.main {
-            let newFrame: WindowFrame = {
+            let newFrame: CGRect = {
                 switch preferences.windowSizeMode {
                 case .default:
                     return getDefaultFrame(for: screen)
@@ -58,7 +58,7 @@ extension OnitModel: NSWindowDelegate {
                 }
             }()
             
-            newPanel.setFrame(newFrame.rect, display: false)
+            newPanel.setFrame(newFrame, display: false)
             
             // Ensure the panel is visible on screen
             var panelFrame = newPanel.frame
@@ -233,7 +233,7 @@ extension OnitModel: NSWindowDelegate {
     }
 
     // Get the default window frame in the top-right corner
-    private func getDefaultFrame(for screen: NSScreen) -> WindowFrame {
+    private func getDefaultFrame(for screen: NSScreen) -> CGRect {
         let visibleFrame = screen.visibleFrame
         let width: CGFloat = 400
         let height: CGFloat = 600
@@ -241,13 +241,13 @@ extension OnitModel: NSWindowDelegate {
         let x = visibleFrame.maxX - width - 16
         let y = visibleFrame.maxY - height - 16
         
-        return WindowFrame(x: x, y: y, width: width, height: height)
+        return CGRect(x: x, y: y, width: width, height: height)
     }
     
     // Get the full screen frame with padding
-    private func getFullScreenFrame(for screen: NSScreen) -> WindowFrame {
+    private func getFullScreenFrame(for screen: NSScreen) -> CGRect {
         let visibleFrame = screen.visibleFrame
-        return WindowFrame(
+        return CGRect(
             x: visibleFrame.minX + 16,
             y: visibleFrame.minY + 16,
             width: visibleFrame.width - 32,
@@ -274,7 +274,7 @@ extension OnitModel: NSWindowDelegate {
         
         // Save current frame before changing modes if we're in userLast mode
         if preferences.windowSizeMode == .userLast {
-            preferences.contentViewFrame = WindowFrame(from: panel.frame)
+            preferences.contentViewFrame = panel.frame
         }
         
         // Update the mode
@@ -283,7 +283,7 @@ extension OnitModel: NSWindowDelegate {
         }
         
         // Apply the new frame based on mode
-        let newFrame: WindowFrame = {
+        let newFrame: CGRect = {
             switch nextMode {
             case .default:
                 return getDefaultFrame(for: screen)
@@ -295,7 +295,7 @@ extension OnitModel: NSWindowDelegate {
         }()
         
         // Animate to new position
-        panel.setFrame(newFrame.rect, display: true, animate: true)
+        panel.setFrame(newFrame, display: true, animate: true)
     }
     
     // MARK: - Keyboard Shortcuts

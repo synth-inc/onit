@@ -40,7 +40,8 @@ struct ContentView: View {
         .gesture(
             DragGesture(minimumDistance: 1)
                 .onEnded { value in
-                    if let panel = model.panel {
+                    if let panel = model.panel,
+                       model.preferences.windowSizeMode == .userLast {
                         model.updatePreferences { prefs in
                             prefs.contentViewFrame = panel.frame
                         }
