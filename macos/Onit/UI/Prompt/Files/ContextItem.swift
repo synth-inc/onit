@@ -11,66 +11,39 @@ struct ContextItem: View {
     @Environment(\.model) var model
 
     var item: Context
-    var isSent: Bool
-
-    var imageRect: RoundedRectangle {
-        .rect(cornerRadius: 3)
-    }
+    var isEditing: Bool = true
 
     var body: some View {
         HStack(spacing: 0) {
-            image
-
-            Spacer()
-                .frame(width: 4)
-
-            text
-            if !isSent {
+            switch item {
+            case .auto:
+                Button {
+                    model.showAutoContextWindow(context: item)
+                } label: {
+                    contentView
+                }
+                .tooltip(prompt: "View auto-context file")
+            default:
+                contentView
+            }
+            
+            if isEditing {
                 xButton
             }
         }
         .padding(3)
-        .background(.gray700, in: .rect(cornerRadius: 4))
+        .background(isEditing ? .gray700 : .clear, in: .rect(cornerRadius: 4))
     }
-
-    @ViewBuilder
-    var image: some View {
-        switch item {
-        case .image:
-            imageImage
-        case .file:
-            fileImage
-        default:
-            warningImage
+    
+    var contentView: some View {
+        HStack(spacing: 0) {
+            ContextImage(context: item)
+            
+            Spacer()
+                .frame(width: 4)
+            
+            text
         }
-    }
-
-    var fileImage: some View {
-        Image(.file)
-            .padding(.horizontal, 2)
-            .padding(.vertical, 1)
-    }
-
-    var imageImage: some View {
-        Color.clear
-            .frame(width: 16, height: 16)
-            .overlay {
-                Image(nsImage: NSImage(byReferencing: item.url))
-                    .resizable()
-                    .scaledToFill()
-            }
-            .imageProgress(url: item.url)
-            .clipShape(imageRect)
-            .overlay {
-                imageRect
-                    .strokeBorder(.gray500)
-            }
-    }
-
-    var warningImage: some View {
-        Image(.warning)
-            .resizable()
-            .frame(width: 16, height: 16)
     }
 
     var text: some View {
@@ -87,6 +60,8 @@ struct ContextItem: View {
 
     var name: String {
         switch item {
+        case .auto(let appName, _):
+            appName
         case .file(let url), .image(let url):
             url.lastPathComponent
         case .error(_, let error):
@@ -98,6 +73,7 @@ struct ContextItem: View {
 
     var xButton: some View {
         Button {
+            model.closeAutoContextWindow(context: item)
             model.removeContext(context: item)
         } label: {
             Color.clear
@@ -112,7 +88,7 @@ struct ContextItem: View {
 #if DEBUG
 #Preview {
     ModelContainerPreview {
-        ContextItem(item: .file(URL(fileURLWithPath: "")), isSent: false)
+        ContextItem(item: .file(URL(fileURLWithPath: "")))
     }
 }
 #endif

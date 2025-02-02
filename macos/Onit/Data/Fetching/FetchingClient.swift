@@ -20,7 +20,7 @@ actor FetchingClient {
     }()
     
  
-    func chat(instructions: [String], inputs: [Input?], files: [[URL]], images: [[URL]], responses: [String], model: AIModel?, apiToken: String?) async throws -> String {
+    func chat(instructions: [String], inputs: [Input?], files: [[URL]], images: [[URL]], autoContexts: [[String: String]], responses: [String], model: AIModel?, apiToken: String?) async throws -> String {
         guard let model = model else {
             throw FetchingError.invalidRequest(message: "Model is required")
         }
@@ -28,7 +28,8 @@ actor FetchingClient {
         guard instructions.count == inputs.count,
               inputs.count == files.count,
               files.count == images.count,
-              images.count == responses.count + 1 else {
+              images.count == autoContexts.count,
+              autoContexts.count == responses.count + 1 else {
             throw FetchingError.invalidRequest(message: "Mismatched array lengths: instructions, inputs, files, and images must be the same length, and one longer than responses.")
         }
 
@@ -54,11 +55,17 @@ actor FetchingClient {
                     }
                 }
             }
+            
+            if !autoContexts[index].isEmpty {
+                for (appName, appContent) in autoContexts[index] {
+                    message += "\n\nContent from application \(appName):\n\(appContent)"
+                }
+            }
 
             // Intuitively, I (tim) think the message should be the last thing. 
             // TODO: evaluate this 
             message += "\n\n\(instruction)"
-            
+            print(message)
             userMessages.append(message)
         }
         

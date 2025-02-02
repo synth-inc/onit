@@ -8,28 +8,30 @@
 import SwiftUI
 
 struct InputView: View {
-    @Environment(\.model) var model
+    
+    @State var inputExpanded: Bool = true
     
     var input: Input
+    var isEditing: Bool = true
     
     var body: some View {
         VStack(spacing: 0) {
-            InputTitle()
+            InputTitle(inputExpanded: $inputExpanded, input: input)
             divider
-            InputBody(text: model.pendingInput?.selectedText ?? "")
+            InputBody(inputExpanded: $inputExpanded, input: input)
         }
         .background {
             RoundedRectangle(cornerRadius: 10)
                 .fill(.gray800)
                 .strokeBorder(.gray600)
         }
-        .padding([.horizontal, .top], 8)
+        .padding([.horizontal, .top], isEditing ? 8 : 0)
     }
     
     var divider: some View {
         Color.gray600
             .frame(height: 1)
-            .opacity(model.inputExpanded ? 1 : 0)
+            .opacity(inputExpanded ? 1 : 0)
     }
 }
 

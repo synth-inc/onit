@@ -157,7 +157,7 @@ extension OnitModel: NSWindowDelegate {
     func closeDebugWindow() {
         guard let panel = debugPanel else { return }
         panel.orderOut(nil)
-        WindowHelper.shared.adjustWindowToTopRight()
+        HighlightHintWindowController.shared.adjustWindow()
         self.debugPanel = nil
     }
 
@@ -167,7 +167,7 @@ extension OnitModel: NSWindowDelegate {
             prefs.contentViewFrame = panel.frame
         }
         panel.orderOut(nil)
-        WindowHelper.shared.adjustWindowToTopRight()
+        HighlightHintWindowController.shared.adjustWindow()
         self.panel = nil
         
         disableKeyboardShortcuts()
@@ -302,7 +302,6 @@ extension OnitModel: NSWindowDelegate {
         KeyboardShortcuts.enable([.toggleLocalMode,
                                   .newChat,
                                   .resizeWindow,
-                                  .toggleModels,
                                   .escape])
     }
     
@@ -310,7 +309,6 @@ extension OnitModel: NSWindowDelegate {
         KeyboardShortcuts.disable([.toggleLocalMode,
                                    .newChat,
                                    .resizeWindow,
-                                   .toggleModels,
                                    .escape])
     }
 }

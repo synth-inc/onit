@@ -24,7 +24,6 @@ import AppKit
     var isTooltipActive = false
     var showHistory: Bool = false
     var showMenuBarExtra: Bool = false
-    var inputExpanded = true
     var panel: CustomPanel? = nil
 
     var currentChat: Chat?
@@ -57,7 +56,11 @@ import AppKit
     var debugPanel: CustomPanel? = nil
     var debugText: String?
 
-    var modelSelectionWindowController: ModelSelectionWindowController?
+    var modelSelectionWindowController: OverlayWindowController<ModelSelectionView>?
+    var contextPickerWindowController: OverlayWindowController<ContextPickerView>?
+    var autoContextWindowControllers: [Context: AutoContextWindowController] = [:]
+    
+    var showFileImporter = false
 
     var accessibilityPermissionStatus: AccessibilityPermissionStatus = .notDetermined
 
@@ -167,8 +170,9 @@ import AppKit
     }
 
     init(container: ModelContainer) {
-        self.pendingInput = Input?.load()
-        self.pendingInstruction = String.load("instructions") ?? ""
+        // TODO: KNA - Checks this
+        // self.pendingInput = Input?.load()
+        // self.pendingInstruction = String.load("instructions") ?? ""
         self.container = container
         super.init()
         self.preferences = Preferences.shared

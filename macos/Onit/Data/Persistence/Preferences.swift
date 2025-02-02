@@ -12,8 +12,6 @@ class Preferences: Codable {
     
     private static let key = "app_preferences"
     
-    let id: UUID = UUID()
-    
     static func save(_ preferences: Preferences) {
         if let data = try? JSONEncoder().encode(preferences) {
             UserDefaults.standard.set(data, forKey: key)
@@ -41,6 +39,11 @@ class Preferences: Codable {
     var visibleModelIds: Set<String> = Set([])
     var localEndpointURL: URL = URL(string: "http://localhost:11434")!
     
+    // Feature flags
+    var accessibilityInputEnabled: Bool? = nil
+    var accessibilityAutoContextEnabled: Bool? = nil
+    var highlightHintMode: HighlightHintMode? = nil
+
     // Window state
     var contentViewFrame: CGRect?
     

@@ -22,6 +22,13 @@ struct App: SwiftUI.App {
     
     init() {
         KeyboardShortcuts.onKeyUp(for: .launch) { [weak model] in
+            let eventProperties: [String: Any] = [
+                "app_hidden": model?.panel == nil,
+                "highlight_hint_visible": HighlightHintWindowController.shared.isVisible(),
+                "highlight_hint_mode": FeatureFlagManager.shared.highlightHintMode
+            ]
+            PostHogSDK.shared.capture("shortcut_launch", properties: eventProperties)
+            
             model?.launchShortcutAction()
         }
         KeyboardShortcuts.onKeyUp(for: .toggleLocalMode) { [weak model] in
@@ -33,11 +40,16 @@ struct App: SwiftUI.App {
         KeyboardShortcuts.onKeyUp(for: .resizeWindow) { [weak model] in
             model?.resizeWindow()
         }
-        KeyboardShortcuts.onKeyUp(for: .toggleModels) { [weak model] in
-            model?.toggleModelsPanel()
-        }
         KeyboardShortcuts.onKeyUp(for: .escape) { [weak model] in
             model?.escapeAction()
+        }
+        KeyboardShortcuts.onKeyUp(for: .launchWithAutoContext) { [weak model] in
+            let eventProperties: [String: Any] = [
+                "app_hidden": model?.panel == nil
+            ]
+            PostHogSDK.shared.capture("shortcut_launch_with_auto_context", properties: eventProperties)
+            model?.addAutoContext()
+            model?.launchPanel()
         }
 
         featureFlagsManager.configure()
@@ -48,20 +60,8 @@ struct App: SwiftUI.App {
 
         #if !targetEnvironment(simulator)
         
-        let hostingController = NSHostingController(rootView: StaticPromptView())
-        let window = NSWindow(contentViewController: hostingController)
-        
-        window.styleMask = [.borderless]
-        window.isOpaque = false
-        window.backgroundColor = NSColor.clear
-        window.level = .floating
-        window.hasShadow = false
-        window.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
-        
         AccessibilityPermissionManager.shared.setModel(model)
         AccessibilityNotificationsManager.shared.setModel(model)
-        AccessibilityNotificationsManager.shared.setupWindow(window)
-        WindowHelper.shared.setupWindow(window)
         
         #endif
     }
@@ -85,7 +85,7 @@ struct App: SwiftUI.App {
                         break
                     }
                 }
-                .onChange(of: featureFlagsManager.flags.accessibility, initial: true) { oldValue, newValue in
+                .onChange(of: featureFlagsManager.accessibility, initial: true) { oldValue, newValue in
                     if newValue {
                         if !accessibilityPermissionRequested {
                             accessibilityPermissionRequested = true

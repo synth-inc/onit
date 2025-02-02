@@ -9,7 +9,6 @@ import SwiftUI
 
 struct FileRow: View {
     var contextList: [Context]
-    var isSent: Bool
 
     var body: some View {
         HStack(spacing: 6) {
@@ -26,12 +25,12 @@ struct FileRow: View {
         if contextList.isEmpty {
             emptyContext
         } else {
-            ContextList(contextList: contextList, isSent: isSent)
+            ContextList(contextList: contextList)
         }
     }
 
     var emptyContext: some View {
-        ContextItem(item: .file(URL(fileURLWithPath: "")), isSent: false)
+        ContextItem(item: .file(URL(fileURLWithPath: "")))
             .opacity(0)
     }
 }
@@ -39,7 +38,7 @@ struct FileRow: View {
 #if DEBUG
 #Preview {
     ModelContainerPreview {
-        FileRow(contextList: [], isSent: false)
+        FileRow(contextList: [])
     }
 }
 #endif

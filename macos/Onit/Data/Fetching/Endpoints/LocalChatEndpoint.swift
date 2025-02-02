@@ -9,7 +9,7 @@ import Foundation
 import PhotosUI
 
 extension FetchingClient {
-    func localChat(instructions: [String], inputs: [Input?], files: [[URL]], images: [[URL]], responses: [String], model: String?) async throws -> String {
+    func localChat(instructions: [String], inputs: [Input?], files: [[URL]], images: [[URL]], autoContexts: [[String: String]], responses: [String], model: String?) async throws -> String {
 
         guard let model = model else {
             throw FetchingError.invalidRequest(message: "Model is required")
@@ -18,7 +18,8 @@ extension FetchingClient {
         guard instructions.count == inputs.count,
               inputs.count == files.count,
               files.count == images.count,
-              images.count == responses.count + 1 else {
+              images.count == autoContexts.count,
+              autoContexts.count == responses.count + 1 else {
             throw FetchingError.invalidRequest(message: "Mismatched array lengths: instructions, inputs, files, and images must be the same length, and one longer than responses.")
         }
 
@@ -43,6 +44,12 @@ extension FetchingClient {
                     if let fileContent = try? String(contentsOf: file, encoding: .utf8) {
                         message += "\n\nFile: \(file.lastPathComponent)\nContent:\n\(fileContent)"
                     }
+                }
+            }
+            
+            if !autoContexts[index].isEmpty {
+                for (appName, appContent) in autoContexts[index] {
+                    message += "\n\nContent from application \(appName):\n\(appContent)"
                 }
             }
 

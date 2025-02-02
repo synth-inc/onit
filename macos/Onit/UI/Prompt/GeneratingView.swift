@@ -16,7 +16,7 @@ struct GeneratingView: View {
     }
 
     var body: some View {
-        UserInputView(prompt: prompt, isSent: true)
+        FinalContextView(prompt: prompt)
         Button {
             model.cancelGenerate()
             model.textFocusTrigger.toggle()

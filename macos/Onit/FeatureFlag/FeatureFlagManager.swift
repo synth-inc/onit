@@ -21,18 +21,12 @@ class FeatureFlagManager: ObservableObject {
     
     // MARK: - Feature Flags
     
-    @Published private(set) var flags: FeatureFlags = .init()
+    @Published private(set) var accessibilityInput: Bool = false
+    @Published private(set) var accessibilityAutoContext: Bool = false
+    @Published private(set) var highlightHintMode: HighlightHintMode = .none
     
-    struct FeatureFlags {
-        var accessibility: Bool = false
-    }
-    
-    // MARK: - Feature Flag Keys
-    
-    enum FeatureFlagKey: String, CaseIterable, Identifiable {
-        var id : String { UUID().uuidString }
-        
-        case accessibility = "Accessibility"
+    var accessibility: Bool {
+        accessibilityInput || accessibilityAutoContext
     }
     
     // MARK: - Functions
@@ -56,23 +50,28 @@ class FeatureFlagManager: ObservableObject {
         PostHogSDK.shared.setup(config)
     }
     
-    func getFeatureFlag(_ key: FeatureFlagKey) -> Bool {
-        switch key {
-        case .accessibility:
-            return flags.accessibility
-        }
+    func overrideAccessibilityInput(_ value: Bool) {
+        let preferences = Preferences.shared
+        preferences.accessibilityInputEnabled = value
+        Preferences.save(preferences)
+        
+        accessibilityInput = value
     }
     
-    /** Override feature flag value (for testing or manual control) */
-    func setFeatureFlag(_ value: Bool, for key: FeatureFlagKey) {
-        var newFlags = flags
+    func overrideAccessibilityAutoContext(_ value: Bool) {
+        let preferences = Preferences.shared
+        preferences.accessibilityAutoContextEnabled = value
+        Preferences.save(preferences)
         
-        switch key {
-        case .accessibility:
-            newFlags.accessibility = value
-        }
+        accessibilityAutoContext = value
+    }
+    
+    func overrideHighlightHintMode(_ value: HighlightHintMode) {
+        let preferences = Preferences.shared
+        preferences.highlightHintMode = value
+        Preferences.save(preferences)
         
-        flags = newFlags
+        highlightHintMode = value
     }
     
     // MARK: - Objective-C Functions
@@ -84,10 +83,27 @@ class FeatureFlagManager: ObservableObject {
     // MARK: - Private functions
     
     private func setFeatureFlagsFromRemote() {
-        let newFlags = FeatureFlags(
-            accessibility: PostHogSDK.shared.isFeatureEnabled("accessibility")
-        )
+        if let accessibilityInputEnabled = Preferences.shared.accessibilityInputEnabled {
+            accessibilityInput = accessibilityInputEnabled
+        } else {
+            accessibilityInput = PostHogSDK.shared.isFeatureEnabled("accessibility_input")
+        }
         
-        self.flags = newFlags
+        if let accessibilityAutoContextEnabled = Preferences.shared.accessibilityAutoContextEnabled {
+            accessibilityAutoContext = accessibilityAutoContextEnabled
+        } else {
+            accessibilityAutoContext = PostHogSDK.shared.isFeatureEnabled("accessibility_autocontext")
+        }
+        
+        if let highlightHintMode = Preferences.shared.highlightHintMode {
+            self.highlightHintMode = highlightHintMode
+        } else {
+            if let value = PostHogSDK.shared.getFeatureFlag("highlight_hint_mode") as? String,
+               let mode = HighlightHintMode(rawValue: value) {
+                self.highlightHintMode = mode
+            } else {
+                self.highlightHintMode = .none
+            }
+        }
     }
 }

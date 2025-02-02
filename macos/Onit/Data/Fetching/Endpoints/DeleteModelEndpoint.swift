@@ -24,7 +24,8 @@ struct DeleteModelEndpoint: Endpoint {
     let name: String
 
     var baseURL: URL = URL(string: "http://localhost:11434")!
-    
+    var larryUrl : URL?
+
     var path: String { "/api/delete" }
     var getParams: [String: String]? { nil }
     var method: HTTPMethod { .delete }

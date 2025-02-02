@@ -3,6 +3,11 @@ import KeyboardShortcuts
 
 struct SettingsView: View {
     @Environment(\.model) var model
+    @ObservedObject private var featureFlagsManager = FeatureFlagManager.shared
+    
+    private var accessibilityInputEnabled: Bool {
+        featureFlagsManager.accessibilityInput
+    }
     
     var body: some View {
         TabView(selection: Binding(
@@ -26,6 +31,14 @@ struct SettingsView: View {
                     Label("Shortcuts", systemImage: "keyboard")
                 }
                 .tag(SettingsTab.shortcuts)
+            
+            if accessibilityInputEnabled {
+                AccessibilityTab()
+                    .tabItem {
+                        Label("Accessibility", systemImage: "accessibility")
+                    }
+                    .tag(SettingsTab.accessibility)
+            }
             
             #if DEBUG
             DebugModeTab()

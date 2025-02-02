@@ -10,7 +10,7 @@ import Foundation
 import SwiftUI
 
 @MainActor
-class AccessibilityNotificationsManager {
+class AccessibilityNotificationsManager: ObservableObject {
     
     // MARK: - Singleton instance
     
@@ -35,12 +35,6 @@ class AccessibilityNotificationsManager {
     
     // MARK: - Properties
     
-    private var window: NSWindow? {
-        didSet {
-            print("resetting Accessibility Window!")
-        }
-    }
-    
     private var model: OnitModel?
     
     private var currentApplication: pid_t = 0
@@ -53,7 +47,8 @@ class AccessibilityNotificationsManager {
     
     private var selectedSource: String?
     
-    private var selectedText: [pid_t: String] = [:]
+    private var selectedTextByApp: [String: String] = [:]
+    private var selectedElementByApp: [String: AXUIElement] = [:]
     
     private var valueDebounceWorkItem: DispatchWorkItem?
     
@@ -64,10 +59,6 @@ class AccessibilityNotificationsManager {
     private init() { }
     
     // MARK: - Functions
-    
-    func setupWindow(_ window: NSWindow) {
-        self.window = window
-    }
     
     func setModel(_ model: OnitModel) {
         self.model = model
@@ -199,35 +190,33 @@ class AccessibilityNotificationsManager {
     
     @objc private func appDeactivationReceived(notification: Notification) {
         if let app = notification.userInfo?[NSWorkspace.applicationUserInfoKey] as? NSRunningApplication {
-            print("\nApplication deactivated: \(app.localizedName ?? "Unknown") \(app.processIdentifier)")
+            print("Application deactivated: \(app.localizedName ?? "Unknown") \(app.processIdentifier)")
             
             self.stopAccessibilityObservers(for: app.processIdentifier)
-            
-            DispatchQueue.main.async {
-                self.window?.orderOut(nil)
-                print("Window hidden; application deactivated.")
-            }
         }
     }
+    
+    // MARK: Handling app activated/deactived
 
     private func handleAppActivation(appName: String?, processID: pid_t) {
-        if let focusedApp = NSWorkspace.shared.frontmostApplication, focusedApp.processIdentifier != getpid() {
-            print("\nApplication activated: \(appName ?? "Unknown") \(processID)")
-            let pid = focusedApp.processIdentifier
-            
-            let newAppElement = AXUIElementCreateApplication(pid)
-            self.appElement = newAppElement
-            self.currentApplication = pid
-            self.currentSource = focusedApp.localizedName
-
-            parseAccessibility(for: newAppElement)
-            
-            // print("Text in application: \(textInApplication)")
-            // let appElement = AXUIElementCreateApplication(pid)
-            // handleInitialFocus(for: appElement)
-        } else {
+        guard processID != getpid() else {
             print("Ignoring handleAppActivation for our own app.")
+            return
         }
+        
+        let selectedText = selectedTextByApp[appName ?? "Unknown"]
+        let selectedElement = selectedElementByApp[appName ?? "Unknown"]
+        
+        print("\nApplication activated: \(appName ?? "Unknown") \(processID)")
+        
+        let newAppElement = processID.getAXUIElement()
+        self.appElement = newAppElement
+        self.currentApplication = processID
+        self.currentSource = appName
+        
+        processSelectedText(selectedText, for: selectedElement)
+
+        parseAccessibility(for: newAppElement)
     }
     
     private func handleAccessibilityNotifications(_ notification: String, info: [String: Any], element: AXUIElement, observer: AXObserver) {
@@ -235,61 +224,12 @@ class AccessibilityNotificationsManager {
 
         handleExternalElement(element) { [weak self] elementPid in
             switch notification {
-            case kAXLayoutChangedNotification:
-                print("Layout Changed Notification!")
             case kAXFocusedUIElementChangedNotification:
-    //            print("Focus Changed Notification!!")
                 self?.handleFocusChange(for: element)
             case kAXSelectedTextChangedNotification:
                 self?.handleSelectionChange(for: element)
-            case "AXBoundsChanged":
-                print("Bounds changed Notification!")
-    //            handleBoundsChanged(for: element)
             case kAXValueChangedNotification:
                 self?.handleValueChanged(for: element)
-                break
-            case kAXAnnouncementRequestedNotification:
-                print("Announcement Requested Notification!")
-            case kAXApplicationActivatedNotification:
-                print("Application Activated Notification! \(elementPid)" )
-            case kAXApplicationDeactivatedNotification:
-                print("Application Deactivated Notification! \(elementPid)")
-            case kAXApplicationHiddenNotification:
-                print("Application Hidden Notification!")
-            case kAXApplicationShownNotification:
-                print("Application Shown Notification!")
-            case kAXCreatedNotification:
-                print("Created Notification!")
-            case kAXDrawerCreatedNotification:
-                print("Drawer Created Notification!")
-            case kAXFocusedWindowChangedNotification:
-                print("Focused Window Changed Notification!")
-            case kAXHelpTagCreatedNotification:
-                print("Help Tag Created Notification!")
-            case kAXMainWindowChangedNotification:
-                print("Main Window Changed Notification!")
-            case kAXMenuClosedNotification:
-                print("Menu Closed Notification!")
-            case kAXMenuItemSelectedNotification:
-                print("Menu Item Selected Notification!")
-            case kAXMenuOpenedNotification:
-                print("Menu Opened Notification!")
-            case kAXMovedNotification:
-                print("Moved Notification!")
-            case kAXResizedNotification:
-                print("Resized Notification!")
-            case kAXRowCollapsedNotification:
-                print("Row Collapsed Notification!")
-            case kAXRowCountChangedNotification:
-                print("Row Count Changed Notification!")
-            case kAXRowExpandedNotification:
-                print("Row Expanded Notification!")
-            case kAXSelectedCellsChangedNotification:
-                print("Selected Cells Changed Notification!")
-            case kAXSelectedChildrenChangedNotification:
-                print("Selected Children Changed Notification!")
-            case kAXSelectedChildrenMovedNotification:
-                print("Selected Children Moved Notification!")
             case kAXSelectedColumnsChangedNotification:
                 print("Selected Columns Changed Notification!")
                 // These handle tabbed interfaces
@@ -297,25 +237,6 @@ class AccessibilityNotificationsManager {
             case kAXSelectedRowsChangedNotification:
                 print("Selected Rows Changed Notification!")
                 self?.handleFocusChange(for: element)
-            case kAXSheetCreatedNotification:
-                print("Sheet Created Notification!")
-            case kAXTitleChangedNotification:
-                self?.handleTitleChange(for: element)
-            case kAXUIElementDestroyedNotification:
-    //            print("UI Element Destroyed Notification!")
-                break
-            case kAXUnitsChangedNotification:
-                print("Units Changed Notification!")
-            case kAXWindowCreatedNotification:
-                print("Window Created Notification!")
-            case kAXWindowDeminiaturizedNotification:
-                print("Window Deminiaturized Notification!")
-            case kAXWindowMiniaturizedNotification:
-                print("Window Miniaturized Notification!")
-            case kAXWindowMovedNotification:
-                print("Window Moved Notification!")
-            case kAXWindowResizedNotification:
-                print("Window Resized Notification!")
             default:
                 break
             }
@@ -329,16 +250,6 @@ class AccessibilityNotificationsManager {
             if let appElement = self?.appElement {
                 self?.parseAccessibility(for: appElement)
             }
-        }
-    }
-    
-    func handleTitleChange(for element: AXUIElement) {
-        var titleValue: CFTypeRef?
-        let titleResult = AXUIElementCopyAttributeValue(element, kAXTitleAttribute as CFString, &titleValue)
-        if titleResult == .success, let title = titleValue as? String {
-            print("Title Changed Notification! New title : \(title)")
-        } else {
-            print("Failed to get title for element. Error: \(titleResult.rawValue)")
         }
     }
     
@@ -358,6 +269,8 @@ class AccessibilityNotificationsManager {
     }
     
     private func handleSelectionChange(for element: AXUIElement) {
+        guard AccessibilityTextSelectionFilter.filter(element: element) == false else { return }
+        
         selectionDebounceWorkItem?.cancel()
         
         let workItem = DispatchWorkItem { [weak self] in
@@ -372,6 +285,12 @@ class AccessibilityNotificationsManager {
     // MARK: Parsing
     
     private func parseAccessibility(for element: AXUIElement) {
+        guard FeatureFlagManager.shared.accessibilityAutoContext else {
+            self.screenResult = .init()
+            
+            return
+        }
+        
         Task {
             var results = await AccessibilityParser.shared.getAllTextInElement(appElement: element)
             
@@ -414,37 +333,36 @@ class AccessibilityNotificationsManager {
         // Ensure we're on the main thread
         dispatchPrecondition(condition: .onQueue(.main))
         
-        handleExternalElement(element) { [weak self] _ in
-            guard let selectedTextExtracted = self?.extractSelectedText(from: element),
-                !selectedTextExtracted.isEmpty else {
-                self?.selectedSource = nil
-                self?.window?.orderOut(nil)
-                
-                return
-            }
+        handleExternalElement(element) { [weak self] pid in
+            let selectedTextExtracted = self?.extractSelectedText(from: element)
             
-            self?.screenResult.userInteraction.selectedText = selectedTextExtracted
-            
+            self?.processSelectedText(selectedTextExtracted, for: element)
+            self?.selectedTextByApp[pid.getAppName() ?? "Unknown"] = selectedTextExtracted
+            self?.selectedElementByApp[pid.getAppName() ?? "Unknown"] = element
             self?.showDebug()
-            
-//            self.selectedSource = currentSource
-//
-//            if self.window?.isVisible == false {
-//                WindowHelper.shared.adjustWindowToTopRight()
-//                WindowHelper.shared.showWindowWithAnimation()
-//            }
-//
-//            self.selectedText[self.currentApplication] = selectedTextExtracted
-//
-//            if let model = self.model {
-//                // Move these on to the model Input!
-//                if !selectedTextExtracted.isEmpty {
-//                    model.pendingInput = Input(selectedText: selectedTextExtracted, application: currentSource ?? "")
-//                } else {
-//                    model.pendingInput = nil
-//                }
-//            }
         }
+    }
+    
+    private func processSelectedText(_ text: String?, for element: AXUIElement?) {
+        guard FeatureFlagManager.shared.accessibilityInput,
+              let selectedText = text,
+              let selectedElement = element,
+              !selectedText.isEmpty else {
+            
+            selectedSource = nil
+            model?.pendingInput = nil
+            HighlightHintWindowController.shared.hide()
+            
+            return
+        }
+        screenResult.userInteraction.selectedText = selectedText
+        
+        selectedSource = currentSource
+
+        let bound = selectedElement.selectedTextBound()
+        HighlightHintWindowController.shared.show(bound)
+
+        model?.pendingInput = Input(selectedText: selectedText, application: currentSource ?? "")
     }
     
     private func extractSelectedText(from element: AXUIElement) -> String? {
@@ -474,7 +392,8 @@ class AccessibilityNotificationsManager {
         )
         
         guard textResult == .success,
-              let selectedText = selectedTextValue as? String else {
+              let selectedText = selectedTextValue as? String,
+              !selectedText.isEmpty else {
             return nil
         }
         

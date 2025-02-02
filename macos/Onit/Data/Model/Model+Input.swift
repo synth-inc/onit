@@ -8,6 +8,18 @@
 import AppKit
 
 extension OnitModel {
+    func addAutoContext() {
+        guard FeatureFlagManager.shared.accessibility,
+              FeatureFlagManager.shared.accessibilityAutoContext,
+              let appName = AccessibilityNotificationsManager.shared.screenResult.applicationName,
+              let appContent = AccessibilityNotificationsManager.shared.screenResult.others else {
+            return
+        }
+        
+        let autoContext = Context(appName: appName, appContent: appContent)
+        pendingContextList.insert(autoContext, at: 0)
+    }
+    
     func addContext(urls: [URL]) {
         let contextItems = urls.map(Context.init)
         pendingContextList += contextItems

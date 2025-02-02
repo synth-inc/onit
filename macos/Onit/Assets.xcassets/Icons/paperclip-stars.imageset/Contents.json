@@ -1,0 +1,15 @@
+{
+  "images" : [
+    {
+      "filename" : "paperclip-2, attachment, attach, paper clip.pdf",
+      "idiom" : "universal"
+    }
+  ],
+  "info" : {
+    "author" : "xcode",
+    "version" : 1
+  },
+  "properties" : {
+    "preserves-vector-representation" : true
+  }
+}

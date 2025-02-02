@@ -37,13 +37,15 @@ struct StaticPromptView: View {
                     )
             }
             .foregroundStyle(Color.white)
-            .padding(.bottom, 10)
-            .padding(.leading, 10)
-            .padding(.trailing, 20)
-            .padding(.top, 10)
-            .background(
-                RoundedRectangle(cornerRadius: 10)
-                    .fill(Color.black)
+            .padding(10)
+            .background(Color.black)
+            .clipShape(
+                .rect(
+                    topLeadingRadius: 10,
+                    bottomLeadingRadius: 10,
+                    bottomTrailingRadius: 0,
+                    topTrailingRadius: 0
+                )
             )
         }
     }

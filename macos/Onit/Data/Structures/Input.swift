@@ -7,7 +7,7 @@
 
 import Foundation
 
-struct Input: Codable {
+struct Input: Codable, Equatable {
     var selectedText: String
     var application: String?
 }

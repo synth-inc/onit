@@ -10,22 +10,30 @@ import KeyboardShortcuts
 
 struct ShortcutsTab: View {
     @Environment(\.model) var model
+    
+    @ObservedObject private var featureFlagsManager = FeatureFlagManager.shared
+    
+    private var accessibilityAutoContextEnabled: Bool {
+        featureFlagsManager.accessibilityAutoContext
+    }
 
     var body: some View {
         Form {
             Section {
                 KeyboardShortcuts.Recorder(
                     "Launch Onit", name: .launch
-                ) { _ in
-                    resetPrompt()
+                ) {
+                    resetPrompt(empty: $0 == nil)
                 }
                 .padding()
-                
-                KeyboardShortcuts.Recorder(
-                    "Switch Local vs Remote", name: .toggleLocalMode
-                )
-                .padding()
 
+                if accessibilityAutoContextEnabled {
+                    KeyboardShortcuts.Recorder(
+                        "Launch Onit with Auto-Context", name: .launchWithAutoContext
+                    )
+                    .padding()
+                }
+                
                 KeyboardShortcuts.Recorder(
                     "New Chat", name: .newChat
                 )
@@ -35,21 +43,19 @@ struct ShortcutsTab: View {
                     "Resize Window", name: .resizeWindow
                 )
                 .padding()
-
+                
                 KeyboardShortcuts.Recorder(
-                    "Toggle Models", name: .toggleModels
+                    "Switch Local vs Remote", name: .toggleLocalMode
                 )
                 .padding()
-
-                
             }
         }
         .padding()
     }
 
-    func resetPrompt() {
-        let view = StaticPromptView().environment(model)
-        WindowHelper.shared.resetPrompt(with: view)
+    func resetPrompt(empty: Bool) {
+        //let view = StaticPromptView().environment(model)
+        HighlightHintWindowController.shared.shortcutChanges(empty: empty)
     }
 }
 
