@@ -9,6 +9,12 @@ struct SettingsView: View {
             get: { model.settingsTab },
             set: { model.settingsTab = $0 }
         )) {
+            GeneralTab()
+                .tabItem {
+                    Label("General", systemImage: "gear")
+                }
+                .tag(SettingsTab.general)
+            
             ModelsTab()
                 .tabItem {
                     Label("Models", systemImage: "cpu")

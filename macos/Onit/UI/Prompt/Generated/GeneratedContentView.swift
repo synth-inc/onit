@@ -9,6 +9,7 @@ import SwiftUI
 import MarkdownUI
 
 struct GeneratedContentView: View {
+    @Environment(\.model) var model
     @State private var contentHeight: CGFloat = 1000
 
     var result: String
@@ -47,20 +48,24 @@ struct GeneratedContentView: View {
 }
 
 extension Theme {
-    @MainActor static let custom = Theme()
-        .text {
-            FontFamily(.custom("Inter"))
-            FontSize(16)
-            ForegroundColor(.FG)
-        }
-        .code {
-            FontFamily(.custom("SometypeMono"))
-            FontFamilyVariant(.monospaced)
-            ForegroundColor(.pink)
-        }
-        .codeBlock { configuration in
-            CodeBlockView(configuration: configuration)
-        }
+    @MainActor static var custom: Theme {
+        let fontSize = Preferences.shared.fontSize
+        return Theme()
+            .text {
+                FontFamily(.custom("Inter"))
+                FontSize(fontSize)
+                ForegroundColor(.FG)
+            }
+            .code {
+                FontFamily(.custom("SometypeMono"))
+                FontFamilyVariant(.monospaced)
+                FontSize(fontSize)
+                ForegroundColor(.pink)
+            }
+            .codeBlock { configuration in
+                CodeBlockView(configuration: configuration)
+            }
+    }
 }
 
 #Preview {

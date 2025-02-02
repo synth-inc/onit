@@ -44,6 +44,9 @@ class Preferences: Codable {
     // Window state
     var contentViewFrame: CGRect?
     
+    // General settings
+    var fontSize: Double = 14.0
+    
     // Local model advanced options
     var localKeepAlive: String?
     var localNumCtx: Int?
