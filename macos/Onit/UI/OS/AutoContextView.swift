@@ -41,7 +41,7 @@ struct AutoContextView: View {
     
     var dialog: some View {
         SetUpDialog(title: "Auto-context", showButton: false) {
-            Text("Auto-context is collected as plain text from your current window and only stored once you submit your prompt. You can manage your preferences and data in settings.")
+            Text("Auto-context is collected as plain text from your current window. You can manage your autocontext preferences in settings.")
         } action: {
             
         } closeAction: {

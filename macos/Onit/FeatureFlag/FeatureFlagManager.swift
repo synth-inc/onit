@@ -25,9 +25,10 @@ class FeatureFlagManager: ObservableObject {
     @Published private(set) var accessibilityAutoContext: Bool = false
     @Published private(set) var highlightHintMode: HighlightHintMode = .none
     
-    var accessibility: Bool {
-        accessibilityInput || accessibilityAutoContext
-    }
+    @Published private(set) var accessibility: Bool = false
+    
+    private var wasAccessibilityInputEnabled: Bool = false
+    private var wasAccessibilityAutoContextEnabled: Bool = false
     
     // MARK: - Functions
     
@@ -74,6 +75,28 @@ class FeatureFlagManager: ObservableObject {
         highlightHintMode = value
     }
     
+    func overrideAccessibility(_ value: Bool) {
+        let preferences = Preferences.shared
+        preferences.accessibilityEnabled = value
+        Preferences.save(preferences)
+        
+        accessibility = value
+        
+        if value {
+            // Restore previous accessibility settings
+            overrideAccessibilityInput(wasAccessibilityInputEnabled)
+            overrideAccessibilityAutoContext(wasAccessibilityAutoContextEnabled)
+        } else {
+            // Store current settings before disabling
+            wasAccessibilityInputEnabled = accessibilityInput
+            wasAccessibilityAutoContextEnabled = accessibilityAutoContext
+            
+            // Disable all accessibility features
+            overrideAccessibilityInput(false)
+            overrideAccessibilityAutoContext(false)
+        }
+    }
+    
     // MARK: - Objective-C Functions
     
     @objc private func receiveFeatureFlags() {
@@ -83,16 +106,48 @@ class FeatureFlagManager: ObservableObject {
     // MARK: - Private functions
     
     private func setFeatureFlagsFromRemote() {
-        if let accessibilityInputEnabled = Preferences.shared.accessibilityInputEnabled {
-            accessibilityInput = accessibilityInputEnabled
+        // Set global accessibility toggle
+        if let accessibilityEnabled = Preferences.shared.accessibilityEnabled {
+            accessibility = accessibilityEnabled
         } else {
-            accessibilityInput = PostHogSDK.shared.isFeatureEnabled("accessibility_input")
+            accessibility = PostHogSDK.shared.isFeatureEnabled("accessibility")
         }
         
-        if let accessibilityAutoContextEnabled = Preferences.shared.accessibilityAutoContextEnabled {
-            accessibilityAutoContext = accessibilityAutoContextEnabled
+        // Only set individual accessibility features if global toggle is on
+        if accessibility {
+            if let accessibilityInputEnabled = Preferences.shared.accessibilityInputEnabled {
+                accessibilityInput = accessibilityInputEnabled
+                wasAccessibilityInputEnabled = accessibilityInputEnabled
+            } else {
+                let enabled = PostHogSDK.shared.isFeatureEnabled("accessibility_input")
+                accessibilityInput = enabled
+                wasAccessibilityInputEnabled = enabled
+            }
+            
+            if let accessibilityAutoContextEnabled = Preferences.shared.accessibilityAutoContextEnabled {
+                accessibilityAutoContext = accessibilityAutoContextEnabled
+                wasAccessibilityAutoContextEnabled = accessibilityAutoContextEnabled
+            } else {
+                let enabled = PostHogSDK.shared.isFeatureEnabled("accessibility_autocontext")
+                accessibilityAutoContext = enabled
+                wasAccessibilityAutoContextEnabled = enabled
+            }
         } else {
-            accessibilityAutoContext = PostHogSDK.shared.isFeatureEnabled("accessibility_autocontext")
+            // Store current settings but keep features disabled
+            if let accessibilityInputEnabled = Preferences.shared.accessibilityInputEnabled {
+                wasAccessibilityInputEnabled = accessibilityInputEnabled
+            } else {
+                wasAccessibilityInputEnabled = PostHogSDK.shared.isFeatureEnabled("accessibility_input")
+            }
+            
+            if let accessibilityAutoContextEnabled = Preferences.shared.accessibilityAutoContextEnabled {
+                wasAccessibilityAutoContextEnabled = accessibilityAutoContextEnabled
+            } else {
+                wasAccessibilityAutoContextEnabled = PostHogSDK.shared.isFeatureEnabled("accessibility_autocontext")
+            }
+            
+            accessibilityInput = false
+            accessibilityAutoContext = false
         }
         
         if let highlightHintMode = Preferences.shared.highlightHintMode {

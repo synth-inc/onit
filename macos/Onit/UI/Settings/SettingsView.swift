@@ -32,13 +32,16 @@ struct SettingsView: View {
                 }
                 .tag(SettingsTab.shortcuts)
             
-            if accessibilityInputEnabled {
-                AccessibilityTab()
-                    .tabItem {
-                        Label("Accessibility", systemImage: "accessibility")
+            
+            AccessibilityTab()
+                .tabItem {
+                    if featureFlagsManager.accessibility {
+                        Label("Autocontext", systemImage: "lightbulb")
+                    } else {
+                        Label("Autocontext", systemImage: "lightbulb.slash")
                     }
-                    .tag(SettingsTab.accessibility)
-            }
+                }
+                .tag(SettingsTab.accessibility)
             
             #if DEBUG
             DebugModeTab()
