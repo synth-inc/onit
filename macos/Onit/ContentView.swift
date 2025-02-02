@@ -52,8 +52,8 @@ struct ContentView: View {
                             prefs.contentViewFrame = panel.frame
                         }
                     }
-            }
-        }
+                }
+            )
         .fileImporter(
             isPresented: showFileImporterBinding,
             allowedContentTypes: [.item],
