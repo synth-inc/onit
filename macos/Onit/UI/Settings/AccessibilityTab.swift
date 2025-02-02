@@ -44,10 +44,10 @@ struct AccessibilityTab: View {
     var body: some View {
         VStack(spacing: 25) {
             VStack(alignment: .leading, spacing: 20) {
-                Text("Accessibility Features")
+                Text("Autocontext Features")
                     .font(.system(size: 14))
                 HStack {
-                    Text("Enable accessibility features")
+                    Text("Enable Autocontext")
                         .font(.system(size: 13))
                     Spacer()
                     Toggle("", isOn: Binding(
@@ -60,7 +60,7 @@ struct AccessibilityTab: View {
                 
                 if featureFlagsManager.accessibility {
                     HStack {
-                        Text("Enable accessibility input")
+                        Text("Autocontext for Highlighted Text")
                             .font(.system(size: 13))
                         Spacer()
                         Toggle("", isOn: Binding(
@@ -69,10 +69,16 @@ struct AccessibilityTab: View {
                         ))
                         .toggleStyle(.switch)
                         .controlSize(.small)
+                        SettingInfoButton(
+                            title: "Autocontext from Highlighted Text",
+                            description: "When enabled, Onit will read highlighted text from any application, and add it as context to your conversation. Context is not uploaded until you submit your conversation. In local mode, no context is ever uploaded." ,
+                            defaultValue: "off",
+                            valueType: "Bool"
+                        )
                     }
                     
                     HStack {
-                        Text("Enable auto context")
+                        Text("Autocontext + Screen-Reader Shortcut")
                             .font(.system(size: 13))
                         Spacer()
                         Toggle("", isOn: Binding(
@@ -81,27 +87,33 @@ struct AccessibilityTab: View {
                         ))
                         .toggleStyle(.switch)
                         .controlSize(.small)
+                        SettingInfoButton(
+                            title: "Autocontext, Screen Reader Shortcut",
+                            description: "When enabled, Onit adds a shortcut that, when triggered, will read the text from the foregrounded application and add it as context to your conversation. Context is not uploaded until you submit your conversation. In local mode, no context is ever uploaded.",
+                            defaultValue: "off",
+                            valueType: "Bool"
+                        )
+                    }
+                    VStack(alignment: .leading, spacing: 20) {
+                        Text("Autocontext Hint Position")
+                            .font(.system(size: 14))
+                        Picker("Choose hint position", selection: $selectedMode) {
+                            ForEach(modes, id: \.self) { mode in
+                                Text(mode.text)
+                                    .appFont(.medium14)
+                                    .padding(.vertical, 4)
+                            }
+                        }
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .pickerStyle(MenuPickerStyle())
+                        .padding(.vertical, 4)
+                        .padding(.bottom, 5)
+                        .padding(.leading, 5)
+                        .tint(.blue600)
                     }
                 }
             }
             
-            VStack(alignment: .leading, spacing: 20) {
-                Text("Hint Position")
-                    .font(.system(size: 14))
-                Picker("Choose hint position", selection: $selectedMode) {
-                    ForEach(modes, id: \.self) { mode in
-                        Text(mode.text)
-                            .appFont(.medium14)
-                            .padding(.vertical, 4)
-                    }
-                }
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .pickerStyle(MenuPickerStyle())
-                .padding(.vertical, 4)
-                .padding(.bottom, 5)
-                .padding(.leading, 5)
-                .tint(.blue600)
-            }
         }
         .padding(.vertical, 20)
         .padding(.horizontal, 86)
