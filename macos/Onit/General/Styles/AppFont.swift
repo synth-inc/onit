@@ -7,6 +7,7 @@
 
 import SwiftUI
 
+@MainActor
 enum AppFont {
     case medium10
     case medium12
