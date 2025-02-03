@@ -13,8 +13,6 @@ struct SetUpDialogs: View {
     @Environment(\.remoteModels) var remoteModels
     @Environment(\.openSettings) var openSettings
 
-    var seenLocal: Bool
-
     @State var closedNoLocalModels = false
     @State var closedNoRemoteModels = false
 
@@ -23,6 +21,7 @@ struct SetUpDialogs: View {
     
     @AppStorage("closedRemote") var closedRemote = false
     @AppStorage("closedLocal") var closedLocal = false
+    @AppStorage("seenLocal") var seenLocal = false
 
     @AppStorage("closedOpenAI") var closedOpenAI = false
     @AppStorage("closedAnthropic") var closedAnthropic = false
@@ -52,8 +51,17 @@ struct SetUpDialogs: View {
     @Default(.availableRemoteModels) var availableRemoteModels
     @Default(.availableLocalModels) var availableLocalModels
 
+    init() {
+        // resetAppStorageFlags()
+    }
+
     var body: some View {
         content
+        .onChange(of: availableLocalModels.count) { _, new in
+            if new != 0 {
+                seenLocal = true
+            }
+        }
     }
     
     @ViewBuilder
@@ -207,7 +215,7 @@ struct SetUpDialogs: View {
 
     var restartLocal: some View {
         SetUpDialog(title: "No Local Models Found", buttonText: fetchingLocal ? "Loading..." : "Try again") {
-            Text("Onit couldn’t connect to local models - you may need to restart Ollama.")
+            Text("Onit couldn't connect to local models - you may need to restart Ollama.")
         } action: {
             Task {
                 fetchingLocal = true
@@ -228,8 +236,8 @@ struct SetUpDialogs: View {
     }
 
     func expired(_ provider: AIModel.ModelProvider) -> some View {
-        SetUpDialog(title: "Couldn’t connect to \(provider.title)", buttonText: "Go to Settings") {
-            Text("Onit couldn’t connect to remote API providers - your tokens may have expired.")
+        SetUpDialog(title: "Couldn't connect to \(provider.title)", buttonText: "Go to Settings") {
+            Text("Onit couldn't connect to remote API providers - your tokens may have expired.")
         } action: {
             settings()
         } closeAction: {
@@ -244,5 +252,14 @@ struct SetUpDialogs: View {
                 closedGoogleAI = true
             }
         }
+    }
+
+    func resetAppStorageFlags() {
+        closedRemote = false
+        closedLocal = false
+        closedOpenAI = false
+        closedAnthropic = false
+        closedXAI = false
+        closedGoogleAI = false
     }
 }
