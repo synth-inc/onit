@@ -6,14 +6,15 @@
 //
 
 import SwiftUI
-import SageKit
 import SwiftData
 import Sparkle
 import Combine
 import AppKit
+import Defaults
 
 @MainActor @Observable class OnitModel: NSObject {
     var container: ModelContainer
+    var remoteModels: RemoteModelsState
     
     var tooltipWindow: NSWindow?
     var tooltip: Tooltip?
@@ -30,15 +31,9 @@ import AppKit
     var currentPrompts: [Prompt]?
 
     // User inputs that have not yet been submitted
-    var pendingInstruction = "" {
-        didSet { pendingInstruction.save("pendingInstruction") }
-    }
-    var pendingContextList : [Context] = [] {
-        didSet { pendingContextList.save("pendingContext") }
-    }
-    var pendingInput: Input? =  nil {
-        didSet { pendingInput.save("pendingInput") }
-    }
+    var pendingInstruction = ""
+    var pendingContextList : [Context] = []
+    var pendingInput: Input? =  nil
         
     var imageUploads: [URL: UploadProgress] = [:]
     var uploadTasks: [URL: Task<URL?, Never>] = [:]
@@ -83,30 +78,27 @@ import AppKit
             let models = try await FetchingClient().getLocalModels()
 
             // Handle local model selection
-            updatePreferences { prefs in
-                preferences.availableLocalModels = models
-
-                if preferences.availableLocalModels.isEmpty {
-                    prefs.localModel = nil
-                
-                } else if preferences.localModel == nil || !preferences.availableLocalModels.contains(preferences.localModel!) {
-                    prefs.localModel = preferences.availableLocalModels[0]
-                }
-                if listedModels.isEmpty {
-                    prefs.mode = .local
-                }
-                localFetchFailed = false
+            let localModel = Defaults[.localModel]
+            
+            Defaults[.availableLocalModels] = models
+            if models.isEmpty {
+                Defaults[.localModel] = nil
+            } else if localModel == nil || !models.contains(localModel!) {
+                Defaults[.localModel] = models[0]
             }
+            if remoteModels.listedModels.isEmpty {
+                Defaults[.mode] = .local
+            }
+            localFetchFailed = false
             
             // If relevant shrink the dialog box to account for the removed SetupDialog.
             shrinkContent()
         } catch {
             print("Error fetching local models:", error)
-            updatePreferences { prefs in
-                localFetchFailed = true
-                prefs.availableLocalModels = []
-                prefs.localModel = nil
-            }
+            
+            localFetchFailed = true
+            Defaults[.availableLocalModels] = []
+            Defaults[.localModel] = nil
         }
     }
     
@@ -117,49 +109,48 @@ import AppKit
             var models = try await AIModel.fetchModels()
             
             // This means we've never successfully fetched before
-            if preferences.availableRemoteModels.isEmpty {
-                updatePreferences { prefs in
-                    prefs.initializeVisibleModelIds(from: models)
-                    prefs.availableRemoteModels = models
-                    if !listedModels.isEmpty {
-                        prefs.remoteModel = listedModels.first
-                    }
-
-                    // If relevant shrink the dialog box to account for the removed SetupDialog.
-                    shrinkContent()
+            
+            if Defaults[.availableLocalModels].isEmpty {
+                if Defaults[.visibleModelIds].isEmpty {
+                    Defaults[.visibleModelIds] = Set(models.filter { $0.defaultOn }.map { $0.id })
                 }
+                Defaults[.availableRemoteModels] = models
+                if !remoteModels.listedModels.isEmpty {
+                    Defaults[.remoteModel] = remoteModels.listedModels.first
+                }
+                // If relevant shrink the dialog box to account for the removed SetupDialog.
+                shrinkContent()
             } else {
-                updatePreferences { prefs in
-                    // Update the availableRemoteModels with the newly fetched models
-                    let newModelIds = Set(models.map { $0.id })
-                    let existingModelIds = Set(prefs.availableRemoteModels.map { $0.id })
+                // Update the availableRemoteModels with the newly fetched models
+                let newModelIds = Set(models.map { $0.id })
+                let existingModelIds = Set(Defaults[.availableRemoteModels].map { $0.id })
                     
-                    let newModels = models.filter { !existingModelIds.contains($0.id) }
-                    var deprecatedModels = prefs.availableRemoteModels.filter { !newModelIds.contains($0.id) }
-                    for index in models.indices where newModels.contains(models[index]) {
-                        models[index].isNew = true
-                    }
+                let newModels = models.filter { !existingModelIds.contains($0.id) }
+                var deprecatedModels = Defaults[.availableRemoteModels].filter { !newModelIds.contains($0.id) }
+                for index in models.indices where newModels.contains(models[index]) {
+                    models[index].isNew = true
+                }
                     
-                    for index in deprecatedModels.indices {
-                        deprecatedModels[index].isDeprecated = true
-                    }
+                for index in deprecatedModels.indices {
+                    deprecatedModels[index].isDeprecated = true
+                }
 
                     // We only save deprecated models if the user has them visibile. Otherwise, quietly remove them from the list. 
-                    let visibleModelIds = Set(prefs.visibleModelIds)
-                    let visibleDeprecatedModels = deprecatedModels.filter { visibleModelIds.contains($0.id) }
+                let visibleModelIds = Set(Defaults[.visibleModelIds])
+                let visibleDeprecatedModels = deprecatedModels.filter { visibleModelIds.contains($0.id) }
                     
-                    remoteFetchFailed = false
-                    prefs.availableRemoteModels = models + visibleDeprecatedModels
-                    prefs.initializeVisibleModelIds(from: (models + visibleDeprecatedModels))
-
-                    
-                    if !listedModels.isEmpty && (preferences.remoteModel == nil || !preferences.availableRemoteModels.contains(preferences.remoteModel!)) {
-                        prefs.remoteModel = preferences.availableRemoteModels[0]
-                    }
-
-                    // If relevant shrink the dialog box to account for the removed SetupDialog.
-                    shrinkContent()
+                remoteFetchFailed = false
+                Defaults[.availableRemoteModels] = models + visibleDeprecatedModels
+                if Defaults[.visibleModelIds].isEmpty {
+                    Defaults[.visibleModelIds] = Set((models + visibleDeprecatedModels).filter { $0.defaultOn }.map { $0.id })
                 }
+
+                if !remoteModels.listedModels.isEmpty && (Defaults[.remoteModel] == nil || !Defaults[.availableRemoteModels].contains(Defaults[.remoteModel]!)) {
+                    Defaults[.remoteModel] = Defaults[.availableRemoteModels].first
+                }
+
+                // If relevant shrink the dialog box to account for the removed SetupDialog.
+                shrinkContent()
             }
 
             
@@ -169,13 +160,14 @@ import AppKit
         }
     }
 
-    init(container: ModelContainer) {
+    init(container: ModelContainer, remoteModels: RemoteModelsState) {
         // TODO: KNA - Checks this
         // self.pendingInput = Input?.load()
         // self.pendingInstruction = String.load("instructions") ?? ""
         self.container = container
+        self.remoteModels = remoteModels
         super.init()
-        self.preferences = Preferences.shared
+
         Task {
             await fetchLocalModels()
             await fetchRemoteModels()
@@ -183,15 +175,10 @@ import AppKit
             // This handles an edge case where Ollama is running but there is no internet connection
             // We put the user in localmode so they can use the product.
             // We don't do the opposite, becuase we don't want to put the product in remote mode without them knowing.
-            if !preferences.availableLocalModels.isEmpty && preferences.availableRemoteModels.isEmpty {
-                preferences.mode = .local
+            if !Defaults[.availableLocalModels].isEmpty && Defaults[.availableRemoteModels].isEmpty {
+                Defaults[.mode] = .local
             }
         }
-    }
-    
-    func updatePreferences(_ update: (inout Preferences) -> Void) {
-        update(&preferences)
-        Preferences.save(preferences)
     }
     
     func setSettingsTab(tab: SettingsTab) {

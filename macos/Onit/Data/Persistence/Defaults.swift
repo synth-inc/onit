@@ -1,0 +1,67 @@
+//
+//  Defaults.swift
+//  Onit
+//
+//  Created by Kévin Naudin on 29/01/2025.
+//
+
+import Defaults
+import Foundation
+import CoreGraphics
+
+extension Defaults.Keys {
+    static let isPanelExpanded = Key<Bool>("isPanelExpanded", default: false)
+    static let defaultPanelFrame = Key<NSRect>("defaultPanelFrame", default: NSRect(x: 0, y: 0, width: 400, height: 600))
+    
+    // Remote model tokens
+    static let openAIToken = Key<String?>("openAIToken", default: nil)
+    static let anthropicToken = Key<String?>("anthropicToken", default: nil)
+    static let xAIToken = Key<String?>("xAIToken", default: nil)
+    static let googleAIToken = Key<String?>("googleAIToken", default: nil)
+    
+    // Remote model validation
+    static let isOpenAITokenValidated = Key<Bool>("openAITokenValidated", default: false)
+    static let isAnthropicTokenValidated = Key<Bool>("anthropicTokenValidated", default: false)
+    static let isXAITokenValidated = Key<Bool>("xAITokenValidated", default: false)
+    static let isGoogleAITokenValidated = Key<Bool>("googleAITokenValidated", default: false)
+    
+    // Remote model usage
+    static let useOpenAI = Key<Bool>("useOpenAI", default: false)
+    static let useAnthropic = Key<Bool>("useAnthropic", default: false)
+    static let useXAI = Key<Bool>("useXAI", default: false)
+    static let useGoogleAI = Key<Bool>("useGoogleAI", default: false)
+    static let useLocal = Key<Bool>("useLocalModel", default: false)
+    
+    static let remoteModel = Key<AIModel?>("remoteModel", default: nil)
+    static let localModel = Key<String?>("localModel", default: nil)
+    static let mode = Key<InferenceMode>("mode", default: .remote)
+    static let availableLocalModels = Key<[String]>("availableLocalModels", default: [])
+    static let availableRemoteModels = Key<[AIModel]>("availableRemoteModels", default: [])
+    static let visibleModelIds = Key<Set<String>>("visibleModelIds", default: Set([]))
+    static let localEndpointURL = Key<URL>("localEndpointURL", default: URL(string: "http://localhost:11434")!)
+        
+    // Feature flags
+    static let accessibilityEnabled = Key<Bool?>("accessibilityEnabled", default: nil)
+    static let accessibilityInputEnabled = Key<Bool?>("accessibilityInputEnabled", default: nil)
+    static let accessibilityAutoContextEnabled = Key<Bool?>("accessibilityAutoContextEnabled", default: nil)
+    static let highlightHintMode = Key<HighlightHintMode?>("highlightHintMode", default: nil)
+
+    // Window state
+    static let panelWidth = Key<Double?>("panelWidth", default: nil)
+    static let panelPosition = Key<PanelPosition>("panelPosition", default: .topRight)
+
+    // General settings
+    static let launchOnStartupRequested = Key<Bool>("launchOnStartupRequested", default: false)
+    static let fontSize = Key<Double>("fontSize", default: 14.0)
+
+    // Local model advanced options
+    static let localKeepAlive = Key<String?>("localKeepAlive", default: nil)
+    static let localNumCtx = Key<Int?>("localNumCtx", default: nil)
+    static let localTemperature = Key<Double?>("localTemperature", default: nil)
+    static let localTopP = Key<Double?>("localTopP", default: nil)
+    static let localTopK = Key<Int?>("localTopK", default: nil)
+}
+
+extension NSRect: Defaults.Serializable {
+    
+}

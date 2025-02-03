@@ -10,6 +10,7 @@ import KeyboardShortcuts
 import MenuBarExtraAccess
 import Foundation
 import PostHog
+import Defaults
 import ServiceManagement
 
 @main
@@ -19,9 +20,7 @@ struct App: SwiftUI.App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) var delegate
     @ObservedObject private var featureFlagsManager = FeatureFlagManager.shared
     
-    // @Default(.launchOnStartupRequested) var launchOnStartupRequested
-    // TODO: KNA - Replace by future Defaults SDK
-    @AppStorage("launchOnStartupRequested") var launchOnStartupRequested: Bool = false
+    @Default(.launchOnStartupRequested) var launchOnStartupRequested
     
     @State var accessibilityPermissionRequested = false
     
@@ -59,7 +58,7 @@ struct App: SwiftUI.App {
 
         featureFlagsManager.configure()
         // For testing new user experience
-        // model.clearTokens()
+        // clearTokens()
         model.showPanel()
         
 
@@ -126,6 +125,17 @@ struct App: SwiftUI.App {
         }
     }
     
+    private func clearTokens() {
+        // Helpful for debugging the new-user-experience
+        let defaultsKeys: [Defaults._AnyKey] = [
+            .openAIToken, .anthropicToken, .xAIToken, .googleAIToken,
+            .isOpenAITokenValidated, .isAnthropicTokenValidated, .isXAITokenValidated, .isGoogleAITokenValidated,
+            .useOpenAI, .useAnthropic, .useXAI, .useGoogleAI, .useLocal
+        ]
+        
+        Defaults.reset(defaultsKeys)
+    }
+
     private func checkLaunchOnStartup() {
         if !launchOnStartupRequested {
             do {

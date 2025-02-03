@@ -5,6 +5,7 @@
 //  Created by Benjamin Sage on 10/3/24.
 //
 
+import Defaults
 import SwiftUI
 import KeyboardShortcuts
 
@@ -61,14 +62,14 @@ extension OnitModel: NSWindowDelegate {
             
             // Get the saved width or use default
             var windowWidth = newPanel.frame.width
-            if let savedWidth = preferences.panelWidth {
+            if let savedWidth = Defaults[.panelWidth] {
                 // Ensure width is not greater than screen width minus padding
                 windowWidth = min(savedWidth, visibleFrame.width - 32)
             }
             
             // Calculate position based on preference
             let finalXPosition: CGFloat
-            switch preferences.panelPosition {
+            switch Defaults[.panelPosition] {
             case .topLeft:
                 finalXPosition = visibleFrame.origin.x + 16
             case .topCenter:
@@ -92,7 +93,7 @@ extension OnitModel: NSWindowDelegate {
         self.textFocusTrigger.toggle()
 
         // Set the defaultPanelFrame to the initial frame of the panel
-        defaultPanelFrame = newPanel.frame
+        Defaults[.defaultPanelFrame] = newPanel.frame
     }
     
     func openDebugWindow() {
@@ -130,6 +131,7 @@ extension OnitModel: NSWindowDelegate {
         
         if let screen = NSScreen.main {
             let visibleFrame = screen.visibleFrame
+            let defaultPanelFrame = Defaults[.defaultPanelFrame]
             let windowWidth = defaultPanelFrame.width
             let windowHeight = defaultPanelFrame.height
             
@@ -152,9 +154,9 @@ extension OnitModel: NSWindowDelegate {
 
     func closePanel() {
         guard let panel = panel else { return }
-        updatePreferences { prefs in
-            prefs.panelWidth = panel.frame.width
-        }
+        
+        Defaults[.panelWidth] = panel.frame.width
+        
         panel.orderOut(nil)
         HighlightHintWindowController.shared.adjustWindow()
         panel.delegate = nil
@@ -201,14 +203,14 @@ extension OnitModel: NSWindowDelegate {
             
             // Get the saved width or use current
             var windowWidth = panel.frame.width
-            if let savedWidth = preferences.panelWidth {
+            if let savedWidth = Defaults[.panelWidth] {
                 // Ensure width is not greater than screen width minus padding
                 windowWidth = min(savedWidth, visibleFrame.width - 32)
             }
             
             // Calculate position based on preference
             let finalXPosition: CGFloat
-            switch preferences.panelPosition {
+            switch Defaults[.panelPosition] {
             case .topLeft:
                 finalXPosition = visibleFrame.origin.x + 16
             case .topCenter:
@@ -234,9 +236,7 @@ extension OnitModel: NSWindowDelegate {
     }
         
     func toggleLocalVsRemoteShortcutAction() {
-        updatePreferences { prefs in
-            prefs.mode = prefs.mode == .local ? .remote : .local
-        }
+        Defaults[.mode] = Defaults[.mode] == .local ? .remote : .local
     }
     
     func escapeAction() {
@@ -289,28 +289,6 @@ extension OnitModel: NSWindowDelegate {
         )
     }
 
-    // Property to track if the panel is expanded
-    var isPanelExpanded: Bool {
-        get { UserDefaults.standard.bool(forKey: "isPanelExpanded") }
-        set { UserDefaults.standard.set(newValue, forKey: "isPanelExpanded") }
-    }
-    
-    // Property to store the default panel frame
-    var defaultPanelFrame: NSRect {
-        get {
-            if let data = UserDefaults.standard.data(forKey: "defaultPanelFrame"),
-               let rect = try? NSKeyedUnarchiver.unarchiveTopLevelObjectWithData(data) as? NSRect {
-                return rect
-            }
-            return NSRect(x: 0, y: 0, width: 400, height: 600)
-        }
-        set {
-            if let data = try? NSKeyedArchiver.archivedData(withRootObject: newValue, requiringSecureCoding: false) {
-                UserDefaults.standard.set(data, forKey: "defaultPanelFrame")
-            }
-        }
-    }
-
     @MainActor
     func togglePanelSize() {
         guard let panel = panel else { return }
@@ -318,18 +296,19 @@ extension OnitModel: NSWindowDelegate {
         if let screen = panel.screen ?? NSScreen.main {
             let visibleFrame = screen.visibleFrame
 
-            if isPanelExpanded {
+            if Defaults[.isPanelExpanded] {
+                let defaultPanelFrame = Defaults[.defaultPanelFrame]
                 // Restore the panel to its default size and position
                 panel.setFrame(defaultPanelFrame, display: true, animate: true)
                 // Optionally reposition the panel to its original location
                 panel.setFrameOrigin(defaultPanelFrame.origin)
             } else {
                 // Save the current panel frame as the default size
-                defaultPanelFrame = panel.frame
+                Defaults[.defaultPanelFrame] = panel.frame
                 // Expand the panel to fit the screen's visible frame
                 panel.setFrame(visibleFrame, display: true, animate: true)
             }
-            isPanelExpanded.toggle()
+            Defaults[.isPanelExpanded].toggle()
         }
     }
     

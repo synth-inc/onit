@@ -6,9 +6,11 @@
 //
 
 import SwiftUI
+import Defaults
 
 struct ContentView: View {
     @Environment(\.model) var model
+    @Default(.panelWidth) var panelWidth
 
     var showFileImporterBinding: Binding<Bool> {
         Binding(
@@ -48,9 +50,7 @@ struct ContentView: View {
             DragGesture(minimumDistance: 1)
                 .onEnded { value in
                     if let panel = model.panel {
-                        model.updatePreferences { prefs in
-                            prefs.panelWidth = panel.frame.width
-                        }
+                        panelWidth = panel.frame.width
                     }
                 }
             )

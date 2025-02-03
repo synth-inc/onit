@@ -5,6 +5,7 @@
 //  Created by Benjamin Sage on 9/17/24.
 //
 
+import Defaults
 import SwiftUI
 import SwiftData
 import KeyboardShortcuts
@@ -15,6 +16,8 @@ struct TextInputView: View {
     @FocusState var focused: Bool
 
     @Query(sort: \Chat.timestamp, order: .reverse) private var chats: [Chat]
+    
+    @Default(.mode) var mode
 
     var body: some View {
         HStack {
@@ -91,10 +94,10 @@ struct TextInputView: View {
 
     var sendButton: some View {
         Button(action: sendAction) {
-            Image(model.preferences.mode == .local ? .circleArrowUpDotted : .circleArrowUp)
+            Image(mode == .local ? .circleArrowUpDotted : .circleArrowUp)
                 .resizable()
                 .renderingMode(.template)
-                .foregroundStyle(model.pendingInstruction.isEmpty ? Color.gray700 : (model.preferences.mode == .local ? .limeGreen : Color.blue400))
+                .foregroundStyle(model.pendingInstruction.isEmpty ? Color.gray700 : (mode == .local ? .limeGreen : Color.blue400))
                 .frame(width: 18, height: 18)
         }
         .buttonStyle(.plain)

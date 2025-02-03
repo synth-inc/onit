@@ -11,7 +11,8 @@ import SwiftData
 private struct ModelEnvironmentKey: @preconcurrency EnvironmentKey {
     @MainActor static var defaultValue: OnitModel = {
         let container = try! ModelContainer(for: Chat.self)
-        let model = OnitModel(container: container)
+        let remoteModels = RemoteModelsEnvironmentKey.defaultValue
+        let model = OnitModel(container: container, remoteModels: remoteModels)
         return model
     }()
 }

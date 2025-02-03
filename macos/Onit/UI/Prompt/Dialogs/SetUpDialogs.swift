@@ -6,9 +6,11 @@
 //
 
 import SwiftUI
+import Defaults
 
 struct SetUpDialogs: View {
     @Environment(\.model) var model
+    @Environment(\.remoteModels) var remoteModels
     @Environment(\.openSettings) var openSettings
 
     var seenLocal: Bool
@@ -46,32 +48,35 @@ struct SetUpDialogs: View {
             return [:]
         }
     }
+    
+    @Default(.availableRemoteModels) var availableRemoteModels
+    @Default(.availableLocalModels) var availableLocalModels
 
     var body: some View {
         content
     }
-
+    
     @ViewBuilder
     var content: some View {
         Group {
-            if model.preferences.availableRemoteModels.isEmpty && model.remoteFetchFailed && !closedNoRemoteModels {
+            if availableRemoteModels.isEmpty && model.remoteFetchFailed && !closedNoRemoteModels {
                 noRemote
             }
-            if model.remoteNeedsSetup && !closedRemote {
+            if remoteModels.remoteNeedsSetup && !closedRemote {
                 remote
             }
-            if model.preferences.availableRemoteModels.contains(where: { $0.isDeprecated && !(closedDeprecatedRemote[$0.id] ?? false) }) {
-                let deprecatedModels = model.preferences.availableRemoteModels.filter { $0.isDeprecated && !(closedDeprecatedRemote[$0.id] ?? false) }
+            if availableRemoteModels.contains(where: { $0.isDeprecated && !(closedDeprecatedRemote[$0.id] ?? false) }) {
+                let deprecatedModels = availableRemoteModels.filter { $0.isDeprecated && !(closedDeprecatedRemote[$0.id] ?? false) }
                 deprecatedRemote(models: deprecatedModels)
             }
-            if model.preferences.availableRemoteModels.contains(where: { $0.isNew && !(closedNewRemote[$0.id] ?? false) }) {
-                let newModels = model.preferences.availableRemoteModels.filter { $0.isNew && !(closedNewRemote[$0.id] ?? false) }
+            if availableRemoteModels.contains(where: { $0.isNew && !(closedNewRemote[$0.id] ?? false) }) {
+                let newModels = availableRemoteModels.filter { $0.isNew && !(closedNewRemote[$0.id] ?? false) }
                 newRemote(models: newModels)
             }
-            if !closedLocal && model.preferences.availableLocalModels.isEmpty && !seenLocal {
+            if !closedLocal && availableLocalModels.isEmpty && !seenLocal {
                 local
             }
-            if !closedNoLocalModels && model.preferences.availableLocalModels.isEmpty && seenLocal {
+            if !closedNoLocalModels && availableLocalModels.isEmpty && seenLocal {
                 restartLocal
             }
             if false && !closedOpenAI {

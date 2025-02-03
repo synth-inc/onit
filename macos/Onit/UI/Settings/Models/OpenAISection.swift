@@ -5,6 +5,7 @@
 //  Created by Benjamin Sage on 1/13/25.
 //
 
+import Defaults
 import SwiftUI
 
 struct OpenAISection: View {
@@ -12,6 +13,17 @@ struct OpenAISection: View {
 
     @State private var openAIKey: String = ""
     @State private var showOpenAIKey: Bool = false
+    
+    @Default(.availableRemoteModels) var availableRemoteModels
+    @Default(.visibleModelIds) var visibleModelIds
+    @Default(.isOpenAITokenValidated) var isOpenAITokenValidated
+    @Default(.openAIToken) var openAIToken
+    
+    var visibleModelsList : [AIModel] {
+        availableRemoteModels
+            .filter { visibleModelIds.contains($0.id) }
+            .filter { $0.provider == .openAI }
+    }
 
     var body: some View {
         Section("OpenAI") {
@@ -61,21 +73,21 @@ struct OpenAISection: View {
                 }
             }
             .onChange(of: openAIKey) { _, newValue in
-                model.openAIToken = newValue.isEmpty ? nil : newValue
+                openAIToken = newValue.isEmpty ? nil : newValue
             }
 
             Text("Get your API key from [OpenAI](https://platform.openai.com/api-keys)")
                 .font(.caption)
                 .foregroundStyle(.secondary)
 
-            if model.isOpenAITokenValidated {
-                ForEach(model.preferences.visibleModelsList.filter { $0.provider == .openAI }) { aiModel in
+            if isOpenAITokenValidated {
+                ForEach(visibleModelsList) { aiModel in
                     ModelToggle(aiModel: aiModel)
                 }
             }
         }
         .onAppear {
-            openAIKey = model.openAIToken ?? ""
+            openAIKey = openAIToken ?? ""
         }
     }
 }

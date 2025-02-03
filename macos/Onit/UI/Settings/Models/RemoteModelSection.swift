@@ -5,16 +5,34 @@
 //  Created by Benjamin Sage on 1/13/25.
 //
 
+import Defaults
 import SwiftUI
 
 struct RemoteModelSection: View {
     @Environment(\.model) var model
+    @Environment(\.remoteModels) var remoteModels
 
     @State private var use = false
     @State private var key = ""
     @State private var validated = false
 
     @State private var loading = false
+    
+    @Default(.mode) var mode
+    @Default(.remoteModel) var remoteModel
+    @Default(.availableRemoteModels) var availableRemoteModels
+    @Default(.openAIToken) var openAIToken
+    @Default(.anthropicToken) var anthropicToken
+    @Default(.xAIToken) var xAIToken
+    @Default(.googleAIToken) var googleAIToken
+    @Default(.useOpenAI) var useOpenAI
+    @Default(.useAnthropic) var useAnthropic
+    @Default(.useXAI) var useXAI
+    @Default(.useGoogleAI) var useGoogleAI
+    @Default(.isOpenAITokenValidated) var isOpenAITokenValidated
+    @Default(.isAnthropicTokenValidated) var isAnthropicTokenValidated
+    @Default(.isXAITokenValidated) var isXAITokenValidated
+    @Default(.isGoogleAITokenValidated) var isGoogleAITokenValidated
 
     var provider: AIModel.ModelProvider
 
@@ -23,7 +41,7 @@ struct RemoteModelSection: View {
     }
 
     var models: [AIModel] {
-        model.preferences.availableRemoteModels.filter { $0.provider == provider }
+        availableRemoteModels.filter { $0.provider == provider }
     }
 
     // MARK: - Body
@@ -48,12 +66,12 @@ struct RemoteModelSection: View {
             save(use: use)
             save(validated: validated)
             // If we've turned off everything go into local mode.
-            if model.listedModels.isEmpty {
-                model.preferences.mode = .local
+            if remoteModels.listedModels.isEmpty {
+                mode = .local
             } else {
                 // If it's our first time adding models, set the remoteModel
-                if model.preferences.remoteModel == nil {
-                    model.preferences.remoteModel = model.listedModels.first
+                if remoteModel == nil {
+                    remoteModel = remoteModels.listedModels.first
                 }
             }
             // This will collapse SetupDialogs if they're no longer needed
@@ -178,79 +196,78 @@ struct RemoteModelSection: View {
     func save(key: String) {
         switch provider {
         case .openAI:
-            model.openAIToken = key.isEmpty ? nil : key
+            openAIToken = key.isEmpty ? nil : key
         case .anthropic:
-            model.anthropicToken = key.isEmpty ? nil : key
+            anthropicToken = key.isEmpty ? nil : key
         case .xAI:
-            model.xAIToken = key.isEmpty ? nil : key
+            xAIToken = key.isEmpty ? nil : key
         case .googleAI:
-            model.googleAIToken = key.isEmpty ? nil : key
+            googleAIToken = key.isEmpty ? nil : key
         }
-        
     }
 
     func fetchKey() {
         switch provider {
         case .openAI:
-            key = model.openAIToken ?? ""
+            key = openAIToken ?? ""
         case .anthropic:
-            key = model.anthropicToken ?? ""
+            key = anthropicToken ?? ""
         case .xAI:
-            key = model.xAIToken ?? ""
+            key = xAIToken ?? ""
         case .googleAI:
-            key = model.googleAIToken ?? ""
+            key = googleAIToken ?? ""
         }
     }
 
     func checkUse() {
         switch provider {
         case .openAI:
-            use = model.useOpenAI
+            use = useOpenAI
         case .anthropic:
-            use = model.useAnthropic
+            use = useAnthropic
         case .xAI:
-            use = model.useXAI
+            use = useXAI
         case .googleAI:
-            use = model.useGoogleAI
+            use = useGoogleAI
         }
     }
 
     func checkValidated() {
         switch provider {
         case .openAI:
-            validated = model.isOpenAITokenValidated
+            validated = isOpenAITokenValidated
         case .anthropic:
-            validated = model.isAnthropicTokenValidated
+            validated = isAnthropicTokenValidated
         case .xAI:
-            validated = model.isXAITokenValidated
+            validated = isXAITokenValidated
         case .googleAI:
-            validated = model.isGoogleAITokenValidated
+            validated = isGoogleAITokenValidated
         }
     }
 
     func save(use: Bool) {
         switch provider {
         case .openAI:
-            model.useOpenAI = use
+            useOpenAI = use
         case .anthropic:
-            model.useAnthropic = use
+            useAnthropic = use
         case .xAI:
-            model.useXAI = use
+            useXAI = use
         case .googleAI:
-            model.useGoogleAI = use
+            useGoogleAI = use
         }
     }
 
     func save(validated: Bool) {
         switch provider {
         case .openAI:
-            model.isOpenAITokenValidated = validated
+            isOpenAITokenValidated = validated
         case .anthropic:
-            model.isAnthropicTokenValidated = validated
+            isAnthropicTokenValidated = validated
         case .xAI:
-            model.isXAITokenValidated = validated
+            isXAITokenValidated = validated
         case .googleAI:
-            model.isGoogleAITokenValidated = validated
+            isGoogleAITokenValidated = validated
         }
     }
 

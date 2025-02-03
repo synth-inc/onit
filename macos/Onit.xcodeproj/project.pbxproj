@@ -10,11 +10,12 @@
 		280F35002CB9BF4300D60130 /* Sparkle in Frameworks */ = {isa = PBXBuildFile; productRef = 280F34FF2CB9BF4300D60130 /* Sparkle */; };
 		282E9A1E2CD06218003F3617 /* MarkdownUI in Frameworks */ = {isa = PBXBuildFile; productRef = 282E9A1D2CD06218003F3617 /* MarkdownUI */; };
 		2842875E2CD0B6A5000C6C67 /* HighlightSwift in Frameworks */ = {isa = PBXBuildFile; productRef = 2842875D2CD0B6A5000C6C67 /* HighlightSwift */; };
-		28BF71682CAB72A200DE7C03 /* SageKit in Frameworks */ = {isa = PBXBuildFile; productRef = 28BF71672CAB72A200DE7C03 /* SageKit */; };
 		28F57E222CAC84AA006AAA8C /* KeyboardShortcuts in Frameworks */ = {isa = PBXBuildFile; productRef = 28F57E212CAC84AA006AAA8C /* KeyboardShortcuts */; };
 		28F57E292CAC9262006AAA8C /* MenuBarExtraAccess in Frameworks */ = {isa = PBXBuildFile; productRef = 28F57E282CAC9262006AAA8C /* MenuBarExtraAccess */; };
 		863817352D3FB5F700919BC7 /* PostHog in Frameworks */ = {isa = PBXBuildFile; productRef = 863817342D3FB5F700919BC7 /* PostHog */; };
 		863817372D3FB5F700919BC7 /* phlibwebp in Frameworks */ = {isa = PBXBuildFile; productRef = 863817362D3FB5F700919BC7 /* phlibwebp */; };
+		867A647A2D4AD73A00FD4D80 /* Defaults in Frameworks */ = {isa = PBXBuildFile; productRef = 867A64792D4AD73A00FD4D80 /* Defaults */; };
+		867A647C2D4AD73A00FD4D80 /* DefaultsMacros in Frameworks */ = {isa = PBXBuildFile; productRef = 867A647B2D4AD73A00FD4D80 /* DefaultsMacros */; };
 		86A974C12D4A76F800CF6FCE /* Markdown in Frameworks */ = {isa = PBXBuildFile; productRef = 86A974C02D4A76F800CF6FCE /* Markdown */; };
 		A782C1982D383493009976F8 /* FirebaseCrashlytics in Frameworks */ = {isa = PBXBuildFile; productRef = A782C1972D383493009976F8 /* FirebaseCrashlytics */; };
 /* End PBXBuildFile section */
@@ -49,15 +50,16 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				28BF71682CAB72A200DE7C03 /* SageKit in Frameworks */,
 				280F35002CB9BF4300D60130 /* Sparkle in Frameworks */,
 				28F57E292CAC9262006AAA8C /* MenuBarExtraAccess in Frameworks */,
 				86A974C12D4A76F800CF6FCE /* Markdown in Frameworks */,
 				863817352D3FB5F700919BC7 /* PostHog in Frameworks */,
+				867A647A2D4AD73A00FD4D80 /* Defaults in Frameworks */,
 				A782C1982D383493009976F8 /* FirebaseCrashlytics in Frameworks */,
 				863817372D3FB5F700919BC7 /* phlibwebp in Frameworks */,
 				2842875E2CD0B6A5000C6C67 /* HighlightSwift in Frameworks */,
 				28F57E222CAC84AA006AAA8C /* KeyboardShortcuts in Frameworks */,
+				867A647C2D4AD73A00FD4D80 /* DefaultsMacros in Frameworks */,
 				282E9A1E2CD06218003F3617 /* MarkdownUI in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -102,7 +104,6 @@
 			);
 			name = Onit;
 			packageProductDependencies = (
-				28BF71672CAB72A200DE7C03 /* SageKit */,
 				28F57E212CAC84AA006AAA8C /* KeyboardShortcuts */,
 				28F57E282CAC9262006AAA8C /* MenuBarExtraAccess */,
 				280F34FF2CB9BF4300D60130 /* Sparkle */,
@@ -112,6 +113,8 @@
 				863817342D3FB5F700919BC7 /* PostHog */,
 				863817362D3FB5F700919BC7 /* phlibwebp */,
 				86A974C02D4A76F800CF6FCE /* Markdown */,
+				867A64792D4AD73A00FD4D80 /* Defaults */,
+				867A647B2D4AD73A00FD4D80 /* DefaultsMacros */,
 			);
 			productName = Onit;
 			productReference = 2883E4B32CA5ECBB00F79A48 /* Onit.app */;
@@ -142,7 +145,6 @@
 			mainGroup = 2883E4AA2CA5ECBB00F79A48;
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
-				28BF71662CAB72A200DE7C03 /* XCRemoteSwiftPackageReference "SageKit" */,
 				28F57E202CAC84AA006AAA8C /* XCRemoteSwiftPackageReference "KeyboardShortcuts" */,
 				28F57E272CAC9262006AAA8C /* XCRemoteSwiftPackageReference "MenuBarExtraAccess" */,
 				280F34FE2CB9BF4300D60130 /* XCRemoteSwiftPackageReference "Sparkle" */,
@@ -151,6 +153,7 @@
 				A782C1962D383493009976F8 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
 				863817332D3FB5F700919BC7 /* XCRemoteSwiftPackageReference "posthog-ios" */,
 				86A974BF2D4A76F800CF6FCE /* XCRemoteSwiftPackageReference "swift-markdown" */,
+				867A64782D4AD73A00FD4D80 /* XCRemoteSwiftPackageReference "Defaults" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 2883E4B42CA5ECBB00F79A48 /* Products */;
@@ -450,14 +453,6 @@
 				kind = branch;
 			};
 		};
-		28BF71662CAB72A200DE7C03 /* XCRemoteSwiftPackageReference "SageKit" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/blsage/SageKit";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 0.0.1;
-			};
-		};
 		28F57E202CAC84AA006AAA8C /* XCRemoteSwiftPackageReference "KeyboardShortcuts" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/sindresorhus/KeyboardShortcuts";
@@ -480,6 +475,14 @@
 			requirement = {
 				kind = upToNextMajorVersion;
 				minimumVersion = 3.19.1;
+			};
+		};
+		867A64782D4AD73A00FD4D80 /* XCRemoteSwiftPackageReference "Defaults" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/sindresorhus/Defaults";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 9.0.1;
 			};
 		};
 		86A974BF2D4A76F800CF6FCE /* XCRemoteSwiftPackageReference "swift-markdown" */ = {
@@ -516,11 +519,6 @@
 			package = 2842875C2CD0B6A5000C6C67 /* XCRemoteSwiftPackageReference "HighlightSwift" */;
 			productName = HighlightSwift;
 		};
-		28BF71672CAB72A200DE7C03 /* SageKit */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 28BF71662CAB72A200DE7C03 /* XCRemoteSwiftPackageReference "SageKit" */;
-			productName = SageKit;
-		};
 		28F57E212CAC84AA006AAA8C /* KeyboardShortcuts */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 28F57E202CAC84AA006AAA8C /* XCRemoteSwiftPackageReference "KeyboardShortcuts" */;
@@ -540,6 +538,16 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 863817332D3FB5F700919BC7 /* XCRemoteSwiftPackageReference "posthog-ios" */;
 			productName = phlibwebp;
+		};
+		867A64792D4AD73A00FD4D80 /* Defaults */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 867A64782D4AD73A00FD4D80 /* XCRemoteSwiftPackageReference "Defaults" */;
+			productName = Defaults;
+		};
+		867A647B2D4AD73A00FD4D80 /* DefaultsMacros */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 867A64782D4AD73A00FD4D80 /* XCRemoteSwiftPackageReference "Defaults" */;
+			productName = DefaultsMacros;
 		};
 		86A974C02D4A76F800CF6FCE /* Markdown */ = {
 			isa = XCSwiftPackageProductDependency;

@@ -5,6 +5,7 @@
 //  Created by Benjamin Sage on 10/2/24.
 //
 
+import Defaults
 import SwiftUI
 import MarkdownUI
 
@@ -49,7 +50,8 @@ struct GeneratedContentView: View {
 
 extension Theme {
     @MainActor static var custom: Theme {
-        let fontSize = Preferences.shared.fontSize
+        @Default(.fontSize) var fontSize
+        
         return Theme()
             .text {
                 FontFamily(.custom("Inter"))

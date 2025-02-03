@@ -5,23 +5,24 @@
 //  Created by Benjamin Sage on 1/13/25.
 //
 
+import Defaults
 import SwiftUI
 
 struct ModelToggle: View {
     @Environment(\.model) var model
+    @Default(.availableRemoteModels) var availableRemoteModels
+    @Default(.visibleModelIds) var visibleModelIds
 
     var aiModel: AIModel
     
     var isOn: Binding<Bool> {
         Binding {
-            model.preferences.visibleModelIds.contains(aiModel.id)
+            visibleModelIds.contains(aiModel.id)
         } set: { isOn in
             if isOn {
-                model.preferences.visibleModelIds.insert(aiModel.id)
-                Preferences.save(model.preferences)
+                visibleModelIds.insert(aiModel.id)
             } else {
-                model.preferences.visibleModelIds.remove(aiModel.id)
-                Preferences.save(model.preferences)
+                visibleModelIds.remove(aiModel.id)
             }
         }
     }
@@ -51,8 +52,9 @@ struct ModelToggle: View {
         .onDisappear() {
             if aiModel.isNew {
                 // Once we've displayed the "NEW" tag in settings, the model is no longer new
-                model.preferences.markRemoteModelAsNotNew(modelId: aiModel.id)
-                Preferences.save(model.preferences)
+                if let index = availableRemoteModels.firstIndex(where: { $0.id == aiModel.id }) {
+                    availableRemoteModels[index].isNew = false
+                }
             }
         }
     }

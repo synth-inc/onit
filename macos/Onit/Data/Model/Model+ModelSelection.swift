@@ -8,6 +8,7 @@
 import Foundation
 import AppKit
 import SwiftUI
+import Defaults
 
 extension OnitModel {
     func showModelSelectionOverlay() {
@@ -24,10 +25,9 @@ extension OnitModel {
     }
 
     func selectModel(_ modelItem: AIModel) {
-        updatePreferences { prefs in
-            prefs.remoteModel = modelItem
-            prefs.mode = .remote
-        }
+        Defaults[.remoteModel] = modelItem
+        Defaults[.mode] = .remote
+      
         closeModelSelectionOverlay()
     }
 
@@ -44,70 +44,5 @@ extension OnitModel {
             }
         }
         return nil
-    }
-
-    var selectedModel: Binding<SelectedModel?> {
-        .init { [self] in
-            if preferences.mode == .local, let localModelName = preferences.localModel {
-                return .local(localModelName)
-            } else if let aiModel = preferences.remoteModel {
-                return .remote(aiModel)
-            } else {
-                return nil
-            }
-        } set: { [self] newValue in
-            guard let newValue else { return }
-            switch newValue {
-            case .remote(let aiModel):
-                updatePreferences { prefs in
-                    prefs.remoteModel = aiModel
-                    prefs.mode = .remote
-                }
-            case .local(let localModelName):
-                updatePreferences { prefs in
-                    prefs.localModel = localModelName
-                    prefs.mode = .local
-                }
-            }
-        }
-    }
-
-    var defaultRemoteModel: AIModel? {
-        get {
-            preferences.remoteModel
-        }
-        set {
-            preferences.remoteModel = newValue
-            Preferences.save(preferences)
-        }
-    }
-
-    var defaultLocalModel: String? {
-        get {
-            preferences.localModel
-        }
-        set {
-            preferences.localModel = newValue
-            Preferences.save(preferences)
-        }
-    }
-
-    var listedModels: [AIModel] {
-        var models = preferences.visibleModelsList
-
-        if !useOpenAI {
-            models = models.filter { $0.provider != .openAI }
-        }
-        if !useAnthropic {
-            models = models.filter { $0.provider != .anthropic }
-        }
-        if !useXAI {
-            models = models.filter { $0.provider != .xAI }
-        }
-        if !useGoogleAI {
-            models = models.filter { $0.provider != .googleAI }
-        }
-
-        return models
     }
 }

@@ -6,7 +6,6 @@
 //
 
 import SwiftUI
-import SageKit
 
 struct HoverableButtonStyle: ButtonStyle {
     @Environment(\.model) var model

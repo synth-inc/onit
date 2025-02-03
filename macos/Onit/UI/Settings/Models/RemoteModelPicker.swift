@@ -6,15 +6,15 @@
 //
 
 import SwiftUI
+import Defaults
 
 struct RemoteModelPicker: View {
-    @Environment(\.model) var model
+    @Environment(\.remoteModels) var remoteModels
+    @Default(.remoteModel) var remoteModel
 
     var body: some View {
-        @Bindable var model = model
-
-        Picker("Model", selection: $model.defaultRemoteModel) {
-            ForEach(model.listedModels) { aiModel in
+        Picker("Model", selection: $remoteModel) {
+            ForEach(remoteModels.listedModels) { aiModel in
                 Text(aiModel.displayName)
                     .tag(aiModel)
             }

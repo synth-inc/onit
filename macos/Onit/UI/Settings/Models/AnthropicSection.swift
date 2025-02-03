@@ -5,6 +5,7 @@
 //  Created by Benjamin Sage on 1/13/25.
 //
 
+import Defaults
 import SwiftUI
 
 struct AnthropicSection: View {
@@ -12,6 +13,17 @@ struct AnthropicSection: View {
 
     @State private var anthropicKey: String = ""
     @State private var showAnthropicKey: Bool = false
+    
+    @Default(.availableRemoteModels) var availableRemoteModels
+    @Default(.visibleModelIds) var visibleModelIds
+    @Default(.isAnthropicTokenValidated) var isAnthropicTokenValidated
+    @Default(.anthropicToken) var anthropicToken
+    
+    var visibleModelsList : [AIModel] {
+        availableRemoteModels
+            .filter { visibleModelIds.contains($0.id) }
+            .filter { $0.provider == .anthropic }
+    }
 
     var body: some View {
             VStack(alignment: .leading, spacing: 8) {
@@ -59,10 +71,10 @@ struct AnthropicSection: View {
                 }
             }
             .onChange(of: anthropicKey) { _, newValue in
-                model.anthropicToken = newValue.isEmpty ? nil : newValue
+                anthropicToken = newValue.isEmpty ? nil : newValue
             }
             .onAppear {
-                anthropicKey = model.anthropicToken ?? ""
+                anthropicKey = anthropicToken ?? ""
             }
         
 
@@ -70,8 +82,8 @@ struct AnthropicSection: View {
                     .font(.caption)
                     .foregroundStyle(.secondary)
 
-            if model.isAnthropicTokenValidated {
-                ForEach(model.preferences.visibleModelsList.filter { $0.provider == .anthropic }) { aiModel in
+            if isAnthropicTokenValidated {
+                ForEach(visibleModelsList) { aiModel in
                     ModelToggle(aiModel: aiModel)
                 }
             }

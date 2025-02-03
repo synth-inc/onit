@@ -5,6 +5,7 @@
 //  Created by Benjamin Sage on 9/20/24.
 //
 
+import Defaults
 import SwiftUI
 
 @MainActor
@@ -29,7 +30,7 @@ enum AppFont {
     }
     
     private var pointSize: CGFloat {
-        let baseFontSize = Preferences.shared.fontSize
+        let baseFontSize = Defaults[.fontSize]
         switch self {
         case .medium10:
             return baseFontSize - 4

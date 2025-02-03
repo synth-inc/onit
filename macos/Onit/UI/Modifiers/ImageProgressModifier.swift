@@ -6,9 +6,8 @@
 //
 
 import SwiftUI
-import SageKit
 
-struct ImageProgress: ViewModifier {
+struct ImageProgressModifier: ViewModifier {
     @Environment(\.model) var model
 
     var url: URL
@@ -51,7 +50,7 @@ struct ImageProgress: ViewModifier {
 
 extension View {
     func imageProgress(url: URL) -> some View {
-        modifier(ImageProgress(url: url))
+        modifier(ImageProgressModifier(url: url))
     }
 }
 
@@ -59,7 +58,7 @@ extension View {
 #Preview {
     ModelContainerPreview {
         Color.red
-            .modifier(ImageProgress(url: .applicationDirectory))
+            .modifier(ImageProgressModifier(url: .applicationDirectory))
 
     }
 }
