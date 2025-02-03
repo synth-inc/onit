@@ -71,7 +71,9 @@ import Defaults
     
     var remoteFetchFailed: Bool = false
     var localFetchFailed: Bool = false
-        
+    
+    var streamedResponse: String = ""
+    
     @MainActor
     func fetchLocalModels() async {
         do {
