@@ -6,8 +6,9 @@
 //
 
 import Foundation
+import EventSource
 
-protocol Endpoint {
+protocol Endpoint: Sendable {
     associatedtype Request: Encodable
     associatedtype Response: Decodable
 
@@ -19,4 +20,72 @@ protocol Endpoint {
     var requestBody: Request? { get }
     var additionalHeaders: [String: String]? { get }
     var timeout: TimeInterval? { get }
+    
+    func getContentFromSSE(event: EVEvent) throws -> String?
+}
+
+extension Endpoint {
+    func getContentFromSSE(event: EVEvent) throws -> String? {
+        return nil
+    }
+    
+    func asURLRequest() throws -> URLRequest {
+        var url = baseURL.appendingPathComponent(path)
+        
+        if let getParams = getParams {
+            if !getParams.isEmpty {
+                var urlComponents = URLComponents(url: url, resolvingAgainstBaseURL: false)
+                urlComponents?.queryItems = getParams.map { URLQueryItem(name: $0.key, value: $0.value) }
+                if let updatedURL = urlComponents?.url {
+                    url = updatedURL
+                }
+            }
+        }
+        
+        // Helpful debugging method- put in the endpoint name and you can see the full request
+        if path.contains("/v1beta/models") {
+            printCurlRequest(url: url)
+            print("here")
+        }
+        
+        var request = URLRequest(url: url)
+
+        request.httpMethod = method.rawValue
+        
+        if let requestBody = requestBody {
+            let data = try JSONEncoder().encode(requestBody)
+            request.httpBody = data
+        }
+        
+        request.addAuthorization(token: token)
+        request.cachePolicy = .reloadIgnoringLocalCacheData
+        request.addContentType(for: method, defaultType: "application/json")
+
+        additionalHeaders?.forEach { key, value in
+            request.setValue(value, forHTTPHeaderField: key)
+        }
+
+        return request
+    }
+    
+    private func printCurlRequest(url: URL) {
+        // Helpful debugging method
+        if let requestBody = requestBody {
+            if let jsonData = try? JSONEncoder().encode(requestBody),
+                let jsonString = String(data: jsonData, encoding: .utf8) {
+                print("CURL Request:")
+                print("curl -X \(method.rawValue) \(url.absoluteString) \\")
+                print("  -H 'Content-Type: application/json' \\")
+                if let token = token {
+                    print("  -H 'Authorization: Bearer \(token)' \\")
+                }
+                if let additionalHeaders = additionalHeaders {
+                    for (header, value) in additionalHeaders {
+                        print("  -H '\(header): \(value)' \\")
+                    }
+                }
+                print("  -d '\(jsonString)'")
+            }
+        }
+    }
 }

@@ -85,22 +85,44 @@ extension OnitModel {
             }
 
             do {
-                let chat: String
-                if Defaults[.mode] == .remote {
-                    // Regular remote model chat
-                    chat = try await client.chat(
-                        instructions: instructionsHistory,
-                        inputs: inputsHistory,
-                        files: filesHistory,
-                        images: imagesHistory,
-                        autoContexts: autoContextsHistory,
-                        responses: responsesHistory,
-                        model: Defaults[.remoteModel],
-                        apiToken: getTokenForModel(Defaults[.remoteModel] ?? nil)
-                    )
-                } else {
+                switch preferences.mode {
+                case .remote:
+                    streamedResponse = ""
+                    let llmRequest = LLMRequest(instructions: instructionsHistory,
+                                                inputs: inputsHistory,
+                                                files: filesHistory,
+                                                images: imagesHistory,
+                                                autoContexts: autoContextsHistory,
+                                                responses: responsesHistory,
+                                                model: preferences.remoteModel)
+                    
+                    prompt.generationState = .done
+                    
+                    let asyncText = try await client.chatInStream(llmRequest: llmRequest, apiToken: getTokenForModel(preferences.remoteModel ?? nil))
+                    let batchSizeLimit = 1
+                    var batchSize = 0
+                    var buffer = ""
+                    // TODO: KNA - If too much event, some are skipped ...
+                    for try await response in asyncText {
+                        buffer += response
+                        batchSize += 1
+                        
+                        if batchSize >= batchSizeLimit {
+                            updateStreamedResponse(newText: buffer)
+                            batchSize = 0
+                            buffer = ""
+                        }
+                    }
+                    if !buffer.isEmpty {
+                        streamedResponse += buffer
+                    }
+                    
+                    let response = Response(text: streamedResponse, type: .success)
+                    updatePrompt(prompt: prompt, response: response, instruction: curInstruction)
+                    setTokenIsValid(true)
+                case .local:
                     // TODO implement history for local chat!
-                    chat = try await client.localChat(
+                    let chat = try await client.localChat(
                         instructions: instructionsHistory,
                         inputs: inputsHistory,
                         files: filesHistory,
@@ -109,12 +131,10 @@ extension OnitModel {
                         responses: responsesHistory,
                         model: Defaults[.localModel]
                     )
+                    let response = Response(text: chat, type:.success)
+                    updatePrompt(prompt: prompt, response: response, instruction: curInstruction)
+                    setTokenIsValid(true)
                 }
-
-                let response = Response(text: chat, type: .success)
-                updatePrompt(prompt: prompt, response: response, instruction: curInstruction)
-                setTokenIsValid(true)
-
             } catch let error as FetchingError {
                 print("Fetching Error: \(error.localizedDescription)")
                 if case .forbidden = error {
@@ -130,12 +150,14 @@ extension OnitModel {
                 let response = Response(text: error.localizedDescription, type: .error)
                 updatePrompt(prompt: prompt, response: response, instruction: curInstruction)
             }
-
-            generatingPrompt = nil
-            generatingPromptPriorState = nil
         }
     }
-
+    
+    @MainActor
+    private func updateStreamedResponse(newText: String) {
+        streamedResponse += newText
+    }
+    
     /**
      * Track an event when user prompted
      * - parameter prompt: The current prompt
@@ -220,5 +242,8 @@ extension OnitModel {
         prompt.responses.append(response)
         prompt.generationIndex = (prompt.responses.count - 1)
         prompt.generationState = .done
+        
+        generatingPrompt = nil
+        generatingPromptPriorState = nil
     }
 }

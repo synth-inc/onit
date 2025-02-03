@@ -4,6 +4,7 @@
 //
 
 import Foundation
+import EventSource
 
 struct OpenAIChatEndpoint: Endpoint {
     var baseURL: URL = URL(string: "https://api.openai.com")!
@@ -19,11 +20,22 @@ struct OpenAIChatEndpoint: Endpoint {
     var getParams: [String: String]? { nil }
     var method: HTTPMethod { .post }
     var requestBody: OpenAIChatRequest? {
-        OpenAIChatRequest(model: model, messages: messages)
+        OpenAIChatRequest(model: model, messages: messages, stream: true)
     }
     var additionalHeaders: [String: String]? {
         ["Authorization": "Bearer \(token ?? "")"]
     }
+    
+    func getContentFromSSE(event: EVEvent) throws -> String? {
+        if let data = event.data?.data(using: .utf8) {
+            let response = try JSONDecoder().decode(Response.self, from: data)
+            
+            return response.choices[0].delta.content
+        }
+        
+        return nil
+    }
+
     var timeout: TimeInterval? { nil }
 }
 
@@ -72,16 +84,28 @@ struct OpenAIChatContentPart: Codable {
 struct OpenAIChatRequest: Codable {
     let model: String
     let messages: [OpenAIChatMessage]
+    let stream: Bool
 }
 
 struct OpenAIChatResponse: Codable {
     let choices: [Choice]
-
+    let created: Int
+    let id: String
+    let model: String
+    let object: String
+    
     struct Choice: Codable {
-        let message: Message
-
-        struct Message: Codable {
-            let content: String
+        let delta: Delta
+        let index: Int
+            
+        enum CodingKeys: String, CodingKey {
+            case delta
+            case index
         }
+    }
+        
+    struct Delta: Codable {
+        let content: String?
+        let role: String?
     }
 }

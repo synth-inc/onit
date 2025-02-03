@@ -4,6 +4,7 @@
 //
 
 import Foundation
+import EventSource
 
 struct GoogleAIChatEndpoint: Endpoint {
     var baseURL: URL = URL(string: "https://generativelanguage.googleapis.com")!
@@ -20,12 +21,23 @@ struct GoogleAIChatEndpoint: Endpoint {
 
     var method: HTTPMethod { .post }
     var requestBody: GoogleAIChatRequest? {
-        GoogleAIChatRequest(model: model, messages: messages, n: 1)
+        GoogleAIChatRequest(model:model, messages: messages, stream: true, n: 1)
     }
 
     var additionalHeaders: [String: String]? {
         ["Authorization": "Bearer \(token ?? "")"]
     }
+    
+    func getContentFromSSE(event: EVEvent) throws -> String? {
+        if let data = event.data?.data(using: .utf8) {
+            let response = try JSONDecoder().decode(Response.self, from: data)
+            
+            return response.choices[0].delta.content
+        }
+        
+        return nil
+    }
+
     var timeout: TimeInterval? { nil }
 }
 
@@ -74,42 +86,29 @@ struct GoogleAIChatContentPart: Codable {
 struct GoogleAIChatRequest: Codable {
     let model: String
     let messages: [GoogleAIChatMessage]
-    let n: Int
+    let stream: Bool
+    let n : Int
 }
 
 struct GoogleAIChatResponse: Codable {
     let choices: [Choice]
     let created: Int
+    let id: String
     let model: String
     let object: String
-    let usage: Usage
-
+    
     struct Choice: Codable {
-        let finishReason: String
+        let delta: Delta
         let index: Int
-        let message: Message
-
+            
         enum CodingKeys: String, CodingKey {
-            case finishReason = "finish_reason"
+            case delta
             case index
-            case message
         }
     }
-
-    struct Message: Codable {
-        let content: String
-        let role: String
-    }
-
-    struct Usage: Codable {
-        let completionTokens: Int
-        let promptTokens: Int
-        let totalTokens: Int
-
-        enum CodingKeys: String, CodingKey {
-            case completionTokens = "completion_tokens"
-            case promptTokens = "prompt_tokens"
-            case totalTokens = "total_tokens"
-        }
+        
+    struct Delta: Codable {
+        let content: String?
+        let role: String?
     }
 }

@@ -8,6 +8,8 @@
 import SwiftUI
 
 struct GeneratedView: View {
+    @Environment(\.model) var model
+    
     var prompt: Prompt
 
     var body: some View {
@@ -27,6 +29,8 @@ struct GeneratedView: View {
                     GeneratedErrorView(
                         errorDescription: prompt.responses[prompt.generationIndex].text)
                 }
+            } else {
+                GeneratedContentView(stream: true)
             }
             GeneratedToolbar(prompt: prompt)
                 .padding(.horizontal, 16)

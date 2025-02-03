@@ -4,6 +4,7 @@
 //
 
 import Foundation
+import EventSource
 
 struct XAIChatEndpoint: Endpoint {
     var baseURL: URL = URL(string: "https://api.x.ai")!
@@ -21,12 +22,24 @@ struct XAIChatEndpoint: Endpoint {
     var requestBody: XAIChatRequest? {
         XAIChatRequest(
             model: model,
-            messages: messages
+            messages: messages,
+            stream: true
         )
     }
     var additionalHeaders: [String: String]? {
         ["Authorization": "Bearer \(token ?? "")"]
     }
+    
+    func getContentFromSSE(event: EVEvent) throws -> String? {
+        if let data = event.data?.data(using: .utf8) {
+            let response = try JSONDecoder().decode(Response.self, from: data)
+            
+            return response.choices[0].delta.content
+        }
+        
+        return nil
+    }
+
     var timeout: TimeInterval? { nil }
 }
 
@@ -76,16 +89,19 @@ struct XAIChatContentPart: Codable {
 struct XAIChatRequest: Codable {
     let model: String
     let messages: [XAIChatMessage]
+    let stream: Bool
 }
 
 struct XAIChatResponse: Codable {
     let choices: [Choice]
 
     struct Choice: Codable {
-        let message: Message
-
-        struct Message: Codable {
-            let content: String
+        let index: Int
+        let delta: Delta
+        
+        struct Delta: Codable {
+            let content: String?
+            let role: String?
         }
     }
 }

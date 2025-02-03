@@ -11,26 +11,30 @@ import SwiftUI
 
 struct GeneratedContentView: View {
     @Environment(\.model) var model
+    @State private var text: String = ""
     @State private var contentHeight: CGFloat = 1000
+    
+    private var stream: Bool = false
 
-    var result: String
+    init(result: String) {
+        self._text = State(initialValue: result)
+    }
 
+    init(text: String) {
+        self._text = State(initialValue: text)
+    }
+
+    init(stream: Bool) {
+        self.stream = stream
+        self._text = State(initialValue: model.streamedResponse)
+    }
+    
     var height: CGFloat {
         min(contentHeight, 500)
     }
 
     var body: some View {
-        //        ViewThatFits(in: .vertical) {
-        content
-        //            ScrollView {
-        //                content
-        //            }
-        //        }
-        //        .frame(height: height)
-    }
-
-    var content: some View {
-        Markdown(result)
+        Markdown(self.text)
             .markdownTheme(.custom)
             .textSelection(.enabled)
             .multilineTextAlignment(.leading)
@@ -43,6 +47,11 @@ struct GeneratedContentView: View {
                         .onAppear {
                             contentHeight = proxy.size.height
                         }
+                }
+            }
+            .onChange(of: model.streamedResponse, initial: false) { _, newValue in
+                if self.stream {
+                    self.text = newValue
                 }
             }
     }

@@ -13,9 +13,8 @@ class Response {
     var text: String
     var timestamp: Date
     var type: ResponseType
-    //    var prompt: Prompt?
 
-    init(text: String, type: ResponseType, time: Date = .now) {  // , prompt: Prompt? = nil) {
+    init(text: String, type: ResponseType, time: Date = .now) {
         self.text = text
         self.timestamp = time
         self.type = type
