@@ -15,7 +15,7 @@ struct EnableAutocontextTag: View {
                 Image(.stars)
                     .resizable()
                     .frame(width: 12, height: 12)
-                Text("Enable Auto-Context Context")
+                Text("Enable Auto-Context")
                     .appFont(.medium13)
                     .foregroundStyle(.white)
             }
