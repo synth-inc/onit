@@ -172,11 +172,52 @@ extension OnitModel: NSWindowDelegate {
     func launchPanel() {
         if panel == nil {
             showPanel()
+            return
         }
-        if let panel = panel {
+        
+        guard let panel = panel,
+              let currentScreen = panel.screen,
+              let mouseScreen = NSScreen.screens.first(where: { screen in
+                  let mouseLocation = NSEvent.mouseLocation
+                  return screen.frame.contains(mouseLocation)
+              }) ?? NSScreen.main else {
+            // If we can't determine screens, just show the panel
             panel.makeKeyAndOrderFront(nil)
             panel.orderFrontRegardless()
+            return
         }
+        
+        // If panel is not on the active screen, move it
+        if currentScreen != mouseScreen {
+            let visibleFrame = mouseScreen.visibleFrame
+            let windowHeight = panel.frame.height
+            
+            // Get the saved width or use current
+            var windowWidth = panel.frame.width
+            if let savedWidth = preferences.panelWidth {
+                // Ensure width is not greater than screen width minus padding
+                windowWidth = min(savedWidth, visibleFrame.width - 32)
+            }
+            
+            // Calculate position based on preference
+            let finalXPosition: CGFloat
+            switch preferences.panelPosition {
+            case .topLeft:
+                finalXPosition = visibleFrame.origin.x + 16
+            case .topCenter:
+                finalXPosition = visibleFrame.origin.x + (visibleFrame.width - windowWidth) / 2
+            case .topRight:
+                finalXPosition = visibleFrame.origin.x + visibleFrame.width - windowWidth - 16
+            }
+            let finalYPosition = visibleFrame.origin.y + visibleFrame.height - windowHeight - 16
+            
+            // Set the frame with the new position and width
+            let newFrame = NSRect(x: finalXPosition, y: finalYPosition, width: windowWidth, height: windowHeight)
+            panel.setFrame(newFrame, display: true, animate: true)
+        }
+        
+        panel.makeKeyAndOrderFront(nil)
+        panel.orderFrontRegardless()
     }
         
     func launchShortcutAction() {
