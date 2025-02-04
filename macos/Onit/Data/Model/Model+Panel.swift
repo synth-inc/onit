@@ -64,8 +64,16 @@ extension OnitModel: NSWindowDelegate {
                 windowWidth = min(savedWidth, visibleFrame.width - 32)
             }
             
-            // Position in top left with padding
-            let finalXPosition = visibleFrame.origin.x + 16
+            // Calculate position based on preference
+            let finalXPosition: CGFloat
+            switch preferences.panelPosition {
+            case .topLeft:
+                finalXPosition = visibleFrame.origin.x + 16
+            case .topCenter:
+                finalXPosition = visibleFrame.origin.x + (visibleFrame.width - windowWidth) / 2
+            case .topRight:
+                finalXPosition = visibleFrame.origin.x + visibleFrame.width - windowWidth - 16
+            }
             let finalYPosition = visibleFrame.origin.y + visibleFrame.height - windowHeight - 16
             
             // Set the frame with the new position and width

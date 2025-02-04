@@ -47,6 +47,7 @@ class Preferences: Codable {
 
     // Window state
     var panelWidth: Double?
+    var panelPosition: PanelPosition = .topRight
     
     // General settings
     var fontSize: Double = 14.0
