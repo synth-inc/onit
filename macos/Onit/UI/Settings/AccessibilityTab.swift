@@ -44,58 +44,94 @@ struct AccessibilityTab: View {
     var body: some View {
         VStack(spacing: 25) {
             VStack(alignment: .leading, spacing: 20) {
-                Text("Autocontext Features")
+                Text("Auto-Context Features")
                     .font(.system(size: 14))
-                HStack {
-                    Text("Enable Autocontext")
-                        .font(.system(size: 13))
-                    Spacer()
-                    Toggle("", isOn: Binding(
-                        get: { featureFlagsManager.accessibility },
-                        set: { featureFlagsManager.overrideAccessibility($0) }
-                    ))
-                    .toggleStyle(.switch)
-                    .controlSize(.small)
+                Text("With Auto-Context, Onit can load context directly from your computer using Apple's screen-reader APIs. Auto-Context spares you the hassle of manually uploading files or copy/pasting. Data loaded with Auto-Context is not uploaded until you submit your conversation. In local mode, no context is ever uploaded.")
+                    .font(.system(size: 12))
+                    .foregroundStyle(.gray200)
+                    .lineSpacing(2)
+                
+                Button {
+                    // TODO: Add demo video action
+                } label: {
+                    HStack(spacing: 6) {
+                        Image(.playBottom)
+                            .resizable()
+                            .frame(width: 16, height: 16)
+                        Text("Watch the demo")
+                            .font(.system(size: 13))
+                    }
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 6)
+                    .background(Color(.blue300))
+                    .clipShape(RoundedRectangle(cornerRadius: 6))
+                }
+                
+                VStack(alignment: .leading, spacing: 4) {
+                    HStack {
+                        Text("Enable Auto-Context")
+                            .font(.system(size: 13))
+                        Spacer()
+                        Toggle("", isOn: Binding(
+                            get: { featureFlagsManager.accessibility },
+                            set: { featureFlagsManager.overrideAccessibility($0) }
+                        ))
+                        .toggleStyle(.switch)
+                        .controlSize(.small)
+                    }
+                    Text("You'll need to grant Accessibility access.")
+                        .font(.system(size: 12))
+                        .foregroundStyle(.gray200)
                 }
                 
                 if featureFlagsManager.accessibility {
-                    HStack {
-                        Text("Autocontext for Highlighted Text")
-                            .font(.system(size: 13))
-                        Spacer()
-                        Toggle("", isOn: Binding(
-                            get: { featureFlagsManager.accessibilityInput },
-                            set: { featureFlagsManager.overrideAccessibilityInput($0) }
-                        ))
-                        .toggleStyle(.switch)
-                        .controlSize(.small)
-                        SettingInfoButton(
-                            title: "Autocontext from Highlighted Text",
-                            description: "When enabled, Onit will read highlighted text from any application, and add it as context to your conversation. Context is not uploaded until you submit your conversation. In local mode, no context is ever uploaded." ,
-                            defaultValue: "off",
-                            valueType: "Bool"
-                        )
+                    VStack(alignment: .leading, spacing: 4) {
+                        HStack {
+                            Text("Highlighted Text")
+                                .font(.system(size: 13))
+                            Spacer()
+                            Toggle("", isOn: Binding(
+                                get: { featureFlagsManager.accessibilityInput },
+                                set: { featureFlagsManager.overrideAccessibilityInput($0) }
+                            ))
+                            .toggleStyle(.switch)
+                            .controlSize(.small)
+                            SettingInfoButton(
+                                title: "Auto-Context from Highlighted Text",
+                                description: "When enabled, Onit will read highlighted text from any application, and add it as context to your conversation. Context is not uploaded until you submit your conversation. In local mode, no context is ever uploaded." ,
+                                defaultValue: "off",
+                                valueType: "Bool"
+                            )
+                        }
+                        Text("Automatically loads highlighted text as content.")
+                            .font(.system(size: 12))
+                            .foregroundStyle(.gray200)
                     }
                     
-                    HStack {
-                        Text("Autocontext + Screen-Reader Shortcut")
-                            .font(.system(size: 13))
-                        Spacer()
-                        Toggle("", isOn: Binding(
-                            get: { featureFlagsManager.accessibilityAutoContext },
-                            set: { featureFlagsManager.overrideAccessibilityAutoContext($0) }
-                        ))
-                        .toggleStyle(.switch)
-                        .controlSize(.small)
-                        SettingInfoButton(
-                            title: "Autocontext, Screen Reader Shortcut",
-                            description: "When enabled, Onit adds a shortcut that, when triggered, will read the text from the foregrounded application and add it as context to your conversation. Context is not uploaded until you submit your conversation. In local mode, no context is ever uploaded.",
-                            defaultValue: "off",
-                            valueType: "Bool"
-                        )
+                    VStack(alignment: .leading, spacing: 4) {
+                        HStack {
+                            Text("Current Window Shortcut")
+                                .font(.system(size: 13))
+                            Spacer()
+                            Toggle("", isOn: Binding(
+                                get: { featureFlagsManager.accessibilityAutoContext },
+                                set: { featureFlagsManager.overrideAccessibilityAutoContext($0) }
+                            ))
+                            .toggleStyle(.switch)
+                            .controlSize(.small)
+                            SettingInfoButton(
+                                title: "Auto-Context, Screen Reader Shortcut",
+                                description: "When enabled, Onit adds a shortcut that, when triggered, will read the text from the foregrounded application and add it as context to your conversation. Context is not uploaded until you submit your conversation. In local mode, no context is ever uploaded.",
+                                defaultValue: "off",
+                                valueType: "Bool"
+                            )
+                        }
+                        Text("Loads context from the active window")
+                            .font(.system(size: 12))
+                            .foregroundStyle(.gray200)
                     }
                     VStack(alignment: .leading, spacing: 20) {
-                        Text("Autocontext Hint Position")
+                        Text("Auto-Context Hint Position")
                             .font(.system(size: 14))
                         Picker("Choose hint position", selection: $selectedMode) {
                             ForEach(modes, id: \.self) { mode in
