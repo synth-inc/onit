@@ -182,8 +182,10 @@ extension OnitModel: NSWindowDelegate {
                   return screen.frame.contains(mouseLocation)
               }) ?? NSScreen.main else {
             // If we can't determine screens, just show the panel
-            panel.makeKeyAndOrderFront(nil)
-            panel.orderFrontRegardless()
+            if let panel = panel {
+                panel.makeKeyAndOrderFront(nil)
+                panel.orderFrontRegardless()
+            }
             return
         }
         
@@ -209,11 +211,11 @@ extension OnitModel: NSWindowDelegate {
             case .topRight:
                 finalXPosition = visibleFrame.origin.x + visibleFrame.width - windowWidth - 16
             }
-            let finalYPosition = visibleFrame.origin.y + visibleFrame.height - windowHeight - 16
+            let finalYPosition = visibleFrame.origin.y + visibleFrame.height - windowHeight
             
             // Set the frame with the new position and width
             let newFrame = NSRect(x: finalXPosition, y: finalYPosition, width: windowWidth, height: windowHeight)
-            panel.setFrame(newFrame, display: true, animate: true)
+            panel.setFrame(newFrame, display: true, animate: false)
         }
         
         panel.makeKeyAndOrderFront(nil)

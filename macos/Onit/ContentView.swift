@@ -49,7 +49,7 @@ struct ContentView: View {
                 .onEnded { value in
                     if let panel = model.panel {
                         model.updatePreferences { prefs in
-                            prefs.contentViewFrame = panel.frame
+                            prefs.panelWidth = panel.frame.width
                         }
                     }
                 }

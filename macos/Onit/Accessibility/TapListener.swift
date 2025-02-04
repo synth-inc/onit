@@ -40,9 +40,9 @@ class TapListener {
                 DispatchQueue.main.async {
                     switch type {
                     case .leftMouseDown, .rightMouseDown:
-                        print("Mouse down detected!")
+//                        print("Mouse down detected!")
                     case .leftMouseUp, .rightMouseUp:
-                        print("Mouse up detected!")
+//                        print("Mouse up detected!")
                         Task { @MainActor in
                             // self.handleMouseUp()
                         }
