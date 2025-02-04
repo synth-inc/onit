@@ -89,7 +89,7 @@ extension OnitModel {
                 switch preferences.mode {
                 case .remote:
                     streamedResponse = ""
-                    prompt.generationState = .done
+                    addPartialPrompt(prompt: prompt, instruction: curInstruction)
                     
                     let llmRequest = LLMRequest(instructions: instructionsHistory,
                                                 inputs: inputsHistory,
@@ -117,8 +117,7 @@ extension OnitModel {
                     if !buffer.isEmpty {
                         streamedResponse += buffer
                     }
-                    
-                    let response = Response(text: streamedResponse, type: .success)
+                    let response = Response(text: String(streamedResponse), type: .success)
                     updatePrompt(prompt: prompt, response: response, instruction: curInstruction)
                     setTokenIsValid(true)
                 case .local:
@@ -237,8 +236,23 @@ extension OnitModel {
         }
         return nil
     }
-
+    
+    func addPartialPrompt(prompt: Prompt, instruction: String) {
+        prompt.priorInstructions.append(instruction)
+        prompt.responses.append(Response.partial)
+        prompt.generationIndex = (prompt.responses.count - 1)
+        prompt.generationState = .done
+        
+        generatingPrompt = nil
+        generatingPromptPriorState = nil
+    }
+    
     func updatePrompt(prompt: Prompt, response: Response, instruction: String) {
+        if let partialResponseIndex = prompt.responses.firstIndex(where: { $0.isPartial }) {
+            prompt.responses.remove(at: partialResponseIndex)
+            prompt.priorInstructions.removeLast()
+        }
+        
         prompt.priorInstructions.append(instruction)
         prompt.responses.append(response)
         prompt.generationIndex = (prompt.responses.count - 1)

@@ -19,9 +19,18 @@ class Response {
         self.timestamp = time
         self.type = type
     }
+    
+    static var partial: Response {
+        .init(text: "", type: .partial)
+    }
+    
+    var isPartial: Bool {
+        type == .partial
+    }
 }
 
 enum ResponseType: String, Codable {
+    case partial
     case success
     case error
 }

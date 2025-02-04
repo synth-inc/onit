@@ -11,22 +11,18 @@ import SwiftUI
 
 struct GeneratedContentView: View {
     @Environment(\.model) var model
-    @State private var text: String = ""
     @State private var contentHeight: CGFloat = 1000
     
-    private var stream: Bool = false
-
-    init(result: String) {
-        self._text = State(initialValue: result)
-    }
-
-    init(text: String) {
-        self._text = State(initialValue: text)
-    }
-
-    init(stream: Bool) {
-        self.stream = stream
-        self._text = State(initialValue: model.streamedResponse)
+    var prompt: Prompt
+    
+    var textToRead: String {
+        let response = prompt.responses[prompt.generationIndex]
+        
+        return if response.isPartial {
+            model.streamedResponse
+        } else {
+            response.text
+        }
     }
     
     var height: CGFloat {
@@ -34,7 +30,7 @@ struct GeneratedContentView: View {
     }
 
     var body: some View {
-        Markdown(self.text)
+        Markdown(textToRead)
             .markdownTheme(.custom)
             .textSelection(.enabled)
             .multilineTextAlignment(.leading)
@@ -47,11 +43,6 @@ struct GeneratedContentView: View {
                         .onAppear {
                             contentHeight = proxy.size.height
                         }
-                }
-            }
-            .onChange(of: model.streamedResponse, initial: false) { _, newValue in
-                if self.stream {
-                    self.text = newValue
                 }
             }
     }
@@ -80,15 +71,5 @@ extension Theme {
 }
 
 #Preview {
-    GeneratedContentView(
-        result: """
-            ```swift
-            struct ContentView: View {
-                var body: some View {
-                    Text("Hello world")
-                }
-            }
-            ```
-            """
-    )
+    GeneratedContentView(prompt: Prompt.sample)
 }
