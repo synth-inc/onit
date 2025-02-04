@@ -68,6 +68,7 @@ import SwiftUI
     var client = FetchingClient()
     var updater = SPUStandardUpdaterController(
         startingUpdater: true, updaterDelegate: nil, userDriverDelegate: nil)
+    var streamingClient = StreamingClient()
     var _tokenValidation = TokenValidationState()
 
     var remoteFetchFailed: Bool = false

@@ -8,6 +8,7 @@
 import Defaults
 import Foundation
 import PostHog
+import EventSource
 
 extension OnitModel {
     func createAndSavePrompt() -> Prompt {
@@ -88,6 +89,8 @@ extension OnitModel {
                 switch preferences.mode {
                 case .remote:
                     streamedResponse = ""
+                    prompt.generationState = .done
+                    
                     let llmRequest = LLMRequest(instructions: instructionsHistory,
                                                 inputs: inputsHistory,
                                                 files: filesHistory,
@@ -95,10 +98,8 @@ extension OnitModel {
                                                 autoContexts: autoContextsHistory,
                                                 responses: responsesHistory,
                                                 model: preferences.remoteModel)
-                    
-                    prompt.generationState = .done
-                    
-                    let asyncText = try await client.chatInStream(llmRequest: llmRequest, apiToken: getTokenForModel(preferences.remoteModel ?? nil))
+                    let apiToken = getTokenForModel(preferences.remoteModel ?? nil)
+                    let asyncText = try await streamingClient.chatInStream(llmRequest: llmRequest, apiToken: apiToken)
                     let batchSizeLimit = 1
                     var batchSize = 0
                     var buffer = ""

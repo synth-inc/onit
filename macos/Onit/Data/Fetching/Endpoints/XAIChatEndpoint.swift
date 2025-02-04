@@ -39,6 +39,12 @@ struct XAIChatEndpoint: Endpoint {
         
         return nil
     }
+    
+    func getStreamingErrorMessage(data: Data) -> String? {
+        let response = try? JSONDecoder().decode(XAIChatStreamingError.self, from: data)
+        
+        return response?.error
+    }
 
     var timeout: TimeInterval? { nil }
 }
@@ -104,4 +110,8 @@ struct XAIChatResponse: Codable {
             let role: String?
         }
     }
+}
+
+struct XAIChatStreamingError: Codable {
+    let error: String
 }

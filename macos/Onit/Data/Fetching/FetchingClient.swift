@@ -19,14 +19,4 @@ actor FetchingClient {
         decoder.dateDecodingStrategy = .formatted(dateFormatter)
         return decoder
     }()
-    
-    func mimeType(for url: URL) -> String {
-        let pathExtension = url.pathExtension
-        if let uti = UTType(filenameExtension: pathExtension),
-            let mimeType = uti.preferredMIMEType
-        {
-            return mimeType
-        }
-        return "application/octet-stream"  // Fallback if MIME type is not found
-    }
 }

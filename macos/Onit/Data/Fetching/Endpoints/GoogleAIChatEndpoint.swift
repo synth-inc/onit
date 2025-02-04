@@ -37,6 +37,12 @@ struct GoogleAIChatEndpoint: Endpoint {
         
         return nil
     }
+    
+    func getStreamingErrorMessage(data: Data) -> String? {
+        let response = try? JSONDecoder().decode(GoogleAIChatStreamingError.self, from: data)
+        
+        return response?.error.message
+    }
 
     var timeout: TimeInterval? { nil }
 }
@@ -111,4 +117,12 @@ struct GoogleAIChatResponse: Codable {
         let content: String?
         let role: String?
     }
+}
+
+struct GoogleAIChatStreamingError: Codable {
+    struct Error: Codable {
+        let message: String
+    }
+    
+    let error: Error
 }

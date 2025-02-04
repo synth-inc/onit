@@ -22,10 +22,14 @@ protocol Endpoint: Sendable {
     var timeout: TimeInterval? { get }
     
     func getContentFromSSE(event: EVEvent) throws -> String?
+    func getStreamingErrorMessage(data: Data) -> String?
 }
 
 extension Endpoint {
     func getContentFromSSE(event: EVEvent) throws -> String? {
+        return nil
+    }
+    func getStreamingErrorMessage(data: Data) -> String? {
         return nil
     }
     

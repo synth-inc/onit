@@ -35,6 +35,12 @@ struct OpenAIChatEndpoint: Endpoint {
         
         return nil
     }
+    
+    func getStreamingErrorMessage(data: Data) -> String? {
+        let response = try? JSONDecoder().decode(OpenAIChatStreamingError.self, from: data)
+        
+        return response?.error.message
+    }
 
     var timeout: TimeInterval? { nil }
 }
@@ -107,5 +113,13 @@ struct OpenAIChatResponse: Codable {
     struct Delta: Codable {
         let content: String?
         let role: String?
+    }
+}
+
+struct OpenAIChatStreamingError: Codable {
+    let error: ErrorMessage
+    
+    struct ErrorMessage: Codable {
+        let message: String
     }
 }
