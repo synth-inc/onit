@@ -100,23 +100,11 @@ extension OnitModel {
                                                 model: preferences.remoteModel)
                     let apiToken = getTokenForModel(preferences.remoteModel ?? nil)
                     let asyncText = try await streamingClient.chatInStream(llmRequest: llmRequest, apiToken: apiToken)
-                    let batchSizeLimit = 1
-                    var batchSize = 0
-                    var buffer = ""
-                    // TODO: KNA - If too much event, some are skipped ...
+                    
                     for try await response in asyncText {
-                        buffer += response
-                        batchSize += 1
-                        
-                        if batchSize >= batchSizeLimit {
-                            updateStreamedResponse(newText: buffer)
-                            batchSize = 0
-                            buffer = ""
-                        }
+                        streamedResponse += response
                     }
-                    if !buffer.isEmpty {
-                        streamedResponse += buffer
-                    }
+                    
                     let response = Response(text: String(streamedResponse), type: .success)
                     updatePrompt(prompt: prompt, response: response, instruction: curInstruction)
                     setTokenIsValid(true)
@@ -151,11 +139,6 @@ extension OnitModel {
                 updatePrompt(prompt: prompt, response: response, instruction: curInstruction)
             }
         }
-    }
-    
-    @MainActor
-    private func updateStreamedResponse(newText: String) {
-        streamedResponse += newText
     }
     
     /**

@@ -68,7 +68,7 @@ actor StreamingClient {
         let eventSource = EventSource(mode: .dataOnly)
         let dataTask = await eventSource.dataTask(for: urlRequest)
         
-        return AsyncThrowingStream<String, Error>(String.self, bufferingPolicy: .bufferingNewest(5)) { continuation in
+        return AsyncThrowingStream<String, Error>(String.self, bufferingPolicy: .unbounded) { continuation in
             let task = Task { @Sendable in
                 for await event in await dataTask.events() {
                     switch event {
@@ -77,6 +77,8 @@ actor StreamingClient {
                     case .event(let event):
                         if let response = try? endpoint.getContentFromSSE(event: event) {
                             continuation.yield(response)
+                        } else {
+                            continuation.yield("")
                         }
                     case .error(let error):
                         continuation.finish(throwing: convertError(endpoint: endpoint, error: error))
