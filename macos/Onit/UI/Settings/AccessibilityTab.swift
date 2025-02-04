@@ -1,5 +1,6 @@
 import PostHog
 import SwiftUI
+import KeyboardShortcuts
 
 struct AccessibilityTab: View {
     
@@ -105,7 +106,7 @@ struct AccessibilityTab: View {
                             SettingInfoButton(
                                 title: "Auto-Context from Highlighted Text",
                                 description: "When enabled, Onit will read highlighted text from any application, and add it as context to your conversation. Context is not uploaded until you submit your conversation. In local mode, no context is ever uploaded." ,
-                                defaultValue: "off",
+                                defaultValue: "on",
                                 valueType: "Bool"
                             )
                         }
@@ -134,7 +135,9 @@ struct AccessibilityTab: View {
                                 .font(.system(size: 13))
                             Spacer()
                             Toggle("", isOn: Binding(
-                                get: { featureFlagsManager.accessibilityAutoContext },
+                                get: {
+                                    featureFlagsManager.accessibilityAutoContext
+                                },
                                 set: { featureFlagsManager.overrideAccessibilityAutoContext($0) }
                             ))
                             .toggleStyle(.switch)
@@ -142,7 +145,7 @@ struct AccessibilityTab: View {
                             SettingInfoButton(
                                 title: "Auto-Context, Screen Reader Shortcut",
                                 description: "When enabled, Onit adds a shortcut that, when triggered, will read the text from the foregrounded application and add it as context to your conversation. Context is not uploaded until you submit your conversation. In local mode, no context is ever uploaded.",
-                                defaultValue: "off",
+                                defaultValue: "on",
                                 valueType: "Bool"
                             )
                         }
@@ -150,6 +153,9 @@ struct AccessibilityTab: View {
                             .font(.system(size: 12))
                             .foregroundStyle(.gray200)
                     }
+                    KeyboardShortcuts.Recorder(
+                        "Shortcut", name: .launchWithAutoContext
+                    )
                 }
             }
         }

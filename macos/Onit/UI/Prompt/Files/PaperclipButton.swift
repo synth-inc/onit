@@ -50,9 +50,26 @@ struct PaperclipButton: View {
                                 .appFont(.medium13)
                         }
                     }
+                } else {
+                    Button {
+                        handleAddContext()
+                    } label: {
+                        
+                        Text("Add context")
+                            .foregroundStyle(.gray200)
+                            .appFont(.medium13)
+                        
+                    }
                 }
             }
         }
+        .onAppear {
+            resetClosedAutocontext()
+        }
+    }
+    
+    private func resetClosedAutocontext() {
+        closedAutocontext = false
     }
     
     private func handleAddContext() {
