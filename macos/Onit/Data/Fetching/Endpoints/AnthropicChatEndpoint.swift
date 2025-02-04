@@ -53,6 +53,12 @@ struct AnthropicChatEndpoint: Endpoint {
         return nil
     }
     
+    func getStreamingErrorMessage(data: Data) -> String? {
+        let response = try? JSONDecoder().decode(AnthropicChatStreamingError.self, from: data)
+        
+        return response?.message
+    }
+
     var timeout: TimeInterval? { nil }
 }
 
@@ -128,4 +134,8 @@ struct AnthropicChatResponse: Codable {
             case outputTokens = "output_tokens"
         }
     }
+}
+
+struct AnthropicChatStreamingError: Codable {
+    let message: String
 }
