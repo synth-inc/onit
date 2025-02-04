@@ -44,6 +44,11 @@ struct AccessibilityTab: View {
     var body: some View {
         Form {
             Section {
+                
+            } header: {
+                Text("Auto-Context")
+                    .font(.system(size: 14))
+                    .padding(.vertical, 2)
                 Text("With Auto-Context, Onit can load context directly from your computer using Apple's screen-reader APIs. Auto-Context spares you the hassle of manually uploading files or copy/pasting. Data loaded with Auto-Context is not uploaded until you submit your conversation. In local mode, no context is ever uploaded.")
                     .font(.system(size: 12))
                     .foregroundStyle(.gray200)
@@ -59,14 +64,10 @@ struct AccessibilityTab: View {
                         Text("Watch the demo")
                             .font(.system(size: 13))
                     }
-                    .padding(.horizontal, 12)
                     .padding(.vertical, 6)
-                    .background(Color(.blue300))
-                    .clipShape(RoundedRectangle(cornerRadius: 6))
                 }
-            } header: {
-                Text("Auto-Context Features")
-                    .font(.system(size: 14))
+                .background(Color(.blue))
+                .clipShape(RoundedRectangle(cornerRadius: 6))
             }
             
             Section {
@@ -85,11 +86,6 @@ struct AccessibilityTab: View {
                     Text("You'll need to grant Accessibility access.")
                         .font(.system(size: 12))
                         .foregroundStyle(.gray200)
-                }
-            } header: {
-                HStack {
-                    Image(systemName: "gearshape")
-                    Text("Settings")
                 }
             }
             
@@ -129,11 +125,6 @@ struct AccessibilityTab: View {
                     .pickerStyle(MenuPickerStyle())
                     .padding(.vertical, 4)
                     .tint(.blue600)
-                } header: {
-                    HStack {
-                        Image(systemName: "text.cursor")
-                        Text("Text Selection")
-                    }
                 }
                 
                 Section {
@@ -158,11 +149,6 @@ struct AccessibilityTab: View {
                         Text("Loads context from the active window")
                             .font(.system(size: 12))
                             .foregroundStyle(.gray200)
-                    }
-                } header: {
-                    HStack {
-                        Image(systemName: "window.vertical")
-                        Text("Window Content")
                     }
                 }
             }
