@@ -30,15 +30,17 @@ struct PaperclipButton: View {
             .tooltip(prompt: accessibilityAutoContextEnabled ? "Add context" : "Upload file")
 
             if model.pendingContextList.isEmpty {
-                Button {
-                    handleAddContext()
-                } label: {
-                    HStack(spacing: 0) {
-                        Text(accessibilityAutoContextEnabled ? "Add context (" : "Add file")
-                            .foregroundStyle(.gray200)
-                            .appFont(.medium13)
-                        
-                        if accessibilityAutoContextEnabled {
+                if !accessibilityAutoContextEnabled {
+                    EnableAutocontextTag()
+                } else {
+                    Button {
+                        handleAddContext()
+                    } label: {
+                        HStack(spacing: 0) {
+                            Text("Add context (")
+                                .foregroundStyle(.gray200)
+                                .appFont(.medium13)
+                            
                             KeyboardShortcutView(shortcut: KeyboardShortcuts.getShortcut(for: .launchWithAutoContext)?.native)
                                 .foregroundStyle(.gray200)
                                 .appFont(.medium13)
