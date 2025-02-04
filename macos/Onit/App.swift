@@ -10,6 +10,7 @@ import KeyboardShortcuts
 import MenuBarExtraAccess
 import Foundation
 import PostHog
+import ServiceManagement
 
 @main
 struct App: SwiftUI.App {
@@ -17,6 +18,10 @@ struct App: SwiftUI.App {
     @Environment(\.model) var model
     @NSApplicationDelegateAdaptor(AppDelegate.self) var delegate
     @ObservedObject private var featureFlagsManager = FeatureFlagManager.shared
+    
+    // @Default(.launchOnStartupRequested) var launchOnStartupRequested
+    // TODO: KNA - Replace by future Defaults SDK
+    @AppStorage("launchOnStartupRequested") var launchOnStartupRequested: Bool = false
     
     @State var accessibilityPermissionRequested = false
     
@@ -73,6 +78,9 @@ struct App: SwiftUI.App {
             MenuBarContent()
         } label: {
             MenuIcon()
+                .onAppear {
+                    checkLaunchOnStartup()
+                }
                 .onChange(of: model.accessibilityPermissionStatus, initial: true) { oldValue, newValue in
                     switch newValue {
                     case .granted:
@@ -114,6 +122,17 @@ struct App: SwiftUI.App {
                 if let window = NSApplication.shared.windows.first(where: { $0.contentViewController is NSHostingController<SettingsView> }) {
                     window.level = .floating
                 }
+            }
+        }
+    }
+    
+    private func checkLaunchOnStartup() {
+        if !launchOnStartupRequested {
+            do {
+                try SMAppService.mainApp.register()
+                launchOnStartupRequested = true
+            } catch {
+                print("Error: \(error)")
             }
         }
     }
