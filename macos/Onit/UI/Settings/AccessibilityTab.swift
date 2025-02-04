@@ -42,10 +42,8 @@ struct AccessibilityTab: View {
     @ObservedObject private var featureFlagsManager = FeatureFlagManager.shared
     
     var body: some View {
-        VStack(spacing: 25) {
-            VStack(alignment: .leading, spacing: 20) {
-                Text("Auto-Context Features")
-                    .font(.system(size: 14))
+        Form {
+            Section {
                 Text("With Auto-Context, Onit can load context directly from your computer using Apple's screen-reader APIs. Auto-Context spares you the hassle of manually uploading files or copy/pasting. Data loaded with Auto-Context is not uploaded until you submit your conversation. In local mode, no context is ever uploaded.")
                     .font(.system(size: 12))
                     .foregroundStyle(.gray200)
@@ -66,7 +64,12 @@ struct AccessibilityTab: View {
                     .background(Color(.blue300))
                     .clipShape(RoundedRectangle(cornerRadius: 6))
                 }
-                
+            } header: {
+                Text("Auto-Context Features")
+                    .font(.system(size: 14))
+            }
+            
+            Section {
                 VStack(alignment: .leading, spacing: 4) {
                     HStack {
                         Text("Enable Auto-Context")
@@ -83,8 +86,15 @@ struct AccessibilityTab: View {
                         .font(.system(size: 12))
                         .foregroundStyle(.gray200)
                 }
-                
-                if featureFlagsManager.accessibility {
+            } header: {
+                HStack {
+                    Image(systemName: "gearshape")
+                    Text("Settings")
+                }
+            }
+            
+            if featureFlagsManager.accessibility {
+                Section {
                     VStack(alignment: .leading, spacing: 4) {
                         HStack {
                             Text("Highlighted Text")
@@ -108,6 +118,25 @@ struct AccessibilityTab: View {
                             .foregroundStyle(.gray200)
                     }
                     
+                    Picker("Choose hint position", selection: $selectedMode) {
+                        ForEach(modes, id: \.self) { mode in
+                            Text(mode.text)
+                                .appFont(.medium14)
+                                .padding(.vertical, 4)
+                        }
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .pickerStyle(MenuPickerStyle())
+                    .padding(.vertical, 4)
+                    .tint(.blue600)
+                } header: {
+                    HStack {
+                        Image(systemName: "text.cursor")
+                        Text("Text Selection")
+                    }
+                }
+                
+                Section {
                     VStack(alignment: .leading, spacing: 4) {
                         HStack {
                             Text("Current Window Shortcut")
@@ -130,29 +159,16 @@ struct AccessibilityTab: View {
                             .font(.system(size: 12))
                             .foregroundStyle(.gray200)
                     }
-                    VStack(alignment: .leading, spacing: 20) {
-                        Text("Auto-Context Hint Position")
-                            .font(.system(size: 14))
-                        Picker("Choose hint position", selection: $selectedMode) {
-                            ForEach(modes, id: \.self) { mode in
-                                Text(mode.text)
-                                    .appFont(.medium14)
-                                    .padding(.vertical, 4)
-                            }
-                        }
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .pickerStyle(MenuPickerStyle())
-                        .padding(.vertical, 4)
-                        .padding(.bottom, 5)
-                        .padding(.leading, 5)
-                        .tint(.blue600)
+                } header: {
+                    HStack {
+                        Image(systemName: "window.vertical")
+                        Text("Window Content")
                     }
                 }
             }
-            
         }
-        .padding(.vertical, 20)
-        .padding(.horizontal, 86)
+        .formStyle(.grouped)
+        .padding()
         .onChange(of: selectedMode, initial: false) { old, new in
             highlightModeChange(oldValue: old, newValue: new)
         }
