@@ -99,13 +99,15 @@ class HighlightHintWindowController {
     
     func adjustWindow() {
         DispatchQueue.main.async {
-            guard let currentScreen = NSScreen.main else {
-                print("No main screen found.")
-                return
-            }
+            
             
             switch self.mode {
             case .topRight:
+                guard let currentScreen = NSScreen.main else {
+                    print("No main screen found.")
+                    return
+                }
+                
                 // Get the window's height (or 75x75 beacuse sometimes it's empty?)
                 let windowHeight = max(self.window.frame.height, 75)
                 let windowWidth = max(self.window.frame.width, 75)
@@ -118,18 +120,22 @@ class HighlightHintWindowController {
                 self.window.setFrameOrigin(NSPoint(x: newOriginX, y: newOriginY))
                 
             case .textfield:
-                // TODO: KNA - Filter if uiElementBound weird (origin minY = maxY)
-                if let bound = self.uiElementBound {
-                    let elementScreenY = currentScreen.frame.height - bound.origin.y
-                    
-                    let newOriginX = bound.origin.x
-                    let newOriginY = elementScreenY + 0
-                    
-                    self.window.setFrameOrigin(NSPoint(x: newOriginX, y: newOriginY))
-                } else {
-                    // TODO: KNA - What to do
+                guard let currentScreen = NSScreen.screens.first else {
+                    print("No base screen found.")
+                    return
                 }
                 
+                guard let bound = self.uiElementBound else {
+                    // TODO: KNA - What to do
+                    return
+                }
+                
+                let elementScreenY = currentScreen.frame.height - bound.origin.y
+                
+                let newOriginX = bound.origin.x
+                let newOriginY = elementScreenY + 0
+                
+                self.window.setFrameOrigin(NSPoint(x: newOriginX, y: newOriginY))
             case .none:
                 break
             }
