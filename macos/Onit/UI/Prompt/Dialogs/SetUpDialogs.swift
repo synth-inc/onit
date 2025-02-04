@@ -19,16 +19,18 @@ struct SetUpDialogs: View {
     @State private var fetchingRemote = false
     @State private var fetchingLocal = false
     
-    @AppStorage("closedRemote") var closedRemote = false
-    @AppStorage("closedLocal") var closedLocal = false
-    @AppStorage("seenLocal") var seenLocal = false
+    @Default(.closedRemote) var closedRemote
+    @Default(.closedLocal) var closedLocal
+    @Default(.closedOpenAI) var closedOpenAI
+    @Default(.closedAnthropic) var closedAnthropic
+    @Default(.closedXAI) var closedXAI
+    @Default(.closedGoogleAI) var closedGoogleAI
+    @Default(.seenLocal) var seenLocal
+    @Default(.closedNewRemoteData) var closedNewRemoteData
+    @Default(.closedDeprecatedRemoteData) var closedDeprecatedRemoteData
+    @Default(.availableRemoteModels) var availableRemoteModels
+    @Default(.availableLocalModels) var availableLocalModels
 
-    @AppStorage("closedOpenAI") var closedOpenAI = false
-    @AppStorage("closedAnthropic") var closedAnthropic = false
-    @AppStorage("closedXAI") var closedXAI = false
-    @AppStorage("closedGoogleAI") var closedGoogleAI = false
-
-    @AppStorage("closedNewRemoteData") private var closedNewRemoteData: Data = Data()
     var closedNewRemote: [String: Bool] {
         get {
              if let decoded = try? JSONDecoder().decode([String: Bool].self, from: closedNewRemoteData) {
@@ -37,8 +39,7 @@ struct SetUpDialogs: View {
             return [:]
         }
     }
-        
-    @AppStorage("closedDeprecatedRemoteData") private var closedDeprecatedRemoteData: Data = Data()
+
     var closedDeprecatedRemote: [String: Bool] {
         get {
              if let decoded = try? JSONDecoder().decode([String: Bool].self, from: closedDeprecatedRemoteData) {
@@ -47,9 +48,6 @@ struct SetUpDialogs: View {
             return [:]
         }
     }
-    
-    @Default(.availableRemoteModels) var availableRemoteModels
-    @Default(.availableLocalModels) var availableLocalModels
 
     init() {
         // resetAppStorageFlags()

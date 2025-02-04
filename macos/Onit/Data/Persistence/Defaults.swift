@@ -32,6 +32,19 @@ extension Defaults.Keys {
     static let useGoogleAI = Key<Bool>("useGoogleAI", default: false)
     static let useLocal = Key<Bool>("useLocalModel", default: false)
     
+    // Dialogs closed
+    static let closedRemote = Key<Bool>("closedRemote", default: false)
+    static let closedLocal = Key<Bool>("closedLocal", default: false)
+    static let closedOpenAI = Key<Bool>("closedOpenAI", default: false)
+    static let closedAnthropic = Key<Bool>("closedAnthropic", default: false)
+    static let closedXAI = Key<Bool>("closedXAI", default: false)
+    static let closedGoogleAI = Key<Bool>("closedGoogleAI", default: false)
+    static let closedNewRemoteData = Key<Data>("closedNewRemoteData", default: Data())
+    static let closedDeprecatedRemoteData = Key<Data>("closedDeprecatedRemoteData", default: Data())
+    static let closedAutoContextDialog = Key<Bool>("closedAutoContext", default: false)
+    
+    static let seenLocal = Key<Bool>("seenLocal", default: false)
+    
     static let remoteModel = Key<AIModel?>("remoteModel", default: nil)
     static let localModel = Key<String?>("localModel", default: nil)
     static let mode = Key<InferenceMode>("mode", default: .remote)
