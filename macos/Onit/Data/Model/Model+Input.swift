@@ -10,9 +10,13 @@ import AppKit
 extension OnitModel {
     func addAutoContext() {
         guard FeatureFlagManager.shared.accessibility,
-              FeatureFlagManager.shared.accessibilityAutoContext,
-              let appName = AccessibilityNotificationsManager.shared.screenResult.applicationName,
+              FeatureFlagManager.shared.accessibilityAutoContext else {
+            return
+        }
+        
+        guard let appName = AccessibilityNotificationsManager.shared.screenResult.applicationName,
               let appContent = AccessibilityNotificationsManager.shared.screenResult.others else {
+            // TODO: KNA - notify user for empty context
             return
         }
         
@@ -24,7 +28,7 @@ extension OnitModel {
             return false
         }
         guard !contextDuplicated else {
-            // TODO: KNA - Display duplicated context to user
+            // TODO: KNA - Notify user for duplicated context
             return
         }
         
