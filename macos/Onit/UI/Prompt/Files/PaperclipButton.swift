@@ -12,6 +12,7 @@ struct PaperclipButton: View {
     @Environment(\.model) var model
     @ObservedObject var featureFlagsManager = FeatureFlagManager.shared
     @ObservedObject var notificationsManager = AccessibilityNotificationsManager.shared
+    @AppStorage("closedAutocontext") private var closedAutocontext = false
     
     var accessibilityAutoContextEnabled: Bool {
         featureFlagsManager.accessibilityAutoContext
@@ -30,26 +31,45 @@ struct PaperclipButton: View {
             .tooltip(prompt: accessibilityAutoContextEnabled ? "Add context" : "Upload file")
 
             if model.pendingContextList.isEmpty {
-                Button {
-                    handleAddContext()
-                } label: {
-                    HStack(spacing: 0) {
-                        Text(accessibilityAutoContextEnabled ? "Add context (" : "Add file")
-                            .foregroundStyle(.gray200)
-                            .appFont(.medium13)
-                        
-                        if accessibilityAutoContextEnabled {
+                if !accessibilityAutoContextEnabled && !closedAutocontext {
+                    EnableAutocontextTag()
+                } else if accessibilityAutoContextEnabled {
+                    Button {
+                        handleAddContext()
+                    } label: {
+                        HStack(spacing: 0) {
+                            Text("Add context (")
+                                .foregroundStyle(.gray200)
+                                .appFont(.medium13)
+                            
                             KeyboardShortcutView(shortcut: KeyboardShortcuts.getShortcut(for: .launchWithAutoContext)?.native)
                                 .foregroundStyle(.gray200)
                                 .appFont(.medium13)
-                            Text(" for autocontext)")
+                            Text(" for Auto-Context)")
                                 .foregroundStyle(.gray200)
                                 .appFont(.medium13)
                         }
                     }
+                } else {
+                    Button {
+                        handleAddContext()
+                    } label: {
+                        
+                        Text("Add context")
+                            .foregroundStyle(.gray200)
+                            .appFont(.medium13)
+                        
+                    }
                 }
             }
         }
+        .onAppear {
+            resetClosedAutocontext()
+        }
+    }
+    
+    private func resetClosedAutocontext() {
+        closedAutocontext = false
     }
     
     private func handleAddContext() {

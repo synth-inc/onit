@@ -36,9 +36,9 @@ struct SettingsView: View {
             AccessibilityTab()
                 .tabItem {
                     if featureFlagsManager.accessibility {
-                        Label("Autocontext", systemImage: "lightbulb")
+                        Label("Context", systemImage: "lightbulb")
                     } else {
-                        Label("Autocontext", systemImage: "lightbulb.slash")
+                        Label("Context", systemImage: "lightbulb.slash")
                     }
                 }
                 .tag(SettingsTab.accessibility)
