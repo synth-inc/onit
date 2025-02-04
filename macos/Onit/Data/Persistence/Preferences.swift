@@ -46,7 +46,7 @@ class Preferences: Codable {
     var highlightHintMode: HighlightHintMode? = nil
 
     // Window state
-    var contentViewFrame: CGRect?
+    var panelWidth: Double?
     
     // General settings
     var fontSize: Double = 14.0
