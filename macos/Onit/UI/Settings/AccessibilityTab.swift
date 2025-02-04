@@ -53,7 +53,7 @@ struct AccessibilityTab: View {
                     // TODO: Add demo video action
                 } label: {
                     HStack(spacing: 6) {
-                        Image(.playBottom)
+                        Image(.playButton)
                             .resizable()
                             .frame(width: 16, height: 16)
                         Text("Watch the demo")
