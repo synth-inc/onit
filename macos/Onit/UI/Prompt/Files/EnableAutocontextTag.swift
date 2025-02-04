@@ -3,27 +3,26 @@ import SwiftUI
 struct EnableAutocontextTag: View {
     @Environment(\.model) var model
     @Environment(\.openSettings) var openSettings
-    @State private var isVisible = true
+    @AppStorage("closedAutocontext") private var closedAutocontext = false
     
     var body: some View {
-        if isVisible {
+        if !closedAutocontext {
             HStack(spacing: 4) {
                 Button {
-                    isVisible = false
+                    closedAutocontext = true
                     model.settingsTab = .accessibility
                     openSettings()
                 } label: {
-                
                     Image(.stars)
                         .resizable()
                         .frame(width: 12, height: 12)
-                    Text("Enable Autocontext Context")
+                    Text("Enable Auto-Context Context")
                         .appFont(.medium13)
                         .foregroundStyle(.white)
                 }
                 .padding(.vertical, 3)
                 Button {
-                    isVisible = false
+                    closedAutocontext = true
                 } label: {
                     Color.clear
                         .frame(width: 16, height: 16)

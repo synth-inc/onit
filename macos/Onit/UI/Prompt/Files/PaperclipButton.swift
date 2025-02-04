@@ -12,6 +12,7 @@ struct PaperclipButton: View {
     @Environment(\.model) var model
     @ObservedObject var featureFlagsManager = FeatureFlagManager.shared
     @ObservedObject var notificationsManager = AccessibilityNotificationsManager.shared
+    @AppStorage("closedAutocontext") private var closedAutocontext = false
     
     var accessibilityAutoContextEnabled: Bool {
         featureFlagsManager.accessibilityAutoContext
@@ -30,9 +31,9 @@ struct PaperclipButton: View {
             .tooltip(prompt: accessibilityAutoContextEnabled ? "Add context" : "Upload file")
 
             if model.pendingContextList.isEmpty {
-                if !accessibilityAutoContextEnabled {
+                if !accessibilityAutoContextEnabled && !closedAutocontext {
                     EnableAutocontextTag()
-                } else {
+                } else if accessibilityAutoContextEnabled {
                     Button {
                         handleAddContext()
                     } label: {
@@ -44,7 +45,7 @@ struct PaperclipButton: View {
                             KeyboardShortcutView(shortcut: KeyboardShortcuts.getShortcut(for: .launchWithAutoContext)?.native)
                                 .foregroundStyle(.gray200)
                                 .appFont(.medium13)
-                            Text(" for autocontext)")
+                            Text(" for Auto-Context)")
                                 .foregroundStyle(.gray200)
                                 .appFont(.medium13)
                         }
