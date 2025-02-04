@@ -16,6 +16,18 @@ extension OnitModel {
             return
         }
         
+        /** Prevent duplication */
+        let contextDuplicated = pendingContextList.contains { context in
+            if case .auto(let contextApp, let contextContent) = context {
+                return contextApp == appName && contextContent == appContent
+            }
+            return false
+        }
+        guard !contextDuplicated else {
+            // TODO: KNA - Display duplicated context to user
+            return
+        }
+        
         let autoContext = Context(appName: appName, appContent: appContent)
         pendingContextList.insert(autoContext, at: 0)
     }
