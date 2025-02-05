@@ -84,38 +84,18 @@ extension OnitModel {
             
             do {
                 let chat: String
-                if Defaults[.mode] == .remote {
-                    if let customProviderName = Defaults[.remoteModel]?.customProviderName,
-                       let customProvider = Defaults[.availableCustomProvider].first(where: { $0.name == customProviderName }) {
-                           
-                        // Handle custom provider chat
-                        let messages = createOpenAIMessages(
-                            instructions: instructionsHistory,
-                            responses: responsesHistory
-                        )
-                        if let endpoint = getCustomEndpoint(
-                            for: customProvider,
-                            messages: messages,
-                            model: Defaults[.remoteModel]?.id ?? ""
-                        ) {
-                            let response = try await client.execute(endpoint)
-                            chat = response.choices[0].message.content
-                        } else {
-                            throw FetchingError.invalidURL
-                        }
-                    } else {
-                        // Regular remote model chat
-                        chat = try await client.chat(
-                        	instructions: instructionsHistory,
-                        	inputs: inputsHistory,
-                        	files: filesHistory,
-                        	images: imagesHistory,
-                        	autoContexts: autoContextsHistory,
-                        	responses: responsesHistory,
-                        	model: Defaults[.remoteModel],
-                        	apiToken: getTokenForModel(Defaults[.remoteModel] ?? nil)
-                    	)
-                    }
+                if Defaults[.mode] == .remote {                   
+                    // Regular remote model chat
+                    chat = try await client.chat(
+                        instructions: instructionsHistory,
+                        inputs: inputsHistory,
+                        files: filesHistory,
+                        images: imagesHistory,
+                        autoContexts: autoContextsHistory,
+                        responses: responsesHistory,
+                        model: Defaults[.remoteModel],
+                        apiToken: getTokenForModel(Defaults[.remoteModel] ?? nil)
+                    )
                 } else {
                     // TODO implement history for local chat!
                     chat = try await client.localChat(
@@ -234,19 +214,5 @@ extension OnitModel {
         prompt.responses.append(response)
         prompt.generationIndex = (prompt.responses.count - 1)
         prompt.generationState = .done
-    }
-    
-    private func createOpenAIMessages(instructions: [String], responses: [String]) -> [OpenAIChatMessage] {
-        var messages: [OpenAIChatMessage] = []
-        
-        for (index, instruction) in instructions.enumerated() {
-            messages.append(OpenAIChatMessage(role: "user", content: .text(instruction)))
-            
-            if index < responses.count {
-                messages.append(OpenAIChatMessage(role: "assistant", content: .text(responses[index])))
-            }
-        }
-        
-        return messages
     }
 }

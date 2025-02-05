@@ -40,7 +40,7 @@ final class RemoteModelsState: ObservableObject {
     var useGoogleAI: Bool
 
     var listedModels: [AIModel] {
-        var models = availableRemoteModels.filter { Defaults[.visibleModelIds].contains($0.id) }
+        var models = availableRemoteModels.filter { Defaults[.visibleModelIds].contains($0.uniqueId) }
 
         if !useOpenAI {
             models = models.filter { $0.provider != .openAI }
@@ -56,16 +56,14 @@ final class RemoteModelsState: ObservableObject {
         }
         
         // Filter out models from disabled custom providers
-//        for customProvider in availableCustomProvider {
-//            models = models.filter { model in
-//                if model.customProviderName == customProvider.name {
-//                    print("customProvider.isEnabled: \(customProvider.isEnabled), model.defaultOn: \(model.defaultOn)")
-//                    return customProvider.isEnabled ? model.defaultOn : customProvider.isEnabled
-//                }
-//                
-//                return true
-//            }
-//        }
+        for customProvider in availableCustomProvider {
+            models = models.filter { model in
+                if model.customProviderName == customProvider.name {
+                    return customProvider.isEnabled
+                }
+                return true
+            }
+        }
         
         return models
     }

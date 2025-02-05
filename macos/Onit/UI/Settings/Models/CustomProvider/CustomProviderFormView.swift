@@ -13,7 +13,7 @@ struct CustomProviderFormView: View {
     
     @Default(.availableCustomProvider) var availableCustomProviders
     @Default(.availableRemoteModels) var availableRemoteModels
-    @Default(.visibleModelIds) var visibleModelIds
+
     
     @State var name: String = ""
     @State var baseURL: String = ""
@@ -65,7 +65,6 @@ struct CustomProviderFormView: View {
             do {
                 
                 try await fetchModels()
-
                 DispatchQueue.main.async {
                     isSubmitted = true
                     dismiss()
@@ -77,32 +76,18 @@ struct CustomProviderFormView: View {
     }
     
     func fetchModels() async throws {
-        guard let url = URL(string: baseURL) else { return }
-        
-        let endpoint = CustomModelsEndpoint(baseURL: url, token: token)
-        let client = FetchingClient()
-        let response = try await client.execute(endpoint)
-        
-        let modelIds = response.data.map { $0.id }
-        let provider = CustomProvider(
+        var provider = CustomProvider(
             name: name,
             baseURL: baseURL,
             token: token,
-            models: modelIds
+            models: []
         )
         
+        try await provider.fetchModels()
+        
+        // If the above doesn't crash, we're good!
         availableCustomProviders.append(provider)
-        
-        // Initialize model IDs
-        let newModels = response.data.map { model in
-            AIModel(from: model, providerName: provider.name)
-        }
-        
-        // Initialize visible model IDs
-        visibleModelIds = visibleModelIds.union(Set(newModels.map { $0.id }))
-        
-        // Add new models to available remote models
-        availableRemoteModels.append(contentsOf: newModels)
+        availableRemoteModels.append(contentsOf: provider.models)
     }
 }
 

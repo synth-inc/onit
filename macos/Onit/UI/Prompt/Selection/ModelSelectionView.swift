@@ -124,7 +124,7 @@ struct ModelSelectionView: View {
             VStack(alignment: .leading) {
                 Picker("", selection: selectedModel) {
                     ForEach(remoteModels.listedModels) { model in
-                        Text(model.formattedDisplayName)
+                        Text(model.displayName)
                             .appFont(.medium14)
                             .tag(SelectedModel.remote(model))
                             .padding(.vertical, 4)

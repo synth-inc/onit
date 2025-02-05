@@ -19,13 +19,6 @@ struct AIModel: Codable, Identifiable, Hashable, Defaults.Serializable {
     var isDeprecated: Bool = false
     var customProviderName: String?
     
-    var formattedDisplayName: String {
-        if provider == .custom, let providerName = customProviderName {
-            return "\(providerName) / \(displayName)"
-        }
-        return displayName
-    }
-    
     var uniqueId: String {
         if provider == .custom, let providerName = customProviderName {
             return "\(providerName)-\(id)"
@@ -83,9 +76,8 @@ struct AIModel: Codable, Identifiable, Hashable, Defaults.Serializable {
         var customModels: [AIModel] = []
         for provider in Defaults[.availableCustomProvider] {
             do {
-                let models = try await provider.fetchModels()
-                let custom = models.map { AIModel(from: $0, providerName: provider.name) }
-                customModels.append(contentsOf: custom)
+                try await provider.fetchModels()
+                customModels.append(contentsOf: provider.models)
             } catch {
                 print("Error fetching custom models for provider \(provider.name): \(error)")
             }

@@ -13,6 +13,14 @@ struct CustomProviderRow: View {
     @Default(.visibleModelIds) var visibleModelIds
     @Binding var provider: CustomProvider
     
+    @State private var searchText: String = ""
+    
+    private var filteredProviderModels: [AIModel] {
+        providerModels.filter { model in
+            searchText.isEmpty || model.displayName.localizedCaseInsensitiveContains(searchText)
+        }
+    }
+    
     private var providerModels: [AIModel] {
         availableRemoteModels.filter { $0.customProviderName == provider.name }
     }
@@ -28,46 +36,32 @@ struct CustomProviderRow: View {
                 Toggle("", isOn: $provider.isEnabled)
                     .toggleStyle(.switch)
                     .controlSize(.small)
-                
-//                Button(role: .destructive) {
-//                    
-//                    // TODO: KNA - Remove from visible also
-//                    // Remove provider's models from available remote models
-////                    Defaults[.availableRemoteModels].removeAll { model in
-////                        model.customProvider?.id == provider.id
-////                    }
-//                    
-//                } label: {
-//                    Image(systemName: "trash")
-//                }
             }
             
             if provider.isEnabled {
                 GroupBox {
-                    VStack(alignment: .leading, spacing: 0) {
-                        ForEach(providerModels, id: \.self) { model in
-                            ModelToggle(aiModel: model)
-                                .frame(height: 36)
+                    VStack {
+                        TextField("Search models", text: $searchText)
+                            .textFieldStyle(RoundedBorderTextFieldStyle())
+                            .padding(.horizontal, 4)
+                        
+                        ScrollView {
+                            VStack(alignment: .leading, spacing: 0) {
+                                ForEach(filteredProviderModels, id: \.self) { model in
+                                    ModelToggle(aiModel: model)
+                                        .frame(height: 36)
+                                }
+                            }
+                            .padding(.vertical, -4)
+                            .padding(.horizontal, 4)
+                            .frame(maxWidth: .infinity, alignment: .leading)
                         }
+                        .frame(maxHeight: 5 * 36) // Limit to 5 rows
                     }
-                    .padding(.vertical, -4)
-                    .padding(.horizontal, 4)
-                    .frame(maxWidth: .infinity, alignment: .leading)
                 }
             }
         }
         .cornerRadius(8)
-        .onChange(of: provider.isEnabled, initial: false) { old, new in
-            let modelIds = Set(provider.models)
-
-            if new {
-                visibleModelIds.formUnion(modelIds)
-            } else {
-                visibleModelIds.subtract(modelIds)
-            }
-            
-            print(visibleModelIds)
-        }
     }
 }
 

@@ -30,7 +30,7 @@ struct ModelToggle: View {
     var body: some View {
         Toggle(isOn: isOn) {
             HStack {
-                Text(aiModel.formattedDisplayName)
+                Text(aiModel.displayName)
                     .font(.system(size: 13))
                     .fontWeight(.regular)
                     .opacity(0.85)

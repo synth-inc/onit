@@ -71,12 +71,7 @@ import Defaults
     
     var remoteFetchFailed: Bool = false
     var localFetchFailed: Bool = false
-    
-    func getCustomEndpoint(for provider: CustomProvider, messages: [OpenAIChatMessage], model: String) -> CustomChatEndpoint? {
-        guard let url = URL(string: provider.baseURL) else { return nil }
-        return CustomChatEndpoint(baseURL: url, messages: messages, token: provider.token, model: model)
-    }
-    
+        
     @MainActor
     func fetchLocalModels() async {
         do {
@@ -113,13 +108,7 @@ import Defaults
         do {
             var models = try await AIModel.fetchModels()
             
-            // Migrate legacy model IDs if needed
-            if !Defaults[.hasPerformedModelIdMigration] {
-                let legacyIds = Defaults[.visibleModelIds]
-                let migratedIds = AIModel.migrateVisibleModelIds(models: models, legacyIds: legacyIds)
-                Defaults[.visibleModelIds] = migratedIds
-                Defaults[.hasPerformedModelIdMigration] = true
-            }
+     
             
             // This means we've never successfully fetched before
             if Defaults[.availableLocalModels].isEmpty {
@@ -134,6 +123,15 @@ import Defaults
                 // If relevant shrink the dialog box to account for the removed SetupDialog.
                 shrinkContent()
             } else {
+                
+                // Migrate legacy model IDs if needed
+                if !Defaults[.hasPerformedModelIdMigration] {
+                    let legacyIds = Defaults[.visibleModelIds]
+                    let migratedIds = AIModel.migrateVisibleModelIds(models: Defaults[.availableRemoteModels], legacyIds: legacyIds)
+                    Defaults[.visibleModelIds] = migratedIds
+                    Defaults[.hasPerformedModelIdMigration] = true
+                }
+                
                 // Update the availableRemoteModels with the newly fetched models
                 let newModelIds = Set(models.map { $0.id })
                 let existingModelIds = Set(Defaults[.availableRemoteModels].map { $0.id })
