@@ -5,11 +5,16 @@
 //  Created by Benjamin Sage on 9/20/24.
 //
 
+import Defaults
 import SwiftUI
 import KeyboardShortcuts
 
 struct Toolbar: View {
     @Environment(\.model) var model
+    
+    @Default(.mode) var mode
+    @Default(.remoteModel) var remoteModel
+    @Default(.localModel) var localModel
 
     var body: some View {
         HStack(spacing: 4) {
@@ -94,9 +99,9 @@ struct Toolbar: View {
             model.showModelSelectionOverlay()
         } label: {
             HStack(spacing: 0) {
-                Text(model.preferences.mode == .local ?
-                     (model.preferences.localModel?.split(separator: ":").first.map(String.init) ?? "Choose model") :
-                     (model.preferences.remoteModel?.displayName ?? "Choose model"))
+                Text(mode == .local ?
+                     (localModel?.split(separator: ":").first.map(String.init) ?? "Choose model") :
+                     (remoteModel?.displayName ?? "Choose model"))
                     .appFont(.medium13)
                     .padding(.leading, 2)
                 Image(.smallChevDown)
@@ -125,14 +130,12 @@ struct Toolbar: View {
 
     var localMode: some View {
         Button {
-            model.updatePreferences { prefs in
-                prefs.mode = prefs.mode == .local ? .remote : .local
-            }
+            mode = mode == .local ? .remote : .local
         } label: {
-            Image(model.preferences.mode == .local ? .localModeActive : .localMode)
+            Image(mode == .local ? .localModeActive : .localMode)
                 .renderingMode(.template)
                 .padding(2)
-                .foregroundColor(model.preferences.mode == .local ? .limeGreen : .gray200)
+                .foregroundColor(mode == .local ? .limeGreen : .gray200)
         }
         .tooltip(prompt: "Local Mode", shortcut: .keyboardShortcuts(.toggleLocalMode))
     }

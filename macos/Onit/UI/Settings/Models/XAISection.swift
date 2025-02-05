@@ -5,6 +5,7 @@
 //  Created by Benjamin Sage on 1/13/25.
 //
 
+import Defaults
 import SwiftUI
 
 struct XAISection: View {
@@ -12,6 +13,17 @@ struct XAISection: View {
 
     @State private var xAIKey: String = ""
     @State private var showXAIKey: Bool = false
+    
+    @Default(.availableRemoteModels) var availableRemoteModels
+    @Default(.visibleModelIds) var visibleModelIds
+    @Default(.isXAITokenValidated) var isXAITokenValidated
+    @Default(.xAIToken) var xAIToken
+    
+    var visibleModelsList : [AIModel] {
+        availableRemoteModels
+            .filter { visibleModelIds.contains($0.id) }
+            .filter { $0.provider == .xAI }
+    }
 
     var body: some View {
         Section("xAI") {
@@ -60,15 +72,15 @@ struct XAISection: View {
                 }
             }
             .onChange(of: xAIKey) { _, newValue in
-                model.xAIToken = newValue.isEmpty ? nil : newValue
+                xAIToken = newValue.isEmpty ? nil : newValue
             }
 
             Text("Get your API key from [xAI](https://console.x.ai/)")
                 .font(.caption)
                 .foregroundStyle(.secondary)
 
-            if model.isXAITokenValidated {
-                ForEach(model.preferences.visibleModelsList.filter { $0.provider == .xAI }) { aiModel in
+            if isXAITokenValidated {
+                ForEach(visibleModelsList) { aiModel in
                     ModelToggle(aiModel: aiModel)
                 }
             }

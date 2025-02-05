@@ -4,12 +4,24 @@
 //
 
 import SwiftUI
+import Defaults
 
 struct GoogleAISection: View {
     @Environment(\.model) var model
 
     @State private var googleAIKey: String = ""
     @State private var showGoogleAIKey: Bool = false
+    
+    @Default(.availableRemoteModels) var availableRemoteModels
+    @Default(.visibleModelIds) var visibleModelIds
+    @Default(.isGoogleAITokenValidated) var isGoogleAITokenValidated
+    @Default(.googleAIToken) var googleAIToken
+    
+    var visibleModelsList : [AIModel] {
+        availableRemoteModels
+            .filter { visibleModelIds.contains($0.id) }
+            .filter { $0.provider == .googleAI }
+    }
 
     var body: some View {
         Section("Google AI") {
@@ -59,21 +71,21 @@ struct GoogleAISection: View {
                 }
             }
             .onChange(of: googleAIKey) { _, newValue in
-                model.googleAIToken = newValue.isEmpty ? nil : newValue
+                googleAIToken = newValue.isEmpty ? nil : newValue
             }
 
             Text("Get your API key from [Google AI Studio](https://makersuite.google.com/app/apikey)")
                 .font(.caption)
                 .foregroundStyle(.secondary)
 
-            if model.isGoogleAITokenValidated {
-                ForEach(model.preferences.visibleModelsList.filter { $0.provider == .googleAI }) { aiModel in
+            if isGoogleAITokenValidated {
+                ForEach(visibleModelsList) { aiModel in
                     ModelToggle(aiModel: aiModel)
                 }
             }
         }
         .onAppear {
-            googleAIKey = model.googleAIToken ?? ""
+            googleAIKey = googleAIToken ?? ""
         }
     }
 }

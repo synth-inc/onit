@@ -5,6 +5,7 @@
 //  Created by Kévin Naudin on 21/01/2025.
 //
 
+import Defaults
 import PostHog
 import Foundation
 import SwiftUI
@@ -52,33 +53,25 @@ class FeatureFlagManager: ObservableObject {
     }
     
     func overrideAccessibilityInput(_ value: Bool) {
-        let preferences = Preferences.shared
-        preferences.accessibilityInputEnabled = value
-        Preferences.save(preferences)
+        Defaults[.accessibilityInputEnabled] = value
         
         accessibilityInput = value
     }
     
     func overrideAccessibilityAutoContext(_ value: Bool) {
-        let preferences = Preferences.shared
-        preferences.accessibilityAutoContextEnabled = value
-        Preferences.save(preferences)
+        Defaults[.accessibilityAutoContextEnabled] = value
         
         accessibilityAutoContext = value
     }
     
     func overrideHighlightHintMode(_ value: HighlightHintMode) {
-        let preferences = Preferences.shared
-        preferences.highlightHintMode = value
-        Preferences.save(preferences)
+        Defaults[.highlightHintMode] = value
         
         highlightHintMode = value
     }
     
     func overrideAccessibility(_ value: Bool) {
-        let preferences = Preferences.shared
-        preferences.accessibilityEnabled = value
-        Preferences.save(preferences)
+        Defaults[.accessibilityEnabled] = value
         
         accessibility = value
         
@@ -107,7 +100,7 @@ class FeatureFlagManager: ObservableObject {
     
     private func setFeatureFlagsFromRemote() {
         // Set global accessibility toggle
-        if let accessibilityEnabled = Preferences.shared.accessibilityEnabled {
+        if let accessibilityEnabled = Defaults[.accessibilityEnabled] {
             accessibility = accessibilityEnabled
         } else {
             accessibility = PostHogSDK.shared.isFeatureEnabled("accessibility")
@@ -115,7 +108,7 @@ class FeatureFlagManager: ObservableObject {
         
         // Only set individual accessibility features if global toggle is on
         if accessibility {
-            if let accessibilityInputEnabled = Preferences.shared.accessibilityInputEnabled {
+            if let accessibilityInputEnabled = Defaults[.accessibilityInputEnabled] {
                 accessibilityInput = accessibilityInputEnabled
                 wasAccessibilityInputEnabled = accessibilityInputEnabled
             } else {
@@ -124,7 +117,7 @@ class FeatureFlagManager: ObservableObject {
                 wasAccessibilityInputEnabled = enabled
             }
             
-            if let accessibilityAutoContextEnabled = Preferences.shared.accessibilityAutoContextEnabled {
+            if let accessibilityAutoContextEnabled = Defaults[.accessibilityAutoContextEnabled] {
                 accessibilityAutoContext = accessibilityAutoContextEnabled
                 wasAccessibilityAutoContextEnabled = accessibilityAutoContextEnabled
             } else {
@@ -134,13 +127,13 @@ class FeatureFlagManager: ObservableObject {
             }
         } else {
             // Store current settings but keep features disabled
-            if let accessibilityInputEnabled = Preferences.shared.accessibilityInputEnabled {
+            if let accessibilityInputEnabled = Defaults[.accessibilityInputEnabled] {
                 wasAccessibilityInputEnabled = accessibilityInputEnabled
             } else {
                 wasAccessibilityInputEnabled = PostHogSDK.shared.isFeatureEnabled("accessibility_input")
             }
             
-            if let accessibilityAutoContextEnabled = Preferences.shared.accessibilityAutoContextEnabled {
+            if let accessibilityAutoContextEnabled = Defaults[.accessibilityAutoContextEnabled] {
                 wasAccessibilityAutoContextEnabled = accessibilityAutoContextEnabled
             } else {
                 wasAccessibilityAutoContextEnabled = PostHogSDK.shared.isFeatureEnabled("accessibility_autocontext")
@@ -150,7 +143,7 @@ class FeatureFlagManager: ObservableObject {
             accessibilityAutoContext = false
         }
         
-        if let highlightHintMode = Preferences.shared.highlightHintMode {
+        if let highlightHintMode = Defaults[.highlightHintMode] {
             self.highlightHintMode = highlightHintMode
         } else {
             if let value = PostHogSDK.shared.getFeatureFlag("highlight_hint_mode") as? String,

@@ -5,10 +5,11 @@
 //  Created by Kévin Naudin on 22/01/2025.
 //
 
+import Defaults
 import Foundation
 import SwiftUI
 
-enum HighlightHintMode: String, Codable {
+enum HighlightHintMode: String, Codable, Defaults.Serializable {
     case none
     case textfield
     case topRight

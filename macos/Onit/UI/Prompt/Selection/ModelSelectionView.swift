@@ -6,10 +6,44 @@
 //
 
 import SwiftUI
+import Defaults
 
 struct ModelSelectionView: View {
     @Environment(\.model) var model
     @Environment(\.openSettings) var openSettings
+    @Environment(\.remoteModels) var remoteModels
+    
+    @Default(.mode) var mode
+    @Default(.localModel) var localModel
+    @Default(.remoteModel) var remoteModel
+    @Default(.useOpenAI) var useOpenAI
+    @Default(.useAnthropic) var useAnthropic
+    @Default(.useXAI) var useXAI
+    @Default(.useGoogleAI) var useGoogleAI
+    @Default(.availableRemoteModels) var availableRemoteModels
+    @Default(.availableLocalModels) var availableLocalModels
+    
+    var selectedModel: Binding<SelectedModel?> {
+        .init {
+            if mode == .local, let localModelName = localModel {
+                return .local(localModelName)
+            } else if let aiModel = remoteModel {
+                return .remote(aiModel)
+            } else {
+                return nil
+            }
+        } set: { newValue in
+            guard let newValue else { return }
+            switch newValue {
+            case .remote(let aiModel):
+                remoteModel = aiModel
+                mode = .remote
+            case .local(let localModelName):
+                localModel = localModelName
+                mode = .local
+            }
+        }
+    }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -32,13 +66,13 @@ struct ModelSelectionView: View {
                     .appFont(.medium13)
                     .foregroundStyle(.white.opacity(0.6))
                 Spacer()
-                if model.remoteNeedsSetup || (!model.remoteNeedsSetup && model.preferences.availableRemoteModels.isEmpty) {
+                if remoteModels.remoteNeedsSetup || (!remoteModels.remoteNeedsSetup && availableRemoteModels.isEmpty) {
                     Image(.warningSettings)
                 }
             }
             .padding(.horizontal, 12)
 
-            if model.listedModels.isEmpty {
+            if remoteModels.listedModels.isEmpty {
                 Button("Setup remote models") {
                     model.settingsTab = .models
                     openSettings()
@@ -50,14 +84,14 @@ struct ModelSelectionView: View {
                 .padding(.bottom, 10)
                 
             } else {
-                remoteModels
+                remoteModelsView
             }
         }
     }
 
-    var remoteModels: some View {
-        Picker("", selection: model.selectedModel) {
-            ForEach(model.listedModels) { model in
+    var remoteModelsView: some View {
+        Picker("", selection: selectedModel) {
+            ForEach(remoteModels.listedModels) { model in
                 Text(model.displayName)
                     .appFont(.medium14)
                     .tag(SelectedModel.remote(model))
@@ -83,7 +117,7 @@ struct ModelSelectionView: View {
                 Text("Local models")
                     .foregroundStyle(.FG.opacity(0.6))
                     .appFont(.medium13)
-                if (model.preferences.availableLocalModels.isEmpty) {
+                if (availableLocalModels.isEmpty) {
                     Image(.warningSettings)
                 } 
                 Spacer()
@@ -91,7 +125,7 @@ struct ModelSelectionView: View {
             }
             .padding(.horizontal, 12)
 
-            if model.preferences.availableLocalModels.isEmpty {
+            if availableLocalModels.isEmpty {
                 Button("Setup local models") {
                     model.settingsTab = .models
                     openSettings()
@@ -103,16 +137,16 @@ struct ModelSelectionView: View {
                 .padding(.bottom, 10)
                 
             } else {
-                localModels
+                localModelsView
             }
         }
         .padding(.top, 8)
         .padding(.bottom, 4)
     }
 
-    var localModels: some View {
-        Picker("", selection: model.selectedModel) {
-            ForEach(model.preferences.availableLocalModels, id: \.self) { localModelName in
+    var localModelsView: some View {
+        Picker("", selection: selectedModel) {
+            ForEach(availableLocalModels, id: \.self) { localModelName in
                 Text(localModelName)
                     .appFont(.medium14)
                     .tag(SelectedModel.local(localModelName))

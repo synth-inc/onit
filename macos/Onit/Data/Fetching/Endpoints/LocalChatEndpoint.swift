@@ -5,6 +5,7 @@
 //  Created by timl on 11/14/24.
 //
 
+import Defaults
 import Foundation
 import PhotosUI
 
@@ -98,7 +99,7 @@ struct LocalChatEndpoint: Endpoint {
     var baseURL: URL {
         var url: URL!
         DispatchQueue.main.sync {
-            url = Preferences.shared.localEndpointURL
+            url = Defaults[.localEndpointURL]
         }
         return url
     }
@@ -112,17 +113,16 @@ struct LocalChatEndpoint: Endpoint {
         var keepAlive: String?
         
         DispatchQueue.main.sync {
-            let prefs = Preferences.shared
-            keepAlive = prefs.localKeepAlive
+            keepAlive = Defaults[.localKeepAlive]
             
             // Only create options if at least one parameter is set
-            if prefs.localNumCtx != nil || prefs.localTemperature != nil || 
-               prefs.localTopP != nil || prefs.localTopK != nil {
+            if Defaults[.localNumCtx] != nil || Defaults[.localTemperature] != nil ||
+                Defaults[.localTopP] != nil || Defaults[.localTopK] != nil {
                 options = LocalChatOptions(
-                    num_ctx: prefs.localNumCtx,
-                    temperature: prefs.localTemperature,
-                    top_p: prefs.localTopP,
-                    top_k: prefs.localTopK
+                    num_ctx: Defaults[.localNumCtx],
+                    temperature: Defaults[.localTemperature],
+                    top_p: Defaults[.localTopP],
+                    top_k: Defaults[.localTopK]
                 )
             }
         }

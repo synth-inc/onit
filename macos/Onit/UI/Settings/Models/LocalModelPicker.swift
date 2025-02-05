@@ -6,15 +6,18 @@
 //
 
 import SwiftUI
+import Defaults
 
 struct LocalModelPicker: View {
     @Environment(\.model) var model
+    @Default(.availableLocalModels) var availableLocalModels
+    @Default(.localModel) var localModel
 
     var body: some View {
         @Bindable var model = model
 
-        Picker("Model", selection: $model.defaultLocalModel) {
-            ForEach(model.preferences.availableLocalModels, id: \.self) { localModel in
+        Picker("Model", selection: $localModel) {
+            ForEach(availableLocalModels, id: \.self) { localModel in
                 Text(localModel)
                     .tag(localModel)
             }

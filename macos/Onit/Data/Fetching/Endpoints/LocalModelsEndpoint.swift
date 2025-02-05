@@ -5,6 +5,7 @@
 //  Created by timl on 11/14/24.
 //
 
+import Defaults
 import Foundation
 
 extension FetchingClient {
@@ -27,7 +28,7 @@ struct LocalModelsEndpoint: Endpoint {
     var baseURL: URL {
         var url: URL!
         DispatchQueue.main.sync {
-            url = Preferences.shared.localEndpointURL
+            url = Defaults[.localEndpointURL]
         }
         return url
     }

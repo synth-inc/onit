@@ -1,8 +1,10 @@
 import SwiftUI
+import Defaults
 import ServiceManagement
 
 struct GeneralTab: View {
-    @Environment(\.model) var model
+    @Default(.fontSize) var fontSize
+    @Default(.panelPosition) var panelPosition
     
     @State var isLaunchAtStartupEnabled: Bool = SMAppService.mainApp.status == .enabled
     
@@ -48,18 +50,11 @@ struct GeneralTab: View {
                     HStack {
                         Text("Font Size")
                         Slider(
-                            value: Binding(
-                                get: { model.preferences.fontSize },
-                                set: { newValue in
-                                    model.updatePreferences { prefs in
-                                        prefs.fontSize = newValue
-                                    }
-                                }
-                            ),
+                            value: $fontSize,
                             in: 10...24,
                             step: 1.0
                         )
-                        Text("\(Int(model.preferences.fontSize))pt")
+                        Text("\(Int(fontSize))pt")
                             .monospacedDigit()
                             .frame(width: 40)
                     }
@@ -67,9 +62,7 @@ struct GeneralTab: View {
                     HStack {
                         Spacer()
                         Button("Restore Default") {
-                            model.updatePreferences { prefs in
-                                prefs.fontSize = 14.0
-                            }
+                            _fontSize.reset()
                         }
                         .controlSize(.small)
                     }
@@ -82,9 +75,7 @@ struct GeneralTab: View {
                     HStack(spacing: 8) {
                         ForEach(PanelPosition.allCases, id: \.self) { position in
                             Button {
-                                model.updatePreferences { prefs in
-                                    prefs.panelPosition = position
-                                }
+                                panelPosition = position
                             } label: {
                                 VStack(spacing: 4) {
                                     Image(systemName: position.systemImage)
@@ -94,7 +85,7 @@ struct GeneralTab: View {
                                 }
                                 .frame(maxWidth: .infinity)
                                 .padding(.vertical, 8)
-                                .background(model.preferences.panelPosition == position ? Color(.blue300) : Color(.gray700))
+                                .background(panelPosition == position ? Color(.blue300) : Color(.gray700))
                                 .clipShape(RoundedRectangle(cornerRadius: 6))
                             }
                             .buttonStyle(.plain)

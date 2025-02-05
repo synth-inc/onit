@@ -20,7 +20,7 @@ struct ModelContainerPreview<Content: View>: View {
         self.content = content
         do {
             self.container = try MainActor.assumeIsolated(modelContainer)
-            let model = OnitModel(container: self.container)
+            let model = OnitModel(container: self.container, remoteModels: PreviewSampleData.remoteModels)
             self._model = State(initialValue: model)
         } catch {
             fatalError("Failed to create the model container: \(error.localizedDescription)")

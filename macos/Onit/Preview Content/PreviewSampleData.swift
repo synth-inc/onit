@@ -12,6 +12,11 @@ actor PreviewSampleData {
     static var container: ModelContainer = {
         try! inMemoryContainer()
     }()
+    
+    @MainActor
+    static var remoteModels: RemoteModelsState = {
+        RemoteModelsState()
+    }()
 
     @MainActor
     static var inMemoryContainer: () throws -> ModelContainer = {

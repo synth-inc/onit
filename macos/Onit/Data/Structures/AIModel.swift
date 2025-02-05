@@ -5,9 +5,10 @@
 //  Created by Benjamin Sage on 10/10/24.
 //
 
+import Defaults
 import Foundation
 
-struct AIModel: Codable, Identifiable, Hashable {
+struct AIModel: Codable, Identifiable, Hashable, Defaults.Serializable {
     let id: String
     let displayName: String
     let provider: ModelProvider
@@ -36,7 +37,7 @@ struct AIModel: Codable, Identifiable, Hashable {
         return response.models.compactMap { AIModel(from: $0) }
     }
     
-    enum ModelProvider: String, Codable, Equatable, Hashable {
+    enum ModelProvider: String, Codable, Equatable, Hashable, Defaults.Serializable {
         case openAI = "openai"
         case anthropic = "anthropic"
         case xAI = "xai"

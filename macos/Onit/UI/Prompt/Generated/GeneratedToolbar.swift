@@ -5,10 +5,13 @@
 //  Created by Benjamin Sage on 10/2/24.
 //
 
+import Defaults
 import SwiftUI
 
 struct GeneratedToolbar: View {
     @Environment(\.model) var model
+    @Default(.mode) var mode
+    
     var prompt: Prompt
 
     var body: some View {
@@ -88,7 +91,7 @@ struct GeneratedToolbar: View {
             .padding(4)
             .background {
                 RoundedRectangle(cornerRadius: 10)
-                    .fill(model.preferences.mode == .local ? .limeGreen : .blue400)
+                    .fill(mode == .local ? .limeGreen : .blue400)
             }
             .foregroundStyle(.FG)
         }

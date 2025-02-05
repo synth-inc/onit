@@ -5,6 +5,7 @@
 //  Created by Benjamin Sage on 10/4/24.
 //
 
+import Defaults
 import Foundation
 import PostHog
 
@@ -83,7 +84,7 @@ extension OnitModel {
             
             do {
                 let chat: String
-                if preferences.mode == .remote {
+                if Defaults[.mode] == .remote {
                     // chat(instructions: [String], inputs: [Input?], files: [[URL]], images[[URL]], responses: [String], model: AIModel?, apiToken: String?)
                     chat = try await client.chat(
                         instructions: instructionsHistory,
@@ -92,8 +93,8 @@ extension OnitModel {
                         images: imagesHistory,
                         autoContexts: autoContextsHistory,
                         responses: responsesHistory,
-                        model: preferences.remoteModel,
-                        apiToken: getTokenForModel(preferences.remoteModel ?? nil)
+                        model: Defaults[.remoteModel],
+                        apiToken: getTokenForModel(Defaults[.remoteModel] ?? nil)
                     )
                 } else {
                     // TODO implement history for local chat!
@@ -104,7 +105,7 @@ extension OnitModel {
                         images: imagesHistory,
                         autoContexts: autoContextsHistory,
                         responses: responsesHistory,
-                        model: preferences.localModel
+                        model: Defaults[.localModel]
                     )
                 }
 
@@ -140,8 +141,8 @@ extension OnitModel {
     private func trackEventGeneration(prompt: Prompt) {
         let eventName = "user_prompted"
         let eventProperties: [String: Any] = [
-            "prompt_mode": preferences.mode.rawValue,
-            "prompt_model": preferences.mode == .remote ? preferences.remoteModel?.displayName ?? "" : preferences.localModel ?? ""
+            "prompt_mode": Defaults[.mode].rawValue,
+            "prompt_model": Defaults[.mode] == .remote ? Defaults[.remoteModel]?.displayName ?? "" : Defaults[.localModel] ?? ""
         ]
         PostHogSDK.shared.capture(eventName, properties: eventProperties)
     }
@@ -155,22 +156,22 @@ extension OnitModel {
     }
 
     func setTokenIsValid(_ isValid: Bool) {
-        if let provider = preferences.remoteModel?.provider {
+        if let provider = Defaults[.remoteModel]?.provider {
             setTokenIsValid(isValid, provider: provider)
         }
     }
 
     func setTokenIsValid(_ isValid: Bool, provider: AIModel.ModelProvider) {
-        if preferences.mode == .local { return }
+        if Defaults[.mode] == .local { return }
         switch provider {
         case .openAI:
-            isOpenAITokenValidated = isValid
+            Defaults[.isOpenAITokenValidated] = isValid
         case .anthropic:
-            isAnthropicTokenValidated = isValid
+            Defaults[.isAnthropicTokenValidated] = isValid
         case .xAI:
-            isXAITokenValidated = isValid
+            Defaults[.isXAITokenValidated] = isValid
         case .googleAI:
-            isGoogleAITokenValidated = isValid
+            Defaults[.isGoogleAITokenValidated] = isValid
         }
     }
     
@@ -178,13 +179,13 @@ extension OnitModel {
         if let provider = model?.provider {
             switch provider {
             case .openAI:
-                return openAIToken
+                return Defaults[.openAIToken]
             case .anthropic:
-                return anthropicToken
+                return Defaults[.anthropicToken]
             case .xAI:
-                return xAIToken
+                return Defaults[.xAIToken]
             case .googleAI:
-                return googleAIToken
+                return Defaults[.googleAIToken]
             }
         }
         return nil

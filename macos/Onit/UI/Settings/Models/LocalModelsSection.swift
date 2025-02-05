@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import Defaults
 
 struct LocalModelsSection: View {
     @Environment(\.model) var model
@@ -28,6 +29,16 @@ struct LocalModelsSection: View {
     @State private var topPError: String? = nil
     @State private var topKError: String? = nil
     
+    @Default(.availableLocalModels) var availableLocalModels
+    @Default(.useLocal) var useLocal
+    @Default(.localEndpointURL) var localEndpointURL
+    @Default(.localKeepAlive) var localKeepAlive
+    @Default(.localNumCtx) var localNumCtx
+    @Default(.localTemperature) var localTemperature
+    @Default(.localTopP) var localTopP
+    @Default(.localTopK) var localTopK
+    
+    
     // Default values
     private let defaultKeepAlive = "5m"
     private let defaultNumCtx = 2048
@@ -49,16 +60,16 @@ struct LocalModelsSection: View {
             .frame(maxWidth: .infinity, alignment: .leading)
         }
         .onAppear {
-            isOn = model.useLocal
-            localEndpointString = model.preferences.localEndpointURL.absoluteString
-            if let value = model.preferences.localKeepAlive { keepAlive = value }
-            if let value = model.preferences.localNumCtx { numCtx = String(value) }
-            if let value = model.preferences.localTemperature { temperature = String(value) }
-            if let value = model.preferences.localTopP { topP = String(value) }
-            if let value = model.preferences.localTopK { topK = String(value) }
+            isOn = useLocal
+            localEndpointString = localEndpointURL.absoluteString
+            if let value = localKeepAlive { keepAlive = value }
+            if let value = localNumCtx { numCtx = String(value) }
+            if let value = localTemperature { temperature = String(value) }
+            if let value = localTopP { topP = String(value) }
+            if let value = localTopK { topK = String(value) }
         }
         .onChange(of: isOn) {
-            model.useLocal = isOn
+            useLocal = isOn
         }
     }
 
@@ -81,9 +92,7 @@ struct LocalModelsSection: View {
                     Task {
                         fetching = true
                         if let localEndpointURL = URL(string: localEndpointString) {
-                            model.updatePreferences { prefs in
-                                prefs.localEndpointURL = localEndpointURL
-                            }
+                            self.localEndpointURL = localEndpointURL
                             
                             await model.fetchLocalModels()
                             
@@ -118,14 +127,10 @@ struct LocalModelsSection: View {
                                 .onChange(of: keepAlive) {
                                     if keepAlive.isEmpty {
                                         keepAliveError = nil
-                                        model.updatePreferences { prefs in
-                                            prefs.localKeepAlive = nil
-                                        }
+                                        localKeepAlive = nil
                                     } else if LocalModelValidation.validateKeepAlive(keepAlive) {
                                         keepAliveError = nil
-                                        model.updatePreferences { prefs in
-                                            prefs.localKeepAlive = keepAlive
-                                        }
+                                        localKeepAlive = keepAlive
                                     } else {
                                         keepAliveError = "Invalid format. Use duration (e.g. 10m, 24h) or seconds"
                                     }
@@ -147,15 +152,11 @@ struct LocalModelsSection: View {
                                 .onChange(of: numCtx) {
                                     if numCtx.isEmpty {
                                         numCtxError = nil
-                                        model.updatePreferences { prefs in
-                                            prefs.localNumCtx = nil
-                                        }
+                                        localNumCtx = nil
                                     } else if LocalModelValidation.validateInt(numCtx, min: 1) {
                                         numCtxError = nil
                                         if let value = Int(numCtx) {
-                                            model.updatePreferences { prefs in
-                                                prefs.localNumCtx = value
-                                            }
+                                            localNumCtx = value
                                         }
                                     } else {
                                         numCtxError = "Must be a positive integer"
@@ -178,15 +179,11 @@ struct LocalModelsSection: View {
                                 .onChange(of: temperature) {
                                     if temperature.isEmpty {
                                         temperatureError = nil
-                                        model.updatePreferences { prefs in
-                                            prefs.localTemperature = nil
-                                        }
+                                        localTemperature = nil
                                     } else if LocalModelValidation.validateFloat(temperature, min: 0.0, max: 2.0) {
                                         temperatureError = nil
                                         if let value = Double(temperature) {
-                                            model.updatePreferences { prefs in
-                                                prefs.localTemperature = value
-                                            }
+                                            localTemperature = value
                                         }
                                     } else {
                                         temperatureError = "Must be a number between 0.0 and 2.0"
@@ -209,15 +206,11 @@ struct LocalModelsSection: View {
                                 .onChange(of: topK) {
                                     if topK.isEmpty {
                                         topKError = nil
-                                        model.updatePreferences { prefs in
-                                            prefs.localTopK = nil
-                                        }
+                                        localTopK = nil
                                     } else if LocalModelValidation.validateInt(topK, min: 1) {
                                         topKError = nil
                                         if let value = Int(topK) {
-                                            model.updatePreferences { prefs in
-                                                prefs.localTopK = value
-                                            }
+                                            localTopK = value
                                         }
                                     } else {
                                         topKError = "Must be a positive integer"
@@ -240,15 +233,11 @@ struct LocalModelsSection: View {
                                 .onChange(of: topP) {
                                     if topP.isEmpty {
                                         topPError = nil
-                                        model.updatePreferences { prefs in
-                                            prefs.localTopP = nil
-                                        }
+                                        localTopP = nil
                                     } else if LocalModelValidation.validateFloat(topP, min: 0.0, max: 1.0) {
                                         topPError = nil
                                         if let value = Double(topP) {
-                                            model.updatePreferences { prefs in
-                                                prefs.localTopP = value
-                                            }
+                                            localTopP = value
                                         }
                                     } else {
                                         topPError = "Must be a number between 0.0 and 1.0"
@@ -275,13 +264,11 @@ struct LocalModelsSection: View {
                             topP = String(defaultTopP)
                             
                             // Update preferences
-                            model.updatePreferences { prefs in
-                                prefs.localKeepAlive = defaultKeepAlive
-                                prefs.localNumCtx = defaultNumCtx
-                                prefs.localTemperature = defaultTemperature
-                                prefs.localTopK = defaultTopK
-                                prefs.localTopP = defaultTopP
-                            }
+                            localKeepAlive = defaultKeepAlive
+                            localNumCtx = defaultNumCtx
+                            localTemperature = defaultTemperature
+                            localTopK = defaultTopK
+                            localTopP = defaultTopP
                             
                             // Clear any errors
                             keepAliveError = nil
@@ -307,7 +294,7 @@ struct LocalModelsSection: View {
 
     @ViewBuilder
     var content: some View {
-        if model.preferences.availableLocalModels.isEmpty {
+        if availableLocalModels.isEmpty {
             HStack(spacing: 0) {
                 text
                 Spacer(minLength: 8)
@@ -341,7 +328,7 @@ struct LocalModelsSection: View {
         if isOn {
             GroupBox {
                 VStack(alignment: .leading, spacing: 0) {
-                    ForEach(model.preferences.availableLocalModels, id: \.self) { model in
+                    ForEach(availableLocalModels, id: \.self) { model in
                         Toggle(isOn: .constant(true)) {
                             Text(model)
                                 .font(.system(size: 13))

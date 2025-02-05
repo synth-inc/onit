@@ -6,9 +6,10 @@
 //
 
 import SwiftUI
+import Defaults
 
 struct AutoContextView: View {
-    @AppStorage("closedAutoContext") var closedDialog = false
+    @Default(.closedAutoContextDialog) var closedAutoContextDialog
     @State private var text: String? = nil
     
     var context: Context
@@ -16,14 +17,14 @@ struct AutoContextView: View {
     var body: some View {
         ScrollView {
             VStack {
-                if !closedDialog {
+                if !closedAutoContextDialog {
                     dialog
                 }
                 
                 if let text = text {
                     Text(text)
                         .appFont(.medium14)
-                        .padding(.top, !closedDialog ? 0: 16)
+                        .padding(.top, !closedAutoContextDialog ? 0: 16)
                         .padding(.bottom, 16)
                         .padding(.horizontal, 16)
                 } else {
@@ -45,7 +46,7 @@ struct AutoContextView: View {
         } action: {
             
         } closeAction: {
-            closedDialog = true
+            closedAutoContextDialog = true
         }
         .fixedSize(horizontal: false, vertical: true)
     }

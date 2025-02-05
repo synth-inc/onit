@@ -6,12 +6,12 @@
 //
 
 import SwiftUI
+import Defaults
 
 struct SetUpDialogs: View {
     @Environment(\.model) var model
+    @Environment(\.remoteModels) var remoteModels
     @Environment(\.openSettings) var openSettings
-
-    var seenLocal: Bool
 
     @State var closedNoLocalModels = false
     @State var closedNoRemoteModels = false
@@ -19,15 +19,18 @@ struct SetUpDialogs: View {
     @State private var fetchingRemote = false
     @State private var fetchingLocal = false
     
-    @AppStorage("closedRemote") var closedRemote = false
-    @AppStorage("closedLocal") var closedLocal = false
+    @Default(.closedRemote) var closedRemote
+    @Default(.closedLocal) var closedLocal
+    @Default(.closedOpenAI) var closedOpenAI
+    @Default(.closedAnthropic) var closedAnthropic
+    @Default(.closedXAI) var closedXAI
+    @Default(.closedGoogleAI) var closedGoogleAI
+    @Default(.seenLocal) var seenLocal
+    @Default(.closedNewRemoteData) var closedNewRemoteData
+    @Default(.closedDeprecatedRemoteData) var closedDeprecatedRemoteData
+    @Default(.availableRemoteModels) var availableRemoteModels
+    @Default(.availableLocalModels) var availableLocalModels
 
-    @AppStorage("closedOpenAI") var closedOpenAI = false
-    @AppStorage("closedAnthropic") var closedAnthropic = false
-    @AppStorage("closedXAI") var closedXAI = false
-    @AppStorage("closedGoogleAI") var closedGoogleAI = false
-
-    @AppStorage("closedNewRemoteData") private var closedNewRemoteData: Data = Data()
     var closedNewRemote: [String: Bool] {
         get {
              if let decoded = try? JSONDecoder().decode([String: Bool].self, from: closedNewRemoteData) {
@@ -36,8 +39,7 @@ struct SetUpDialogs: View {
             return [:]
         }
     }
-        
-    @AppStorage("closedDeprecatedRemoteData") private var closedDeprecatedRemoteData: Data = Data()
+
     var closedDeprecatedRemote: [String: Bool] {
         get {
              if let decoded = try? JSONDecoder().decode([String: Bool].self, from: closedDeprecatedRemoteData) {
@@ -47,31 +49,40 @@ struct SetUpDialogs: View {
         }
     }
 
-    var body: some View {
-        content
+    init() {
+        // resetAppStorageFlags()
     }
 
+    var body: some View {
+        content
+        .onChange(of: availableLocalModels.count) { _, new in
+            if new != 0 {
+                seenLocal = true
+            }
+        }
+    }
+    
     @ViewBuilder
     var content: some View {
         Group {
-            if model.preferences.availableRemoteModels.isEmpty && model.remoteFetchFailed && !closedNoRemoteModels {
+            if availableRemoteModels.isEmpty && model.remoteFetchFailed && !closedNoRemoteModels {
                 noRemote
             }
-            if model.remoteNeedsSetup && !closedRemote {
+            if remoteModels.remoteNeedsSetup && !closedRemote {
                 remote
             }
-            if model.preferences.availableRemoteModels.contains(where: { $0.isDeprecated && !(closedDeprecatedRemote[$0.id] ?? false) }) {
-                let deprecatedModels = model.preferences.availableRemoteModels.filter { $0.isDeprecated && !(closedDeprecatedRemote[$0.id] ?? false) }
+            if availableRemoteModels.contains(where: { $0.isDeprecated && !(closedDeprecatedRemote[$0.id] ?? false) }) {
+                let deprecatedModels = availableRemoteModels.filter { $0.isDeprecated && !(closedDeprecatedRemote[$0.id] ?? false) }
                 deprecatedRemote(models: deprecatedModels)
             }
-            if model.preferences.availableRemoteModels.contains(where: { $0.isNew && !(closedNewRemote[$0.id] ?? false) }) {
-                let newModels = model.preferences.availableRemoteModels.filter { $0.isNew && !(closedNewRemote[$0.id] ?? false) }
+            if availableRemoteModels.contains(where: { $0.isNew && !(closedNewRemote[$0.id] ?? false) }) {
+                let newModels = availableRemoteModels.filter { $0.isNew && !(closedNewRemote[$0.id] ?? false) }
                 newRemote(models: newModels)
             }
-            if !closedLocal && model.preferences.availableLocalModels.isEmpty && !seenLocal {
+            if !closedLocal && availableLocalModels.isEmpty && !seenLocal {
                 local
             }
-            if !closedNoLocalModels && model.preferences.availableLocalModels.isEmpty && seenLocal {
+            if !closedNoLocalModels && availableLocalModels.isEmpty && seenLocal {
                 restartLocal
             }
             if false && !closedOpenAI {
@@ -202,7 +213,7 @@ struct SetUpDialogs: View {
 
     var restartLocal: some View {
         SetUpDialog(title: "No Local Models Found", buttonText: fetchingLocal ? "Loading..." : "Try again") {
-            Text("Onit couldn’t connect to local models - you may need to restart Ollama.")
+            Text("Onit couldn't connect to local models - you may need to restart Ollama.")
         } action: {
             Task {
                 fetchingLocal = true
@@ -223,8 +234,8 @@ struct SetUpDialogs: View {
     }
 
     func expired(_ provider: AIModel.ModelProvider) -> some View {
-        SetUpDialog(title: "Couldn’t connect to \(provider.title)", buttonText: "Go to Settings") {
-            Text("Onit couldn’t connect to remote API providers - your tokens may have expired.")
+        SetUpDialog(title: "Couldn't connect to \(provider.title)", buttonText: "Go to Settings") {
+            Text("Onit couldn't connect to remote API providers - your tokens may have expired.")
         } action: {
             settings()
         } closeAction: {
@@ -239,5 +250,14 @@ struct SetUpDialogs: View {
                 closedGoogleAI = true
             }
         }
+    }
+
+    func resetAppStorageFlags() {
+        closedRemote = false
+        closedLocal = false
+        closedOpenAI = false
+        closedAnthropic = false
+        closedXAI = false
+        closedGoogleAI = false
     }
 }

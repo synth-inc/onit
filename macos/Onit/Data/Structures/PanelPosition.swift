@@ -1,6 +1,7 @@
 import Foundation
+import Defaults
 
-enum PanelPosition: String, CaseIterable, Codable {
+enum PanelPosition: String, CaseIterable, Codable, Defaults.Serializable {
     case topLeft = "Top Left"
     case topCenter = "Top Center"
     case topRight = "Top Right"
