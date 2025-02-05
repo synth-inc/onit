@@ -248,6 +248,8 @@ struct SetUpDialogs: View {
                 closedXAI = true
             case .googleAI:
                 closedGoogleAI = true
+            case .custom:
+                break // TODO: KNA -
             }
         }
     }

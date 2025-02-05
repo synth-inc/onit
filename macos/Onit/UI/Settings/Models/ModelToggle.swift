@@ -17,12 +17,12 @@ struct ModelToggle: View {
     
     var isOn: Binding<Bool> {
         Binding {
-            visibleModelIds.contains(aiModel.id)
+            visibleModelIds.contains(aiModel.uniqueId)
         } set: { isOn in
             if isOn {
-                visibleModelIds.insert(aiModel.id)
+                visibleModelIds.insert(aiModel.uniqueId)
             } else {
-                visibleModelIds.remove(aiModel.id)
+                visibleModelIds.remove(aiModel.uniqueId)
             }
         }
     }
@@ -52,7 +52,7 @@ struct ModelToggle: View {
         .onDisappear() {
             if aiModel.isNew {
                 // Once we've displayed the "NEW" tag in settings, the model is no longer new
-                if let index = availableRemoteModels.firstIndex(where: { $0.id == aiModel.id }) {
+                if let index = availableRemoteModels.firstIndex(where: { $0.uniqueId == aiModel.uniqueId }) {
                     availableRemoteModels[index].isNew = false
                 }
             }

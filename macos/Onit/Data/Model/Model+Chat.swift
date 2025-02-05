@@ -84,8 +84,8 @@ extension OnitModel {
             
             do {
                 let chat: String
-                if Defaults[.mode] == .remote {
-                    // chat(instructions: [String], inputs: [Input?], files: [[URL]], images[[URL]], responses: [String], model: AIModel?, apiToken: String?)
+                if Defaults[.mode] == .remote {                   
+                    // Regular remote model chat
                     chat = try await client.chat(
                         instructions: instructionsHistory,
                         inputs: inputsHistory,
@@ -140,9 +140,23 @@ extension OnitModel {
      */
     private func trackEventGeneration(prompt: Prompt) {
         let eventName = "user_prompted"
+        var modelName = ""
+        
+        if Defaults[.mode] == .remote {
+            if let model = Defaults[.remoteModel] {
+                if let customProviderName = model.customProviderName {
+                    modelName = "\(customProviderName)/\(model.displayName)"
+                } else {
+                    modelName = model.displayName
+                }
+            }
+        } else {
+            modelName = Defaults[.localModel] ?? ""
+        }
+        
         let eventProperties: [String: Any] = [
             "prompt_mode": Defaults[.mode].rawValue,
-            "prompt_model": Defaults[.mode] == .remote ? Defaults[.remoteModel]?.displayName ?? "" : Defaults[.localModel] ?? ""
+            "prompt_model": modelName
         ]
         PostHogSDK.shared.capture(eventName, properties: eventProperties)
     }
@@ -172,6 +186,8 @@ extension OnitModel {
             Defaults[.isXAITokenValidated] = isValid
         case .googleAI:
             Defaults[.isGoogleAITokenValidated] = isValid
+        case .custom:
+            break // TODO: KNA -
         }
     }
     
@@ -186,6 +202,8 @@ extension OnitModel {
                 return Defaults[.xAIToken]
             case .googleAI:
                 return Defaults[.googleAIToken]
+            case .custom:
+                return nil // TODO: KNA -
             }
         }
         return nil

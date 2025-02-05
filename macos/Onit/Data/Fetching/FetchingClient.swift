@@ -7,6 +7,7 @@
 
 import Foundation
 import UniformTypeIdentifiers
+import Defaults
 
 actor FetchingClient {
     let session = URLSession.shared
@@ -244,6 +245,56 @@ actor FetchingClient {
             let endpoint = GoogleAIChatEndpoint(messages: googleAIMessageStack, model: model.id, token: apiToken)
             let response = try await execute(endpoint)
             return response.choices[0].message.content
+        case .custom:
+            
+            var openAIMessageStack: [OpenAIChatMessage] = []
+            
+            // Initialize messages with system prompt if needed
+            // if model.supportsSystemPrompts {
+
+            // 3rd Party model providers don't tell us if system prompts are enabled or not...
+            // How to handle? I guess the user needs to be able to toggle system prompts for each custom provider model.
+            openAIMessageStack.append(OpenAIChatMessage(role: "system", content: .text(systemMessage)))
+
+            for (index, userMessage) in userMessages.enumerated() {
+                if images[index].isEmpty {
+                    let openAIMessage = OpenAIChatMessage(role: "user", content: .text(userMessage))
+                    openAIMessageStack.append(openAIMessage)
+                } else {
+                    var parts = [OpenAIChatContentPart(type: "text", text: userMessage, image_url: nil)]
+                    for url in images[index] {
+                        if let imageData = try? Data(contentsOf: url) {
+                            let base64EncodedData = imageData.base64EncodedString()
+                            let mimeType = mimeType(for: url)
+                            let imagePart = OpenAIChatContentPart(
+                                type: "image_url",
+                                text: nil,
+                                image_url: .init(url: "data:\(mimeType);base64,\(base64EncodedData)")
+                            )
+                            parts.append(imagePart)
+                        } else {
+                            print("Unable to read image data from URL: \(url)")
+                        }
+                    }
+                    let openAIMessage = OpenAIChatMessage(role: "user", content: .multiContent(parts))
+                    openAIMessageStack.append(openAIMessage)
+                }
+                
+                // If there is a corresponding response, add it as an assistant message
+                if index < responses.count {
+                    let responseMessage = OpenAIChatMessage(role: "assistant", content: .text(responses[index]))
+                    openAIMessageStack.append(responseMessage)
+                }
+            }
+
+            if let customProvider = Defaults[.availableCustomProviders].first(where: { $0.name == model.customProviderName }) {
+                let url = URL(string: customProvider.baseURL)!
+                let endpoint = CustomChatEndpoint(baseURL: url, messages: openAIMessageStack, token: customProvider.token, model: model.id)
+                let response = try await execute(endpoint)
+                return response.choices[0].message.content
+            } else {
+                throw FetchingError.invalidRequest(message: "Custom provider not found")
+            }
         }
     }
     

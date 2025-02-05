@@ -3,6 +3,7 @@
 //  Onit
 //
 
+import Defaults
 import Foundation
 
 struct TokenValidationState {
@@ -101,6 +102,18 @@ extension OnitModel {
                 let endpoint = GoogleAIValidationEndpoint(apiKey: token)
                 _ = try await FetchingClient().execute(endpoint)
                 state.setValid(provider: provider)
+                
+            case .custom:
+                // For custom providers, we'll validate by trying to fetch the models list
+                if let customProviderName = Defaults[.remoteModel]?.customProviderName,
+                   let customProvider = Defaults[.availableCustomProviders].first(where: { $0.name == customProviderName }),
+                   let url = URL(string: customProvider.baseURL) {
+                    let endpoint = CustomModelsEndpoint(baseURL: url, token: token)
+                    _ = try await FetchingClient().execute(endpoint)
+                    state.setValid(provider: provider)
+                } else {
+                    throw FetchingError.invalidURL
+                }
             }
             setTokenIsValid(true)
         } catch let error as FetchingError {

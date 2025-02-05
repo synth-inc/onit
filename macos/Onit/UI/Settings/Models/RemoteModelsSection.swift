@@ -11,11 +11,18 @@ struct RemoteModelsSection: View {
     @Environment(\.model) var model
 
     var body: some View {
-        ModelsSection(title: "Remote Models") {
-            RemoteModelSection(provider: .openAI)
-            RemoteModelSection(provider: .anthropic)
-            RemoteModelSection(provider: .xAI)
-            RemoteModelSection(provider: .googleAI)
+        ScrollView {
+            ModelsSection(title: "Remote Models") {
+                RemoteModelSection(provider: .openAI)
+                RemoteModelSection(provider: .anthropic)
+                RemoteModelSection(provider: .xAI)
+                RemoteModelSection(provider: .googleAI)
+                CustomProvidersSection()
+            }
         }
     }
+}
+
+#Preview {
+    RemoteModelsSection()
 }

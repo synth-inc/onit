@@ -50,7 +50,12 @@ extension Defaults.Keys {
     static let mode = Key<InferenceMode>("mode", default: .remote)
     static let availableLocalModels = Key<[String]>("availableLocalModels", default: [])
     static let availableRemoteModels = Key<[AIModel]>("availableRemoteModels", default: [])
+    static let availableCustomProviders = Key<[CustomProvider]>("availableCustomProvider", default: [])
+    
+    // Stores unique model identifiers in the format "provider-id" or "customProviderName-id" for custom providers
     static let visibleModelIds = Key<Set<String>>("visibleModelIds", default: Set([]))
+    static let hasPerformedModelIdMigration = Key<Bool>("hasPerformedModelIdMigration", default: false)
+    
     static let localEndpointURL = Key<URL>("localEndpointURL", default: URL(string: "http://localhost:11434")!)
         
     // Feature flags

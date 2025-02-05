@@ -88,22 +88,57 @@ struct ModelSelectionView: View {
             }
         }
     }
+    
+    var custom: some View {
+        VStack(alignment: .leading, spacing: 2) {
+            HStack {
+                Text("Custom models")
+                    .appFont(.medium13)
+                    .foregroundStyle(.white.opacity(0.6))
+                Spacer()
+                if remoteModels.remoteNeedsSetup || (!remoteModels.remoteNeedsSetup && availableRemoteModels.isEmpty) {
+                    Image(.warningSettings)
+                }
+            }
+            .padding(.horizontal, 12)
 
-    var remoteModelsView: some View {
-        Picker("", selection: selectedModel) {
-            ForEach(remoteModels.listedModels) { model in
-                Text(model.displayName)
-                    .appFont(.medium14)
-                    .tag(SelectedModel.remote(model))
-                    .padding(.vertical, 4)
+            if remoteModels.listedModels.isEmpty {
+                Button("Setup remote models") {
+                    model.settingsTab = .models
+                    openSettings()
+                }
+                .buttonStyle(SetUpButtonStyle(showArrow: true))
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.horizontal, 12)
+                .padding(.top, 6)
+                .padding(.bottom, 10)
+                
+            } else {
+                remoteModelsView
             }
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .pickerStyle(.inline)
-        .padding(.vertical, 4)
-        .padding(.bottom, 5)
-        .padding(.leading, 5)
-        .tint(.blue600)
+    }
+
+    var remoteModelsView: some View {
+        ScrollView {
+            VStack(alignment: .leading) {
+                Picker("", selection: selectedModel) {
+                    ForEach(remoteModels.listedModels) { model in
+                        Text(model.displayName)
+                            .appFont(.medium14)
+                            .tag(SelectedModel.remote(model))
+                            .padding(.vertical, 4)
+                    }
+                }
+                .pickerStyle(.inline)
+                .clipped()
+                .padding(.vertical, 4)
+                .padding(.bottom, 5)
+                .padding(.leading, 5)
+                .tint(.blue600)
+            }
+        }
+        .frame(maxHeight: 300)
     }
 
     var divider: some View {

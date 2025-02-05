@@ -15,9 +15,13 @@ final class RemoteModelsState: ObservableObject {
     @ObservationIgnored
     var availableRemoteModels: [AIModel]
     
-    @ObservableDefault(.visibleModelIds)
+    @ObservableDefault(.availableCustomProviders)
     @ObservationIgnored
-    var visibleModelIds: Set<String>
+    var availableCustomProvider: [CustomProvider]
+    
+//    @ObservableDefault(.visibleModelIds)
+//    @ObservationIgnored
+//    var visibleModelIds: Set<String>
     
     @ObservableDefault(.useOpenAI)
     @ObservationIgnored
@@ -34,13 +38,9 @@ final class RemoteModelsState: ObservableObject {
     @ObservableDefault(.useGoogleAI)
     @ObservationIgnored
     var useGoogleAI: Bool
-    
-    var remoteNeedsSetup: Bool {
-        !useOpenAI && !useAnthropic && !useXAI && !useGoogleAI
-    }
 
     var listedModels: [AIModel] {
-        var models = availableRemoteModels.filter { visibleModelIds.contains($0.id) }
+        var models = availableRemoteModels.filter { Defaults[.visibleModelIds].contains($0.uniqueId) }
 
         if !useOpenAI {
             models = models.filter { $0.provider != .openAI }
@@ -55,6 +55,20 @@ final class RemoteModelsState: ObservableObject {
             models = models.filter { $0.provider != .googleAI }
         }
         
+        // Filter out models from disabled custom providers
+        for customProvider in availableCustomProvider {
+            models = models.filter { model in
+                if model.customProviderName == customProvider.name {
+                    return customProvider.isEnabled
+                }
+                return true
+            }
+        }
+        
         return models
+    }
+    
+    var remoteNeedsSetup: Bool {
+        listedModels.isEmpty
     }
 }
