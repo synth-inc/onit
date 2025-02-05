@@ -46,6 +46,11 @@ extension FetchingClient {
         request.cachePolicy = .reloadIgnoringLocalCacheData
         request.addContentType(for: method, defaultType: contentType ?? "application/json")
 
+        // Set timeout interval for local model requests
+        if url.absoluteString.contains(Defaults[.localEndpointURL].absoluteString) {
+            request.timeoutInterval = Defaults[.localRequestTimeout]
+        }
+
         additionalHeaders?.forEach { key, value in
             request.setValue(value, forHTTPHeaderField: key)
         }
