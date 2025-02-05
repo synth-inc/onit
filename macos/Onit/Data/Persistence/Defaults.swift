@@ -18,18 +18,21 @@ extension Defaults.Keys {
     static let anthropicToken = Key<String?>("anthropicToken", default: nil)
     static let xAIToken = Key<String?>("xAIToken", default: nil)
     static let googleAIToken = Key<String?>("googleAIToken", default: nil)
+    static let deepSeekToken = Key<String?>("deepSeekToken", default: nil)
     
     // Remote model validation
     static let isOpenAITokenValidated = Key<Bool>("openAITokenValidated", default: false)
     static let isAnthropicTokenValidated = Key<Bool>("anthropicTokenValidated", default: false)
     static let isXAITokenValidated = Key<Bool>("xAITokenValidated", default: false)
     static let isGoogleAITokenValidated = Key<Bool>("googleAITokenValidated", default: false)
+    static let isDeepSeekTokenValidated = Key<Bool>("deepSeekTokenValidated", default: false)
     
     // Remote model usage
     static let useOpenAI = Key<Bool>("useOpenAI", default: false)
     static let useAnthropic = Key<Bool>("useAnthropic", default: false)
     static let useXAI = Key<Bool>("useXAI", default: false)
     static let useGoogleAI = Key<Bool>("useGoogleAI", default: false)
+    static let useDeepSeek = Key<Bool>("useDeepSeek", default: false)
     static let useLocal = Key<Bool>("useLocalModel", default: false)
     
     // Dialogs closed
