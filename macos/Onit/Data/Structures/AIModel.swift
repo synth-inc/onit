@@ -33,6 +33,24 @@ struct AIModel: Codable, Identifiable, Hashable, Defaults.Serializable {
         return "\(provider)-\(id)"
     }
     
+    // Helper method to check if a legacy ID matches this model
+    func matchesLegacyId(_ legacyId: String) -> Bool {
+        return id == legacyId
+    }
+    
+    // Helper method to migrate legacy IDs to unique IDs
+    static func migrateVisibleModelIds(models: [AIModel], legacyIds: Set<String>) -> Set<String> {
+        var newIds = Set<String>()
+        
+        // For each legacy ID, find all matching models and add their unique IDs
+        for legacyId in legacyIds {
+            let matchingModels = models.filter { $0.matchesLegacyId(legacyId) }
+            newIds.formUnion(matchingModels.map { $0.uniqueId })
+        }
+        
+        return newIds
+    }
+    
     init(from customModel: CustomModelInfo, providerName: String) {
         self.id = customModel.id
         self.displayName = customModel.id

@@ -111,13 +111,20 @@ import Defaults
     @MainActor
     func fetchRemoteModels() async {
         do {
-            // if
             var models = try await AIModel.fetchModels()
+            
+            // Migrate legacy model IDs if needed
+            if !Defaults[.hasPerformedModelIdMigration] {
+                let legacyIds = Defaults[.visibleModelIds]
+                let migratedIds = AIModel.migrateVisibleModelIds(models: models, legacyIds: legacyIds)
+                Defaults[.visibleModelIds] = migratedIds
+                Defaults[.hasPerformedModelIdMigration] = true
+            }
             
             // This means we've never successfully fetched before
             if Defaults[.availableLocalModels].isEmpty {
                 if Defaults[.visibleModelIds].isEmpty {
-                    Defaults[.visibleModelIds] = Set(models.filter { $0.defaultOn }.map { $0.id })
+                    Defaults[.visibleModelIds] = Set(models.filter { $0.defaultOn }.map { $0.uniqueId })
                 }
                 
                 Defaults[.availableRemoteModels] = models
@@ -143,12 +150,12 @@ import Defaults
 
                 // We only save deprecated models if the user has them visibile. Otherwise, quietly remove them from the list.
                 let visibleModelIds = Set(Defaults[.visibleModelIds])
-                let visibleDeprecatedModels = deprecatedModels.filter { visibleModelIds.contains($0.id) }
+                let visibleDeprecatedModels = deprecatedModels.filter { visibleModelIds.contains($0.uniqueId) }
                     
                 remoteFetchFailed = false
                 Defaults[.availableRemoteModels] = models + visibleDeprecatedModels
                 if visibleModelIds.isEmpty {
-                    Defaults[.visibleModelIds] = Set((models + visibleDeprecatedModels).filter { $0.defaultOn }.map { $0.id })
+                    Defaults[.visibleModelIds] = Set((models + visibleDeprecatedModels).filter { $0.defaultOn }.map { $0.uniqueId })
                 }
 
                 if !remoteModels.listedModels.isEmpty && (Defaults[.remoteModel] == nil || !Defaults[.availableRemoteModels].contains(Defaults[.remoteModel]!)) {
