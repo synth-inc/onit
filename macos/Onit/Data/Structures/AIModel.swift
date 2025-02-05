@@ -111,7 +111,7 @@ struct AIModel: Codable, Identifiable, Hashable, Defaults.Serializable {
             case .anthropic: return "Claude"
             case .xAI: return "Grok"
             case .googleAI: return "Gemini"
-            case .deepSeek: return "DeepSeek"
+            case .deepSeek: return "DeepSeek R1"
             case .custom: return "Custom Model"
             }
         }
@@ -127,7 +127,7 @@ struct AIModel: Codable, Identifiable, Hashable, Defaults.Serializable {
             case .googleAI:
                 return URL(string: "https://makersuite.google.com/app/apikey")!
             case .deepSeek:
-                return URL(string: "https://platform.deepseek.com/settings/api-keys")!
+                return URL(string: "https://platform.deepseek.com/api_keys")!
             case .custom:
                 return URL(string: "about:blank")!
             }

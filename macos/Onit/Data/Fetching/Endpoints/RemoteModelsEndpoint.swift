@@ -10,7 +10,7 @@ struct RemoteModelsEndpoint: Endpoint {
     }
     
     var path: String {
-        "/onit/models.json"
+        "/onit/models-deepseek.json"
     }
     var getParams: [String: String]? { nil }
     

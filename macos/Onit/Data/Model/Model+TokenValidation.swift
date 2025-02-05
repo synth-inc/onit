@@ -103,6 +103,11 @@ extension OnitModel {
                 _ = try await FetchingClient().execute(endpoint)
                 state.setValid(provider: provider)
                 
+            case .deepSeek:
+                let endpoint = DeepSeekValidationEndpoint(apiKey: token)
+                _ = try await FetchingClient().execute(endpoint)
+                state.setValid(provider: provider)
+                
             case .custom:
                 // For custom providers, we'll validate by trying to fetch the models list
                 if let customProviderName = Defaults[.remoteModel]?.customProviderName,

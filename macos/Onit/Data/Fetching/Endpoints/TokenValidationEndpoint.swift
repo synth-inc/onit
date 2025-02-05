@@ -94,3 +94,31 @@ struct XAIValidationResponse: Codable {
         let id: String
     }
 }
+
+
+// DeepSeek validation endpoint
+struct DeepSeekValidationEndpoint: Endpoint {
+    var baseURL: URL = URL(string: "https://api.deepseek.com")!
+    
+    typealias Request = Never
+    typealias Response = DeepSeekValidationResponse
+    
+    var path: String { "/models" }
+    var getParams: [String: String]? { nil }
+    var method: HTTPMethod { .get }
+    var token: String? { nil }
+    var requestBody: Never? { nil }
+    var additionalHeaders: [String: String]? {
+        ["Authorization": "Bearer \(apiKey)"]
+    }
+    
+    let apiKey: String
+}
+
+struct DeepSeekValidationResponse: Codable {
+    let data: [Model]
+    
+    struct Model: Codable {
+        let id: String
+    }
+}

@@ -25,14 +25,17 @@ struct RemoteModelSection: View {
     @Default(.anthropicToken) var anthropicToken
     @Default(.xAIToken) var xAIToken
     @Default(.googleAIToken) var googleAIToken
+    @Default(.deepSeekToken) var deepSeekToken
     @Default(.useOpenAI) var useOpenAI
     @Default(.useAnthropic) var useAnthropic
     @Default(.useXAI) var useXAI
     @Default(.useGoogleAI) var useGoogleAI
+    @Default(.useDeepSeek) var useDeepSeek
     @Default(.isOpenAITokenValidated) var isOpenAITokenValidated
     @Default(.isAnthropicTokenValidated) var isAnthropicTokenValidated
     @Default(.isXAITokenValidated) var isXAITokenValidated
     @Default(.isGoogleAITokenValidated) var isGoogleAITokenValidated
+    @Default(.isDeepSeekTokenValidated) var isDeepSeekTokenValidated
 
     var provider: AIModel.ModelProvider
 
@@ -203,6 +206,8 @@ struct RemoteModelSection: View {
             xAIToken = key.isEmpty ? nil : key
         case .googleAI:
             googleAIToken = key.isEmpty ? nil : key
+        case .deepSeek:
+            deepSeekToken = key.isEmpty ? nil : key
         case .custom:
             break // TODO: KNA -
         }
@@ -218,6 +223,8 @@ struct RemoteModelSection: View {
             key = xAIToken ?? ""
         case .googleAI:
             key = googleAIToken ?? ""
+        case .deepSeek:
+            key = deepSeekToken ?? ""
         case .custom:
             break // TODO: KNA -
         }
@@ -233,6 +240,8 @@ struct RemoteModelSection: View {
             use = useXAI
         case .googleAI:
             use = useGoogleAI
+        case .deepSeek:
+            use = useDeepSeek
         case .custom:
             break // TODO: KNA -
         }
@@ -248,6 +257,8 @@ struct RemoteModelSection: View {
             validated = isXAITokenValidated
         case .googleAI:
             validated = isGoogleAITokenValidated
+        case .deepSeek:
+            validated = isDeepSeekTokenValidated
         case .custom:
             break // TODO: KNA -
         }
@@ -263,6 +274,8 @@ struct RemoteModelSection: View {
             useXAI = use
         case .googleAI:
             useGoogleAI = use
+        case .deepSeek:
+            useDeepSeek = use
         case .custom:
             break // TODO: KNA -
         }
@@ -278,6 +291,8 @@ struct RemoteModelSection: View {
             isXAITokenValidated = validated
         case .googleAI:
             isGoogleAITokenValidated = validated
+        case .deepSeek:
+            isDeepSeekTokenValidated = validated
         case .custom:
             break // TODO: KNA -
         }
