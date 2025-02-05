@@ -8,37 +8,26 @@
 import Foundation
 
 struct DeepSeekChatEndpoint: Endpoint {
+    typealias Request = DeepSeekChatRequest
     typealias Response = DeepSeekChatResponse
-    let messages: [OpenAIChatMessage]
-    let model: String
+    
+    let messages: [DeepSeekChatMessage]
     let token: String
+    let model: String
     
     var baseURL: URL {
-        URL(string: "https://api.deepseek.com/v1/chat/completions")!
+        URL(string: "https://api.deepseek.com")!
     }
     
-    var method: String {
-        "POST"
+    var path: String { "/v1/chat/completions" }
+    var getParams: [String: String]? { nil }
+    var method: HTTPMethod { .post }
+    
+    var requestBody: DeepSeekChatRequest? {
+        DeepSeekChatRequest(model: model, messages: messages)
     }
     
-    var headers: [String: String] {
-        [
-            "Content-Type": "application/json",
-            "Authorization": "Bearer \(token)"
-        ]
-    }
-    
-    var body: Data? {
-        let parameters: [String: Any] = [
-            "model": model,
-            "messages": messages.map { $0.dictionary },
-            "stream": true
-        ]
-        
-        return try? JSONSerialization.data(withJSONObject: parameters)
-    }
-    
-    var responseType: EndpointResponseType {
-        .streamedJSON
+    var additionalHeaders: [String: String]? {
+        ["Authorization": "Bearer \(token)"]
     }
 }
