@@ -91,6 +91,7 @@ struct AIModel: Codable, Identifiable, Hashable, Defaults.Serializable {
         case anthropic = "anthropic"
         case xAI = "xai"
         case googleAI = "googleai"
+        case deepSeek = "deepseek"
         case custom = "custom"
 
         var title: String {
@@ -99,6 +100,7 @@ struct AIModel: Codable, Identifiable, Hashable, Defaults.Serializable {
             case .anthropic: return "Anthropic"
             case .xAI: return "xAI"
             case .googleAI: return "Google AI"
+            case .deepSeek: return "DeepSeek"
             case .custom: return "Custom Providers"
             }
         }
@@ -109,6 +111,7 @@ struct AIModel: Codable, Identifiable, Hashable, Defaults.Serializable {
             case .anthropic: return "Claude"
             case .xAI: return "Grok"
             case .googleAI: return "Gemini"
+            case .deepSeek: return "DeepSeek R1"
             case .custom: return "Custom Model"
             }
         }
@@ -123,6 +126,8 @@ struct AIModel: Codable, Identifiable, Hashable, Defaults.Serializable {
                 return URL(string: "https://accounts.x.ai/account")!
             case .googleAI:
                 return URL(string: "https://makersuite.google.com/app/apikey")!
+            case .deepSeek:
+                return URL(string: "https://platform.deepseek.com/api_keys")!
             case .custom:
                 return URL(string: "about:blank")!
             }

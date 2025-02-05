@@ -25,6 +25,7 @@ struct SetUpDialogs: View {
     @Default(.closedAnthropic) var closedAnthropic
     @Default(.closedXAI) var closedXAI
     @Default(.closedGoogleAI) var closedGoogleAI
+    @Default(.closedDeepSeek) var closedDeepSeek
     @Default(.seenLocal) var seenLocal
     @Default(.closedNewRemoteData) var closedNewRemoteData
     @Default(.closedDeprecatedRemoteData) var closedDeprecatedRemoteData
@@ -96,6 +97,9 @@ struct SetUpDialogs: View {
             }
             if false && !closedGoogleAI {
                 expired(.googleAI)
+            }
+            if false && !closedDeepSeek {
+                expired(.deepSeek)
             }
         }
         .background {
@@ -248,6 +252,8 @@ struct SetUpDialogs: View {
                 closedXAI = true
             case .googleAI:
                 closedGoogleAI = true
+            case .deepSeek:
+                closedDeepSeek = true
             case .custom:
                 break // TODO: KNA -
             }
@@ -261,5 +267,6 @@ struct SetUpDialogs: View {
         closedAnthropic = false
         closedXAI = false
         closedGoogleAI = false
+        closedDeepSeek = false
     }
 }

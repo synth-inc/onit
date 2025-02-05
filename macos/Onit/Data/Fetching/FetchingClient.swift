@@ -245,6 +245,48 @@ actor FetchingClient {
             let endpoint = GoogleAIChatEndpoint(messages: googleAIMessageStack, model: model.id, token: apiToken)
             let response = try await execute(endpoint)
             return response.choices[0].message.content
+            
+        case .deepSeek:
+            var deepSeekMessageStack: [DeepSeekChatMessage] = []
+            
+            // DeepSeek uses OpenAI-compatible format
+            if model.supportsSystemPrompts {
+                deepSeekMessageStack.append(DeepSeekChatMessage(role: "system", content: .text(systemMessage)))
+            }
+            
+            for (index, userMessage) in userMessages.enumerated() {
+                if images[index].isEmpty {
+                    deepSeekMessageStack.append(DeepSeekChatMessage(role: "user", content: .text(userMessage)))
+                } else {
+                    var parts = [DeepSeekChatContentPart(type: "text", text: userMessage, image_url: nil)]
+                    for url in images[index] {
+                        if let imageData = try? Data(contentsOf: url) {
+                            let base64EncodedData = imageData.base64EncodedString()
+                            let mimeType = mimeType(for: url)
+                            let imagePart = DeepSeekChatContentPart(
+                                type: "image_url",
+                                text: nil,
+                                image_url: .init(url: "data:\(mimeType);base64,\(base64EncodedData)")
+                            )
+                            parts.append(imagePart)
+                        } else {
+                            print("Unable to read image data from URL: \(url)")
+                        }
+                    }
+                    deepSeekMessageStack.append(DeepSeekChatMessage(role: "user", content: .multiContent(parts)))
+                }
+                
+                // If there is a corresponding response, add it as an assistant message
+                if index < responses.count {
+                    let responseMessage = DeepSeekChatMessage(role: "assistant", content: .text(responses[index]))
+                    deepSeekMessageStack.append(responseMessage)
+                }
+            }
+            
+            let endpoint = DeepSeekChatEndpoint(messages: deepSeekMessageStack, token: apiToken!, model: model.id)
+            let response = try await execute(endpoint)
+            return response.choices[0].message.content
+            
         case .custom:
             
             var openAIMessageStack: [OpenAIChatMessage] = []

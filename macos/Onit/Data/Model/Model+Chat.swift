@@ -186,6 +186,8 @@ extension OnitModel {
             Defaults[.isXAITokenValidated] = isValid
         case .googleAI:
             Defaults[.isGoogleAITokenValidated] = isValid
+        case .deepSeek:
+            Defaults[.isDeepSeekTokenValidated] = isValid
         case .custom:
             break // TODO: KNA -
         }
@@ -202,6 +204,8 @@ extension OnitModel {
                 return Defaults[.xAIToken]
             case .googleAI:
                 return Defaults[.googleAIToken]
+            case .deepSeek:
+                return Defaults[.deepSeekToken]
             case .custom:
                 return nil // TODO: KNA -
             }
