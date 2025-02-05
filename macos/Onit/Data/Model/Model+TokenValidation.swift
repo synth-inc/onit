@@ -106,7 +106,7 @@ extension OnitModel {
             case .custom:
                 // For custom providers, we'll validate by trying to fetch the models list
                 if let customProviderName = Defaults[.remoteModel]?.customProviderName,
-                   let customProvider = Defaults[.availableCustomProvider].first(where: { $0.name == customProviderName }),
+                   let customProvider = Defaults[.availableCustomProviders].first(where: { $0.name == customProviderName }),
                    let url = URL(string: customProvider.baseURL) {
                     let endpoint = CustomModelsEndpoint(baseURL: url, token: token)
                     _ = try await FetchingClient().execute(endpoint)

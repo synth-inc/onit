@@ -50,7 +50,7 @@ extension Defaults.Keys {
     static let mode = Key<InferenceMode>("mode", default: .remote)
     static let availableLocalModels = Key<[String]>("availableLocalModels", default: [])
     static let availableRemoteModels = Key<[AIModel]>("availableRemoteModels", default: [])
-    static let availableCustomProvider = Key<[CustomProvider]>("availableCustomProvider", default: [])
+    static let availableCustomProviders = Key<[CustomProvider]>("availableCustomProvider", default: [])
     
     // Stores unique model identifiers in the format "provider-id" or "customProviderName-id" for custom providers
     static let visibleModelIds = Key<Set<String>>("visibleModelIds", default: Set([]))

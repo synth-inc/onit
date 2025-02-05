@@ -74,7 +74,7 @@ struct AIModel: Codable, Identifiable, Hashable, Defaults.Serializable {
         let remoteModels = response.models.compactMap { AIModel(from: $0) }
         
         var customModels: [AIModel] = []
-        for provider in Defaults[.availableCustomProvider] {
+        for provider in Defaults[.availableCustomProviders] {
             do {
                 try await provider.fetchModels()
                 customModels.append(contentsOf: provider.models)

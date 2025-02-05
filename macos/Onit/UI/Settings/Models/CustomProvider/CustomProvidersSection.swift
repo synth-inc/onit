@@ -3,7 +3,7 @@ import SwiftUI
 import SwiftData
 
 struct CustomProvidersSection: View {
-    @Default(.availableCustomProvider) private var availableCustomProvider
+    @Default(.availableCustomProviders) private var availableCustomProvider
     
     @State private var showForm = false
     @State private var isSubmitted = false

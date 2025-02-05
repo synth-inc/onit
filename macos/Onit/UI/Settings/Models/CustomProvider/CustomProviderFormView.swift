@@ -11,7 +11,7 @@ import SwiftUI
 struct CustomProviderFormView: View {
     @Environment(\.dismiss) private var dismiss
     
-    @Default(.availableCustomProvider) var availableCustomProviders
+    @Default(.availableCustomProviders) var availableCustomProviders
     @Default(.availableRemoteModels) var availableRemoteModels
 
     
@@ -51,7 +51,7 @@ struct CustomProviderFormView: View {
                 .disabled(name.isEmpty || baseURL.isEmpty || token.isEmpty)
             }.padding(.top, 8)
             
-            if let errorMessage = errorMessage{
+            if let errorMessage = errorMessage {
                 Text(errorMessage)
                     .foregroundColor(.red)
             }
@@ -63,8 +63,22 @@ struct CustomProviderFormView: View {
     private func addProvider() {
         Task {
             do {
-                
-                try await fetchModels()
+                // Check for duplicate provider name
+                if availableCustomProviders.contains(where: { $0.name == name }) {
+                    errorMessage = "A provider with this name already exists."
+                    return
+                }
+                var provider = CustomProvider(
+                    name: name,
+                    baseURL: baseURL,
+                    token: token,
+                    models: []
+                )
+                try await provider.fetchModels()
+
+                // If the above doesn't crash, we're good!
+                availableCustomProviders.append(provider)
+                availableRemoteModels.append(contentsOf: provider.models)
                 DispatchQueue.main.async {
                     isSubmitted = true
                     dismiss()
@@ -73,21 +87,6 @@ struct CustomProviderFormView: View {
                 errorMessage = "Failed to fetch models: \(error.localizedDescription)"
             }
         }
-    }
-    
-    func fetchModels() async throws {
-        var provider = CustomProvider(
-            name: name,
-            baseURL: baseURL,
-            token: token,
-            models: []
-        )
-        
-        try await provider.fetchModels()
-        
-        // If the above doesn't crash, we're good!
-        availableCustomProviders.append(provider)
-        availableRemoteModels.append(contentsOf: provider.models)
     }
 }
 

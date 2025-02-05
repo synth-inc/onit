@@ -287,7 +287,7 @@ actor FetchingClient {
                 }
             }
 
-            if let customProvider = Defaults[.availableCustomProvider].first(where: { $0.name == model.customProviderName }) {
+            if let customProvider = Defaults[.availableCustomProviders].first(where: { $0.name == model.customProviderName }) {
                 let url = URL(string: customProvider.baseURL)!
                 let endpoint = CustomChatEndpoint(baseURL: url, messages: openAIMessageStack, token: customProvider.token, model: model.id)
                 let response = try await execute(endpoint)

@@ -15,7 +15,7 @@ final class RemoteModelsState: ObservableObject {
     @ObservationIgnored
     var availableRemoteModels: [AIModel]
     
-    @ObservableDefault(.availableCustomProvider)
+    @ObservableDefault(.availableCustomProviders)
     @ObservationIgnored
     var availableCustomProvider: [CustomProvider]
     
