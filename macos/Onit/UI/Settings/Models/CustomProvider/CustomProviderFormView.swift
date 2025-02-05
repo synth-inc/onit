@@ -83,24 +83,19 @@ struct CustomProviderFormView: View {
         let client = FetchingClient()
         let response = try await client.execute(endpoint)
         
-        let models = response.data.map { $0.id }
+        let modelIds = response.data.map { $0.id }
         let provider = CustomProvider(
             name: name,
             baseURL: baseURL,
             token: token,
-            models: models
+            models: modelIds
         )
         
         availableCustomProviders.append(provider)
         
         // Initialize model IDs
-        let newModels = models.map { modelId in
-            AIModel(from: CustomModelInfo(
-                id: modelId,
-                object: "model",
-                created: Int(Date().timeIntervalSince1970),
-                owned_by: name
-            ), providerName: provider.name)
+        let newModels = response.data.map { model in
+            AIModel(from: model, providerName: provider.name)
         }
         
         // Initialize visible model IDs

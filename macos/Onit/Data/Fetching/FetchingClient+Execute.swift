@@ -28,7 +28,7 @@ extension FetchingClient {
         }
 
         // Helpful debugging method- put in the endpoint name and you can see the full request
-        if endpoint.path.contains("/v1beta/models") {
+        if endpoint.path.contains("/v1/models") {
             printCurlRequest(endpoint: endpoint, url: url)
             print("here")
         }

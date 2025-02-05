@@ -53,7 +53,11 @@ struct AIModel: Codable, Identifiable, Hashable, Defaults.Serializable {
         let client = FetchingClient()
         let endpoint = RemoteModelsEndpoint()
         let response = try await client.execute(endpoint)
-        return response.models.compactMap { AIModel(from: $0) }
+        let onitModels = response.models.compactMap { AIModel(from: $0) }
+        
+        // TODO include custom models
+        
+        return onitModels
     }
     
     enum ModelProvider: String, Codable, Equatable, Hashable, Defaults.Serializable {
