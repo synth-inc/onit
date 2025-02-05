@@ -26,6 +26,13 @@ struct AIModel: Codable, Identifiable, Hashable, Defaults.Serializable {
         return displayName
     }
     
+    var uniqueId: String {
+        if provider == .custom, let providerName = customProviderName {
+            return "\(providerName)-\(id)"
+        }
+        return "\(provider)-\(id)"
+    }
+    
     init(from customModel: CustomModelInfo, providerName: String) {
         self.id = customModel.id
         self.displayName = customModel.id
@@ -53,11 +60,20 @@ struct AIModel: Codable, Identifiable, Hashable, Defaults.Serializable {
         let client = FetchingClient()
         let endpoint = RemoteModelsEndpoint()
         let response = try await client.execute(endpoint)
-        let onitModels = response.models.compactMap { AIModel(from: $0) }
+        let remoteModels = response.models.compactMap { AIModel(from: $0) }
         
-        // TODO include custom models
+        var customModels: [AIModel] = []
+        for provider in Defaults[.availableCustomProvider] {
+            do {
+                let models = try await provider.fetchModels()
+                let custom = models.map { AIModel(from: $0, providerName: provider.name) }
+                customModels.append(contentsOf: custom)
+            } catch {
+                print("Error fetching custom models for provider \(provider.name): \(error)")
+            }
+        }
         
-        return onitModels
+        return remoteModels + customModels
     }
     
     enum ModelProvider: String, Codable, Equatable, Hashable, Defaults.Serializable {

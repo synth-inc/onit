@@ -51,7 +51,10 @@ extension Defaults.Keys {
     static let availableLocalModels = Key<[String]>("availableLocalModels", default: [])
     static let availableRemoteModels = Key<[AIModel]>("availableRemoteModels", default: [])
     static let availableCustomProvider = Key<[CustomProvider]>("availableCustomProvider", default: [])
+    
+    // Updated visible model identifiers to use composite ModelID (combining provider and id)
     static let visibleModelIds = Key<Set<String>>("visibleModelIds", default: Set([]))
+    
     static let localEndpointURL = Key<URL>("localEndpointURL", default: URL(string: "http://localhost:11434")!)
         
     // Feature flags
