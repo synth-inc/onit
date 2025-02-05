@@ -14,9 +14,11 @@ extension OnitModel: NSWindowDelegate {
         if let existingPanel = panel, existingPanel.isVisible {
             existingPanel.makeKeyAndOrderFront(nil)
             existingPanel.orderFrontRegardless()
+            // Focus the text input when we're activating the panel
+            self.textFocusTrigger.toggle()
             return
         }
-
+        
         let newPanel = CustomPanel(
             contentRect: NSRect(x: 0, y: 0, width: 400, height: 0),
             styleMask: [.resizable, .nonactivatingPanel, .fullSizeContentView],
@@ -87,7 +89,7 @@ extension OnitModel: NSWindowDelegate {
         enableKeyboardShortcuts()
 
         // Focus the text input when we're activating the panel
-        textFocusTrigger = true
+        self.textFocusTrigger.toggle()
 
         // Set the defaultPanelFrame to the initial frame of the panel
         defaultPanelFrame = newPanel.frame
@@ -155,6 +157,8 @@ extension OnitModel: NSWindowDelegate {
         }
         panel.orderOut(nil)
         HighlightHintWindowController.shared.adjustWindow()
+        panel.delegate = nil
+        panel.contentView = nil
         self.panel = nil
         
         disableKeyboardShortcuts()
@@ -185,6 +189,7 @@ extension OnitModel: NSWindowDelegate {
             if let panel = panel {
                 panel.makeKeyAndOrderFront(nil)
                 panel.orderFrontRegardless()
+                self.textFocusTrigger.toggle()
             }
             return
         }
@@ -220,6 +225,8 @@ extension OnitModel: NSWindowDelegate {
         
         panel.makeKeyAndOrderFront(nil)
         panel.orderFrontRegardless()
+
+        self.textFocusTrigger.toggle()
     }
         
     func launchShortcutAction() {
