@@ -50,6 +50,7 @@ extension Defaults.Keys {
     static let mode = Key<InferenceMode>("mode", default: .remote)
     static let availableLocalModels = Key<[String]>("availableLocalModels", default: [])
     static let availableRemoteModels = Key<[AIModel]>("availableRemoteModels", default: [])
+    static let availableCustomProvider = Key<[CustomProvider]>("availableCustomProvider", default: [])
     static let visibleModelIds = Key<Set<String>>("visibleModelIds", default: Set([]))
     static let localEndpointURL = Key<URL>("localEndpointURL", default: URL(string: "http://localhost:11434")!)
         

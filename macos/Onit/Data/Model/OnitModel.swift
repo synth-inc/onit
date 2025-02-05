@@ -91,6 +91,7 @@ import Defaults
             } else if localModel == nil || !models.contains(localModel!) {
                 Defaults[.localModel] = models[0]
             }
+            print("KNA - OnitModel fetchLocalModels")
             if remoteModels.listedModels.isEmpty {
                 Defaults[.mode] = .local
             }
@@ -114,11 +115,11 @@ import Defaults
             var models = try await AIModel.fetchModels()
             
             // This means we've never successfully fetched before
-            
             if Defaults[.availableLocalModels].isEmpty {
                 if Defaults[.visibleModelIds].isEmpty {
                     Defaults[.visibleModelIds] = Set(models.filter { $0.defaultOn }.map { $0.id })
                 }
+                
                 Defaults[.availableRemoteModels] = models
                 if !remoteModels.listedModels.isEmpty {
                     Defaults[.remoteModel] = remoteModels.listedModels.first
@@ -140,13 +141,13 @@ import Defaults
                     deprecatedModels[index].isDeprecated = true
                 }
 
-                    // We only save deprecated models if the user has them visibile. Otherwise, quietly remove them from the list. 
+                // We only save deprecated models if the user has them visibile. Otherwise, quietly remove them from the list.
                 let visibleModelIds = Set(Defaults[.visibleModelIds])
                 let visibleDeprecatedModels = deprecatedModels.filter { visibleModelIds.contains($0.id) }
                     
                 remoteFetchFailed = false
                 Defaults[.availableRemoteModels] = models + visibleDeprecatedModels
-                if Defaults[.visibleModelIds].isEmpty {
+                if visibleModelIds.isEmpty {
                     Defaults[.visibleModelIds] = Set((models + visibleDeprecatedModels).filter { $0.defaultOn }.map { $0.id })
                 }
 

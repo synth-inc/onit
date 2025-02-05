@@ -85,7 +85,9 @@ extension OnitModel {
             do {
                 let chat: String
                 if Defaults[.mode] == .remote {
-                    if let customProvider = Defaults[.remoteModel]?.customProvider {
+                    if let customProviderName = Defaults[.remoteModel]?.customProviderName,
+                       let customProvider = Defaults[.availableCustomProvider].first(where: { $0.name == customProviderName }) {
+                           
                         // Handle custom provider chat
                         let messages = createOpenAIMessages(
                             instructions: instructionsHistory,
@@ -162,8 +164,8 @@ extension OnitModel {
         
         if Defaults[.mode] == .remote {
             if let model = Defaults[.remoteModel] {
-                if model.provider == .custom {
-                    modelName = "\(model.customProvider?.name ?? "Custom")/\(model.displayName)"
+                if let customProviderName = model.customProviderName {
+                    modelName = "\(customProviderName)/\(model.displayName)"
                 } else {
                     modelName = model.displayName
                 }

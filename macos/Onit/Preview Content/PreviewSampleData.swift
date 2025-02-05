@@ -17,6 +17,11 @@ actor PreviewSampleData {
     static var remoteModels: RemoteModelsState = {
         RemoteModelsState()
     }()
+    
+    @MainActor
+    static var customProvider: CustomProvider = {
+        CustomProvider(name: "Provider name", baseURL: "http://google.com", token: "aiZafeoi", models: [])
+    }()
 
     @MainActor
     static var inMemoryContainer: () throws -> ModelContainer = {

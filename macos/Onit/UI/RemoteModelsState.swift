@@ -15,9 +15,13 @@ final class RemoteModelsState: ObservableObject {
     @ObservationIgnored
     var availableRemoteModels: [AIModel]
     
-    @ObservableDefault(.visibleModelIds)
+    @ObservableDefault(.availableCustomProvider)
     @ObservationIgnored
-    var visibleModelIds: Set<String>
+    var availableCustomProvider: [CustomProvider]
+    
+//    @ObservableDefault(.visibleModelIds)
+//    @ObservationIgnored
+//    var visibleModelIds: Set<String>
     
     @ObservableDefault(.useOpenAI)
     @ObservationIgnored
@@ -34,13 +38,9 @@ final class RemoteModelsState: ObservableObject {
     @ObservableDefault(.useGoogleAI)
     @ObservationIgnored
     var useGoogleAI: Bool
-    
-    var remoteNeedsSetup: Bool {
-        !useOpenAI && !useAnthropic && !useXAI && !useGoogleAI
-    }
 
     var listedModels: [AIModel] {
-        var models = availableRemoteModels.filter { visibleModelIds.contains($0.id) }
+        var models = availableRemoteModels.filter { Defaults[.visibleModelIds].contains($0.id) }
 
         if !useOpenAI {
             models = models.filter { $0.provider != .openAI }
@@ -56,14 +56,21 @@ final class RemoteModelsState: ObservableObject {
         }
         
         // Filter out models from disabled custom providers
-        models = models.filter { model in
-            if model.provider == .custom,
-               let provider = model.customProvider {
-                return provider.isEnabled
-            }
-            return true
-        }
+//        for customProvider in availableCustomProvider {
+//            models = models.filter { model in
+//                if model.customProviderName == customProvider.name {
+//                    print("customProvider.isEnabled: \(customProvider.isEnabled), model.defaultOn: \(model.defaultOn)")
+//                    return customProvider.isEnabled ? model.defaultOn : customProvider.isEnabled
+//                }
+//                
+//                return true
+//            }
+//        }
         
         return models
+    }
+    
+    var remoteNeedsSetup: Bool {
+        listedModels.isEmpty
     }
 }

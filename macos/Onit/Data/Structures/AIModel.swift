@@ -17,23 +17,23 @@ struct AIModel: Codable, Identifiable, Hashable, Defaults.Serializable {
     let supportsSystemPrompts: Bool
     var isNew: Bool = false
     var isDeprecated: Bool = false
-    var customProvider: CustomProvider?
+    var customProviderName: String?
     
     var formattedDisplayName: String {
-        if provider == .custom, let provider = customProvider {
-            return "\(provider.name) / \(displayName)"
+        if provider == .custom, let providerName = customProviderName {
+            return "\(providerName) / \(displayName)"
         }
         return displayName
     }
     
-    init(from customModel: CustomModelInfo, provider: CustomProvider) {
+    init(from customModel: CustomModelInfo, providerName: String) {
         self.id = customModel.id
         self.displayName = customModel.id
         self.provider = .custom
         self.defaultOn = false
         self.supportsVision = false
         self.supportsSystemPrompts = true
-        self.customProvider = provider
+        self.customProviderName = providerName
     }
 
     init?(from modelInfo: ModelInfo) {
