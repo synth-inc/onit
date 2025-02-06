@@ -47,7 +47,8 @@ extension Defaults.Keys {
     static let closedDeprecatedRemoteData = Key<Data>("closedDeprecatedRemoteData", default: Data())
     static let closedAutoContextDialog = Key<Bool>("closedAutoContext", default: false)
     static let closedLegacyClientDialog = Key<Bool>("closedLegacyClientDialog", default: false)
-    
+    static let lastLegacyClientDialogShownDate = Key<Date?>("lastLegacyClientDialogShownDate", default: nil)
+
     static let seenLocal = Key<Bool>("seenLocal", default: false)
     
     static let remoteModel = Key<AIModel?>("remoteModel", default: nil)

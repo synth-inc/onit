@@ -9,8 +9,6 @@ import SwiftUI
 import Sparkle
 import Defaults
 
-@preconcurrency import class Foundation.NSWorkspace
-
 struct MenuCheckForUpdates: View {
     @Environment(\.model) var model
     @State var checkUpdates: CheckForUpdatesViewModel?
@@ -46,8 +44,9 @@ struct MenuCheckForUpdates: View {
             }
             Button("Cancel", role: .cancel) {}
         } message: {
-            Text("Your version of Onit can't be updated automatically. Please download the latest version from our website.")
+            Text("Your version of Onit can't be updated automatically. To get the latest, please delete this version and download a new version from our website.")
         }
+    }
 }
 
 #Preview {

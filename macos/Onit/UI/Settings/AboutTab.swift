@@ -1,8 +1,6 @@
 import SwiftUI
 import Defaults
 
-@preconcurrency import class Foundation.NSWorkspace
-
 struct AboutTab: View {
     var body: some View {
         VStack(spacing: 24) {
@@ -18,7 +16,7 @@ struct AboutTab: View {
                     .foregroundColor(.secondary)
                 
                 if FeatureFlagManager.shared.showLegacyClientCantUpdateDialog {
-                    Text("This version can't be updated automatically.\nPlease download a new version from our website.")
+                    Text("This version can't be updated automatically.\nTo get the latest, please delete this version and download a new version from our website.")
                         .foregroundColor(.red)
                         .multilineTextAlignment(.center)
                         .padding(.top, 8)
@@ -32,8 +30,10 @@ struct AboutTab: View {
                             NSWorkspace.shared.open(url)
                         }
                     }
+                    .foregroundStyle(.white)
                     .buttonStyle(.borderedProminent)
-                    .tint(.blue400)
+                    .frame(height: 22)
+                    .fontWeight(.regular)
                 }
                 
                 HStack(spacing: 12) {

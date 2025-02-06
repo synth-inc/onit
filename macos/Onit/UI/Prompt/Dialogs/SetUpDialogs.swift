@@ -13,11 +13,14 @@ struct SetUpDialogs: View {
     @Environment(\.remoteModels) var remoteModels
     @Environment(\.openSettings) var openSettings
 
+    @ObservedObject private var featureFlagsManager = FeatureFlagManager.shared
+
     @State var closedNoLocalModels = false
     @State var closedNoRemoteModels = false
 
     @State private var fetchingRemote = false
     @State private var fetchingLocal = false
+    @State private var showDeprecatedInfoDialog = false
     
     @Default(.closedRemote) var closedRemote
     @Default(.closedLocal) var closedLocal
@@ -31,7 +34,7 @@ struct SetUpDialogs: View {
     @Default(.closedDeprecatedRemoteData) var closedDeprecatedRemoteData
     @Default(.availableRemoteModels) var availableRemoteModels
     @Default(.availableLocalModels) var availableLocalModels
-    @Default(.closedLegacyClientDialog) var closedLegacyClientDialog
+    @Default(.lastLegacyClientDialogShownDate) var lastLegacyClientDialogShownDate
 
     var closedNewRemote: [String: Bool] {
         get {
@@ -67,6 +70,7 @@ struct SetUpDialogs: View {
     @ViewBuilder
     var content: some View {
         Group {
+            
             if availableRemoteModels.isEmpty && model.remoteFetchFailed && !closedNoRemoteModels {
                 noRemote
             }
@@ -102,7 +106,7 @@ struct SetUpDialogs: View {
             if false && !closedDeepSeek {
                 expired(.deepSeek)
             }
-            if FeatureFlagManager.shared.showLegacyClientCantUpdateDialog && !closedLegacyClientDialog {
+            if shouldShowLegacyClientDialog && featureFlagsManager.showLegacyClientCantUpdateDialog {
                 legacyClientDialog
             }
         }
@@ -120,6 +124,18 @@ struct SetUpDialogs: View {
                     }
             }
         }
+    }
+
+    var shouldShowLegacyClientDialog: Bool {
+        if lastLegacyClientDialogShownDate == nil {
+            return true
+        }
+        guard let lastShownDate = lastLegacyClientDialogShownDate else {
+            return true
+        }
+        let threeDaysAgo = Calendar.current.date(byAdding: .day, value: -3, to: Date())!
+        let shouldShow = lastShownDate < threeDaysAgo
+        return shouldShow
     }
 
     var remote: some View {
@@ -265,15 +281,19 @@ struct SetUpDialogs: View {
     }
 
     var legacyClientDialog: some View {
-        SetUpDialog(title: "Update Required", buttonText: "Download New Version") {
-            Text("Your version of Onit can't be updated automatically. Please download the latest version from our website.")
+        SetUpDialog(title: "⚠️ Deprecated App Version", buttonText: "Get New Version") {
+            VStack {
+                Text("This version of Onit can no longer receive updates. To get the latest, please delete this version and download the latest from our website!")
+            }
         } action: {
             if let url = URL(string: "https://www.getonit.ai") {
                 NSWorkspace.shared.open(url)
             }
-            closedLegacyClientDialog = true
+            lastLegacyClientDialogShownDate = Date()
+            model.shrinkContent()
         } closeAction: {
-            closedLegacyClientDialog = true
+            lastLegacyClientDialogShownDate = Date()
+            model.shrinkContent()
         }
     }
 
@@ -285,6 +305,6 @@ struct SetUpDialogs: View {
         closedXAI = false
         closedGoogleAI = false
         closedDeepSeek = false
-        closedLegacyClientDialog = false
+        lastLegacyClientDialogShownDate = nil
     }
 }

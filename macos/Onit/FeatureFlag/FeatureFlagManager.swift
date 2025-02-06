@@ -100,6 +100,8 @@ class FeatureFlagManager: ObservableObject {
     // MARK: - Private functions
     
     private func setFeatureFlagsFromRemote() {
+
+        
         // Set global accessibility toggle
         if let accessibilityEnabled = Defaults[.accessibilityEnabled] {
             accessibility = accessibilityEnabled
@@ -156,6 +158,6 @@ class FeatureFlagManager: ObservableObject {
         }
         
         // Check legacy client update dialog flag
-        showLegacyClientCantUpdateDialog = PostHogSDK.shared.isFeatureEnabled("showLegacyClientCantUpdateDialog")
+        showLegacyClientCantUpdateDialog = PostHogSDK.shared.isFeatureEnabled("show_legacy_client_cant_update_dialog")
     }
 }
