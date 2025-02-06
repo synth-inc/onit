@@ -100,9 +100,6 @@ extension OnitModel {
                     "Based on the provided instructions, either provide the output or answer any questions related to it. Provide the response without any additional comments. Provide the output ready to go."
                 
                 streamedResponse = ""
-                if useStreaming {
-                    addPartialPrompt(prompt: prompt, instruction: curInstruction)
-                }
                 
                 switch Defaults[.mode] {
                 case .remote:
@@ -111,7 +108,9 @@ extension OnitModel {
                     }
                     let apiToken = getTokenForModel(model)
                     
-                    if useStreaming {
+                    if useRemoteStreaming {
+                        addPartialPrompt(prompt: prompt, instruction: curInstruction)
+                        
                         let asyncText = try await streamingClient.chat(systemMessage: systemMessage,
                                                                        instructions: instructionsHistory,
                                                                        inputs: inputsHistory,
@@ -140,27 +139,18 @@ extension OnitModel {
                         throw FetchingError.invalidRequest(message: "Model is required")
                     }
                     
-                    if useStreaming {
-                        let asyncText = try await streamingClient.localChat(systemMessage: systemMessage,
-                                                                            instructions: instructionsHistory,
-                                                                            inputs: inputsHistory,
-                                                                            files: filesHistory,
-                                                                            images: imagesHistory,
-                                                                            autoContexts: autoContextsHistory,
-                                                                            responses: responsesHistory,
-                                                                            model: model)
-                        for try await response in asyncText {
-                            streamedResponse += response
-                        }
-                    } else {
-                        streamedResponse = try await client.localChat(systemMessage: systemMessage,
-                                                                      instructions: instructionsHistory,
-                                                                      inputs: inputsHistory,
-                                                                      files: filesHistory,
-                                                                      images: imagesHistory,
-                                                                      autoContexts: autoContextsHistory,
-                                                                      responses: responsesHistory,
-                                                                      model: model)
+                    addPartialPrompt(prompt: prompt, instruction: curInstruction)
+                    
+                    let asyncText = try await streamingClient.localChat(systemMessage: systemMessage,
+                                                                        instructions: instructionsHistory,
+                                                                        inputs: inputsHistory,
+                                                                        files: filesHistory,
+                                                                        images: imagesHistory,
+                                                                        autoContexts: autoContextsHistory,
+                                                                        responses: responsesHistory,
+                                                                        model: model)
+                    for try await response in asyncText {
+                        streamedResponse += response
                     }
                 }
                 

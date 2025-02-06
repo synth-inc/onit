@@ -74,7 +74,7 @@ import SwiftUI
     var remoteFetchFailed: Bool = false
     var localFetchFailed: Bool = false
     
-    var useStreaming: Bool = true
+    var useRemoteStreaming: Bool = false
     var streamedResponse: String = ""
     
     @MainActor
