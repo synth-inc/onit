@@ -37,7 +37,7 @@ struct DeepSeekChatStreamingEndpoint: StreamingEndpoint {
         if let data = event.data?.data(using: .utf8) {
             let response = try JSONDecoder().decode(Response.self, from: data)
             
-            return response.choices[0].delta.content
+            return response.choices.first?.delta.content
         }
         
         return nil
