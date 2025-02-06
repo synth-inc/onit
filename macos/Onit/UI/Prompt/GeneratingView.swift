@@ -8,49 +8,49 @@
 import SwiftUI
 
 struct GeneratingView: View {
-    @Environment(\.model) var model
-    var prompt: Prompt
+  @Environment(\.model) var model
+  var prompt: Prompt
 
-    var delete: KeyboardShortcut {
-        .init(.delete, modifiers: [.command])
-    }
+  var delete: KeyboardShortcut {
+    .init(.delete, modifiers: [.command])
+  }
 
-    var body: some View {
-        FinalContextView(prompt: prompt)
-        Button {
-            model.cancelGenerate()
-            model.textFocusTrigger.toggle()
-        } label: {
-            VStack(spacing: 12) {
-                icon
-                text
-            }
-            .padding(20)
-        }
-        .buttonStyle(.plain)
-        .keyboardShortcut(.delete)
+  var body: some View {
+    FinalContextView(prompt: prompt)
+    Button {
+      model.cancelGenerate()
+      model.textFocusTrigger.toggle()
+    } label: {
+      VStack(spacing: 12) {
+        icon
+        text
+      }
+      .padding(20)
     }
+    .buttonStyle(.plain)
+    .keyboardShortcut(.delete)
+  }
 
-    var icon: some View {
-        Image(.word)
-            .shimmering()
-    }
+  var icon: some View {
+    Image(.word)
+      .shimmering()
+  }
 
-    var text: some View {
-        HStack(spacing: 4) {
-            Text("Cancel")
-                .foregroundStyle(.gray200)
-            KeyboardShortcutView(shortcut: delete)
-                .foregroundStyle(.gray300)
-        }
-        .appFont(.medium13)
+  var text: some View {
+    HStack(spacing: 4) {
+      Text("Cancel")
+        .foregroundStyle(.gray200)
+      KeyboardShortcutView(shortcut: delete)
+        .foregroundStyle(.gray300)
     }
+    .appFont(.medium13)
+  }
 }
 
 #if DEBUG
-#Preview {
+  #Preview {
     ModelContainerPreview {
-//        GeneratingView()
+      //        GeneratingView()
     }
-}
+  }
 #endif

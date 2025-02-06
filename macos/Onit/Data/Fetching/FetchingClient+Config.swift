@@ -8,19 +8,19 @@
 import Foundation
 
 extension FetchingClient {
-    struct FetchingConfig {
-        let validStatuses: Set<Int>
-        let logoutStatus: Int
-        let forbiddenStatus: Int
-        let notFoundStatus: Int
-    }
+  struct FetchingConfig {
+    let validStatuses: Set<Int>
+    let logoutStatus: Int
+    let forbiddenStatus: Int
+    let notFoundStatus: Int
+  }
 
-    var config: FetchingConfig {
-        FetchingConfig(
-            validStatuses: [200, 201, 204],
-            logoutStatus: 401,
-            forbiddenStatus: 403,
-            notFoundStatus: 404
-        )
-    }
+  var config: FetchingConfig {
+    FetchingConfig(
+      validStatuses: [200, 201, 204],
+      logoutStatus: 401,
+      forbiddenStatus: 403,
+      notFoundStatus: 404
+    )
+  }
 }

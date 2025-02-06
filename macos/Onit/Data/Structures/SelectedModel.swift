@@ -8,15 +8,15 @@
 import Foundation
 
 enum SelectedModel: Equatable, Identifiable, Hashable {
-    case remote(AIModel)
-    case local(String)
+  case remote(AIModel)
+  case local(String)
 
-    var id: String {
-        switch self {
-        case .remote(let aiModel):
-            return "remote-\(aiModel.id)"
-        case .local(let localModel):
-            return "local-\(localModel)"
-        }
+  var id: String {
+    switch self {
+    case .remote(let aiModel):
+      return "remote-\(aiModel.id)"
+    case .local(let localModel):
+      return "local-\(localModel)"
     }
+  }
 }

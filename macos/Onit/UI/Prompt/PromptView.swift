@@ -9,29 +9,29 @@ import SwiftUI
 
 struct PromptView: View {
 
-    @ObservedObject var prompt: Prompt
-    
-    var body: some View {
-        VStack(spacing: 0) {
-            content
-        }
-        .padding(.bottom, 16)
-      }
+  @ObservedObject var prompt: Prompt
 
-      @ViewBuilder
-      var content: some View {
-          switch prompt.generationState {
-          case .generating:
-              GeneratingView(prompt: prompt)
-          case .done:
-              GeneratedView(prompt: prompt)
-          default:
-              EmptyView()
-          }
-      }
+  var body: some View {
+    VStack(spacing: 0) {
+      content
+    }
+    .padding(.bottom, 16)
   }
 
-  #Preview {
-      // TODO bring back the previews.. 
-//      PromptView()
+  @ViewBuilder
+  var content: some View {
+    switch prompt.generationState {
+    case .generating:
+      GeneratingView(prompt: prompt)
+    case .done:
+      GeneratedView(prompt: prompt)
+    default:
+      EmptyView()
+    }
   }
+}
+
+#Preview {
+  // TODO bring back the previews..
+  //      PromptView()
+}

@@ -8,21 +8,21 @@
 import SwiftUI
 
 struct ModelsTab: View {
-    @Environment(\.model) var model
-    
-    var body: some View {
-        ScrollView {
-            VStack(spacing: 25) {
-                RemoteModelsSection()
-                LocalModelsSection()
-                DefaultModelsSection()
-            }
-            .padding(.vertical, 20)
-            .padding(.horizontal, 86)
-        }
+  @Environment(\.model) var model
+
+  var body: some View {
+    ScrollView {
+      VStack(spacing: 25) {
+        RemoteModelsSection()
+        LocalModelsSection()
+        DefaultModelsSection()
+      }
+      .padding(.vertical, 20)
+      .padding(.horizontal, 86)
     }
+  }
 }
 
 #Preview {
-    ModelsTab()
+  ModelsTab()
 }

@@ -5,60 +5,60 @@
 //  Created by Benjamin Sage on 1/13/25.
 //
 
-import SwiftUI
 import KeyboardShortcuts
+import SwiftUI
 
 struct ShortcutsTab: View {
-    @Environment(\.model) var model
-    
-    @ObservedObject private var featureFlagsManager = FeatureFlagManager.shared
-    
-    private var accessibilityAutoContextEnabled: Bool {
-        featureFlagsManager.accessibilityAutoContext
-    }
+  @Environment(\.model) var model
 
-    var body: some View {
-        Form {
-            Section {
-                KeyboardShortcuts.Recorder(
-                    "Launch Onit", name: .launch
-                ) {
-                    resetPrompt(empty: $0 == nil)
-                }
-                .padding()
+  @ObservedObject private var featureFlagsManager = FeatureFlagManager.shared
 
-                if accessibilityAutoContextEnabled {
-                    KeyboardShortcuts.Recorder(
-                        "Launch Onit with Auto-Context", name: .launchWithAutoContext
-                    )
-                    .padding()
-                }
-                
-                KeyboardShortcuts.Recorder(
-                    "New Chat", name: .newChat
-                )
-                .padding()
+  private var accessibilityAutoContextEnabled: Bool {
+    featureFlagsManager.accessibilityAutoContext
+  }
 
-                KeyboardShortcuts.Recorder(
-                    "Resize Window", name: .resizeWindow
-                )
-                .padding()
-                
-                KeyboardShortcuts.Recorder(
-                    "Switch Local vs Remote", name: .toggleLocalMode
-                )
-                .padding()
-            }
+  var body: some View {
+    Form {
+      Section {
+        KeyboardShortcuts.Recorder(
+          "Launch Onit", name: .launch
+        ) {
+          resetPrompt(empty: $0 == nil)
         }
         .padding()
-    }
 
-    func resetPrompt(empty: Bool) {
-        //let view = StaticPromptView().environment(model)
-        HighlightHintWindowController.shared.shortcutChanges(empty: empty)
+        if accessibilityAutoContextEnabled {
+          KeyboardShortcuts.Recorder(
+            "Launch Onit with Auto-Context", name: .launchWithAutoContext
+          )
+          .padding()
+        }
+
+        KeyboardShortcuts.Recorder(
+          "New Chat", name: .newChat
+        )
+        .padding()
+
+        KeyboardShortcuts.Recorder(
+          "Resize Window", name: .resizeWindow
+        )
+        .padding()
+
+        KeyboardShortcuts.Recorder(
+          "Switch Local vs Remote", name: .toggleLocalMode
+        )
+        .padding()
+      }
     }
+    .padding()
+  }
+
+  func resetPrompt(empty: Bool) {
+    //let view = StaticPromptView().environment(model)
+    HighlightHintWindowController.shared.shortcutChanges(empty: empty)
+  }
 }
 
 #Preview {
-    ShortcutsTab()
+  ShortcutsTab()
 }

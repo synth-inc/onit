@@ -8,24 +8,24 @@
 import SwiftUI
 
 struct GeneratedErrorView: View {
-    var errorDescription: String
+  var errorDescription: String
 
-    var body: some View {
-        HStack(spacing: 8) {
-            Image(.warning)
-            ScrollView {
-                Text(errorDescription)
-                    .appFont(.medium14)
-                    .foregroundStyle(.warning)
-            }
-            Spacer()
-        }
-        .padding(.horizontal, 16)
-        .padding(.bottom, 20)
-        .padding(.top, 6)
+  var body: some View {
+    HStack(spacing: 8) {
+      Image(.warning)
+      ScrollView {
+        Text(errorDescription)
+          .appFont(.medium14)
+          .foregroundStyle(.warning)
+      }
+      Spacer()
     }
+    .padding(.horizontal, 16)
+    .padding(.bottom, 20)
+    .padding(.top, 6)
+  }
 }
 
 #Preview {
-    GeneratedErrorView(errorDescription: "Message")
+  GeneratedErrorView(errorDescription: "Message")
 }

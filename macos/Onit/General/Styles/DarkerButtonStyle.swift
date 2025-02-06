@@ -8,8 +8,8 @@
 import SwiftUI
 
 struct DarkerButtonStyle: ButtonStyle {
-    func makeBody(configuration: Configuration) -> some View {
-        configuration.label
-            .opacity(configuration.isPressed ? 0.5 : 1)
-    }
+  func makeBody(configuration: Configuration) -> some View {
+    configuration.label
+      .opacity(configuration.isPressed ? 0.5 : 1)
+  }
 }
