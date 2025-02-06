@@ -8,15 +8,15 @@
 import SwiftUI
 
 struct RemoteModelsEnvironmentKey: @preconcurrency EnvironmentKey {
-  @MainActor static var defaultValue: RemoteModelsState = {
-    return RemoteModelsState()
-  }()
+    @MainActor static var defaultValue: RemoteModelsState = {
+        return RemoteModelsState()
+    }()
 }
 
 extension EnvironmentValues {
-  @MainActor
-  var remoteModels: RemoteModelsState {
-    get { self[RemoteModelsEnvironmentKey.self] }
-    set { self[RemoteModelsEnvironmentKey.self] = newValue }
-  }
+    @MainActor
+    var remoteModels: RemoteModelsState {
+        get { self[RemoteModelsEnvironmentKey.self] }
+        set { self[RemoteModelsEnvironmentKey.self] = newValue }
+    }
 }

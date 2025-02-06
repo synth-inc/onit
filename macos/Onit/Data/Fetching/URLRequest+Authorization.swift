@@ -8,8 +8,8 @@
 import Foundation
 
 extension URLRequest {
-  mutating func addAuthorization(token: String?) {
-    guard let token else { return }
-    setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
-  }
+    mutating func addAuthorization(token: String?) {
+        guard let token else { return }
+        setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+    }
 }

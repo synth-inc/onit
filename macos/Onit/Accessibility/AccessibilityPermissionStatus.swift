@@ -8,7 +8,7 @@
 /// Enumeration of the Accessibility permission's status
 /// Default status is `.notDetermined`
 enum AccessibilityPermissionStatus: Int {
-  case notDetermined
-  case denied
-  case granted
+    case notDetermined
+    case denied
+    case granted
 }

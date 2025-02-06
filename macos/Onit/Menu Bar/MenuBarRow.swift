@@ -8,51 +8,51 @@
 import SwiftUI
 
 struct MenuBarRow<Leading: View, Trailing: View>: View {
-  @Environment(\.model) var model
+    @Environment(\.model) var model
 
-  var action: () -> Void
-  var leading: Leading
-  var trailing: Trailing
+    var action: () -> Void
+    var leading: Leading
+    var trailing: Trailing
 
-  init(
-    action: @escaping () -> Void,
-    @ViewBuilder leading: () -> Leading,
-    @ViewBuilder trailing: () -> Trailing = { EmptyView() }
-  ) {
-    self.action = action
-    self.leading = leading()
-    self.trailing = trailing()
-  }
-
-  var body: some View {
-    Button {
-      action()
-      @Bindable var model = model
-      model.showMenuBarExtra = false
-    } label: {
-      label
+    init(
+        action: @escaping () -> Void,
+        @ViewBuilder leading: () -> Leading,
+        @ViewBuilder trailing: () -> Trailing = { EmptyView() }
+    ) {
+        self.action = action
+        self.leading = leading()
+        self.trailing = trailing()
     }
-    .buttonStyle(MenuButtonStyle())
-  }
 
-  var label: some View {
-    HStack {
-      leading
-      Spacer()
-      trailing
-        .foregroundStyle(Color.primary.opacity(0.25))
+    var body: some View {
+        Button {
+            action()
+            @Bindable var model = model
+            model.showMenuBarExtra = false
+        } label: {
+            label
+        }
+        .buttonStyle(MenuButtonStyle())
     }
-    .font(.system(size: 13, weight: .medium))
-    .frame(height: 22)
-  }
+
+    var label: some View {
+        HStack {
+            leading
+            Spacer()
+            trailing
+                .foregroundStyle(Color.primary.opacity(0.25))
+        }
+        .font(.system(size: 13, weight: .medium))
+        .frame(height: 22)
+    }
 }
 
 #Preview {
-  MenuBarRow {
+    MenuBarRow {
 
-  } leading: {
-    Text("Hello world")
-  } trailing: {
-    Text("Cmd-O")
-  }
+    } leading: {
+        Text("Hello world")
+    } trailing: {
+        Text("Cmd-O")
+    }
 }

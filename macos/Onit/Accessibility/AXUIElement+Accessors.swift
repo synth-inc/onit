@@ -8,105 +8,107 @@
 @preconcurrency import ApplicationServices
 
 extension AXUIElement {
-  func attribute(forAttribute attribute: CFString) -> Any? {
-    var value: CFTypeRef?
-    let result = AXUIElementCopyAttributeValue(self, attribute, &value)
-    if result == .success {
-      return value
-    } else {
-      return nil
-    }
-  }
-
-  func value() -> String? {
-    return self.attribute(forAttribute: kAXValueAttribute as CFString) as? String
-  }
-
-  func position() -> CGPoint? {
-    let position = self.attribute(forAttribute: kAXPositionAttribute as CFString)
-    if let position = position {
-      var cgPoint = CGPoint()
-      AXValueGetValue(position as! AXValue, .cgPoint, &cgPoint)
-      return cgPoint
-    } else {
-      return nil
-    }
-  }
-
-  func size() -> CGSize? {
-    let size = self.attribute(forAttribute: kAXSizeAttribute as CFString)
-    if let size = size {
-      var cgSize = CGSize()
-      AXValueGetValue(size as! AXValue, .cgSize, &cgSize)
-      return cgSize
-    } else {
-      return nil
-    }
-  }
-
-  func frame() -> CGRect? {
-    if let position = self.position(), let size = self.size() {
-      return CGRect(origin: position, size: size)
-    } else {
-      return nil
-    }
-  }
-
-  func role() -> String? {
-    return self.attribute(forAttribute: kAXRoleAttribute as CFString) as? String
-  }
-
-  func description() -> String? {
-    return self.attribute(forAttribute: kAXDescriptionAttribute as CFString) as? String
-  }
-
-  func subrole() -> String? {
-    return self.attribute(forAttribute: kAXSubroleAttribute as CFString) as? String
-  }
-
-  func title() -> String? {
-    return self.attribute(forAttribute: kAXTitleAttribute as CFString) as? String
-  }
-
-  func children() -> [AXUIElement]? {
-    return self.attribute(forAttribute: kAXChildrenAttribute as CFString) as? [AXUIElement]
-  }
-
-  func visibleChildren() -> [AXUIElement]? {
-    return self.attribute(forAttribute: kAXVisibleChildrenAttribute as CFString) as? [AXUIElement]
-  }
-
-  func selectedTextBound() -> CGRect? {
-    var rangeValue: CFTypeRef?
-    guard
-      AXUIElementCopyAttributeValue(self, kAXSelectedTextRangeAttribute as CFString, &rangeValue)
-        == .success
-    else {
-      return nil
+    func attribute(forAttribute attribute: CFString) -> Any? {
+        var value: CFTypeRef?
+        let result = AXUIElementCopyAttributeValue(self, attribute, &value)
+        if result == .success {
+            return value
+        } else {
+            return nil
+        }
     }
 
-    var textRange = CFRange()
-    AXValueGetValue(rangeValue as! AXValue, .cfRange, &textRange)
-
-    var bounds: CFTypeRef?
-    guard
-      AXUIElementCopyParameterizedAttributeValue(
-        self,
-        kAXBoundsForRangeParameterizedAttribute as CFString,
-        rangeValue as CFTypeRef,
-        &bounds
-      ) == .success
-    else {
-      return nil
+    func value() -> String? {
+        return self.attribute(forAttribute: kAXValueAttribute as CFString) as? String
     }
 
-    let boundsValue = bounds as! AXValue
+    func position() -> CGPoint? {
+        let position = self.attribute(forAttribute: kAXPositionAttribute as CFString)
+        if let position = position {
+            var cgPoint = CGPoint()
+            AXValueGetValue(position as! AXValue, .cgPoint, &cgPoint)
+            return cgPoint
+        } else {
+            return nil
+        }
+    }
 
-    var rect = CGRect.zero
-    AXValueGetValue(boundsValue, .cgRect, &rect)
+    func size() -> CGSize? {
+        let size = self.attribute(forAttribute: kAXSizeAttribute as CFString)
+        if let size = size {
+            var cgSize = CGSize()
+            AXValueGetValue(size as! AXValue, .cgSize, &cgSize)
+            return cgSize
+        } else {
+            return nil
+        }
+    }
 
-    return rect
-  }
+    func frame() -> CGRect? {
+        if let position = self.position(), let size = self.size() {
+            return CGRect(origin: position, size: size)
+        } else {
+            return nil
+        }
+    }
+
+    func role() -> String? {
+        return self.attribute(forAttribute: kAXRoleAttribute as CFString) as? String
+    }
+
+    func description() -> String? {
+        return self.attribute(forAttribute: kAXDescriptionAttribute as CFString) as? String
+    }
+
+    func subrole() -> String? {
+        return self.attribute(forAttribute: kAXSubroleAttribute as CFString) as? String
+    }
+
+    func title() -> String? {
+        return self.attribute(forAttribute: kAXTitleAttribute as CFString) as? String
+    }
+
+    func children() -> [AXUIElement]? {
+        return self.attribute(forAttribute: kAXChildrenAttribute as CFString) as? [AXUIElement]
+    }
+
+    func visibleChildren() -> [AXUIElement]? {
+        return self.attribute(forAttribute: kAXVisibleChildrenAttribute as CFString)
+            as? [AXUIElement]
+    }
+
+    func selectedTextBound() -> CGRect? {
+        var rangeValue: CFTypeRef?
+        guard
+            AXUIElementCopyAttributeValue(
+                self, kAXSelectedTextRangeAttribute as CFString, &rangeValue)
+                == .success
+        else {
+            return nil
+        }
+
+        var textRange = CFRange()
+        AXValueGetValue(rangeValue as! AXValue, .cfRange, &textRange)
+
+        var bounds: CFTypeRef?
+        guard
+            AXUIElementCopyParameterizedAttributeValue(
+                self,
+                kAXBoundsForRangeParameterizedAttribute as CFString,
+                rangeValue as CFTypeRef,
+                &bounds
+            ) == .success
+        else {
+            return nil
+        }
+
+        let boundsValue = bounds as! AXValue
+
+        var rect = CGRect.zero
+        AXValueGetValue(boundsValue, .cgRect, &rect)
+
+        return rect
+    }
 }
 
 //

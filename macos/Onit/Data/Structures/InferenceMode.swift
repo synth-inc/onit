@@ -8,6 +8,6 @@
 import Defaults
 
 enum InferenceMode: String, CaseIterable, Codable, Defaults.Serializable {
-  case local = "local"
-  case remote = "remote"
+    case local = "local"
+    case remote = "remote"
 }

@@ -8,19 +8,19 @@
 import SwiftUI
 
 private struct AppFontModifier: ViewModifier {
-  let appFont: AppFont
+    let appFont: AppFont
 
-  func body(content: Content) -> some View {
-    content
-      .font(appFont.font)
-      .kerning(appFont.kearning)
-      .lineSpacing(appFont.lineSpacing)
-    //            .padding(.vertical, (lineHeight - font.lineHeight) / 2)
-  }
+    func body(content: Content) -> some View {
+        content
+            .font(appFont.font)
+            .kerning(appFont.kearning)
+            .lineSpacing(appFont.lineSpacing)
+        //            .padding(.vertical, (lineHeight - font.lineHeight) / 2)
+    }
 }
 
 extension View {
-  func appFont(_ appFont: AppFont) -> some View {
-    modifier(AppFontModifier(appFont: appFont))
-  }
+    func appFont(_ appFont: AppFont) -> some View {
+        modifier(AppFontModifier(appFont: appFont))
+    }
 }

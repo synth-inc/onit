@@ -10,13 +10,13 @@ import Foundation
 import SwiftUI
 
 extension pid_t {
-  func getAXUIElement() -> AXUIElement {
-    return AXUIElementCreateApplication(self)
-  }
+    func getAXUIElement() -> AXUIElement {
+        return AXUIElementCreateApplication(self)
+    }
 
-  func getAppName() -> String? {
-    guard let app = NSRunningApplication(processIdentifier: self) else { return nil }
+    func getAppName() -> String? {
+        guard let app = NSRunningApplication(processIdentifier: self) else { return nil }
 
-    return app.localizedName
-  }
+        return app.localizedName
+    }
 }

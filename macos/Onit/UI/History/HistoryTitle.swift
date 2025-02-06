@@ -8,35 +8,35 @@
 import SwiftUI
 
 struct HistoryTitle: View {
-  @Environment(\.model) var model
+    @Environment(\.model) var model
 
-  var body: some View {
-    HStack {
-      Text("History")
-        .appFont(.medium14)
-        .foregroundStyle(.FG)
-      Spacer()
-      Button {
-        model.showHistory = false
-      } label: {
-        Color.clear
-          .frame(width: 20, height: 20)
-          .overlay {
-            Image(.smallCross)
-              .renderingMode(.template)
-              .foregroundStyle(.gray200)
-          }
-      }
+    var body: some View {
+        HStack {
+            Text("History")
+                .appFont(.medium14)
+                .foregroundStyle(.FG)
+            Spacer()
+            Button {
+                model.showHistory = false
+            } label: {
+                Color.clear
+                    .frame(width: 20, height: 20)
+                    .overlay {
+                        Image(.smallCross)
+                            .renderingMode(.template)
+                            .foregroundStyle(.gray200)
+                    }
+            }
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 12)
     }
-    .padding(.horizontal, 16)
-    .padding(.vertical, 12)
-  }
 }
 
 #if DEBUG
-  #Preview {
-    ModelContainerPreview {
-      HistoryTitle()
+    #Preview {
+        ModelContainerPreview {
+            HistoryTitle()
+        }
     }
-  }
 #endif

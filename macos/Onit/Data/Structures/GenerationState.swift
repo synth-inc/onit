@@ -8,6 +8,6 @@
 import Foundation
 
 enum GenerationState: Equatable, Codable {
-  case generating
-  case done
+    case generating
+    case done
 }

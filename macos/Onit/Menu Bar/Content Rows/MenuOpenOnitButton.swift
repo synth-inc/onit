@@ -8,38 +8,38 @@
 import SwiftUI
 
 struct MenuOpenOnitButton: View {
-  @Environment(\.model) var model
+    @Environment(\.model) var model
 
-  var shortcut: KeyboardShortcut {
-    .init(.space, modifiers: [.option, .command])
-  }
-
-  var body: some View {
-    MenuBarRow {
-      model.showPanel()
-    } leading: {
-      HStack(spacing: 4) {
-        Image(.smirk)
-          .renderingMode(.template)
-          .resizable()
-          .foregroundStyle(.primary)
-          .scaledToFit()
-          .padding(1)
-          .frame(width: 16, height: 16)
-        Text("Open Onit")
-      }
-      .padding(.leading, 5)
-    } trailing: {
-      KeyboardShortcutView(shortcut: shortcut)
-        .padding(.trailing, 10)
+    var shortcut: KeyboardShortcut {
+        .init(.space, modifiers: [.option, .command])
     }
-  }
+
+    var body: some View {
+        MenuBarRow {
+            model.showPanel()
+        } leading: {
+            HStack(spacing: 4) {
+                Image(.smirk)
+                    .renderingMode(.template)
+                    .resizable()
+                    .foregroundStyle(.primary)
+                    .scaledToFit()
+                    .padding(1)
+                    .frame(width: 16, height: 16)
+                Text("Open Onit")
+            }
+            .padding(.leading, 5)
+        } trailing: {
+            KeyboardShortcutView(shortcut: shortcut)
+                .padding(.trailing, 10)
+        }
+    }
 }
 
 #if DEBUG
-  #Preview {
-    ModelContainerPreview {
-      MenuOpenOnitButton()
+    #Preview {
+        ModelContainerPreview {
+            MenuOpenOnitButton()
+        }
     }
-  }
 #endif
