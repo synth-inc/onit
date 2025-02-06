@@ -10,37 +10,20 @@ import Foundation
 
 actor StreamingClient {
 
-    func chatInStream(instructions: [String],
-                      inputs: [Input?],
-                      files: [[URL]],
-                      images: [[URL]],
-                      autoContexts: [[String: String]],
-                      responses: [String],
-                      model: AIModel?,
-                      apiToken: String?) async throws -> AsyncThrowingStream<String, Error> {
-        guard let model = model else {
-            throw FetchingError.invalidRequest(message: "Model is required")
-        }
-
-        guard instructions.count == inputs.count,
-            inputs.count == files.count,
-            files.count == images.count,
-            images.count == autoContexts.count,
-            autoContexts.count == responses.count + 1
-        else {
-            throw FetchingError.invalidRequest(
-                message:
-                    "Mismatched array lengths: instructions, inputs, files, and images must be the same length, and one longer than responses."
-            )
-        }
-
-        let systemMessage =
-            "Based on the provided instructions, either provide the output or answer any questions related to it. Provide the response without any additional comments. Provide the output ready to go."
-        let userMessages = buildUserMessages(instructions: instructions,
-                                             inputs: inputs,
-                                             files: files,
-                                             autoContexts: autoContexts)
-
+    func chat(systemMessage: String,
+              instructions: [String],
+              inputs: [Input?],
+              files: [[URL]],
+              images: [[URL]],
+              autoContexts: [[String: String]],
+              responses: [String],
+              model: AIModel,
+              apiToken: String?) async throws -> AsyncThrowingStream<String, Error> {
+        let userMessages = ChatEndpointMessagesBuilder.user(
+            instructions: instructions,
+            inputs: inputs,
+            files: files,
+            autoContexts: autoContexts)
         let endpoint = try ChatStreamingEndpointBuilder.build(
             model: model,
             images: images,
@@ -49,6 +32,29 @@ actor StreamingClient {
             systemMessage: systemMessage,
             userMessages: userMessages)
 
+        return try await stream(endpoint: endpoint)
+    }
+    
+    func localChat(systemMessage: String,
+                   instructions: [String],
+                   inputs: [Input?],
+                   files: [[URL]],
+                   images: [[URL]],
+                   autoContexts: [[String: String]],
+                   responses: [String],
+                   model: String) async throws -> AsyncThrowingStream<String, Error> {
+        let userMessages = ChatEndpointMessagesBuilder.user(
+            instructions: instructions,
+            inputs: inputs,
+            files: files,
+            autoContexts: autoContexts)
+        let localMessages = ChatEndpointMessagesBuilder.local(
+            images: images,
+            responses: responses,
+            systemMessage: systemMessage,
+            userMessages: userMessages)
+        let endpoint = LocalChatStreamingEndpoint(model: model, messages: localMessages)
+        
         return try await stream(endpoint: endpoint)
     }
 
@@ -68,8 +74,10 @@ actor StreamingClient {
                 for await event in await dataTask.events() {
                     switch event {
                     case .open:
+                        print("open")
                         break
                     case .event(let event):
+                        print("event")
                         if let response = try? endpoint.getContentFromSSE(
                             event: event)
                         {
@@ -78,10 +86,12 @@ actor StreamingClient {
                             continuation.yield("")
                         }
                     case .error(let error):
+                        print("error \(error)")
                         continuation.finish(
                             throwing: convertError(
                                 endpoint: endpoint, error: error))
                     case .closed:
+                        print("closed")
                         continuation.finish()
                     }
                 }
@@ -93,54 +103,5 @@ actor StreamingClient {
                 }
             }
         }
-    }
-
-    // MARK: - User messages
-
-    private func buildUserMessages(instructions: [String],
-                                   inputs: [Input?],
-                                   files: [[URL]],
-                                   autoContexts: [[String: String]]) -> [String] {
-        var userMessages: [String] = []
-
-        for (index, instruction) in instructions.enumerated() {
-            var message = ""
-
-            if let input = inputs[index], !input.selectedText.isEmpty
-            {
-                if let application = input.application {
-                    message +=
-                        "\n\nSelected Text from \(application): \(input.selectedText)"
-                } else {
-                    message += "\n\nSelected Text: \(input.selectedText)"
-                }
-            }
-
-            if !files[index].isEmpty {
-                for file in files[index] {
-                    if let fileContent = try? String(
-                        contentsOf: file, encoding: .utf8)
-                    {
-                        message +=
-                            "\n\nFile: \(file.lastPathComponent)\nContent:\n\(fileContent)"
-                    }
-                }
-            }
-
-            if !autoContexts[index].isEmpty {
-                for (appName, appContent) in autoContexts[index] {
-                    message +=
-                        "\n\nContent from application \(appName):\n\(appContent)"
-                }
-            }
-
-            // Intuitively, I (tim) think the message should be the last thing.
-            // TODO: evaluate this
-            message += "\n\n\(instruction)"
-            print(message)
-            userMessages.append(message)
-        }
-
-        return userMessages
     }
 }
