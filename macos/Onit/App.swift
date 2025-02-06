@@ -31,7 +31,7 @@ struct App: SwiftUI.App {
         "highlight_hint_visible": HighlightHintWindowController.shared.isVisible(),
         "highlight_hint_mode": FeatureFlagManager.shared.highlightHintMode,
       ]
-      PostHogSDK.shared.capture("shortcut_launch", properties: eventProperties)
+      AnalyticsManager.shared.capture("shortcut_launch", properties: eventProperties)
 
       model?.launchShortcutAction()
     }
@@ -51,7 +51,7 @@ struct App: SwiftUI.App {
       let eventProperties: [String: Any] = [
         "app_hidden": model?.panel == nil
       ]
-      PostHogSDK.shared.capture("shortcut_launch_with_auto_context", properties: eventProperties)
+      AnalyticsManager.shared.capture("shortcut_launch_with_auto_context", properties: eventProperties)
       model?.addAutoContext()
       model?.launchPanel()
     }

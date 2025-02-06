@@ -8,11 +8,15 @@ struct GeneralTab: View {
 
   @State var isLaunchAtStartupEnabled: Bool = SMAppService.mainApp.status == .enabled
 
+  @Default(.analyticsEnabled) var analyticsEnabled
+
   var body: some View {
     Form {
       launchOnStartupSection
 
       appearanceSection
+
+      privacySection
     }
     .formStyle(.grouped)
     .padding()
@@ -110,6 +114,32 @@ struct GeneralTab: View {
       }
     } catch {
       print("Error : \(error)")
+    }
+  }
+
+  var privacySection: some View {
+    Section {
+      VStack(alignment: .leading, spacing: 8) {
+        HStack {
+          Text("Enable analytics and telemetry")
+            .font(.system(size: 13))
+
+          Spacer()
+
+          Toggle("", isOn: $analyticsEnabled)
+            .toggleStyle(.switch)
+            .controlSize(.small)
+        }
+
+        Text("Help improve Onit by sending anonymous usage data. You can opt out at any time.")
+          .font(.system(size: 11))
+          .foregroundColor(.secondary)
+      }
+    } header: {
+      HStack {
+        Image(systemName: "shield")
+        Text("Privacy")
+      }
     }
   }
 }
