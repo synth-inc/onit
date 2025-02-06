@@ -24,6 +24,7 @@ struct OpenAIChatEndpoint: Endpoint {
     var additionalHeaders: [String: String]? {
         ["Authorization": "Bearer \(token ?? "")"]
     }
+    var timeout: TimeInterval? { nil }
 }
 
 struct OpenAIChatMessage: Codable {

@@ -35,6 +35,7 @@ struct AnthropicChatEndpoint: Endpoint {
             "anthropic-version": "2023-06-01"
         ]
     }
+    var timeout: TimeInterval? { nil }
 }
 
 struct AnthropicMessage: Codable {

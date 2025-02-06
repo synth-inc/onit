@@ -16,12 +16,11 @@ struct OpenAIValidationEndpoint: Endpoint {
     var getParams: [String: String]? { nil }
     var method: HTTPMethod { .get }
     var token: String? { nil }
-    var timeout: TimeInterval? { nil }
     var requestBody: Never? { nil }
     var additionalHeaders: [String: String]? {
         ["Authorization": "Bearer \(apiKey)"]
     }
-    
+    var timeout: TimeInterval? { nil }
     let apiKey: String
 }
 
@@ -44,7 +43,6 @@ struct AnthropicValidationEndpoint: Endpoint {
     var getParams: [String: String]? { nil }
     var method: HTTPMethod { .get }
     var token: String? { nil }
-    var timeout: TimeInterval? { nil }
     var requestBody: Never? { nil }
     var additionalHeaders: [String: String]? {
         [
@@ -52,7 +50,7 @@ struct AnthropicValidationEndpoint: Endpoint {
             "anthropic-version": "2023-06-01"
         ]
     }
-    
+    var timeout: TimeInterval? { nil }
     let apiKey: String
 }
 
@@ -81,12 +79,11 @@ struct XAIValidationEndpoint: Endpoint {
     var getParams: [String: String]? { nil }
     var method: HTTPMethod { .get }
     var token: String? { nil }
-    var timeout: TimeInterval? { nil }
     var requestBody: Never? { nil }
     var additionalHeaders: [String: String]? {
         ["Authorization": "Bearer \(apiKey)"]
     }
-    
+    var timeout: TimeInterval? { nil }
     let apiKey: String
 }
 
@@ -110,12 +107,11 @@ struct DeepSeekValidationEndpoint: Endpoint {
     var getParams: [String: String]? { nil }
     var method: HTTPMethod { .get }
     var token: String? { nil }
-    var timeout: TimeInterval? { nil }
     var requestBody: Never? { nil }
     var additionalHeaders: [String: String]? {
         ["Authorization": "Bearer \(apiKey)"]
     }
-    
+    var timeout: TimeInterval? { nil }
     let apiKey: String
 }
 

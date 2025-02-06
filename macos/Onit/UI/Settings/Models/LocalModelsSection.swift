@@ -47,7 +47,7 @@ struct LocalModelsSection: View {
     private let defaultTemperature = 0.8
     private let defaultTopP = 0.9
     private let defaultTopK = 40
-    private let defaultTimeout = 60
+    private let defaultTimeout = 60.0
 
     var body: some View {
         ModelsSection(title: "Local Models") {
@@ -70,7 +70,7 @@ struct LocalModelsSection: View {
             if let value = localTemperature { temperature = String(value) }
             if let value = localTopP { topP = String(value) }
             if let value = localTopK { topK = String(value) }
-            if let value = localRequestTimeout { timeout = value }
+            if let value = localRequestTimeout { timeout = String(value) }
         }
         .onChange(of: isOn) {
             useLocal = isOn
@@ -159,7 +159,7 @@ struct LocalModelsSection: View {
                                         localRequestTimeout = nil
                                     } else if LocalModelValidation.validateInt(timeout, min: 1) {
                                         timeoutError = nil
-                                        if let value = Int(timeout) {
+                                        if let value = Double(timeout) {
                                             localRequestTimeout = value
                                         }
                                     } else {
@@ -289,7 +289,7 @@ struct LocalModelsSection: View {
                         Button {
                             // Restore defaults
                             keepAlive = defaultKeepAlive
-                            timeout = defaultTimeout
+                            timeout = String(defaultTimeout)
                             numCtx = String(defaultNumCtx)
                             temperature = String(defaultTemperature)
                             topK = String(defaultTopK)
