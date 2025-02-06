@@ -27,6 +27,7 @@ class FeatureFlagManager: ObservableObject {
     @Published private(set) var highlightHintMode: HighlightHintMode = .none
     
     @Published private(set) var accessibility: Bool = false
+    @Published private(set) var showLegacyClientCantUpdateDialog: Bool = false
     
     private var wasAccessibilityInputEnabled: Bool = false
     private var wasAccessibilityAutoContextEnabled: Bool = false
@@ -153,5 +154,8 @@ class FeatureFlagManager: ObservableObject {
                 self.highlightHintMode = .none
             }
         }
+        
+        // Check legacy client update dialog flag
+        showLegacyClientCantUpdateDialog = PostHogSDK.shared.isFeatureEnabled("showLegacyClientCantUpdateDialog")
     }
 }

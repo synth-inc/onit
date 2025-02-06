@@ -1,4 +1,7 @@
 import SwiftUI
+import Defaults
+
+@preconcurrency import class Foundation.NSWorkspace
 
 struct AboutTab: View {
     var body: some View {
@@ -13,28 +16,49 @@ struct AboutTab: View {
                 
                 Text("Version \(Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0.0")")
                     .foregroundColor(.secondary)
+                
+                if FeatureFlagManager.shared.showLegacyClientCantUpdateDialog {
+                    Text("This version can't be updated automatically.\nPlease download a new version from our website.")
+                        .foregroundColor(.red)
+                        .multilineTextAlignment(.center)
+                        .padding(.top, 8)
+                }
             }
             
-            HStack(spacing: 12) {
-                Button("Visit Website") {
-                    if let url = URL(string: "https://www.getonit.ai") {
-                        NSWorkspace.shared.open(url)
+            VStack(spacing: 12) {
+                if FeatureFlagManager.shared.showLegacyClientCantUpdateDialog {
+                    Button("Download New Version") {
+                        if let url = URL(string: "https://www.getonit.ai") {
+                            NSWorkspace.shared.open(url)
+                        }
                     }
+                    .buttonStyle(.borderedProminent)
+                    .tint(.blue400)
                 }
                 
-                Button("Contact Us") {
-                    if let url = URL(string: "mailto:contact@getonit.ai") {
-                        NSWorkspace.shared.open(url)
+                HStack(spacing: 12) {
+                    if !FeatureFlagManager.shared.showLegacyClientCantUpdateDialog {
+                        Button("Visit Website") {
+                            if let url = URL(string: "https://www.getonit.ai") {
+                                NSWorkspace.shared.open(url)
+                            }
+                        }
+                    }
+                    
+                    Button("Contact Us") {
+                        if let url = URL(string: "mailto:contact@getonit.ai") {
+                            NSWorkspace.shared.open(url)
+                        }
+                    }
+                    
+                    Button("Send Feedback") {
+                        if let url = URL(string: "mailto:support@getonit.ai") {
+                            NSWorkspace.shared.open(url)
+                        }
                     }
                 }
-                
-                Button("Send Feedback") {
-                    if let url = URL(string: "mailto:support@getonit.ai") {
-                        NSWorkspace.shared.open(url)
-                    }
-                }
+                .buttonStyle(.link)
             }
-            .buttonStyle(.link)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .padding()

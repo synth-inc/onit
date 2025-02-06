@@ -31,6 +31,7 @@ struct SetUpDialogs: View {
     @Default(.closedDeprecatedRemoteData) var closedDeprecatedRemoteData
     @Default(.availableRemoteModels) var availableRemoteModels
     @Default(.availableLocalModels) var availableLocalModels
+    @Default(.closedLegacyClientDialog) var closedLegacyClientDialog
 
     var closedNewRemote: [String: Bool] {
         get {
@@ -100,6 +101,9 @@ struct SetUpDialogs: View {
             }
             if false && !closedDeepSeek {
                 expired(.deepSeek)
+            }
+            if FeatureFlagManager.shared.showLegacyClientCantUpdateDialog && !closedLegacyClientDialog {
+                legacyClientDialog
             }
         }
         .background {
@@ -260,6 +264,19 @@ struct SetUpDialogs: View {
         }
     }
 
+    var legacyClientDialog: some View {
+        SetUpDialog(title: "Update Required", buttonText: "Download New Version") {
+            Text("Your version of Onit can't be updated automatically. Please download the latest version from our website.")
+        } action: {
+            if let url = URL(string: "https://www.getonit.ai") {
+                NSWorkspace.shared.open(url)
+            }
+            closedLegacyClientDialog = true
+        } closeAction: {
+            closedLegacyClientDialog = true
+        }
+    }
+
     func resetAppStorageFlags() {
         closedRemote = false
         closedLocal = false
@@ -268,5 +285,6 @@ struct SetUpDialogs: View {
         closedXAI = false
         closedGoogleAI = false
         closedDeepSeek = false
+        closedLegacyClientDialog = false
     }
 }
