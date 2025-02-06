@@ -11,6 +11,77 @@ import Foundation
  * Used to build the messages in chat endpoints's request
  */
 struct ChatEndpointMessagesBuilder {
+    
+    static func user(instructions: [String], inputs: [Input?], files: [[URL]], autoContexts: [[String: String]]) -> [String] {
+        var userMessages: [String] = []
+        for (index, instruction) in instructions.enumerated() {
+            var message = ""
+            
+            if let input = inputs[index], !input.selectedText.isEmpty {
+                if let application = input.application {
+                    message += "\n\nSelected Text from \(application): \(input.selectedText)"
+                } else {
+                    message += "\n\nSelected Text: \(input.selectedText)"
+                }
+            }
+            
+            // TODO: add error handling for contexts too long & incorrect file types
+            if !files[index].isEmpty {
+                for file in files[index] {
+                    if let fileContent = try? String(contentsOf: file, encoding: .utf8) {
+                        message += "\n\nFile: \(file.lastPathComponent)\nContent:\n\(fileContent)"
+                    }
+                }
+            }
+            
+            if !autoContexts[index].isEmpty {
+                for (appName, appContent) in autoContexts[index] {
+                    message += "\n\nContent from application \(appName):\n\(appContent)"
+                }
+            }
+
+            // Intuitively, I (tim) think the message should be the last thing.
+            // TODO: evaluate this
+            message += "\n\n\(instruction)"
+            userMessages.append(message)
+        }
+
+        return userMessages
+    }
+    
+    // MARK: - Local
+    
+    static func local(
+        images: [[URL]],
+        responses: [String],
+        systemMessage: String,
+        userMessages: [String]
+    ) -> [LocalChatMessage] {
+        var localMessageStack: [LocalChatMessage] = []
+        
+        localMessageStack.append(LocalChatMessage(role: "system", content: systemMessage, images: []))
+
+        for (index, userMessage) in userMessages.enumerated() {
+            if images[index].isEmpty {
+                localMessageStack.append(LocalChatMessage(role: "user", content: userMessage, images: []))
+            } else {
+                var base64Images : [String] = []
+                for url in images[index] {
+                    if let imageData = try? Data(contentsOf: url) {
+                        let base64EncodedData = imageData.base64EncodedString()
+                        base64Images.append(base64EncodedData)
+                    }
+                }
+                localMessageStack.append(LocalChatMessage(role: "user", content: userMessage, images: base64Images))
+            }
+
+            if index < responses.count {
+                localMessageStack.append(LocalChatMessage(role: "assistant", content: responses[index], images: nil))
+            }
+        }
+        
+        return localMessageStack
+    }
 
     // MARK: - OpenAI
 
@@ -31,13 +102,11 @@ struct ChatEndpointMessagesBuilder {
 
         for (index, userMessage) in userMessages.enumerated() {
             if images[index].isEmpty {
-                let openAIMessage = OpenAIChatMessage(
-                    role: "user", content: .text(userMessage))
+                let openAIMessage = OpenAIChatMessage(role: "user", content: .text(userMessage))
                 openAIMessageStack.append(openAIMessage)
             } else {
                 var parts = [
-                    OpenAIChatContentPart(
-                        type: "text", text: userMessage, image_url: nil)
+                    OpenAIChatContentPart(type: "text", text: userMessage, image_url: nil)
                 ]
                 for url in images[index] {
                     if let imageData = try? Data(contentsOf: url) {

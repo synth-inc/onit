@@ -28,6 +28,10 @@ struct GoogleAIChatEndpoint: Endpoint {
         ["Authorization": "Bearer \(token ?? "")"]
     }
     var timeout: TimeInterval? { nil }
+    
+    func getContent(response: Response) -> String? {
+        return response.choices.first?.message.content
+    }
 }
 
 struct GoogleAIChatMessage: Codable {

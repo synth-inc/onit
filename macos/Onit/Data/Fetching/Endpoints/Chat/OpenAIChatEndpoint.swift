@@ -1,41 +1,45 @@
 //
-//  XAIChatEndpoint.swift
+//  OpenAIChatEndpoint.swift
 //  Onit
 //
 
 import Foundation
 import EventSource
 
-struct XAIChatEndpoint: Endpoint {
-    var baseURL: URL = URL(string: "https://api.x.ai")!
+struct OpenAIChatEndpoint: Endpoint {
+    var baseURL: URL = URL(string: "https://api.openai.com")!
 
-    typealias Request = XAIChatRequest
-    typealias Response = XAIChatResponse
+    typealias Request = OpenAIChatRequest
+    typealias Response = OpenAIChatResponse
 
-    let messages: [XAIChatMessage]
-    let model: String
+    let messages: [OpenAIChatMessage]
     let token: String?
+    let model: String
 
     var path: String { "/v1/chat/completions" }
     var getParams: [String: String]? { nil }
     var method: HTTPMethod { .post }
-    var requestBody: XAIChatRequest? {
-        XAIChatRequest(model: model, messages: messages, stream: false)
+    var requestBody: OpenAIChatRequest? {
+        OpenAIChatRequest(model: model, messages: messages, stream: false)
     }
     var additionalHeaders: [String: String]? {
         ["Authorization": "Bearer \(token ?? "")"]
     }
     var timeout: TimeInterval? { nil }
+    
+    func getContent(response: Response) -> String? {
+        return response.choices.first?.message.content
+    }
 }
 
-struct XAIChatMessage: Codable {
+struct OpenAIChatMessage: Codable {
     let role: String
-    let content: XAIChatContent
+    let content: OpenAIChatContent
 }
 
-enum XAIChatContent: Codable {
+enum OpenAIChatContent: Codable {
     case text(String)
-    case multiContent([XAIChatContentPart])
+    case multiContent([OpenAIChatContentPart])
 
     func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
@@ -51,7 +55,7 @@ enum XAIChatContent: Codable {
         let container = try decoder.singleValueContainer()
         if let str = try? container.decode(String.self) {
             self = .text(str)
-        } else if let parts = try? container.decode([XAIChatContentPart].self) {
+        } else if let parts = try? container.decode([OpenAIChatContentPart].self) {
             self = .multiContent(parts)
         } else {
             throw DecodingError.dataCorruptedError(
@@ -60,26 +64,25 @@ enum XAIChatContent: Codable {
     }
 }
 
-struct XAIChatContentPart: Codable {
+struct OpenAIChatContentPart: Codable {
     let type: String
     let text: String?
-    let image_url: ImageBase64Url?
+    let image_url: ImageURL?
 
-    struct ImageBase64Url: Codable {
-        let url: String?
-        let detail: String?
+    struct ImageURL: Codable {
+        let url: String
     }
 }
 
-struct XAIChatRequest: Codable {
+struct OpenAIChatRequest: Codable {
     let model: String
-    let messages: [XAIChatMessage]
+    let messages: [OpenAIChatMessage]
     let stream: Bool
 }
 
-struct XAIChatResponse: Codable {
+struct OpenAIChatResponse: Codable {
     let choices: [Choice]
-
+    
     struct Choice: Codable {
         let message: Message
         

@@ -86,43 +86,87 @@ extension OnitModel {
             }
 
             do {
+                guard instructionsHistory.count == inputsHistory.count,
+                      inputsHistory.count == filesHistory.count,
+                      filesHistory.count == imagesHistory.count,
+                      imagesHistory.count == autoContextsHistory.count,
+                      autoContextsHistory.count == responsesHistory.count + 1 else {
+                    throw FetchingError.invalidRequest(
+                        message:
+                            "Mismatched array lengths: instructions, inputs, files, autoContexts and images must be the same length, and one longer than responses."
+                    )
+                }
+                let systemMessage =
+                    "Based on the provided instructions, either provide the output or answer any questions related to it. Provide the response without any additional comments. Provide the output ready to go."
+                
+                streamedResponse = ""
+                if useStreaming {
+                    addPartialPrompt(prompt: prompt, instruction: curInstruction)
+                }
+                
                 switch Defaults[.mode] {
                 case .remote:
-                    streamedResponse = ""
-                    addPartialPrompt(prompt: prompt, instruction: curInstruction)
+                    guard let model = Defaults[.remoteModel] else {
+                        throw FetchingError.invalidRequest(message: "Model is required")
+                    }
+                    let apiToken = getTokenForModel(model)
                     
-                    let apiToken = getTokenForModel(Defaults[.remoteModel] ?? nil)
-                    let asyncText = try await streamingClient.chatInStream(instructions: instructionsHistory,
-                                                                           inputs: inputsHistory,
-                                                                           files: filesHistory,
-                                                                           images: imagesHistory,
-                                                                           autoContexts: autoContextsHistory,
-                                                                           responses: responsesHistory,
-                                                                           model: Defaults[.remoteModel],
-                                                                           apiToken: apiToken)
-                    
-                    for try await response in asyncText {
-                        streamedResponse += response
+                    if useStreaming {
+                        let asyncText = try await streamingClient.chat(systemMessage: systemMessage,
+                                                                       instructions: instructionsHistory,
+                                                                       inputs: inputsHistory,
+                                                                       files: filesHistory,
+                                                                       images: imagesHistory,
+                                                                       autoContexts: autoContextsHistory,
+                                                                       responses: responsesHistory,
+                                                                       model: model,
+                                                                       apiToken: apiToken)
+                        for try await response in asyncText {
+                            streamedResponse += response
+                        }
+                    } else {
+                        streamedResponse = try await client.chat(systemMessage: systemMessage,
+                                                                 instructions: instructionsHistory,
+                                                                 inputs: inputsHistory,
+                                                                 files: filesHistory,
+                                                                 images: imagesHistory,
+                                                                 autoContexts: autoContextsHistory,
+                                                                 responses: responsesHistory,
+                                                                 model: model,
+                                                                 apiToken: apiToken)
+                    }
+                case .local:
+                    guard let model = Defaults[.localModel] else {
+                        throw FetchingError.invalidRequest(message: "Model is required")
                     }
                     
-                    let response = Response(text: String(streamedResponse), type: .success)
-                    updatePrompt(prompt: prompt, response: response, instruction: curInstruction)
-                    setTokenIsValid(true)
-                case .local:
-                    // TODO implement history for local chat!
-                    let chat = try await client.localChat(
-                        instructions: instructionsHistory,
-                        inputs: inputsHistory,
-                        files: filesHistory,
-                        images: imagesHistory,
-                        autoContexts: autoContextsHistory,
-                        responses: responsesHistory,
-                        model: Defaults[.localModel]
-                    )
-                    let response = Response(text: chat, type:.success)
-                    updatePrompt(prompt: prompt, response: response, instruction: curInstruction)
-                    setTokenIsValid(true)
+                    if useStreaming {
+                        let asyncText = try await streamingClient.localChat(systemMessage: systemMessage,
+                                                                            instructions: instructionsHistory,
+                                                                            inputs: inputsHistory,
+                                                                            files: filesHistory,
+                                                                            images: imagesHistory,
+                                                                            autoContexts: autoContextsHistory,
+                                                                            responses: responsesHistory,
+                                                                            model: model)
+                        for try await response in asyncText {
+                            streamedResponse += response
+                        }
+                    } else {
+                        streamedResponse = try await client.localChat(systemMessage: systemMessage,
+                                                                      instructions: instructionsHistory,
+                                                                      inputs: inputsHistory,
+                                                                      files: filesHistory,
+                                                                      images: imagesHistory,
+                                                                      autoContexts: autoContextsHistory,
+                                                                      responses: responsesHistory,
+                                                                      model: model)
+                    }
                 }
+                
+                let response = Response(text: String(streamedResponse), type: .success)
+                updatePrompt(prompt: prompt, response: response, instruction: curInstruction)
+                setTokenIsValid(true)
             } catch let error as FetchingError {
                 print("Fetching Error: \(error.localizedDescription)")
                 if case .forbidden = error {

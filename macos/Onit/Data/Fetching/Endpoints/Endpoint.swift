@@ -20,9 +20,15 @@ protocol Endpoint: Sendable {
     var requestBody: Request? { get }
     var additionalHeaders: [String: String]? { get }
     var timeout: TimeInterval? { get }
+    
+    func getContent(response: Response) -> String?
 }
 
 extension Endpoint {
+    func getContent(response: Response) -> String? {
+        return nil
+    }
+    
     func asURLRequest() throws -> URLRequest {
         var url = baseURL.appendingPathComponent(path)
         

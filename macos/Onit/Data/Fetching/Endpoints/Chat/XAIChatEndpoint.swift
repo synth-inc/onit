@@ -1,52 +1,45 @@
 //
-//  DeepSeekChatEndpoint.swift
+//  XAIChatEndpoint.swift
 //  Onit
-//
-//  Created by OpenHands on 2/13/25.
 //
 
 import Foundation
+import EventSource
 
-struct DeepSeekChatEndpoint: Endpoint {
-    typealias Request = DeepSeekChatRequest
-    typealias Response = DeepSeekChatResponse
+struct XAIChatEndpoint: Endpoint {
+    var baseURL: URL = URL(string: "https://api.x.ai")!
 
-    let messages: [DeepSeekChatMessage]
-    let token: String?
+    typealias Request = XAIChatRequest
+    typealias Response = XAIChatResponse
+
+    let messages: [XAIChatMessage]
     let model: String
-
-    var baseURL: URL {
-        URL(string: "https://api.deepseek.com")!
-    }
+    let token: String?
 
     var path: String { "/v1/chat/completions" }
     var getParams: [String: String]? { nil }
     var method: HTTPMethod { .post }
-
-    var requestBody: DeepSeekChatRequest? {
-        DeepSeekChatRequest(model: model, messages: messages, stream: false)
+    var requestBody: XAIChatRequest? {
+        XAIChatRequest(model: model, messages: messages, stream: false)
     }
-
     var additionalHeaders: [String: String]? {
         ["Authorization": "Bearer \(token ?? "")"]
     }
     var timeout: TimeInterval? { nil }
+    
+    func getContent(response: Response) -> String? {
+        return response.choices.first?.message.content
+    }
 }
 
-struct DeepSeekChatRequest: Codable {
-    let model: String
-    let messages: [DeepSeekChatMessage]
-    let stream: Bool
-}
-
-struct DeepSeekChatMessage: Codable {
+struct XAIChatMessage: Codable {
     let role: String
-    let content: DeepSeekChatContent
+    let content: XAIChatContent
 }
 
-enum DeepSeekChatContent: Codable {
+enum XAIChatContent: Codable {
     case text(String)
-    case multiContent([DeepSeekChatContentPart])
+    case multiContent([XAIChatContentPart])
 
     func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
@@ -62,7 +55,7 @@ enum DeepSeekChatContent: Codable {
         let container = try decoder.singleValueContainer()
         if let str = try? container.decode(String.self) {
             self = .text(str)
-        } else if let parts = try? container.decode([DeepSeekChatContentPart].self) {
+        } else if let parts = try? container.decode([XAIChatContentPart].self) {
             self = .multiContent(parts)
         } else {
             throw DecodingError.dataCorruptedError(
@@ -71,22 +64,29 @@ enum DeepSeekChatContent: Codable {
     }
 }
 
-struct DeepSeekChatContentPart: Codable {
+struct XAIChatContentPart: Codable {
     let type: String
     let text: String?
-    let image_url: ImageURL?
+    let image_url: ImageBase64Url?
 
-    struct ImageURL: Codable {
-        let url: String
+    struct ImageBase64Url: Codable {
+        let url: String?
+        let detail: String?
     }
 }
 
-struct DeepSeekChatResponse: Codable {
+struct XAIChatRequest: Codable {
+    let model: String
+    let messages: [XAIChatMessage]
+    let stream: Bool
+}
+
+struct XAIChatResponse: Codable {
     let choices: [Choice]
 
     struct Choice: Codable {
         let message: Message
-
+        
         struct Message: Codable {
             let content: String
         }

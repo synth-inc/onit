@@ -38,6 +38,10 @@ struct AnthropicChatEndpoint: Endpoint {
         ]
     }
     var timeout: TimeInterval? { nil }
+    
+    func getContent(response: Response) -> String? {
+        return response.content.first?.text
+    }
 }
 
 struct AnthropicMessage: Codable {
