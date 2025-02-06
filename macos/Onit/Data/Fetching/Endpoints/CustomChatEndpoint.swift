@@ -14,7 +14,7 @@ struct CustomChatEndpoint: Endpoint {
     var getParams: [String: String]? { nil }
     var method: HTTPMethod { .post }
     var requestBody: OpenAIChatRequest? {
-        OpenAIChatRequest(model: model, messages: messages)
+        OpenAIChatRequest(model: model, messages: messages, stream: false)
     }
     var additionalHeaders: [String: String]? {
         ["Authorization": "Bearer \(token ?? "")"]

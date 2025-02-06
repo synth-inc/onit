@@ -20,28 +20,11 @@ struct OpenAIChatEndpoint: Endpoint {
     var getParams: [String: String]? { nil }
     var method: HTTPMethod { .post }
     var requestBody: OpenAIChatRequest? {
-        OpenAIChatRequest(model: model, messages: messages, stream: true)
+        OpenAIChatRequest(model: model, messages: messages, stream: false)
     }
     var additionalHeaders: [String: String]? {
         ["Authorization": "Bearer \(token ?? "")"]
     }
-    
-    func getContentFromSSE(event: EVEvent) throws -> String? {
-        if let data = event.data?.data(using: .utf8) {
-            let response = try JSONDecoder().decode(Response.self, from: data)
-            
-            return response.choices[0].delta.content
-        }
-        
-        return nil
-    }
-    
-    func getStreamingErrorMessage(data: Data) -> String? {
-        let response = try? JSONDecoder().decode(OpenAIChatStreamingError.self, from: data)
-        
-        return response?.error.message
-    }
-
     var timeout: TimeInterval? { nil }
 }
 
@@ -95,31 +78,12 @@ struct OpenAIChatRequest: Codable {
 
 struct OpenAIChatResponse: Codable {
     let choices: [Choice]
-    let created: Int
-    let id: String
-    let model: String
-    let object: String
     
     struct Choice: Codable {
-        let delta: Delta
-        let index: Int
-            
-        enum CodingKeys: String, CodingKey {
-            case delta
-            case index
-        }
-    }
+        let message: Message
         
-    struct Delta: Codable {
-        let content: String?
-        let role: String?
-    }
-}
-
-struct OpenAIChatStreamingError: Codable {
-    let error: ErrorMessage
-    
-    struct ErrorMessage: Codable {
-        let message: String
+        struct Message: Codable {
+            let content: String
+        }
     }
 }

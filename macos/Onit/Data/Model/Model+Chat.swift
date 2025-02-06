@@ -86,20 +86,20 @@ extension OnitModel {
             }
 
             do {
-                switch preferences.mode {
+                switch Defaults[.mode] {
                 case .remote:
                     streamedResponse = ""
                     addPartialPrompt(prompt: prompt, instruction: curInstruction)
                     
-                    let llmRequest = LLMRequest(instructions: instructionsHistory,
-                                                inputs: inputsHistory,
-                                                files: filesHistory,
-                                                images: imagesHistory,
-                                                autoContexts: autoContextsHistory,
-                                                responses: responsesHistory,
-                                                model: preferences.remoteModel)
-                    let apiToken = getTokenForModel(preferences.remoteModel ?? nil)
-                    let asyncText = try await streamingClient.chatInStream(llmRequest: llmRequest, apiToken: apiToken)
+                    let apiToken = getTokenForModel(Defaults[.remoteModel] ?? nil)
+                    let asyncText = try await streamingClient.chatInStream(instructions: instructionsHistory,
+                                                                           inputs: inputsHistory,
+                                                                           files: filesHistory,
+                                                                           images: imagesHistory,
+                                                                           autoContexts: autoContextsHistory,
+                                                                           responses: responsesHistory,
+                                                                           model: Defaults[.remoteModel],
+                                                                           apiToken: apiToken)
                     
                     for try await response in asyncText {
                         streamedResponse += response

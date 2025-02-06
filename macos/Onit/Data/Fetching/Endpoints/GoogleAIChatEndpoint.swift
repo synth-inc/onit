@@ -21,29 +21,12 @@ struct GoogleAIChatEndpoint: Endpoint {
 
     var method: HTTPMethod { .post }
     var requestBody: GoogleAIChatRequest? {
-        GoogleAIChatRequest(model:model, messages: messages, stream: true, n: 1)
+        GoogleAIChatRequest(model:model, messages: messages, stream: false, n: 1)
     }
 
     var additionalHeaders: [String: String]? {
         ["Authorization": "Bearer \(token ?? "")"]
     }
-    
-    func getContentFromSSE(event: EVEvent) throws -> String? {
-        if let data = event.data?.data(using: .utf8) {
-            let response = try JSONDecoder().decode(Response.self, from: data)
-            
-            return response.choices[0].delta.content
-        }
-        
-        return nil
-    }
-    
-    func getStreamingErrorMessage(data: Data) -> String? {
-        let response = try? JSONDecoder().decode(GoogleAIChatStreamingError.self, from: data)
-        
-        return response?.error.message
-    }
-
     var timeout: TimeInterval? { nil }
 }
 
@@ -99,30 +82,36 @@ struct GoogleAIChatRequest: Codable {
 struct GoogleAIChatResponse: Codable {
     let choices: [Choice]
     let created: Int
-    let id: String
     let model: String
     let object: String
-    
+    let usage: Usage
+
     struct Choice: Codable {
-        let delta: Delta
+        let finishReason: String
         let index: Int
-            
+        let message: Message
+
         enum CodingKeys: String, CodingKey {
-            case delta
+            case finishReason = "finish_reason"
             case index
+            case message
         }
     }
-        
-    struct Delta: Codable {
-        let content: String?
-        let role: String?
-    }
-}
 
-struct GoogleAIChatStreamingError: Codable {
-    struct Error: Codable {
-        let message: String
+    struct Message: Codable {
+        let content: String
+        let role: String
     }
-    
-    let error: Error
+
+    struct Usage: Codable {
+        let completionTokens: Int
+        let promptTokens: Int
+        let totalTokens: Int
+
+        enum CodingKeys: String, CodingKey {
+            case completionTokens = "completion_tokens"
+            case promptTokens = "prompt_tokens"
+            case totalTokens = "total_tokens"
+        }
+    }
 }

@@ -28,7 +28,7 @@ struct AnthropicChatEndpoint: Endpoint {
             system: system,
             messages: messages,
             max_tokens: maxTokens,
-            stream: true
+            stream: false
         )
     }
     var additionalHeaders: [String: String]? {
@@ -37,28 +37,6 @@ struct AnthropicChatEndpoint: Endpoint {
             "anthropic-version": "2023-06-01",
         ]
     }
-    
-    func getContentFromSSE(event: EVEvent) throws -> String? {
-        guard let eventString = event.event,
-              let dataStart = eventString.range(of: "data: ")?.upperBound else { return nil }
-        
-        let jsonString = String(eventString[dataStart...]).trimmingCharacters(in: .whitespacesAndNewlines)
-        
-        if let data = jsonString.data(using: .utf8) {
-            let response = try JSONDecoder().decode(Response.self, from: data)
-            
-            return response.delta?.text
-        }
-        
-        return nil
-    }
-    
-    func getStreamingErrorMessage(data: Data) -> String? {
-        let response = try? JSONDecoder().decode(AnthropicChatStreamingError.self, from: data)
-        
-        return response?.message
-    }
-
     var timeout: TimeInterval? { nil }
 }
 
@@ -88,54 +66,9 @@ struct AnthropicChatRequest: Codable {
 }
 
 struct AnthropicChatResponse: Codable {
-    let type: String
-    let delta: Delta?
-
-    struct Delta: Codable {
-        let type: String?
-        let text: String?
-        let partialJson: String?
-        
-        enum CodingKeys: String, CodingKey {
-            case type, text
-            case partialJson = "partial_json"
-        }
-    }
+    let content: [AnthropicResponseContent]
     
-    struct Message: Codable {
-        let id: String
-        let type: String
-        let role: String
-        let content: [Content]
-        let model: String
-        let stopReason: String?
-        let stopSequence: String?
-        let usage: Usage
-
-        enum CodingKeys: String, CodingKey {
-            case id, type, role, content, model
-            case stopReason = "stop_reason"
-            case stopSequence = "stop_sequence"
-            case usage
-        }
-    }
-
-    struct Content: Codable {
-        let type: String
+    struct AnthropicResponseContent: Codable {
         let text: String
     }
-
-    struct Usage: Codable {
-        let inputTokens: Int
-        let outputTokens: Int
-
-        enum CodingKeys: String, CodingKey {
-            case inputTokens = "input_tokens"
-            case outputTokens = "output_tokens"
-        }
-    }
-}
-
-struct AnthropicChatStreamingError: Codable {
-    let message: String
 }

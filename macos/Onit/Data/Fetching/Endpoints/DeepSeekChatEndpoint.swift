@@ -24,7 +24,7 @@ struct DeepSeekChatEndpoint: Endpoint {
     var method: HTTPMethod { .post }
 
     var requestBody: DeepSeekChatRequest? {
-        DeepSeekChatRequest(model: model, messages: messages)
+        DeepSeekChatRequest(model: model, messages: messages, stream: false)
     }
 
     var additionalHeaders: [String: String]? {
@@ -36,6 +36,7 @@ struct DeepSeekChatEndpoint: Endpoint {
 struct DeepSeekChatRequest: Codable {
     let model: String
     let messages: [DeepSeekChatMessage]
+    let stream: Bool
 }
 
 struct DeepSeekChatMessage: Codable {

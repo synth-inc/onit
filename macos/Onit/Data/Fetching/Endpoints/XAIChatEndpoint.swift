@@ -20,32 +20,11 @@ struct XAIChatEndpoint: Endpoint {
     var getParams: [String: String]? { nil }
     var method: HTTPMethod { .post }
     var requestBody: XAIChatRequest? {
-        XAIChatRequest(
-            model: model,
-            messages: messages,
-            stream: true
-        )
+        XAIChatRequest(model: model, messages: messages, stream: false)
     }
     var additionalHeaders: [String: String]? {
         ["Authorization": "Bearer \(token ?? "")"]
     }
-    
-    func getContentFromSSE(event: EVEvent) throws -> String? {
-        if let data = event.data?.data(using: .utf8) {
-            let response = try JSONDecoder().decode(Response.self, from: data)
-            
-            return response.choices[0].delta.content
-        }
-        
-        return nil
-    }
-    
-    func getStreamingErrorMessage(data: Data) -> String? {
-        let response = try? JSONDecoder().decode(XAIChatStreamingError.self, from: data)
-        
-        return response?.error
-    }
-
     var timeout: TimeInterval? { nil }
 }
 
@@ -102,16 +81,10 @@ struct XAIChatResponse: Codable {
     let choices: [Choice]
 
     struct Choice: Codable {
-        let index: Int
-        let delta: Delta
+        let message: Message
         
-        struct Delta: Codable {
-            let content: String?
-            let role: String?
+        struct Message: Codable {
+            let content: String
         }
     }
-}
-
-struct XAIChatStreamingError: Codable {
-    let error: String
 }

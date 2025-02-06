@@ -9,79 +9,78 @@ import EventSource
 import Foundation
 
 actor StreamingClient {
-    
-    func chatInStream(llmRequest: LLMRequest, apiToken: String?) async throws -> AsyncThrowingStream<String, Error> {
-        guard let model = llmRequest.model else {
+
+    func chatInStream(instructions: [String],
+                      inputs: [Input?],
+                      files: [[URL]],
+                      images: [[URL]],
+                      autoContexts: [[String: String]],
+                      responses: [String],
+                      model: AIModel?,
+                      apiToken: String?) async throws -> AsyncThrowingStream<String, Error> {
+        guard let model = model else {
             throw FetchingError.invalidRequest(message: "Model is required")
         }
-        
-        guard llmRequest.instructions.count == llmRequest.inputs.count,
-              llmRequest.inputs.count == llmRequest.files.count,
-              llmRequest.files.count == llmRequest.images.count,
-              llmRequest.images.count == llmRequest.autoContexts.count,
-              llmRequest.autoContexts.count == llmRequest.responses.count + 1 else {
-            throw FetchingError.invalidRequest(message: "Mismatched array lengths: instructions, inputs, files, and images must be the same length, and one longer than responses.")
+
+        guard instructions.count == inputs.count,
+            inputs.count == files.count,
+            files.count == images.count,
+            images.count == autoContexts.count,
+            autoContexts.count == responses.count + 1
+        else {
+            throw FetchingError.invalidRequest(
+                message:
+                    "Mismatched array lengths: instructions, inputs, files, and images must be the same length, and one longer than responses."
+            )
         }
-        
-        let systemMessage = "Based on the provided instructions, either provide the output or answer any questions related to it. Provide the response without any additional comments. Provide the output ready to go."
-        let userMessages = buildUserMessages(llmRequest: llmRequest)
-        
-        let endpoint: any Endpoint
-        switch model.provider {
-        case .openAI:
-            endpoint = buildOpenAIChatEndpoint(model: model,
-                                               images: llmRequest.images,
-                                               responses: llmRequest.responses,
-                                               apiToken: apiToken,
-                                               systemMessage: systemMessage,
-                                               userMessages: userMessages)
-        case .anthropic:
-            endpoint = buildAnthropicChatEndpoint(model: model,
-                                                  images: llmRequest.images,
-                                                  responses: llmRequest.responses,
-                                                  apiToken: apiToken,
-                                                  systemMessage: systemMessage,
-                                                  userMessages: userMessages)
-        case .xAI:
-            endpoint = buildXAIChatEndpoint(model: model,
-                                            images: llmRequest.images,
-                                            responses: llmRequest.responses,
-                                            apiToken: apiToken,
-                                            systemMessage: systemMessage,
-                                            userMessages: userMessages)
-        case .googleAI:
-            endpoint = buildGoogleAIChatEndpoint(model: model,
-                                                 images: llmRequest.images,
-                                                 responses: llmRequest.responses,
-                                                 apiToken: apiToken,
-                                                 systemMessage: systemMessage,
-                                                 userMessages: userMessages)
-        }
-        
+
+        let systemMessage =
+            "Based on the provided instructions, either provide the output or answer any questions related to it. Provide the response without any additional comments. Provide the output ready to go."
+        let userMessages = buildUserMessages(instructions: instructions,
+                                             inputs: inputs,
+                                             files: files,
+                                             autoContexts: autoContexts)
+
+        let endpoint = try ChatStreamingEndpointBuilder.build(
+            model: model,
+            images: images,
+            responses: responses,
+            apiToken: apiToken,
+            systemMessage: systemMessage,
+            userMessages: userMessages)
+
         return try await stream(endpoint: endpoint)
     }
-    
+
     // MARK: - Streaming
-    
-    private func stream(endpoint: any Endpoint) async throws -> AsyncThrowingStream<String, Error> {
+
+    private func stream(endpoint: any StreamingEndpoint) async throws
+        -> AsyncThrowingStream<String, Error>
+    {
         let urlRequest = try endpoint.asURLRequest()
         let eventSource = EventSource(mode: .dataOnly)
         let dataTask = await eventSource.dataTask(for: urlRequest)
-        
-        return AsyncThrowingStream<String, Error>(String.self, bufferingPolicy: .unbounded) { continuation in
+
+        return AsyncThrowingStream<String, Error>(
+            String.self, bufferingPolicy: .unbounded
+        ) { continuation in
             let task = Task { @Sendable in
                 for await event in await dataTask.events() {
                     switch event {
                     case .open:
                         break
                     case .event(let event):
-                        if let response = try? endpoint.getContentFromSSE(event: event) {
+                        if let response = try? endpoint.getContentFromSSE(
+                            event: event)
+                        {
                             continuation.yield(response)
                         } else {
                             continuation.yield("")
                         }
                     case .error(let error):
-                        continuation.finish(throwing: convertError(endpoint: endpoint, error: error))
+                        continuation.finish(
+                            throwing: convertError(
+                                endpoint: endpoint, error: error))
                     case .closed:
                         continuation.finish()
                     }
@@ -95,44 +94,53 @@ actor StreamingClient {
             }
         }
     }
-    
+
     // MARK: - User messages
-    
-    private func buildUserMessages(llmRequest: LLMRequest) -> [String] {
+
+    private func buildUserMessages(instructions: [String],
+                                   inputs: [Input?],
+                                   files: [[URL]],
+                                   autoContexts: [[String: String]]) -> [String] {
         var userMessages: [String] = []
-        
-        for (index, instruction) in llmRequest.instructions.enumerated() {
+
+        for (index, instruction) in instructions.enumerated() {
             var message = ""
-            
-            if let input = llmRequest.inputs[index], !input.selectedText.isEmpty {
+
+            if let input = inputs[index], !input.selectedText.isEmpty
+            {
                 if let application = input.application {
-                    message += "\n\nSelected Text from \(application): \(input.selectedText)"
+                    message +=
+                        "\n\nSelected Text from \(application): \(input.selectedText)"
                 } else {
                     message += "\n\nSelected Text: \(input.selectedText)"
                 }
             }
-            
-            if !llmRequest.files[index].isEmpty {
-                for file in llmRequest.files[index] {
-                    if let fileContent = try? String(contentsOf: file, encoding: .utf8) {
-                        message += "\n\nFile: \(file.lastPathComponent)\nContent:\n\(fileContent)"
+
+            if !files[index].isEmpty {
+                for file in files[index] {
+                    if let fileContent = try? String(
+                        contentsOf: file, encoding: .utf8)
+                    {
+                        message +=
+                            "\n\nFile: \(file.lastPathComponent)\nContent:\n\(fileContent)"
                     }
                 }
             }
-            
-            if !llmRequest.autoContexts[index].isEmpty {
-                for (appName, appContent) in llmRequest.autoContexts[index] {
-                    message += "\n\nContent from application \(appName):\n\(appContent)"
+
+            if !autoContexts[index].isEmpty {
+                for (appName, appContent) in autoContexts[index] {
+                    message +=
+                        "\n\nContent from application \(appName):\n\(appContent)"
                 }
             }
-            
+
             // Intuitively, I (tim) think the message should be the last thing.
             // TODO: evaluate this
             message += "\n\n\(instruction)"
             print(message)
             userMessages.append(message)
         }
-        
+
         return userMessages
     }
 }
