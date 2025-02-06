@@ -18,4 +18,5 @@ protocol Endpoint {
     var token: String? { get }
     var requestBody: Request? { get }
     var additionalHeaders: [String: String]? { get }
+    var timeout: TimeInterval? { get }
 }

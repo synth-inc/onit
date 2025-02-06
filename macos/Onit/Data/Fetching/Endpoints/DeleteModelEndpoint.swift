@@ -30,6 +30,7 @@ struct DeleteModelEndpoint: Endpoint {
     var getParams: [String: String]? { nil }
     var method: HTTPMethod { .delete }
     var token: String? { nil }
+    var timeout: TimeInterval? { nil }
 }
 
 struct DeleteModelRequest: Codable {

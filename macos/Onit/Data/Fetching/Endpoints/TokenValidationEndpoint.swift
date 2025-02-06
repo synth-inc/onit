@@ -20,7 +20,7 @@ struct OpenAIValidationEndpoint: Endpoint {
     var additionalHeaders: [String: String]? {
         ["Authorization": "Bearer \(apiKey)"]
     }
-    
+    var timeout: TimeInterval? { nil }
     let apiKey: String
 }
 
@@ -50,7 +50,7 @@ struct AnthropicValidationEndpoint: Endpoint {
             "anthropic-version": "2023-06-01"
         ]
     }
-    
+    var timeout: TimeInterval? { nil }
     let apiKey: String
 }
 
@@ -83,7 +83,7 @@ struct XAIValidationEndpoint: Endpoint {
     var additionalHeaders: [String: String]? {
         ["Authorization": "Bearer \(apiKey)"]
     }
-    
+    var timeout: TimeInterval? { nil }
     let apiKey: String
 }
 
@@ -111,7 +111,7 @@ struct DeepSeekValidationEndpoint: Endpoint {
     var additionalHeaders: [String: String]? {
         ["Authorization": "Bearer \(apiKey)"]
     }
-    
+    var timeout: TimeInterval? { nil }
     let apiKey: String
 }
 

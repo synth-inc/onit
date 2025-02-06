@@ -16,6 +16,7 @@ struct RemoteModelsEndpoint: Endpoint {
     
     var method: HTTPMethod { .get }
     var token: String? { nil }
+    var timeout: TimeInterval? { nil }
     var requestBody: EmptyRequest?
     
     var additionalHeaders: [String : String]? {

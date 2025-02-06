@@ -82,6 +82,7 @@ extension Defaults.Keys {
     static let localTemperature = Key<Double?>("localTemperature", default: nil)
     static let localTopP = Key<Double?>("localTopP", default: nil)
     static let localTopK = Key<Int?>("localTopK", default: nil)
+    static let localRequestTimeout = Key<TimeInterval?>("localRequestTimeout", default: 60.0)
 }
 
 extension NSRect: Defaults.Serializable {

@@ -40,7 +40,8 @@ extension FetchingClient {
                 body: requestBodyData,
                 contentType: "application/json",
                 token: endpoint.token,
-                additionalHeaders: endpoint.additionalHeaders
+                additionalHeaders: endpoint.additionalHeaders,
+                timeout: endpoint.timeout
             )
             let decodedResponse = try decoder.decode(E.Response.self, from: data)
             return decodedResponse

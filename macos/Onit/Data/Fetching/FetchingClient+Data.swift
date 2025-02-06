@@ -14,7 +14,8 @@ extension FetchingClient {
         body: UploadBody = .empty,
         contentType: String? = nil,
         token: String? = nil,
-        additionalHeaders: [String: String]? = nil
+        additionalHeaders: [String: String]? = nil,
+        timeout: TimeInterval? = nil
     ) async throws -> Data {
         print("fetching from \(url)")
         let request = makeRequest(
@@ -23,7 +24,8 @@ extension FetchingClient {
             body: body,
             contentType: contentType,
             token: token,
-            additionalHeaders: additionalHeaders
+            additionalHeaders: additionalHeaders,
+            timeout: timeout
         )
         return try await fetchAndHandle(using: request)
     }
@@ -34,7 +36,8 @@ extension FetchingClient {
         body: UploadBody,
         contentType: String?,
         token: String? = nil,
-        additionalHeaders: [String: String]?
+        additionalHeaders: [String: String]?,
+        timeout: TimeInterval? = nil
     ) -> URLRequest {
         var request = URLRequest(url: url)
 
@@ -45,6 +48,10 @@ extension FetchingClient {
         request.addAuthorization(token: token)
         request.cachePolicy = .reloadIgnoringLocalCacheData
         request.addContentType(for: method, defaultType: contentType ?? "application/json")
+
+        if let timeout = timeout {
+            request.timeoutInterval = timeout
+        }
 
         additionalHeaders?.forEach { key, value in
             request.setValue(value, forHTTPHeaderField: key)

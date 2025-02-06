@@ -30,6 +30,7 @@ struct DeepSeekChatEndpoint: Endpoint {
     var additionalHeaders: [String: String]? {
         ["Authorization": "Bearer \(token ?? "")"]
     }
+    var timeout: TimeInterval? { nil }
 }
 
 struct DeepSeekChatRequest: Codable {

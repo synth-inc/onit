@@ -21,14 +21,16 @@ struct LocalModelsSection: View {
     @State private var temperature: String = ""
     @State private var topP: String = ""
     @State private var topK: String = ""
-    
+    @State private var timeout: String = ""
+
     // Validation states and errors
     @State private var keepAliveError: String? = nil
     @State private var numCtxError: String? = nil
     @State private var temperatureError: String? = nil
     @State private var topPError: String? = nil
     @State private var topKError: String? = nil
-    
+    @State private var timeoutError: String? = nil
+
     @Default(.availableLocalModels) var availableLocalModels
     @Default(.useLocal) var useLocal
     @Default(.localEndpointURL) var localEndpointURL
@@ -37,14 +39,15 @@ struct LocalModelsSection: View {
     @Default(.localTemperature) var localTemperature
     @Default(.localTopP) var localTopP
     @Default(.localTopK) var localTopK
-    
-    
+    @Default(.localRequestTimeout) var localRequestTimeout
+
     // Default values
     private let defaultKeepAlive = "5m"
     private let defaultNumCtx = 2048
     private let defaultTemperature = 0.8
     private let defaultTopP = 0.9
     private let defaultTopK = 40
+    private let defaultTimeout = 60.0
 
     var body: some View {
         ModelsSection(title: "Local Models") {
@@ -67,6 +70,7 @@ struct LocalModelsSection: View {
             if let value = localTemperature { temperature = String(value) }
             if let value = localTopP { topP = String(value) }
             if let value = localTopK { topK = String(value) }
+            if let value = localRequestTimeout { timeout = String(value) }
         }
         .onChange(of: isOn) {
             useLocal = isOn
@@ -77,7 +81,7 @@ struct LocalModelsSection: View {
         VStack(alignment: .leading, spacing: 8) {
             // The implementation to turn off local models doesn't exist, so we never show the toggle.
             ModelTitle(title: "Ollama", isOn: $isOn, showToggle: .constant(false))
-            
+
             HStack {
                 Text("Endpoint URL:")
                     .foregroundStyle(.primary.opacity(0.65))
@@ -93,9 +97,9 @@ struct LocalModelsSection: View {
                         fetching = true
                         if let localEndpointURL = URL(string: localEndpointString) {
                             self.localEndpointURL = localEndpointURL
-                            
+
                             await model.fetchLocalModels()
-                            
+
                             if model.localFetchFailed {
                                 message = "Couldn't find any models at the provided URL."
                             } else {
@@ -115,7 +119,7 @@ struct LocalModelsSection: View {
                 .frame(height: 22)
                 .fontWeight(.regular)
             }
-            
+
             DisclosureGroup("Advanced", isExpanded: $showAdvanced) {
                 VStack(alignment: .leading, spacing: 8) {
                     VStack(alignment: .leading, spacing: 8) {
@@ -143,7 +147,34 @@ struct LocalModelsSection: View {
                             )
                         }
                         SettingErrorMessage(message: keepAliveError)
-                        
+
+                        HStack {
+                            Text("Request timeout (seconds):")
+                            TextField("", text: $timeout)
+                                .textFieldStyle(.roundedBorder)
+                                .frame(maxWidth: 100)
+                                .onChange(of: timeout) {
+                                    if timeout.isEmpty {
+                                        timeoutError = nil
+                                        localRequestTimeout = nil
+                                    } else if LocalModelValidation.validateInt(timeout, min: 1) {
+                                        timeoutError = nil
+                                        if let value = Double(timeout) {
+                                            localRequestTimeout = value
+                                        }
+                                    } else {
+                                        timeoutError = "Must be a positive integer"
+                                    }
+                                }
+                            SettingInfoButton(
+                                title: "Request Timeout",
+                                description: "Controls how long to wait for a response from the model before timing out (in seconds)",
+                                defaultValue: String(defaultTimeout),
+                                valueType: "Integer (seconds)"
+                            )
+                        }
+                        SettingErrorMessage(message: timeoutError)
+
                         HStack {
                             Text("Context window:")
                             TextField("", text: $numCtx)
@@ -170,7 +201,7 @@ struct LocalModelsSection: View {
                             )
                         }
                         SettingErrorMessage(message: numCtxError)
-                        
+
                         HStack {
                             Text("Temperature:")
                             TextField("", text: $temperature)
@@ -197,7 +228,7 @@ struct LocalModelsSection: View {
                             )
                         }
                         SettingErrorMessage(message: temperatureError)
-                        
+
                         HStack {
                             Text("Top K:")
                             TextField("", text: $topK)
@@ -224,7 +255,7 @@ struct LocalModelsSection: View {
                             )
                         }
                         SettingErrorMessage(message: topKError)
-                        
+
                         HStack {
                             Text("Top P:")
                             TextField("", text: $topP)
@@ -251,27 +282,30 @@ struct LocalModelsSection: View {
                             )
                         }
                         SettingErrorMessage(message: topPError)
-                        
+
                         Divider()
                             .padding(.vertical, 4)
-                        
+
                         Button {
                             // Restore defaults
                             keepAlive = defaultKeepAlive
+                            timeout = String(defaultTimeout)
                             numCtx = String(defaultNumCtx)
                             temperature = String(defaultTemperature)
                             topK = String(defaultTopK)
                             topP = String(defaultTopP)
-                            
+
                             // Update preferences
                             localKeepAlive = defaultKeepAlive
+                            localRequestTimeout = defaultTimeout
                             localNumCtx = defaultNumCtx
                             localTemperature = defaultTemperature
                             localTopK = defaultTopK
                             localTopP = defaultTopP
-                            
+
                             // Clear any errors
                             keepAliveError = nil
+                            timeoutError = nil
                             numCtxError = nil
                             temperatureError = nil
                             topKError = nil
