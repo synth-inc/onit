@@ -55,16 +55,16 @@ actor StreamingClient {
             userMessages: userMessages)
         let endpoint = LocalChatStreamingEndpoint(model: model, messages: localMessages)
         
-        return try await stream(endpoint: endpoint)
+        return try await stream(endpoint: endpoint, eventParser: LocalEventParser())
     }
 
     // MARK: - Streaming
 
-    private func stream(endpoint: any StreamingEndpoint) async throws
+    private func stream(endpoint: any StreamingEndpoint, eventParser: EventParser? = nil) async throws
         -> AsyncThrowingStream<String, Error>
     {
         let urlRequest = try endpoint.asURLRequest()
-        let eventSource = EventSource(mode: .dataOnly)
+        let eventSource = EventSource(mode: .dataOnly, eventParser: eventParser)
         let dataTask = await eventSource.dataTask(for: urlRequest)
 
         return AsyncThrowingStream<String, Error>(
@@ -78,9 +78,7 @@ actor StreamingClient {
                         break
                     case .event(let event):
                         print("event")
-                        if let response = try? endpoint.getContentFromSSE(
-                            event: event)
-                        {
+                        if let response = try? endpoint.getContentFromSSE(event: event) {
                             continuation.yield(response)
                         } else {
                             continuation.yield("")
