@@ -143,6 +143,6 @@ struct CustomProviderRow: View {
     }
 }
 
-#Preview {
-    CustomProviderRow(provider: .constant(PreviewSampleData.customProvider))
-}
+//#Preview {
+//    CustomProviderRow(provider: .constant(PreviewSampleData.customProvider))
+//}
