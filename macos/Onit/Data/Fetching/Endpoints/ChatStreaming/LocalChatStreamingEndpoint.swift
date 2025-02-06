@@ -66,7 +66,7 @@ struct LocalChatStreamingEndpoint: StreamingEndpoint {
         if let data = event.data?.data(using: .utf8) {
             let response = try JSONDecoder().decode(Response.self, from: data)
             
-            return response.response
+            return response.message?.content
         }
         
         return nil
@@ -80,8 +80,13 @@ struct LocalChatStreamingEndpoint: StreamingEndpoint {
 }
 
 struct LocalChatStreamingResponse: Codable {
-    let response: String?
+    let message: Message?
     let done: Bool
+    
+    struct Message: Codable {
+        let role: String
+        let content: String
+    }
 }
 
 struct LocalChatStreamingError: Codable {
