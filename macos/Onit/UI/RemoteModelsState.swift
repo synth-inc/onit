@@ -39,6 +39,10 @@ final class RemoteModelsState: ObservableObject {
   @ObservationIgnored
   var useGoogleAI: Bool
 
+  @ObservableDefault(.useDeepSeek)
+  @ObservationIgnored
+  var useDeepSeek: Bool
+
   var listedModels: [AIModel] {
     var models = availableRemoteModels.filter { Defaults[.visibleModelIds].contains($0.uniqueId) }
 
@@ -53,6 +57,9 @@ final class RemoteModelsState: ObservableObject {
     }
     if !useGoogleAI {
       models = models.filter { $0.provider != .googleAI }
+    }
+    if !useDeepSeek {
+      models = models.filter { $0.provider != .deepSeek }
     }
 
     // Filter out models from disabled custom providers
