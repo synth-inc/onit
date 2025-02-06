@@ -15,6 +15,12 @@ struct GeneratedContentView: View {
     
     var prompt: Prompt
     
+    var isPartial: Bool {
+        let response = prompt.responses[prompt.generationIndex]
+        
+        return response.isPartial
+    }
+    
     var textToRead: String {
         let response = prompt.responses[prompt.generationIndex]
         
@@ -30,21 +36,30 @@ struct GeneratedContentView: View {
     }
 
     var body: some View {
-        Markdown(textToRead)
-            .markdownTheme(.custom)
-            .textSelection(.enabled)
-            .multilineTextAlignment(.leading)
-            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-            .fixedSize(horizontal: false, vertical: true)
-            .padding(.horizontal, 16)
-            .background {
-                GeometryReader { proxy in
-                    Color.clear
-                        .onAppear {
-                            contentHeight = proxy.size.height
-                        }
+        VStack(alignment: .leading) {
+            Markdown(textToRead)
+                .markdownTheme(.custom)
+                .textSelection(.enabled)
+                .multilineTextAlignment(.leading)
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+                .fixedSize(horizontal: false, vertical: true)
+                .padding(.horizontal, 16)
+                .background {
+                    GeometryReader { proxy in
+                        Color.clear
+                            .onAppear {
+                                contentHeight = proxy.size.height
+                            }
+                    }
+                }
+            if isPartial {
+                HStack {
+                    Spacer()
+                    SpinningRingView(size: 12)
+                        .padding(.horizontal, 16)
                 }
             }
+        }
     }
 }
 
