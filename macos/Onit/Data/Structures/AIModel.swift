@@ -86,7 +86,7 @@ struct AIModel: Codable, Identifiable, Hashable, Defaults.Serializable {
     return remoteModels + customModels
   }
 
-  enum ModelProvider: String, Codable, Equatable, Hashable, Defaults.Serializable {
+  enum ModelProvider: String, Codable, CaseIterable, Equatable, Hashable, Defaults.Serializable {
     case openAI = "openai"
     case anthropic = "anthropic"
     case xAI = "xai"

@@ -67,6 +67,11 @@ struct CustomProviderFormView: View {
           errorMessage = "A provider with this name already exists."
           return
         }
+        if AIModel.ModelProvider.allCases.contains(where: { $0.rawValue.caseInsensitiveCompare(name) == .orderedSame }) {
+          errorMessage = "Custom provider cannot have the same name as a built-in provider."
+          return
+        }
+
         var provider = CustomProvider(
           name: name,
           baseURL: baseURL,
