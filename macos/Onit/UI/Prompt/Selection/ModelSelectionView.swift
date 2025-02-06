@@ -57,6 +57,17 @@ struct ModelSelectionView: View {
         .padding(.vertical, 12)
         .background(.gray600, in: .rect(cornerRadius: 12))
         .frame(minWidth: 218, alignment: .leading)
+        .overlay(alignment: .topTrailing) {
+            Button(action: {
+                model.closeModelSelectionOverlay()
+            }) {
+                Image(.smallRemove)
+                    .renderingMode(.template)  
+                    .foregroundStyle(.gray200)
+            }
+            .padding(8)
+            .buttonStyle(PlainButtonStyle())
+        }
     }
 
     var remote: some View {

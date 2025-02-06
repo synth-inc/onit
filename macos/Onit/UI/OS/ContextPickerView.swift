@@ -28,9 +28,21 @@ struct ContextPickerView: View {
                 ContextPickerItemView(imageRes: .stars, title: "Auto-context", subtitle: "Current window activity")
             }
             .buttonStyle(.plain)
+            .foregroundColor(.gray200)
             .padding(.bottom, 6)
         }
         .background(Color(.gray600))
         .cornerRadius(12)
+        .overlay(alignment: .topTrailing) {
+            Button(action: {
+                model.closeContextPickerOverlay()
+            }) {
+                Image(.smallRemove)
+                    .renderingMode(.template)
+                    .foregroundStyle(.gray200)
+            }
+            .padding(8)
+            .buttonStyle(PlainButtonStyle())
+        }
     }
 }
