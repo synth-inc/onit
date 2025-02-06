@@ -47,7 +47,7 @@ struct LocalModelsSection: View {
     private let defaultTemperature = 0.8
     private let defaultTopP = 0.9
     private let defaultTopK = 40
-    private let defaultTimeout = "60s"
+    private let defaultTimeout = 60
 
     var body: some View {
         ModelsSection(title: "Local Models") {
@@ -149,26 +149,28 @@ struct LocalModelsSection: View {
                         SettingErrorMessage(message: keepAliveError)
 
                         HStack {
-                            Text("Request timeout:")
-                            TextField("e.g. 60s, 5m, 300", text: $timeout)
+                            Text("Request timeout (seconds):")
+                            TextField("", text: $timeout)
                                 .textFieldStyle(.roundedBorder)
-                                .frame(maxWidth: 150)
+                                .frame(maxWidth: 100)
                                 .onChange(of: timeout) {
                                     if timeout.isEmpty {
                                         timeoutError = nil
                                         localRequestTimeout = nil
-                                    } else if LocalModelValidation.validateKeepAlive(timeout) {
+                                    } else if LocalModelValidation.validateInt(timeout, min: 1) {
                                         timeoutError = nil
-                                        localRequestTimeout = timeout
+                                        if let value = Int(timeout) {
+                                            localRequestTimeout = value
+                                        }
                                     } else {
-                                        timeoutError = "Invalid format. Use duration (e.g. 60s, 5m) or seconds"
+                                        timeoutError = "Must be a positive integer"
                                     }
                                 }
                             SettingInfoButton(
                                 title: "Request Timeout",
-                                description: "Controls how long to wait for a response from the model before timing out",
-                                defaultValue: defaultTimeout,
-                                valueType: "Duration string (e.g. '60s', '5m') or integer seconds"
+                                description: "Controls how long to wait for a response from the model before timing out (in seconds)",
+                                defaultValue: String(defaultTimeout),
+                                valueType: "Integer (seconds)"
                             )
                         }
                         SettingErrorMessage(message: timeoutError)

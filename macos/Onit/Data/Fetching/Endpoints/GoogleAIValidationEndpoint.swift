@@ -7,6 +7,7 @@ import Foundation
 
 struct GoogleAIValidationEndpoint: Endpoint {
     var token: String?
+    var timeout: TimeInterval? { nil }
     
     var baseURL: URL = URL(string: "https://generativelanguage.googleapis.com")!
     

@@ -37,6 +37,7 @@ struct LocalModelsEndpoint: Endpoint {
     var getParams: [String: String]? { nil }
     var method: HTTPMethod { .get }
     var token: String? { nil }
+    var timeout: TimeInterval? { nil }
 }
 
 struct EmptyRequest: Codable {}

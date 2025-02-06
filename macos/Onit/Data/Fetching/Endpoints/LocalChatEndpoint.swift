@@ -108,6 +108,11 @@ struct LocalChatEndpoint: Endpoint {
     var getParams: [String: String]? { nil }
     var method: HTTPMethod { .post }
     var token: String? { nil }
+    var timeout: TimeInterval? {
+        DispatchQueue.main.sync {
+            return Defaults[.localRequestTimeout]
+        }
+    }
     var requestBody: LocalChatRequestJSON? {
         var options: LocalChatOptions?
         var keepAlive: String?
