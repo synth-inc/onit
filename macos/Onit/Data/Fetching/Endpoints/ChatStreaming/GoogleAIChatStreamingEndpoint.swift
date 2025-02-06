@@ -33,7 +33,7 @@ struct GoogleAIChatStreamingEndpoint: StreamingEndpoint {
         if let data = event.data?.data(using: .utf8) {
             let response = try JSONDecoder().decode(Response.self, from: data)
             
-            return response.choices[0].delta.content
+            return response.choices.first?.delta.content
         }
         
         return nil
@@ -48,10 +48,6 @@ struct GoogleAIChatStreamingEndpoint: StreamingEndpoint {
 
 struct GoogleAIChatStreamingResponse: Codable {
     let choices: [Choice]
-    let created: Int
-    let id: String
-    let model: String
-    let object: String
     
     struct Choice: Codable {
         let delta: Delta
