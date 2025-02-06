@@ -1,5 +1,5 @@
 {
-  "originHash" : "b15eec498fb9f8ad6aec54ec9016669c561a224bdbfa6df59d8e468dbc92595f",
+  "originHash" : "e48c7f63d5d4469189796b9fceb0b824b24945fde48e0bdac90e3d8f3a1cad67",
   "pins" : [
     {
       "identity" : "abseil-cpp-binary",
@@ -26,6 +26,15 @@
       "state" : {
         "revision" : "3d98a76aab39eedf957274e98e15ebe6bb390b87",
         "version" : "9.0.1"
+      }
+    },
+    {
+      "identity" : "eventsource",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/Recouse/EventSource",
+      "state" : {
+        "revision" : "9bd7c5aaba81f06511c4f681643ef991c6ae3477",
+        "version" : "0.1.3"
       }
     },
     {
@@ -78,8 +87,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/google/gtm-session-fetcher.git",
       "state" : {
-        "revision" : "85b7b231882c3c472b8bda4fb495324d3f19bab6",
-        "version" : "4.2.0"
+        "revision" : "3cdb78efb79b4a5383c3911488d8025bfc545b5e",
+        "version" : "4.3.0"
       }
     },
     {
@@ -150,8 +159,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/PostHog/posthog-ios.git",
       "state" : {
-        "revision" : "80208b1086ebd021efdba5826fd9e819f5e736cf",
-        "version" : "3.19.1"
+        "revision" : "22f1a379b32838d9db484d873d6a8b5d39e50e27",
+        "version" : "3.19.2"
       }
     },
     {

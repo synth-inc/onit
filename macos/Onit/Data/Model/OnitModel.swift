@@ -66,12 +66,16 @@ import Defaults
     var generatingPromptPriorState: GenerationState?
 
     var client = FetchingClient()
+    var streamingClient = StreamingClient()
     var updater = SPUStandardUpdaterController(startingUpdater: true, updaterDelegate: nil, userDriverDelegate: nil)
     var _tokenValidation = TokenValidationState()
     
     var remoteFetchFailed: Bool = false
     var localFetchFailed: Bool = false
-        
+    
+    var useRemoteStreaming: Bool = false
+    var streamedResponse: String = ""
+    
     @MainActor
     func fetchLocalModels() async {
         do {

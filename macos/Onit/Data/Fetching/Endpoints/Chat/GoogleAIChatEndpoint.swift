@@ -4,6 +4,7 @@
 //
 
 import Foundation
+import EventSource
 
 struct GoogleAIChatEndpoint: Endpoint {
     var baseURL: URL = URL(string: "https://generativelanguage.googleapis.com")!
@@ -16,18 +17,22 @@ struct GoogleAIChatEndpoint: Endpoint {
     let token: String?
     
 
-    var path: String { "/v1beta:chatCompletions" } 
+    var path: String { "/v1beta:chatCompletions" }
     var getParams: [String: String]? { nil }
 
     var method: HTTPMethod { .post }
     var requestBody: GoogleAIChatRequest? {
-        GoogleAIChatRequest(model:model, messages: messages, n: 1)
+        GoogleAIChatRequest(model:model, messages: messages, stream: false, n: 1)
     }
     
     var additionalHeaders: [String: String]? {
         ["Authorization": "Bearer \(token ?? "")"]
     }
     var timeout: TimeInterval? { nil }
+    
+    func getContent(response: Response) -> String? {
+        return response.choices.first?.message.content
+    }
 }
 
 struct GoogleAIChatMessage: Codable {
@@ -74,6 +79,7 @@ struct GoogleAIChatContentPart: Codable {
 struct GoogleAIChatRequest: Codable {
     let model: String
     let messages: [GoogleAIChatMessage]
+    let stream: Bool
     let n : Int
 }
 

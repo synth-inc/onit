@@ -12,8 +12,8 @@ struct DeepSeekChatEndpoint: Endpoint {
     typealias Response = DeepSeekChatResponse
     
     let messages: [DeepSeekChatMessage]
-    let token: String?
     let model: String
+    let token: String?
     
     var baseURL: URL {
         URL(string: "https://api.deepseek.com")!
@@ -24,18 +24,23 @@ struct DeepSeekChatEndpoint: Endpoint {
     var method: HTTPMethod { .post }
     
     var requestBody: DeepSeekChatRequest? {
-        DeepSeekChatRequest(model: model, messages: messages)
+        DeepSeekChatRequest(model: model, messages: messages, stream: false)
     }
     
     var additionalHeaders: [String: String]? {
         ["Authorization": "Bearer \(token ?? "")"]
     }
     var timeout: TimeInterval? { nil }
+    
+    func getContent(response: Response) -> String? {
+        return response.choices.first?.message.content
+    }
 }
 
 struct DeepSeekChatRequest: Codable {
     let model: String
     let messages: [DeepSeekChatMessage]
+    let stream: Bool
 }
 
 struct DeepSeekChatMessage: Codable {
