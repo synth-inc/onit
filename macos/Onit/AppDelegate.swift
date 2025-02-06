@@ -5,14 +5,12 @@
 //  Created by Kévin Naudin on 21/01/2025.
 //
 
-import FirebaseCore
-import PostHog
 import SwiftUI
 
 class AppDelegate: NSObject, NSApplicationDelegate {
-
+  @MainActor
   func applicationDidFinishLaunching(_ notification: Notification) {
-    FirebaseApp.configure()
+    AnalyticsManager.shared.configure()
 
     // This is helpful for debugging the new user experience, but should never be committed!
     //        if let appDomain = Bundle.main.bundleIdentifier {
@@ -21,7 +19,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     //        }
   }
 
+  @MainActor
   func applicationWillTerminate(_ notification: Notification) {
-    PostHogSDK.shared.capture("app_quit")
+    AnalyticsManager.shared.capture("app_quit")
   }
 }

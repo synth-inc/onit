@@ -33,22 +33,12 @@ class FeatureFlagManager: ObservableObject {
 
   /** Configure the SDK */
   func configure() {
-    guard let apiKey = Bundle.main.object(forInfoDictionaryKey: "PostHogApiKey") as? String,
-      let host = Bundle.main.object(forInfoDictionaryKey: "PostHogHost") as? String
-    else {
-      print("PostHog -> Error not initialized due to missing API key or host")
-      return
-    }
-
     NotificationCenter.default.addObserver(
       self,
       selector: #selector(receiveFeatureFlags),
       name: PostHogSDK.didReceiveFeatureFlags,
       object: nil
     )
-    let config = PostHogConfig(apiKey: apiKey, host: host)
-
-    PostHogSDK.shared.setup(config)
   }
 
   func overrideAccessibilityInput(_ value: Bool) {
@@ -102,7 +92,7 @@ class FeatureFlagManager: ObservableObject {
     if let accessibilityEnabled = Defaults[.accessibilityEnabled] {
       accessibility = accessibilityEnabled
     } else {
-      accessibility = PostHogSDK.shared.isFeatureEnabled("accessibility")
+      accessibility = AnalyticsManager.shared.isFeatureEnabled("accessibility")
     }
 
     // Only set individual accessibility features if global toggle is on
@@ -111,7 +101,7 @@ class FeatureFlagManager: ObservableObject {
         accessibilityInput = accessibilityInputEnabled
         wasAccessibilityInputEnabled = accessibilityInputEnabled
       } else {
-        let enabled = PostHogSDK.shared.isFeatureEnabled("accessibility_input")
+        let enabled = AnalyticsManager.shared.isFeatureEnabled("accessibility_input")
         accessibilityInput = enabled
         wasAccessibilityInputEnabled = enabled
       }
@@ -120,7 +110,7 @@ class FeatureFlagManager: ObservableObject {
         accessibilityAutoContext = accessibilityAutoContextEnabled
         wasAccessibilityAutoContextEnabled = accessibilityAutoContextEnabled
       } else {
-        let enabled = PostHogSDK.shared.isFeatureEnabled("accessibility_autocontext")
+        let enabled = AnalyticsManager.shared.isFeatureEnabled("accessibility_autocontext")
         accessibilityAutoContext = enabled
         wasAccessibilityAutoContextEnabled = enabled
       }
@@ -129,13 +119,13 @@ class FeatureFlagManager: ObservableObject {
       if let accessibilityInputEnabled = Defaults[.accessibilityInputEnabled] {
         wasAccessibilityInputEnabled = accessibilityInputEnabled
       } else {
-        wasAccessibilityInputEnabled = PostHogSDK.shared.isFeatureEnabled("accessibility_input")
+        wasAccessibilityInputEnabled = AnalyticsManager.shared.isFeatureEnabled("accessibility_input")
       }
 
       if let accessibilityAutoContextEnabled = Defaults[.accessibilityAutoContextEnabled] {
         wasAccessibilityAutoContextEnabled = accessibilityAutoContextEnabled
       } else {
-        wasAccessibilityAutoContextEnabled = PostHogSDK.shared.isFeatureEnabled(
+        wasAccessibilityAutoContextEnabled = AnalyticsManager.shared.isFeatureEnabled(
           "accessibility_autocontext")
       }
 
@@ -146,7 +136,7 @@ class FeatureFlagManager: ObservableObject {
     if let highlightHintMode = Defaults[.highlightHintMode] {
       self.highlightHintMode = highlightHintMode
     } else {
-      if let value = PostHogSDK.shared.getFeatureFlag("highlight_hint_mode") as? String,
+      if let value = AnalyticsManager.shared.getFeatureFlag("highlight_hint_mode") as? String,
         let mode = HighlightHintMode(rawValue: value)
       {
         self.highlightHintMode = mode
