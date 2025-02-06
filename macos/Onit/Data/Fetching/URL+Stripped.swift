@@ -8,11 +8,11 @@
 import Foundation
 
 extension URL {
-    var stripped: URL {
-        guard var urlComponents = URLComponents(url: self, resolvingAgainstBaseURL: true) else {
-            return self
-        }
-        urlComponents.queryItems = nil
-        return urlComponents.url ?? self
+  var stripped: URL {
+    guard var urlComponents = URLComponents(url: self, resolvingAgainstBaseURL: true) else {
+      return self
     }
+    urlComponents.queryItems = nil
+    return urlComponents.url ?? self
+  }
 }

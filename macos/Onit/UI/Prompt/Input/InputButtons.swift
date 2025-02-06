@@ -8,45 +8,45 @@
 import SwiftUI
 
 struct InputButtons: View {
-    @Environment(\.model) var model
-    @Binding var inputExpanded: Bool
-    
-    var input: Input
+  @Environment(\.model) var model
+  @Binding var inputExpanded: Bool
 
-    var body: some View {
-        @Bindable var model = model
+  var input: Input
 
-        Group {
-            if input == model.pendingInput {
-                Button {
-                    model.pendingInput = nil
-                } label: {
-                    Image(.smallRemove)
-                        .renderingMode(.template)
-                }
-                .buttonStyle(DarkerButtonStyle())
-            }
-                
-            Button {
-                inputExpanded.toggle()
-            } label: {
-                Color.clear
-                    .frame(width: 20, height: 20)
-                    .overlay {
-                        Image(.smallChevRight)
-                            .renderingMode(.template)
-                            .rotationEffect(inputExpanded ? .degrees(90) : .zero)
-                    }
-            }
+  var body: some View {
+    @Bindable var model = model
+
+    Group {
+      if input == model.pendingInput {
+        Button {
+          model.pendingInput = nil
+        } label: {
+          Image(.smallRemove)
+            .renderingMode(.template)
         }
-        .foregroundStyle(.gray200)
+        .buttonStyle(DarkerButtonStyle())
+      }
+
+      Button {
+        inputExpanded.toggle()
+      } label: {
+        Color.clear
+          .frame(width: 20, height: 20)
+          .overlay {
+            Image(.smallChevRight)
+              .renderingMode(.template)
+              .rotationEffect(inputExpanded ? .degrees(90) : .zero)
+          }
+      }
     }
+    .foregroundStyle(.gray200)
+  }
 }
 
 #if DEBUG
-#Preview {
+  #Preview {
     ModelContainerPreview {
-        InputButtons(inputExpanded: .constant(true), input: .sample)
+      InputButtons(inputExpanded: .constant(true), input: .sample)
     }
-}
+  }
 #endif

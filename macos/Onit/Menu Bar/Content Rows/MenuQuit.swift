@@ -8,24 +8,24 @@
 import SwiftUI
 
 struct MenuQuit: View {
-    var shortcut: KeyboardShortcut {
-        KeyboardShortcut("q")
-    }
+  var shortcut: KeyboardShortcut {
+    KeyboardShortcut("q")
+  }
 
-    var body: some View {
-        MenuBarRow {
-            NSApplication.shared.terminate(nil)
-        } leading: {
-            Text("Quit Onit Completely")
-                .padding(.leading, 10)
-        } trailing: {
-            KeyboardShortcutView(shortcut: shortcut)
-                .padding(.trailing, 10)
-        }
-        .keyboardShortcut("q")
+  var body: some View {
+    MenuBarRow {
+      NSApplication.shared.terminate(nil)
+    } leading: {
+      Text("Quit Onit Completely")
+        .padding(.leading, 10)
+    } trailing: {
+      KeyboardShortcutView(shortcut: shortcut)
+        .padding(.trailing, 10)
     }
+    .keyboardShortcut("q")
+  }
 }
 
 #Preview {
-    MenuQuit()
+  MenuQuit()
 }

@@ -8,8 +8,8 @@
 import Foundation
 
 extension URLRequest {
-    mutating func addContentType(for method: HTTPMethod, defaultType: String) {
-        guard method.requiresContentType else { return }
-        setValue(defaultType, forHTTPHeaderField: "Content-Type")
-    }
+  mutating func addContentType(for method: HTTPMethod, defaultType: String) {
+    guard method.requiresContentType else { return }
+    setValue(defaultType, forHTTPHeaderField: "Content-Type")
+  }
 }

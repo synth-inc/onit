@@ -6,14 +6,14 @@
 //
 
 struct AccessibilityParsedElements {
-    static let applicationName = "applicationName"
-    static let applicationTitle = "applicationTitle"
-    static let elapsedTime = "elapsedTime"
-    
-    static let screen = "screen"
-    
-    struct Xcode {
-        static let editor = "editor"
-        static let console = "console"
-    }
+  static let applicationName = "applicationName"
+  static let applicationTitle = "applicationTitle"
+  static let elapsedTime = "elapsedTime"
+
+  static let screen = "screen"
+
+  struct Xcode {
+    static let editor = "editor"
+    static let console = "console"
+  }
 }
