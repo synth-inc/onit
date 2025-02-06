@@ -1,5 +1,5 @@
 {
-  "originHash" : "39800b33aed208454a8edc7307fb7a1a229c5005ea555afc4e2693ea6286cb20",
+  "originHash" : "e48c7f63d5d4469189796b9fceb0b824b24945fde48e0bdac90e3d8f3a1cad67",
   "pins" : [
     {
       "identity" : "abseil-cpp-binary",
@@ -17,6 +17,15 @@
       "state" : {
         "revision" : "61b85103a1aeed8218f17c794687781505fbbef5",
         "version" : "11.2.0"
+      }
+    },
+    {
+      "identity" : "defaults",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/sindresorhus/Defaults",
+      "state" : {
+        "revision" : "3d98a76aab39eedf957274e98e15ebe6bb390b87",
+        "version" : "9.0.1"
       }
     },
     {
@@ -164,15 +173,6 @@
       }
     },
     {
-      "identity" : "sagekit",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/blsage/SageKit",
-      "state" : {
-        "revision" : "4c387ef08c93caf7d36ae3cc228d7169c439166b",
-        "version" : "0.0.1"
-      }
-    },
-    {
       "identity" : "sparkle",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/sparkle-project/Sparkle",
@@ -215,6 +215,15 @@
       "state" : {
         "revision" : "ebc7251dd5b37f627c93698e4374084d98409633",
         "version" : "1.28.2"
+      }
+    },
+    {
+      "identity" : "swift-syntax",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/swiftlang/swift-syntax",
+      "state" : {
+        "revision" : "0687f71944021d616d34d922343dcef086855920",
+        "version" : "600.0.1"
       }
     }
   ],

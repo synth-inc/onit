@@ -14,7 +14,6 @@
 		28F57E292CAC9262006AAA8C /* MenuBarExtraAccess in Frameworks */ = {isa = PBXBuildFile; productRef = 28F57E282CAC9262006AAA8C /* MenuBarExtraAccess */; };
 		862BC3C82D50D0D100806B58 /* EventSource in Frameworks */ = {isa = PBXBuildFile; productRef = 862BC3C72D50D0D100806B58 /* EventSource */; };
 		863817352D3FB5F700919BC7 /* PostHog in Frameworks */ = {isa = PBXBuildFile; productRef = 863817342D3FB5F700919BC7 /* PostHog */; };
-		863817372D3FB5F700919BC7 /* phlibwebp in Frameworks */ = {isa = PBXBuildFile; productRef = 863817362D3FB5F700919BC7 /* phlibwebp */; };
 		867A647A2D4AD73A00FD4D80 /* Defaults in Frameworks */ = {isa = PBXBuildFile; productRef = 867A64792D4AD73A00FD4D80 /* Defaults */; };
 		867A647C2D4AD73A00FD4D80 /* DefaultsMacros in Frameworks */ = {isa = PBXBuildFile; productRef = 867A647B2D4AD73A00FD4D80 /* DefaultsMacros */; };
 		86A974C12D4A76F800CF6FCE /* Markdown in Frameworks */ = {isa = PBXBuildFile; productRef = 86A974C02D4A76F800CF6FCE /* Markdown */; };
@@ -548,11 +547,6 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 863817332D3FB5F700919BC7 /* XCRemoteSwiftPackageReference "posthog-ios" */;
 			productName = PostHog;
-		};
-		863817362D3FB5F700919BC7 /* phlibwebp */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 863817332D3FB5F700919BC7 /* XCRemoteSwiftPackageReference "posthog-ios" */;
-			productName = phlibwebp;
 		};
 		867A64792D4AD73A00FD4D80 /* Defaults */ = {
 			isa = XCSwiftPackageProductDependency;

@@ -68,7 +68,7 @@ struct CustomProviderFormView: View {
                     errorMessage = "A provider with this name already exists."
                     return
                 }
-                var provider = CustomProvider(
+                let provider = CustomProvider(
                     name: name,
                     baseURL: baseURL,
                     token: token,

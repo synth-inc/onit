@@ -9,7 +9,7 @@ import EventSource
 
 extension StreamingClient {
     
-    func convertError(endpoint: any Endpoint, error: Error) -> Error {
+    func convertError(endpoint: any StreamingEndpoint, error: Error) -> Error {
         guard let error = error as? EventSourceError else {
             return error
         }

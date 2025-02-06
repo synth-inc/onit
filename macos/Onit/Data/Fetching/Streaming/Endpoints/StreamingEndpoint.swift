@@ -1,5 +1,5 @@
 //
-//  Endpoint.swift
+//  StreamingEndpoint.swift
 //  Onit
 //
 //  Created by Benjamin Sage on 10/4/24.
@@ -8,7 +8,7 @@
 import Foundation
 import EventSource
 
-protocol Endpoint: Sendable {
+protocol StreamingEndpoint: Sendable {
     associatedtype Request: Encodable
     associatedtype Response: Decodable
 
@@ -25,7 +25,7 @@ protocol Endpoint: Sendable {
     func getStreamingErrorMessage(data: Data) -> String?
 }
 
-extension Endpoint {
+extension StreamingEndpoint {
     func getContentFromSSE(event: EVEvent) throws -> String? {
         return nil
     }
