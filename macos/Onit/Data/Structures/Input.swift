@@ -8,13 +8,13 @@
 import Foundation
 
 struct Input: Codable, Equatable {
-  var selectedText: String
-  var application: String?
+    var selectedText: String
+    var application: String?
 }
 
 // MARK: - Sample
 
 extension Input {
-  static let sample = Input(
-    selectedText: "Some input text goes here and looks pretty good", application: "Xcode")
+    static let sample = Input(
+        selectedText: "Some input text goes here and looks pretty good", application: "Xcode")
 }

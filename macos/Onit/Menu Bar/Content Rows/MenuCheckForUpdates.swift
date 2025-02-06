@@ -9,30 +9,30 @@ import Sparkle
 import SwiftUI
 
 struct MenuCheckForUpdates: View {
-  @Environment(\.model) var model
-  @State var checkUpdates: CheckForUpdatesViewModel?
+    @Environment(\.model) var model
+    @State var checkUpdates: CheckForUpdatesViewModel?
 
-  var disabled: Bool {
-    guard let checkUpdates else { return false }
-    return !checkUpdates.canCheckForUpdates
-  }
-
-  var body: some View {
-    MenuBarRow {
-      model.updater.updater.checkForUpdates()
-    } leading: {
-      Text("Check for updates...")
-        .padding(.horizontal, 10)
-    } trailing: {
-
+    var disabled: Bool {
+        guard let checkUpdates else { return false }
+        return !checkUpdates.canCheckForUpdates
     }
-    .disabled(disabled)
-    .task {
-      checkUpdates = CheckForUpdatesViewModel(updater: model.updater.updater)
+
+    var body: some View {
+        MenuBarRow {
+            model.updater.updater.checkForUpdates()
+        } leading: {
+            Text("Check for updates...")
+                .padding(.horizontal, 10)
+        } trailing: {
+
+        }
+        .disabled(disabled)
+        .task {
+            checkUpdates = CheckForUpdatesViewModel(updater: model.updater.updater)
+        }
     }
-  }
 }
 
 #Preview {
-  MenuCheckForUpdates()
+    MenuCheckForUpdates()
 }

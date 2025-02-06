@@ -8,35 +8,35 @@
 import SwiftUI
 
 struct InputBarView: View {
-  @Environment(\.model) var model
+    @Environment(\.model) var model
 
-  var body: some View {
-    VStack(spacing: 0) {
-      if model.currentPrompts?.count ?? 0 > 0 {
-        PromptDivider()
-      }
-      if let pendingInput = model.pendingInput {
-        InputView(input: pendingInput)
-      }
-      FileRow(contextList: model.pendingContextList)
-      TextInputView()
-    }
-    .background {
-      heightListener
-    }
-  }
-
-  var heightListener: some View {
-    GeometryReader { proxy in
-      Color.clear
-        .onAppear {
-          model.inputHeight = proxy.size.height
-          model.adjustPanelSize()
+    var body: some View {
+        VStack(spacing: 0) {
+            if model.currentPrompts?.count ?? 0 > 0 {
+                PromptDivider()
+            }
+            if let pendingInput = model.pendingInput {
+                InputView(input: pendingInput)
+            }
+            FileRow(contextList: model.pendingContextList)
+            TextInputView()
         }
-        .onChange(of: proxy.size.height) { _, new in
-          model.inputHeight = new
-          model.adjustPanelSize()
+        .background {
+            heightListener
         }
     }
-  }
+
+    var heightListener: some View {
+        GeometryReader { proxy in
+            Color.clear
+                .onAppear {
+                    model.inputHeight = proxy.size.height
+                    model.adjustPanelSize()
+                }
+                .onChange(of: proxy.size.height) { _, new in
+                    model.inputHeight = new
+                    model.adjustPanelSize()
+                }
+        }
+    }
 }

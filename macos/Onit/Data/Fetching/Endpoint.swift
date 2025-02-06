@@ -8,15 +8,15 @@
 import Foundation
 
 protocol Endpoint {
-  associatedtype Request: Encodable
-  associatedtype Response: Decodable
+    associatedtype Request: Encodable
+    associatedtype Response: Decodable
 
-  var baseURL: URL { get }
-  var path: String { get }
-  var getParams: [String: String]? { get }
-  var method: HTTPMethod { get }
-  var token: String? { get }
-  var requestBody: Request? { get }
-  var additionalHeaders: [String: String]? { get }
-  var timeout: TimeInterval? { get }
+    var baseURL: URL { get }
+    var path: String { get }
+    var getParams: [String: String]? { get }
+    var method: HTTPMethod { get }
+    var token: String? { get }
+    var requestBody: Request? { get }
+    var additionalHeaders: [String: String]? { get }
+    var timeout: TimeInterval? { get }
 }

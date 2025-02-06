@@ -9,22 +9,22 @@ import KeyboardShortcuts
 import SwiftUI
 
 struct MenuSettings: View {
-  @Environment(\.openSettings) var openSettings
-  @Environment(\.model) var model
+    @Environment(\.openSettings) var openSettings
+    @Environment(\.model) var model
 
-  var body: some View {
-    MenuBarRow {
-      NSApp.activate()
-      if NSApp.isActive {
-        openSettings()
-      }
-    } leading: {
-      Text("Settings...")
-        .padding(.horizontal, 10)
+    var body: some View {
+        MenuBarRow {
+            NSApp.activate()
+            if NSApp.isActive {
+                openSettings()
+            }
+        } leading: {
+            Text("Settings...")
+                .padding(.horizontal, 10)
+        }
     }
-  }
 }
 
 #Preview {
-  MenuSettings()
+    MenuSettings()
 }

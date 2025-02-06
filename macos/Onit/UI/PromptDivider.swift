@@ -8,12 +8,12 @@
 import SwiftUI
 
 struct PromptDivider: View {
-  var body: some View {
-    Color.gray600
-      .frame(height: 1)
-  }
+    var body: some View {
+        Color.gray600
+            .frame(height: 1)
+    }
 }
 
 #Preview {
-  PromptDivider()
+    PromptDivider()
 }

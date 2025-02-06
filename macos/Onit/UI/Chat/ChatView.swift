@@ -2,20 +2,20 @@ import Defaults
 import SwiftUI
 
 struct ChatView: View {
-  @Environment(\.model) var model
+    @Environment(\.model) var model
 
-  @Default(.availableLocalModels) var availableLocalModels
+    @Default(.availableLocalModels) var availableLocalModels
 
-  var body: some View {
-    VStack(spacing: 0) {
-      SetUpDialogs()
-      ChatsView()
-      InputBarView()
+    var body: some View {
+        VStack(spacing: 0) {
+            SetUpDialogs()
+            ChatsView()
+            InputBarView()
+        }
+        .drag()
     }
-    .drag()
-  }
 }
 
 #Preview {
-  ChatView()
+    ChatView()
 }

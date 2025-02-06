@@ -8,19 +8,19 @@
 import SwiftUI
 
 struct MenuHowItWorks: View {
-  var body: some View {
-    MenuBarRow {
+    var body: some View {
+        MenuBarRow {
 
-    } leading: {
-      Text("How it Works")
-        .padding(.leading, 10)
-    } trailing: {
-      Color.clear
-        .frame(width: 1)
+        } leading: {
+            Text("How it Works")
+                .padding(.leading, 10)
+        } trailing: {
+            Color.clear
+                .frame(width: 1)
+        }
     }
-  }
 }
 
 #Preview {
-  MenuHowItWorks()
+    MenuHowItWorks()
 }

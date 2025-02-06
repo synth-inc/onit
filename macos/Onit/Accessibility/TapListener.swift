@@ -11,82 +11,82 @@ import SwiftUI
 @MainActor
 class TapListener {
 
-  // MARK: - Singleton instance
+    // MARK: - Singleton instance
 
-  static let shared = TapListener()
+    static let shared = TapListener()
 
-  // MARK: - Properties
+    // MARK: - Properties
 
-  private var tapObserver: CFMachPort?
+    private var tapObserver: CFMachPort?
 
-  // MARK: - Initializers
+    // MARK: - Initializers
 
-  private init() {}
+    private init() {}
 
-  // MARK: - Functions
+    // MARK: - Functions
 
-  func start() {
-    // Setup mouse click observer
-    let eventMask =
-      (1 << CGEventType.leftMouseUp.rawValue) | (1 << CGEventType.rightMouseUp.rawValue)
+    func start() {
+        // Setup mouse click observer
+        let eventMask =
+            (1 << CGEventType.leftMouseUp.rawValue) | (1 << CGEventType.rightMouseUp.rawValue)
 
-    if let eventTap = CGEvent.tapCreate(
-      tap: .cghidEventTap,
-      place: .headInsertEventTap,
-      options: .defaultTap,
-      eventsOfInterest: CGEventMask(eventMask),
-      callback: { (proxy, type, event, refcon) -> Unmanaged<CGEvent>? in
-        DispatchQueue.main.async {
-          switch type {
-          case .leftMouseDown, .rightMouseDown:
-            Task { @MainActor in
+        if let eventTap = CGEvent.tapCreate(
+            tap: .cghidEventTap,
+            place: .headInsertEventTap,
+            options: .defaultTap,
+            eventsOfInterest: CGEventMask(eventMask),
+            callback: { (proxy, type, event, refcon) -> Unmanaged<CGEvent>? in
+                DispatchQueue.main.async {
+                    switch type {
+                    case .leftMouseDown, .rightMouseDown:
+                        Task { @MainActor in
 
-            }
-          //                        print("Mouse down detected!")
-          case .leftMouseUp, .rightMouseUp:
-            //                        print("Mouse up detected!")
-            Task { @MainActor in
-              // self.handleMouseUp()
-            }
-          default:
-            break
-          }
+                        }
+                    //                        print("Mouse down detected!")
+                    case .leftMouseUp, .rightMouseUp:
+                        //                        print("Mouse up detected!")
+                        Task { @MainActor in
+                            // self.handleMouseUp()
+                        }
+                    default:
+                        break
+                    }
+                }
+                return Unmanaged.passUnretained(event)  // Ensure the event is returned
+            },
+            userInfo: nil
+        ) {
+            self.tapObserver = eventTap
+            let runLoopSource = CFMachPortCreateRunLoopSource(kCFAllocatorDefault, eventTap, 0)
+            CFRunLoopAddSource(CFRunLoopGetMain(), runLoopSource, .commonModes)
+            CGEvent.tapEnable(tap: eventTap, enable: true)
+        } else {
+            print("Failed to create event tap.")
         }
-        return Unmanaged.passUnretained(event)  // Ensure the event is returned
-      },
-      userInfo: nil
-    ) {
-      self.tapObserver = eventTap
-      let runLoopSource = CFMachPortCreateRunLoopSource(kCFAllocatorDefault, eventTap, 0)
-      CFRunLoopAddSource(CFRunLoopGetMain(), runLoopSource, .commonModes)
-      CGEvent.tapEnable(tap: eventTap, enable: true)
-    } else {
-      print("Failed to create event tap.")
-    }
-  }
-
-  func stop() {
-    guard let tapObserver = self.tapObserver else {
-      print("No active tap observer to stop.")
-      return
     }
 
-    CGEvent.tapEnable(tap: tapObserver, enable: false)
+    func stop() {
+        guard let tapObserver = self.tapObserver else {
+            print("No active tap observer to stop.")
+            return
+        }
 
-    let runLoopSource = CFMachPortCreateRunLoopSource(kCFAllocatorDefault, tapObserver, 0)
-    CFRunLoopRemoveSource(CFRunLoopGetMain(), runLoopSource, .commonModes)
+        CGEvent.tapEnable(tap: tapObserver, enable: false)
 
-    CFMachPortInvalidate(tapObserver)
-    self.tapObserver = nil
-  }
+        let runLoopSource = CFMachPortCreateRunLoopSource(kCFAllocatorDefault, tapObserver, 0)
+        CFRunLoopRemoveSource(CFRunLoopGetMain(), runLoopSource, .commonModes)
 
-  //    private func handleMouseUp() {
-  //        if appElement != nil {
-  //            print("Mouse up!")
-  //        }
-  //        else {
-  //            print("No app ELement, skipping")
-  //        }
-  //    }
+        CFMachPortInvalidate(tapObserver)
+        self.tapObserver = nil
+    }
+
+    //    private func handleMouseUp() {
+    //        if appElement != nil {
+    //            print("Mouse up!")
+    //        }
+    //        else {
+    //            print("No app ELement, skipping")
+    //        }
+    //    }
 
 }

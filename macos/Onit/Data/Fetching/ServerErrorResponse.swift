@@ -8,6 +8,6 @@
 import Foundation
 
 struct ServerErrorResponse: Decodable {
-  let error: Bool
-  let message: String
+    let error: Bool
+    let message: String
 }

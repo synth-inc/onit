@@ -9,108 +9,108 @@ import Defaults
 import SwiftUI
 
 struct GeneratedToolbar: View {
-  @Environment(\.model) var model
-  @Default(.mode) var mode
+    @Environment(\.model) var model
+    @Default(.mode) var mode
 
-  var prompt: Prompt
+    var prompt: Prompt
 
-  var body: some View {
-    HStack(spacing: 8) {
-      copy
-      regenerate
-      more
-      Spacer()
-      selector
-      //            insert
+    var body: some View {
+        HStack(spacing: 8) {
+            copy
+            regenerate
+            more
+            Spacer()
+            selector
+            //            insert
+        }
+        .foregroundStyle(.FG)
     }
-    .foregroundStyle(.FG)
-  }
 
-  @ViewBuilder
-  var copy: some View {
-    if let generation = prompt.generation {
-      CopyButton(text: generation, stripMarkdown: true)
+    @ViewBuilder
+    var copy: some View {
+        if let generation = prompt.generation {
+            CopyButton(text: generation, stripMarkdown: true)
+        }
     }
-  }
 
-  var regenerate: some View {
-    Button {
-      model.generate(prompt)
-    } label: {
-      Image(.arrowsSpin)
-        .padding(4)
+    var regenerate: some View {
+        Button {
+            model.generate(prompt)
+        } label: {
+            Image(.arrowsSpin)
+                .padding(4)
+        }
+        .tooltip(prompt: "Retry")
     }
-    .tooltip(prompt: "Retry")
-  }
 
-  var more: some View {
-    Button {
+    var more: some View {
+        Button {
 
-    } label: {
-      Image(.moreHorizontal)
-        .padding(4)
+        } label: {
+            Image(.moreHorizontal)
+                .padding(4)
+        }
+        .tooltip(prompt: "More")
     }
-    .tooltip(prompt: "More")
-  }
 
-  @ViewBuilder
-  var selector: some View {
-    if prompt.responses.count > 1 {
-      ToggleOutputsView(prompt: prompt)
-        .padding(.trailing, 8)
+    @ViewBuilder
+    var selector: some View {
+        if prompt.responses.count > 1 {
+            ToggleOutputsView(prompt: prompt)
+                .padding(.trailing, 8)
+        }
     }
-  }
 
-  var insertShortcut: KeyboardShortcut {
-    .init("y")
-  }
-
-  var insert: some View {
-    Button {
-      if prompt.generationIndex != -1 && !prompt.responses.isEmpty {
-        let text = prompt.responses[prompt.generationIndex].text
-        HighlightHintWindowController.shared.insertText(text)
-        model.closePanel()
-      } else {
-        print("Not generated: \(prompt.generationState ?? .done)")
-      }
-    } label: {
-      HStack(spacing: 4) {
-        Text("Insert")
-          .appFont(.medium14)
-          .padding(.leading, 4)
-        KeyboardShortcutView(shortcut: insertShortcut)
-          .appFont(.medium12)
-          .padding(.horizontal, 4)
-          .padding(.vertical, 5)
-          .background {
-            RoundedRectangle(cornerRadius: 7)
-              .fill(.blue350)
-          }
-      }
-      .padding(4)
-      .background {
-        RoundedRectangle(cornerRadius: 10)
-          .fill(mode == .local ? .limeGreen : .blue400)
-      }
-      .foregroundStyle(.FG)
+    var insertShortcut: KeyboardShortcut {
+        .init("y")
     }
-    .keyboardShortcut(insertShortcut)
-    .buttonStyle(.plain)
-    .tooltip(
-      prompt: "Send",
-      shortcut: .keyboardShortcuts(.enter),
-      background: false
-    )
-  }
+
+    var insert: some View {
+        Button {
+            if prompt.generationIndex != -1 && !prompt.responses.isEmpty {
+                let text = prompt.responses[prompt.generationIndex].text
+                HighlightHintWindowController.shared.insertText(text)
+                model.closePanel()
+            } else {
+                print("Not generated: \(prompt.generationState ?? .done)")
+            }
+        } label: {
+            HStack(spacing: 4) {
+                Text("Insert")
+                    .appFont(.medium14)
+                    .padding(.leading, 4)
+                KeyboardShortcutView(shortcut: insertShortcut)
+                    .appFont(.medium12)
+                    .padding(.horizontal, 4)
+                    .padding(.vertical, 5)
+                    .background {
+                        RoundedRectangle(cornerRadius: 7)
+                            .fill(.blue350)
+                    }
+            }
+            .padding(4)
+            .background {
+                RoundedRectangle(cornerRadius: 10)
+                    .fill(mode == .local ? .limeGreen : .blue400)
+            }
+            .foregroundStyle(.FG)
+        }
+        .keyboardShortcut(insertShortcut)
+        .buttonStyle(.plain)
+        .tooltip(
+            prompt: "Send",
+            shortcut: .keyboardShortcuts(.enter),
+            background: false
+        )
+    }
 }
 
 #if DEBUG
-  #Preview {
-    ModelContainerPreview {
-      // TODO bring 'em back
-      //        GeneratedToolbar()
-      //            .padding()
+    #Preview {
+        ModelContainerPreview {
+            // TODO bring 'em back
+            //        GeneratedToolbar()
+            //            .padding()
+        }
     }
-  }
 #endif

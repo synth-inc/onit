@@ -9,38 +9,38 @@ import AppKit
 import SwiftUI
 
 struct CaptureNSView: ViewModifier {
-  let callback: (NSView) -> Void
+    let callback: (NSView) -> Void
 
-  func body(content: Content) -> some View {
-    content.background {
-      CaptureNSViewRepresentable(onReceiveNSView: callback)
-        .frame(width: 0, height: 0)
+    func body(content: Content) -> some View {
+        content.background {
+            CaptureNSViewRepresentable(onReceiveNSView: callback)
+                .frame(width: 0, height: 0)
+        }
     }
-  }
 }
 
 struct CaptureNSViewRepresentable: NSViewRepresentable {
-  let onReceiveNSView: (NSView) -> Void
+    let onReceiveNSView: (NSView) -> Void
 
-  func makeNSView(context: NSViewRepresentableContext<CaptureNSViewRepresentable>) -> NSView {
-    let nsView = NSView(frame: .zero)
+    func makeNSView(context: NSViewRepresentableContext<CaptureNSViewRepresentable>) -> NSView {
+        let nsView = NSView(frame: .zero)
 
-    DispatchQueue.main.async {
-      self.onReceiveNSView(nsView)
+        DispatchQueue.main.async {
+            self.onReceiveNSView(nsView)
+        }
+
+        return nsView
     }
 
-    return nsView
-  }
-
-  func updateNSView(
-    _ nsView: NSView, context: NSViewRepresentableContext<CaptureNSViewRepresentable>
-  ) {
-    // No update needed
-  }
+    func updateNSView(
+        _ nsView: NSView, context: NSViewRepresentableContext<CaptureNSViewRepresentable>
+    ) {
+        // No update needed
+    }
 }
 
 extension View {
-  func captureNSView(_ callback: @escaping (NSView) -> Void) -> some View {
-    self.modifier(CaptureNSView(callback: callback))
-  }
+    func captureNSView(_ callback: @escaping (NSView) -> Void) -> some View {
+        self.modifier(CaptureNSView(callback: callback))
+    }
 }
