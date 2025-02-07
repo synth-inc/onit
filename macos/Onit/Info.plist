@@ -44,7 +44,7 @@
 	<key>PostHogHost</key>
 	<string>https://us.i.posthog.com</string>
 	<key>SUFeedURL</key>
-	<string>https://onit-server-b3c3746e04e9.herokuapp.com/appcast.xml</string>
+	<string>https://onit-server-v2-a93590258ea2.herokuapp.com/appcast.xml</string>
 	<key>SUPublicEDKey</key>
 	<string>9eeM1iClVE+IwsTY2zzNGfHhRd9I4mUy2/VlPdHWzoQ=</string>
 </dict>
