@@ -162,9 +162,12 @@ class FeatureFlagManager: ObservableObject {
         showLegacyClientCantUpdateDialog = PostHogSDK.shared.isFeatureEnabled("show_legacy_client_cant_update_dialog")
         
         // Get demo video URL from feature flag
-        if let payload = PostHogSDK.shared.getFeatureFlag("autocontext_demo_video_url") as? [String: Any],
-           let url = payload["url"] as? String {
-            autocontextDemoVideoUrl = url
+        if let rawValue = PostHogSDK.shared.getFeatureFlagPayload("autocontext_demo_video_url") {
+            if let payload = rawValue as? [String: Any], let urlString = payload["url"] as? String {
+                autocontextDemoVideoUrl = urlString
+            } else {
+                autocontextDemoVideoUrl = nil
+            }
         } else {
             autocontextDemoVideoUrl = nil
         }
