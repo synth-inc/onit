@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import KeyboardShortcuts
 
 struct MenuOpenOnitButton: View {
     @Environment(\.model) var model
@@ -30,8 +31,12 @@ struct MenuOpenOnitButton: View {
             }
             .padding(.leading, 5)
         } trailing: {
-            KeyboardShortcutView(shortcut: shortcut)
-                .padding(.trailing, 10)
+            KeyboardShortcutView(
+                shortcut: KeyboardShortcuts.getShortcut(
+                    for: .launchWithAutoContext)?.native
+            )
+            .foregroundStyle(.gray200)
+            .appFont(.medium13)
         }
     }
 }
