@@ -27,6 +27,12 @@ struct SettingsView: View {
                     Label("Models", systemImage: "cpu")
                 }
                 .tag(SettingsTab.models)
+            
+            SystemPromptTab()
+                .tabItem {
+                    Label("Prompts", systemImage: "message")
+                }
+                .tag(SettingsTab.prompts)
 
             ShortcutsTab()
                 .tabItem {

@@ -23,6 +23,44 @@ actor PreviewSampleData {
         CustomProvider(
             name: "Provider name", baseURL: "http://google.com", token: "aiZafeoi", models: [])
     }()
+    
+    @MainActor
+    static let systemPrompt: SystemPrompt = {
+        SystemPrompt(name: "Output-only response",
+                     prompt: "Based on the provided instructions, either provide the output or answer any questions related to it. Provide the response without any additional comments. Provide the output ready to go.",
+                     applications: [],
+                     tags: ["sales@checkbin.dev", "python"])
+    }()
+    
+    @MainActor
+    static let systemPrompts: [SystemPrompt] = {
+        [
+            SystemPrompt(name: "Output-only response",
+                         prompt: "Based on the provided instructions, either provide the output or answer any questions related to it. Provide the response without any additional comments. Provide the output ready to go.",
+                         applications: [],
+                         tags: ["sales@checkbin.dev", "python"]),
+            SystemPrompt(name: "Output-only response",
+                         prompt: "Based on the provided instructions, either provide the output or answer any questions related to it. Provide the response without any additional comments. Provide the output ready to go.",
+                         applications: [],
+                         tags: ["sales@checkbin.dev", "python"]),
+            SystemPrompt(name: "Output-only response",
+                         prompt: "Based on the provided instructions, either provide the output or answer any questions related to it. Provide the response without any additional comments. Provide the output ready to go.",
+                         applications: [],
+                         tags: ["sales@checkbin.dev", "python"]),
+            SystemPrompt(name: "Output-only response",
+                         prompt: "Based on the provided instructions, either provide the output or answer any questions related to it. Provide the response without any additional comments. Provide the output ready to go.",
+                         applications: [],
+                         tags: ["sales@checkbin.dev", "python"]),
+            SystemPrompt(name: "Output-only response",
+                         prompt: "Based on the provided instructions, either provide the output or answer any questions related to it. Provide the response without any additional comments. Provide the output ready to go.",
+                         applications: [],
+                         tags: ["sales@checkbin.dev", "python"]),
+            SystemPrompt(name: "Output-only response",
+                         prompt: "Based on the provided instructions, either provide the output or answer any questions related to it. Provide the response without any additional comments. Provide the output ready to go.",
+                         applications: [],
+                         tags: ["sales@checkbin.dev", "python"])
+        ]
+    }()
 
     @MainActor
     static var inMemoryContainer: () throws -> ModelContainer = {
