@@ -29,6 +29,23 @@ We are building Onit based on these core beliefs:
 4. **Customizability:** Onit is your assistant. You should be able to configure it to your liking.
 5. **Extensibility:** Onit should allow the community to build and share extensions, making it more useful for everyone. 
 
+## ✨ V2 Features ([Demo here](https://www.youtube.com/watch?v=-HmAp4dDHMk))- Introducing Auto-Context! 
+
+- **Auto-Context from Highlights ✍️**  Highlight text on your computer and launch Onit: Onit will read the highlighted text and add it to your prompt as context.
+
+<div align="center">
+  <img src="https://syntheticco.blob.core.windows.net/onit-media/autocontext_from_highlights.gif" alt="Auto-Context from Highlights" width="800" height="auto">
+</div>
+
+- **Auto-Context from Current Window 🪟** Launch Onit with a new shortcut (default: Cmd+Shift+Zero) and Onit will add text from your active application as context to your prompt.
+
+<div align="center">
+  <img src="https://syntheticco.blob.core.windows.net/onit-media/autocontext_from_current_window_full.gif" alt="Auto-Context from Current Window" width="800" height="auto">
+</div>
+
+Other V2 features include [Implementing DeepSeek](https://github.com/synth-inc/onit/pull/47#issuecomment-2644300001), [Custom Local Endpoints](https://github.com/synth-inc/onit/pull/27), [Custom Remote Providers (like OpenRouter, Groq, etc)](https://github.com/synth-inc/onit/pull/46), Prompt Position Options (top-left, top-right, top-center), Local Model Options (top_k, top_p, temperature, etc), and more!
+
+
 ## ✨ Features
 
 - **🤖 Local Mode:** Chat with any model running locally on Ollama - no internet required
@@ -73,6 +90,7 @@ We are building Onit based on these core beliefs:
 - No server component in V1
 - Local requests are handled locally
 - Remote requests go directly to model providers' APIs
+- Auto-Context is not uploaded until you hit the 'submit' button
 - Only crash reports are collected (via Firebase) and non-personal analytics (via PostHog)
 
 ## 💡 Future Roadmap
