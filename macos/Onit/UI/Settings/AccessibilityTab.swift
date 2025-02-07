@@ -1,6 +1,8 @@
 import KeyboardShortcuts
 import PostHog
 import SwiftUI
+import KeyboardShortcuts
+import AppKit
 
 struct AccessibilityTab: View {
 
@@ -58,20 +60,22 @@ struct AccessibilityTab: View {
                 .foregroundStyle(.gray200)
                 .lineSpacing(2)
 
-                Button {
-                    // TODO: Add demo video action
-                } label: {
-                    HStack(spacing: 6) {
-                        Image(.playButton)
-                            .resizable()
-                            .frame(width: 16, height: 16)
-                        Text("Watch the demo")
-                            .font(.system(size: 13))
+                if let demoUrl = featureFlagsManager.autocontextDemoVideoUrl {
+                    Button {
+                        NSWorkspace.shared.open(URL(string: demoUrl)!)
+                    } label: {
+                        HStack(spacing: 6) {
+                            Image(.playButton)
+                                .resizable()
+                                .frame(width: 16, height: 16)
+                            Text("Watch the demo")
+                                .font(.system(size: 13))
+                        }
+                        .padding(.vertical, 6)
                     }
-                    .padding(.vertical, 6)
+                    .background(Color(.blue))
+                    .clipShape(RoundedRectangle(cornerRadius: 6))
                 }
-                .background(Color(.blue))
-                .clipShape(RoundedRectangle(cornerRadius: 6))
             }
 
             Section {

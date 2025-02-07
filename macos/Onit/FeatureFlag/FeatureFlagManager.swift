@@ -25,7 +25,8 @@ class FeatureFlagManager: ObservableObject {
     @Published private(set) var highlightHintMode: HighlightHintMode = .none
 
     @Published private(set) var accessibility: Bool = false
-
+    @Published private(set) var autocontextDemoVideoUrl: String? = nil
+    
     private var wasAccessibilityInputEnabled: Bool = false
     private var wasAccessibilityAutoContextEnabled: Bool = false
 
@@ -154,6 +155,14 @@ class FeatureFlagManager: ObservableObject {
             } else {
                 self.highlightHintMode = .none
             }
+        }
+
+        // Get demo video URL from feature flag
+        if let payload = PostHogSDK.shared.getFeatureFlag("autocontext_demo_video_url") as? [String: Any],
+           let url = payload["url"] as? String {
+            autocontextDemoVideoUrl = url
+        } else {
+            autocontextDemoVideoUrl = nil
         }
     }
 }
