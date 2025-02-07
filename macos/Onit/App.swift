@@ -128,6 +128,7 @@ struct App: SwiftUI.App {
 
         Settings {
             SettingsView()
+                .modelContainer(model.container)
                 .onAppear {
                     if let window = NSApplication.shared.windows.first(where: {
                         $0.contentViewController is NSHostingController<SettingsView>
