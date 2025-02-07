@@ -91,7 +91,6 @@ import SwiftUI
             } else if localModel == nil || !models.contains(localModel!) {
                 Defaults[.localModel] = models[0]
             }
-            print("KNA - OnitModel fetchLocalModels")
             if remoteModels.listedModels.isEmpty {
                 Defaults[.mode] = .local
             }

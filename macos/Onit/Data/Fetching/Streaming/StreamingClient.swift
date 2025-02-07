@@ -74,22 +74,18 @@ actor StreamingClient {
                 for await event in await dataTask.events() {
                     switch event {
                     case .open:
-                        print("open")
                         break
                     case .event(let event):
-                        print("event")
                         if let response = try? endpoint.getContentFromSSE(event: event) {
                             continuation.yield(response)
                         } else {
                             continuation.yield("")
                         }
                     case .error(let error):
-                        print("error \(error)")
                         continuation.finish(
                             throwing: convertError(
                                 endpoint: endpoint, error: error))
                     case .closed:
-                        print("closed")
                         continuation.finish()
                     }
                 }
