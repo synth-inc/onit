@@ -28,6 +28,7 @@ class FeatureFlagManager: ObservableObject {
     
     @Published private(set) var accessibility: Bool = false
     @Published private(set) var showLegacyClientCantUpdateDialog: Bool = false
+    @Published private(set) var autocontextDemoVideoUrl: String? = nil
     
     private var wasAccessibilityInputEnabled: Bool = false
     private var wasAccessibilityAutoContextEnabled: Bool = false
@@ -159,5 +160,13 @@ class FeatureFlagManager: ObservableObject {
         
         // Check legacy client update dialog flag
         showLegacyClientCantUpdateDialog = PostHogSDK.shared.isFeatureEnabled("show_legacy_client_cant_update_dialog")
+        
+        // Get demo video URL from feature flag
+        if let payload = PostHogSDK.shared.getFeatureFlag("autocontext_demo_video_url") as? [String: Any],
+           let url = payload["url"] as? String {
+            autocontextDemoVideoUrl = url
+        } else {
+            autocontextDemoVideoUrl = nil
+        }
     }
 }
