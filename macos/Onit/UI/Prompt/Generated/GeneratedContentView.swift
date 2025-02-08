@@ -65,7 +65,13 @@ extension Theme {
                 ForegroundColor(.pink)
             }
             .codeBlock { configuration in
-                CodeBlockView(configuration: configuration)
+                if configuration.language == "math" || configuration.language == "latex" {
+                    LaTeXView(latex: configuration.content)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 8)
+                } else {
+                    CodeBlockView(configuration: configuration)
+                }
             }
     }
 }
@@ -73,12 +79,20 @@ extension Theme {
 #Preview {
     GeneratedContentView(
         result: """
+            Here's a code example:
+            
             ```swift
             struct ContentView: View {
                 var body: some View {
                     Text("Hello world")
                 }
             }
+            ```
+            
+            And here's a math equation:
+            
+            ```math
+            f(x) = \\int_{-\\infty}^\\infty \\hat f(\\xi)\\,e^{2 \\pi i \\xi x} \\,d\\xi
             ```
             """
     )
