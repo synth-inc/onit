@@ -30,21 +30,23 @@ struct GeneratedContentView: View {
     }
 
     var content: some View {
-        Markdown(result)
-            .markdownTheme(.custom)
-            .textSelection(.enabled)
-            .multilineTextAlignment(.leading)
-            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-            .fixedSize(horizontal: false, vertical: true)
-            .padding(.horizontal, 16)
-            .background {
-                GeometryReader { proxy in
-                    Color.clear
-                        .onAppear {
-                            contentHeight = proxy.size.height
-                        }
+        ScrollView {
+            Markdown(result)
+                .markdownTheme(.custom)
+                .textSelection(.enabled)
+                .multilineTextAlignment(.leading)
+                .frame(maxWidth: .infinity, alignment: .topLeading)
+                .padding(.horizontal, 16)
+                .background {
+                    GeometryReader { proxy in
+                        Color.clear
+                            .onAppear {
+                                contentHeight = proxy.size.height
+                            }
+                    }
                 }
-            }
+        }
+        .frame(maxHeight: height)
     }
 }
 
