@@ -3,19 +3,19 @@ import WebKit
 
 struct LaTeXView: NSViewRepresentable {
     let latex: String
-    
-    func makeNSView(context: Context) -> WKWebView {
+
+    func makeNSView(context: NSViewRepresentableContext<LaTeXView>) -> WKWebView {
         let webView = WKWebView()
         webView.navigationDelegate = context.coordinator
         webView.setValue(false, forKey: "drawsBackground")
         return webView
     }
     
-    func updateNSView(_ webView: WKWebView, context: Context) {
+    func updateNSView(_ nsView: WKWebView, context: NSViewRepresentableContext<LaTeXView>) {
         let html = """
         <!DOCTYPE html>
         <html>
-        <head>
+        <head> 
             <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
             <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
             <style>
@@ -34,7 +34,7 @@ struct LaTeXView: NSViewRepresentable {
         </body>
         </html>
         """
-        webView.loadHTMLString(html, baseURL: nil)
+        nsView.loadHTMLString(html, baseURL: nil)
     }
     
     func makeCoordinator() -> Coordinator {
