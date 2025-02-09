@@ -159,6 +159,7 @@ extension OnitModel {
         let eventProperties: [String: Any] = [
             "prompt_mode": Defaults[.mode].rawValue,
             "prompt_model": modelName,
+            "accessibility_enabled": FeatureFlagManager.shared.accessibility
         ]
         PostHogSDK.shared.capture(eventName, properties: eventProperties)
     }
