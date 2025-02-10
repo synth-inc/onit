@@ -9,6 +9,7 @@ import Defaults
 import Foundation
 import PostHog
 import EventSource
+import SwiftData
 
 extension OnitModel {
     func createAndSavePrompt() -> Prompt {
@@ -97,8 +98,15 @@ extension OnitModel {
                             "Mismatched array lengths: instructions, inputs, files, autoContexts and images must be the same length, and one longer than responses."
                     )
                 }
-                let systemMessage =
-                    "Based on the provided instructions, either provide the output or answer any questions related to it. Provide the response without any additional comments. Provide the output ready to go."
+                guard let storedPrompt = try? container.mainContext.fetch(FetchDescriptor<SystemPrompt>())
+                    .first(where: { $0.id == Defaults[.systemPromptId] }) else {
+                    throw FetchingError.invalidRequest(
+                        message:
+                            "Cannot find system prompt."
+                    )
+                }
+                
+                let systemMessage = storedPrompt.prompt
                 
                 streamedResponse = ""
                 

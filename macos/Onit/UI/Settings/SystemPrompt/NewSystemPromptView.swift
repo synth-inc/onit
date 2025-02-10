@@ -45,75 +45,81 @@ struct NewSystemPromptView: View {
     }
     
     var body: some View {
-        titleBar
-        ScrollView {
-            VStack(alignment: .leading, spacing: 16) {
-                
-                
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("Name")
-                        .font(.headline)
-                    TextField("Helpful Assistant", text: $savedPrompt.name)
-                        .textFieldStyle(RoundedBorderTextFieldStyle())
-                }
-                
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("System Prompt*")
-                        .font(.headline)
-                    VStack {
-                        TextEditor(text: $savedPrompt.prompt)
-                            .textEditorStyle(.plain)
-                            .frame(height: 100)
-                            .foregroundStyle(promptIsPlaceholder ? .gray : .white)
-                            .focused($isFocused)
-                    }
-                    .padding(.horizontal, 4)
-                    .padding(.vertical, 8)
-                    .background {
-                        RoundedRectangle(cornerRadius: 8)
-                            .stroke(.gray500, lineWidth: 1)
-                    }
-                }
-                
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("Rules for suggestions")
-                        .font(.headline)
-                    Text("Make this system prompt the default suggestion for specific applications and keywords.")
-                }
-                
-                applications
-                
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("Tags")
-                        .font(.headline)
-                    TextField("Separate with commas", text: keywordsBinding)
-                        .textFieldStyle(RoundedBorderTextFieldStyle())
-                    Text("e.g. frameworks, languages, emails, websites, topics...")
-                }
-                if !isSaved {
-                    HStack {
-                        Spacer()
-                        Button(action: {
-                            isSaved = true
-                            dismiss()
-                        }) {
-                            Text("Save")
-                        }
-                        .keyboardShortcut(.defaultAction)
-                        .disabled(saveButtonDisabled)
-                        .cornerRadius(8)
-                    }
-                }
-                
-                Spacer()
-            }
-            .padding()
+        if #available(macOS 15.0, *) {
+            content
+                .presentationSizing(.fitted)
+        } else {
+            content
+                .frame(height: 570)
         }
-        .onChange(of: isFocused, { _, new in
-            if new && promptIsPlaceholder {
-                self.savedPrompt.prompt = ""
+    }
+    
+    var content: some View {
+        VStack {
+            titleBar
+            ScrollView {
+                VStack(alignment: .leading, spacing: 16) {
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Name")
+                            .font(.headline)
+                        TextField("Helpful Assistant", text: $savedPrompt.name)
+                            .textFieldStyle(RoundedBorderTextFieldStyle())
+                    }
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("System Prompt*")
+                            .font(.headline)
+                        VStack {
+                            TextEditor(text: $savedPrompt.prompt)
+                                .textEditorStyle(.plain)
+                                .frame(height: 100)
+                                .foregroundStyle(promptIsPlaceholder ? .gray : .white)
+                                .focused($isFocused)
+                        }
+                        .padding(.horizontal, 4)
+                        .padding(.vertical, 8)
+                        .background {
+                            RoundedRectangle(cornerRadius: 8)
+                                .stroke(.gray500, lineWidth: 1)
+                        }
+                    }
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Rules for suggestions")
+                            .font(.headline)
+                        Text("Make this system prompt the default suggestion for specific applications and keywords.")
+                    }
+                    applications
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Tags")
+                            .font(.headline)
+                        TextField("Separate with commas", text: keywordsBinding)
+                            .textFieldStyle(RoundedBorderTextFieldStyle())
+                        Text("e.g. frameworks, languages, emails, websites, topics...")
+                    }
+                    if !isSaved {
+                        HStack {
+                            Spacer()
+                            Button(action: {
+                                isSaved = true
+                                dismiss()
+                            }) {
+                                Text("Save")
+                            }
+                            .keyboardShortcut(.defaultAction)
+                            .disabled(saveButtonDisabled)
+                            .cornerRadius(8)
+                        }
+                    }
+                    
+                    Spacer()
+                }
+                .padding()
             }
-        })
+            .onChange(of: isFocused, { _, new in
+                if new && promptIsPlaceholder {
+                    self.savedPrompt.prompt = ""
+                }
+            })
+        }
     }
     
     var titleBar: some View {

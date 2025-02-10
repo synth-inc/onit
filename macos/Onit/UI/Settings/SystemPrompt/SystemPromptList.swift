@@ -60,7 +60,7 @@ struct SystemPromptList: View {
         }
     }
     
-    private func selectionChange(promptId: UUID) {
+    private func selectionChange(promptId: String) {
         guard let selectedPrompt = prompts.first(where: { $0.id == promptId }) else { return }
         
         self.selectedPrompt = selectedPrompt
