@@ -10,6 +10,7 @@ import SwiftUI
 struct CustomTextField: View {
     
     struct Config {
+        var background: Color = .clear
         var clear: Bool = false
         var leftIcon: ImageResource? = nil
     }
@@ -70,10 +71,12 @@ struct CustomTextField: View {
                     .padding(.leading, 4)
             }
         }
+        .background(config.background)
+        .cornerRadius(5)
         .overlay(
             RoundedRectangle(cornerRadius: 5)
                 .stroke(lineWidth: 1.0)
-                .fill(.gray500)
+                .fill(.gray700)
         )
     }
 }

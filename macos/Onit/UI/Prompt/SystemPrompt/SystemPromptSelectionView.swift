@@ -1,0 +1,128 @@
+//
+//  SystemPromptSelectionView.swift
+//  Onit
+//
+//  Created by Kévin Naudin on 07/02/2025.
+//
+
+import SwiftData
+import SwiftUI
+
+struct SystemPromptSelectionView: View {
+    @Environment(\.model) private var model
+    @Environment(\.openSettings) private var openSettings
+    
+    @Query var prompts: [SystemPrompt]
+    
+    @Binding var showNewPrompt: Bool
+    @State private var searchText = ""
+    
+    private var suggestedPrompts: [SystemPrompt] {
+        // TODO: Rework [SystemPrompt.outputOnly]
+        []
+    }
+    
+    private var allPrompts: [SystemPrompt] {
+        prompts.filter { prompt in
+            !suggestedPrompts.contains { $0.id == prompt.id }
+        }
+    }
+    
+    private var filteredPrompts: [SystemPrompt] {
+        let clearFilter = searchText
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .lowercased()
+        
+        return if clearFilter.isEmpty {
+            prompts
+        } else {
+            prompts.filter {
+                $0.name.lowercased().contains(clearFilter) ||
+                $0.prompt.lowercased().contains(clearFilter) ||
+                $0.applications.contains(where: { url in
+                    url.deletingPathExtension().lastPathComponent.lowercased().contains(clearFilter)
+                }) ||
+                $0.tags.joined(separator: ",").lowercased().contains(clearFilter)
+            }
+        }
+    }
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("System Prompts")
+            
+            let config = CustomTextField.Config(background: .gray900, clear: true, leftIcon: .search)
+            CustomTextField("Search by prompts, apps or tags", text: $searchText, config: config)
+            
+            promptsList
+            
+            buttons
+        }
+        .padding(16)
+        .background(.black)
+    }
+    
+    var promptsList: some View {
+        ScrollViewReader { proxy in
+            List {
+                EmptyView()
+                    .id("topScrollPoint")
+                if !suggestedPrompts.isEmpty && searchText.isEmpty {
+                    sectionView(title: "Suggested", prompts: suggestedPrompts)
+                    sectionView(title: "All", prompts: allPrompts)
+                } else {
+                    sectionView(title: nil, prompts: filteredPrompts)
+                }
+            }
+            .frame(height: 244)
+            .padding(EdgeInsets(top: 0, leading: -8, bottom: 0, trailing: -8))
+            .clipShape(Rectangle())
+            .listStyle(.plain)
+            .scrollContentBackground(.hidden)
+            .onChange(of: filteredPrompts) { _, _ in
+                withAnimation(.easeIn(duration: 1.0)) {
+                    proxy.scrollTo("topScrollPoint")
+                }
+            }
+        }
+    }
+    
+    private func sectionView(title: String?, prompts: [SystemPrompt]) -> some View {
+        VStack(alignment: .leading) {
+            if let title = title {
+                Text(title)
+                    .foregroundStyle(.gray200)
+            }
+            
+            ForEach(prompts, id: \.id) { prompt in
+                SystemPromptSelectionRowView(prompt: prompt)
+            }
+        }
+        .listRowSeparator(.hidden)
+    }
+    
+    private var buttons: some View {
+        HStack {
+            Button {
+                model.setSettingsTab(tab: .prompts)
+                openSettings()
+            } label: {
+                Label("Settings", systemImage: "message")
+            }
+            .buttonStyle(.plain)
+            
+            Spacer()
+            
+            Button {
+                showNewPrompt = true
+            } label: {
+                Label("New prompt", image: .plus)
+            }
+            .buttonStyle(.plain)
+        }
+    }
+}
+
+#Preview {
+    SystemPromptSelectionView(showNewPrompt: .constant(false))
+}

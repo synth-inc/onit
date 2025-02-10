@@ -23,3 +23,7 @@ final class Chat {
         prompts.map { $0.fullText }.joined(separator: "\n")
     }
 }
+
+extension Chat {
+    @MainActor static let sample = Chat(prompts: [Prompt.sample])
+}

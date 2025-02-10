@@ -50,7 +50,9 @@ struct SystemPromptDetail: View {
             
             Spacer()
             
-            buttons
+            if prompt.id != SystemPrompt.outputOnly.id {
+                buttons
+            }
         }
         .padding()
         .sheet(isPresented: $showEdit) {
