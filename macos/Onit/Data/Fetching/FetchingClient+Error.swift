@@ -18,6 +18,7 @@ public enum FetchingError: Error {
     case decodingError(Error)
     case networkError(Error)
     case invalidURL
+    case noContent
 }
 
 extension FetchingError: LocalizedError {
@@ -43,6 +44,8 @@ extension FetchingError: LocalizedError {
             "Network error: \(error.localizedDescription)"
         case .invalidURL:
             "Invalid URL"
+        case .noContent:
+            "No content"
         }
     }
 }
@@ -51,9 +54,10 @@ extension FetchingError: Equatable {
     public static func == (lhs: FetchingError, rhs: FetchingError) -> Bool {
         switch (lhs, rhs) {
         case (.invalidResponse, .invalidResponse),
-            (.unauthorized, .unauthorized),
-            (.notFound, .notFound),
-            (.invalidURL, .invalidURL):
+             (.unauthorized, .unauthorized),
+             (.notFound, .notFound),
+             (.invalidURL, .invalidURL),
+             (.noContent, .noContent):
             return true
         case (.forbidden(let lhsMessage), .forbidden(let rhsMessage)):
             return lhsMessage == rhsMessage
@@ -81,7 +85,7 @@ extension FetchingError: Codable {
 
     enum FetchingErrorType: String, Codable {
         case invalidResponse, invalidRequest, unauthorized, forbidden, notFound, failedRequest,
-            serverError, decodingError, networkError, invalidURL
+            serverError, decodingError, networkError, invalidURL, noContent
     }
 
     public init(from decoder: Decoder) throws {
@@ -123,6 +127,8 @@ extension FetchingError: Codable {
             self = .networkError(error)
         case .invalidURL:
             self = .invalidURL
+        case .noContent:
+            self = .noContent
         }
     }
 
@@ -160,6 +166,8 @@ extension FetchingError: Codable {
             try container.encode(error.localizedDescription, forKey: .description)
         case .invalidURL:
             try container.encode(FetchingErrorType.invalidURL, forKey: .type)
+        case .noContent:
+            try container.encode(FetchingErrorType.noContent, forKey: .type)
         }
     }
 }

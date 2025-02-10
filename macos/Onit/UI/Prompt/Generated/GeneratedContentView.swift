@@ -12,39 +12,54 @@ import SwiftUI
 struct GeneratedContentView: View {
     @Environment(\.model) var model
     @State private var contentHeight: CGFloat = 1000
-
-    var result: String
-
+    
+    var prompt: Prompt
+    
+    var isPartial: Bool {
+        let response = prompt.responses[prompt.generationIndex]
+        
+        return response.isPartial
+    }
+    
+    var textToRead: String {
+        let response = prompt.responses[prompt.generationIndex]
+        
+        return if response.isPartial {
+            model.streamedResponse
+        } else {
+            response.text
+        }
+    }
+    
     var height: CGFloat {
         min(contentHeight, 500)
     }
 
     var body: some View {
-        //        ViewThatFits(in: .vertical) {
-        content
-        //            ScrollView {
-        //                content
-        //            }
-        //        }
-        //        .frame(height: height)
-    }
-
-    var content: some View {
-        Markdown(result)
-            .markdownTheme(.custom)
-            .textSelection(.enabled)
-            .multilineTextAlignment(.leading)
-            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-            .fixedSize(horizontal: false, vertical: true)
-            .padding(.horizontal, 16)
-            .background {
-                GeometryReader { proxy in
-                    Color.clear
-                        .onAppear {
-                            contentHeight = proxy.size.height
-                        }
+        VStack(alignment: .leading) {
+            Markdown(textToRead)
+                .markdownTheme(.custom)
+                .textSelection(.enabled)
+                .multilineTextAlignment(.leading)
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+                .fixedSize(horizontal: false, vertical: true)
+                .padding(.horizontal, 16)
+                .background {
+                    GeometryReader { proxy in
+                        Color.clear
+                            .onAppear {
+                                contentHeight = proxy.size.height
+                            }
+                    }
+                }
+            if isPartial {
+                HStack {
+                    Spacer()
+                    SpinningRingView(size: 12)
+                        .padding(.horizontal, 16)
                 }
             }
+        }
     }
 }
 
@@ -71,15 +86,5 @@ extension Theme {
 }
 
 #Preview {
-    GeneratedContentView(
-        result: """
-            ```swift
-            struct ContentView: View {
-                var body: some View {
-                    Text("Hello world")
-                }
-            }
-            ```
-            """
-    )
+    GeneratedContentView(prompt: Prompt.sample)
 }

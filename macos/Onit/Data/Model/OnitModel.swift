@@ -68,11 +68,15 @@ import SwiftUI
     var client = FetchingClient()
     var updater = SPUStandardUpdaterController(
         startingUpdater: true, updaterDelegate: nil, userDriverDelegate: nil)
+    var streamingClient = StreamingClient()
     var _tokenValidation = TokenValidationState()
 
     var remoteFetchFailed: Bool = false
     var localFetchFailed: Bool = false
-
+    
+    var useRemoteStreaming: Bool = false
+    var streamedResponse: String = ""
+    
     @MainActor
     func fetchLocalModels() async {
         do {
@@ -87,7 +91,6 @@ import SwiftUI
             } else if localModel == nil || !models.contains(localModel!) {
                 Defaults[.localModel] = models[0]
             }
-            print("KNA - OnitModel fetchLocalModels")
             if remoteModels.listedModels.isEmpty {
                 Defaults[.mode] = .local
             }

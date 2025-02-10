@@ -8,6 +8,8 @@
 import SwiftUI
 
 struct GeneratedView: View {
+    @Environment(\.model) var model
+    
     var prompt: Prompt
 
     var body: some View {
@@ -21,11 +23,11 @@ struct GeneratedView: View {
         VStack(spacing: 16) {
             if !prompt.responses.isEmpty {
                 let curResponse = prompt.responses[prompt.generationIndex]
-                if curResponse.type == .success {
-                    GeneratedContentView(result: prompt.responses[prompt.generationIndex].text)
-                } else if curResponse.type == .error {
-                    GeneratedErrorView(
-                        errorDescription: prompt.responses[prompt.generationIndex].text)
+                switch curResponse.type {
+                case .error:
+                    GeneratedErrorView(errorDescription: prompt.responses[prompt.generationIndex].text)
+                default:
+                    GeneratedContentView(prompt: prompt)
                 }
             }
             GeneratedToolbar(prompt: prompt)

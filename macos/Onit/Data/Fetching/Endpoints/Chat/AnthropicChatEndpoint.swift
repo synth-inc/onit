@@ -4,6 +4,7 @@
 //
 
 import Foundation
+import EventSource
 
 struct AnthropicChatEndpoint: Endpoint {
     var baseURL: URL = URL(string: "https://api.anthropic.com")!
@@ -26,7 +27,8 @@ struct AnthropicChatEndpoint: Endpoint {
             model: model,
             system: system,
             messages: messages,
-            max_tokens: maxTokens
+            max_tokens: maxTokens,
+            stream: false
         )
     }
     var additionalHeaders: [String: String]? {
@@ -36,6 +38,10 @@ struct AnthropicChatEndpoint: Endpoint {
         ]
     }
     var timeout: TimeInterval? { nil }
+    
+    func getContent(response: Response) -> String? {
+        return response.content.first?.text
+    }
 }
 
 struct AnthropicMessage: Codable {
@@ -60,11 +66,12 @@ struct AnthropicChatRequest: Codable {
     let system: String
     let messages: [AnthropicMessage]
     let max_tokens: Int
+    let stream: Bool
 }
 
 struct AnthropicChatResponse: Codable {
     let content: [AnthropicResponseContent]
-
+    
     struct AnthropicResponseContent: Codable {
         let text: String
     }
