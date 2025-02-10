@@ -66,6 +66,7 @@ struct FinalContextView: View {
                     RoundedRectangle(cornerRadius: 8)
                         .strokeBorder(.gray500)
                 }
+                .textSelection(.enabled)
         }
         .padding()
     }
