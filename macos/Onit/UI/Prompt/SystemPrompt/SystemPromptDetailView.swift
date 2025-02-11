@@ -30,12 +30,14 @@ struct SystemPromptDetailView: View {
     private let layout = [GridItem(.adaptive(minimum: 100), spacing: 10)]
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text("Prompt")
-                .foregroundStyle(.gray100)
-                .bold()
-            Text(storedPrompt.prompt)
-
+        VStack(alignment: .leading, spacing: 12) {
+            VStack(alignment: .leading, spacing: 8) {
+                Text("Prompt")
+                    .foregroundStyle(.gray100)
+                    .bold()
+                Text(storedPrompt.prompt)
+            }
+            
             if let shortcut = KeyboardShortcuts.Name(storedPrompt.id).shortcut?.native {
                 VStack(alignment: .leading, spacing: 8) {
                     Text("Hotkey")
@@ -47,15 +49,18 @@ struct SystemPromptDetailView: View {
             }
             
             if !storedPrompt.applications.isEmpty || !storedPrompt.tags.isEmpty {
-                Text("Apps & Tags")
-                    .foregroundStyle(.gray100)
-                    .bold()
-                appsAndTags
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Apps & Tags")
+                        .foregroundStyle(.gray100)
+                        .bold()
+                    appsAndTags
+                }
             }
 
             buttons
         }
-        .padding(16)
+        .padding(.vertical, 8)
+        .padding(.horizontal, 16)
         .background {
             RoundedRectangle(cornerRadius: 14)
                 .fill(.gray800)
@@ -115,7 +120,7 @@ struct SystemPromptDetailView: View {
                         .resizable()
                         .frame(width: 16, height: 16)
                         .foregroundStyle(.gray100)
-                }.buttonStyle(.plain)
+                }.tooltip(prompt: "Edit")
             }
         }
     }

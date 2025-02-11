@@ -11,6 +11,7 @@ struct CustomTextField: View {
     
     struct Config {
         var background: Color = .clear
+        var strokeColor: Color = .gray700
         var clear: Bool = false
         var leftIcon: ImageResource? = nil
     }
@@ -76,7 +77,7 @@ struct CustomTextField: View {
         .overlay(
             RoundedRectangle(cornerRadius: 5)
                 .stroke(lineWidth: 1.0)
-                .fill(.gray700)
+                .fill(config.strokeColor)
         )
     }
 }

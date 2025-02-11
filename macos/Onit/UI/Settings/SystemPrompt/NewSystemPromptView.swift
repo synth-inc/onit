@@ -67,60 +67,58 @@ struct NewSystemPromptView: View {
                     VStack(alignment: .leading, spacing: 8) {
                         Text("Name")
                             .font(.headline)
+                            .foregroundStyle(.gray100)
                         TextField("Helpful Assistant", text: $savedPrompt.name)
-                            .textFieldStyle(RoundedBorderTextFieldStyle())
+                            .textFieldStyle(.plain)
+                            .padding(8)
+                            .background(.gray700)
+                            .cornerRadius(5)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 8)
+                                    .stroke(.gray500)
+                            )
                     }
                     VStack(alignment: .leading, spacing: 8) {
                         Text("System Prompt*")
                             .font(.headline)
+                            .foregroundStyle(.gray100)
                         VStack {
                             TextEditor(text: $savedPrompt.prompt)
                                 .textEditorStyle(.plain)
                                 .frame(height: 100)
-                                .foregroundStyle(promptIsPlaceholder ? .gray : .white)
+                                .foregroundStyle(promptIsPlaceholder ? .white.opacity(0.3) : .white)
                                 .focused($isFocused)
                         }
-                        .padding(.horizontal, 4)
-                        .padding(.vertical, 8)
-                        .background {
+                        .padding(.vertical, 12)
+                        .padding(.horizontal, 3)
+                        .background(.gray700)
+                        .cornerRadius(5)
+                        .overlay(
                             RoundedRectangle(cornerRadius: 8)
-                                .stroke(.gray500, lineWidth: 1)
-                        }
+                                .stroke(.gray500)
+                        )
                     }
                     KeyboardShortcuts.Recorder(
-                        "Switch to prompt", name: KeyboardShortcuts.Name(savedPrompt.id)
+                        "Hotkey", name: KeyboardShortcuts.Name(savedPrompt.id)
                     ) { shortcut in
                         if isSaved {
                             shortcutChanged.toggle()
                         }
                     }
-                    .padding()
+                    .font(.headline)
+                    .foregroundStyle(.gray100)
+                    
 //                    VStack(alignment: .leading, spacing: 8) {
 //                        Text("Rules for suggestions")
 //                            .font(.headline)
+//                            .foregroundStyle(.gray100)
 //                        Text("Make this system prompt the default suggestion for specific applications and keywords.")
+//                            .foregroundStyle(.gray200)
 //                    }
                     applications
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text("Tags")
-                            .font(.headline)
-                        TextField("Separate with commas", text: keywordsBinding)
-                            .textFieldStyle(RoundedBorderTextFieldStyle())
-                        Text("e.g. frameworks, languages, emails, websites, topics...")
-                    }
+                    tags
                     if !isSaved {
-                        HStack {
-                            Spacer()
-                            Button(action: {
-                                isSaved = true
-                                dismiss()
-                            }) {
-                                Text("Save")
-                            }
-                            .keyboardShortcut(.defaultAction)
-                            .disabled(saveButtonDisabled)
-                            .cornerRadius(8)
-                        }
+                        buttons
                     }
                     
                     Spacer()
@@ -133,9 +131,10 @@ struct NewSystemPromptView: View {
                 }
             })
         }
+        .background(.gray800)
     }
     
-    var titleBar: some View {
+    private var titleBar: some View {
         VStack(spacing: 0) {
             ZStack {
                 HStack {
@@ -143,79 +142,128 @@ struct NewSystemPromptView: View {
                         dismiss()
                     }) {
                         Image(.smallCross)
-                            .frame(width: 20, height: 20)
+                            .frame(width: 48, height: 32)
+                            .foregroundStyle(.gray200)
                     }
-                    .frame(width: 56, height: 32)
                     .buttonStyle(.plain)
                     Spacer()
                 }
                 
                 Text("System Prompt")
                     .frame(maxWidth: .infinity, alignment: .center)
+                    .foregroundStyle(.gray200)
             }
             Divider()
         }
     }
     
-    var applications: some View {
+    private var applications: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text("Applications")
                 .font(.headline)
+                .foregroundStyle(.gray100)
             
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack {
-                    ForEach(savedPrompt.applications, id: \.self) { appURL in
-                        HStack {
-                            Image(nsImage: NSWorkspace.shared.icon(forFile: appURL.path))
-                                .resizable()
-                                .frame(width: 15, height: 15)
-                            
-                            Text(appURL.deletingPathExtension().lastPathComponent)
-                                .foregroundColor(.white)
-                            Button(action: {
-                                savedPrompt.applications.removeAll { $0 == appURL }
-                            }) {
-                                Image(.smallCross)
-                                    .foregroundColor(.white)
+            HStack {
+                Menu {
+                    ForEach(allApps, id: \.self) { url in
+                        Button(action: {
+                            if !savedPrompt.applications.contains(url) {
+                                savedPrompt.applications.append(url)
                             }
-                            .buttonStyle(.plain)
-                        }
-                        .padding(4)
-                        .background(Color.gray.opacity(0.8))
-                        .cornerRadius(8)
-                    }
-                }
-            }
-            
-            Menu {
-                ForEach(allApps, id: \.self) { url in
-                    Button(action: {
-                        if !savedPrompt.applications.contains(url) {
-                            savedPrompt.applications.append(url)
-                        }
-                    }) {
-                        HStack {
-                            Image(nsImage: NSWorkspace.shared.icon(forFile: url.path))
-                            Text(url.deletingPathExtension().lastPathComponent)
+                        }) {
+                            HStack {
+                                Image(nsImage: NSWorkspace.shared.icon(forFile: url.path))
+                                Text(url.deletingPathExtension().lastPathComponent)
+                            }
                         }
                     }
+                } label: {
+                    Image(systemName: "plus.circle.fill")
+                        .resizable()
+                        .frame(width: 20, height: 20)
+                        .foregroundColor(.gray100)
                 }
-            } label: {
-                HStack {
-                    Text("Select apps")
-                        .foregroundColor(.gray)
-                    Spacer()
+                .buttonStyle(.plain)
+                
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 4) {
+                        if savedPrompt.applications.isEmpty {
+                            Text("No app added")
+                                .foregroundColor(.white.opacity(0.3))
+                        } else {
+                            ForEach(savedPrompt.applications, id: \.self) { url in
+                                HStack(spacing: 2) {
+                                    Image(nsImage: NSWorkspace.shared.icon(forFile: url.path))
+                                        .resizable()
+                                        .frame(width: 16, height: 16)
+                                    
+                                    Text(url.deletingPathExtension().lastPathComponent)
+                                    
+                                    Button(action: {
+                                        savedPrompt.applications.removeAll { $0 == url }
+                                    }) {
+                                        Image(.smallCross)
+                                            .resizable()
+                                            .frame(width: 16, height: 16)
+                                            .foregroundColor(.gray)
+                                    }
+                                    .buttonStyle(.plain)
+                                }
+                                .padding(4)
+                                .background(.gray400)
+                                .cornerRadius(3)
+                            }
+                        }
+                    }
+                    .padding(.horizontal, 4)
                 }
-                .padding()
-                .background(Color.black.opacity(0.2))
-                .cornerRadius(8)
+                .frame(height: 34)
+                .background {
+                    RoundedRectangle(cornerRadius: 8)
+                        .fill(.gray700)
+                        .stroke(.gray500, lineWidth: 1)
+                }
             }
+        }
+    }
+    
+    private var tags: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("Tags")
+                .font(.headline)
+                .foregroundStyle(.gray100)
+            TextField("Separate with commas", text: keywordsBinding)
+                .textFieldStyle(.plain)
+                .padding(8)
+                .background(.gray700)
+                .cornerRadius(5)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 8)
+                        .stroke(.gray500)
+                )
+            Text("e.g. frameworks, languages, emails, websites, topics...")
+                .foregroundStyle(.gray200)
+        }
+    }
+    
+    private var buttons: some View {
+        HStack {
+            Spacer()
+            Button(action: {
+                isSaved = true
+                dismiss()
+            }) {
+                Text("Save")
+            }
+            .keyboardShortcut(.defaultAction)
+            .disabled(saveButtonDisabled)
+            .cornerRadius(8)
         }
     }
 }
 
 #Preview {
     NewSystemPromptView(prompt: .constant(SystemPrompt()),
-                        isSaved: .constant(true),
+                        isSaved: .constant(false),
                         shortcutChanged: .constant(false))
 }

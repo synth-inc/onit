@@ -108,6 +108,7 @@ struct SystemPromptSelectionView: View {
                 openSettings()
             } label: {
                 Label("Settings", systemImage: "message")
+                    .foregroundStyle(.gray100)
             }
             .buttonStyle(.plain)
             
@@ -116,7 +117,8 @@ struct SystemPromptSelectionView: View {
             Button {
                 showNewPrompt = true
             } label: {
-                Label("New prompt", image: .plus)
+                Label("New Prompt", image: .plus)
+                    .foregroundStyle(.gray100)
             }
             .buttonStyle(.plain)
         }
