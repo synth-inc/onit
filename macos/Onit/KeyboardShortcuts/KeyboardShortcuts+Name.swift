@@ -25,7 +25,6 @@ extension KeyboardShortcuts.Name: @retroactive CaseIterable {
         .launch,
         .launchWithAutoContext,
         .escape,
-        .enter,
         .newChat,
         .resizeWindow,
         .toggleLocalMode
