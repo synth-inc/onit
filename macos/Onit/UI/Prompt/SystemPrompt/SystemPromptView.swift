@@ -57,11 +57,11 @@ struct SystemPromptView: View {
             }
             .buttonStyle(.plain)
         }
-        .popover(isPresented: $showSelection, arrowEdge: .trailing) {
+        .popover(isPresented: $showSelection, arrowEdge: .leading) {
             SystemPromptSelectionView(showNewPrompt: $showNewPrompt)
         }
         .popover(isPresented: $showDetail, arrowEdge: .bottom) {
-            SystemPromptDetailView(width: size.width - 16, showSelection: $showSelection, showEditPrompt: $showEditPrompt)
+            SystemPromptDetailView(size: $size, showSelection: $showSelection, showEditPrompt: $showEditPrompt)
         }
         .sheet(isPresented: $showNewPrompt) {
             NewSystemPromptView(prompt: $promptToAdd, isSaved: $shouldSavePrompt)

@@ -14,7 +14,7 @@ struct SystemPromptDetailView: View {
     @Environment(\.modelContext) private var modelContext
     @Default(.systemPromptId) private var systemPromptId
     
-    let width: CGFloat
+    @Binding var size: CGSize
     @Binding var showSelection: Bool
     @Binding var showEditPrompt: Bool
 
@@ -50,7 +50,7 @@ struct SystemPromptDetailView: View {
                 .fill(.gray800)
                 .strokeBorder(.gray600)
         }
-        .frame(width: width)
+        .frame(width: size.width - 16)
     }
     
     private var appsAndTags: some View {
@@ -111,5 +111,7 @@ struct SystemPromptDetailView: View {
 }
 
 #Preview {
-    SystemPromptDetailView(width: 200, showSelection: .constant(false), showEditPrompt: .constant(false))
+    let size: Binding<CGSize> = .constant(.init(width: 200, height: 40))
+    
+    SystemPromptDetailView(size: size, showSelection: .constant(false), showEditPrompt: .constant(false))
 }
