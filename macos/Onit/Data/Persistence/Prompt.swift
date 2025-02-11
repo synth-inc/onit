@@ -10,6 +10,7 @@ import SwiftData
 
 @Model final class Prompt: Identifiable, ObservableObject {
 
+    var systemPrompt: SystemPrompt?
     var instruction: String
     var timestamp: Date
     var input: Input?
@@ -26,9 +27,10 @@ import SwiftData
     var generationIndex = -1
 
     init(
-        instruction: String, timestamp: Date, input: Input? = nil, contextList: [Context] = [],
-        responses: [Response] = []
+        systemPrompt: SystemPrompt, instruction: String, timestamp: Date,
+        input: Input? = nil, contextList: [Context] = [], responses: [Response] = []
     ) {
+        self.systemPrompt = systemPrompt
         self.instruction = instruction
         self.timestamp = timestamp
         self.input = input
@@ -70,5 +72,5 @@ extension Prompt: Equatable {
 }
 
 extension Prompt {
-    @MainActor static let sample = Prompt(instruction: "Hello, world!", timestamp: .now)
+    @MainActor static let sample = Prompt(systemPrompt: SystemPrompt.outputOnly, instruction: "Hello, world!", timestamp: .now)
 }
