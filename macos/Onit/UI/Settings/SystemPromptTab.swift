@@ -5,11 +5,13 @@
 //  Created by Kévin Naudin on 07/02/2025.
 //
 
+import Defaults
 import SwiftData
 import SwiftUI
 
 struct SystemPromptTab: View {
     @Environment(\.modelContext) var modelContext
+    @Default(.systemPromptId) var systemPromptId
     
     @State var searchText: String = ""
     @State var selectedPrompt: SystemPrompt? = nil
@@ -87,6 +89,13 @@ struct SystemPromptTab: View {
     private func deleteSelectedPrompt() {
         if let model = selectedPrompt {
             selectedPrompt = nil
+            
+            /// The prompt we're deleting is the one selected for chat
+            /// Select the default outputOnly
+            if systemPromptId == model.id {
+                systemPromptId = SystemPrompt.outputOnly.id
+            }
+            
             do {
                 modelContext.delete(model)
                 try modelContext.save()
