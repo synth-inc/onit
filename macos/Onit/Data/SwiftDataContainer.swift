@@ -16,7 +16,7 @@ actor SwiftDataContainer {
                 Chat.self,
                 SystemPrompt.self,
             ])
-            let container = try! ModelContainer(for: schema)
+            let container = try ModelContainer(for: schema)
             
             // Make sure the persistent store is empty. If it's not, return the non-empty container.
             var itemFetchDescriptor = FetchDescriptor<SystemPrompt>()
@@ -24,11 +24,11 @@ actor SwiftDataContainer {
             guard try container.mainContext.fetch(itemFetchDescriptor).count == 0 else { return container }
             
             container.mainContext.insert(SystemPrompt.outputOnly)
-            try! container.mainContext.save()
+            try container.mainContext.save()
             
             return container
         } catch {
-            fatalError("Failed to create container")
+            fatalError("Failed to create container \(error)")
         }
     }()
     
@@ -39,7 +39,7 @@ actor SwiftDataContainer {
             SystemPrompt.self,
         ])
         let configuration = ModelConfiguration(isStoredInMemoryOnly: true)
-        let container = try! ModelContainer(for: schema, configurations: [configuration])
+        let container = try ModelContainer(for: schema, configurations: [configuration])
         
         let sampleData: [any PersistentModel] = [
             Chat.sample,

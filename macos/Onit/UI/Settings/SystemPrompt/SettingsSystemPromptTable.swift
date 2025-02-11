@@ -1,17 +1,20 @@
 //
-//  SystemPromptList.swift
+//  SettingsSystemPromptTable.swift
 //  Onit
 //
 //  Created by Kévin Naudin on 07/02/2025.
 //
 
+import KeyboardShortcuts
 import SwiftData
 import SwiftUI
 
-struct SystemPromptList: View {
+struct SettingsSystemPromptTable: View {
     @Query var prompts: [SystemPrompt]
     @Binding var filter: String
     @Binding var selectedPrompt: SystemPrompt?
+    @Binding var refreshUI: Bool
+    
     @State private var selected = Set<SystemPrompt.ID>()
     
     private var filteredPrompts: [SystemPrompt] {
@@ -33,10 +36,14 @@ struct SystemPromptList: View {
     var body: some View {
         Table(filteredPrompts, selection: $selected) {
             TableColumn("Name", value: \.name)
-//            TableColumn("Hotkey") { prompt in
-//                Text("record")
-//                    .foregroundColor(.gray)
-//            }
+            TableColumn("Hotkey") { prompt in
+                if let shortcut = KeyboardShortcuts.Name(prompt.id).shortcut?.native {
+                    KeyboardShortcutView(shortcut: shortcut, characterWidth: 12, spacing: 3)
+                        .font(.system(size: 13, weight: .light))
+                } else {
+                    Text("record").foregroundColor(.gray)
+                }
+            }
             TableColumn("Applications") { prompt in
                 switch prompt.applications.count {
                 case 0:
@@ -51,6 +58,7 @@ struct SystemPromptList: View {
                 Text("\(prompt.tags.count)")
             }
         }
+        .id(refreshUI)
         .onChange(of: selected) { _, new in
             guard let promptId = new.first else {
                 selectedPrompt = nil
@@ -68,6 +76,7 @@ struct SystemPromptList: View {
 }
 
 #Preview {
-    SystemPromptList(filter: .constant(""),
-                     selectedPrompt: .constant(nil))
+    SettingsSystemPromptTable(filter: .constant(""),
+                     selectedPrompt: .constant(nil),
+                     refreshUI: .constant(false))
 }

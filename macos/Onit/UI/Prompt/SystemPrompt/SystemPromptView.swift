@@ -64,10 +64,10 @@ struct SystemPromptView: View {
             SystemPromptDetailView(size: $size, showSelection: $showSelection, showEditPrompt: $showEditPrompt)
         }
         .sheet(isPresented: $showNewPrompt) {
-            NewSystemPromptView(prompt: $promptToAdd, isSaved: $shouldSavePrompt)
+            NewSystemPromptView(prompt: $promptToAdd, isSaved: $shouldSavePrompt, shortcutChanged: .constant(false))
         }
         .sheet(isPresented: $showEditPrompt) {
-            NewSystemPromptView(prompt: editPromptBinding, isSaved: .constant(true))
+            NewSystemPromptView(prompt: editPromptBinding, isSaved: .constant(true), shortcutChanged: .constant(false))
         }
         .onChange(of: shouldSavePrompt) { _, new in
             if new { addPrompt() }
@@ -89,6 +89,8 @@ struct SystemPromptView: View {
     private func addPrompt() {
         modelContext.insert(promptToAdd)
         try! modelContext.save()
+        
+        KeyboardShortcutsManager.register(systemPrompt: promptToAdd)
         
         systemPromptId = promptToAdd.id
         

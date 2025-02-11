@@ -1,5 +1,5 @@
 //
-//  KeyboardShortcuts+Launch.swift
+//  KeyboardShortcuts+Name.swift
 //  Onit
 //
 //  Created by Benjamin Sage on 10/1/24.
@@ -18,4 +18,16 @@ extension KeyboardShortcuts.Name {
     static let resizeWindow = Self("resizeWindow", default: .init(.eight, modifiers: [.command]))
     static let toggleLocalMode = Self(
         "toggleLocalMode", default: .init(.seven, modifiers: [.shift, .command]))
+}
+
+extension KeyboardShortcuts.Name: @retroactive CaseIterable {
+    public static let allCases: [Self] = [
+        .launch,
+        .launchWithAutoContext,
+        .escape,
+        .enter,
+        .newChat,
+        .resizeWindow,
+        .toggleLocalMode
+    ]
 }
