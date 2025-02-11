@@ -5,6 +5,7 @@
 //  Created by Kévin Naudin on 07/02/2025.
 //
 
+import KeyboardShortcuts
 import SwiftUI
 
 struct NewSystemPromptView: View {
@@ -12,12 +13,14 @@ struct NewSystemPromptView: View {
     
     @Binding var savedPrompt: SystemPrompt
     @Binding var isSaved: Bool
+    @Binding var shortcutChanged: Bool
     
     @FocusState private var isFocused: Bool
     
-    init(prompt: Binding<SystemPrompt>, isSaved: Binding<Bool>) {
+    init(prompt: Binding<SystemPrompt>, isSaved: Binding<Bool>, shortcutChanged: Binding<Bool>) {
         self._savedPrompt = prompt
         self._isSaved = isSaved
+        self._shortcutChanged = shortcutChanged
     }
     
     private var allApps: [URL] {
@@ -43,6 +46,8 @@ struct NewSystemPromptView: View {
     private var saveButtonDisabled: Bool {
         savedPrompt.name.isEmpty || promptIsPlaceholder || savedPrompt.prompt.isEmpty
     }
+    
+    // MARK: - Views
     
     var body: some View {
         if #available(macOS 15.0, *) {
@@ -82,11 +87,19 @@ struct NewSystemPromptView: View {
                                 .stroke(.gray500, lineWidth: 1)
                         }
                     }
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text("Rules for suggestions")
-                            .font(.headline)
-                        Text("Make this system prompt the default suggestion for specific applications and keywords.")
+                    KeyboardShortcuts.Recorder(
+                        "Switch to prompt", name: KeyboardShortcuts.Name(savedPrompt.id)
+                    ) { shortcut in
+                        if isSaved {
+                            shortcutChanged.toggle()
+                        }
                     }
+                    .padding()
+//                    VStack(alignment: .leading, spacing: 8) {
+//                        Text("Rules for suggestions")
+//                            .font(.headline)
+//                        Text("Make this system prompt the default suggestion for specific applications and keywords.")
+//                    }
                     applications
                     VStack(alignment: .leading, spacing: 8) {
                         Text("Tags")
@@ -202,5 +215,7 @@ struct NewSystemPromptView: View {
 }
 
 #Preview {
-    NewSystemPromptView(prompt: .constant(SystemPrompt()), isSaved: .constant(true))
+    NewSystemPromptView(prompt: .constant(SystemPrompt()),
+                        isSaved: .constant(true),
+                        shortcutChanged: .constant(false))
 }

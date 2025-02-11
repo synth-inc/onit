@@ -6,6 +6,7 @@
 //
 
 import Defaults
+import KeyboardShortcuts
 import SwiftUI
 import SwiftData
 
@@ -35,6 +36,16 @@ struct SystemPromptDetailView: View {
                 .bold()
             Text(storedPrompt.prompt)
 
+            if let shortcut = KeyboardShortcuts.Name(storedPrompt.id).shortcut?.native {
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Hotkey")
+                        .foregroundStyle(.gray100)
+                        .bold()
+                    KeyboardShortcutView(shortcut: shortcut, characterWidth: 12, spacing: 3)
+                        .font(.system(size: 13, weight: .light))
+                }
+            }
+            
             if !storedPrompt.applications.isEmpty || !storedPrompt.tags.isEmpty {
                 Text("Apps & Tags")
                     .foregroundStyle(.gray100)
