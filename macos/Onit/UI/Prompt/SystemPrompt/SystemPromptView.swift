@@ -43,6 +43,7 @@ struct SystemPromptView: View {
                 .allowsHitTesting(false)
             
             Text(selectedPrompt.name)
+                .lineLimit(1)
                 .allowsHitTesting(false)
             
             Spacer()

@@ -14,6 +14,7 @@ struct GeneratedView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
+            GeneratedSystemPromptView(systemPrompt: prompt.systemPrompt ?? SystemPrompt.outputOnly)
             FinalContextView(prompt: prompt)
             content
         }
@@ -39,7 +40,10 @@ struct GeneratedView: View {
 #if DEBUG
     #Preview {
         ModelContainerPreview {
-            //        GeneratedView(prompt: Prompt(input: nil, text: "Testing this out", timestamp: Date(), responses: [Response(text: "Testing this out")]))
+            var prompt = Prompt.sample
+            prompt.input = Input(selectedText: "blablabla", application: "Xcode")
+            
+            return GeneratedView(prompt: prompt)
         }
     }
 #endif
