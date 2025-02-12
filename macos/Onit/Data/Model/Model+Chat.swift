@@ -108,7 +108,7 @@ extension OnitModel {
                     }
                     let apiToken = getTokenForModel(model)
                     
-                    if useRemoteStreaming {
+                    if shouldUseStream(model) {
                         addPartialPrompt(prompt: prompt, instruction: curInstruction)
                         
                         let asyncText = try await streamingClient.chat(systemMessage: systemMessage,
@@ -139,18 +139,29 @@ extension OnitModel {
                         throw FetchingError.invalidRequest(message: "Model is required")
                     }
                     
-                    addPartialPrompt(prompt: prompt, instruction: curInstruction)
-                    
-                    let asyncText = try await streamingClient.localChat(systemMessage: systemMessage,
-                                                                        instructions: instructionsHistory,
-                                                                        inputs: inputsHistory,
-                                                                        files: filesHistory,
-                                                                        images: imagesHistory,
-                                                                        autoContexts: autoContextsHistory,
-                                                                        responses: responsesHistory,
-                                                                        model: model)
-                    for try await response in asyncText {
-                        streamedResponse += response
+                    if Defaults[.streamResponse].local {
+                        addPartialPrompt(prompt: prompt, instruction: curInstruction)
+                        
+                        let asyncText = try await streamingClient.localChat(systemMessage: systemMessage,
+                                                                            instructions: instructionsHistory,
+                                                                            inputs: inputsHistory,
+                                                                            files: filesHistory,
+                                                                            images: imagesHistory,
+                                                                            autoContexts: autoContextsHistory,
+                                                                            responses: responsesHistory,
+                                                                            model: model)
+                        for try await response in asyncText {
+                            streamedResponse += response
+                        }
+                    } else {
+                        streamedResponse = try await client.localChat(systemMessage: systemMessage,
+                                                                      instructions: instructionsHistory,
+                                                                      inputs: inputsHistory,
+                                                                      files: filesHistory,
+                                                                      images: imagesHistory,
+                                                                      autoContexts: autoContextsHistory,
+                                                                      responses: responsesHistory,
+                                                                      model: model)
                     }
                 }
                 
@@ -252,6 +263,27 @@ extension OnitModel {
             }
         }
         return nil
+    }
+    
+    func shouldUseStream(_ aiModel: AIModel) -> Bool {
+        switch aiModel.provider {
+        case .openAI:
+            return Defaults[.streamResponse].openAI
+        case .anthropic:
+            return Defaults[.streamResponse].anthropic
+        case .xAI:
+            return Defaults[.streamResponse].xAI
+        case .googleAI:
+            return Defaults[.streamResponse].googleAI
+        case .deepSeek:
+            return Defaults[.streamResponse].deepSeek
+        case .custom:
+            guard let providerId = aiModel.customProviderName else {
+                return false
+            }
+            
+            return Defaults[.streamResponse].customProviders[providerId] ?? false
+        }
     }
     
     func addPartialPrompt(prompt: Prompt, instruction: String) {
