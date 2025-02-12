@@ -88,6 +88,8 @@ struct SystemPromptView: View {
     }
     
     private func addPrompt() {
+        promptToAdd.lastUsed = Date()
+
         modelContext.insert(promptToAdd)
         try! modelContext.save()
         
