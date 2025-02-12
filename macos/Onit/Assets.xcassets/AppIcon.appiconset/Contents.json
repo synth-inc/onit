@@ -1,61 +1,61 @@
 {
   "images" : [
     {
-      "filename" : "onit_16.png",
+      "filename" : "onit_appicon_16_full.png",
       "idiom" : "mac",
       "scale" : "1x",
       "size" : "16x16"
     },
     {
-      "filename" : "onit_32 1.png",
+      "filename" : "onit_appicon_32_full.png",
       "idiom" : "mac",
       "scale" : "2x",
       "size" : "16x16"
     },
     {
-      "filename" : "onit_32.png",
+      "filename" : "onit_appicon_32_full 1.png",
       "idiom" : "mac",
       "scale" : "1x",
       "size" : "32x32"
     },
     {
-      "filename" : "onit_64.png",
+      "filename" : "onit_appicon_64_full.png",
       "idiom" : "mac",
       "scale" : "2x",
       "size" : "32x32"
     },
     {
-      "filename" : "onit_128.png",
+      "filename" : "onit_appicon_128.png",
       "idiom" : "mac",
       "scale" : "1x",
       "size" : "128x128"
     },
     {
-      "filename" : "onit_256 1.png",
+      "filename" : "onit_appicon_256 1.png",
       "idiom" : "mac",
       "scale" : "2x",
       "size" : "128x128"
     },
     {
-      "filename" : "onit_256.png",
+      "filename" : "onit_appicon_256.png",
       "idiom" : "mac",
       "scale" : "1x",
       "size" : "256x256"
     },
     {
-      "filename" : "onit_512.png",
+      "filename" : "onit_appicon_512.png",
       "idiom" : "mac",
       "scale" : "2x",
       "size" : "256x256"
     },
     {
-      "filename" : "app_icon_1x.png",
+      "filename" : "onit_appicon_512 1.png",
       "idiom" : "mac",
       "scale" : "1x",
       "size" : "512x512"
     },
     {
-      "filename" : "app_icon_2x.png",
+      "filename" : "onit_appicon_1024.png",
       "idiom" : "mac",
       "scale" : "2x",
       "size" : "512x512"
