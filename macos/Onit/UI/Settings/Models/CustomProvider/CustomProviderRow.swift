@@ -12,6 +12,7 @@ struct CustomProviderRow: View {
     @Default(.availableCustomProviders) var availableCustomProviders
     @Default(.availableRemoteModels) var availableRemoteModels
     @Default(.visibleModelIds) var visibleModelIds
+    @Default(.streamResponse) var streamResponse
     @Binding var provider: CustomProvider
 
     @State private var searchText: String = ""
@@ -19,6 +20,14 @@ struct CustomProviderRow: View {
     @State private var validated = false
     @State private var errorMessage: String?
     @State private var showAlert = false
+    
+    private var streamResponseBinding: Binding<Bool> {
+        Binding {
+            streamResponse.customProviders[provider.id] ?? false
+        } set: { newValue in
+            streamResponse.customProviders[provider.id] = newValue
+        }
+    }
 
     private var filteredProviderModels: [AIModel] {
         providerModels.filter { model in
@@ -66,6 +75,7 @@ struct CustomProviderRow: View {
             }
 
             if provider.isEnabled {
+                ModelStreamResponse(isOn: streamResponseBinding)
                 GroupBox {
                     VStack {
                         TextField("Search models", text: $searchText)

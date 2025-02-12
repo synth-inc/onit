@@ -33,6 +33,7 @@ struct LocalModelsSection: View {
 
     @Default(.availableLocalModels) var availableLocalModels
     @Default(.useLocal) var useLocal
+    @Default(.streamResponse) var streamResponse
     @Default(.localEndpointURL) var localEndpointURL
     @Default(.localKeepAlive) var localKeepAlive
     @Default(.localNumCtx) var localNumCtx
@@ -119,6 +120,8 @@ struct LocalModelsSection: View {
                 .frame(height: 22)
                 .fontWeight(.regular)
             }
+            
+            ModelStreamResponse(isOn: $streamResponse.local)
 
             DisclosureGroup("Advanced", isExpanded: $showAdvanced) {
                 VStack(alignment: .leading, spacing: 8) {

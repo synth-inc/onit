@@ -35,6 +35,8 @@ extension Defaults.Keys {
     static let useGoogleAI = Key<Bool>("useGoogleAI", default: false)
     static let useDeepSeek = Key<Bool>("useDeepSeek", default: false)
     static let useLocal = Key<Bool>("useLocalModel", default: false)
+    
+    static let streamResponse = Key<StreamResponseConfig>("streamResponse", default: StreamResponseConfig.default)
 
     // Dialogs closed
     static let closedRemote = Key<Bool>("closedRemote", default: false)

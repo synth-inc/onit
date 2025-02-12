@@ -36,6 +36,7 @@ struct RemoteModelSection: View {
     @Default(.isXAITokenValidated) var isXAITokenValidated
     @Default(.isGoogleAITokenValidated) var isGoogleAITokenValidated
     @Default(.isDeepSeekTokenValidated) var isDeepSeekTokenValidated
+    @Default(.streamResponse) var streamResponse
 
     var provider: AIModel.ModelProvider
 
@@ -46,6 +47,23 @@ struct RemoteModelSection: View {
     var models: [AIModel] {
         availableRemoteModels.filter { $0.provider == provider }
     }
+    
+    var streamResponseBinding: Binding<Bool> {
+        switch provider {
+        case .openAI:
+            return $streamResponse.openAI
+        case .anthropic:
+            return $streamResponse.anthropic
+        case .xAI:
+            return $streamResponse.xAI
+        case .googleAI:
+            return $streamResponse.googleAI
+        case .deepSeek:
+            return $streamResponse.deepSeek
+        case .custom:
+            return .constant(false)
+        }
+    }
 
     // MARK: - Body
 
@@ -55,6 +73,7 @@ struct RemoteModelSection: View {
             textField
             errorView
             caption
+            streamResponseView
             modelsView
         }
         .onAppear {
@@ -168,6 +187,13 @@ struct RemoteModelSection: View {
             .foregroundStyle(.foreground.opacity(0.65))
             .fontWeight(.regular)
             .font(.system(size: 12))
+    }
+    
+    @ViewBuilder
+    var streamResponseView: some View {
+        if use {
+            ModelStreamResponse(isOn: streamResponseBinding)
+        }
     }
 
     @ViewBuilder

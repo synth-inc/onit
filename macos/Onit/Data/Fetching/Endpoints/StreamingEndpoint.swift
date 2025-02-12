@@ -46,12 +46,6 @@ extension StreamingEndpoint {
             }
         }
         
-        // Helpful debugging method- put in the endpoint name and you can see the full request
-        if path.contains("/v1beta/models") {
-            printCurlRequest(url: url)
-            print("here")
-        }
-        
         var request = URLRequest(url: url)
 
         request.httpMethod = method.rawValue
@@ -70,26 +64,5 @@ extension StreamingEndpoint {
         }
 
         return request
-    }
-    
-    private func printCurlRequest(url: URL) {
-        // Helpful debugging method
-        if let requestBody = requestBody {
-            if let jsonData = try? JSONEncoder().encode(requestBody),
-                let jsonString = String(data: jsonData, encoding: .utf8) {
-                print("CURL Request:")
-                print("curl -X \(method.rawValue) \(url.absoluteString) \\")
-                print("  -H 'Content-Type: application/json' \\")
-                if let token = token {
-                    print("  -H 'Authorization: Bearer \(token)' \\")
-                }
-                if let additionalHeaders = additionalHeaders {
-                    for (header, value) in additionalHeaders {
-                        print("  -H '\(header): \(value)' \\")
-                    }
-                }
-                print("  -d '\(jsonString)'")
-            }
-        }
     }
 }
