@@ -1,5 +1,5 @@
 {
-  "originHash" : "b15eec498fb9f8ad6aec54ec9016669c561a224bdbfa6df59d8e468dbc92595f",
+  "originHash" : "e48c7f63d5d4469189796b9fceb0b824b24945fde48e0bdac90e3d8f3a1cad67",
   "pins" : [
     {
       "identity" : "abseil-cpp-binary",
@@ -26,6 +26,15 @@
       "state" : {
         "revision" : "3d98a76aab39eedf957274e98e15ebe6bb390b87",
         "version" : "9.0.1"
+      }
+    },
+    {
+      "identity" : "eventsource",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/Recouse/EventSource",
+      "state" : {
+        "revision" : "9bd7c5aaba81f06511c4f681643ef991c6ae3477",
+        "version" : "0.1.3"
       }
     },
     {

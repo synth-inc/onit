@@ -6,8 +6,9 @@
 //
 
 import Foundation
+import EventSource
 
-protocol Endpoint {
+protocol Endpoint: Sendable {
     associatedtype Request: Encodable
     associatedtype Response: Decodable
 
@@ -19,4 +20,12 @@ protocol Endpoint {
     var requestBody: Request? { get }
     var additionalHeaders: [String: String]? { get }
     var timeout: TimeInterval? { get }
+    
+    func getContent(response: Response) -> String?
+}
+
+extension Endpoint {
+    func getContent(response: Response) -> String? {
+        return nil
+    }
 }

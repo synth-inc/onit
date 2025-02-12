@@ -8,6 +8,7 @@
 import Defaults
 import Foundation
 import PostHog
+import EventSource
 
 extension OnitModel {
     func createAndSavePrompt() -> Prompt {
@@ -85,36 +86,88 @@ extension OnitModel {
             }
 
             do {
-                let chat: String
-                if Defaults[.mode] == .remote {
-                    // Regular remote model chat
-                    chat = try await client.chat(
-                        instructions: instructionsHistory,
-                        inputs: inputsHistory,
-                        files: filesHistory,
-                        images: imagesHistory,
-                        autoContexts: autoContextsHistory,
-                        responses: responsesHistory,
-                        model: Defaults[.remoteModel],
-                        apiToken: getTokenForModel(Defaults[.remoteModel] ?? nil)
-                    )
-                } else {
-                    // TODO implement history for local chat!
-                    chat = try await client.localChat(
-                        instructions: instructionsHistory,
-                        inputs: inputsHistory,
-                        files: filesHistory,
-                        images: imagesHistory,
-                        autoContexts: autoContextsHistory,
-                        responses: responsesHistory,
-                        model: Defaults[.localModel]
+                guard instructionsHistory.count == inputsHistory.count,
+                      inputsHistory.count == filesHistory.count,
+                      filesHistory.count == imagesHistory.count,
+                      imagesHistory.count == autoContextsHistory.count,
+                      autoContextsHistory.count == responsesHistory.count + 1 else {
+                    throw FetchingError.invalidRequest(
+                        message:
+                            "Mismatched array lengths: instructions, inputs, files, autoContexts and images must be the same length, and one longer than responses."
                     )
                 }
-
-                let response = Response(text: chat, type: .success)
+                let systemMessage =
+                    "Based on the provided instructions, either provide the output or answer any questions related to it. Provide the response without any additional comments. Provide the output ready to go."
+                
+                streamedResponse = ""
+                
+                switch Defaults[.mode] {
+                case .remote:
+                    guard let model = Defaults[.remoteModel] else {
+                        throw FetchingError.invalidRequest(message: "Model is required")
+                    }
+                    let apiToken = getTokenForModel(model)
+                    
+                    if shouldUseStream(model) {
+                        addPartialPrompt(prompt: prompt, instruction: curInstruction)
+                        
+                        let asyncText = try await streamingClient.chat(systemMessage: systemMessage,
+                                                                       instructions: instructionsHistory,
+                                                                       inputs: inputsHistory,
+                                                                       files: filesHistory,
+                                                                       images: imagesHistory,
+                                                                       autoContexts: autoContextsHistory,
+                                                                       responses: responsesHistory,
+                                                                       model: model,
+                                                                       apiToken: apiToken)
+                        for try await response in asyncText {
+                            streamedResponse += response
+                        }
+                    } else {
+                        streamedResponse = try await client.chat(systemMessage: systemMessage,
+                                                                 instructions: instructionsHistory,
+                                                                 inputs: inputsHistory,
+                                                                 files: filesHistory,
+                                                                 images: imagesHistory,
+                                                                 autoContexts: autoContextsHistory,
+                                                                 responses: responsesHistory,
+                                                                 model: model,
+                                                                 apiToken: apiToken)
+                    }
+                case .local:
+                    guard let model = Defaults[.localModel] else {
+                        throw FetchingError.invalidRequest(message: "Model is required")
+                    }
+                    
+                    if Defaults[.streamResponse].local {
+                        addPartialPrompt(prompt: prompt, instruction: curInstruction)
+                        
+                        let asyncText = try await streamingClient.localChat(systemMessage: systemMessage,
+                                                                            instructions: instructionsHistory,
+                                                                            inputs: inputsHistory,
+                                                                            files: filesHistory,
+                                                                            images: imagesHistory,
+                                                                            autoContexts: autoContextsHistory,
+                                                                            responses: responsesHistory,
+                                                                            model: model)
+                        for try await response in asyncText {
+                            streamedResponse += response
+                        }
+                    } else {
+                        streamedResponse = try await client.localChat(systemMessage: systemMessage,
+                                                                      instructions: instructionsHistory,
+                                                                      inputs: inputsHistory,
+                                                                      files: filesHistory,
+                                                                      images: imagesHistory,
+                                                                      autoContexts: autoContextsHistory,
+                                                                      responses: responsesHistory,
+                                                                      model: model)
+                    }
+                }
+                
+                let response = Response(text: String(streamedResponse), type: .success)
                 updatePrompt(prompt: prompt, response: response, instruction: curInstruction)
                 setTokenIsValid(true)
-
             } catch let error as FetchingError {
                 print("Fetching Error: \(error.localizedDescription)")
                 if case .forbidden = error {
@@ -130,12 +183,9 @@ extension OnitModel {
                 let response = Response(text: error.localizedDescription, type: .error)
                 updatePrompt(prompt: prompt, response: response, instruction: curInstruction)
             }
-
-            generatingPrompt = nil
-            generatingPromptPriorState = nil
         }
     }
-
+    
     /**
      * Track an event when user prompted
      * - parameter prompt: The current prompt
@@ -215,11 +265,50 @@ extension OnitModel {
         }
         return nil
     }
-
+    
+    func shouldUseStream(_ aiModel: AIModel) -> Bool {
+        switch aiModel.provider {
+        case .openAI:
+            return Defaults[.streamResponse].openAI
+        case .anthropic:
+            return Defaults[.streamResponse].anthropic
+        case .xAI:
+            return Defaults[.streamResponse].xAI
+        case .googleAI:
+            return Defaults[.streamResponse].googleAI
+        case .deepSeek:
+            return Defaults[.streamResponse].deepSeek
+        case .custom:
+            guard let providerId = aiModel.customProviderName else {
+                return false
+            }
+            
+            return Defaults[.streamResponse].customProviders[providerId] ?? false
+        }
+    }
+    
+    func addPartialPrompt(prompt: Prompt, instruction: String) {
+        prompt.priorInstructions.append(instruction)
+        prompt.responses.append(Response.partial)
+        prompt.generationIndex = (prompt.responses.count - 1)
+        prompt.generationState = .done
+        
+        generatingPrompt = nil
+        generatingPromptPriorState = nil
+    }
+    
     func updatePrompt(prompt: Prompt, response: Response, instruction: String) {
+        if let partialResponseIndex = prompt.responses.firstIndex(where: { $0.isPartial }) {
+            prompt.responses.remove(at: partialResponseIndex)
+            prompt.priorInstructions.removeLast()
+        }
+        
         prompt.priorInstructions.append(instruction)
         prompt.responses.append(response)
         prompt.generationIndex = (prompt.responses.count - 1)
         prompt.generationState = .done
+        
+        generatingPrompt = nil
+        generatingPromptPriorState = nil
     }
 }

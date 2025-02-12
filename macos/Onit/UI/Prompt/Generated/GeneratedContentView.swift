@@ -12,39 +12,48 @@ import SwiftUI
 struct GeneratedContentView: View {
     @Environment(\.model) var model
     @State private var contentHeight: CGFloat = 1000
-
-    var result: String
-
+    
+    var prompt: Prompt
+    
+    var isPartial: Bool {
+        let response = prompt.responses[prompt.generationIndex]
+        
+        return response.isPartial
+    }
+    
+    var textToRead: String {
+        let response = prompt.responses[prompt.generationIndex]
+        
+        return response.isPartial ? model.streamedResponse : response.text
+    }
+    
     var height: CGFloat {
         min(contentHeight, 500)
     }
 
     var body: some View {
-        //        ViewThatFits(in: .vertical) {
-        content
-        //            ScrollView {
-        //                content
-        //            }
-        //        }
-        //        .frame(height: height)
-    }
-
-    var content: some View {
-        Markdown(result)
-            .markdownTheme(.custom)
-            .textSelection(.enabled)
-            .multilineTextAlignment(.leading)
-            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-            .fixedSize(horizontal: false, vertical: true)
-            .padding(.horizontal, 16)
-            .background {
-                GeometryReader { proxy in
-                    Color.clear
-                        .onAppear {
-                            contentHeight = proxy.size.height
-                        }
+        VStack(alignment: .leading) {
+            ParsedContentView(text: textToRead)
+                .padding(.horizontal, 16)
+                .background {
+                    GeometryReader { proxy in
+                        Color.clear
+                            .onAppear {
+                                contentHeight = proxy.size.height
+                            }
+                    }
+                }
+            Spacer()
+            if textToRead.isEmpty {
+                HStack {
+                    Spacer()
+                    QLImage("loader_rotated-200")
+                        .frame(width: 36, height: 36)
+                        .padding(.horizontal, 16)
+                    Spacer()
                 }
             }
+        }
     }
 }
 
@@ -71,15 +80,114 @@ extension Theme {
 }
 
 #Preview {
-    GeneratedContentView(
-        result: """
-            ```swift
-            struct ContentView: View {
-                var body: some View {
-                    Text("Hello world")
+    GeneratedContentView(prompt: Prompt.sample)
+}
+
+// MARK: - Parsed Content and Thought Process Views
+
+struct ParsedContentView: View {
+    let text: String
+    
+    // ContentSegment represents either normal text or a thought block
+    struct ContentSegment {
+        let isThought: Bool
+        let isStreaming: Bool
+        let content: String
+    }
+    
+    // Split the text into segments based on <think> and </think> tags.
+    var segments: [ContentSegment] {
+        var result: [ContentSegment] = []
+        var currentIndex = text.startIndex
+        
+        while let openRange = text.range(of: "<think>", range: currentIndex..<text.endIndex) {
+            // Add normal text before <think> if any
+            let normalText = String(text[currentIndex..<openRange.lowerBound])
+            if !normalText.isEmpty {
+                result.append(ContentSegment(isThought: false, isStreaming: false, content: normalText))
+            }
+            
+            let searchStart = openRange.upperBound
+            if let closeRange = text.range(of: "</think>", range: searchStart..<text.endIndex) {
+                // Found closing tag: complete thought block
+                let thoughtContent = String(text[searchStart..<closeRange.lowerBound])
+                result.append(ContentSegment(isThought: true, isStreaming: false, content: thoughtContent))
+                currentIndex = closeRange.upperBound
+            } else {
+                // No closing tag found: streaming thought block
+                let thoughtContent = String(text[searchStart..<text.endIndex])
+                result.append(ContentSegment(isThought: true, isStreaming: true, content: thoughtContent))
+                currentIndex = text.endIndex
+            }
+        }
+        
+        if currentIndex < text.endIndex {
+            let remaining = String(text[currentIndex..<text.endIndex])
+            if !remaining.isEmpty {
+                result.append(ContentSegment(isThought: false, isStreaming: false, content: remaining))
+            }
+        }
+        return result
+    }
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            ForEach(Array(segments.enumerated()), id: \ .offset) { index, segment in
+                if segment.isThought {
+                    ThoughtProcessView(content: segment.content, streaming: segment.isStreaming)
+                } else {
+                    Markdown(segment.content)
+                        .markdownTheme(.custom)
+                        .textSelection(.enabled)
+                        .multilineTextAlignment(.leading)
+                        .frame(maxWidth: .infinity, alignment: .leading)
                 }
             }
-            ```
-            """
-    )
+        }
+    }
+}
+
+struct ThoughtProcessView: View {
+    let content: String
+    let streaming: Bool
+    
+    @State private var isExpanded: Bool = false
+    
+    var title: String {
+        streaming ? "Thinking..." : "Thought-process"
+    }
+    
+    var arrowImageName: String {
+        isExpanded ? "chevron.up" : "chevron.down"
+    }
+    
+    var body: some View {
+        VStack(alignment: .leading) {
+            HStack {
+                Image(.lightBulb)
+                Text(title)
+                    .font(.headline)
+                    .shimmering(active: streaming)
+                Spacer()
+                Image(systemName: arrowImageName)
+            }
+            .contentShape(Rectangle())
+            .onTapGesture {
+                // Only allow expanding if the thought block is complete
+                if !streaming {
+                    withAnimation {
+                        isExpanded.toggle()
+                    }
+                }
+            }
+            
+            if isExpanded && !streaming {
+                Text(content)
+                    .padding(.leading, 20)
+            }
+        }
+        .padding(8)
+        .background(Color.gray.opacity(0.1))
+        .cornerRadius(8)
+    }
 }

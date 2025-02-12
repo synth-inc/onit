@@ -4,6 +4,7 @@
 //
 
 import Foundation
+import EventSource
 
 struct XAIChatEndpoint: Endpoint {
     var baseURL: URL = URL(string: "https://api.x.ai")!
@@ -19,15 +20,16 @@ struct XAIChatEndpoint: Endpoint {
     var getParams: [String: String]? { nil }
     var method: HTTPMethod { .post }
     var requestBody: XAIChatRequest? {
-        XAIChatRequest(
-            model: model,
-            messages: messages
-        )
+        XAIChatRequest(model: model, messages: messages, stream: false)
     }
     var additionalHeaders: [String: String]? {
         ["Authorization": "Bearer \(token ?? "")"]
     }
     var timeout: TimeInterval? { nil }
+    
+    func getContent(response: Response) -> String? {
+        return response.choices.first?.message.content
+    }
 }
 
 struct XAIChatMessage: Codable {
@@ -76,6 +78,7 @@ struct XAIChatContentPart: Codable {
 struct XAIChatRequest: Codable {
     let model: String
     let messages: [XAIChatMessage]
+    let stream: Bool
 }
 
 struct XAIChatResponse: Codable {
@@ -83,7 +86,7 @@ struct XAIChatResponse: Codable {
 
     struct Choice: Codable {
         let message: Message
-
+        
         struct Message: Codable {
             let content: String
         }

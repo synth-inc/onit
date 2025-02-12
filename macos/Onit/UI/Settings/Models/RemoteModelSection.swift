@@ -15,8 +15,8 @@ struct RemoteModelSection: View {
     @State private var use = false
     @State private var key = ""
     @State private var validated = false
-
     @State private var loading = false
+    @State private var showAdvanced: Bool = false  
 
     @Default(.mode) var mode
     @Default(.remoteModel) var remoteModel
@@ -36,6 +36,7 @@ struct RemoteModelSection: View {
     @Default(.isXAITokenValidated) var isXAITokenValidated
     @Default(.isGoogleAITokenValidated) var isGoogleAITokenValidated
     @Default(.isDeepSeekTokenValidated) var isDeepSeekTokenValidated
+    @Default(.streamResponse) var streamResponse
 
     var provider: AIModel.ModelProvider
 
@@ -45,6 +46,23 @@ struct RemoteModelSection: View {
 
     var models: [AIModel] {
         availableRemoteModels.filter { $0.provider == provider }
+    }
+    
+    var streamResponseBinding: Binding<Bool> {
+        switch provider {
+        case .openAI:
+            return $streamResponse.openAI
+        case .anthropic:
+            return $streamResponse.anthropic
+        case .xAI:
+            return $streamResponse.xAI
+        case .googleAI:
+            return $streamResponse.googleAI
+        case .deepSeek:
+            return $streamResponse.deepSeek
+        case .custom:
+            return .constant(false)
+        }
     }
 
     // MARK: - Body
@@ -56,6 +74,7 @@ struct RemoteModelSection: View {
             errorView
             caption
             modelsView
+            advancedSettings
         }
         .onAppear {
             fetchKey()
@@ -168,6 +187,17 @@ struct RemoteModelSection: View {
             .foregroundStyle(.foreground.opacity(0.65))
             .fontWeight(.regular)
             .font(.system(size: 12))
+    }
+    
+    @ViewBuilder
+    var advancedSettings: some View {
+        if use {
+            DisclosureGroup("Advanced", isExpanded: $showAdvanced) {
+                StreamingToggle(isOn: streamResponseBinding)
+                    .padding(.leading, 8)
+                    .padding(.top, 4)
+            }
+        }
     }
 
     @ViewBuilder

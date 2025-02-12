@@ -33,6 +33,7 @@ struct LocalModelsSection: View {
 
     @Default(.availableLocalModels) var availableLocalModels
     @Default(.useLocal) var useLocal
+    @Default(.streamResponse) var streamResponse
     @Default(.localEndpointURL) var localEndpointURL
     @Default(.localKeepAlive) var localKeepAlive
     @Default(.localNumCtx) var localNumCtx
@@ -119,9 +120,11 @@ struct LocalModelsSection: View {
                 .frame(height: 22)
                 .fontWeight(.regular)
             }
-
+            
             DisclosureGroup("Advanced", isExpanded: $showAdvanced) {
                 VStack(alignment: .leading, spacing: 8) {
+                    StreamingToggle(isOn: $streamResponse.local)
+                    
                     VStack(alignment: .leading, spacing: 8) {
                         HStack {
                             Text("Keep alive:")
