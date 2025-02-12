@@ -25,6 +25,13 @@ class SystemPromptSuggestionService {
         let activeApp = NSWorkspace.shared.frontmostApplication?.localizedName?.lowercased()
         let selectedApp = input?.application?.lowercased()
         let selectedText = input?.selectedText.lowercased()
+        let contextApps = contextList.compactMap { context -> String? in
+            guard case .auto(let appName, _) = context else {
+                return nil
+            }
+            
+            return appName.lowercased()
+        }
         let contextContent = contextList.compactMap { context -> String? in
             switch context {
             case .auto(_, let content):
@@ -42,11 +49,18 @@ class SystemPromptSuggestionService {
         let scoredPrompts = allPrompts.map { prompt -> ScoredPrompt in
             var score = 0
             
-            if prompt.applications.contains(where: {
-                let lowercaseAppName = $0.deletingPathExtension().lastPathComponent.lowercased()
-                return lowercaseAppName == activeApp || lowercaseAppName == selectedApp
-            }) {
-                score += 5
+            for appURL in prompt.applications {
+                let lowercaseAppName = appURL.deletingPathExtension().lastPathComponent.lowercased()
+                
+                if lowercaseAppName == activeApp {
+                    score += 5
+                }
+                if lowercaseAppName == selectedApp {
+                    score += 5
+                }
+                if contextApps.contains(lowercaseAppName) {
+                    score += 5
+                }
             }
             
             for tag in prompt.tags {
@@ -57,7 +71,7 @@ class SystemPromptSuggestionService {
                 }
                 
                 if contextContent.contains(lowercaseTag) {
-                    score += 2
+                    score += 3
                 }
             }
             
