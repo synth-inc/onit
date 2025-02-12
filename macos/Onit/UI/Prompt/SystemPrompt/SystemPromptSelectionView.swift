@@ -10,16 +10,17 @@ import SwiftUI
 
 struct SystemPromptSelectionView: View {
     @Environment(\.model) private var model
+    @Environment(\.modelContext) private var modelContext
     @Environment(\.openSettings) private var openSettings
     
     @Query(sort: \SystemPrompt.timestamp, order: .reverse) var prompts: [SystemPrompt]
     
     @Binding var showNewPrompt: Bool
     @State private var searchText = ""
+    @State private var suggestedPromptIds: [String] = []
     
-    private var suggestedPrompts: [SystemPrompt] {
-        // TODO: Rework [SystemPrompt.outputOnly]
-        []
+    init(showNewPrompt: Binding<Bool>) {
+        self._showNewPrompt = showNewPrompt
     }
     
     private var allPrompts: [SystemPrompt] {
@@ -47,6 +48,12 @@ struct SystemPromptSelectionView: View {
         }
     }
     
+    private var suggestedPrompts: [SystemPrompt] {
+        prompts.filter { prompt in
+            suggestedPromptIds.contains(prompt.id)
+        }
+    }
+    
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text("System Prompts")
@@ -60,6 +67,13 @@ struct SystemPromptSelectionView: View {
         }
         .padding(16)
         .background(.black)
+        .task {
+            let service = SystemPromptSuggestionService(with: model.container)
+            suggestedPromptIds = await service.findSuggestedPromptIds(
+                input: model.pendingInput,
+                contextList: model.pendingContextList
+            )
+        }
     }
     
     var promptsList: some View {
