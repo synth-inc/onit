@@ -15,8 +15,8 @@ struct RemoteModelSection: View {
     @State private var use = false
     @State private var key = ""
     @State private var validated = false
-
     @State private var loading = false
+    @State private var showAdvanced: Bool = false  
 
     @Default(.mode) var mode
     @Default(.remoteModel) var remoteModel
@@ -73,8 +73,8 @@ struct RemoteModelSection: View {
             textField
             errorView
             caption
-            streamResponseView
             modelsView
+            advancedSettings
         }
         .onAppear {
             fetchKey()
@@ -190,9 +190,13 @@ struct RemoteModelSection: View {
     }
     
     @ViewBuilder
-    var streamResponseView: some View {
+    var advancedSettings: some View {
         if use {
-            ModelStreamResponse(isOn: streamResponseBinding)
+            DisclosureGroup("Advanced", isExpanded: $showAdvanced) {
+                StreamingToggle(isOn: streamResponseBinding)
+                    .padding(.leading, 8)
+                    .padding(.top, 4)
+            }
         }
     }
 

@@ -20,6 +20,7 @@ struct CustomProviderRow: View {
     @State private var validated = false
     @State private var errorMessage: String?
     @State private var showAlert = false
+    @State private var showAdvanced: Bool = false
     
     private var streamResponseBinding: Binding<Bool> {
         Binding {
@@ -75,7 +76,6 @@ struct CustomProviderRow: View {
             }
 
             if provider.isEnabled {
-                ModelStreamResponse(isOn: streamResponseBinding)
                 GroupBox {
                     VStack {
                         TextField("Search models", text: $searchText)
@@ -96,6 +96,7 @@ struct CustomProviderRow: View {
                         .frame(maxHeight: 5 * 36)  // Limit to 5 rows
                     }
                 }
+                advancedSettings
             }
         }
         .cornerRadius(8)
@@ -137,6 +138,14 @@ struct CustomProviderRow: View {
             .buttonStyle(.borderedProminent)
             .frame(height: 22)
             .fontWeight(.regular)
+        }
+    }
+    
+    var advancedSettings: some View {
+        DisclosureGroup("Advanced", isExpanded: $showAdvanced) {
+            StreamingToggle(isOn: streamResponseBinding)
+                .padding(.leading, 8)
+                .padding(.top, 4)
         }
     }
 

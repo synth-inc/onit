@@ -121,10 +121,10 @@ struct LocalModelsSection: View {
                 .fontWeight(.regular)
             }
             
-            ModelStreamResponse(isOn: $streamResponse.local)
-
             DisclosureGroup("Advanced", isExpanded: $showAdvanced) {
                 VStack(alignment: .leading, spacing: 8) {
+                    StreamingToggle(isOn: $streamResponse.local)
+                    
                     VStack(alignment: .leading, spacing: 8) {
                         HStack {
                             Text("Keep alive:")
