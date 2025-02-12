@@ -10,7 +10,7 @@ import SwiftData
 import SwiftUI
 
 struct SettingsSystemPromptTable: View {
-    @Query var prompts: [SystemPrompt]
+    @Query(sort: \SystemPrompt.timestamp, order: .reverse) var prompts: [SystemPrompt]
     @Binding var filter: String
     @Binding var selectedPrompt: SystemPrompt?
     @Binding var refreshUI: Bool
@@ -60,18 +60,29 @@ struct SettingsSystemPromptTable: View {
         }
         .id(refreshUI)
         .onChange(of: selected) { _, new in
-            guard let promptId = new.first else {
-                selectedPrompt = nil
-                return
+            Task { @MainActor in
+                guard let promptId = new.first else {
+                    selectedPrompt = nil
+                    return
+                }
+                selectionChange(promptId: promptId)
             }
-            selectionChange(promptId: promptId)
+        }
+        .onChange(of: selectedPrompt) { _, newPrompt in
+            if let id = newPrompt?.id {
+                selected = [id]
+            } else {
+                selected.removeAll()
+            }
+        }
+        .onChange(of: filter) { _, _ in
+            selected.removeAll()
+            selectedPrompt = nil
         }
     }
     
     private func selectionChange(promptId: String) {
-        guard let selectedPrompt = prompts.first(where: { $0.id == promptId }) else { return }
-        
-        self.selectedPrompt = selectedPrompt
+        selectedPrompt = prompts.first(where: { $0.id == promptId })
     }
 }
 

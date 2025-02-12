@@ -102,9 +102,8 @@ struct SystemPromptTab: View {
             selectedPrompt = nil
             
             /// The prompt we're deleting is the one selected for chat
-            /// Select the default outputOnly
             if systemPromptId == systemPrompt.id {
-                systemPromptId = SystemPrompt.outputOnly.id
+                selectMostRecentlyUsedPrompt(deletedId: systemPrompt.id)
             }
             
             // Unregister the shortcut keyboard
@@ -115,6 +114,25 @@ struct SystemPromptTab: View {
         }
         
         shouldDeleteSelectedPrompt = false
+    }
+    
+    private func selectMostRecentlyUsedPrompt(deletedId: String) {
+        var fetchDescriptor = FetchDescriptor<SystemPrompt>(
+            predicate: #Predicate { $0.id != deletedId },
+            sortBy: [SortDescriptor(\.lastUsed, order: .reverse)]
+        )
+        fetchDescriptor.fetchLimit = 1
+        
+        do {
+            let result = try modelContext.fetch(fetchDescriptor)
+            if let systemPrompt = result.first {
+                systemPromptId = systemPrompt.id
+            } else {
+                systemPromptId = SystemPrompt.outputOnly.id
+            }
+        } catch {
+            systemPromptId = SystemPrompt.outputOnly.id
+        }
     }
     
     private func resetData() {

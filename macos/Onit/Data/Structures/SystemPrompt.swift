@@ -19,6 +19,8 @@ class SystemPrompt {
     var prompt: String
     var applications: [URL]
     var tags: [String]
+    var timestamp: Date
+    var lastUsed: Date?
     
     init() {
         id = UUID().uuidString
@@ -26,14 +28,16 @@ class SystemPrompt {
         prompt = "Enter instructions to define role, tone and boundaries of the AI"
         applications = []
         tags = []
+        timestamp = Date()
     }
     
-    init(id: String = UUID().uuidString, name: String, prompt: String, applications: [URL], tags: [String]) {
+    init(id: String = UUID().uuidString, name: String, prompt: String, applications: [URL], tags: [String], timestamp: Date = Date()) {
         self.id = id
         self.name = name
         self.prompt = prompt
         self.applications = applications
         self.tags = tags
+        self.timestamp = timestamp
     }
     
     nonisolated(unsafe) static let outputOnly: SystemPrompt = .init(

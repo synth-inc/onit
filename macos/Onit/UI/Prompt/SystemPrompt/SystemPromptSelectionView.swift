@@ -12,7 +12,7 @@ struct SystemPromptSelectionView: View {
     @Environment(\.model) private var model
     @Environment(\.openSettings) private var openSettings
     
-    @Query var prompts: [SystemPrompt]
+    @Query(sort: \SystemPrompt.timestamp, order: .reverse) var prompts: [SystemPrompt]
     
     @Binding var showNewPrompt: Bool
     @State private var searchText = ""
