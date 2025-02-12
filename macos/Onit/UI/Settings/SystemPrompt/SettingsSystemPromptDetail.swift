@@ -15,61 +15,81 @@ struct SettingsSystemPromptDetail: View {
     
     @State private var showEdit = false
     
-    private let layout = [GridItem(.adaptive(minimum: 60), spacing: 10)]
-    
     var body: some View {
-        VStack(alignment: .leading, spacing: 20) {
-            Text(prompt.name)
-                .font(.title3)
-                .bold()
-            
-            VStack(alignment: .leading, spacing: 8) {
-                Text("Prompt")
+        ScrollView(.vertical) {
+            VStack(alignment: .leading, spacing: 20) {
+                Text(prompt.name)
+                    .font(.title3)
                     .bold()
-                Text(prompt.prompt)
-            }
-            if let shortcut = KeyboardShortcuts.Name(prompt.id).shortcut?.native {
+                
                 VStack(alignment: .leading, spacing: 8) {
-                    Text("Hotkey")
+                    Text("Prompt")
                         .bold()
-                    KeyboardShortcutView(shortcut: shortcut, characterWidth: 12, spacing: 3)
-                        .font(.system(size: 13, weight: .light))
+                    Text(prompt.prompt)
                 }
-            }
-            if !prompt.applications.isEmpty {
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("Applications")
-                        .bold()
-                    LazyVGrid(columns: layout, alignment: .leading, spacing: 10) {
-                        ForEach(prompt.applications, id: \.self) { url in
-                            HStack(alignment: .center) {
-                                Image(nsImage: NSWorkspace.shared.icon(forFile: url.path))
-                                    .resizable()
-                                    .frame(width: 16, height: 16)
-                                Text(url.deletingPathExtension().lastPathComponent)
+                if let shortcut = KeyboardShortcuts.Name(prompt.id).shortcut?.native {
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Hotkey")
+                            .bold()
+                        KeyboardShortcutView(shortcut: shortcut, characterWidth: 12, spacing: 3)
+                            .font(.system(size: 13, weight: .light))
+                    }
+                }
+                if !prompt.applications.isEmpty {
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Applications")
+                            .bold()
+                        FlowLayout(spacing: 8) {
+                            ForEach(prompt.applications, id: \.self) { url in
+                                HStack(alignment: .center, spacing: 4) {
+                                    Image(nsImage: NSWorkspace.shared.icon(forFile: url.path))
+                                        .resizable()
+                                        .frame(width: 16, height: 16)
+                                    Text(url.deletingPathExtension().lastPathComponent)
+                                        .lineLimit(1)
+                                }
+                                .padding(.horizontal, 6)
+                                .padding(.vertical, 4)
+                                .background {
+                                    RoundedRectangle(cornerRadius: 5)
+                                        .stroke(.gray300)
+                                }
                             }
                         }
                     }
                 }
-            }
-            if !prompt.tags.isEmpty {
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("Tags")
-                        .bold()
-                    Text(prompt.tags.joined(separator: ","))
+                if !prompt.tags.isEmpty {
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Tags")
+                            .bold()
+                        
+                        FlowLayout(spacing: 8) {
+                            ForEach(prompt.tags, id: \.self) { tag in
+                                Text(tag)
+                                    .lineLimit(1)
+                                    .padding(.horizontal, 6)
+                                    .padding(.vertical, 4)
+                                    .background {
+                                        RoundedRectangle(cornerRadius: 5)
+                                            .stroke(.gray300)
+                                    }
+                            }
+                        }
+                    }
+                }
+                
+                Spacer()
+                
+                if prompt.id != SystemPrompt.outputOnly.id {
+                    buttons
                 }
             }
-            
-            Spacer()
-            
-            if prompt.id != SystemPrompt.outputOnly.id {
-                buttons
+            .padding()
+            .sheet(isPresented: $showEdit) {
+                NewSystemPromptView(prompt: $prompt, isSaved: .constant(true), shortcutChanged: $shortcutChanged)
             }
         }
-        .padding()
-        .sheet(isPresented: $showEdit) {
-            NewSystemPromptView(prompt: $prompt, isSaved: .constant(true), shortcutChanged: $shortcutChanged)
-        }
+        .scrollBounceBehavior(.basedOnSize)
     }
     
     var buttons: some View {

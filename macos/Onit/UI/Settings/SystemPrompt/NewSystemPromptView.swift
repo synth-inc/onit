@@ -108,13 +108,13 @@ struct NewSystemPromptView: View {
                     .font(.headline)
                     .foregroundStyle(.gray100)
                     
-//                    VStack(alignment: .leading, spacing: 8) {
-//                        Text("Rules for suggestions")
-//                            .font(.headline)
-//                            .foregroundStyle(.gray100)
-//                        Text("Make this system prompt the default suggestion for specific applications and keywords.")
-//                            .foregroundStyle(.gray200)
-//                    }
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Rules for suggestions")
+                            .font(.headline)
+                            .foregroundStyle(.gray100)
+                        Text("Make this system prompt the default suggestion for specific applications and keywords.")
+                            .foregroundStyle(.gray200)
+                    }
                     applications
                     tags
                     if !isSaved {
@@ -132,6 +132,7 @@ struct NewSystemPromptView: View {
             })
         }
         .background(.gray800)
+        .frame(maxWidth: 400, alignment: .leading)
     }
     
     private var titleBar: some View {

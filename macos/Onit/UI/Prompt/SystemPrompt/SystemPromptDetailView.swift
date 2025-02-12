@@ -27,8 +27,6 @@ struct SystemPromptDetailView: View {
         return prompt
     }
     
-    private let layout = [GridItem(.adaptive(minimum: 100), spacing: 10)]
-    
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             VStack(alignment: .leading, spacing: 8) {
@@ -70,7 +68,7 @@ struct SystemPromptDetailView: View {
     }
     
     private var appsAndTags: some View {
-        LazyVGrid(columns: layout, alignment: .leading, spacing: 10) {
+        FlowLayout(spacing: 8) {
             ForEach(storedPrompt.applications, id: \.self) { url in
                 HStack(alignment: .center, spacing: 4) {
                     Image(nsImage: NSWorkspace.shared.icon(forFile: url.path))
@@ -78,7 +76,8 @@ struct SystemPromptDetailView: View {
                         .frame(width: 16, height: 16)
                     Text(url.deletingPathExtension().lastPathComponent)
                 }
-                .padding(2)
+                .padding(.horizontal, 6)
+                .padding(.vertical, 4)
                 .background {
                     RoundedRectangle(cornerRadius: 5)
                         .fill(.gray500)
@@ -86,14 +85,13 @@ struct SystemPromptDetailView: View {
             }
             
             ForEach(storedPrompt.tags, id: \.self) { tag in
-                HStack(alignment: .center) {
-                    Text(tag)
-                        .padding(2)
-                }
-                .background {
-                    RoundedRectangle(cornerRadius: 5)
-                        .fill(.gray500)
-                }
+                Text(tag)
+                    .padding(.horizontal, 6)
+                    .padding(.vertical, 4)
+                    .background {
+                        RoundedRectangle(cornerRadius: 5)
+                            .fill(.gray500)
+                    }
             }
         }
     }
