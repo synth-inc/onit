@@ -42,7 +42,8 @@ actor StreamingClient {
                    images: [[URL]],
                    autoContexts: [[String: String]],
                    responses: [String],
-                   model: String) async throws -> AsyncThrowingStream<String, Error> {
+                   model: String,
+                   options: LocalChatOptions) async throws -> AsyncThrowingStream<String, Error> {
         let userMessages = ChatEndpointMessagesBuilder.user(
             instructions: instructions,
             inputs: inputs,
@@ -53,7 +54,7 @@ actor StreamingClient {
             responses: responses,
             systemMessage: systemMessage,
             userMessages: userMessages)
-        let endpoint = LocalChatStreamingEndpoint(model: model, messages: localMessages)
+        let endpoint = LocalChatStreamingEndpoint(model: model, messages: localMessages, options: options)
         
         return try await stream(endpoint: endpoint, eventParser: LocalEventParser())
     }
