@@ -6,19 +6,24 @@
 //
 
 import Defaults
+import Foundation
 import MarkdownUI
 import SwiftUI
 
 struct GeneratedContentView: View {
     @Environment(\.model) var model
     @State private var contentHeight: CGFloat = 1000
-
+    @Default(.lineHeight) var lineHeight
+    @Default(.fontSize) var fontSize
+    
     var result: String
 
     var height: CGFloat {
         min(contentHeight, 500)
     }
 
+    
+    
     var body: some View {
         //        ViewThatFits(in: .vertical) {
         content
@@ -34,6 +39,7 @@ struct GeneratedContentView: View {
             .markdownTheme(.custom)
             .textSelection(.enabled)
             .multilineTextAlignment(.leading)
+            .lineSpacing((lineHeight * fontSize) - fontSize)
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
             .fixedSize(horizontal: false, vertical: true)
             .padding(.horizontal, 16)
@@ -51,7 +57,8 @@ struct GeneratedContentView: View {
 extension Theme {
     @MainActor static var custom: Theme {
         @Default(.fontSize) var fontSize
-
+        @Default(.lineHeight) var lineHeight
+        
         return Theme()
             .text {
                 FontFamily(.custom("Inter"))
@@ -67,8 +74,14 @@ extension Theme {
             .codeBlock { configuration in
                 CodeBlockView(configuration: configuration)
             }
+            .paragraph { configuration in
+                configuration.label
+                    .markdownMargin(top: fontSize + (lineHeight * fontSize) - fontSize) // This works
+            }
     }
 }
+
+
 
 #Preview {
     GeneratedContentView(

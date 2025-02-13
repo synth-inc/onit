@@ -80,6 +80,7 @@ extension Defaults.Keys {
     // General settings
     static let launchOnStartupRequested = Key<Bool>("launchOnStartupRequested", default: false)
     static let fontSize = Key<Double>("fontSize", default: 14.0)
+    static let lineHeight = Key<Double>("lineHeight", default: 1.5)
 
     // Local model advanced options
     static let localKeepAlive = Key<String?>("localKeepAlive", default: nil)
