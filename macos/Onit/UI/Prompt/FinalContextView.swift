@@ -173,7 +173,10 @@ struct FinalContextView: View {
                             if context.isWebSearchContext, let url = context.webURL {
                                 NSWorkspace.shared.open(url)
                             } else {
-                                ContextWindowsManager.shared.showContextWindow(windowState: windowState, context: context)
+                                ContextWindowsManager.shared.showContextWindow(
+                                    context: context,
+                                    pendingContextList: windowState.pendingContextList
+                                )
                             }
                         })
                             .background {

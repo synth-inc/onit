@@ -42,7 +42,10 @@ extension Defaults.Keys {
     static let usePerplexity = Key<Bool>("usePerplexity", default: true)
     static let useLocal = Key<Bool>("useLocalModel", default: true)
     
+    // Features configuration
     static let streamResponse = Key<StreamResponseConfig>("streamResponse", default: StreamResponseConfig.default)
+    static let typeaheadConfig = Key<TypeaheadConfig>("typeaheadConfig", default: TypeaheadConfig.default)
+    static let typeaheadLearningConfig = Key<TypeaheadLearningConfig>("typeaheadLearningConfig", default: TypeaheadLearningConfig.default)
 
     // Dialogs closed
     static let closedRemote = Key<Bool>("closedRemote", default: false)

@@ -1,9 +1,8 @@
+import AppKit
 import Defaults
 import KeyboardShortcuts
 import PostHog
 import SwiftUI
-import KeyboardShortcuts
-import AppKit
 
 struct AccessibilityTab: View {
     @Default(.autoContextFromHighlights) var autoContextFromHighlights

@@ -17,26 +17,12 @@ class AccessibilityNotificationsManager: ObservableObject {
     // MARK: - Singleton instance
 
     static let shared = AccessibilityNotificationsManager()
-    
-    // MARK: - ScreenResult
-
-    struct ScreenResult {
-        struct UserInteractions {
-            var selectedText: String?
-            var input: String?
-        }
-
-        var elapsedTime: String?
-        var applicationName: String?
-        var applicationTitle: String?
-        var userInteraction: UserInteractions = .init()
-        var others: [String: String]?
-        var errorMessage: String?  // Renamed field for error message
-    }
 
     // MARK: - Properties
     
     @Published private(set) var screenResult: ScreenResult = .init()
+    @Published private(set) var userInput: AccessibilityUserInput = .empty
+    @Published private(set) var inputPosition: CGPoint?
     
     let windowsManager = AccessibilityWindowsManager()
     
@@ -53,6 +39,10 @@ class AccessibilityNotificationsManager: ObservableObject {
     private var timedOutWindowHash: Set<UInt> = []  // Track window's hash that have timed out
     
     private var lastActiveWindowPid: pid_t?
+    
+#if DEBUG
+    var screenResultsByDate: [Date: ScreenResult] = [:]
+#endif
 
     // MARK: - Private initializer
 
@@ -127,6 +117,10 @@ class AccessibilityNotificationsManager: ObservableObject {
         if let mainWindow = processID.firstMainWindow {
             handleWindowBounds(for: mainWindow, elementPid: processID)
         }
+        
+        #if DEBUG
+        retrieveWindowContent(for: processID)
+        #endif
     }
     
     private func handleAppDeactivation(appName: String?, processID: pid_t) {
@@ -435,6 +429,18 @@ class AccessibilityNotificationsManager: ObservableObject {
         self.screenResult.errorMessage = nil
         self.showDebug()
         
+        #if DEBUG
+        screenResultsByDate[Date()] = screenResult
+        
+        // Keep only the 5 most recent entries
+        if screenResultsByDate.count > 5 {
+            let sortedDates = screenResultsByDate.keys.sorted()
+            if let oldestDate = sortedDates.first {
+                screenResultsByDate.removeValue(forKey: oldestDate)
+            }
+        }
+        #endif
+        
         state.addAutoContext()
     }
 
@@ -444,13 +450,16 @@ class AccessibilityNotificationsManager: ObservableObject {
         // Ensure we're on the main thread
         dispatchPrecondition(condition: .onQueue(.main))
 
-        guard let value = element.value() else {
-            screenResult.userInteraction.input = nil
+        guard let userInput = getUserInput(for: element) else {
+            userInput = .empty
+            inputPosition = nil
             showDebug()
             return
         }
+        
+        self.userInput = userInput
+        self.inputPosition = element.position()
 
-        screenResult.userInteraction.input = value
         showDebug()
     }
 
@@ -476,10 +485,51 @@ class AccessibilityNotificationsManager: ObservableObject {
             return
         }
         
-        screenResult.userInteraction.selectedText = selectedText
-        
         let input = Input(selectedText: selectedText, application: currentSource ?? "")
         PanelStateCoordinator.shared.state.pendingInput = input
+    }
+    
+    private func getUserInput(for element: AXUIElement) -> AccessibilityUserInput? {
+        // Ensure we're on the main thread
+        dispatchPrecondition(condition: .onQueue(.main))
+
+        var selectedRangeValue: CFTypeRef?
+        var selectedRange = CFRange()
+
+        guard
+            AXUIElementCopyAttributeValue(
+                element, kAXSelectedTextRangeAttribute as CFString, &selectedRangeValue) == .success
+        else {
+            print("Accessibility.getUserInput - Failed to get selected text range")
+            return nil
+        }
+        let rangeValue = selectedRangeValue as! AXValue
+
+        guard AXValueGetValue(rangeValue, .cfRange, &selectedRange) else {
+            print("Accessibility.getUserInput - Failed to convert range value")
+            return nil
+        }
+
+        var selectedTextValue: CFTypeRef?
+        _ = AXUIElementCopyParameterizedAttributeValue(
+            element,
+            kAXStringForRangeParameterizedAttribute as CFString,
+            rangeValue,
+            &selectedTextValue
+        )
+
+        guard let fullText = element.value() else { return nil }
+        
+        let cursorPosition = selectedRange.location
+        let precedingText = String(fullText.prefix(cursorPosition))
+        let followingText = String(fullText.dropFirst(cursorPosition))
+        
+        return AccessibilityUserInput(
+            fullText: fullText,
+            precedingText: precedingText,
+            followingText: followingText,
+            cursorPosition: cursorPosition
+        )
     }
 
     // MARK: Debug
@@ -494,9 +544,8 @@ class AccessibilityNotificationsManager: ObservableObject {
 
             Application Title: \(screenResult.applicationTitle ?? "N/A")
 
-            Selected Text: \(screenResult.userInteraction.selectedText ?? "N/A")
-
-            User Input: \(screenResult.userInteraction.input ?? "N/A")
+            User Input: \(userInput)
+            User Input position: \(inputPosition ?? .zero)
 
             Error Message: \(screenResult.errorMessage ?? "N/A")
 

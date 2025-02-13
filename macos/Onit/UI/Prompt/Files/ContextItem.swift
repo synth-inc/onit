@@ -72,8 +72,8 @@ struct ContextItem: View {
 extension ContextItem {
     private func showContextWindow() {
         ContextWindowsManager.shared.showContextWindow(
-            windowState: state,
-            context: item
+            context: item,
+            pendingContextList: state.pendingContextList
         )
     }
     
