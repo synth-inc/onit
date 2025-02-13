@@ -6,12 +6,14 @@
 //
 
 import Defaults
+import Foundation
 import MarkdownUI
 import SwiftUI
 
 struct GeneratedContentView: View {
     @Environment(\.model) var model
     @State private var contentHeight: CGFloat = 1000
+
     
     var prompt: Prompt
     
@@ -30,8 +32,9 @@ struct GeneratedContentView: View {
     var height: CGFloat {
         min(contentHeight, 500)
     }
-
+    
     var body: some View {
+
         VStack(alignment: .leading) {
             ParsedContentView(text: textToRead)
                 .padding(.horizontal, 16)
@@ -60,7 +63,8 @@ struct GeneratedContentView: View {
 extension Theme {
     @MainActor static var custom: Theme {
         @Default(.fontSize) var fontSize
-
+        @Default(.lineHeight) var lineHeight
+        
         return Theme()
             .text {
                 FontFamily(.custom("Inter"))
@@ -76,8 +80,14 @@ extension Theme {
             .codeBlock { configuration in
                 CodeBlockView(configuration: configuration)
             }
+            .paragraph { configuration in
+                configuration.label
+                    .markdownMargin(top: fontSize + (lineHeight * fontSize) - fontSize) // This works
+            }
     }
 }
+
+
 
 #Preview {
     GeneratedContentView(prompt: Prompt.sample)
@@ -87,6 +97,9 @@ extension Theme {
 
 struct ParsedContentView: View {
     let text: String
+    
+    @Default(.lineHeight) var lineHeight
+    @Default(.fontSize) var fontSize
     
     // ContentSegment represents either normal text or a thought block
     struct ContentSegment {
@@ -139,6 +152,7 @@ struct ParsedContentView: View {
                     Markdown(segment.content)
                         .markdownTheme(.custom)
                         .textSelection(.enabled)
+                        .lineSpacing((lineHeight * fontSize) - fontSize)
                         .multilineTextAlignment(.leading)
                         .frame(maxWidth: .infinity, alignment: .leading)
                 }
@@ -151,6 +165,8 @@ struct ThoughtProcessView: View {
     let content: String
     let streaming: Bool
     
+    @Default(.lineHeight) var lineHeight
+    @Default(.fontSize) var fontSize
     @State private var isExpanded: Bool = false
     
     var title: String {
@@ -184,6 +200,7 @@ struct ThoughtProcessView: View {
             if isExpanded && !streaming {
                 Text(content)
                     .padding(.leading, 20)
+                    .lineSpacing((lineHeight * fontSize) - fontSize)
             }
         }
         .padding(8)
