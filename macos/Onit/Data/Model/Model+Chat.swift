@@ -68,6 +68,7 @@ extension OnitModel {
             var responsesHistory: [String] = []
 
             // Go through prior prompts and add them to the history
+            let currentModelName = Defaults[.mode] == .local ? Defaults[.localModel] ?? "" : Defaults[.remoteModel]?.displayName ?? ""
             var currentPrompt: Prompt? = prompt.priorPrompt
             while currentPrompt != nil {
                 let response = currentPrompt!.responses[currentPrompt!.generationIndex]
@@ -100,6 +101,8 @@ extension OnitModel {
                     "Based on the provided instructions, either provide the output or answer any questions related to it. Provide the response without any additional comments. Provide the output ready to go."
                 
                 streamedResponse = ""
+                
+                
                 
                 switch Defaults[.mode] {
                 case .remote:
@@ -165,7 +168,7 @@ extension OnitModel {
                     }
                 }
                 
-                let response = Response(text: String(streamedResponse), type: .success)
+                let response = Response(text: String(streamedResponse), type: .success, model: currentModelName)
                 updatePrompt(prompt: prompt, response: response, instruction: curInstruction)
                 setTokenIsValid(true)
             } catch let error as FetchingError {
@@ -176,11 +179,11 @@ extension OnitModel {
                 if case .unauthorized = error {
                     setTokenIsValid(false)
                 }
-                let response = Response(text: error.localizedDescription, type: .error)
+                let response = Response(text: error.localizedDescription, type: .error, model: currentModelName)
                 updatePrompt(prompt: prompt, response: response, instruction: curInstruction)
             } catch {
                 print("Unexpected Error: \(error.localizedDescription)")
-                let response = Response(text: error.localizedDescription, type: .error)
+                let response = Response(text: error.localizedDescription, type: .error, model: currentModelName)
                 updatePrompt(prompt: prompt, response: response, instruction: curInstruction)
             }
         }

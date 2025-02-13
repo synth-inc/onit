@@ -18,10 +18,12 @@ struct GeneratedToolbar: View {
         HStack(spacing: 8) {
             copy
             regenerate
-            more
-            Spacer()
             selector
-            //            insert
+            Spacer()
+            if let model = prompt.responses[prompt.generationIndex].model {
+                Text("\(model)")
+                    .foregroundColor(Color.gray300)
+            }
         }
         .foregroundStyle(.FG)
     }

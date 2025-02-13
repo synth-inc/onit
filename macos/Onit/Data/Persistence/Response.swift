@@ -13,15 +13,17 @@ class Response {
     var text: String
     var timestamp: Date
     var type: ResponseType
+    var model: String?
 
-    init(text: String, type: ResponseType, time: Date = .now) {
+    init(text: String, type: ResponseType, model: String, time: Date = .now) {
         self.text = text
         self.timestamp = time
         self.type = type
+        self.model = model
     }
     
     static var partial: Response {
-        .init(text: "", type: .partial)
+        .init(text: "", type: .partial, model: "")
     }
     
     var isPartial: Bool {
