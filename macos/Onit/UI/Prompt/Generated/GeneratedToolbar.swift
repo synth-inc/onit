@@ -20,7 +20,9 @@ struct GeneratedToolbar: View {
             regenerate
             selector
             Spacer()
-            if let model = prompt.responses[prompt.generationIndex].model {
+            if prompt.generationIndex >= 0 &&
+                prompt.generationIndex < prompt.responses.count,
+                let model = prompt.responses[prompt.generationIndex].model {
                 Text("\(model)")
                     .foregroundColor(Color.gray300)
             }
