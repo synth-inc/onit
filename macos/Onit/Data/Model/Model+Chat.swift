@@ -157,6 +157,13 @@ extension OnitModel {
                         throw FetchingError.invalidRequest(message: "Model is required")
                     }
                     
+                    let options = LocalChatOptions(
+                        num_ctx: Defaults[.localNumCtx],
+                        temperature: Defaults[.localTemperature],
+                        top_p: Defaults[.localTopP],
+                        top_k: Defaults[.localTopK]
+                    )
+                    
                     if Defaults[.streamResponse].local {
                         addPartialPrompt(prompt: prompt, instruction: curInstruction)
                         
@@ -167,7 +174,8 @@ extension OnitModel {
                                                                             images: imagesHistory,
                                                                             autoContexts: autoContextsHistory,
                                                                             responses: responsesHistory,
-                                                                            model: model)
+                                                                            model: model,
+                                                                            options: options)
                         for try await response in asyncText {
                             streamedResponse += response
                         }
@@ -179,7 +187,8 @@ extension OnitModel {
                                                                       images: imagesHistory,
                                                                       autoContexts: autoContextsHistory,
                                                                       responses: responsesHistory,
-                                                                      model: model)
+                                                                      model: model,
+                                                                      options: options)
                     }
                 }
                 

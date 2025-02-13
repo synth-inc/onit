@@ -64,7 +64,8 @@ actor FetchingClient {
         images: [[URL]],
         autoContexts: [[String: String]],
         responses: [String],
-        model: String
+        model: String,
+        options: LocalChatOptions
     ) async throws -> String {
          // Create the user messages by appending any text files
         let userMessages = ChatEndpointMessagesBuilder.user(
@@ -79,7 +80,7 @@ actor FetchingClient {
             systemMessage: systemMessage,
             userMessages: userMessages)
         
-        let endpoint = LocalChatEndpoint(model: model, messages: localMessages)
+        let endpoint = LocalChatEndpoint(model: model, messages: localMessages, options: options)
         let response = try await execute(endpoint)
         return response.message.content
     }
