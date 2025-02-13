@@ -4,6 +4,7 @@ import SwiftUI
 
 struct GeneralTab: View {
     @Default(.fontSize) var fontSize
+    @Default(.lineHeight) var lineHeight
     @Default(.panelPosition) var panelPosition
 
     @State var isLaunchAtStartupEnabled: Bool = SMAppService.mainApp.status == .enabled
@@ -68,6 +69,27 @@ struct GeneralTab: View {
                     }
                 }
 
+                VStack(spacing: 8) {
+                    HStack {
+                        Text("Line Height")
+                        Slider(
+                            value: $lineHeight,
+                            in: 1.0...2.5,
+                            step: 0.1
+                        )
+                        Text(String(format: "%.1f", lineHeight))
+                            .monospacedDigit()
+                            .frame(width: 40)
+                    }
+
+                    HStack {
+                        Spacer()
+                        Button("Restore Default") {
+                            _lineHeight.reset()
+                        }
+                        .controlSize(.small)
+                    }
+                }
                 VStack(alignment: .leading, spacing: 8) {
                     Text("Panel Position")
                         .font(.system(size: 13))
