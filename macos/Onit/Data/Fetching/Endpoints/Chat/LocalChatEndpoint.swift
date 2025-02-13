@@ -17,6 +17,8 @@ struct LocalChatEndpoint: Endpoint {
 
     let model: String?
     let messages: [LocalChatMessage]
+    let options: LocalChatOptions
+    
     var baseURL: URL {
         var url: URL!
         DispatchQueue.main.sync {
@@ -35,22 +37,18 @@ struct LocalChatEndpoint: Endpoint {
         }
     }
     var requestBody: LocalChatRequestJSON? {
-        var options: LocalChatOptions?
         var keepAlive: String?
         
         DispatchQueue.main.sync {
             keepAlive = Defaults[.localKeepAlive]
-            
-            // Only create options if at least one parameter is set
-            if Defaults[.localNumCtx] != nil || Defaults[.localTemperature] != nil ||
-                Defaults[.localTopP] != nil || Defaults[.localTopK] != nil {
-                options = LocalChatOptions(
-                    num_ctx: Defaults[.localNumCtx],
-                    temperature: Defaults[.localTemperature],
-                    top_p: Defaults[.localTopP],
-                    top_k: Defaults[.localTopK]
-                )
-            }
+        }
+        
+        // Only create options if at least one parameter is set
+        let newOptions: LocalChatOptions?
+        if options.isEmpty {
+            newOptions = nil
+        } else {
+            newOptions = options
         }
         
         return LocalChatRequestJSON(
@@ -58,7 +56,7 @@ struct LocalChatEndpoint: Endpoint {
             messages: messages,
             stream: false,
             keep_alive: keepAlive,
-            options: options
+            options: newOptions
         )
     }
 }
@@ -77,6 +75,11 @@ struct LocalChatOptions: Codable {
     var temperature: Double?
     var top_p: Double?
     var top_k: Int?
+    
+    var isEmpty: Bool {
+        num_ctx == nil && temperature == nil &&
+        top_p == nil && top_k == nil
+    }
 }
 
 struct LocalChatMessage: Codable {
