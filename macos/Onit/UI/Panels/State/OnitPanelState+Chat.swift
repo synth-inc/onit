@@ -163,6 +163,14 @@ extension OnitPanelState {
                     isSearchingWeb[prompt.id] = false
                 }
                 
+                let keepAlive = Defaults[.localKeepAlive]
+                let options = LocalChatOptions(
+                    num_ctx: Defaults[.localNumCtx],
+                    temperature: Defaults[.localTemperature],
+                    top_p: Defaults[.localTopP],
+                    top_k: Defaults[.localTopK]
+                )
+                
                 switch Defaults[.mode] {
                 case .remote:
                     guard let model = Defaults[.remoteModel] else {

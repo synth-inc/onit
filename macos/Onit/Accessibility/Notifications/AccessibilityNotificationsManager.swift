@@ -34,6 +34,10 @@ class AccessibilityNotificationsManager: ObservableObject {
         var errorMessage: String?  // Renamed field for error message
     }
 
+//    @Published private(set) var userInput: AccessibilityUserInput = .empty
+//    @Published private(set) var selectedText: String?
+//    @Published private(set) var inputPosition: CGPoint?
+
     // MARK: - Properties
     
     @Published private(set) var screenResult: ScreenResult = .init()
@@ -449,6 +453,16 @@ class AccessibilityNotificationsManager: ObservableObject {
             showDebug()
             return
         }
+//        handleExternalElement(element) { [weak self] _ in
+//            guard let userInput = self?.getUserInput(for: element) else {
+//                self?.userInput = .empty
+//                self?.inputPosition = nil
+//                self?.showDebug()
+//                return
+//            }
+//
+//            self?.userInput = userInput
+//            self?.inputPosition = element.position()
 
         screenResult.userInteraction.input = value
         showDebug()
@@ -475,11 +489,58 @@ class AccessibilityNotificationsManager: ObservableObject {
             PanelStateCoordinator.shared.state.pendingInput = nil
             return
         }
+
         
         screenResult.userInteraction.selectedText = selectedText
         
         let input = Input(selectedText: selectedText, application: currentSource ?? "")
         PanelStateCoordinator.shared.state.pendingInput = input
+    }
+    
+    private func getUserInput(for element: AXUIElement) -> AccessibilityUserInput? {
+        // Ensure we're on the main thread
+        dispatchPrecondition(condition: .onQueue(.main))
+
+        var selectedRangeValue: CFTypeRef?
+        var selectedRange = CFRange()
+
+        guard
+            AXUIElementCopyAttributeValue(
+                element, kAXSelectedTextRangeAttribute as CFString, &selectedRangeValue) == .success
+        else {
+            print("Accessibility.getUserInput - Failed to get selected text range")
+            return nil
+        }
+        let rangeValue = selectedRangeValue as! AXValue
+
+        guard AXValueGetValue(rangeValue, .cfRange, &selectedRange) else {
+            print("Accessibility.getUserInput - Failed to convert range value")
+            return nil
+        }
+
+        var selectedTextValue: CFTypeRef?
+        _ = AXUIElementCopyParameterizedAttributeValue(
+            element,
+            kAXStringForRangeParameterizedAttribute as CFString,
+            rangeValue,
+            &selectedTextValue
+        )
+
+        guard let fullText = element.value() else { return nil }
+        
+        let cursorPosition = selectedRange.location
+        let precedingText = String(fullText.prefix(cursorPosition))
+        let followingText = String(fullText.dropFirst(cursorPosition))
+        
+        // TODO: KNA - Check if it works
+        selectedText = selectedTextValue as? String
+        
+        return AccessibilityUserInput(
+            fullText: fullText,
+            precedingText: precedingText,
+            followingText: followingText,
+            cursorPosition: cursorPosition
+        )
     }
 
     // MARK: Debug
@@ -494,9 +555,7 @@ class AccessibilityNotificationsManager: ObservableObject {
 
             Application Title: \(screenResult.applicationTitle ?? "N/A")
 
-            Selected Text: \(screenResult.userInteraction.selectedText ?? "N/A")
-
-            User Input: \(screenResult.userInteraction.input ?? "N/A")
+            User Input: \(userInput)
 
             Error Message: \(screenResult.errorMessage ?? "N/A")
 

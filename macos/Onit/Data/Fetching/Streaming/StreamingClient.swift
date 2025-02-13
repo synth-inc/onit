@@ -53,7 +53,9 @@ actor StreamingClient {
                    autoContexts: [[String: String]],
                    webSearchContexts: [[(title: String, content: String, source: String, url: URL?)]],
                    responses: [String],
-                   model: String) async throws -> AsyncThrowingStream<String, Error> {
+                   model: String,
+                   keepAlive: String?,
+                   options: LocalChatOptions) async throws -> AsyncThrowingStream<String, Error> {
         let userMessages = ChatEndpointMessagesBuilder.user(
             instructions: instructions,
             inputs: inputs,
@@ -65,7 +67,25 @@ actor StreamingClient {
             responses: responses,
             systemMessage: systemMessage,
             userMessages: userMessages)
-        let endpoint = LocalChatStreamingEndpoint(model: model, messages: localMessages)
+        
+        return try await localChat(model: model, localMessages: localMessages, keepAlive: keepAlive, options: options)
+    }
+    
+    func localChat(model: String,
+                   localMessages: [LocalChatMessage],
+                   keepAlive: String?,
+                   options: LocalChatOptions) async throws -> AsyncThrowingStream<String, Error> {
+        let endpoint = LocalChatStreamingEndpoint(model: model, messages: localMessages, keepAlive: keepAlive, options: options)
+        
+        return try await stream(endpoint: endpoint, eventParser: LocalEventParser())
+    }
+    
+    func localGenerate(systemMessage: String,
+                       prompt: String,
+                       model: String,
+                       keepAlive: String?,
+                       options: LocalChatOptions) async throws -> AsyncThrowingStream<String, Error> {
+        let endpoint = LocalGenerateStreamingEndpoint(model: model, prompt: prompt, system: systemMessage, keepAlive: keepAlive, options: options)
         
         return try await stream(endpoint: endpoint, eventParser: LocalEventParser())
     }

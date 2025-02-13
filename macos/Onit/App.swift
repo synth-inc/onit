@@ -28,6 +28,7 @@ struct App: SwiftUI.App {
     @Default(.autoContextFromCurrentWindow) var autoContextFromCurrentWindow
     @Default(.autoContextFromHighlights) var autoContextFromHighlights
     @Default(.authFlowStatus) var authFlowStatus
+    @Default(.typeaheadLearningConfig) var typeaheadLearningConfig
     
     private let appCoordinator: AppCoordinator
 
@@ -51,6 +52,7 @@ struct App: SwiftUI.App {
             MenuIcon()
                 .onAppear {
                     checkLaunchOnStartup()
+					checkLocalTesting()
                     restoreSession()
                 }
                 .onChange(of: [
@@ -64,6 +66,13 @@ struct App: SwiftUI.App {
                         debugManager.openDebugWindow()
                     } else {
                         debugManager.closeDebugWindow()
+                    }
+                }
+                .onChange(of: TypeAheadState.shared.shouldShow) { _, new in
+                    if new {
+                        TypeAheadWindowController.shared.showWindow()
+                    } else {
+                        TypeAheadWindowController.shared.closeWindow()
                     }
                 }
         }
@@ -164,6 +173,12 @@ struct App: SwiftUI.App {
                 print("Error: \(error)")
             }
         }
+    }
+    
+    private func checkLocalTesting() {
+        guard typeaheadLearningConfig.isEnabled else { return }
+        
+        TypeaheadTestingService.shared.startRemoteTesting()
     }
 
     private func restoreSession() {
