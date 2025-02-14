@@ -36,7 +36,9 @@ extension Defaults.Keys {
     static let useDeepSeek = Key<Bool>("useDeepSeek", default: false)
     static let useLocal = Key<Bool>("useLocalModel", default: false)
     
+    // Features configuration
     static let streamResponse = Key<StreamResponseConfig>("streamResponse", default: StreamResponseConfig.default)
+    static let typeAheadConfig = Key<TypeAheadConfig>("typeAheadConfig", default: TypeAheadConfig.default)
 
     // Dialogs closed
     static let closedRemote = Key<Bool>("closedRemote", default: false)

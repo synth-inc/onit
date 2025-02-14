@@ -1,8 +1,8 @@
+import AppKit
+import Defaults
 import KeyboardShortcuts
 import PostHog
 import SwiftUI
-import KeyboardShortcuts
-import AppKit
 
 struct AccessibilityTab: View {
 
@@ -44,6 +44,9 @@ struct AccessibilityTab: View {
         mode: FeatureFlagManager.shared.highlightHintMode)
 
     @ObservedObject private var featureFlagsManager = FeatureFlagManager.shared
+    
+    @Default(.availableLocalModels) var availableLocalModels
+    @Default(.typeAheadConfig) var typeAheadConfig
 
     var body: some View {
         Form {
@@ -177,6 +180,63 @@ struct AccessibilityTab: View {
                         "Shortcut", name: .launchWithAutoContext
                     )
                 }
+                
+                Section {
+                    VStack(alignment: .leading, spacing: 4) {
+                        HStack {
+                            Text("Type Ahead")
+                                .font(.system(size: 13))
+                            Spacer()
+                            Toggle("", isOn: $typeAheadConfig.isEnabled)
+                                .toggleStyle(.switch)
+                                .controlSize(.small)
+                            SettingInfoButton(
+                                title: "Auto-Context, Type ahead",
+                                description:
+                                    "When enabled, Onit will read the input's text from the foregrounded application and will suggest autocompletions based on that text. No context is ever uploaded.",
+                                defaultValue: "on",
+                                valueType: "Bool"
+                            )
+                        }
+                        Text("Display typeahead anywhere")
+                            .font(.system(size: 12))
+                            .foregroundStyle(.gray200)
+                    }
+                    if typeAheadConfig.isEnabled {
+                        VStack(alignment: .leading) {
+                            Text("Model used")
+                                .font(.system(size: 13))
+                            GroupBox {
+                                VStack(alignment: .leading, spacing: 0) {
+                                    ForEach(availableLocalModels, id: \.self) { model in
+                                        Toggle(isOn: Binding(get: {
+                                            return model == typeAheadConfig.model
+                                        }, set: { isOn in
+                                            typeAheadConfig.model = isOn ? model : nil
+                                        })) {
+                                            Text(model)
+                                                .font(.system(size: 13))
+                                                .fontWeight(.regular)
+                                                .opacity(0.85)
+                                        }
+                                        .frame(height: 36)
+                                    }
+                                }
+                                .padding(.vertical, -4)
+                                .padding(.horizontal, 4)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                            }
+                            LocalModelAdvancedOptionsView(storedStreamResponse: $typeAheadConfig.streamResponse,
+                                                          storedKeepAlive: $typeAheadConfig.keepAlive,
+                                                          storedRequestTimeout: $typeAheadConfig.requestTimeout,
+                                                          storedOptions: $typeAheadConfig.options,
+                                                          streamAdditionalInfo: "If enabled, Onit streams partial responses from model providers, offering quicker auto complete suggestions.")
+                        }
+                    }
+//                    KeyboardShortcuts.Recorder(
+//                        "Shortcut", name: .launchWithAutoContext
+//                    )
+                }
             }
         }
         .formStyle(.grouped)
@@ -199,8 +259,8 @@ struct AccessibilityTab: View {
     }
 }
 
-//#Preview {
-//    ModelContainerPreview {
-//        AccessibilityTab()
-//    }
-//}
+#Preview {
+    ModelContainerPreview {
+        AccessibilityTab()
+    }
+}
