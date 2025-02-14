@@ -37,8 +37,6 @@ class AccessibilityNotificationsManager: ObservableObject {
 
     private var model: OnitModel?
 
-    private var currentApplication: pid_t = 0
-
     private var currentSource: String?
 
     private var appElement: AXUIElement?
@@ -77,7 +75,6 @@ class AccessibilityNotificationsManager: ObservableObject {
 
         stopAppActivationObservers()
 
-        currentApplication = 0
         currentSource = nil
         appElement = nil
         observers.removeAll()
@@ -189,13 +186,10 @@ class AccessibilityNotificationsManager: ObservableObject {
                     return
                 }
 
-                // If it's the same as last time, we just toggled between Onit and that app, no need to remove observers and set up new ones.
-                if app.processIdentifier != self.currentApplication {
-                    self.stopAccessibilityObservers(for: app.processIdentifier)
-                    self.handleAppActivation(
-                        appName: app.localizedName, processID: app.processIdentifier)
-                    self.startAccessibilityObservers(for: app.processIdentifier)
-                }
+                self.stopAccessibilityObservers(for: app.processIdentifier)
+                self.handleAppActivation(
+                    appName: app.localizedName, processID: app.processIdentifier)
+                self.startAccessibilityObservers(for: app.processIdentifier)
             }
         }
     }
@@ -227,7 +221,6 @@ class AccessibilityNotificationsManager: ObservableObject {
 
         let newAppElement = processID.getAXUIElement()
         self.appElement = newAppElement
-        self.currentApplication = processID
         self.currentSource = appName
 
         processSelectedText(selectedText, for: selectedElement)
