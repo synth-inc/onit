@@ -19,10 +19,13 @@ struct App: SwiftUI.App {
     @Environment(\.model) var model
     @NSApplicationDelegateAdaptor(AppDelegate.self) var delegate
     @ObservedObject private var featureFlagsManager = FeatureFlagManager.shared
+    @ObservedObject private var accessibilityManager = AccessibilityNotificationsManager.shared
 
     @Default(.launchOnStartupRequested) var launchOnStartupRequested
 
     @State var accessibilityPermissionRequested = false
+    
+    private let autoCompleteController = AutoCompleteWindowController.shared
 
     init() {
         KeyboardShortcutsManager.configure(model: model)
@@ -89,6 +92,15 @@ struct App: SwiftUI.App {
                         model.openDebugWindow()
                     } else {
                         model.closeDebugWindow()
+                    }
+                }
+                .onChange(of: accessibilityManager.screenResult.userInteraction) { old, new in
+                    if old.input != new.input {
+                        if new.input?.isEmpty == false {
+                            autoCompleteController.showWindow()
+                        } else {
+                            autoCompleteController.closeWindow()
+                        }
                     }
                 }
         }
