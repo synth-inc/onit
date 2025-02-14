@@ -94,13 +94,11 @@ struct App: SwiftUI.App {
                         model.closeDebugWindow()
                     }
                 }
-                .onChange(of: accessibilityManager.screenResult.userInteraction) { old, new in
-                    if old.input != new.input {
-                        if new.input?.isEmpty == false {
-                            autoCompleteController.showWindow()
-                        } else {
-                            autoCompleteController.closeWindow()
-                        }
+                .onChange(of: accessibilityManager.userInput) { old, new in
+                    if new != .empty {
+                        autoCompleteController.showWindow()
+                    } else {
+                        autoCompleteController.closeWindow()
                     }
                 }
         }
