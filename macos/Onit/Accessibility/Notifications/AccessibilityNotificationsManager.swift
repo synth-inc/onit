@@ -39,8 +39,6 @@ class AccessibilityNotificationsManager: ObservableObject {
 
     private var currentSource: String?
 
-    private var appElement: AXUIElement?
-
     private var observers: [pid_t: AXObserver] = [:]
 
     private var selectedSource: String?
@@ -76,7 +74,6 @@ class AccessibilityNotificationsManager: ObservableObject {
         stopAppActivationObservers()
 
         currentSource = nil
-        appElement = nil
         observers.removeAll()
     }
 
@@ -101,7 +98,7 @@ class AccessibilityNotificationsManager: ObservableObject {
     }
 
     private func startAccessibilityObservers(for pid: pid_t) {
-        if !Thread.isMainThread {
+        guard Thread.isMainThread else {
             DispatchQueue.main.async {
                 self.startAccessibilityObservers(for: pid)
             }
@@ -114,56 +111,52 @@ class AccessibilityNotificationsManager: ObservableObject {
         }
 
         print("Start accessibility observers for PID: \(pid)")
-        if let appElement = self.appElement {
-            var observer: AXObserver?
+        var observer: AXObserver?
 
-            let observerCallback: AXObserverCallbackWithInfo = {
-                observer, element, notification, userInfo, refcon in
-                // Dispatch to main thread immediately
-                DispatchQueue.main.async {
-                    let accessibilityInstance = Unmanaged<AccessibilityNotificationsManager>
-                        .fromOpaque(
-                            refcon!
-                        ).takeUnretainedValue()
-                    accessibilityInstance.handleAccessibilityNotifications(
-                        notification as String, info: userInfo as! [String: Any] as Dictionary,
-                        element: element, observer: observer)
-                }
+        let observerCallback: AXObserverCallbackWithInfo = {
+            observer, element, notification, userInfo, refcon in
+            // Dispatch to main thread immediately
+            DispatchQueue.main.async {
+                let accessibilityInstance = Unmanaged<AccessibilityNotificationsManager>
+                    .fromOpaque(
+                        refcon!
+                    ).takeUnretainedValue()
+                accessibilityInstance.handleAccessibilityNotifications(
+                    notification as String, info: userInfo as! [String: Any] as Dictionary,
+                    element: element, observer: observer)
             }
+        }
 
-            let result = AXObserverCreateWithInfoCallback(pid, observerCallback, &observer)
+        let result = AXObserverCreateWithInfoCallback(pid, observerCallback, &observer)
 
-            if result == .success, let observer = observer {
-                // Release the previous observer if it exists
-                self.observers[pid] = observer
-                let refCon = Unmanaged.passUnretained(self).toOpaque()
-                for notification in Config.notifications {
-                    // print("Registering observer for \(notification)...")
-                    AXObserverAddNotification(
-                        observer, appElement, notification as CFString, refCon)
-                }
-                // Add the observer to the main run loop
-                CFRunLoopAddSource(
-                    CFRunLoopGetMain(), AXObserverGetRunLoopSource(observer), .defaultMode)
-                print("Observer registered for PID: \(pid)")
-
-            } else {
-                print("Failed to create observer for PID: \(pid) with result: \(result)")
+        if result == .success, let observer = observer {
+            // Release the previous observer if it exists
+            self.observers[pid] = observer
+            let refCon = Unmanaged.passUnretained(self).toOpaque()
+            for notification in Config.notifications {
+                // print("Registering observer for \(notification)...")
+                AXObserverAddNotification(
+                    observer, pid.getAXUIElement(), notification as CFString, refCon)
             }
+            // Add the observer to the main run loop
+            CFRunLoopAddSource(
+                CFRunLoopGetMain(), AXObserverGetRunLoopSource(observer), .defaultMode)
+            print("Observer registered for PID: \(pid)")
+
+        } else {
+            print("Failed to create observer for PID: \(pid) with result: \(result)")
         }
     }
 
     private func stopAccessibilityObservers(for pid: pid_t) {
         // Check if the process ID is already in self.observers
-        guard let appElement = self.appElement,
-            let existingObserver = self.observers[pid]
-        else { return }
+        guard let existingObserver = self.observers[pid] else { return }
 
         let runLoopSource = AXObserverGetRunLoopSource(existingObserver)
         CFRunLoopRemoveSource(CFRunLoopGetMain(), runLoopSource, .defaultMode)
 
         for notification in Config.notifications {
-            AXObserverRemoveNotification(existingObserver, appElement, notification as CFString)
+            AXObserverRemoveNotification(existingObserver, pid.getAXUIElement(), notification as CFString)
         }
 
         self.observers.removeValue(forKey: pid)
@@ -209,23 +202,14 @@ class AccessibilityNotificationsManager: ObservableObject {
     // MARK: Handling app activated/deactived
 
     private func handleAppActivation(appName: String?, processID: pid_t) {
-        guard processID != getpid() else {
-            print("Ignoring handleAppActivation for our own app.")
-            return
-        }
-
         let selectedText = selectedTextByApp[appName ?? "Unknown"]
         let selectedElement = selectedElementByApp[appName ?? "Unknown"]
 
         print("\nApplication activated: \(appName ?? "Unknown") \(processID)")
 
-        let newAppElement = processID.getAXUIElement()
-        self.appElement = newAppElement
-        self.currentSource = appName
-
+        currentSource = appName
         processSelectedText(selectedText, for: selectedElement)
-
-        parseAccessibility(for: newAppElement)
+        parseAccessibility(for: processID)
     }
 
     private func handleAccessibilityNotifications(
@@ -258,9 +242,7 @@ class AccessibilityNotificationsManager: ObservableObject {
         handleExternalElement(element) { [weak self] elementPid in
             print("Focus change from pid: \(elementPid)")
 
-            if let appElement = self?.appElement {
-                self?.parseAccessibility(for: appElement)
-            }
+            self?.parseAccessibility(for: elementPid)
         }
     }
 
@@ -297,27 +279,31 @@ class AccessibilityNotificationsManager: ObservableObject {
 
     // MARK: Parsing
 
-    private func parseAccessibility(for element: AXUIElement) {
+    private func parseAccessibility(for pid: pid_t) {
         guard FeatureFlagManager.shared.accessibilityAutoContext else {
             self.screenResult = .init()
 
             return
         }
-
-        Task {
-            var results = await AccessibilityParser.shared.getAllTextInElement(appElement: element)
-
-            screenResult.elapsedTime = results?[AccessibilityParsedElements.elapsedTime]
-            screenResult.applicationName = results?[AccessibilityParsedElements.applicationName]
-            screenResult.applicationTitle = results?[AccessibilityParsedElements.applicationTitle]
-
+        
+        Task.detached(priority: .background) { [pid] in
+            var results = await AccessibilityParser.shared.getAllTextInElement(appElement: pid.getAXUIElement())
+            let elapsedTime = results?[AccessibilityParsedElements.elapsedTime]
+            let appName = results?[AccessibilityParsedElements.applicationName]
+            let appTitle = results?[AccessibilityParsedElements.applicationTitle]
+            
             results?.removeValue(forKey: AccessibilityParsedElements.elapsedTime)
             results?.removeValue(forKey: AccessibilityParsedElements.applicationName)
             results?.removeValue(forKey: AccessibilityParsedElements.applicationTitle)
 
-            screenResult.others = results
+            await MainActor.run {
+                self.screenResult.elapsedTime = elapsedTime
+                self.screenResult.applicationName = appName
+                self.screenResult.applicationTitle = appTitle
+                self.screenResult.others = results
 
-            showDebug()
+                self.showDebug()
+            }
         }
     }
 
