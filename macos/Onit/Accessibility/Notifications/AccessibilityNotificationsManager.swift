@@ -19,21 +19,12 @@ class AccessibilityNotificationsManager: ObservableObject {
     // MARK: - ScreenResult
 
     @Published private(set) var screenResult: ScreenResult = .init()
+    @Published private(set) var userInput: AccessibilityUserInput = .empty
 
     struct ScreenResult {
-        struct UserInteractions: Equatable {
-            var selectedText: String?
-            var input: String?
-            
-            static func == (lhs: Self, rhs: Self) -> Bool {
-                lhs.selectedText == rhs.selectedText && lhs.input == rhs.input
-            }
-        }
-
         var elapsedTime: String?
         var applicationName: String?
         var applicationTitle: String?
-        var userInteraction: UserInteractions = .init()
         var others: [String: String]?
     }
 
@@ -321,14 +312,14 @@ class AccessibilityNotificationsManager: ObservableObject {
         dispatchPrecondition(condition: .onQueue(.main))
 
         handleExternalElement(element) { [weak self] _ in
-            guard let value = element.value() else {
-                self?.screenResult.userInteraction.input = nil
+            guard let userInput = self?.getUserInput(for: element) else {
+                self?.userInput = .empty
                 self?.inputElement = nil
                 self?.showDebug()
                 return
             }
 
-            self?.screenResult.userInteraction.input = value
+            self?.userInput = userInput
             self?.inputElement = element
 
             self?.showDebug()
@@ -364,7 +355,7 @@ class AccessibilityNotificationsManager: ObservableObject {
 
             return
         }
-        screenResult.userInteraction.selectedText = selectedText
+        userInput.selectedText = selectedText
 
         selectedSource = currentSource
 
@@ -372,6 +363,50 @@ class AccessibilityNotificationsManager: ObservableObject {
         HighlightHintWindowController.shared.show(bound)
 
         model?.pendingInput = Input(selectedText: selectedText, application: currentSource ?? "")
+    }
+    
+    func getUserInput(for element: AXUIElement) -> AccessibilityUserInput? {
+        // Ensure we're on the main thread
+        dispatchPrecondition(condition: .onQueue(.main))
+
+        var selectedRangeValue: CFTypeRef?
+        var selectedRange = CFRange()
+
+        guard
+            AXUIElementCopyAttributeValue(
+                element, kAXSelectedTextRangeAttribute as CFString, &selectedRangeValue) == .success
+        else {
+            print("Accessibility.getUserInput - Failed to get selected text range")
+            return nil
+        }
+        let rangeValue = selectedRangeValue as! AXValue
+
+        guard AXValueGetValue(rangeValue, .cfRange, &selectedRange) else {
+            print("Accessibility.getUserInput - Failed to convert range value")
+            return nil
+        }
+
+        var selectedTextValue: CFTypeRef?
+        _ = AXUIElementCopyParameterizedAttributeValue(
+            element,
+            kAXStringForRangeParameterizedAttribute as CFString,
+            rangeValue,
+            &selectedTextValue
+        )
+
+        guard let fullText = element.value() else { return nil }
+        
+        let cursorPosition = selectedRange.location
+        let precedingText = String(fullText.prefix(cursorPosition))
+        let followingText = String(fullText.dropFirst(cursorPosition))
+        
+        return AccessibilityUserInput(
+            selectedText: selectedTextValue as? String,
+            fullText: fullText,
+            precedingText: precedingText,
+            followingText: followingText,
+            cursorPosition: cursorPosition
+        )
     }
 
     private func extractSelectedText(from element: AXUIElement) -> String? {
@@ -465,9 +500,7 @@ class AccessibilityNotificationsManager: ObservableObject {
 
             Application Title: \(screenResult.applicationTitle ?? "N/A")
 
-            Selected Text: \(screenResult.userInteraction.selectedText ?? "N/A")
-
-            User Input: \(screenResult.userInteraction.input ?? "N/A")
+            User Input: \(userInput)
 
             =============================
 
