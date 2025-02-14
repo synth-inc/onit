@@ -38,6 +38,7 @@ class AccessibilityNotificationsManager: ObservableObject {
 
     private var selectedSource: String?
 
+    private var inputElement: AXUIElement?
     private var selectedTextByApp: [String: String] = [:]
     private var selectedElementByApp: [String: AXUIElement] = [:]
 
