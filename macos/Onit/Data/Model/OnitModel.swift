@@ -95,11 +95,13 @@ import SwiftUI
             }
             localFetchFailed = false
 
+            // Reset the closedNoLocalModels flag when local models are successfully fetched.
+            Defaults[.closedNoLocalModels] = false
+
             // If relevant shrink the dialog box to account for the removed SetupDialog.
             shrinkContent()
         } catch {
             print("Error fetching local models:", error)
-
             localFetchFailed = true
             Defaults[.availableLocalModels] = []
             Defaults[.localModel] = nil

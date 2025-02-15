@@ -13,8 +13,7 @@ struct SetUpDialogs: View {
     @Environment(\.remoteModels) var remoteModels
     @Environment(\.openSettings) var openSettings
 
-    @State var closedNoLocalModels = false
-    @State var closedNoRemoteModels = false
+    
 
     @State private var fetchingRemote = false
     @State private var fetchingLocal = false
@@ -26,6 +25,8 @@ struct SetUpDialogs: View {
     @Default(.closedXAI) var closedXAI
     @Default(.closedGoogleAI) var closedGoogleAI
     @Default(.closedDeepSeek) var closedDeepSeek
+    @Default(.closedNoLocalModels) var closedNoLocalModels
+    @Default(.closedNoRemoteModels) var closedNoRemoteModels
     @Default(.seenLocal) var seenLocal
     @Default(.closedNewRemoteData) var closedNewRemoteData
     @Default(.closedDeprecatedRemoteData) var closedDeprecatedRemoteData
