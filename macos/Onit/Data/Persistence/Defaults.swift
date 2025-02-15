@@ -46,6 +46,8 @@ extension Defaults.Keys {
     static let closedXAI = Key<Bool>("closedXAI", default: false)
     static let closedGoogleAI = Key<Bool>("closedGoogleAI", default: false)
     static let closedDeepSeek = Key<Bool>("closedDeepSeek", default: false)
+    static let closedNoLocalModels = Key<Bool>("closedNoLocalModels", default: false)
+    static let closedNoRemoteModels = Key<Bool>("closedNoRemoteModels", default: false)
     static let closedNewRemoteData = Key<Data>("closedNewRemoteData", default: Data())
     static let closedDeprecatedRemoteData = Key<Data>("closedDeprecatedRemoteData", default: Data())
     static let closedAutoContextDialog = Key<Bool>("closedAutoContext", default: false)
