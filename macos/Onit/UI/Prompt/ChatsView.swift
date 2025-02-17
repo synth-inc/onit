@@ -9,7 +9,8 @@ import SwiftUI
 
 struct ChatsView: View {
     @Environment(\.model) var model
-    @State private var windowTopOffset: CGFloat = 0
+    @State private var contentHeight: CGFloat = 0
+    @State private var lastPromptHeight: CGFloat = 0
 
     let chatsID = "chats"
 
@@ -21,9 +22,9 @@ struct ChatsView: View {
             - model.headerHeight - model.inputHeight - model.setUpHeight
         return availableHeight
     }
-
-    var contentHeight: CGFloat {
-        max(1, model.contentHeight)
+    
+    var realHeight: CGFloat {
+        min(contentHeight, maxHeight)
     }
 
     var lastGenerationSate: GenerationState {
@@ -36,15 +37,23 @@ struct ChatsView: View {
                 LazyVStack(spacing: -16) {
                     ForEach(model.currentPrompts ?? []) { prompt in
                         PromptView(prompt: prompt)
-                            .background {
-                                if prompt == model.currentPrompts?.last {
-                                    heightReader
+                            .background(
+                                Group {
+                                    if prompt == model.currentPrompts?.last {
+                                        lastPromptHeightReader(scrollProxy: proxy)
+                                    }
                                 }
-                            }
+                            )
                     }
                 }
                 .id(chatsID)
+                .background(heightReader)
             }
+            .frame(
+                minHeight: realHeight,
+                idealHeight: realHeight,
+                alignment: .top
+            )
             .onChange(of: model.currentPrompts?.count) {
                 withAnimation {
                     proxy.scrollTo(chatsID, anchor: .bottom)
@@ -56,38 +65,40 @@ struct ChatsView: View {
                 }
             }
         }
-        .frame(
-            minHeight: min(maxHeight, contentHeight),
-            idealHeight: min(maxHeight, contentHeight),
-            maxHeight: maxHeight
-        )
-        .onAppear {
-            updateWindowTopOffset()
-        }
-        .onReceive(NotificationCenter.default.publisher(for: NSWindow.didMoveNotification)) { _ in
-            updateWindowTopOffset()
-        }
-        .onReceive(NotificationCenter.default.publisher(for: NSWindow.didResizeNotification)) { _ in
-            updateWindowTopOffset()
-        }
-    }
-
-    func updateWindowTopOffset() {
-        if let window = model.panel {
-            let screenHeight = NSScreen.main!.frame.height
-            let windowTopY = window.frame.origin.y + window.frame.size.height
-            windowTopOffset = screenHeight - windowTopY
-        }
     }
 
     var heightReader: some View {
         GeometryReader { proxy in
             Color.clear
                 .onAppear {
-                    model.contentHeight = proxy.size.height
+                    let oldHeight = realHeight
+                    contentHeight = proxy.size.height
+                    
+                    if oldHeight != realHeight {
+                        model.adjustPanelSize()
+                    }
                 }
                 .onChange(of: proxy.size.height) {
-                    model.contentHeight = proxy.size.height
+                    let oldHeight = realHeight
+                    contentHeight = proxy.size.height
+                    
+                    if oldHeight != realHeight {
+                        model.adjustPanelSize()
+                    }
+                }
+        }
+    }
+    
+    func lastPromptHeightReader(scrollProxy: ScrollViewProxy) -> some View {
+        GeometryReader { promptProxy in
+            Color.clear
+                .onChange(of: promptProxy.size.height) { _, newHeight in
+                    if lastPromptHeight != newHeight {
+                        lastPromptHeight = newHeight
+                        withAnimation {
+                            scrollProxy.scrollTo(chatsID, anchor: .bottom)
+                        }
+                    }
                 }
         }
     }
