@@ -5,12 +5,14 @@
 //  Created by Benjamin Sage on 1/17/25.
 //
 
+import Defaults
 import SwiftUI
 
 struct ChatsView: View {
     @Environment(\.model) var model
     @State private var contentHeight: CGFloat = 0
     @State private var lastPromptHeight: CGFloat = 0
+    @Default(.isPanelExpanded) var isPanelExpanded: Bool
 
     let chatsID = "chats"
 
@@ -24,7 +26,7 @@ struct ChatsView: View {
     }
     
     var realHeight: CGFloat {
-        min(contentHeight, maxHeight)
+        isPanelExpanded ? maxHeight : min(contentHeight, maxHeight)
     }
 
     var lastGenerationSate: GenerationState {
