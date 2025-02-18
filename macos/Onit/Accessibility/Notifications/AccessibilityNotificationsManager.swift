@@ -460,34 +460,6 @@ class AccessibilityNotificationsManager: ObservableObject {
 
         callback(elementPid)
     }
-    
-    func modifyText(_ newText: String) {
-        guard let element = inputElement else {
-            print("Impossible de modifier le texte - aucun element défini")
-            return
-        }
-        guard canModifyText(element: element) else {
-            print("Impossible de modifier le texte - vérifiez les permissions d'accessibilité")
-            return
-        }
-        let value = newText as CFString
-        
-        let result = AXUIElementSetAttributeValue(element, kAXValueAttribute as CFString, value)
-        
-        // Vérifier le résultat
-        if result == .success {
-            print("Texte modifié avec succès")
-        } else {
-            print("Échec de la modification du texte : \(result.rawValue)")
-        }
-    }
-
-    private func canModifyText(element: AXUIElement) -> Bool {
-        var isSettable: DarwinBoolean = false
-        let result = AXUIElementIsAttributeSettable(element, kAXValueAttribute as CFString, &isSettable)
-        
-        return result == .success && isSettable.boolValue
-    }
 
     // MARK: Debug
 

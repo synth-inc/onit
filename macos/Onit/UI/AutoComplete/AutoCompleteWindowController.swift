@@ -18,12 +18,14 @@ class AutoCompleteWindowController: NSObject, NSWindowDelegate {
 
     // MARK: - Properties
 
+    private let state: AutoCompleteState
     private let contentView: AutoCompleteView?
     private var window: NSWindow?
 
     // MARK: - Initializers
 
     override init() {
+        self.state = AutoCompleteState.shared
         self.contentView = AutoCompleteView()
 
         super.init()
@@ -35,7 +37,7 @@ class AutoCompleteWindowController: NSObject, NSWindowDelegate {
         window.styleMask = [.borderless]
         window.isOpaque = false
         window.backgroundColor = NSColor.clear
-        window.level = .modalPanel
+        window.level = .floating
         window.hasShadow = false
         window.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary, .ignoresCycle]
         window.isReleasedWhenClosed = false
@@ -44,6 +46,22 @@ class AutoCompleteWindowController: NSObject, NSWindowDelegate {
         window.hidesOnDeactivate = false
 
         self.window = window
+        
+        setupEventMonitor()
+    }
+
+    private func setupEventMonitor() {
+        NSEvent.addGlobalMonitorForEvents(matching: .keyDown) { [weak self] event in
+            guard let self = self else { return }
+            
+            if event.keyCode == 48 {
+                Task { @MainActor in
+                    if !self.state.completion.isEmpty {
+                        self.state.insertSuggestion()
+                    }
+                }
+            }
+        }
     }
 
     // MARK: - Functions
@@ -80,11 +98,9 @@ class AutoCompleteWindowController: NSObject, NSWindowDelegate {
     private func positionWindow(at position: CGPoint) {
         guard let window = window else { return }
         
-        // Convertir les coordonnées pour le système de coordonnées de macOS
         let screenHeight = NSScreen.main?.frame.height ?? 0
         let adjustedY = screenHeight - position.y
         
-        // Trouver l'écran qui contient le point
         if let screen = NSScreen.screens.first(where: { $0.frame.contains(NSPoint(x: position.x, y: adjustedY)) }) {
             let visibleFrame = screen.visibleFrame
             
@@ -92,7 +108,6 @@ class AutoCompleteWindowController: NSObject, NSWindowDelegate {
             var originX = position.x - windowFrame.width / 2
             var originY = adjustedY - windowFrame.height
             
-            // Empêcher la fenêtre de sortir de l'écran
             originX = max(visibleFrame.minX, min(originX, visibleFrame.maxX - windowFrame.width))
             originY = max(visibleFrame.minY, min(originY, visibleFrame.maxY - windowFrame.height))
             
