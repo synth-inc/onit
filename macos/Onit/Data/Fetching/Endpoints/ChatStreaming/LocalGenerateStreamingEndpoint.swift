@@ -1,5 +1,5 @@
 //
-//  LocalChatStreamingEndpoint.swift
+//  LocalGenerateStreamingEndpoint.swift
 //  Onit
 //
 //  Created by Kévin Naudin on 06/02/2025.
@@ -9,14 +9,15 @@ import Defaults
 import EventSource
 import Foundation
 
-struct LocalChatStreamingEndpoint: StreamingEndpoint {
+struct LocalGenerateStreamingEndpoint: StreamingEndpoint {
     var additionalHeaders: [String : String]?
     
-    typealias Request = LocalChatRequestJSON
-    typealias Response = LocalChatStreamingResponse
+    typealias Request = LocalGenerateRequestJSON
+    typealias Response = LocalGenerateStreamingResponse
 
     let model: String?
-    let messages: [LocalChatMessage]
+    let prompt: String
+    let system: String?
     let keepAlive: String?
     let options: LocalChatOptions
     
@@ -28,7 +29,7 @@ struct LocalChatStreamingEndpoint: StreamingEndpoint {
         return url
     }
 
-    var path: String { "/api/chat" }
+    var path: String { "/api/generate" }
     var getParams: [String: String]? { nil }
     var method: HTTPMethod { .post }
     var token: String? { nil }
@@ -37,7 +38,7 @@ struct LocalChatStreamingEndpoint: StreamingEndpoint {
             return Defaults[.localRequestTimeout]
         }
     }
-    var requestBody: LocalChatRequestJSON? {
+    var requestBody: LocalGenerateRequestJSON? {
         // Only create options if at least one parameter is set
         let newOptions: LocalChatOptions?
         if options.isEmpty {
@@ -46,9 +47,10 @@ struct LocalChatStreamingEndpoint: StreamingEndpoint {
             newOptions = options
         }
         
-        return LocalChatRequestJSON(
+        return LocalGenerateRequestJSON(
             model: model,
-            messages: messages,
+            prompt: prompt,
+            system: system,
             stream: true,
             keep_alive: keepAlive,
             options: newOptions
@@ -59,29 +61,26 @@ struct LocalChatStreamingEndpoint: StreamingEndpoint {
         if let data = event.data?.data(using: .utf8) {
             let response = try JSONDecoder().decode(Response.self, from: data)
             
-            return response.message?.content
+            return response.response
         }
         
         return nil
     }
     
     func getStreamingErrorMessage(data: Data) -> String? {
-        let response = try? JSONDecoder().decode(LocalChatStreamingError.self, from: data)
+        let response = try? JSONDecoder().decode(LocalGenerateStreamingError.self, from: data)
         
         return response?.error
     }
 }
 
-struct LocalChatStreamingResponse: Codable {
-    let message: Message?
+struct LocalGenerateStreamingResponse: Codable {
+    let model: String
+    let created_at: String
+    let response: String
     let done: Bool
-    
-    struct Message: Codable {
-        let role: String
-        let content: String
-    }
 }
 
-struct LocalChatStreamingError: Codable {
+struct LocalGenerateStreamingError: Codable {
     let error: String
 }
