@@ -20,6 +20,8 @@ class AccessibilityNotificationsManager: ObservableObject {
 
     @Published private(set) var screenResult: ScreenResult = .init()
     @Published private(set) var userInput: AccessibilityUserInput = .empty
+    @Published private(set) var selectedText: String?
+    @Published private(set) var inputPosition: CGPoint?
 
     struct ScreenResult {
         var elapsedTime: String?
@@ -38,7 +40,7 @@ class AccessibilityNotificationsManager: ObservableObject {
 
     private var selectedSource: String?
 
-    private var inputElement: AXUIElement?
+    
     private var selectedTextByApp: [String: String] = [:]
     private var selectedElementByApp: [String: AXUIElement] = [:]
 
@@ -54,6 +56,10 @@ class AccessibilityNotificationsManager: ObservableObject {
 
     func setModel(_ model: OnitModel) {
         self.model = model
+    }
+    
+    func resetInput() {
+        userInput = .empty
     }
 
     // MARK: Start / Stop
@@ -312,13 +318,13 @@ class AccessibilityNotificationsManager: ObservableObject {
         handleExternalElement(element) { [weak self] _ in
             guard let userInput = self?.getUserInput(for: element) else {
                 self?.userInput = .empty
-                self?.inputElement = nil
+                self?.inputPosition = nil
                 self?.showDebug()
                 return
             }
 
             self?.userInput = userInput
-            self?.inputElement = element
+            self?.inputPosition = element.position()
 
             self?.showDebug()
         }
@@ -353,7 +359,7 @@ class AccessibilityNotificationsManager: ObservableObject {
 
             return
         }
-        userInput.selectedText = selectedText
+        self.selectedText = selectedText
 
         selectedSource = currentSource
 
@@ -363,7 +369,7 @@ class AccessibilityNotificationsManager: ObservableObject {
         model?.pendingInput = Input(selectedText: selectedText, application: currentSource ?? "")
     }
     
-    func getUserInput(for element: AXUIElement) -> AccessibilityUserInput? {
+    private func getUserInput(for element: AXUIElement) -> AccessibilityUserInput? {
         // Ensure we're on the main thread
         dispatchPrecondition(condition: .onQueue(.main))
 
@@ -398,8 +404,10 @@ class AccessibilityNotificationsManager: ObservableObject {
         let precedingText = String(fullText.prefix(cursorPosition))
         let followingText = String(fullText.dropFirst(cursorPosition))
         
+        // TODO: KNA - Check if it works
+        selectedText = selectedTextValue as? String
+        
         return AccessibilityUserInput(
-            selectedText: selectedTextValue as? String,
             fullText: fullText,
             precedingText: precedingText,
             followingText: followingText,
