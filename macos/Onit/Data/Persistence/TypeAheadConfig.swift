@@ -24,7 +24,7 @@ struct TypeAheadConfig: Codable, Defaults.Serializable {
         streamResponse: true,
         keepAlive: nil,
         requestTimeout: 60.0,
-        options: LocalChatOptions(num_ctx: 15, temperature: 0.2, top_p: 0.9, top_k: nil)
+        options: LocalChatOptions(num_ctx: 50, temperature: 0.2, top_p: 0.9, top_k: 40)
     )
 }
 
