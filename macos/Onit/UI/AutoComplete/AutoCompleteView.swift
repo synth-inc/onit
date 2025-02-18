@@ -16,21 +16,13 @@ struct AutoCompleteView: View {
                 ProgressView()
                     .controlSize(.small)
             }
-            Button {
-                insertSuggestion()
-            } label: {
-                autoCompleteText
-            }
-            .buttonStyle(.plain)
+            
+            autoCompleteText
             
             if !state.isLoading && !state.completion.isEmpty{
                 shortcutView
                 menuButton
             }
-        }
-        .keyboardShortcut(.tab, modifiers: [.command])
-        .onSubmit {
-            insertSuggestion()
         }
         .padding(.vertical, 4)
         .padding(.horizontal, 6)
@@ -74,14 +66,6 @@ struct AutoCompleteView: View {
     
     private func displayMenu() {
         // TODO: KNA
-    }
-    
-    private func insertSuggestion() {
-        let autoCompleteSuggestion = state.completion
-        
-        if !autoCompleteSuggestion.isEmpty {
-            AccessibilityNotificationsManager.shared.modifyText(autoCompleteSuggestion)
-        }
     }
 }
 
