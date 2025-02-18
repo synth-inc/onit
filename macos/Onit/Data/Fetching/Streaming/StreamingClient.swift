@@ -32,6 +32,8 @@ actor StreamingClient {
             systemMessage: systemMessage,
             userMessages: userMessages)
 
+        
+        
         return try await stream(endpoint: endpoint)
     }
     
