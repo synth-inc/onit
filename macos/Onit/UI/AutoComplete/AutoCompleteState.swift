@@ -23,8 +23,7 @@ final class AutoCompleteState {
     var isLoading = false
     var error: AutoCompleteError?
     
-    private var completionTask: Task<Void, Never>?
-    private var debounceTask: Task<Void, Never>?
+    private var currentTaskId: UUID?
     
     // MARK: - Initializer
     
@@ -34,79 +33,105 @@ final class AutoCompleteState {
         }
     }
     
+    // MARK: - Functions
+    
+    func insertSuggestion() {
+        if !isLoading && !completion.isEmpty {
+            let pasteboard = NSPasteboard.general
+            let oldValue = pasteboard.string(forType: .string) ?? ""
+            
+            pasteboard.clearContents()
+            pasteboard.setString(completion, forType: .string)
+
+            let source = CGEventSource(stateID: .hidSystemState)
+            let cmdKeyCode: CGKeyCode = 0x37
+            let vKeyCode: CGKeyCode = 0x09
+            let cmdDown = CGEvent(keyboardEventSource: source, virtualKey: cmdKeyCode, keyDown: true)
+            let cmdUp = CGEvent(keyboardEventSource: source, virtualKey: cmdKeyCode, keyDown: false)
+            let vDown = CGEvent(keyboardEventSource: source, virtualKey: vKeyCode, keyDown: true)
+            let vUp = CGEvent(keyboardEventSource: source, virtualKey: vKeyCode, keyDown: false)
+
+            cmdDown?.flags = .maskCommand
+            vDown?.flags = .maskCommand
+
+            cmdDown?.post(tap: .cghidEventTap)
+            vDown?.post(tap: .cghidEventTap)
+            vUp?.post(tap: .cghidEventTap)
+            cmdUp?.post(tap: .cghidEventTap)
+            
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                pasteboard.clearContents()
+                pasteboard.setString(oldValue, forType: .string)
+            }
+        }
+    }
+    
     // MARK: - Private functions
     
     private func startObserving() {
         Task { @MainActor in
             let manager = AccessibilityNotificationsManager.shared
             
-            for await userInput in manager.$userInput.values {
-                debounce {
-                    await MainActor.run {
-                        guard Defaults[.typeAheadConfig].isEnabled else { return }
-                        
-                        if userInput == .empty {
-                            print("\(Date()) : changes detected EMPTY")
-                            self.completion = ""
-                            self.isLoading = false
-                            self.error = nil
-                        } else {
-                            print("\(Date()) : changes detected \(userInput)")
-                            Task.detached {
-                                await self.requestCompletion()
-                            }
-                        }
+            for try await userInput in manager.$userInput.values {
+                Task { @MainActor in
+                    let taskId = UUID()
+                    self.currentTaskId = taskId
+                    
+                    guard Defaults[.typeAheadConfig].isEnabled else { return }
+                    
+                    if userInput.precedingText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                        self.completion = ""
+                        self.isLoading = false
+                        self.error = nil
+                        return
                     }
+                    
+                    await self.requestCompletion(taskId: taskId)
                 }
             }
         }
     }
     
-    private func requestCompletion() async {
+    private func requestCompletion(taskId: UUID) async {
+        guard taskId == currentTaskId else { return }
+        
         await MainActor.run {
-            completionTask?.cancel()
-            isLoading = true
-            error = nil
+            self.isLoading = true
+            self.error = nil
         }
         
-        completionTask = Task.detached {
-            do {
-                var fullCompletion = ""
-                let stream = try await AutoCompleteService.complete()
+        do {
+            var fullCompletion = ""
+            let stream = try await Task.detached {
+                return try await AutoCompleteService.complete()
+            }.value
+            
+            for try await chunk in stream {
+                guard taskId == currentTaskId else { return }
                 
-                for try await chunk in stream {
-                    guard !Task.isCancelled else { return }
-                    
-                    fullCompletion += chunk
-                    
-                    await MainActor.run {
-                        self.completion = fullCompletion
-                    }
-                }
-            } catch let error as AutoCompleteError {
+                fullCompletion += chunk
+                
                 await MainActor.run {
-                    self.error = error
-                    self.completion = ""
-                }
-            } catch {
-                await MainActor.run {
-                    self.error = .completionFailed(error.localizedDescription)
-                    self.completion = ""
+                    self.completion = fullCompletion
                 }
             }
+        } catch {
+            guard taskId == currentTaskId else { return }
             
+            await MainActor.run {
+                if let autoCompleteError = error as? AutoCompleteError {
+                    self.error = autoCompleteError
+                } else {
+                    self.error = .completionFailed(error.localizedDescription)
+                }
+                self.completion = ""
+            }
+        }
+        
+        if taskId == currentTaskId {
             await MainActor.run {
                 self.isLoading = false
             }
-        }
-    }
-    
-    private func debounce(interval: TimeInterval = 0.3, action: @escaping () async -> Void) {
-        debounceTask?.cancel()
-        debounceTask = Task {
-            try? await Task.sleep(for: .milliseconds(Int(interval * 1000)))
-            guard !Task.isCancelled else { return }
-            await action()
         }
     }
 }
