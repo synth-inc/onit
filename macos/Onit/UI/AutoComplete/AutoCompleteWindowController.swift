@@ -21,6 +21,7 @@ class AutoCompleteWindowController: NSObject, NSWindowDelegate {
     private let state: AutoCompleteState
     private let contentView: AutoCompleteView?
     private var window: NSWindow?
+    private var positionObserver: Task<Void, Never>?
 
     // MARK: - Initializers
 
@@ -48,6 +49,7 @@ class AutoCompleteWindowController: NSObject, NSWindowDelegate {
         self.window = window
         
         setupEventMonitor()
+        setupPositionObserver()
     }
 
     private func setupEventMonitor() {
@@ -64,11 +66,27 @@ class AutoCompleteWindowController: NSObject, NSWindowDelegate {
         }
     }
 
+    private func setupPositionObserver() {
+        positionObserver?.cancel()
+        
+        positionObserver = Task { [weak self] in
+            let manager = AccessibilityNotificationsManager.shared
+            
+            for await position in manager.$inputPosition.values {
+                if self?.updateWindowPosition(at: position) == false {
+                    self?.positionWindowAtMouse()
+                }
+            }
+        }
+    }
+
     // MARK: - Functions
 
     func showWindow() {
         updateWindowSize()
-        positionWindow()
+        if updateWindowPosition(at: AccessibilityNotificationsManager.shared.inputPosition) == false {
+            positionWindowAtMouse()
+        }
         bringToFront()
     }
 
@@ -85,90 +103,11 @@ class AutoCompleteWindowController: NSObject, NSWindowDelegate {
                 context.duration = 0.2
                 context.timingFunction = CAMediaTimingFunction(name: .easeInEaseOut)
                 window.animator().alphaValue = 0.0
-            },
-            completionHandler: {
-                window.orderOut(nil)
             })
     }
 
     // MARK: - Private Functions
     
-    private func positionWindow(at position: CGPoint) {
-        guard let window = window else { return }
-        
-        let screenHeight = NSScreen.main?.frame.height ?? 0
-        let adjustedY = screenHeight - position.y
-        
-        if let screen = NSScreen.screens.first(where: { $0.frame.contains(NSPoint(x: position.x, y: adjustedY)) }) {
-            let visibleFrame = screen.visibleFrame
-            
-            let windowFrame = window.frame
-            var originX = position.x - windowFrame.width / 2
-            var originY = adjustedY - windowFrame.height
-            
-            originX = max(visibleFrame.minX, min(originX, visibleFrame.maxX - windowFrame.width))
-            originY = max(visibleFrame.minY, min(originY, visibleFrame.maxY - windowFrame.height))
-            
-            window.setFrameOrigin(NSPoint(x: originX, y: originY))
-        }
-    }
-
-    private func positionWindow() {
-        guard let window = window else {
-            print("No overlay window found.")
-            return
-        }
-
-        let mouseLocation = NSEvent.mouseLocation
-
-        guard
-            let screen = NSScreen.screens.first(where: {
-                NSMouseInRect(mouseLocation, $0.frame, false)
-            })
-        else {
-            print("No screen contains the mouse location.")
-            return
-        }
-
-        let screenFrame = screen.frame
-        let visibleFrame = screen.visibleFrame
-
-        // Convert mouse location to local screen coordinates
-        let localMouseLocation = NSPoint(
-            x: mouseLocation.x - screenFrame.origin.x,
-            y: mouseLocation.y - screenFrame.origin.y
-        )
-
-        // Adjust mouse Y-coordinate to position the window lower
-        let adjustedMouseY = localMouseLocation.y - 15  // Adjust this value as needed
-
-        let overlayWidth = window.frame.width
-        let overlayHeight = window.frame.height
-
-        // Calculate the overlay's origin point
-        var overlayOriginX = localMouseLocation.x - overlayWidth / 2
-        var overlayOriginY = adjustedMouseY - overlayHeight
-
-        // Ensure the overlay doesn't go off-screen horizontally
-        overlayOriginX = max(
-            visibleFrame.minX - screenFrame.origin.x,
-            min(overlayOriginX, visibleFrame.maxX - screenFrame.origin.x - overlayWidth)
-        )
-
-        // If the overlay would go off the bottom of the screen, position it above the cursor
-        if overlayOriginY < visibleFrame.minY - screenFrame.origin.y {
-            overlayOriginY = adjustedMouseY + overlayHeight + 10  // Position above the cursor
-        }
-
-        // Convert overlay origin back to global screen coordinates
-        let globalOverlayOrigin = NSPoint(
-            x: overlayOriginX + screenFrame.origin.x,
-            y: overlayOriginY + screenFrame.origin.y
-        )
-
-        window.setFrameOrigin(globalOverlayOrigin)
-    }
-
     private func updateWindowSize() {
         guard let window = window else { return }
         guard let contentView = window.contentViewController?.view else { return }
@@ -176,6 +115,65 @@ class AutoCompleteWindowController: NSObject, NSWindowDelegate {
         contentView.layoutSubtreeIfNeeded()
         let contentSize = contentView.fittingSize
         window.setContentSize(contentSize)
+    }
+
+    private func updateWindowPosition(at position: CGPoint?) -> Bool {
+        guard let window = window,
+              let position = position,
+              let screenHeight = NSScreen.main?.frame.height else {
+            
+            return false
+        }
+        
+        let adjustedY = screenHeight - position.y
+        
+        window.setFrameOrigin(NSPoint(x: position.x, y: adjustedY))
+        
+        return true
+    }
+    
+    private func positionWindowAtMouse() {
+        guard let window = window else { return }
+        
+        let mouseLocation = NSEvent.mouseLocation
+        
+        guard let screen = NSScreen.screens.first(where: {
+            NSMouseInRect(mouseLocation, $0.frame, false)
+        }) else { return }
+        
+        let screenFrame = screen.frame
+        let visibleFrame = screen.visibleFrame
+        
+        let localMouseLocation = NSPoint(
+            x: mouseLocation.x - screenFrame.origin.x,
+            y: mouseLocation.y - screenFrame.origin.y
+        )
+        
+        let adjustedMouseY = localMouseLocation.y - 15
+        
+        let windowFrame = window.frame
+        var originX = localMouseLocation.x - windowFrame.width / 2
+        var originY = adjustedMouseY - windowFrame.height
+        
+        originX = max(
+            visibleFrame.minX - screenFrame.origin.x,
+            min(originX, visibleFrame.maxX - screenFrame.origin.x - windowFrame.width)
+        )
+        
+        if originY < visibleFrame.minY - screenFrame.origin.y {
+            originY = adjustedMouseY + 10
+        }
+        
+        let globalOrigin = NSPoint(
+            x: originX + screenFrame.origin.x,
+            y: originY + screenFrame.origin.y
+        )
+        
+        window.setFrameOrigin(globalOrigin)
+    }
+
+    deinit {
+        positionObserver?.cancel()
     }
 
     // MARK: - NSWindowDelegate

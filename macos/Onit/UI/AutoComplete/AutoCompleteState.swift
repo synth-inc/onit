@@ -37,6 +37,7 @@ final class AutoCompleteState {
     
     func insertSuggestion() {
         if !isLoading && !completion.isEmpty {
+            // Copy/Paste trick
             let pasteboard = NSPasteboard.general
             let oldValue = pasteboard.string(forType: .string) ?? ""
             
@@ -59,9 +60,14 @@ final class AutoCompleteState {
             vUp?.post(tap: .cghidEventTap)
             cmdUp?.post(tap: .cghidEventTap)
             
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+            completion = ""
+            
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
                 pasteboard.clearContents()
                 pasteboard.setString(oldValue, forType: .string)
+            
+                // reset input to not trigger the autocomplete again
+                AccessibilityNotificationsManager.shared.resetInput()
             }
         }
     }
@@ -83,6 +89,7 @@ final class AutoCompleteState {
                         self.completion = ""
                         self.isLoading = false
                         self.error = nil
+                        
                         return
                     }
                     
@@ -143,7 +150,7 @@ final class AutoCompleteState {
         }
         
         let userInput = AccessibilityNotificationsManager.shared.userInput
-        guard userInput != .empty else {
+        guard !userInput.fullText.isEmpty else {
             throw AutoCompleteError.noUserInput
         }
         
