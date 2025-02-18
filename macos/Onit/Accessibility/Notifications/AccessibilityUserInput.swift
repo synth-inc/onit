@@ -9,7 +9,6 @@ import SwiftUI
 
 /// Structure containing information about the user input fetch from Accessibility
 struct AccessibilityUserInput {
-    var selectedText: String?
     var fullText: String = ""
     var precedingText: String = ""
     var followingText: String = ""
@@ -19,8 +18,7 @@ struct AccessibilityUserInput {
     
     private init() { }
     
-    init(selectedText: String?, fullText: String, precedingText: String, followingText: String, cursorPosition: Int) {
-        self.selectedText = selectedText
+    init(fullText: String, precedingText: String, followingText: String, cursorPosition: Int) {
         self.fullText = fullText
         self.precedingText = precedingText
         self.followingText = followingText
@@ -30,8 +28,7 @@ struct AccessibilityUserInput {
 
 extension AccessibilityUserInput: Equatable {
     static func == (lhs: AccessibilityUserInput, rhs: AccessibilityUserInput) -> Bool {
-        lhs.selectedText == rhs.selectedText && lhs.fullText == rhs.fullText &&
-        lhs.precedingText == rhs.precedingText && lhs.followingText == rhs.followingText &&
-        lhs.cursorPosition == rhs.cursorPosition
+        lhs.fullText == rhs.fullText && lhs.precedingText == rhs.precedingText &&
+        lhs.followingText == rhs.followingText && lhs.cursorPosition == rhs.cursorPosition
     }
 }
