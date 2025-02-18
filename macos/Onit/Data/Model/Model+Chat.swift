@@ -157,6 +157,7 @@ extension OnitModel {
                         throw FetchingError.invalidRequest(message: "Model is required")
                     }
                     
+                    let keepAlive = Defaults[.localKeepAlive]
                     let options = LocalChatOptions(
                         num_ctx: Defaults[.localNumCtx],
                         temperature: Defaults[.localTemperature],
@@ -175,6 +176,7 @@ extension OnitModel {
                                                                             autoContexts: autoContextsHistory,
                                                                             responses: responsesHistory,
                                                                             model: model,
+                                                                            keepAlive: keepAlive,
                                                                             options: options)
                         for try await response in asyncText {
                             streamedResponse += response
@@ -188,6 +190,7 @@ extension OnitModel {
                                                                       autoContexts: autoContextsHistory,
                                                                       responses: responsesHistory,
                                                                       model: model,
+                                                                      keepAlive: keepAlive,
                                                                       options: options)
                     }
                 }

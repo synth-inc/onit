@@ -43,6 +43,7 @@ actor StreamingClient {
                    autoContexts: [[String: String]],
                    responses: [String],
                    model: String,
+                   keepAlive: String?,
                    options: LocalChatOptions) async throws -> AsyncThrowingStream<String, Error> {
         let userMessages = ChatEndpointMessagesBuilder.user(
             instructions: instructions,
@@ -54,7 +55,17 @@ actor StreamingClient {
             responses: responses,
             systemMessage: systemMessage,
             userMessages: userMessages)
-        let endpoint = LocalChatStreamingEndpoint(model: model, messages: localMessages, options: options)
+        let endpoint = LocalChatStreamingEndpoint(model: model, messages: localMessages, keepAlive: keepAlive, options: options)
+        
+        return try await stream(endpoint: endpoint, eventParser: LocalEventParser())
+    }
+    
+    func localGenerate(systemMessage: String,
+                       prompt: String,
+                       model: String,
+                       keepAlive: String?,
+                       options: LocalChatOptions) async throws -> AsyncThrowingStream<String, Error> {
+        let endpoint = LocalGenerateStreamingEndpoint(model: model, prompt: prompt, system: systemMessage, keepAlive: keepAlive, options: options)
         
         return try await stream(endpoint: endpoint, eventParser: LocalEventParser())
     }

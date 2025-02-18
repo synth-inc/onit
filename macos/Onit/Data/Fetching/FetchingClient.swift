@@ -48,14 +48,6 @@ actor FetchingClient {
         return try await fetchChatContent(from: endpoint)
     }
     
-    private func fetchChatContent<E: Endpoint>(from endpoint: E) async throws -> String {
-        let response = try await execute(endpoint)
-        guard let content = endpoint.getContent(response: response) else {
-            throw FetchingError.noContent
-        }
-        return content
-    }
-    
     func localChat(
         systemMessage: String,
         instructions: [String],
@@ -65,6 +57,7 @@ actor FetchingClient {
         autoContexts: [[String: String]],
         responses: [String],
         model: String,
+        keepAlive: String?,
         options: LocalChatOptions
     ) async throws -> String {
          // Create the user messages by appending any text files
@@ -80,8 +73,29 @@ actor FetchingClient {
             systemMessage: systemMessage,
             userMessages: userMessages)
         
-        let endpoint = LocalChatEndpoint(model: model, messages: localMessages, options: options)
+        let endpoint = LocalChatEndpoint(model: model, messages: localMessages, keepAlive: keepAlive, options: options)
         let response = try await execute(endpoint)
         return response.message.content
+    }
+    
+    func localGenerate(
+        systemMessage: String,
+        prompt: String,
+        model: String,
+        keepAlive: String?,
+        options: LocalChatOptions
+    ) async throws -> String {
+        let endpoint = LocalGenerateEndpoint(model: model, prompt: prompt, system: systemMessage, keepAlive: keepAlive, options: options)
+        let response = try await execute(endpoint)
+        
+        return response.response
+    }
+    
+    private func fetchChatContent<E: Endpoint>(from endpoint: E) async throws -> String {
+        let response = try await execute(endpoint)
+        guard let content = endpoint.getContent(response: response) else {
+            throw FetchingError.noContent
+        }
+        return content
     }
 }

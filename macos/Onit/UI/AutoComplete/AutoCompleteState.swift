@@ -154,62 +154,28 @@ final class AutoCompleteState {
             throw AutoCompleteError.noUserInput
         }
         
-        let appName = AccessibilityNotificationsManager.shared.screenResult.applicationName ?? "l'application"
+        // let appName = AccessibilityNotificationsManager.shared.screenResult.applicationName ?? "l'application"
         
-        let systemMessage = """
-        You are an auto-completion assistant specialized in text prediction.
-        
-        IMPORTANT RULES:
-        1. NEVER repeat the already typed text
-        2. ONLY provide the logical continuation of the text
-        3. Stay concise and natural
-        4. Respect style and context
-        5. Answer in a single line
-        6. Do not add punctuation at the beginning
-        """
-        
-        let instruction = """
-        TEXT TO COMPLETE:
-        
-        Before cursor: "\(userInput.precedingText)"
-        [CURSOR HERE]
-        After cursor: "\(userInput.followingText)"
-        
-        Complete the text from the cursor position.
-        """
-        
-        let instructions = [instruction]
-        let inputs: [Input?] = [nil]
-        let files: [[URL]] = [[]]
-        let images: [[URL]] = [[]]
-        let autoContexts: [[String: String]] = [[:]]
-        let responses: [String] = []
+        let systemMessage = systemPrompt()
+        let instruction = userPrompt(userInput: userInput)
         
         if config.streamResponse {
-            return try await StreamingClient().localChat(
+            return try await StreamingClient().localGenerate(
                 systemMessage: systemMessage,
-                instructions: instructions,
-                inputs: inputs,
-                files: files,
-                images: images,
-                autoContexts: autoContexts,
-                responses: responses,
+                prompt: instruction,
                 model: model,
+                keepAlive: config.keepAlive,
                 options: config.options
             )
         } else {
             return AsyncThrowingStream { continuation in
                 Task {
                     do {
-                        let response = try await FetchingClient().localChat(
+                        let response = try await FetchingClient().localGenerate(
                             systemMessage: systemMessage,
-                            instructions: instructions,
-                            inputs: inputs,
-                            files: files,
-                            images: images,
-                            autoContexts: autoContexts,
-                            responses: responses,
+                            prompt: instruction,
                             model: model,
+                            keepAlive: config.keepAlive,
                             options: config.options
                         )
                         continuation.yield(response)
@@ -220,5 +186,41 @@ final class AutoCompleteState {
                 }
             }
         }
+    }
+    
+    private func systemPrompt() -> String {
+        return """
+You are a text completion AI. Complete words and phrases directly.
+
+CRITICAL RULES:
+1. Start your completion immediately without ...,
+2. NEVER repeat text before [COMPLETE HERE]
+3. Maximum 20 characters
+4. Keep suggestions natural and contextual
+5. NO explanations, NO dots, NO quotes
+
+BAD EXAMPLES:
+Input: "I am writ[COMPLETE HERE]"
+❌ "...ing"
+❌ " ing"
+❌ "I am writing"
+
+GOOD EXAMPLES:
+Input: "I am writ[COMPLETE HERE]"
+✅ ing a letter
+
+Input: "The meet[COMPLETE HERE] at 2pm"
+✅ ing starts
+
+Input: "Je vais au rest[COMPLETE HERE]"
+✅ aurant
+"""
+    }
+    
+    private func userPrompt(userInput: AccessibilityUserInput) -> String {
+        return """
+Complete directly after the cursor:
+\(userInput.precedingText)[COMPLETE HERE]\(userInput.followingText)
+"""
     }
 }

@@ -17,6 +17,7 @@ struct LocalChatEndpoint: Endpoint {
 
     let model: String?
     let messages: [LocalChatMessage]
+    let keepAlive: String?
     let options: LocalChatOptions
     
     var baseURL: URL {
@@ -37,12 +38,6 @@ struct LocalChatEndpoint: Endpoint {
         }
     }
     var requestBody: LocalChatRequestJSON? {
-        var keepAlive: String?
-        
-        DispatchQueue.main.sync {
-            keepAlive = Defaults[.localKeepAlive]
-        }
-        
         // Only create options if at least one parameter is set
         let newOptions: LocalChatOptions?
         if options.isEmpty {
