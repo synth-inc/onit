@@ -22,10 +22,15 @@ struct App: SwiftUI.App {
     @ObservedObject private var accessibilityManager = AccessibilityNotificationsManager.shared
 
     @Default(.launchOnStartupRequested) var launchOnStartupRequested
+    @Default(.typeAheadConfig) var typeAheadConfig
 
     @State var accessibilityPermissionRequested = false
     
-    private let autoCompleteController = AutoCompleteWindowController.shared
+    private var shouldShowAutoComplete: Bool {
+        guard typeAheadConfig.isEnabled else { return false }
+        
+        return !accessibilityManager.userInput.fullText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    }
 
     init() {
         KeyboardShortcuts.onKeyUp(for: .launch) { [weak model] in
@@ -115,11 +120,11 @@ struct App: SwiftUI.App {
                         model.closeDebugWindow()
                     }
                 }
-                .onChange(of: accessibilityManager.userInput) { old, new in
-                    if new != .empty {
-                        autoCompleteController.showWindow()
+                .onChange(of: shouldShowAutoComplete) { _, new in
+                    if new {
+                        AutoCompleteWindowController.shared.showWindow()
                     } else {
-                        autoCompleteController.closeWindow()
+                        AutoCompleteWindowController.shared.closeWindow()
                     }
                 }
         }

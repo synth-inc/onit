@@ -36,7 +36,7 @@ class AutoCompleteWindowController: NSObject, NSWindowDelegate {
         let window = NSWindow(contentViewController: hostingController)
         window.styleMask = [.borderless]
         window.isOpaque = false
-        window.backgroundColor = NSColor.clear
+        window.backgroundColor = .clear
         window.level = .floating
         window.hasShadow = false
         window.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary, .ignoresCycle]
@@ -74,7 +74,7 @@ class AutoCompleteWindowController: NSObject, NSWindowDelegate {
 
     func bringToFront() {
         window?.alphaValue = 1.0
-        window?.orderFront(nil)
+        window?.makeKeyAndOrderFront(nil)
     }
 
     func closeWindow() {
@@ -88,8 +88,6 @@ class AutoCompleteWindowController: NSObject, NSWindowDelegate {
             },
             completionHandler: {
                 window.orderOut(nil)
-                window.alphaValue = 1.0
-                self.window = nil
             })
     }
 

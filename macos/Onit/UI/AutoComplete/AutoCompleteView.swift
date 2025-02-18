@@ -8,6 +8,8 @@
 import SwiftUI
 
 struct AutoCompleteView: View {
+    @Environment(\.model) var model
+    @Environment(\.openSettings) var openSettings
     @Environment(\.autoCompleteState) var state
     
     var body: some View {
@@ -17,7 +19,7 @@ struct AutoCompleteView: View {
                     .controlSize(.small)
             }
             
-            autoCompleteText
+            errorOrCompletion
             
             if !state.isLoading && !state.completion.isEmpty{
                 shortcutView
@@ -28,16 +30,42 @@ struct AutoCompleteView: View {
         .padding(.horizontal, 6)
         .background {
             RoundedRectangle(cornerRadius: 6)
-                .fill(Color(rgba: 0x1B1B1F))
+                .fill(.typeAheadBG)
                 .stroke(.gray500, lineWidth: 1)
         }
         .clipShape(RoundedRectangle(cornerRadius: 6))
     }
     
-    private var autoCompleteText: some View {
-        Text(state.completion)
-            .font(.system(size: 13, weight: .medium))
-            .foregroundStyle(.gray100)
+    private var errorOrCompletion: some View {
+        Group {
+            if let error = state.error {
+                if error == .noModelConfigured {
+                    Button {
+                        model.setSettingsTab(tab: .accessibility)
+                        openSettings()
+                    } label: {
+                        HStack {
+                            Image(.settingsCog)
+                                .renderingMode(.template)
+                                .resizable()
+                                .frame(width: 16, height: 16)
+                            Text(error.localizedDescription)
+                                .font(.system(size: 13, weight: .medium))
+                        }
+                        .foregroundStyle(.red)
+                    }
+                    .buttonStyle(.plain)
+                } else {
+                    Text(error.localizedDescription)
+                        .font(.system(size: 13, weight: .medium))
+                        .foregroundStyle(.red)
+                }
+            } else {
+                Text(state.completion)
+                    .font(.system(size: 13, weight: .medium))
+                    .foregroundStyle(.gray100)
+            }
+        }
     }
     
     private var shortcutView: some View {
