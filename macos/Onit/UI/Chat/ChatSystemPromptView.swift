@@ -10,6 +10,7 @@ import SwiftUI
 struct ChatSystemPromptView: View {
     @Environment(\.model) var model
     @State var isExpanded: Bool = false
+    @State private var contentHeight: CGFloat = 0
     
     var systemPrompt: SystemPrompt
     
@@ -34,9 +35,12 @@ struct ChatSystemPromptView: View {
                 Image(.chatSettings)
                     .renderingMode(.template)
                 Text(systemPrompt.name)
+                    .appFont(.medium14)
                     .lineLimit(1)
                 Button {
-                    isExpanded.toggle()
+                    withAnimation {
+                        isExpanded.toggle()
+                    }
                 } label: {
                     Image(.smallChevDown)
                         .renderingMode(.template)
@@ -49,16 +53,29 @@ struct ChatSystemPromptView: View {
             if isExpanded {
                 VStack(alignment: .leading, spacing: 8) {
                     Text("System Prompt")
-                        //.appFont(.medium14)
+                        .appFont(.medium14)
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .padding([.horizontal, .top], 8)
                     
                     ScrollView {
                         Text(systemPrompt.prompt)
+                            .appFont(.medium14)
                             .foregroundStyle(.gray100)
                             .padding(.horizontal, 8)
+                            .background(
+                                GeometryReader { geometry in
+                                    Color.clear
+                                        .onAppear {
+                                            contentHeight = geometry.size.height
+                                        }
+                                        .onChange(of: geometry.frame(in: .local).height) { _, newHeight in
+                                            contentHeight = newHeight
+                                        }
+                                }
+                            )
                     }
-                    .frame(minHeight: 0, maxHeight: 165, alignment: .top)
+                    .scrollBounceBehavior(.basedOnSize)
+                    .frame(height: min(contentHeight, 165))
                     
                     PromptDivider()
                     
@@ -69,13 +86,16 @@ struct ChatSystemPromptView: View {
                         
                         VStack(alignment: .leading, spacing: 4) {
                             Text(infoFirstLine)
+                                .appFont(.medium13)
                                 .foregroundStyle(.white.opacity(0.5))
                             
                             HStack(spacing: 0) {
                                 Text(infoSecondLinePrefix)
+                                    .appFont(.medium13)
                                     .foregroundStyle(.white.opacity(0.5))
                                 
                                 Text(infoClickableText)
+                                    .appFont(.medium13)
                                     .foregroundStyle(.blue300)
                                     .underline()
                                     .onTapGesture {
