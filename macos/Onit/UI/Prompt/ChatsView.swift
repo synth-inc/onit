@@ -24,12 +24,16 @@ struct ChatsView: View {
         guard !model.resizing, screenHeight != 0 else { return 0 }
         let availableHeight =
             screenHeight
-            - model.headerHeight - model.inputHeight - model.setUpHeight - 100
-        return availableHeight
+            - model.headerHeight - model.inputHeight - model.setUpHeight - 40
+        return max(200, availableHeight)
     }
     
     var realHeight: CGFloat {
-        isPanelExpanded ? maxHeight : min(contentHeight, maxHeight)
+        if isPanelExpanded {
+            return maxHeight
+        } else {
+            return min(max(200, contentHeight), maxHeight)
+        }
     }
 
     var body: some View {
