@@ -81,7 +81,9 @@ struct App: SwiftUI.App {
                     checkLaunchOnStartup()
                 }
                 .onChange(of: model.accessibilityPermissionStatus, initial: true) {
-                    oldValue, newValue in
+                    _, newValue in
+                    AccessibilityAnalytics.logPermission(local: newValue)
+                    
                     switch newValue {
                     case .granted:
                         AccessibilityNotificationsManager.shared.start()
@@ -94,7 +96,7 @@ struct App: SwiftUI.App {
                     }
                 }
                 .onChange(of: featureFlagsManager.accessibility, initial: true) {
-                    oldValue, newValue in
+                    _, newValue in
                     if newValue {
                         if !accessibilityPermissionRequested {
                             accessibilityPermissionRequested = true
@@ -104,6 +106,13 @@ struct App: SwiftUI.App {
                     } else {
                         AccessibilityPermissionManager.shared.stopListeningPermission()
                     }
+                }
+                .onChange(of: [
+                    featureFlagsManager.accessibility,
+                    featureFlagsManager.accessibilityInput,
+                    featureFlagsManager.accessibilityAutoContext
+                ], initial: true) { oldValue, newValue in
+                    AccessibilityAnalytics.logFlags()
                 }
                 .onChange(of: model.showDebugWindow, initial: true) { oldValue, newValue in
                     if newValue {

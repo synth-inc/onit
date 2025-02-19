@@ -5,10 +5,6 @@ struct SettingsView: View {
     @Environment(\.model) var model
     @ObservedObject private var featureFlagsManager = FeatureFlagManager.shared
 
-    private var accessibilityInputEnabled: Bool {
-        featureFlagsManager.accessibilityInput
-    }
-
     var body: some View {
         TabView(
             selection: Binding(

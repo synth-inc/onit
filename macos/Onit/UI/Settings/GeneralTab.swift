@@ -1,4 +1,5 @@
 import Defaults
+import PostHog
 import ServiceManagement
 import SwiftUI
 
@@ -8,10 +9,13 @@ struct GeneralTab: View {
     @Default(.panelPosition) var panelPosition
 
     @State var isLaunchAtStartupEnabled: Bool = SMAppService.mainApp.status == .enabled
+    @State var isAnalyticsEnabled: Bool = PostHogSDK.shared.isOptOut() == false
 
     var body: some View {
         Form {
             launchOnStartupSection
+            
+            analyticsSection
 
             appearanceSection
         }
@@ -40,6 +44,32 @@ struct GeneralTab: View {
             HStack {
                 Image(systemName: "power")
                 Text("Auto start")
+            }
+        }
+    }
+    
+    var analyticsSection: some View {
+        Section {
+            VStack(alignment: .leading, spacing: 4) {
+                HStack {
+                    Text("Disable analytics")
+                        .font(.system(size: 13))
+                    Spacer()
+                    Toggle("", isOn: $isAnalyticsEnabled)
+                        .toggleStyle(.switch)
+                        .controlSize(.small)
+                }
+                Text("Help us improve your experience 🚀\nWe collect anonymous usage data to enhance performance and fix issues faster.")
+                    .font(.system(size: 12))
+                    .foregroundStyle(.gray200)
+            }
+            .onChange(of: isAnalyticsEnabled, initial: false) {
+                toggleAnalyticsOptOut()
+            }
+        } header: {
+            HStack {
+                Image(systemName: "chart.bar.xaxis")
+                Text("Analytics")
             }
         }
     }
@@ -136,6 +166,14 @@ struct GeneralTab: View {
             }
         } catch {
             print("Error : \(error)")
+        }
+    }
+    
+    private func toggleAnalyticsOptOut() {
+        if PostHogSDK.shared.isOptOut() {
+            PostHogSDK.shared.optIn()
+        } else {
+            PostHogSDK.shared.optOut()
         }
     }
 }

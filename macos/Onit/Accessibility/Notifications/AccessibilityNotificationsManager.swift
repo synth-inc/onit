@@ -144,7 +144,10 @@ class AccessibilityNotificationsManager: ObservableObject {
             print("Observer registered for PID: \(pid)")
 
         } else {
-            print("Failed to create observer for PID: \(pid) with result: \(result)")
+            AccessibilityAnalytics.logObserverError(
+                errorCode: result.rawValue,
+                pid: pid
+            )
         }
     }
 
