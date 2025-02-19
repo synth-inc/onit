@@ -3,10 +3,12 @@ import SwiftData
 
 @Model
 final class Chat {
+    var systemPrompt: SystemPrompt?
     var prompts: [Prompt]
     var timestamp: Date
 
-    init(prompts: [Prompt] = [], timestamp: Date = Date()) {
+    init(systemPrompt: SystemPrompt, prompts: [Prompt] = [], timestamp: Date = Date()) {
+        self.systemPrompt = systemPrompt
         self.prompts = prompts
         self.timestamp = timestamp
     }
@@ -25,5 +27,5 @@ final class Chat {
 }
 
 extension Chat {
-    @MainActor static let sample = Chat(prompts: [Prompt.sample])
+    @MainActor static let sample = Chat(systemPrompt: .outputOnly, prompts: [Prompt.sample])
 }

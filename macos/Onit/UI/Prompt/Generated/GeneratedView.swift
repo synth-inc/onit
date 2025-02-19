@@ -14,7 +14,6 @@ struct GeneratedView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            GeneratedSystemPromptView(systemPrompt: prompt.systemPrompt ?? SystemPrompt.outputOnly)
             FinalContextView(prompt: prompt)
             content
         }

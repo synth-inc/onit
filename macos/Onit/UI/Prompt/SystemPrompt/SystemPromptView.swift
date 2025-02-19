@@ -66,7 +66,7 @@ struct SystemPromptView: View {
         .onChange(of: shouldSavePrompt) { _, new in
             if new { addPrompt() }
         }
-        .onChange(of: systemPromptId) { _, systemPromptId in
+        .onChange(of: systemPromptId, initial: true) { _, systemPromptId in
             guard let prompt = try? modelContext.fetch(FetchDescriptor<SystemPrompt>()).first(where: { $0.id == systemPromptId }) else {
                 selectedPrompt = .outputOnly
                 print("Could not find prompt")
