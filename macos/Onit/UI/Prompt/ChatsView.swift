@@ -16,12 +16,13 @@ struct ChatsView: View {
 
     let chatsID = "chats"
 
+    @State var screenHeight: CGFloat = NSScreen.main?.visibleFrame.height ?? 0
+    
     var maxHeight: CGFloat {
-        guard !model.resizing else { return 0 }
-        let screenHeight = NSScreen.main?.visibleFrame.height ?? 0
+        guard !model.resizing, screenHeight != 0 else { return 0 }
         let availableHeight =
             screenHeight
-            - model.headerHeight - model.inputHeight - model.setUpHeight
+            - model.headerHeight - model.inputHeight - model.setUpHeight - 100
         return availableHeight
     }
     
@@ -51,9 +52,11 @@ struct ChatsView: View {
                 .id(chatsID)
                 .background(heightReader)
             }
+            .screenHeight(binding: $screenHeight)
             .frame(
-                minHeight: realHeight,
+                minHeight: 0,
                 idealHeight: realHeight,
+                maxHeight: maxHeight,
                 alignment: .top
             )
             .onChange(of: model.currentPrompts?.count) {
