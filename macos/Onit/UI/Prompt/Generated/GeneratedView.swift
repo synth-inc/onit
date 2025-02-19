@@ -33,6 +33,10 @@ struct GeneratedView: View {
             GeneratedToolbar(prompt: prompt)
                 .padding(.horizontal, 16)
         }
+        .onChange(of: prompt.responses.count) { _, _ in
+            // When a new response is added, automatically update the generationIndex to show it
+            prompt.generationIndex = prompt.responses.count - 1
+        }
     }
 }
 
