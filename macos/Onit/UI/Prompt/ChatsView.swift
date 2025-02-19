@@ -24,17 +24,20 @@ struct ChatsView: View {
         guard !model.resizing, screenHeight != 0 else { return 0 }
         let availableHeight =
             screenHeight
-            - model.headerHeight - model.inputHeight - model.setUpHeight - 100
-        return availableHeight
+            - model.headerHeight - model.inputHeight - model.setUpHeight - 40
+        return max(200, availableHeight)
     }
     
     var realHeight: CGFloat {
-        isPanelExpanded ? maxHeight : min(contentHeight, maxHeight)
+        if isPanelExpanded {
+            return maxHeight
+        }
+        return min(max(200, contentHeight), maxHeight)
     }
 
     var body: some View {
         ScrollViewReader { proxy in
-            ScrollView {
+            ScrollView(.vertical, showsIndicators: true) {
                 LazyVStack(spacing: -16) {
                     ForEach(model.currentPrompts ?? []) { prompt in
                         PromptView(prompt: prompt)
@@ -52,11 +55,12 @@ struct ChatsView: View {
             }
             .screenHeight(binding: $screenHeight)
             .frame(
-                minHeight: 0,
+                minHeight: 200,
                 idealHeight: realHeight,
                 maxHeight: maxHeight,
                 alignment: .top
             )
+            .clipShape(Rectangle())
             .onChange(of: model.currentPrompts?.count, initial: true) {
                 withAnimation {
                     proxy.scrollTo(chatsID, anchor: .bottom)
