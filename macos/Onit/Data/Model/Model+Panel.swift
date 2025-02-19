@@ -236,7 +236,11 @@ extension OnitModel: NSWindowDelegate {
     }
 
     func launchShortcutAction() {
-        launchPanel()
+        if Defaults[.launchShortcutToggleEnabled] {
+            togglePanel()
+        } else {
+            launchPanel()
+        }
     }
 
     func toggleLocalVsRemoteShortcutAction() {

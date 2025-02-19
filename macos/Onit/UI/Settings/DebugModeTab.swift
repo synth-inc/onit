@@ -23,6 +23,18 @@ struct DebugModeTab: View {
                     .toggleStyle(.switch)
                     .controlSize(.small)
                 }
+                
+                HStack {
+                    Text("Launch shortcut toggle mode")
+                        .font(.system(size: 13))
+                    Spacer()
+                    Toggle(
+                        "",
+                        isOn: Defaults.$launchShortcutToggleEnabled
+                    )
+                    .toggleStyle(.switch)
+                    .controlSize(.small)
+                }
             }
         }
         .padding(.vertical, 20)
