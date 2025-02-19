@@ -5,29 +5,31 @@
 //  Created by Benjamin Sage on 1/17/25.
 //
 
+import Defaults
 import SwiftUI
 
 struct ChatsView: View {
     @Environment(\.model) var model
-    @State private var windowTopOffset: CGFloat = 0
+    @Default(.isPanelExpanded) var isPanelExpanded: Bool
+    
+    @State private var contentHeight: CGFloat = 0
+    @State private var lastPromptHeight: CGFloat = 0
+    @State var screenHeight: CGFloat = NSScreen.main?.visibleFrame.height ?? 0
+    @State private var lastScrollTime: Date = .now
 
-    let chatsID = "chats"
-
+    private let chatsID = "chats"
+    private let scrollDebounceInterval: TimeInterval = 0.1
+    
     var maxHeight: CGFloat {
-        guard !model.resizing else { return 0 }
-        let screenHeight = NSScreen.main?.visibleFrame.height ?? 0
+        guard !model.resizing, screenHeight != 0 else { return 0 }
         let availableHeight =
             screenHeight
-            - model.headerHeight - model.inputHeight - model.setUpHeight
+            - model.headerHeight - model.inputHeight - model.setUpHeight - 100
         return availableHeight
     }
-
-    var contentHeight: CGFloat {
-        max(1, model.contentHeight)
-    }
-
-    var lastGenerationSate: GenerationState {
-        model.currentPrompts?.last?.generationState ?? .done
+    
+    var realHeight: CGFloat {
+        isPanelExpanded ? maxHeight : min(contentHeight, maxHeight)
     }
 
     var body: some View {
@@ -36,47 +38,30 @@ struct ChatsView: View {
                 LazyVStack(spacing: -16) {
                     ForEach(model.currentPrompts ?? []) { prompt in
                         PromptView(prompt: prompt)
-                            .background {
-                                if prompt == model.currentPrompts?.last {
-                                    heightReader
+                            .background(
+                                Group {
+                                    if prompt == model.currentPrompts?.last {
+                                        lastPromptHeightReader(scrollProxy: proxy)
+                                    }
                                 }
-                            }
+                            )
                     }
                 }
                 .id(chatsID)
+                .background(heightReader)
             }
-            .onChange(of: model.currentPrompts?.count) {
+            .screenHeight(binding: $screenHeight)
+            .frame(
+                minHeight: 0,
+                idealHeight: realHeight,
+                maxHeight: maxHeight,
+                alignment: .top
+            )
+            .onChange(of: model.currentPrompts?.count, initial: true) {
                 withAnimation {
                     proxy.scrollTo(chatsID, anchor: .bottom)
                 }
             }
-            .onChange(of: lastGenerationSate) {
-                withAnimation {
-                    proxy.scrollTo(chatsID, anchor: .bottom)
-                }
-            }
-        }
-        .frame(
-            minHeight: min(maxHeight, contentHeight),
-            idealHeight: min(maxHeight, contentHeight),
-            maxHeight: maxHeight
-        )
-        .onAppear {
-            updateWindowTopOffset()
-        }
-        .onReceive(NotificationCenter.default.publisher(for: NSWindow.didMoveNotification)) { _ in
-            updateWindowTopOffset()
-        }
-        .onReceive(NotificationCenter.default.publisher(for: NSWindow.didResizeNotification)) { _ in
-            updateWindowTopOffset()
-        }
-    }
-
-    func updateWindowTopOffset() {
-        if let window = model.panel {
-            let screenHeight = NSScreen.main!.frame.height
-            let windowTopY = window.frame.origin.y + window.frame.size.height
-            windowTopOffset = screenHeight - windowTopY
         }
     }
 
@@ -84,10 +69,38 @@ struct ChatsView: View {
         GeometryReader { proxy in
             Color.clear
                 .onAppear {
-                    model.contentHeight = proxy.size.height
+                    let oldHeight = realHeight
+                    contentHeight = proxy.size.height
+                    
+                    if oldHeight != realHeight {
+                        model.adjustPanelSize()
+                    }
                 }
                 .onChange(of: proxy.size.height) {
-                    model.contentHeight = proxy.size.height
+                    let oldHeight = realHeight
+                    contentHeight = proxy.size.height
+
+                    if oldHeight != realHeight {
+                        model.adjustPanelSize()
+                    }
+                }
+        }
+    }
+    
+    func lastPromptHeightReader(scrollProxy: ScrollViewProxy) -> some View {
+        GeometryReader { promptProxy in
+            Color.clear
+                .onChange(of: promptProxy.size.height) { _, newHeight in
+                    if lastPromptHeight != newHeight {
+                        lastPromptHeight = newHeight
+                        
+                        let now = Date()
+                        if now.timeIntervalSince(lastScrollTime) >= scrollDebounceInterval {
+                            lastScrollTime = now
+
+                            scrollProxy.scrollTo(chatsID, anchor: .bottom)
+                        }
+                    }
                 }
         }
     }

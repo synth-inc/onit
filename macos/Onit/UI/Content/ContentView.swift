@@ -11,20 +11,20 @@ import SwiftUI
 struct ContentView: View {
     @Environment(\.model) var model
     @Default(.panelWidth) var panelWidth
+    
+    @State var screenHeight: CGFloat = NSScreen.main?.visibleFrame.height ?? 0
 
+    var maxHeight: CGFloat {
+        guard screenHeight != 0 else { return 0 }
+        
+        return screenHeight - 100
+    }
+    
     var showFileImporterBinding: Binding<Bool> {
         Binding(
             get: { self.model.showFileImporter },
             set: { self.model.showFileImporter = $0 }
         )
-    }
-
-    var maxHeight: CGFloat? {
-        if let height = NSScreen.main?.visibleFrame.height {
-            return height - 16 * 2
-        } else {
-            return nil
-        }
     }
 
     var body: some View {
@@ -41,7 +41,8 @@ struct ContentView: View {
         }
         .background(Color.black)
         .buttonStyle(.plain)
-        .frame(minWidth: 325, idealWidth: 400)
+        .screenHeight(binding: $screenHeight)
+        .frame(minWidth: 325, idealWidth: 400, maxHeight: maxHeight)
         .overlay {
             RoundedRectangle(cornerRadius: 14)
                 .strokeBorder(.gray600, lineWidth: 2)

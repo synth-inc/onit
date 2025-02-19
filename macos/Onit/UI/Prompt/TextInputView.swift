@@ -18,9 +18,12 @@ struct TextInputView: View {
     @Query(sort: \Chat.timestamp, order: .reverse) private var chats: [Chat]
 
     @Default(.mode) var mode
+    
+    @State private var textHeight: CGFloat = 20
+    private let maxHeightLimit: CGFloat = 100
 
     var body: some View {
-        HStack {
+        HStack(alignment: .bottom) {
             textField
             sendButton
         }
@@ -39,23 +42,16 @@ struct TextInputView: View {
         @Bindable var model = model
 
         ZStack(alignment: .leading) {
-            TextField("", text: $model.pendingInstruction, axis: .vertical)
-                .textFieldStyle(PlainTextFieldStyle())
-                .focused($focused)
-                .tint(.blue600.opacity(0.2))
-                .fixedSize(horizontal: false, vertical: true)
-                .onAppear {
-                    focused = true
-                }
-                .onChange(of: model.textFocusTrigger) {
-                    focused = true
-                }
-
-            if model.pendingInstruction.isEmpty {
-                placeholderView
-            } else {
-                Text(" ")
-            }
+            TextViewWrapper(
+                text: $model.pendingInstruction,
+                dynamicHeight: $textHeight,
+                onSubmit: sendAction,
+                maxHeight: maxHeightLimit,
+                placeholder: placeholderText)
+            .focused($focused)
+            .frame(height: min(textHeight, maxHeightLimit))
+            .onAppear { focused = true }
+            .onChange(of: model.textFocusTrigger) { focused = true }
         }
         .appFont(.medium16)
         .foregroundStyle(.white)
@@ -79,14 +75,6 @@ struct TextInputView: View {
         } else {
             "New instructions..."
         }
-    }
-
-    var placeholderView: some View {
-        HStack {
-            Text(placeholderText)
-        }
-        .foregroundStyle(.gray300)
-        .allowsHitTesting(false)
     }
 
     func sendAction() {

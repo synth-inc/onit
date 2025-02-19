@@ -76,14 +76,14 @@ extension OnitModel: NSWindowDelegate {
             let finalXPosition: CGFloat
             switch Defaults[.panelPosition] {
             case .topLeft:
-                finalXPosition = visibleFrame.origin.x + 16
+                finalXPosition = visibleFrame.origin.x
             case .topCenter:
                 finalXPosition = visibleFrame.origin.x + (visibleFrame.width - windowWidth) / 2
             case .topRight:
-                finalXPosition = visibleFrame.origin.x + visibleFrame.width - windowWidth - 16
+                finalXPosition = visibleFrame.origin.x + visibleFrame.width - windowWidth
             }
-            let finalYPosition = visibleFrame.origin.y + visibleFrame.height - windowHeight - 16
-
+            let finalYPosition = visibleFrame.origin.y + visibleFrame.height - windowHeight
+            
             // Set the frame with the new position and width
             let newFrame = NSRect(
                 x: finalXPosition, y: finalYPosition, width: windowWidth, height: windowHeight)
@@ -162,7 +162,11 @@ extension OnitModel: NSWindowDelegate {
     func closePanel() {
         guard let panel = panel else { return }
 
-        Defaults[.panelWidth] = panel.frame.width
+        if !Defaults[.isPanelExpanded] {
+            Defaults[.panelWidth] = panel.frame.width
+        } else {
+            Defaults[.isPanelExpanded] = false
+        }
 
         panel.orderOut(nil)
         HighlightHintWindowController.shared.adjustWindow()
@@ -294,7 +298,7 @@ extension OnitModel: NSWindowDelegate {
 
         // Keep the top edge in place
         let newX = panel.frame.origin.x
-        let newY = visibleFrame.origin.y + visibleFrame.height - 16 - newHeight
+        let newY = visibleFrame.origin.y + visibleFrame.height - newHeight
 
         // Apply changes
         panel.setFrame(
