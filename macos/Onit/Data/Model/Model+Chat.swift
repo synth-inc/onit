@@ -58,6 +58,13 @@ extension OnitModel {
         generateTask = Task { [weak self] in
             guard let self = self else { return }
 
+            // Remove any responses after the current index when regenerating
+            if prompt.responses.count > 0 {
+                let currentIndex = prompt.generationIndex
+                prompt.responses.removeSubrange((currentIndex + 1)...)
+                prompt.priorInstructions.removeSubrange((currentIndex + 1)...)
+            }
+
             prompt.generationState = .generating
             let curInstruction = prompt.instruction
             var filesHistory: [[URL]] = [prompt.contextList.files]
