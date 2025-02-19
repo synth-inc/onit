@@ -114,7 +114,7 @@ import SwiftUI
             var models = try await AIModel.fetchModels()
 
             // This means we've never successfully fetched before
-            if Defaults[.availableLocalModels].isEmpty {
+            if Defaults[.availableRemoteModels].isEmpty {
                 if Defaults[.visibleModelIds].isEmpty {
                     Defaults[.visibleModelIds] = Set(
                         models.filter { $0.defaultOn }.map { $0.uniqueId })
