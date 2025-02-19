@@ -18,7 +18,9 @@ struct InputBarView: View {
             if let pendingInput = model.pendingInput {
                 InputView(input: pendingInput)
             }
-            SystemPromptView()
+            if model.currentChat?.systemPrompt == nil {
+                SystemPromptView()
+            }
             FileRow(contextList: model.pendingContextList)
             TextInputView()
         }

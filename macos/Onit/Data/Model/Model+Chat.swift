@@ -13,23 +13,24 @@ import SwiftData
 
 extension OnitModel {
     func createAndSavePrompt() -> Prompt {
-        // Get system prompt
-        let systemPrompt: SystemPrompt
-        do {
-            systemPrompt = try container.mainContext.fetch(FetchDescriptor<SystemPrompt>())
-                .first(where: { $0.id == Defaults[.systemPromptId] }) ?? SystemPrompt.outputOnly
-        } catch {
-            systemPrompt = SystemPrompt.outputOnly
-        }
         // This would actually be a good place to do the images
 
         let prompt = Prompt(
-            systemPrompt: systemPrompt, instruction: pendingInstruction, timestamp: .now,
+            instruction: pendingInstruction, timestamp: .now,
             input: pendingInput, contextList: pendingContextList)
 
         // If there's no current chat, create one
         if currentChat == nil {
-            currentChat = Chat(prompts: [], timestamp: .now)
+            // Get system prompt
+            let systemPrompt: SystemPrompt
+            do {
+                systemPrompt = try container.mainContext.fetch(FetchDescriptor<SystemPrompt>())
+                    .first(where: { $0.id == Defaults[.systemPromptId] }) ?? SystemPrompt.outputOnly
+            } catch {
+                systemPrompt = SystemPrompt.outputOnly
+            }
+            
+            currentChat = Chat(systemPrompt: systemPrompt, prompts: [], timestamp: .now)
             currentPrompts = []
             let modelContext = container.mainContext
             modelContext.insert(currentChat!)
@@ -105,7 +106,7 @@ extension OnitModel {
                     )
                 }
                 
-                let systemPrompt = prompt.systemPrompt ?? SystemPrompt.outputOnly
+                let systemPrompt = currentChat?.systemPrompt ?? SystemPrompt.outputOnly
                 streamedResponse = ""
                 
                 

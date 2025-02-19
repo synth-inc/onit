@@ -45,6 +45,7 @@ import SwiftUI
     var inputHeight: CGFloat = 0
     var contentHeight: CGFloat = 0
     var setUpHeight: CGFloat = 0
+    var systemPromptHeight: CGFloat = 0
     var resizing = false
 
     var showDebugWindow = false
