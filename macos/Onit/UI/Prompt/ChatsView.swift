@@ -10,13 +10,15 @@ import SwiftUI
 
 struct ChatsView: View {
     @Environment(\.model) var model
+    @Default(.isPanelExpanded) var isPanelExpanded: Bool
+    
     @State private var contentHeight: CGFloat = 0
     @State private var lastPromptHeight: CGFloat = 0
-    @Default(.isPanelExpanded) var isPanelExpanded: Bool
-
-    let chatsID = "chats"
-
     @State var screenHeight: CGFloat = NSScreen.main?.visibleFrame.height ?? 0
+    @State private var lastScrollTime: Date = .now
+
+    private let chatsID = "chats"
+    private let scrollDebounceInterval: TimeInterval = 0.1
     
     var maxHeight: CGFloat {
         guard !model.resizing, screenHeight != 0 else { return 0 }
@@ -28,10 +30,6 @@ struct ChatsView: View {
     
     var realHeight: CGFloat {
         isPanelExpanded ? maxHeight : min(contentHeight, maxHeight)
-    }
-
-    var lastGenerationSate: GenerationState {
-        model.currentPrompts?.last?.generationState ?? .done
     }
 
     var body: some View {
@@ -59,12 +57,7 @@ struct ChatsView: View {
                 maxHeight: maxHeight,
                 alignment: .top
             )
-            .onChange(of: model.currentPrompts?.count) {
-                withAnimation {
-                    proxy.scrollTo(chatsID, anchor: .bottom)
-                }
-            }
-            .onChange(of: lastGenerationSate) {
+            .onChange(of: model.currentPrompts?.count, initial: true) {
                 withAnimation {
                     proxy.scrollTo(chatsID, anchor: .bottom)
                 }
@@ -86,7 +79,7 @@ struct ChatsView: View {
                 .onChange(of: proxy.size.height) {
                     let oldHeight = realHeight
                     contentHeight = proxy.size.height
-                    
+
                     if oldHeight != realHeight {
                         model.adjustPanelSize()
                     }
@@ -100,7 +93,11 @@ struct ChatsView: View {
                 .onChange(of: promptProxy.size.height) { _, newHeight in
                     if lastPromptHeight != newHeight {
                         lastPromptHeight = newHeight
-                        withAnimation {
+                        
+                        let now = Date()
+                        if now.timeIntervalSince(lastScrollTime) >= scrollDebounceInterval {
+                            lastScrollTime = now
+
                             scrollProxy.scrollTo(chatsID, anchor: .bottom)
                         }
                     }

@@ -42,11 +42,12 @@ struct TextInputView: View {
         @Bindable var model = model
 
         ZStack(alignment: .leading) {
-            TextViewWrapper(text: $model.pendingInstruction,
-                            dynamicHeight: $textHeight,
-                            onSubmit: sendAction,
-                            maxHeight: maxHeightLimit,
-                            placeholder: placeholderText)
+            TextViewWrapper(
+                text: $model.pendingInstruction,
+                dynamicHeight: $textHeight,
+                onSubmit: sendAction,
+                maxHeight: maxHeightLimit,
+                placeholder: placeholderText)
             .focused($focused)
             .frame(height: min(textHeight, maxHeightLimit))
             .onAppear { focused = true }
