@@ -31,6 +31,13 @@ struct DebugModeTab: View {
                 HStack {
                     Text("Launch shortcut toggle mode")
                         .font(.system(size: 13))
+                    SettingInfoButton(
+                        title: "Launch Shortcut Toggle Mode",
+                        description:
+                            "Enable this to use the launch shortcut (CMD+Zero by default) as a toggle: press once to show the panel, press again to hide it.",
+                        defaultValue: "off",
+                        valueType: "Bool"
+                    )
                     Spacer()
                     Toggle(
                         "",
@@ -43,7 +50,13 @@ struct DebugModeTab: View {
                 HStack {
                     Text("Create new chat on panel open")
                         .font(.system(size: 13))
-                        .help("When enabled, a new chat will be created each time the panel is opened after being closed. When disabled, the previous chat will be restored.")
+                    SettingInfoButton(
+                        title: "Create New Chat on Panel Open",
+                        description:
+                            "Enable this to start a new chat each time the panel opens. You still access your previous conversations with the up arrow.",
+                        defaultValue: "off",
+                        valueType: "Bool"
+                    )
                     Spacer()
                     Toggle(
                         "",
@@ -51,7 +64,6 @@ struct DebugModeTab: View {
                     )
                     .toggleStyle(.switch)
                     .controlSize(.small)
-                    .help("When enabled, a new chat will be created each time the panel is opened after being closed. When disabled, the previous chat will be restored.")
                 }
             }
         }
