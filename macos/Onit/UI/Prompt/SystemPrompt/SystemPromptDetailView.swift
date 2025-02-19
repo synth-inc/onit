@@ -19,14 +19,8 @@ struct SystemPromptDetailView: View {
     @Binding var showSelection: Bool
     @Binding var showEditPrompt: Bool
 
-    var storedPrompt: SystemPrompt {
-        guard let prompt = try? modelContext.fetch(FetchDescriptor<SystemPrompt>()).first(where: { $0.id == systemPromptId }) else {
-            fatalError("Could not find prompt")
-        }
+    @State private var storedPrompt: SystemPrompt = .outputOnly
         
-        return prompt
-    }
-    
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             VStack(alignment: .leading, spacing: 8) {
@@ -65,6 +59,17 @@ struct SystemPromptDetailView: View {
                 .strokeBorder(.gray600)
         }
         .frame(width: size.width - 16)
+        .onChange(of: systemPromptId, initial: true) { oldValue, newValue in
+            let descriptor = FetchDescriptor<SystemPrompt>()
+            
+            guard let prompt = try? modelContext.fetch(descriptor).first(where: { $0.id == newValue }) else {
+                storedPrompt = .outputOnly
+                print("Could not find prompt")
+                return
+            }
+            
+            storedPrompt = prompt
+        }
     }
     
     private var appsAndTags: some View {

@@ -20,14 +20,7 @@ struct SystemPromptView: View {
     @State var shouldSavePrompt: Bool = false
     
     @State var size: CGSize = .zero
-    
-    var selectedPrompt: SystemPrompt {
-        guard let prompt = try? modelContext.fetch(FetchDescriptor<SystemPrompt>()).first(where: { $0.id == systemPromptId }) else {
-            fatalError("Could not find prompt")
-        }
-        
-        return prompt
-    }
+    @State var selectedPrompt: SystemPrompt = .outputOnly
     
     private var editPromptBinding: Binding<SystemPrompt> {
         Binding {
@@ -72,6 +65,15 @@ struct SystemPromptView: View {
         }
         .onChange(of: shouldSavePrompt) { _, new in
             if new { addPrompt() }
+        }
+        .onChange(of: systemPromptId) { _, systemPromptId in
+            guard let prompt = try? modelContext.fetch(FetchDescriptor<SystemPrompt>()).first(where: { $0.id == systemPromptId }) else {
+                selectedPrompt = .outputOnly
+                print("Could not find prompt")
+                return
+            }
+            
+            selectedPrompt = prompt
         }
         .padding(.horizontal, 10)
         .padding(.vertical, 8)

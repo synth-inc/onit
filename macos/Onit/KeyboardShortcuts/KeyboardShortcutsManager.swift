@@ -102,7 +102,7 @@ struct KeyboardShortcutsManager {
         }
     }
     
-    /// Registering keyboard shorcuts for all stored `SystemPrompt`
+    /// Registering keyboard shortcuts for all stored `SystemPrompt`
     /// - parameter modelContainer: ModelContainer used to query SwiftData
     private static func registerSystemPromptsShortcuts(modelContainer: ModelContainer) {
         do {

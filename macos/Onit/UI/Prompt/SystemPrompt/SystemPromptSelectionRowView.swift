@@ -25,11 +25,9 @@ struct SystemPromptSelectionRowView: View {
                     .frame(maxWidth: .infinity, alignment: .leading)
                 
                 if let shortcut = KeyboardShortcuts.Name(prompt.id).shortcut?.native {
-                    VStack(alignment: .leading, spacing: 8) {
-                        KeyboardShortcutView(shortcut: shortcut, characterWidth: 12, spacing: 3)
-                            .font(.system(size: 13, weight: .light))
-                            .foregroundStyle(.gray200)
-                    }
+                    KeyboardShortcutView(shortcut: shortcut, characterWidth: 12, spacing: 3)
+                        .font(.system(size: 13, weight: .light))
+                        .foregroundStyle(.gray200)
                 }
             }
             .padding(8)

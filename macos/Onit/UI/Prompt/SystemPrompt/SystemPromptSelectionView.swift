@@ -67,12 +67,11 @@ struct SystemPromptSelectionView: View {
         }
         .padding(16)
         .background(.black)
-        .task {
-            let service = SystemPromptSuggestionService(with: model.container)
-            suggestedPromptIds = await service.findSuggestedPromptIds(
-                input: model.pendingInput,
-                contextList: model.pendingContextList
-            )
+        .task(id: model.pendingInput) {
+            updateSuggestions()
+        }
+        .task(id: model.pendingContextList) {
+            updateSuggestions()
         }
     }
     
@@ -135,6 +134,20 @@ struct SystemPromptSelectionView: View {
                     .foregroundStyle(.gray100)
             }
             .buttonStyle(.plain)
+        }
+    }
+    
+    private func updateSuggestions() {
+        Task.detached { [model] in
+            let service = await SystemPromptSuggestionService(with: model.container)
+            let suggestedPromptIds = await service.findSuggestedPromptIds(
+                input: model.pendingInput,
+                contextList: model.pendingContextList
+            )
+            
+            Task { @MainActor in
+                self.suggestedPromptIds = suggestedPromptIds
+            }
         }
     }
 }
