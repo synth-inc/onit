@@ -308,6 +308,9 @@ extension OnitModel {
         
         prompt.priorInstructions.append(instruction)
         prompt.responses.append(response)
+
+        // Set generation state to nil first to trigger UI update
+        prompt.generationState = nil
         prompt.generationIndex = (prompt.responses.count - 1)
         prompt.generationState = .done
         

@@ -9,8 +9,7 @@ import SwiftUI
 
 struct GeneratedView: View {
     @Environment(\.model) var model
-    
-    var prompt: Prompt
+    @ObservedObject var prompt: Prompt
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -28,6 +27,7 @@ struct GeneratedView: View {
                     GeneratedErrorView(errorDescription: prompt.responses[prompt.generationIndex].text)
                 default:
                     GeneratedContentView(prompt: prompt)
+                        .id(prompt.generationIndex) // Force view refresh on generation change
                 }
             }
             GeneratedToolbar(prompt: prompt)
