@@ -6,7 +6,8 @@ struct DebugModeTab: View {
     @ObservedObject private var featureFlagsManager = FeatureFlagManager.shared
 
     @Default(.launchShortcutToggleEnabled) var launchShortcutToggleEnabled
-    
+    @Default(.createNewChatOnPanelOpen) var createNewChatOnPanelOpen
+
     var body: some View {
         VStack(spacing: 25) {
             VStack(alignment: .leading, spacing: 20) {
@@ -37,6 +38,20 @@ struct DebugModeTab: View {
                     )
                     .toggleStyle(.switch)
                     .controlSize(.small)
+                }
+
+                HStack {
+                    Text("Create new chat on panel open")
+                        .font(.system(size: 13))
+                        .help("When enabled, a new chat will be created each time the panel is opened after being closed. When disabled, the previous chat will be restored.")
+                    Spacer()
+                    Toggle(
+                        "",
+                        isOn: $createNewChatOnPanelOpen
+                    )
+                    .toggleStyle(.switch)
+                    .controlSize(.small)
+                    .help("When enabled, a new chat will be created each time the panel is opened after being closed. When disabled, the previous chat will be restored.")
                 }
             }
         }

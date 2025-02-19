@@ -20,6 +20,11 @@ extension OnitModel: NSWindowDelegate {
             return
         }
 
+        // Create a new chat when creating a new panel if the setting is enabled
+        if Defaults[.createNewChatOnPanelOpen] {
+            newChat()
+        }
+
         let newPanel = CustomPanel(
             contentRect: NSRect(x: 0, y: 0, width: 400, height: 0),
             styleMask: [.resizable, .nonactivatingPanel, .fullSizeContentView],

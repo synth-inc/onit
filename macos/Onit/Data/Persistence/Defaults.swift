@@ -96,6 +96,7 @@ extension Defaults.Keys {
     
     // Debug settings
     static let launchShortcutToggleEnabled = Key<Bool>("launchShortcutToggleEnabled", default: false)
+    static let createNewChatOnPanelOpen = Key<Bool>("createNewChatOnPanelOpen", default: false)
 }
 
 extension NSRect: Defaults.Serializable {
