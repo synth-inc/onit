@@ -168,9 +168,7 @@ struct NewSystemPromptView: View {
                 Menu {
                     ForEach(allApps, id: \.self) { url in
                         Button(action: {
-                            if !savedPrompt.applications.contains(url) {
-                                savedPrompt.applications.append(url)
-                            }
+                            savedPrompt.applications.append(url)
                         }) {
                             HStack {
                                 Image(nsImage: NSWorkspace.shared.icon(forFile: url.path))

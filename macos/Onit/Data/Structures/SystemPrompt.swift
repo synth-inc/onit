@@ -40,13 +40,15 @@ class SystemPrompt {
         self.timestamp = timestamp
     }
     
-    nonisolated(unsafe) static let outputOnly: SystemPrompt = .init(
-        id: "output-only",
-        name: "Output-only response",
-        prompt: "Based on the provided instructions, either provide the output or answer any questions related to it. Provide the response without any additional comments. Provide the output ready to go.",
-        applications: [],
-        tags: []
-    )
+    static var outputOnly: SystemPrompt {
+        SystemPrompt(
+            id: "output-only",
+            name: "Output-only response",
+            prompt: "Based on the provided instructions, either provide the output or answer any questions related to it. Provide the response without any additional comments. Provide the output ready to go.",
+            applications: [],
+            tags: []
+        )
+    }
 }
 
 // MARK: - Equatable
@@ -55,6 +57,7 @@ extension SystemPrompt: Equatable {
     static func == (lhs: SystemPrompt, rhs: SystemPrompt) -> Bool {
         return lhs.id == rhs.id && lhs.name == rhs.name &&
             lhs.prompt == rhs.prompt && lhs.applications == rhs.applications &&
-            lhs.tags == rhs.tags
+            lhs.tags == rhs.tags && lhs.timestamp == rhs.timestamp &&
+            lhs.lastUsed == rhs.lastUsed
     }
 }
