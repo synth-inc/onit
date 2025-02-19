@@ -93,6 +93,9 @@ extension Defaults.Keys {
     static let localTopP = Key<Double?>("localTopP", default: nil)
     static let localTopK = Key<Int?>("localTopK", default: nil)
     static let localRequestTimeout = Key<TimeInterval?>("localRequestTimeout", default: 60.0)
+    
+    // Debug settings
+    static let launchShortcutToggleEnabled = Key<Bool>("launchShortcutToggleEnabled", default: false)
 }
 
 extension NSRect: Defaults.Serializable {
