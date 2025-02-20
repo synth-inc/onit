@@ -19,18 +19,11 @@ struct App: SwiftUI.App {
     @Environment(\.model) var model
     @NSApplicationDelegateAdaptor(AppDelegate.self) var delegate
     @ObservedObject private var featureFlagsManager = FeatureFlagManager.shared
-    @ObservedObject private var accessibilityManager = AccessibilityNotificationsManager.shared
 
     @Default(.launchOnStartupRequested) var launchOnStartupRequested
     @Default(.typeAheadConfig) var typeAheadConfig
 
     @State var accessibilityPermissionRequested = false
-    
-    private var shouldShowAutoComplete: Bool {
-        guard typeAheadConfig.isEnabled else { return false }
-        
-        return !accessibilityManager.userInput.fullText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-    }
 
     init() {
         KeyboardShortcutsManager.configure(model: model)
@@ -99,11 +92,11 @@ struct App: SwiftUI.App {
                         model.closeDebugWindow()
                     }
                 }
-                .onChange(of: shouldShowAutoComplete) { _, new in
+                .onChange(of: TypeAheadState.shared.shouldShow) { _, new in
                     if new {
-                        AutoCompleteWindowController.shared.showWindow()
+                        TypeAheadWindowController.shared.showWindow()
                     } else {
-                        AutoCompleteWindowController.shared.closeWindow()
+                        TypeAheadWindowController.shared.closeWindow()
                     }
                 }
         }
