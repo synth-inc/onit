@@ -6,7 +6,6 @@
 //
 
 import Defaults
-import KeyboardShortcuts
 import SwiftUI
 
 extension OnitModel: NSWindowDelegate {
@@ -93,7 +92,7 @@ extension OnitModel: NSWindowDelegate {
         newPanel.makeKeyAndOrderFront(nil)
         newPanel.orderFrontRegardless()
 
-        enableKeyboardShortcuts()
+        KeyboardShortcutsManager.enable(modelContainer: container)
 
         // Focus the text input when we're activating the panel
         self.textFocusTrigger.toggle()
@@ -174,7 +173,7 @@ extension OnitModel: NSWindowDelegate {
         panel.contentView = nil
         self.panel = nil
 
-        disableKeyboardShortcuts()
+        KeyboardShortcutsManager.disable(modelContainer: container)
     }
 
     @MainActor
@@ -328,26 +327,6 @@ extension OnitModel: NSWindowDelegate {
             }
             Defaults[.isPanelExpanded].toggle()
         }
-    }
-
-    // MARK: - Keyboard Shortcuts
-
-    private func enableKeyboardShortcuts() {
-        KeyboardShortcuts.enable([
-            .toggleLocalMode,
-            .newChat,
-            .resizeWindow,
-            .escape,
-        ])
-    }
-
-    private func disableKeyboardShortcuts() {
-        KeyboardShortcuts.disable([
-            .toggleLocalMode,
-            .newChat,
-            .resizeWindow,
-            .escape,
-        ])
     }
 }
 

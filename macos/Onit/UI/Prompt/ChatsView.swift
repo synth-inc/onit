@@ -22,10 +22,10 @@ struct ChatsView: View {
     
     var maxHeight: CGFloat {
         guard !model.resizing, screenHeight != 0 else { return 0 }
-        let availableHeight =
-            screenHeight
-            - model.headerHeight - model.inputHeight - model.setUpHeight - 100
-        return availableHeight
+
+        return screenHeight - model.headerHeight -
+            model.inputHeight - model.setUpHeight -
+            model.systemPromptHeight - 100
     }
     
     var realHeight: CGFloat {

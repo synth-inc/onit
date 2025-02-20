@@ -25,37 +25,7 @@ struct App: SwiftUI.App {
     @State var accessibilityPermissionRequested = false
 
     init() {
-        KeyboardShortcuts.onKeyUp(for: .launch) { [weak model] in
-            let eventProperties: [String: Any] = [
-                "app_hidden": model?.panel == nil,
-                "highlight_hint_visible": HighlightHintWindowController.shared.isVisible(),
-                "highlight_hint_mode": FeatureFlagManager.shared.highlightHintMode,
-            ]
-            PostHogSDK.shared.capture("shortcut_launch", properties: eventProperties)
-
-            model?.launchShortcutAction()
-        }
-        KeyboardShortcuts.onKeyUp(for: .toggleLocalMode) { [weak model] in
-            model?.toggleLocalVsRemoteShortcutAction()
-        }
-        KeyboardShortcuts.onKeyUp(for: .newChat) { [weak model] in
-            model?.newChat()
-        }
-        KeyboardShortcuts.onKeyUp(for: .resizeWindow) { [weak model] in
-            model?.resizeWindow()
-        }
-        KeyboardShortcuts.onKeyUp(for: .escape) { [weak model] in
-            model?.escapeAction()
-        }
-        KeyboardShortcuts.onKeyUp(for: .launchWithAutoContext) { [weak model] in
-            let eventProperties: [String: Any] = [
-                "app_hidden": model?.panel == nil
-            ]
-            PostHogSDK.shared.capture(
-                "shortcut_launch_with_auto_context", properties: eventProperties)
-            model?.addAutoContext()
-            model?.launchPanel()
-        }
+        KeyboardShortcutsManager.configure(model: model)
 
         featureFlagsManager.configure()
         // For testing new user experience
@@ -128,6 +98,7 @@ struct App: SwiftUI.App {
 
         Settings {
             SettingsView()
+                .modelContainer(model.container)
                 .onAppear {
                     if let window = NSApplication.shared.windows.first(where: {
                         $0.contentViewController is NSHostingController<SettingsView>
