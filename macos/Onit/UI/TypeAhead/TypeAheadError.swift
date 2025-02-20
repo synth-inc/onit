@@ -11,6 +11,7 @@ enum TypeAheadError: Error, Equatable {
     case noModelConfigured
     case noUserInput
     case completionFailed(String)
+    case moreSuggestionFailed(String)
     
     static func == (lhs: TypeAheadError, rhs: TypeAheadError) -> Bool {
         switch (lhs, rhs) {
@@ -19,6 +20,8 @@ enum TypeAheadError: Error, Equatable {
         case (.noUserInput, .noUserInput):
             return true
         case (.completionFailed(let lhsMessage), .completionFailed(let rhsMessage)):
+            return lhsMessage == rhsMessage
+        case (.moreSuggestionFailed(let lhsMessage), .moreSuggestionFailed(let rhsMessage)):
             return lhsMessage == rhsMessage
         default:
             return false
@@ -34,6 +37,8 @@ extension TypeAheadError: LocalizedError {
         case .noUserInput:
             "Empty input"
         case .completionFailed(let message):
+            "Failed: \(message)."
+        case .moreSuggestionFailed(let message):
             "Failed: \(message)."
         }
     }

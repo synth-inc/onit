@@ -58,14 +58,14 @@ final class TypeAheadState {
     
     // MARK: - Functions
     
-    func insertSuggestion() {
-        if !isLoading && !completion.isEmpty {
+    func insertSuggestion(text: String) {
+        if !isLoading && !text.isEmpty {
             // Copy/Paste trick
             let pasteboard = NSPasteboard.general
             let oldValue = pasteboard.string(forType: .string) ?? ""
             
             pasteboard.clearContents()
-            pasteboard.setString(completion, forType: .string)
+            pasteboard.setString(text, forType: .string)
 
             let source = CGEventSource(stateID: .hidSystemState)
             let cmdKeyCode: CGKeyCode = 0x37
@@ -166,8 +166,8 @@ final class TypeAheadState {
         
         // let appName = AccessibilityNotificationsManager.shared.screenResult.applicationName ?? "l'application"
         
-        let systemMessage = systemPrompt()
-        let instruction = userPrompt(userInput: userInput)
+        let systemMessage = TypeAheadPrompts.AutoCompletion.systemPrompt
+        let instruction = TypeAheadPrompts.AutoCompletion.instruction(userInput: userInput)
         
         if config.streamResponse {
             return try await StreamingClient().localGenerate(
@@ -196,41 +196,5 @@ final class TypeAheadState {
                 }
             }
         }
-    }
-    
-    private func systemPrompt() -> String {
-        return """
-You are a text completion AI. Complete words and phrases directly.
-
-CRITICAL RULES:
-1. Start your completion immediately without ...,
-2. NEVER repeat text before [COMPLETE HERE]
-3. Maximum 20 characters
-4. Keep suggestions natural and contextual
-5. NO explanations, NO dots, NO quotes
-
-BAD EXAMPLES:
-Input: "I am writ[COMPLETE HERE]"
-❌ "...ing"
-❌ " ing"
-❌ "I am writing"
-
-GOOD EXAMPLES:
-Input: "I am writ[COMPLETE HERE]"
-✅ ing a letter
-
-Input: "The meet[COMPLETE HERE] at 2pm"
-✅ ing starts
-
-Input: "Je vais au rest[COMPLETE HERE]"
-✅ aurant
-"""
-    }
-    
-    private func userPrompt(userInput: AccessibilityUserInput) -> String {
-        return """
-Complete directly after the cursor:
-\(userInput.precedingText)[COMPLETE HERE]\(userInput.followingText)
-"""
     }
 }

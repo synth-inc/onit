@@ -14,6 +14,8 @@ struct TypeAheadMenuView: View {
     @Environment(\.openSettings) var openSettings
     @Default(.typeAheadConfig) var typeAheadConfig
     
+    private let moreSuggestionsState = TypeAheadMoreSuggestionsState.shared
+    
     private var appName: String? {
         AccessibilityNotificationsManager.shared.screenResult.applicationName
     }
@@ -55,11 +57,13 @@ struct TypeAheadMenuView: View {
     }
     
     private func moreSuggestionsAction() {
-        // TODO: KNA
+        Task {
+            await moreSuggestionsState.getMoreSuggestions()
+        }
     }
     
     private func viewContextAction() {
-        // TODO: KNA
+        
     }
     
     private func pauseForOneHourAction() {

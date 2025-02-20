@@ -59,7 +59,7 @@ class TypeAheadWindowController: NSObject, NSWindowDelegate {
             if event.keyCode == 48 {
                 Task { @MainActor in
                     if !self.state.completion.isEmpty {
-                        self.state.insertSuggestion()
+                        self.state.insertSuggestion(text: self.state.completion)
                     }
                 }
             }
