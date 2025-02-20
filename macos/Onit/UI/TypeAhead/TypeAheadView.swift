@@ -1,5 +1,5 @@
 //
-//  AutoCompleteView.swift
+//  TypeAheadView.swift
 //  Onit
 //
 //  Created by Kévin Naudin on 13/02/2025.
@@ -7,10 +7,12 @@
 
 import SwiftUI
 
-struct AutoCompleteView: View {
+struct TypeAheadView: View {
     @Environment(\.model) var model
     @Environment(\.openSettings) var openSettings
-    @Environment(\.autoCompleteState) var state
+    @Environment(\.typeAheadState) var state
+    
+    @State var showMenu = false
     
     var body: some View {
         HStack(alignment: .center, spacing: 4) {
@@ -82,7 +84,7 @@ struct AutoCompleteView: View {
     
     private var menuButton: some View {
         Button {
-            displayMenu()
+            showMenu.toggle()
         } label: {
             Image(.moreHorizontal)
                 .resizable()
@@ -90,13 +92,12 @@ struct AutoCompleteView: View {
                 .rotationEffect(.degrees(90))
         }
         .buttonStyle(.plain)
-    }
-    
-    private func displayMenu() {
-        // TODO: KNA
+        .popover(isPresented: $showMenu) {
+            TypeAheadMenuView()
+        }
     }
 }
 
 #Preview {
-    AutoCompleteView()
+    TypeAheadView()
 }
