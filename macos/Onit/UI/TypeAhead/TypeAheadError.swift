@@ -1,5 +1,5 @@
 //
-//  AutoCompleteError.swift
+//  TypeAheadError.swift
 //  Onit
 //
 //  Created by Kévin Naudin on 18/02/2025.
@@ -7,12 +7,12 @@
 
 import Foundation
 
-enum AutoCompleteError: Error, Equatable {
+enum TypeAheadError: Error, Equatable {
     case noModelConfigured
     case noUserInput
     case completionFailed(String)
     
-    static func == (lhs: AutoCompleteError, rhs: AutoCompleteError) -> Bool {
+    static func == (lhs: TypeAheadError, rhs: TypeAheadError) -> Bool {
         switch (lhs, rhs) {
         case (.noModelConfigured, .noModelConfigured):
             return true
@@ -26,7 +26,7 @@ enum AutoCompleteError: Error, Equatable {
     }
 }
 
-extension AutoCompleteError: LocalizedError {
+extension TypeAheadError: LocalizedError {
     public var errorDescription: String? {
         switch self {
         case .noModelConfigured:

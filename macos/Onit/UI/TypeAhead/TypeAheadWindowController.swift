@@ -1,5 +1,5 @@
 //
-//  AutoCompleteWindowController.swift
+//  TypeAheadWindowController.swift
 //  Onit
 //
 //  Created by Kévin Naudin on 14/02/2025.
@@ -10,24 +10,24 @@ import AppKit
 import SwiftUI
 
 @MainActor
-class AutoCompleteWindowController: NSObject, NSWindowDelegate {
+class TypeAheadWindowController: NSObject, NSWindowDelegate {
     
     // MARK: - Singleton instance
     
-    static let shared = AutoCompleteWindowController()
+    static let shared = TypeAheadWindowController()
 
     // MARK: - Properties
 
-    private let state: AutoCompleteState
-    private let contentView: AutoCompleteView?
+    private let state: TypeAheadState
+    private let contentView: TypeAheadView?
     private var window: NSWindow?
     private var positionObserver: Task<Void, Never>?
 
     // MARK: - Initializers
 
     override init() {
-        self.state = AutoCompleteState.shared
-        self.contentView = AutoCompleteView()
+        self.state = TypeAheadState.shared
+        self.contentView = TypeAheadView()
 
         super.init()
 

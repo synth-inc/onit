@@ -1,5 +1,5 @@
 //
-//  AutoCompleteState.swift
+//  TypeAheadState.swift
 //  Onit
 //
 //  Created by Kévin Naudin on 13/02/2025.
@@ -10,26 +10,48 @@ import SwiftUI
 
 @Observable
 @MainActor
-final class AutoCompleteState {
+final class TypeAheadState {
     
     // MARK: - Singleton instance
     
     @MainActor
-    static let shared = AutoCompleteState()
+    static let shared = TypeAheadState()
     
     // MARK: - Properties
     
     var completion: String = ""
     var isLoading = false
-    var error: AutoCompleteError?
+    var error: TypeAheadError?
+    
+    private(set) var shouldShow: Bool = false
     
     private var currentTaskId: UUID?
     
     // MARK: - Initializer
     
-    nonisolated init() {
+    private init() {
+        // Listen for userInput changes
         Task { @MainActor in
-            self.startObserving()
+            let manager = AccessibilityNotificationsManager.shared
+            
+            for try await userInput in manager.$userInput.values {
+                Task { @MainActor in
+                    let taskId = UUID()
+
+                    currentTaskId = taskId
+                    updateShouldShow(userInput: userInput)
+                    
+                    guard shouldShow else {
+                        completion = ""
+                        isLoading = false
+                        error = nil
+                        
+                        return
+                    }
+                    
+                    await requestCompletion(taskId: taskId)
+                }
+            }
         }
     }
     
@@ -74,29 +96,16 @@ final class AutoCompleteState {
     
     // MARK: - Private functions
     
-    private func startObserving() {
-        Task { @MainActor in
-            let manager = AccessibilityNotificationsManager.shared
-            
-            for try await userInput in manager.$userInput.values {
-                Task { @MainActor in
-                    let taskId = UUID()
-                    self.currentTaskId = taskId
-                    
-                    guard Defaults[.typeAheadConfig].isEnabled else { return }
-                    
-                    if userInput.precedingText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                        self.completion = ""
-                        self.isLoading = false
-                        self.error = nil
-                        
-                        return
-                    }
-                    
-                    await self.requestCompletion(taskId: taskId)
-                }
-            }
-        }
+    private func updateShouldShow(userInput: AccessibilityUserInput) {
+        let manager = AccessibilityNotificationsManager.shared
+        let config = Defaults[.typeAheadConfig]
+        let inputText = userInput.fullText.trimmingCharacters(in: .whitespacesAndNewlines)
+        let appName = manager.screenResult.applicationName ?? ""
+        let appExcluded = config.excludedApps.contains(where: appName.contains)
+        let resumeAt = config.resumeAt ?? .now
+        let isResumed = .now >= resumeAt
+        
+        self.shouldShow = config.isEnabled && !inputText.isEmpty && !appExcluded && isResumed
     }
     
     private func requestCompletion(taskId: UUID) async {
@@ -126,8 +135,8 @@ final class AutoCompleteState {
             guard taskId == currentTaskId else { return }
             
             await MainActor.run {
-                if let autoCompleteError = error as? AutoCompleteError {
-                    self.error = autoCompleteError
+                if let error = error as? TypeAheadError {
+                    self.error = error
                 } else {
                     self.error = .completionFailed(error.localizedDescription)
                 }
@@ -146,12 +155,12 @@ final class AutoCompleteState {
         let config = Defaults[.typeAheadConfig]
         
         guard let model = config.model else {
-            throw AutoCompleteError.noModelConfigured
+            throw TypeAheadError.noModelConfigured
         }
         
         let userInput = AccessibilityNotificationsManager.shared.userInput
         guard !userInput.fullText.isEmpty else {
-            throw AutoCompleteError.noUserInput
+            throw TypeAheadError.noUserInput
         }
         
         // let appName = AccessibilityNotificationsManager.shared.screenResult.applicationName ?? "l'application"

@@ -14,6 +14,9 @@ struct TypeAheadConfig: Codable, Defaults.Serializable {
     var model: String?
     var streamResponse: Bool
     
+    var resumeAt: Date?
+    var excludedApps: Set<String>
+    
     var keepAlive: String?
     var requestTimeout: TimeInterval?
     var options: LocalChatOptions
@@ -22,6 +25,8 @@ struct TypeAheadConfig: Codable, Defaults.Serializable {
         isEnabled: false,
         model: nil,
         streamResponse: true,
+        resumeAt: nil,
+        excludedApps: Set(),
         keepAlive: nil,
         requestTimeout: 60.0,
         options: LocalChatOptions(num_ctx: 50, temperature: 0.2, top_p: 0.9, top_k: 40)

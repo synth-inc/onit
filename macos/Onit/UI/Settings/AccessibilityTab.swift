@@ -5,49 +5,9 @@ import PostHog
 import SwiftUI
 
 struct AccessibilityTab: View {
-
-    struct HighlightHintModeUI: Identifiable, Hashable, Equatable {
-        let mode: HighlightHintMode
-        let text: String
-
-        var id: String { text }
-
-        static func from(mode: HighlightHintMode) -> Self {
-            let text: String
-
-            switch mode {
-            case .topRight:
-                text = "Top-right corner of the screen"
-            case .textfield:
-                text = "Above the highlighted text"
-            case .none:
-                text = "No hint"
-            }
-
-            return .init(mode: mode, text: text)
-        }
-
-        static func == (lhs: HighlightHintModeUI, rhs: HighlightHintModeUI) -> Bool {
-            return lhs.mode == rhs.mode
-        }
-    }
-
-    private let modes: [HighlightHintModeUI] = [
-        HighlightHintModeUI.from(mode: .none),
-        HighlightHintModeUI.from(mode: .topRight),
-        //        HighlightHintModeUI.from(mode: .textfield)
-    ]
-
     @Environment(\.model) var model
-
-    @State private var selectedMode: HighlightHintModeUI = HighlightHintModeUI.from(
-        mode: FeatureFlagManager.shared.highlightHintMode)
-
     @ObservedObject private var featureFlagsManager = FeatureFlagManager.shared
     
-    @Default(.availableLocalModels) var availableLocalModels
-    @Default(.typeAheadConfig) var typeAheadConfig
-
     var body: some View {
         Form {
             Section {
@@ -104,46 +64,7 @@ struct AccessibilityTab: View {
             }
 
             if featureFlagsManager.accessibility {
-                Section {
-                    VStack(alignment: .leading, spacing: 4) {
-                        HStack {
-                            Text("Highlighted Text")
-                                .font(.system(size: 13))
-                            Spacer()
-                            Toggle(
-                                "",
-                                isOn: Binding(
-                                    get: { featureFlagsManager.accessibilityInput },
-                                    set: { featureFlagsManager.overrideAccessibilityInput($0) }
-                                )
-                            )
-                            .toggleStyle(.switch)
-                            .controlSize(.small)
-                            SettingInfoButton(
-                                title: "Auto-Context from Highlighted Text",
-                                description:
-                                    "When enabled, Onit will read highlighted text from any application, and add it as context to your conversation. Context is not uploaded until you submit your conversation. In local mode, no context is ever uploaded.",
-                                defaultValue: "on",
-                                valueType: "Bool"
-                            )
-                        }
-                        Text("Automatically loads highlighted text as content.")
-                            .font(.system(size: 12))
-                            .foregroundStyle(.gray200)
-                    }
-
-                    Picker("Choose hint position", selection: $selectedMode) {
-                        ForEach(modes, id: \.self) { mode in
-                            Text(mode.text)
-                                .appFont(.medium14)
-                                .padding(.vertical, 4)
-                        }
-                    }
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .pickerStyle(MenuPickerStyle())
-                    .padding(.vertical, 4)
-                    .tint(.blue600)
-                }
+                HighlightedTextSection()
 
                 Section {
                     VStack(alignment: .leading, spacing: 4) {
@@ -181,81 +102,11 @@ struct AccessibilityTab: View {
                     )
                 }
                 
-                Section {
-                    VStack(alignment: .leading, spacing: 4) {
-                        HStack {
-                            Text("Type Ahead")
-                                .font(.system(size: 13))
-                            Spacer()
-                            Toggle("", isOn: $typeAheadConfig.isEnabled)
-                                .toggleStyle(.switch)
-                                .controlSize(.small)
-                            SettingInfoButton(
-                                title: "Auto-Context, Type ahead",
-                                description:
-                                    "When enabled, Onit will read the input's text from the foregrounded application and will suggest autocompletions based on that text. No context is ever uploaded.",
-                                defaultValue: "on",
-                                valueType: "Bool"
-                            )
-                        }
-                        Text("Display typeahead anywhere")
-                            .font(.system(size: 12))
-                            .foregroundStyle(.gray200)
-                    }
-                    if typeAheadConfig.isEnabled {
-                        VStack(alignment: .leading) {
-                            Text("Model used")
-                                .font(.system(size: 13))
-                            GroupBox {
-                                VStack(alignment: .leading, spacing: 0) {
-                                    ForEach(availableLocalModels, id: \.self) { model in
-                                        Toggle(isOn: Binding(get: {
-                                            return model == typeAheadConfig.model
-                                        }, set: { isOn in
-                                            typeAheadConfig.model = isOn ? model : nil
-                                        })) {
-                                            Text(model)
-                                                .font(.system(size: 13))
-                                                .fontWeight(.regular)
-                                                .opacity(0.85)
-                                        }
-                                        .frame(height: 36)
-                                    }
-                                }
-                                .padding(.vertical, -4)
-                                .padding(.horizontal, 4)
-                                .frame(maxWidth: .infinity, alignment: .leading)
-                            }
-                            LocalModelAdvancedOptionsView(storedStreamResponse: $typeAheadConfig.streamResponse,
-                                                          storedKeepAlive: $typeAheadConfig.keepAlive,
-                                                          storedRequestTimeout: $typeAheadConfig.requestTimeout,
-                                                          storedOptions: $typeAheadConfig.options,
-                                                          streamAdditionalInfo: "If enabled, Onit streams partial responses from model providers, offering quicker auto complete suggestions.")
-                        }
-                    }
-//                    KeyboardShortcuts.Recorder(
-//                        "Shortcut", name: .launchWithAutoContext
-//                    )
-                }
+                TypeAheadSection()
             }
         }
         .formStyle(.grouped)
         .padding()
-        .onChange(of: selectedMode, initial: false) { old, new in
-            highlightModeChange(oldValue: old, newValue: new)
-        }
-    }
-
-    private func highlightModeChange(oldValue: HighlightHintModeUI, newValue: HighlightHintModeUI) {
-        FeatureFlagManager.shared.overrideHighlightHintMode(newValue.mode)
-        HighlightHintWindowController.shared.changeMode(newValue.mode)
-
-        let eventProperties: [String: Any] = [
-            "old": oldValue.mode,
-            "new": newValue.mode,
-        ]
-
-        PostHogSDK.shared.capture("highlight_hint_mode_change", properties: eventProperties)
     }
 }
 
