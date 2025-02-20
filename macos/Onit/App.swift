@@ -57,6 +57,9 @@ struct App: SwiftUI.App {
             model?.addAutoContext()
             model?.launchPanel()
         }
+        KeyboardShortcuts.onKeyUp(for: .showTypeAheadMenu) {
+            TypeAheadState.shared.showMenu.toggle()
+        }
 
         featureFlagsManager.configure()
         // For testing new user experience

@@ -18,7 +18,7 @@ struct TypeAheadMenuView: View {
         AccessibilityNotificationsManager.shared.screenResult.applicationName
     }
     private var shortcut: KeyboardShortcut? {
-        KeyboardShortcuts.getShortcut(for: .launch)?.native
+        KeyboardShortcuts.getShortcut(for: .showTypeAheadMenu)?.native
     }
     
     var body: some View {
