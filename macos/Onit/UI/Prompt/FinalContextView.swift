@@ -55,7 +55,7 @@ struct FinalContextView: View {
                 }
             }
 
-            Text(prompt.instruction)
+            Text(prompt.currentInstruction)
                 .appFont(.medium14)
                 .foregroundStyle(.FG)
                 .frame(maxWidth: .infinity, alignment: .leading)
