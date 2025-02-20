@@ -46,6 +46,9 @@ struct StaticPromptView: View {
                     topTrailingRadius: 0
                 )
             )
+            .onTapGesture {
+                model.panel = .prompt
+            }
         }
     }
 }
