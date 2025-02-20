@@ -18,6 +18,8 @@ extension KeyboardShortcuts.Name {
     static let resizeWindow = Self("resizeWindow", default: .init(.eight, modifiers: [.command]))
     static let toggleLocalMode = Self(
         "toggleLocalMode", default: .init(.seven, modifiers: [.shift, .command]))
+    static let showTypeAheadMenu = Self(
+        "showTypeAheadMenu", default: .init(.tab, modifiers: [.shift, .option]))
 }
 
 extension KeyboardShortcuts.Name: @retroactive CaseIterable {

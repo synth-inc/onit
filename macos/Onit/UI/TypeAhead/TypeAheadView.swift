@@ -12,8 +12,6 @@ struct TypeAheadView: View {
     @Environment(\.openSettings) var openSettings
     @Environment(\.typeAheadState) var state
     
-    @State var showMenu = false
-    
     var body: some View {
         HStack(alignment: .center, spacing: 4) {
             if state.isLoading {
@@ -84,7 +82,7 @@ struct TypeAheadView: View {
     
     private var menuButton: some View {
         Button {
-            showMenu.toggle()
+            state.showMenu.toggle()
         } label: {
             Image(.moreHorizontal)
                 .resizable()
@@ -92,7 +90,11 @@ struct TypeAheadView: View {
                 .rotationEffect(.degrees(90))
         }
         .buttonStyle(.plain)
-        .popover(isPresented: $showMenu) {
+        .popover(isPresented: Binding(get: {
+            state.showMenu
+        }, set: { newValue in
+            state.showMenu = newValue
+        })) {
             TypeAheadMenuView()
         }
     }
