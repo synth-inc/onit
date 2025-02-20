@@ -21,6 +21,7 @@ final class TypeAheadState {
     
     var completion: String = ""
     var isLoading = false
+    var showMenu = false
     var error: TypeAheadError?
     
     private(set) var shouldShow: Bool = false
