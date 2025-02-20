@@ -23,6 +23,7 @@ import SwiftData
 
     @Transient @Published var generationState: GenerationState? = GenerationState.done
     @Transient @Published var isEditing: Bool = false
+    @Transient @Published var editingInstruction: String = ""
     var generationIndex = -1
 
     init(
@@ -36,6 +37,7 @@ import SwiftData
         self.responses = responses
         self.generationState = GenerationState.done
         self.isEditing = false
+        self.editingInstruction = ""
     }
 
     var generation: String? {
@@ -79,4 +81,34 @@ extension Prompt: Equatable {
 
 extension Prompt {
     @MainActor static let sample = Prompt(instruction: "Hello, world!", timestamp: .now)
+
+    func startEditing() {
+        editingInstruction = currentInstruction
+        isEditing = true
+    }
+
+    func cancelEditing() {
+        editingInstruction = ""
+        isEditing = false
+    }
+
+    func finishEditing() {
+        guard !editingInstruction.isEmpty else {
+            cancelEditing()
+            return
+        }
+
+        // Append the new instruction to the array
+        instructions.append(editingInstruction)
+
+        // Increment the generation index to point to the new instruction
+        generationIndex = instructions.count - 1
+
+        // Reset editing state
+        isEditing = false
+        editingInstruction = ""
+
+        // Trigger generation
+        generationState = .generating
+    }
 }

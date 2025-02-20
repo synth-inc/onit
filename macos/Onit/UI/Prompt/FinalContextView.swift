@@ -55,18 +55,48 @@ struct FinalContextView: View {
                 }
             }
 
-            Text(prompt.currentInstruction)
-                .appFont(.medium14)
-                .foregroundStyle(.FG)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(.horizontal, 8)
-                .padding(.vertical, 12)
-                .background(.gray800, in: .rect(cornerRadius: 8))
-                .overlay {
-                    RoundedRectangle(cornerRadius: 8)
-                        .strokeBorder(.gray500)
+            HStack {
+                if prompt.isEditing {
+                    TextField("Enter instruction", text: .init(
+                        get: { prompt.currentInstruction },
+                        set: { prompt.editingInstruction = $0 }
+                    ))
+                    .appFont(.medium14)
+                    .textFieldStyle(.plain)
+                    .frame(maxWidth: .infinity)
+
+                    Button("Send") {
+                        prompt.finishEditing()
+                    }
+                    .buttonStyle(.borderedProminent)
+
+                    Button("Cancel") {
+                        prompt.cancelEditing()
+                    }
+                    .buttonStyle(.bordered)
+                } else {
+                    Text(prompt.currentInstruction)
+                        .appFont(.medium14)
+                        .foregroundStyle(.FG)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+
+                    Button {
+                        prompt.startEditing()
+                    } label: {
+                        Image(systemName: "pencil")
+                            .foregroundStyle(.gray100)
+                    }
+                    .buttonStyle(.plain)
                 }
-                .textSelection(.enabled)
+            }
+            .padding(.horizontal, 8)
+            .padding(.vertical, 12)
+            .background(.gray800, in: .rect(cornerRadius: 8))
+            .overlay {
+                RoundedRectangle(cornerRadius: 8)
+                    .strokeBorder(.gray500)
+            }
+            .textSelection(.enabled)
         }
         .padding()
     }

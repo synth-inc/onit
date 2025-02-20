@@ -21,7 +21,9 @@ struct GeneratedView: View {
 
     var content: some View {
         VStack(spacing: 16) {
-            if !prompt.responses.isEmpty {
+            if case .generating = prompt.generationState {
+                GeneratingView()
+            } else if !prompt.responses.isEmpty {
                 let curResponse = prompt.responses[prompt.generationIndex]
                 switch curResponse.type {
                 case .error:
