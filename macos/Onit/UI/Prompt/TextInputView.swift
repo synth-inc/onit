@@ -78,8 +78,17 @@ struct TextInputView: View {
     }
 
     func sendAction() {
-        let newPrompt = model.createAndSavePrompt()
-        model.generate(newPrompt)
+        if let editingPrompt = model.currentPrompts?.first(where: { $0.isEditing }) {
+            editingPrompt.isEditing = false
+            editingPrompt.instruction = model.pendingInstruction
+            editingPrompt.responses.removeAll()
+            editingPrompt.priorInstructions.removeAll()
+            editingPrompt.generationState = .done
+            model.generate(editingPrompt)
+        } else {
+            let newPrompt = model.createAndSavePrompt()
+            model.generate(newPrompt)
+        }
     }
 
     var sendButton: some View {

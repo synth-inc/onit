@@ -23,6 +23,7 @@ import SwiftData
     var nextPrompt: Prompt?
 
     @Transient @Published var generationState: GenerationState? = GenerationState.done
+    @Transient @Published var isEditing: Bool = false
     var generationIndex = -1
 
     init(
@@ -35,6 +36,7 @@ import SwiftData
         self.contextList = contextList
         self.responses = responses
         self.generationState = GenerationState.done
+        self.isEditing = false
     }
 
     var generation: String? {
