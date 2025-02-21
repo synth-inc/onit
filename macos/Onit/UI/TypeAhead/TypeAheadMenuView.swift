@@ -30,10 +30,16 @@ struct TypeAheadMenuView: View {
             
             TypeAheadMenuRowView(text: "More suggestions", image: .joystick, action: moreSuggestionsAction)
             TypeAheadMenuRowView(text: "View context", image: .paperclip, action: viewContextAction)
+            //TypeAheadMenuRowView(text: "Reject", image: .escape, action: rejectAction)
+            
+            Divider()
+                .padding(.horizontal, -8)
             TypeAheadMenuRowView(text: "Pause for 1h", image: .clockSnooze, action: pauseForOneHourAction)
             if let appName = appName {
-                TypeAheadMenuRowView(text: "Turn off for \(appName)", image: .smallRemove, action: excludeAppAction)
+                TypeAheadMenuRowView(text: "Turn off for \(appName)", image: .circleMinus, action: excludeAppAction)
             }
+            Divider()
+                .padding(.horizontal, -8)
             TypeAheadMenuRowView(text: "Advanced settings", image: .settingsCog, action: advancedSettingsAction)
         }
         .padding(8)
@@ -65,6 +71,10 @@ struct TypeAheadMenuView: View {
     }
     
     private func viewContextAction() {
+        globalState.showMenu = false
+    }
+    
+    private func rejectAction() {
         globalState.showMenu = false
     }
     
