@@ -29,6 +29,14 @@ struct TypeAheadMoreSuggestionsView: View {
             }
         }
         .frame(width: 200, height: 150)
+        .padding(.vertical, 4)
+        .padding(.horizontal, 6)
+        .background {
+            RoundedRectangle(cornerRadius: 8)
+                .fill(.typeAheadBG)
+                .stroke(.gray500, lineWidth: 1)
+        }
+        .clipShape(RoundedRectangle(cornerRadius: 8))
         .onKeyDown { event in
             handleKeyPress(event)
         }
