@@ -17,6 +17,7 @@ struct TypeAheadMenuRowView: View {
             HStack(alignment: .center, spacing: 10) {
                 Image(image)
                     .resizable()
+                    .aspectRatio(contentMode: .fit)
                     .frame(width: 14, height: 14)
                 Text(text)
                     .appFont(.medium14)

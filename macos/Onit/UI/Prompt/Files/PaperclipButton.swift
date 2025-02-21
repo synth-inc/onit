@@ -25,6 +25,7 @@ struct PaperclipButton: View {
             } label: {
                 Image(.paperclip)
                     .resizable()
+                    .aspectRatio(contentMode: .fit)
                     .frame(width: 16, height: 16)
                     .padding(3)
             }
