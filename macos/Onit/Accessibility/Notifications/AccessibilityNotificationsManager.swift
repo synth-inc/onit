@@ -61,10 +61,6 @@ class AccessibilityNotificationsManager: ObservableObject {
     func setModel(_ model: OnitModel) {
         self.model = model
     }
-    
-    func resetInput() {
-        userInput = .empty
-    }
 
     // MARK: Start / Stop
 
