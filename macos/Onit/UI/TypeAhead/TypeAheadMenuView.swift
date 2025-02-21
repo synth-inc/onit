@@ -71,6 +71,10 @@ struct TypeAheadMenuView: View {
     }
     
     private func viewContextAction() {
+        let screenResult = AccessibilityNotificationsManager.shared.screenResult
+        let item = Context.auto(screenResult.applicationName ?? "", screenResult.others ?? [:])
+        
+        model.showAutoContextWindow(context: item)
         globalState.showMenu = false
     }
     
