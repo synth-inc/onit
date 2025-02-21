@@ -20,6 +20,7 @@ final class TypeAheadMoreSuggestionsState {
     // MARK: - Properties
     
     var moreSuggestions: [String] = []
+    var hoveredIndex: Int? = nil
     var isLoading = false
     var error: TypeAheadError?
     
@@ -27,6 +28,7 @@ final class TypeAheadMoreSuggestionsState {
     
     func reset(error: TypeAheadError? = nil) {
         moreSuggestions = []
+        hoveredIndex = nil
         isLoading = false
         self.error = error
     }
@@ -59,7 +61,7 @@ final class TypeAheadMoreSuggestionsState {
                         keepAlive: config.keepAlive,
                         options: config.options
                     )
-                    return [response]
+                    return response.split(separator: "\n").map { String($0) }
                 } catch {
                     throw error
                 }

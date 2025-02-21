@@ -11,23 +11,29 @@ struct TypeAheadCompletionView: View {
     @Environment(\.model) var model
     @Environment(\.openSettings) var openSettings
     
+    @State private var contentHeight: CGFloat = 0
     private let globalState = TypeAheadState.shared
     
     var body: some View {
-        HStack(alignment: .top, spacing: 4) {
-            if globalState.isLoading {
-                ProgressView()
-                    .controlSize(.small)
-            }
-            
-            errorOrCompletion
-            
-            if !globalState.isLoading && !globalState.completion.isEmpty{
-                shortcutView
-                menuButton
+        ScrollView {
+            HStack(alignment: .top, spacing: 4) {
+                if globalState.isLoading {
+                    ProgressView()
+                        .controlSize(.small)
+                }
+                
+                errorOrCompletion
+                
+                if !globalState.isLoading && !globalState.completion.isEmpty {
+                    menuButton
+                }
             }
         }
-        .frame(minHeight: 30)
+        .frame(
+            maxWidth: 300,
+            minHeight: 30,
+            maxHeight: 200
+        )
         .padding(.vertical, 4)
         .padding(.horizontal, 6)
         .background {
@@ -66,6 +72,17 @@ struct TypeAheadCompletionView: View {
                 Text(globalState.completion)
                     .font(.system(size: 13, weight: .medium))
                     .foregroundStyle(.gray100)
+                    .background {
+                        GeometryReader { proxy in
+                            Color.clear
+                                .onAppear {
+                                    contentHeight = proxy.size.height
+                                }
+                                .onChange(of: proxy.size.height) { oldValue, newValue in
+                                    contentHeight = newValue
+                                }
+                        }
+                    }
             }
         }
     }

@@ -19,7 +19,6 @@ class TypeAheadWindowController: NSObject, NSWindowDelegate {
     // MARK: - Properties
 
     private let state: TypeAheadState
-    private let contentView: TypeAheadView?
     private var window: TypeAheadWindow?
     private var positionObserver: Task<Void, Never>?
     private var menuWindow: TypeAheadWindow?
@@ -30,17 +29,23 @@ class TypeAheadWindowController: NSObject, NSWindowDelegate {
 
     override init() {
         self.state = TypeAheadState.shared
-        self.contentView = TypeAheadView()
 
         super.init()
 
-        let contentView = contentView.fixedSize()
+        let contentView = TypeAheadView().fixedSize()
         let hostingController = NSHostingController(rootView: contentView)
         let window = TypeAheadWindow(contentViewController: hostingController)
         
+        let menuView = TypeAheadMenuView().fixedSize()
+        let menuHostingController = NSHostingController(rootView: menuView)
+        
+        let menuWindow = TypeAheadWindow(contentViewController: menuHostingController)
+        
+        menuWindow.configure(self)
         window.configure(self)
         
         self.window = window
+        self.menuWindow = menuWindow
         
         setupEventMonitor()
         setupPositionObserver()
@@ -52,9 +57,7 @@ class TypeAheadWindowController: NSObject, NSWindowDelegate {
             
             if event.keyCode == 48 {
                 Task { @MainActor in
-                    if !self.state.completion.isEmpty {
-                        self.state.insertSuggestion(text: self.state.completion)
-                    }
+                    self.state.insertSuggestion()
                 }
             }
         }
@@ -103,17 +106,6 @@ class TypeAheadWindowController: NSObject, NSWindowDelegate {
     func showMenu() {
         guard let window = window else { return }
         
-        if menuWindow == nil {
-            let menuView = TypeAheadMenuView()
-                .fixedSize()
-            let hostingController = NSHostingController(rootView: menuView)
-            
-            let menuWindow = TypeAheadWindow(contentViewController: hostingController)
-            menuWindow.configure(self)
-            
-            self.menuWindow = menuWindow
-        }
-        
         if let menuWindow = menuWindow {
             let windowFrame = window.frame
             let menuPoint = NSPoint(
@@ -128,7 +120,6 @@ class TypeAheadWindowController: NSObject, NSWindowDelegate {
     
     func hideMenu() {
         menuWindow?.close()
-        menuWindow = nil
     }
 
     // MARK: - Private Functions
@@ -143,18 +134,23 @@ class TypeAheadWindowController: NSObject, NSWindowDelegate {
     }
 
     private func updateWindowPosition(at position: CGPoint?) -> Bool {
-        guard let window = window,
-              let position = position,
-              let screenHeight = NSScreen.main?.frame.height else {
+        if let window = window, var position = position {
             
-            return false
+            position.y -= window.frame.height
+            
+            for screen in NSScreen.screens {
+                if screen.frame.contains(position) {
+                    let screenHeight = screen.frame.height
+                    let adjustedY = screenHeight - position.y
+                    
+                    window.setFrameOrigin(NSPoint(x: position.x, y: adjustedY))
+                    
+                    return true
+                }
+            }
         }
         
-        let adjustedY = screenHeight - position.y
-        
-        window.setFrameOrigin(NSPoint(x: position.x, y: adjustedY))
-        
-        return true
+        return false
     }
     
     private func positionWindowAtMouse() {
@@ -245,7 +241,7 @@ class TypeAheadWindow: NSWindow {
     }
     
     override func becomeKey() {
-        // Ne rien faire pour empêcher la fenêtre de devenir key
+        
     }
     
     override func sendEvent(_ event: NSEvent) {

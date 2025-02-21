@@ -65,7 +65,27 @@ final class TypeAheadState {
     
     // MARK: - Functions
     
-    func insertSuggestion(text: String) {
+    func insertSuggestion() {
+        if let hoveredIndex = moreSuggestionsState.hoveredIndex,
+           hoveredIndex < moreSuggestionsState.moreSuggestions.count {
+            insertSuggestion(text: moreSuggestionsState.moreSuggestions[hoveredIndex])
+        } else {
+            insertSuggestion(text: completion)
+        }
+    }
+    
+    // MARK: - Private functions
+    
+    private func reset(loading: Bool = false, inserted: Bool = false) {
+        completion = ""
+        isLoading = loading
+        error = nil
+        isCompletionInserted = inserted
+        
+        moreSuggestionsState.reset()
+    }
+    
+    private func insertSuggestion(text: String) {
         if !isLoading && !text.isEmpty {
             // Copy/Paste trick
             let pasteboard = NSPasteboard.general
@@ -84,31 +104,20 @@ final class TypeAheadState {
 
             cmdDown?.flags = .maskCommand
             vDown?.flags = .maskCommand
-
-            shouldSkipNextUpdate = true
-            reset(inserted: true)
             
             cmdDown?.post(tap: .cghidEventTap)
             vDown?.post(tap: .cghidEventTap)
             vUp?.post(tap: .cghidEventTap)
             cmdUp?.post(tap: .cghidEventTap)
             
+            shouldSkipNextUpdate = true
+            reset(inserted: true)
+            
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
                 pasteboard.clearContents()
                 pasteboard.setString(oldValue, forType: .string)
             }
         }
-    }
-    
-    // MARK: - Private functions
-    
-    private func reset(loading: Bool = false, inserted: Bool = false) {
-        completion = ""
-        isLoading = loading
-        error = nil
-        isCompletionInserted = inserted
-        
-        moreSuggestionsState.reset()
     }
     
     private func updateShouldShow(userInput: AccessibilityUserInput) {
