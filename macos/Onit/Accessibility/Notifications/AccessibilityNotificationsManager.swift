@@ -461,6 +461,11 @@ class AccessibilityNotificationsManager: ObservableObject {
         guard AXUIElementGetPid(element, &elementPid) == .success, elementPid != getpid() else {
             return
         }
+        
+        // Filter Xcode console
+        if elementPid.getAppName()?.lowercased() == "xcode" && element.description()?.lowercased() == "console" {
+            return
+        }
 
         callback(elementPid)
     }
