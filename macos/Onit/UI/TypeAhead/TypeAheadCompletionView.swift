@@ -27,6 +27,15 @@ struct TypeAheadCompletionView: View {
                 menuButton
             }
         }
+        .frame(minHeight: 30)
+        .padding(.vertical, 4)
+        .padding(.horizontal, 6)
+        .background {
+            RoundedRectangle(cornerRadius: 8)
+                .fill(.typeAheadBG)
+                .stroke(.gray500, lineWidth: 1)
+        }
+        .clipShape(RoundedRectangle(cornerRadius: 8))
     }
     
     private var errorOrCompletion: some View {

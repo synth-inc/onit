@@ -11,10 +11,10 @@ import SwiftUI
 
 struct TypeAheadMenuView: View {
     @Environment(\.model) var model
-    @Environment(\.dismiss) var dismiss
     @Environment(\.openSettings) var openSettings
     @Default(.typeAheadConfig) var typeAheadConfig
     
+    private let globalState = TypeAheadState.shared
     private let moreSuggestionsState = TypeAheadMoreSuggestionsState.shared
     
     private var appName: String? {
@@ -61,26 +61,29 @@ struct TypeAheadMenuView: View {
         Task {
             await moreSuggestionsState.getMoreSuggestions()
         }
-        dismiss()
+        globalState.showMenu = false
     }
     
     private func viewContextAction() {
-        
+        globalState.showMenu = false
     }
     
     private func pauseForOneHourAction() {
         typeAheadConfig.resumeAt = .now.addingTimeInterval(3600)
+        globalState.showMenu = false
     }
     
     private func excludeAppAction() {
         guard let appName = appName else { return }
         
         typeAheadConfig.excludedApps.insert(appName)
+        globalState.showMenu = false
     }
     
     private func advancedSettingsAction() {
         model.setSettingsTab(tab: .accessibility)
         openSettings()
+        globalState.showMenu = false
     }
 }
 
