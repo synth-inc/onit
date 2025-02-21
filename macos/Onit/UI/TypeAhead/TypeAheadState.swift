@@ -21,13 +21,16 @@ final class TypeAheadState {
     
     var completion: String = ""
     var isLoading = false
-    var showMenu = false
     var error: TypeAheadError?
+    var isCompletionInserted = false
+    
+    var showMenu = false
     
     private(set) var shouldShow: Bool = false
     
     private let moreSuggestionsState = TypeAheadMoreSuggestionsState.shared
     private var currentTaskId: UUID?
+    private var shouldSkipNextUpdate: Bool = false
     
     // MARK: - Initializer
     
@@ -44,10 +47,13 @@ final class TypeAheadState {
                     updateShouldShow(userInput: userInput)
                     
                     guard shouldShow else {
-                        completion = ""
-                        isLoading = false
-                        error = nil
+                        reset()
                         
+                        return
+                    }
+                    
+                    if shouldSkipNextUpdate {
+                        shouldSkipNextUpdate = false
                         return
                     }
                     
@@ -79,24 +85,31 @@ final class TypeAheadState {
             cmdDown?.flags = .maskCommand
             vDown?.flags = .maskCommand
 
+            shouldSkipNextUpdate = true
+            reset(inserted: true)
+            
             cmdDown?.post(tap: .cghidEventTap)
             vDown?.post(tap: .cghidEventTap)
             vUp?.post(tap: .cghidEventTap)
             cmdUp?.post(tap: .cghidEventTap)
             
-            completion = ""
-            
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
                 pasteboard.clearContents()
                 pasteboard.setString(oldValue, forType: .string)
-            
-                // reset input to not trigger the autocomplete again
-                AccessibilityNotificationsManager.shared.resetInput()
             }
         }
     }
     
     // MARK: - Private functions
+    
+    private func reset(loading: Bool = false, inserted: Bool = false) {
+        completion = ""
+        isLoading = loading
+        error = nil
+        isCompletionInserted = inserted
+        
+        moreSuggestionsState.reset()
+    }
     
     private func updateShouldShow(userInput: AccessibilityUserInput) {
         let manager = AccessibilityNotificationsManager.shared
@@ -114,9 +127,7 @@ final class TypeAheadState {
         guard taskId == currentTaskId else { return }
         
         await MainActor.run {
-            self.isLoading = true
-            self.error = nil
-            moreSuggestionsState.reset()
+            reset(loading: true)
         }
         
         do {

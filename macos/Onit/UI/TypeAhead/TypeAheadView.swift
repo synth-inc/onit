@@ -12,6 +12,7 @@ struct TypeAheadView: View {
     @ObservedObject var accessibilityManager = AccessibilityNotificationsManager.shared
     @Default(.typeAheadConfig) var typeAheadConfig
     
+    private let state = TypeAheadState.shared
     private let moreSuggestionsState = TypeAheadMoreSuggestionsState.shared
     
     private var isPaused: Bool {
@@ -37,6 +38,8 @@ struct TypeAheadView: View {
                 let appName = accessibilityManager.screenResult.applicationName ?? ""
                 
                 TypeAheadDisabledView(reason: "Auto-complete disabled for \"\(appName)\"")
+            } else if state.isCompletionInserted {
+                TypeAheadUndoView()
             } else {
                 if !moreSuggestionsState.isLoading && moreSuggestionsState.moreSuggestions.isEmpty {
                     TypeAheadCompletionView()

@@ -14,7 +14,7 @@ struct TypeAheadCompletionView: View {
     private let globalState = TypeAheadState.shared
     
     var body: some View {
-        HStack(alignment: .center, spacing: 4) {
+        HStack(alignment: .top, spacing: 4) {
             if globalState.isLoading {
                 ProgressView()
                     .controlSize(.small)
