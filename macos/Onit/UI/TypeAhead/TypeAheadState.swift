@@ -26,6 +26,7 @@ final class TypeAheadState {
     
     private(set) var shouldShow: Bool = false
     
+    private let moreSuggestionsState = TypeAheadMoreSuggestionsState.shared
     private var currentTaskId: UUID?
     
     // MARK: - Initializer
@@ -115,6 +116,7 @@ final class TypeAheadState {
         await MainActor.run {
             self.isLoading = true
             self.error = nil
+            moreSuggestionsState.reset()
         }
         
         do {

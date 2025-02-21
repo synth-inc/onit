@@ -20,8 +20,11 @@ class TypeAheadWindowController: NSObject, NSWindowDelegate {
 
     private let state: TypeAheadState
     private let contentView: TypeAheadView?
-    private var window: NSWindow?
+    private var window: TypeAheadWindow?
     private var positionObserver: Task<Void, Never>?
+    private var menuWindow: TypeAheadWindow?
+    
+    var lastActiveApp: NSRunningApplication?
 
     // MARK: - Initializers
 
@@ -33,19 +36,10 @@ class TypeAheadWindowController: NSObject, NSWindowDelegate {
 
         let contentView = contentView.fixedSize()
         let hostingController = NSHostingController(rootView: contentView)
-
-        let window = NSWindow(contentViewController: hostingController)
-        window.styleMask = [.borderless]
-        window.isOpaque = false
-        window.backgroundColor = .clear
-        window.level = .floating
-        window.hasShadow = false
-        window.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary, .ignoresCycle]
-        window.isReleasedWhenClosed = false
-        window.delegate = self
-        window.ignoresMouseEvents = false
-        window.hidesOnDeactivate = false
-
+        let window = TypeAheadWindow(contentViewController: hostingController)
+        
+        window.configure(self)
+        
         self.window = window
         
         setupEventMonitor()
@@ -92,7 +86,7 @@ class TypeAheadWindowController: NSObject, NSWindowDelegate {
 
     func bringToFront() {
         window?.alphaValue = 1.0
-        window?.makeKeyAndOrderFront(nil)
+        window?.orderFront(nil)
     }
 
     func closeWindow() {
@@ -104,6 +98,37 @@ class TypeAheadWindowController: NSObject, NSWindowDelegate {
                 context.timingFunction = CAMediaTimingFunction(name: .easeInEaseOut)
                 window.animator().alphaValue = 0.0
             })
+    }
+
+    func showMenu() {
+        guard let window = window else { return }
+        
+        if menuWindow == nil {
+            let menuView = TypeAheadMenuView()
+                .fixedSize()
+            let hostingController = NSHostingController(rootView: menuView)
+            
+            let menuWindow = TypeAheadWindow(contentViewController: hostingController)
+            menuWindow.configure(self)
+            
+            self.menuWindow = menuWindow
+        }
+        
+        if let menuWindow = menuWindow {
+            let windowFrame = window.frame
+            let menuPoint = NSPoint(
+                x: windowFrame.maxX - 16,
+                y: windowFrame.maxY - 4
+            )
+            
+            menuWindow.setFrameTopLeftPoint(menuPoint)
+            menuWindow.orderFront(nil)
+        }
+    }
+    
+    func hideMenu() {
+        menuWindow?.close()
+        menuWindow = nil
     }
 
     // MARK: - Private Functions
@@ -180,5 +205,93 @@ class TypeAheadWindowController: NSObject, NSWindowDelegate {
 
     func windowWillClose(_ notification: Notification) {
         
+    }
+}
+
+class TypeAheadWindow: NSWindow {
+    private var lastActiveApp: NSRunningApplication?
+    
+    func configure(_ delegate: TypeAheadWindowController) {
+        styleMask = [.borderless]
+        isOpaque = false
+        backgroundColor = .clear
+        level = .popUpMenu
+        hasShadow = true
+        collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary, .ignoresCycle]
+        isReleasedWhenClosed = false
+        ignoresMouseEvents = false
+        hidesOnDeactivate = false
+        acceptsMouseMovedEvents = true
+        isMovableByWindowBackground = false
+        self.delegate = delegate
+        
+        if let contentView = contentView {
+            contentView.wantsLayer = true
+            contentView.layer?.masksToBounds = true
+            
+            let eventView = MouseTrackingView(frame: contentView.bounds)
+            eventView.autoresizingMask = [.width, .height]
+            eventView.delegate = delegate
+            contentView.addSubview(eventView)
+        }
+    }
+    
+    override var canBecomeKey: Bool {
+        return false
+    }
+    
+    override var canBecomeMain: Bool {
+        return false
+    }
+    
+    override func becomeKey() {
+        // Ne rien faire pour empêcher la fenêtre de devenir key
+    }
+    
+    override func sendEvent(_ event: NSEvent) {
+        switch event.type {
+        case .leftMouseDown:
+            lastActiveApp = NSWorkspace.shared.frontmostApplication
+            super.sendEvent(event)
+            if let app = lastActiveApp {
+                DispatchQueue.main.async {
+                    app.activate(options: .activateAllWindows)
+                }
+            }
+        default:
+            super.sendEvent(event)
+        }
+    }
+}
+
+class MouseTrackingView: NSView {
+    weak var delegate: TypeAheadWindowController?
+    
+    override init(frame frameRect: NSRect) {
+        super.init(frame: frameRect)
+        
+        let trackingArea = NSTrackingArea(
+            rect: bounds,
+            options: [.mouseEnteredAndExited, .activeAlways, .mouseMoved],
+            owner: self,
+            userInfo: nil
+        )
+        addTrackingArea(trackingArea)
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    override func mouseEntered(with event: NSEvent) {
+        if let lastActiveApp = NSWorkspace.shared.frontmostApplication {
+            delegate?.lastActiveApp = lastActiveApp
+        }
+    }
+    
+    override func mouseExited(with event: NSEvent) {
+        if let lastActiveApp = delegate?.lastActiveApp {
+            lastActiveApp.activate(options: .activateAllWindows)
+        }
     }
 }

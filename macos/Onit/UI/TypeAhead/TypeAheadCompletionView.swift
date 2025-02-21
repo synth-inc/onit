@@ -83,12 +83,12 @@ struct TypeAheadCompletionView: View {
                 .rotationEffect(.degrees(90))
         }
         .buttonStyle(.plain)
-        .popover(isPresented: Binding(get: {
-            globalState.showMenu
-        }, set: { newValue in
-            globalState.showMenu = newValue
-        })) {
-            TypeAheadMenuView()
+        .onChange(of: globalState.showMenu) { _, showMenu in
+            if showMenu {
+                TypeAheadWindowController.shared.showMenu()
+            } else {
+                TypeAheadWindowController.shared.hideMenu()
+            }
         }
     }
 }

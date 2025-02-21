@@ -11,6 +11,7 @@ import SwiftUI
 
 struct TypeAheadMenuView: View {
     @Environment(\.model) var model
+    @Environment(\.dismiss) var dismiss
     @Environment(\.openSettings) var openSettings
     @Default(.typeAheadConfig) var typeAheadConfig
     
@@ -60,6 +61,7 @@ struct TypeAheadMenuView: View {
         Task {
             await moreSuggestionsState.getMoreSuggestions()
         }
+        dismiss()
     }
     
     private func viewContextAction() {
