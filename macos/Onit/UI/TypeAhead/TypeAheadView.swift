@@ -12,7 +12,7 @@ struct TypeAheadView: View {
     
     var body: some View {
         HStack(alignment: .center, spacing: 4) {
-            if moreSuggestionsState.moreSuggestions.isEmpty {
+            if !moreSuggestionsState.isLoading && moreSuggestionsState.moreSuggestions.isEmpty {
                 TypeAheadCompletionView()
             } else {
                 TypeAheadMoreSuggestionsView()

@@ -25,17 +25,24 @@ final class TypeAheadMoreSuggestionsState {
     
     // MARK: - Functions
     
+    func reset(error: TypeAheadError? = nil) {
+        moreSuggestions = []
+        isLoading = false
+        self.error = error
+    }
+    
     func getMoreSuggestions() async {
+        isLoading = true
         let config = Defaults[.typeAheadConfig]
         
         guard let model = config.model else {
-            error = TypeAheadError.noModelConfigured
+            reset(error: TypeAheadError.noModelConfigured)
             return
         }
         
         let userInput = AccessibilityNotificationsManager.shared.userInput
         guard !userInput.fullText.isEmpty else {
-            error = TypeAheadError.noUserInput
+            reset(error: TypeAheadError.noUserInput)
             return
         }
         
@@ -43,7 +50,6 @@ final class TypeAheadMoreSuggestionsState {
         let instruction = TypeAheadPrompts.MoreSuggestions.systemPrompt + TypeAheadPrompts.MoreSuggestions.instruction(userInput: userInput)
         
         do {
-            isLoading = true
             moreSuggestions = try await Task.detached {
                 do {
                     let response = try await FetchingClient().localGenerate(
@@ -60,8 +66,7 @@ final class TypeAheadMoreSuggestionsState {
             }.value
             isLoading = false
         } catch {
-            self.isLoading = false
-            self.error = .moreSuggestionFailed(error.localizedDescription)
+            reset(error: .moreSuggestionFailed(error.localizedDescription))
         }
     }
 }
