@@ -31,7 +31,6 @@ struct TypeAheadCompletionView: View {
         }
         .frame(
             maxWidth: 300,
-            minHeight: 30,
             maxHeight: 200
         )
         .padding(.vertical, 4)
