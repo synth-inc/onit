@@ -33,6 +33,9 @@ struct OnitPromptView: View {
                     .fill(.thickMaterial)
             }
             .padding(.vertical, 5)
+            .onTapGesture {
+                model.launchPanel()
+            }
         }
     }
 }
