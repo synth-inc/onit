@@ -10,5 +10,9 @@ import SwiftUI
 @Observable
 final class SystemPromptState {
     
+    @MainActor static let shared = SystemPromptState()
+    
     var activeApplication: String?
+    var shouldShowSystemPrompt: Bool = false
+    var shouldShowSelection: Bool = false
 }

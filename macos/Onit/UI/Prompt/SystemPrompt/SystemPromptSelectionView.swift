@@ -17,10 +17,13 @@ struct SystemPromptSelectionView: View {
     
     @Binding var showNewPrompt: Bool
     @State private var searchText = ""
-    @State private var suggestedPromptIds: [String] = []
     
     init(showNewPrompt: Binding<Bool>) {
         self._showNewPrompt = showNewPrompt
+    }
+    
+    private var suggestedPrompts: [SystemPrompt] {
+        model.promptSuggestionService?.suggestedPrompts ?? []
     }
     
     private var allPrompts: [SystemPrompt] {
@@ -48,12 +51,6 @@ struct SystemPromptSelectionView: View {
         }
     }
     
-    private var suggestedPrompts: [SystemPrompt] {
-        prompts.filter { prompt in
-            suggestedPromptIds.contains(prompt.id)
-        }
-    }
-    
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text("System Prompts")
@@ -67,9 +64,6 @@ struct SystemPromptSelectionView: View {
         }
         .padding(16)
         .background(.black)
-        .task {
-            await updateSuggestions()
-        }
     }
     
     var promptsList: some View {
@@ -132,22 +126,6 @@ struct SystemPromptSelectionView: View {
             }
             .buttonStyle(.plain)
         }
-    }
-    
-    private func updateSuggestions() async {
-        let pendingInput = model.pendingInput
-        let contextList = model.pendingContextList
-        
-        let promptIds = await Task.detached { [pendingInput, contextList] in
-            let service = await SystemPromptSuggestionService(with: model.container)
-            
-            return await service.findSuggestedPromptIds(
-                input: pendingInput,
-                contextList: contextList
-            )
-        }.value
-        
-        self.suggestedPromptIds = promptIds
     }
 }
 

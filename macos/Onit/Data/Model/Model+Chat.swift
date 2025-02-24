@@ -13,36 +13,47 @@ import SwiftData
 
 extension OnitModel {
     func createAndSavePrompt() -> Prompt {
-        // This would actually be a good place to do the images
-
         let prompt = Prompt(
-            instruction: pendingInstruction, timestamp: .now,
-            input: pendingInput, contextList: pendingContextList)
+            instruction: pendingInstruction,
+            timestamp: .now,
+            input: pendingInput,
+            contextList: pendingContextList
+        )
 
-        // If there's no current chat, create one
         if currentChat == nil {
-            // Get system prompt
-            let systemPrompt: SystemPrompt
-            do {
-                systemPrompt = try container.mainContext.fetch(FetchDescriptor<SystemPrompt>())
-                    .first(where: { $0.id == Defaults[.systemPromptId] }) ?? SystemPrompt.outputOnly
-            } catch {
-                systemPrompt = SystemPrompt.outputOnly
+            Task { @MainActor in
+                let systemPrompt: SystemPrompt
+                do {
+                    systemPrompt = try container.mainContext.fetch(FetchDescriptor<SystemPrompt>())
+                            .first(where: { $0.id == Defaults[.systemPromptId] }) ?? SystemPrompt.outputOnly
+                } catch {
+                    systemPrompt = SystemPrompt.outputOnly
+                }
+                
+                systemPrompt.lastUsed = Date()
+                
+                let systemPromptCopy = systemPrompt
+                currentChat = Chat(systemPrompt: systemPromptCopy, prompts: [], timestamp: .now)
+                currentPrompts = []
+                SystemPromptState.shared.shouldShowSystemPrompt = false
+                let modelContext = container.mainContext
+                modelContext.insert(currentChat!)
+                
+                finishPromptCreation(prompt)
             }
-            
-            currentChat = Chat(systemPrompt: systemPrompt, prompts: [], timestamp: .now)
-            currentPrompts = []
-            let modelContext = container.mainContext
-            modelContext.insert(currentChat!)
+            return prompt
         }
 
-        // If there's a last prompt, set the prior and next prompts
+        finishPromptCreation(prompt)
+        return prompt
+    }
+    
+    private func finishPromptCreation(_ prompt: Prompt) {
         if let lastPrompt = currentChat?.prompts.last {
             prompt.priorPrompt = lastPrompt
             lastPrompt.nextPrompt = prompt
         }
 
-        // Add the prompt to the current chat
         currentChat?.prompts.append(prompt)
         currentPrompts?.append(prompt)
         pendingInstruction = ""
@@ -53,8 +64,6 @@ extension OnitModel {
         } catch {
             print(error.localizedDescription)
         }
-
-        return prompt
     }
 
     func generate(_ prompt: Prompt) {

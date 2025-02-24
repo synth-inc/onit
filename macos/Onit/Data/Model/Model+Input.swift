@@ -84,6 +84,9 @@ extension OnitModel {
         focusText()
         shrinkContent()
         
+        SystemPromptState.shared.shouldShowSelection = false
+        let suggestedPrompts = promptSuggestionService?.suggestedPrompts ?? []
+        SystemPromptState.shared.shouldShowSystemPrompt = !suggestedPrompts.isEmpty
     }
 
     func shrinkContent() {

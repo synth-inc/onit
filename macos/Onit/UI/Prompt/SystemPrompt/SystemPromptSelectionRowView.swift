@@ -17,7 +17,6 @@ struct SystemPromptSelectionRowView: View {
     var body: some View {
         Button(action: {
             systemPromptId = prompt.id
-            prompt.lastUsed = Date()
         }) {
             HStack {
                 Text(prompt.name)

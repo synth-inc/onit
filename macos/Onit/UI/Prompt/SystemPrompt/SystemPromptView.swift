@@ -12,6 +12,8 @@ import SwiftUI
 struct SystemPromptView: View {
     @Environment(\.modelContext) var modelContext
     @Default(.systemPromptId) private var systemPromptId
+    @Bindable private var state = SystemPromptState.shared
+    
     @State private var showSelection: Bool = false
     @State private var showDetail: Bool = false
     @State private var showNewPrompt: Bool = false
@@ -51,7 +53,13 @@ struct SystemPromptView: View {
             }
             .buttonStyle(.plain)
         }
-        .popover(isPresented: $showSelection, arrowEdge: .leading) {
+        .popover(isPresented: .init(
+            get: { showSelection || state.shouldShowSelection },
+            set: { 
+                showSelection = $0
+                state.shouldShowSelection = $0
+            }
+        ), arrowEdge: .leading) {
             SystemPromptSelectionView(showNewPrompt: $showNewPrompt)
         }
         .popover(isPresented: $showDetail, arrowEdge: .bottom) {
@@ -67,7 +75,8 @@ struct SystemPromptView: View {
             if new { addPrompt() }
         }
         .onChange(of: systemPromptId, initial: true) { _, systemPromptId in
-            guard let prompt = try? modelContext.fetch(FetchDescriptor<SystemPrompt>()).first(where: { $0.id == systemPromptId }) else {
+            guard let prompts = try? modelContext.fetch(FetchDescriptor<SystemPrompt>()),
+                  let prompt = prompts.first(where: { $0.id == systemPromptId }) else {
                 selectedPrompt = .outputOnly
                 print("Could not find prompt")
                 return
@@ -90,8 +99,6 @@ struct SystemPromptView: View {
     }
     
     private func addPrompt() {
-        promptToAdd.lastUsed = Date()
-
         modelContext.insert(promptToAdd)
         try! modelContext.save()
         

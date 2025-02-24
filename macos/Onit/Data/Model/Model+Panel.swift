@@ -167,6 +167,9 @@ extension OnitModel: NSWindowDelegate {
         } else {
             Defaults[.isPanelExpanded] = false
         }
+        
+        SystemPromptState.shared.shouldShowSelection = false
+        SystemPromptState.shared.shouldShowSystemPrompt = false
 
         panel.orderOut(nil)
         HighlightHintWindowController.shared.adjustWindow()
