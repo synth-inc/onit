@@ -19,6 +19,11 @@ struct OnitPromptView: View {
 
     var body: some View {
         if model.panel == nil {
+            // Reset offset when view appears
+            let _ = DispatchQueue.main.async {
+                offset = .zero
+                isDragging = false
+            }
             HStack(spacing: 3) {
                 Image(.smirk)
                     .resizable()
