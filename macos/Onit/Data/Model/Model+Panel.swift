@@ -25,8 +25,14 @@ extension OnitModel: NSWindowDelegate {
             newChat()
         }
 
+        var windowWidth: CGFloat = 400
+        if let savedWidth = Defaults[.panelWidth] {
+            // Ensure width is not greater than screen width minus padding
+            windowWidth = savedWidth
+        }
+
         let newPanel = CustomPanel(
-            contentRect: NSRect(x: 0, y: 0, width: 400, height: 0),
+            contentRect: NSRect(x: 0, y: 0, width: windowWidth, height: 0),
             styleMask: [.resizable, .nonactivatingPanel, .fullSizeContentView],
             backing: .buffered,
             defer: false
@@ -64,14 +70,8 @@ extension OnitModel: NSWindowDelegate {
         if let screen = NSScreen.main {
             let visibleFrame = screen.visibleFrame
             let windowHeight = newPanel.frame.height
-
-            // Get the saved width or use default
-            var windowWidth = newPanel.frame.width
-            if let savedWidth = Defaults[.panelWidth] {
-                // Ensure width is not greater than screen width minus padding
-                windowWidth = min(savedWidth, visibleFrame.width - 32)
-            }
-
+            var windowWidth = min(newPanel.frame.width, visibleFrame.width)
+            
             // Calculate position based on preference
             let finalXPosition: CGFloat
             switch Defaults[.panelPosition] {
@@ -87,7 +87,7 @@ extension OnitModel: NSWindowDelegate {
             // Set the frame with the new position and width
             let newFrame = NSRect(
                 x: finalXPosition, y: finalYPosition, width: windowWidth, height: windowHeight)
-            newPanel.setFrame(newFrame, display: false)
+            newPanel.setFrame(newFrame, display: false, animate: false)
         }
 
         newPanel.makeKeyAndOrderFront(nil)
@@ -235,7 +235,7 @@ extension OnitModel: NSWindowDelegate {
             // Set the frame with the new position and width
             let newFrame = NSRect(
                 x: finalXPosition, y: finalYPosition, width: windowWidth, height: windowHeight)
-            panel.setFrame(newFrame, display: true, animate: false)
+            panel.setFrame(newFrame, display: true)
         }
 
         panel.makeKeyAndOrderFront(nil)
@@ -317,14 +317,14 @@ extension OnitModel: NSWindowDelegate {
             if Defaults[.isPanelExpanded] {
                 let defaultPanelFrame = Defaults[.defaultPanelFrame]
                 // Restore the panel to its default size and position
-                panel.setFrame(defaultPanelFrame, display: true, animate: true)
+                panel.setFrame(defaultPanelFrame, display: true, animate: false)
                 // Optionally reposition the panel to its original location
                 panel.setFrameOrigin(defaultPanelFrame.origin)
             } else {
                 // Save the current panel frame as the default size
                 Defaults[.defaultPanelFrame] = panel.frame
                 // Expand the panel to fit the screen's visible frame
-                panel.setFrame(visibleFrame, display: true, animate: true)
+                panel.setFrame(visibleFrame, display: true, animate: false)
             }
             Defaults[.isPanelExpanded].toggle()
         }
