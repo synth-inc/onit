@@ -34,7 +34,7 @@ struct OnitPromptView: View {
             }
             .padding(.vertical, 5)
             .onTapGesture {
-                model.panel = .prompt
+                model.launchPanel()
             }
         }
     }

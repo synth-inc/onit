@@ -47,7 +47,7 @@ struct StaticPromptView: View {
                 )
             )
             .onTapGesture {
-                model.panel = .prompt
+                model.launchPanel()
             }
         }
     }
