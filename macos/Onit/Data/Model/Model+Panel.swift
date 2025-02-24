@@ -25,8 +25,14 @@ extension OnitModel: NSWindowDelegate {
             newChat()
         }
 
+        var windowWidth: CGFloat = 400
+        if let savedWidth = Defaults[.panelWidth] {
+            // Ensure width is not greater than screen width minus padding
+            windowWidth = savedWidth
+        }
+
         let newPanel = CustomPanel(
-            contentRect: NSRect(x: 0, y: 0, width: 400, height: 0),
+            contentRect: NSRect(x: 0, y: 0, width: windowWidth, height: 0),
             styleMask: [.resizable, .nonactivatingPanel, .fullSizeContentView],
             backing: .buffered,
             defer: false
@@ -64,14 +70,8 @@ extension OnitModel: NSWindowDelegate {
         if let screen = NSScreen.main {
             let visibleFrame = screen.visibleFrame
             let windowHeight = newPanel.frame.height
-
-            // Get the saved width or use default
-            var windowWidth = newPanel.frame.width
-            if let savedWidth = Defaults[.panelWidth] {
-                // Ensure width is not greater than screen width minus padding
-                windowWidth = min(savedWidth, visibleFrame.width - 32)
-            }
-
+            var windowWidth = min(newPanel.frame.width, visibleFrame.width)
+            
             // Calculate position based on preference
             let finalXPosition: CGFloat
             switch Defaults[.panelPosition] {
