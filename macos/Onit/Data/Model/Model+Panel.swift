@@ -317,14 +317,14 @@ extension OnitModel: NSWindowDelegate {
             if Defaults[.isPanelExpanded] {
                 let defaultPanelFrame = Defaults[.defaultPanelFrame]
                 // Restore the panel to its default size and position
-                panel.setFrame(defaultPanelFrame, display: true, animate: false)
+                panel.setFrame(defaultPanelFrame, display: true, animate: true)
                 // Optionally reposition the panel to its original location
                 panel.setFrameOrigin(defaultPanelFrame.origin)
             } else {
                 // Save the current panel frame as the default size
                 Defaults[.defaultPanelFrame] = panel.frame
                 // Expand the panel to fit the screen's visible frame
-                panel.setFrame(visibleFrame, display: true, animate: false)
+                panel.setFrame(visibleFrame, display: true, animate: true)
             }
             Defaults[.isPanelExpanded].toggle()
         }
