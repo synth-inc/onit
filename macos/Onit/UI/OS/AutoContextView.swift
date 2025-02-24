@@ -16,7 +16,7 @@ struct AutoContextView: View {
 
     var body: some View {
         ScrollView {
-            VStack {
+            VStack(alignment: .leading) {
                 if !closedAutoContextDialog {
                     dialog
                 }
@@ -27,6 +27,7 @@ struct AutoContextView: View {
                         .padding(.top, !closedAutoContextDialog ? 0 : 16)
                         .padding(.bottom, 16)
                         .padding(.horizontal, 16)
+                        .frame(maxWidth: .infinity, alignment: .leading)
                 } else {
                     ProgressView("Loading auto context from \(readableTitle)...")
                         .controlSize(.small)

@@ -24,11 +24,12 @@ class AccessibilityParserXCode: AccessibilityParserBase {
                 result.merge(parentResult) { _, new in new }
             }
 
-            guard let role = element.role(),
-                role == kAXTextAreaRole,
-                let description = element.description(),
-                let value = element.value(),
-                !value.isEmpty
+            guard let description = element.description(),
+                  description != "Console",
+                  let role = element.role(),
+                  role == kAXTextAreaRole,
+                  let value = element.value(),
+                  !value.isEmpty
             else {
                 return result
             }
@@ -36,8 +37,6 @@ class AccessibilityParserXCode: AccessibilityParserBase {
             switch description {
             case "Source Editor":
                 result[AccessibilityParsedElements.Xcode.editor] = value
-            case "Console":
-                result[AccessibilityParsedElements.Xcode.console] = value
             default:
                 break
             }
