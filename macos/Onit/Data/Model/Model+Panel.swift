@@ -87,7 +87,7 @@ extension OnitModel: NSWindowDelegate {
             // Set the frame with the new position and width
             let newFrame = NSRect(
                 x: finalXPosition, y: finalYPosition, width: windowWidth, height: windowHeight)
-            newPanel.setFrame(newFrame, display: false, animate: false)
+            newPanel.setFrame(newFrame, display: false)
         }
 
         newPanel.makeKeyAndOrderFront(nil)
@@ -235,7 +235,7 @@ extension OnitModel: NSWindowDelegate {
             // Set the frame with the new position and width
             let newFrame = NSRect(
                 x: finalXPosition, y: finalYPosition, width: windowWidth, height: windowHeight)
-            panel.setFrame(newFrame, display: true)
+            panel.setFrame(newFrame, display: true, animate: false)
         }
 
         panel.makeKeyAndOrderFront(nil)
