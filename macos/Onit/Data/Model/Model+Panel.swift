@@ -176,16 +176,7 @@ extension OnitModel: NSWindowDelegate {
 
         disableKeyboardShortcuts()
     }
-
-    @MainActor
-    func togglePanel() {
-        if panel != nil {
-            closePanel()
-        } else {
-            showPanel()
-        }
-    }
-
+    
     func launchPanel() {
         if panel == nil {
             showPanel()
@@ -236,20 +227,25 @@ extension OnitModel: NSWindowDelegate {
             let newFrame = NSRect(
                 x: finalXPosition, y: finalYPosition, width: windowWidth, height: windowHeight)
             panel.setFrame(newFrame, display: true, animate: false)
+            
+            panel.makeKeyAndOrderFront(nil)
+            panel.orderFrontRegardless()
+            self.textFocusTrigger.toggle()
+        } else {
+            // If we're using the shortcut as a Toggle, dismiss the panel.
+            if Defaults[.launchShortcutToggleEnabled] {
+                closePanel()
+            } else {
+                // Otherwise, bring it to the front
+                panel.makeKeyAndOrderFront(nil)
+                panel.orderFrontRegardless()
+                self.textFocusTrigger.toggle()
+            }
         }
-
-        panel.makeKeyAndOrderFront(nil)
-        panel.orderFrontRegardless()
-
-        self.textFocusTrigger.toggle()
     }
 
     func launchShortcutAction() {
-        if Defaults[.launchShortcutToggleEnabled] {
-            togglePanel()
-        } else {
-            launchPanel()
-        }
+        launchPanel()
     }
 
     func toggleLocalVsRemoteShortcutAction() {
