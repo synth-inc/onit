@@ -72,15 +72,18 @@ extension OnitModel {
         addContext(urls: imageURLs)
     }
 
-    func newChat() {
+    func newChat(clearContext: Bool = true) {
         historyIndex = -1
         currentChat = nil
         currentPrompts = nil
         pendingInstruction = ""
-        pendingContextList.removeAll()
-        pendingInput = nil
+        if (clearContext) {
+            pendingContextList.removeAll()
+            pendingInput = nil
+        }
         focusText()
         shrinkContent()
+        
     }
 
     func shrinkContent() {

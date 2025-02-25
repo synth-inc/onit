@@ -21,8 +21,9 @@ extension OnitModel: NSWindowDelegate {
         }
 
         // Create a new chat when creating a new panel if the setting is enabled
+        // But we don't want to clear out the context, so that autocontext still works.
         if Defaults[.createNewChatOnPanelOpen] {
-            newChat()
+            newChat(clearContext: false)
         }
 
         var windowWidth: CGFloat = 400
