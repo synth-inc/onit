@@ -39,7 +39,10 @@ struct GeneratedView: View {
 #if DEBUG
     #Preview {
         ModelContainerPreview {
-            //        GeneratedView(prompt: Prompt(input: nil, text: "Testing this out", timestamp: Date(), responses: [Response(text: "Testing this out")]))
+            var prompt = Prompt.sample
+            prompt.input = Input(selectedText: "blablabla", application: "Xcode")
+            
+            return GeneratedView(prompt: prompt)
         }
     }
 #endif

@@ -9,6 +9,10 @@ import SwiftUI
 
 struct InputBarView: View {
     @Environment(\.model) var model
+    
+    private var shouldShowSystemPrompt: Bool {
+        model.currentChat?.systemPrompt == nil && SystemPromptState.shared.shouldShowSystemPrompt
+    }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -17,6 +21,9 @@ struct InputBarView: View {
             }
             if let pendingInput = model.pendingInput {
                 InputView(input: pendingInput)
+            }
+            if shouldShowSystemPrompt {
+                SystemPromptView()
             }
             FileRow(contextList: model.pendingContextList)
             TextInputView()

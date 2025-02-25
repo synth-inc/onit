@@ -8,10 +8,12 @@
 import SwiftData
 import SwiftUI
 
+
 private struct ModelEnvironmentKey: @preconcurrency EnvironmentKey {
     @MainActor static var defaultValue: OnitModel = {
-        let container = try! ModelContainer(for: Chat.self)
-        let remoteModels = RemoteModelsEnvironmentKey.defaultValue
+        let container = SwiftDataContainer.appContainer
+        // TODO: KNA - Check this
+        let remoteModels = EnvironmentValues().remoteModels
         let model = OnitModel(container: container, remoteModels: remoteModels)
         return model
     }()

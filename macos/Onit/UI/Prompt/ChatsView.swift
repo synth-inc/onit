@@ -17,15 +17,17 @@ struct ChatsView: View {
     @State var screenHeight: CGFloat = NSScreen.main?.visibleFrame.height ?? 0
     @State private var lastScrollTime: Date = .now
 
-    private let chatsID = "chats"
+    private var chatsID: Int? {
+        model.currentChat?.hashValue
+    }
     private let scrollDebounceInterval: TimeInterval = 0.1
     
     var maxHeight: CGFloat {
         guard !model.resizing, screenHeight != 0 else { return 0 }
-        let availableHeight =
-            screenHeight
-            - model.headerHeight - model.inputHeight - model.setUpHeight - 100
-        return availableHeight
+
+        return screenHeight - model.headerHeight -
+            model.inputHeight - model.setUpHeight -
+            model.systemPromptHeight - 100
     }
     
     var realHeight: CGFloat {
@@ -37,14 +39,12 @@ struct ChatsView: View {
             ScrollView {
                 LazyVStack(spacing: -16) {
                     ForEach(model.currentPrompts ?? []) { prompt in
-                        PromptView(prompt: prompt)
-                            .background(
-                                Group {
-                                    if prompt == model.currentPrompts?.last {
-                                        lastPromptHeightReader(scrollProxy: proxy)
-                                    }
-                                }
-                            )
+                        if prompt == model.currentPrompts?.last {
+                            PromptView(prompt: prompt)
+                                .background(lastPromptHeightReader(scrollProxy: proxy))
+                        } else {
+                            PromptView(prompt: prompt)
+                        }
                     }
                 }
                 .id(chatsID)
@@ -57,9 +57,16 @@ struct ChatsView: View {
                 maxHeight: maxHeight,
                 alignment: .top
             )
-            .onChange(of: model.currentPrompts?.count, initial: true) {
-                withAnimation {
-                    proxy.scrollTo(chatsID, anchor: .bottom)
+            .onChange(of: model.currentChat, initial: true) { old, new in
+                if old == nil && new != nil {
+                    return
+                }
+                let now = Date()
+                if now.timeIntervalSince(lastScrollTime) >= scrollDebounceInterval {
+                    lastScrollTime = now
+                    withAnimation {
+                        proxy.scrollTo(chatsID, anchor: .bottom)
+                    }
                 }
             }
         }
@@ -82,6 +89,11 @@ struct ChatsView: View {
 
                     if oldHeight != realHeight {
                         model.adjustPanelSize()
+                    }
+                    
+                    // When new chat, there is no prompt so reset the lastPromptHeight
+                    if proxy.size.height == 0 {
+                        lastPromptHeight = 0
                     }
                 }
         }
