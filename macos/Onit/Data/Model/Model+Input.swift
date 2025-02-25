@@ -72,7 +72,7 @@ extension OnitModel {
         addContext(urls: imageURLs)
     }
 
-    func newChat(clearContext: Bool = true) {
+    func newChat(clearContext: Bool = true, shouldSystemPrompt: Bool = false) {
         historyIndex = -1
         currentChat = nil
         currentPrompts = nil
@@ -86,7 +86,7 @@ extension OnitModel {
         
         SystemPromptState.shared.shouldShowSelection = false
         let suggestedPrompts = promptSuggestionService?.suggestedPrompts ?? []
-        SystemPromptState.shared.shouldShowSystemPrompt = !suggestedPrompts.isEmpty
+        SystemPromptState.shared.shouldShowSystemPrompt = shouldSystemPrompt || !suggestedPrompts.isEmpty
     }
 
     func shrinkContent() {
