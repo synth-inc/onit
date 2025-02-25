@@ -7,6 +7,8 @@ struct GeneralTab: View {
     @Default(.fontSize) var fontSize
     @Default(.lineHeight) var lineHeight
     @Default(.panelPosition) var panelPosition
+    @Default(.launchShortcutToggleEnabled) var launchShortcutToggleEnabled
+    @Default(.createNewChatOnPanelOpen) var createNewChatOnPanelOpen
 
     @State var isLaunchAtStartupEnabled: Bool = SMAppService.mainApp.status == .enabled
     @State var isAnalyticsEnabled: Bool = PostHogSDK.shared.isOptOut() == false
@@ -18,6 +20,8 @@ struct GeneralTab: View {
             analyticsSection
 
             appearanceSection
+            
+            experimentalSection
         }
         .formStyle(.grouped)
         .padding()
@@ -52,7 +56,7 @@ struct GeneralTab: View {
         Section {
             VStack(alignment: .leading, spacing: 4) {
                 HStack {
-                    Text("Disable analytics")
+                    Text("Enable analytics")
                         .font(.system(size: 13))
                     Spacer()
                     Toggle("", isOn: $isAnalyticsEnabled)
@@ -153,6 +157,56 @@ struct GeneralTab: View {
             HStack {
                 Image(systemName: "paintbrush")
                 Text("Appearance")
+            }
+        }
+    }
+    
+    var experimentalSection: some View {
+        Section {
+            VStack(spacing: 16) {
+                
+                HStack {
+                    Text("Launch shortcut toggle mode")
+                        .font(.system(size: 13))
+                    SettingInfoButton(
+                        title: "Launch Shortcut Toggle Mode",
+                        description:
+                            "Enable this to use the launch shortcut (CMD+Zero by default) as a toggle: press once to show the panel, press again to hide it.",
+                        defaultValue: "off",
+                        valueType: "Bool"
+                    )
+                    Spacer()
+                    Toggle(
+                        "",
+                        isOn: $launchShortcutToggleEnabled
+                    )
+                    .toggleStyle(.switch)
+                    .controlSize(.small)
+                }
+
+                HStack {
+                    Text("Create new chat on panel open")
+                        .font(.system(size: 13))
+                    SettingInfoButton(
+                        title: "Create New Chat on Panel Open",
+                        description:
+                            "Enable this to start a new chat each time the panel opens. You still access your previous conversations with the up arrow.",
+                        defaultValue: "off",
+                        valueType: "Bool"
+                    )
+                    Spacer()
+                    Toggle(
+                        "",
+                        isOn: $createNewChatOnPanelOpen
+                    )
+                    .toggleStyle(.switch)
+                    .controlSize(.small)
+                }
+            }
+        } header: {
+            HStack {
+                Image(systemName: "gearshape")
+                Text("Experimental Features")
             }
         }
     }
