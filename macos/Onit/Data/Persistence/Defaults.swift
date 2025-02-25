@@ -97,6 +97,9 @@ extension Defaults.Keys {
     // Debug settings
     static let launchShortcutToggleEnabled = Key<Bool>("launchShortcutToggleEnabled", default: false)
     static let createNewChatOnPanelOpen = Key<Bool>("createNewChatOnPanelOpen", default: false)
+
+    // System prompts
+    static let systemPromptId = Key<String>("systemPromptId", default: SystemPrompt.outputOnly.id)
 }
 
 extension NSRect: Defaults.Serializable {

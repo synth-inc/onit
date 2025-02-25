@@ -14,8 +14,7 @@ struct ModelContainerPreview<Content: View>: View {
     @State var model: OnitModel
 
     init(
-        _ modelContainer: @escaping () throws -> ModelContainer = PreviewSampleData
-            .inMemoryContainer,
+        _ modelContainer: @escaping () throws -> ModelContainer = SwiftDataContainer.inMemoryContainer,
         @ViewBuilder content: @escaping () -> Content
     ) {
         self.content = content

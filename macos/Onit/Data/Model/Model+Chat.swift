@@ -9,32 +9,51 @@ import Defaults
 import Foundation
 import PostHog
 import EventSource
+import SwiftData
 
 extension OnitModel {
     func createAndSavePrompt() -> Prompt {
-        // Create a new prompt
-
-        // This would actually be a good place to do the images
-
         let prompt = Prompt(
-            instruction: pendingInstruction, timestamp: .now, input: pendingInput,
-            contextList: pendingContextList)
+            instruction: pendingInstruction,
+            timestamp: .now,
+            input: pendingInput,
+            contextList: pendingContextList
+        )
 
-        // If there's no current chat, create one
         if currentChat == nil {
-            currentChat = Chat(prompts: [], timestamp: .now)
-            currentPrompts = []
-            let modelContext = container.mainContext
-            modelContext.insert(currentChat!)
+            Task { @MainActor in
+                let systemPrompt: SystemPrompt
+                do {
+                    systemPrompt = try container.mainContext.fetch(FetchDescriptor<SystemPrompt>())
+                            .first(where: { $0.id == Defaults[.systemPromptId] }) ?? SystemPrompt.outputOnly
+                } catch {
+                    systemPrompt = SystemPrompt.outputOnly
+                }
+                
+                systemPrompt.lastUsed = Date()
+                
+                let systemPromptCopy = systemPrompt
+                currentChat = Chat(systemPrompt: systemPromptCopy, prompts: [], timestamp: .now)
+                currentPrompts = []
+                SystemPromptState.shared.shouldShowSystemPrompt = false
+                let modelContext = container.mainContext
+                modelContext.insert(currentChat!)
+                
+                finishPromptCreation(prompt)
+            }
+            return prompt
         }
 
-        // If there's a last prompt, set the prior and next prompts
+        finishPromptCreation(prompt)
+        return prompt
+    }
+    
+    private func finishPromptCreation(_ prompt: Prompt) {
         if let lastPrompt = currentChat?.prompts.last {
             prompt.priorPrompt = lastPrompt
             lastPrompt.nextPrompt = prompt
         }
 
-        // Add the prompt to the current chat
         currentChat?.prompts.append(prompt)
         currentPrompts?.append(prompt)
         pendingInstruction = ""
@@ -45,8 +64,6 @@ extension OnitModel {
         } catch {
             print(error.localizedDescription)
         }
-
-        return prompt
     }
 
     func generate(_ prompt: Prompt) {
@@ -97,9 +114,8 @@ extension OnitModel {
                             "Mismatched array lengths: instructions, inputs, files, autoContexts and images must be the same length, and one longer than responses."
                     )
                 }
-                let systemMessage =
-                    "Based on the provided instructions, either provide the output or answer any questions related to it. Provide the response without any additional comments. Provide the output ready to go."
                 
+                let systemPrompt = currentChat?.systemPrompt ?? SystemPrompt.outputOnly
                 streamedResponse = ""
                 
                 
@@ -114,7 +130,7 @@ extension OnitModel {
                     if shouldUseStream(model) {
                         addPartialPrompt(prompt: prompt, instruction: curInstruction)
                         
-                        let asyncText = try await streamingClient.chat(systemMessage: systemMessage,
+                        let asyncText = try await streamingClient.chat(systemMessage: systemPrompt.prompt,
                                                                        instructions: instructionsHistory,
                                                                        inputs: inputsHistory,
                                                                        files: filesHistory,
@@ -127,7 +143,7 @@ extension OnitModel {
                             streamedResponse += response
                         }
                     } else {
-                        streamedResponse = try await client.chat(systemMessage: systemMessage,
+                        streamedResponse = try await client.chat(systemMessage: systemPrompt.prompt,
                                                                  instructions: instructionsHistory,
                                                                  inputs: inputsHistory,
                                                                  files: filesHistory,
@@ -145,7 +161,7 @@ extension OnitModel {
                     if Defaults[.streamResponse].local {
                         addPartialPrompt(prompt: prompt, instruction: curInstruction)
                         
-                        let asyncText = try await streamingClient.localChat(systemMessage: systemMessage,
+                        let asyncText = try await streamingClient.localChat(systemMessage: systemPrompt.prompt,
                                                                             instructions: instructionsHistory,
                                                                             inputs: inputsHistory,
                                                                             files: filesHistory,
@@ -157,7 +173,7 @@ extension OnitModel {
                             streamedResponse += response
                         }
                     } else {
-                        streamedResponse = try await client.localChat(systemMessage: systemMessage,
+                        streamedResponse = try await client.localChat(systemMessage: systemPrompt.prompt,
                                                                       instructions: instructionsHistory,
                                                                       inputs: inputsHistory,
                                                                       files: filesHistory,

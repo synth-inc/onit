@@ -26,8 +26,8 @@ import SwiftData
     var generationIndex = -1
 
     init(
-        instruction: String, timestamp: Date, input: Input? = nil, contextList: [Context] = [],
-        responses: [Response] = []
+        instruction: String, timestamp: Date, input: Input? = nil,
+        contextList: [Context] = [], responses: [Response] = []
     ) {
         self.instruction = instruction
         self.timestamp = timestamp

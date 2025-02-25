@@ -50,7 +50,7 @@ if [ -d "$DATABASE_PATH" ]; then
     find "$DATABASE_PATH" -type f -name "default.store*" -exec cp {} "$BACKUP_DIR" \; > /dev/null 2>&1
     echo "✅ Backup completed at $BACKUP_DIR"
     echo "🗑 Removing default.store files at $DATABASE_PATH"
-    rm -rf "$DATABASE_PATH/default.store*"
+    find "$DATABASE_PATH" -type f -name "default.store*" -exec rm -f {} \; > /dev/null 2>&1
 else
     echo "✅ No default.store found."
 fi

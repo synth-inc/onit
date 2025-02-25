@@ -12,9 +12,7 @@ import SwiftUI
 
 struct GeneratedContentView: View {
     @Environment(\.model) var model
-    @State private var contentHeight: CGFloat = 1000
 
-    
     var prompt: Prompt
     
     var isPartial: Bool {
@@ -29,23 +27,11 @@ struct GeneratedContentView: View {
         return response.isPartial ? model.streamedResponse : response.text
     }
     
-    var height: CGFloat {
-        min(contentHeight, 500)
-    }
-    
     var body: some View {
 
         VStack(alignment: .leading) {
             ParsedContentView(text: textToRead)
                 .padding(.horizontal, 16)
-                .background {
-                    GeometryReader { proxy in
-                        Color.clear
-                            .onAppear {
-                                contentHeight = proxy.size.height
-                            }
-                    }
-                }
             Spacer()
             if textToRead.isEmpty {
                 HStack {

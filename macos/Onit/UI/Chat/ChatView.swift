@@ -7,8 +7,11 @@ struct ChatView: View {
     @Default(.availableLocalModels) var availableLocalModels
 
     var body: some View {
-        VStack(spacing: 0) {
+        VStack(alignment: .leading, spacing: 0) {
             SetUpDialogs()
+            if let systemPrompt = model.currentChat?.systemPrompt {
+                ChatSystemPromptView(systemPrompt: systemPrompt)
+            }
             ChatsView()
             InputBarView()
         }

@@ -45,6 +45,7 @@ import SwiftUI
     var inputHeight: CGFloat = 0
     var contentHeight: CGFloat = 0
     var setUpHeight: CGFloat = 0
+    var systemPromptHeight: CGFloat = 0
     var resizing = false
 
     var showDebugWindow = false
@@ -76,6 +77,8 @@ import SwiftUI
 
     var streamedResponse: String = ""
     
+    var promptSuggestionService: SystemPromptSuggestionService?
+
     @MainActor
     func fetchLocalModels() async {
         do {
@@ -205,6 +208,8 @@ import SwiftUI
                 Defaults[.mode] = .local
             }
         }
+
+        self.promptSuggestionService = SystemPromptSuggestionService(model: self)
     }
 
     func setSettingsTab(tab: SettingsTab) {
