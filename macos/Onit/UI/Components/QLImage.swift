@@ -36,7 +36,13 @@ struct QLImage: NSViewRepresentable {
             let _ = print("Cannot get image \(name)")
             return
         }
-        nsView.previewItem = url as QLPreviewItem
+        
+        // Check if the nsView is still valid before setting the preview item
+        if nsView.window != nil {
+            nsView.previewItem = url as QLPreviewItem
+        } else {
+            print("Cannot set preview item on a closed preview view")
+        }
     }
     
     typealias NSViewType = QLPreviewView
