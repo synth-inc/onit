@@ -10,31 +10,34 @@ import SwiftData
 
 @Model final class Prompt: Identifiable, ObservableObject {
 
-    var instruction: String
+    var instructions: [String] = []
     var timestamp: Date
     var input: Input?
     var contextList: [Context] = []
 
     //    @Relationship(deleteRule: .cascade, inverse: \Response.prompt)
     var responses: [Response] = []
-    var priorInstructions: [String] = []
 
     var priorPrompt: Prompt?
     var nextPrompt: Prompt?
 
     @Transient @Published var generationState: GenerationState? = GenerationState.done
+    @Transient @Published var isEditing: Bool = false
+    @Transient @Published var editingInstruction: String = ""
     var generationIndex = -1
 
     init(
         instruction: String, timestamp: Date, input: Input? = nil, contextList: [Context] = [],
         responses: [Response] = []
     ) {
-        self.instruction = instruction
+        self.instructions = [instruction]
         self.timestamp = timestamp
         self.input = input
         self.contextList = contextList
         self.responses = responses
         self.generationState = GenerationState.done
+        self.isEditing = false
+        self.editingInstruction = ""
     }
 
     var generation: String? {
@@ -57,9 +60,16 @@ import SwiftData
         return generationIndex > 0
     }
 
+    var currentInstruction: String {
+        guard !instructions.isEmpty && generationIndex >= 0 && generationIndex < instructions.count else {
+            return instructions.last ?? ""
+        }
+        return instructions[generationIndex]
+    }
+
     var fullText: String {
         let responseTexts = responses.map { $0.text }.joined(separator: "\n")
-        return "\(instruction)\n\(responseTexts)"
+        return "\(currentInstruction)\n\(responseTexts)"
     }
 }
 
@@ -71,4 +81,34 @@ extension Prompt: Equatable {
 
 extension Prompt {
     @MainActor static let sample = Prompt(instruction: "Hello, world!", timestamp: .now)
+
+    func startEditing() {
+        editingInstruction = currentInstruction
+        isEditing = true
+    }
+
+    func cancelEditing() {
+        editingInstruction = ""
+        isEditing = false
+    }
+
+    func finishEditing() {
+        guard !editingInstruction.isEmpty else {
+            cancelEditing()
+            return
+        }
+
+        // Append the new instruction to the array
+        instructions.append(editingInstruction)
+
+        // Increment the generation index to point to the new instruction
+        generationIndex = instructions.count - 1
+
+        // Reset editing state
+        isEditing = false
+        editingInstruction = ""
+
+        // Trigger generation
+        generationState = .generating
+    }
 }
