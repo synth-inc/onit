@@ -11,17 +11,10 @@ import SwiftUI
 
 extension OnitModel {
     func showContextPickerOverlay() {
-        if contextPickerWindowController == nil {
-            contextPickerWindowController = OverlayWindowController(
-                model: self, content: ContextPickerView())
-        } else {
-            closeContextPickerOverlay()
-        }
+        OverlayManager.shared.showOverlay(model: self, content: ContextPickerView())
     }
 
     func closeContextPickerOverlay() {
-        contextPickerWindowController?.closeOverlay()
-        contextPickerWindowController = nil
+        OverlayManager.shared.dismissOverlay()
     }
-
 }

@@ -52,8 +52,6 @@ import SwiftUI
     var debugPanel: CustomPanel? = nil
     var debugText: String?
 
-    var modelSelectionWindowController: OverlayWindowController<ModelSelectionView>?
-    var contextPickerWindowController: OverlayWindowController<ContextPickerView>?
     var autoContextWindowControllers: [Context: AutoContextWindowController] = [:]
 
     var showFileImporter = false

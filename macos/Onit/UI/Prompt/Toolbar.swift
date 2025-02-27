@@ -114,7 +114,7 @@ struct Toolbar: View {
             .contentShape(.rect)
             .background {
                 RoundedRectangle(cornerRadius: 6)
-                    .fill(model.modelSelectionWindowController == nil ? Color.clear : .gray800)
+                    .fill(Color.clear)
             }
         }
         .tooltip(prompt: "Change model")
