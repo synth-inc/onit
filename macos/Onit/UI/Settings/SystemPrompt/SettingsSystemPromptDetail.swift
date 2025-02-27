@@ -111,8 +111,10 @@ struct SettingsSystemPromptDetail: View {
     }
 }
 
-#Preview {
-    SettingsSystemPromptDetail(prompt: .constant(PreviewSampleData.systemPrompt),
-                       shouldBeDeleted: .constant(false),
-                       shortcutChanged: .constant(false))
-}
+#if DEBUG
+    #Preview {
+        SettingsSystemPromptDetail(prompt: .constant(PreviewSampleData.systemPrompt),
+                           shouldBeDeleted: .constant(false),
+                           shortcutChanged: .constant(false))
+    }
+#endif

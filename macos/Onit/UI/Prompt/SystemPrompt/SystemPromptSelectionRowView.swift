@@ -38,6 +38,8 @@ struct SystemPromptSelectionRowView: View {
     }
 }
 
-#Preview {
-    SystemPromptSelectionRowView(prompt: PreviewSampleData.systemPrompt)
-}
+#if DEBUG
+    #Preview {
+        SystemPromptSelectionRowView(prompt: PreviewSampleData.systemPrompt)
+    }
+#endif
