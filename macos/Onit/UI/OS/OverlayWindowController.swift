@@ -164,18 +164,8 @@ class OverlayWindowController<Content: View>: NSObject, NSWindowDelegate {
     func closeOverlay() {
         guard let overlayWindow = overlayWindow else { return }
 
-        NSAnimationContext.runAnimationGroup(
-            { context in
-                context.duration = 0.2
-                context.timingFunction = CAMediaTimingFunction(name: .easeInEaseOut)
-                overlayWindow.animator().alphaValue = 0.0
-            },
-            completionHandler: {
-                overlayWindow.orderOut(nil)
-                overlayWindow.alphaValue = 1.0
-                self.overlayWindow = nil
-                self.model?.contextPickerWindowController = nil
-                self.stopEventMonitoring()
-            })
+        overlayWindow.orderOut(nil)
+        self.overlayWindow = nil
+        self.stopEventMonitoring()
     }
 }

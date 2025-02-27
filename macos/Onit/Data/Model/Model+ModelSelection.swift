@@ -12,17 +12,11 @@ import SwiftUI
 
 extension OnitModel {
     func showModelSelectionOverlay() {
-        if modelSelectionWindowController == nil {
-            modelSelectionWindowController = OverlayWindowController(
-                model: self, content: ModelSelectionView())
-        } else {
-            closeModelSelectionOverlay()
-        }
+        OverlayManager.shared.showOverlay(model: self, content: ModelSelectionView())
     }
 
     func closeModelSelectionOverlay() {
-        modelSelectionWindowController?.closeOverlay()
-        modelSelectionWindowController = nil
+        OverlayManager.shared.dismissOverlay()
     }
 
     func selectModel(_ modelItem: AIModel) {
