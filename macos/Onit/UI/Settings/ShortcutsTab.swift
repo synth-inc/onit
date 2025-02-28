@@ -63,6 +63,7 @@ struct ShortcutsTab: View {
             } else {
                 KeyboardShortcuts.enable(.escape)
                 
+            KeyboardShortcuts.enable(.escape)
             }
         }
         .padding()
