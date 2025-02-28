@@ -145,7 +145,7 @@ struct AccessibilityTab: View {
                 Section {
                     VStack(alignment: .leading, spacing: 4) {
                         HStack {
-                            Text("Current Window Shortcut")
+                            Text("Current Window (Experimental)")
                                 .font(.system(size: 13))
                             Spacer()
                             Toggle(
@@ -162,14 +162,14 @@ struct AccessibilityTab: View {
                             .toggleStyle(.switch)
                             .controlSize(.small)
                             SettingInfoButton(
-                                title: "Auto-Context, Screen Reader Shortcut",
+                                title: "Auto-Context, Screen Reader Shortcut (Experimental)",
                                 description:
                                     "When enabled, Onit adds a shortcut that, when triggered, will read the text from the foregrounded application and add it as context to your conversation. Context is not uploaded until you submit your conversation. In local mode, no context is ever uploaded.",
                                 defaultValue: "on",
                                 valueType: "Bool"
                             )
                         }
-                        Text("Loads context from the active window")
+                        Text("Loads context from the active window. Warning: If you notice the application freeze after enabling this, please disable it.")
                             .font(.system(size: 12))
                             .foregroundStyle(.gray200)
                     }
