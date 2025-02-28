@@ -327,7 +327,7 @@ class AccessibilityNotificationsManager: ObservableObject {
                 await MainActor.run {
                     print("Accessibility timeout")
                     // Assuming there's a Posthog tracking method available
-                    PostHogSDK.shared.capture("accessibiltyParseTimedOut", properties: ["applicationName": appName])
+                    PostHogSDK.shared.capture("accessibilityParseTimedOut", properties: ["applicationName": appName])
                     // Optionally, reset the screen result
                     self.screenResult = .init()
                     self.showDebug()
