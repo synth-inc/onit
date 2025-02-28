@@ -77,7 +77,7 @@ struct PaperclipButton: View {
 
     private func handleAddContext() {
         if accessibilityAutoContextEnabled {
-            model.showContextPickerOverlay()
+            OverlayManager.shared.showOverlay(model: model, content: ContextPickerView())
         } else {
             model.showFileImporter = true
         }

@@ -31,24 +31,25 @@ struct ChatSystemPromptView: View {
     
     var body: some View {
         VStack(alignment: .leading) {
-            HStack(alignment: .center, spacing: 6) {
-                Image(.chatSettings)
-                    .renderingMode(.template)
-                Text(systemPrompt.name)
-                    .appFont(.medium14)
-                    .lineLimit(1)
-                Button {
-                    withAnimation {
-                        isExpanded.toggle()
-                    }
-                } label: {
+            Button {
+                withAnimation {
+                    isExpanded.toggle()
+                }
+            } label: {
+                HStack(alignment: .center, spacing: 6) {
+                    Image(.chatSettings)
+                        .renderingMode(.template)
+                    Text(systemPrompt.name)
+                        .appFont(.medium14)
+                        .lineLimit(1)
                     Image(.smallChevDown)
                         .renderingMode(.template)
                         .rotationEffect(.degrees(isExpanded ? 180 : 0))
                 }
-                .buttonStyle(DarkerButtonStyle())
+                .padding(.vertical, 2)
+                .foregroundStyle(.blue300)
             }
-            .foregroundStyle(.blue300)
+            .buttonStyle(DarkerButtonStyle())
             
             if isExpanded {
                 VStack(alignment: .leading, spacing: 8) {

@@ -13,7 +13,7 @@ struct ContextPickerView: View {
     var body: some View {
         VStack(spacing: 4) {
             Button(action: {
-                model.closeContextPickerOverlay()
+                OverlayManager.shared.dismissOverlay()
                 model.showFileImporter = true
             }) {
                 ContextPickerItemView(
@@ -23,7 +23,7 @@ struct ContextPickerView: View {
             .buttonStyle(.plain)
 
             Button(action: {
-                model.closeContextPickerOverlay()
+                OverlayManager.shared.dismissOverlay()
                 model.addAutoContext()
             }) {
                 ContextPickerItemView(
@@ -37,7 +37,7 @@ struct ContextPickerView: View {
         .cornerRadius(12)
         .overlay(alignment: .topTrailing) {
             Button(action: {
-                model.closeContextPickerOverlay()
+                OverlayManager.shared.dismissOverlay()
             }) {
                 Image(.smallRemove)
                     .renderingMode(.template)

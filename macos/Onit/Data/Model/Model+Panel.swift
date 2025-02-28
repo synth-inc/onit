@@ -274,7 +274,7 @@ extension OnitModel: NSWindowDelegate {
     }
 
     func toggleModelsPanel() {
-        showModelSelectionOverlay()
+        OverlayManager.shared.showOverlay(model: self, content: ModelSelectionView())
     }
 
     @MainActor

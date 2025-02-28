@@ -30,8 +30,6 @@ extension OnitModel {
                     systemPrompt = SystemPrompt.outputOnly
                 }
                 
-                systemPrompt.lastUsed = Date()
-                
                 let systemPromptCopy = systemPrompt
                 currentChat = Chat(systemPrompt: systemPromptCopy, prompts: [], timestamp: .now)
                 currentPrompts = []

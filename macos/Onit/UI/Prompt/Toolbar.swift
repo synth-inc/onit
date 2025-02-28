@@ -96,7 +96,7 @@ struct Toolbar: View {
         @Bindable var model = model
 
         Button {
-            model.showModelSelectionOverlay()
+            OverlayManager.shared.showOverlay(model: model, content: ModelSelectionView())
         } label: {
             HStack(spacing: 0) {
                 Text(

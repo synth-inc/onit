@@ -59,7 +59,7 @@ struct ModelSelectionView: View {
         .frame(minWidth: 218, alignment: .leading)
         .overlay(alignment: .topTrailing) {
             Button(action: {
-                model.closeModelSelectionOverlay()
+                OverlayManager.shared.dismissOverlay()
             }) {
                 Image(.smallRemove)
                     .renderingMode(.template)
@@ -230,7 +230,7 @@ struct ModelSelectionView: View {
             if NSApp.isActive {
                 model.setSettingsTab(tab: .models)
                 openSettings()
-                model.closeModelSelectionOverlay()
+                OverlayManager.shared.dismissOverlay()
             }
         } label: {
             HStack {

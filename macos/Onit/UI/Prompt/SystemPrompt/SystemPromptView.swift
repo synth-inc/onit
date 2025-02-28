@@ -51,7 +51,18 @@ struct SystemPromptView: View {
                     .aspectRatio(contentMode: .fit)
                     .frame(width: 14, height: 14)
             }
-            .buttonStyle(.plain)
+            
+            Spacer()
+                .frame(width: 4)
+            
+            Button {
+                SystemPromptState.shared.shouldShowSystemPrompt = false
+            } label: {
+                Image(.remove)
+                    .resizable()
+                    .aspectRatio(contentMode: .fit)
+                    .frame(width: 14, height: 14)
+            }
         }
         .popover(isPresented: .init(
             get: { showSelection || state.shouldShowSelection },
