@@ -32,6 +32,10 @@ struct KeyboardShortcutsManager {
         var names = KeyboardShortcuts.Name.allCases
             .filter { ![.launch, .launchWithAutoContext].contains($0) }
         
+        if Defaults[.escapeShortcutDisabled] {
+            names.removeAll { $0 == .escape }
+        }
+        
         do {
             let storedPrompts = try modelContainer.mainContext.fetch(FetchDescriptor<SystemPrompt>())
             
@@ -68,6 +72,9 @@ struct KeyboardShortcutsManager {
     /// - parameter model: Instance of `OnitModel`
     private static func registerSettingsShortcuts(model: OnitModel) {
         KeyboardShortcuts.Name.allCases.forEach { name in
+            if name == .escape && Defaults[.escapeShortcutDisabled] {
+                return
+            }
             KeyboardShortcuts.onKeyUp(for: name) {
                 switch name {
                 case .launch:

@@ -166,10 +166,10 @@ struct GeneralTab: View {
             VStack(spacing: 16) {
                 
                 HStack {
-                    Text("Launch shortcut toggle mode")
+                    Text("Use launch shortcut as a toggle")
                         .font(.system(size: 13))
                     SettingInfoButton(
-                        title: "Launch Shortcut Toggle Mode",
+                        title: "Use Launch Shortcut as a Toggle",
                         description:
                             "Enable this to use the launch shortcut (CMD+Zero by default) as a toggle: press once to show the panel, press again to hide it.",
                         defaultValue: "off",

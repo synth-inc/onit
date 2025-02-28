@@ -7,9 +7,12 @@
 
 import KeyboardShortcuts
 import SwiftUI
+import Defaults
 
 struct ShortcutsTab: View {
     @Environment(\.model) var model
+
+    @Default(.escapeShortcutDisabled) var escapeShortcutDisabled
 
     @ObservedObject private var featureFlagsManager = FeatureFlagManager.shared
 
@@ -48,6 +51,19 @@ struct ShortcutsTab: View {
                     "Switch Local vs Remote", name: .toggleLocalMode
                 )
                 .padding()
+                
+                Toggle("Disable 'ESC' shortcut", isOn: $escapeShortcutDisabled)
+                .padding()
+            }
+        }
+        .onChange(of: escapeShortcutDisabled) { newValue in
+            if newValue {
+                // True is disabled. 
+                KeyboardShortcuts.disable(.escape)
+            } else {
+                KeyboardShortcuts.enable(.escape)
+                
+            KeyboardShortcuts.enable(.escape)
             }
         }
         .padding()
