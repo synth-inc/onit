@@ -55,6 +55,23 @@ struct SetUpDialogs: View {
 
     var body: some View {
         content
+            .background {
+                GeometryReader { g in
+                    Color.clear
+                        .onAppear {
+                            model.setUpHeight = g.size.height
+                            model.adjustPanelSize()
+                        }
+                        .onChange(of: g.size.height) {
+                            model.setUpHeight = g.size.height
+                            model.adjustPanelSize()
+                        }
+                        .onDisappear {
+                            model.setUpHeight = 0
+                            model.adjustPanelSize()
+                        }
+                }
+            }
             .onChange(of: availableLocalModels.count) { _, new in
                 if new != 0 {
                     seenLocal = true
@@ -107,20 +124,6 @@ struct SetUpDialogs: View {
             }
             if false && !closedDeepSeek {
                 expired(.deepSeek)
-            }
-        }
-        .background {
-            GeometryReader { g in
-                Color.clear
-                    .onAppear {
-                        model.setUpHeight = g.size.height
-                    }
-                    .onChange(of: g.size.height) {
-                        model.setUpHeight = g.size.height
-                    }
-                    .onDisappear {
-                        model.setUpHeight = 0
-                    }
             }
         }
     }
