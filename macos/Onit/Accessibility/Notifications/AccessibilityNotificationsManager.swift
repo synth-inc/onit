@@ -32,6 +32,7 @@ class AccessibilityNotificationsManager: ObservableObject {
         var applicationTitle: String?
         var userInteraction: UserInteractions = .init()
         var others: [String: String]?
+        var errorMessage: String?  // Renamed field for error message
     }
 
     // MARK: - Properties
@@ -50,6 +51,8 @@ class AccessibilityNotificationsManager: ObservableObject {
     private var valueDebounceWorkItem: DispatchWorkItem?
 
     private var selectionDebounceWorkItem: DispatchWorkItem?
+
+    private var timedOutPIDs: Set<pid_t> = []  // Track PIDs that have timed out
 
     // MARK: - Initializers
 
@@ -284,6 +287,12 @@ class AccessibilityNotificationsManager: ObservableObject {
     // MARK: Parsing
 
     private func parseAccessibility(for pid: pid_t) {
+        // Check if the PID has previously timed out
+        if timedOutPIDs.contains(pid) {
+            print("Skipping parsing for PID \(pid) due to previous timeout.")
+            return
+        }
+
         guard FeatureFlagManager.shared.accessibilityAutoContext else {
             self.screenResult = .init()
             return
@@ -319,6 +328,7 @@ class AccessibilityNotificationsManager: ObservableObject {
                     self.screenResult.applicationName = appName
                     self.screenResult.applicationTitle = appTitle
                     self.screenResult.others = results
+                    self.screenResult.errorMessage = nil  // Clear error message on success
                     self.showDebug()
                 }
             } catch {
@@ -326,12 +336,15 @@ class AccessibilityNotificationsManager: ObservableObject {
                 let appName = pid.getAppName() ?? "Unknown"
                 await MainActor.run {
                     print("Accessibility timeout")
+                    // Add the PID to the timed out set
+                    self.timedOutPIDs.insert(pid)
                     // Assuming there's a Posthog tracking method available
                     PostHogSDK.shared.capture("accessibilityParseTimedOut", properties: ["applicationName": appName])
                     // Optionally, reset the screen result
                     self.screenResult = .init()
+                    self.screenResult.errorMessage = "Timeout occured, could not read application in reasonable amount of time."  // Set error message on timeout
                     self.showDebug()
-                }
+                }   
             }
         }
     }
@@ -460,6 +473,8 @@ class AccessibilityNotificationsManager: ObservableObject {
             Selected Text: \(screenResult.userInteraction.selectedText ?? "N/A")
 
             User Input: \(screenResult.userInteraction.input ?? "N/A")
+
+            Error Message: \(screenResult.errorMessage ?? "N/A")
 
             =============================
 
