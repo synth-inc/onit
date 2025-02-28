@@ -15,10 +15,16 @@ extension OnitModel {
             return
         }
 
-        guard let appName = AccessibilityNotificationsManager.shared.screenResult.applicationName,
-            let appContent = AccessibilityNotificationsManager.shared.screenResult.others
-        else {
-            // TODO: KNA - notify user for empty context
+        let appName = AccessibilityNotificationsManager.shared.screenResult.applicationName ?? "AutoContext"
+        if let errorMessage = AccessibilityNotificationsManager.shared.screenResult.errorMessage {
+            let errorContext = Context(appName: "Unable to add \(appName)", appContent: ["error": errorMessage])
+            pendingContextList.insert(errorContext, at: 0)
+            return
+        }
+
+        guard let appContent = AccessibilityNotificationsManager.shared.screenResult.others else {
+            let errorContext = Context(appName: "Unable to add \(appName)", appContent: ["error": "Empty text"])
+            pendingContextList.insert(errorContext, at: 0)
             return
         }
 
