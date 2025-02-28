@@ -382,6 +382,65 @@ struct ChatEndpointMessagesBuilder {
         return deepSeekMessageStack
     }
 
+    // MARK: - Perplexity
+
+    static func perplexity(
+        model: AIModel,
+        images: [[URL]],
+        responses: [String],
+        systemMessage: String,
+        userMessages: [String]
+    ) -> [PerplexityChatMessage] {
+        var perplexityMessageStack: [PerplexityChatMessage] = []
+
+        // Add system message
+        perplexityMessageStack.append(
+            PerplexityChatMessage(role: "system", content: .text(systemMessage)))
+
+        for (index, userMessage) in userMessages.enumerated() {
+            if images[index].isEmpty {
+                let perplexityMessage = PerplexityChatMessage(
+                    role: "user", content: .text(userMessage))
+                perplexityMessageStack.append(perplexityMessage)
+            } else {
+                var parts = [
+                    PerplexityChatContentPart(
+                        type: "text", text: userMessage, image_url: nil)
+                ]
+                for url in images[index] {
+                    if let imageData = try? Data(contentsOf: url) {
+                        let base64EncodedData = imageData.base64EncodedString()
+                        let mimeType = url.mimeType
+                        let imagePart = PerplexityChatContentPart(
+                            type: "image_url",
+                            text: nil,
+                            image_url: .init(
+                                url:
+                                    "data:\(mimeType);base64,\(base64EncodedData)"
+                            )
+                        )
+                        parts.append(imagePart)
+                    } else {
+                        print("Unable to read image data from URL: \(url)")
+                    }
+                }
+                let perplexityMessage = PerplexityChatMessage(
+                    role: "user", content: .multiContent(parts))
+                perplexityMessageStack.append(perplexityMessage)
+            }
+
+            // If there is a corresponding response, add it as an assistant message
+            if index < responses.count {
+                let responseMessage = PerplexityChatMessage(
+                    role: "assistant", content: .text(responses[index]))
+                perplexityMessageStack.append(responseMessage)
+            }
+        }
+
+        return perplexityMessageStack
+    }
+
+
     // MARK: - Custom
 
     static func custom(

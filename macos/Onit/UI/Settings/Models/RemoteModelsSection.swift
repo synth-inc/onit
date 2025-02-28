@@ -18,6 +18,7 @@ struct RemoteModelsSection: View {
                 RemoteModelSection(provider: .xAI)
                 RemoteModelSection(provider: .googleAI)
                 RemoteModelSection(provider: .deepSeek)
+                RemoteModelSection(provider: .perplexity)
                 CustomProvidersSection()
             }
         }

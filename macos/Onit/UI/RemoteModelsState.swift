@@ -63,6 +63,9 @@ final class RemoteModelsState: ObservableObject {
         if !useDeepSeek {
             models = models.filter { $0.provider != .deepSeek }
         }
+        if !usePerplexity {
+            models = models.filter { $0.provider != .perplexity }
+        }
 
         // Filter out models from disabled custom providers
         for customProvider in availableCustomProvider {

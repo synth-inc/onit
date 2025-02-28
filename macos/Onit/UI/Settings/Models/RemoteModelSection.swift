@@ -26,17 +26,21 @@ struct RemoteModelSection: View {
     @Default(.xAIToken) var xAIToken
     @Default(.googleAIToken) var googleAIToken
     @Default(.deepSeekToken) var deepSeekToken
+    @Default(.perplexityToken) var perplexityToken
     @Default(.useOpenAI) var useOpenAI
     @Default(.useAnthropic) var useAnthropic
     @Default(.useXAI) var useXAI
     @Default(.useGoogleAI) var useGoogleAI
     @Default(.useDeepSeek) var useDeepSeek
+    @Default(.usePerplexity) var usePerplexity
     @Default(.isOpenAITokenValidated) var isOpenAITokenValidated
     @Default(.isAnthropicTokenValidated) var isAnthropicTokenValidated
     @Default(.isXAITokenValidated) var isXAITokenValidated
     @Default(.isGoogleAITokenValidated) var isGoogleAITokenValidated
     @Default(.isDeepSeekTokenValidated) var isDeepSeekTokenValidated
+    @Default(.isPerplexityTokenValidated) var isPerplexityTokenValidated
     @Default(.streamResponse) var streamResponse
+    
 
     var provider: AIModel.ModelProvider
 
@@ -60,6 +64,8 @@ struct RemoteModelSection: View {
             return $streamResponse.googleAI
         case .deepSeek:
             return $streamResponse.deepSeek
+        case .perplexity:
+            return $streamResponse.perplexity
         case .custom:
             return .constant(false)
         }
@@ -235,6 +241,8 @@ struct RemoteModelSection: View {
             googleAIToken = key.isEmpty ? nil : key
         case .deepSeek:
             deepSeekToken = key.isEmpty ? nil : key
+        case .perplexity:
+            perplexityToken = key.isEmpty ? nil : key
         case .custom:
             break  // TODO: KNA -
         }
@@ -252,6 +260,8 @@ struct RemoteModelSection: View {
             key = googleAIToken ?? ""
         case .deepSeek:
             key = deepSeekToken ?? ""
+        case .perplexity:
+            key = perplexityToken ?? ""
         case .custom:
             break  // TODO: KNA -
         }
@@ -269,6 +279,8 @@ struct RemoteModelSection: View {
             use = useGoogleAI
         case .deepSeek:
             use = useDeepSeek
+        case .perplexity:
+            use = usePerplexity
         case .custom:
             break  // TODO: KNA -
         }
@@ -286,6 +298,8 @@ struct RemoteModelSection: View {
             validated = isGoogleAITokenValidated
         case .deepSeek:
             validated = isDeepSeekTokenValidated
+        case .perplexity:
+            validated = isPerplexityTokenValidated
         case .custom:
             break  // TODO: KNA -
         }
@@ -303,6 +317,8 @@ struct RemoteModelSection: View {
             useGoogleAI = use
         case .deepSeek:
             useDeepSeek = use
+        case .perplexity:
+            usePerplexity = use
         case .custom:
             break  // TODO: KNA -
         }
@@ -320,6 +336,8 @@ struct RemoteModelSection: View {
             isGoogleAITokenValidated = validated
         case .deepSeek:
             isDeepSeekTokenValidated = validated
+        case .perplexity:
+            isPerplexityTokenValidated = validated
         case .custom:
             break  // TODO: KNA -
         }

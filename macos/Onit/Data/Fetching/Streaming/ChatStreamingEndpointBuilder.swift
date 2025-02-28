@@ -60,6 +60,14 @@ struct ChatStreamingEndpointBuilder {
                 apiToken: apiToken,
                 systemMessage: systemMessage,
                 userMessages: userMessages)
+        case .perplexity:
+            return ChatStreamingEndpointBuilder.perplexity(
+                model: model,
+                images: images,
+                responses: responses,
+                apiToken: apiToken,
+                systemMessage: systemMessage,
+                userMessages: userMessages)
         case .custom:
             return try ChatStreamingEndpointBuilder.custom(
                 model: model,

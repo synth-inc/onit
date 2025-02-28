@@ -172,27 +172,6 @@ class AccessibilityNotificationsManager: ObservableObject {
 
     // MARK: Notifications handling
 
-    @objc private func appActivationReceived(notification: Notification) {
-        if let app = notification.userInfo?[NSWorkspace.applicationUserInfoKey]
-            as? NSRunningApplication
-        {
-            Task { @MainActor in
-                // TODO: KNA - Investigate on this
-                // Skip if the activated app is our own app
-                // There's an edge case where the panel somehow has a different processId.
-                let appName = Bundle.main.object(forInfoDictionaryKey: "CFBundleName") as? String
-                if app.processIdentifier == getpid() || app.localizedName == appName {
-                    print("Ignoring activation of our own app.")
-                    return
-                }
-
-                self.stopAccessibilityObservers(for: app.processIdentifier)
-                self.handleAppActivation(
-                    appName: app.localizedName, processID: app.processIdentifier)
-                self.startAccessibilityObservers(for: app.processIdentifier)
-            }
-        }
-    }
 
     @objc private func appDeactivationReceived(notification: Notification) {
         if let app = notification.userInfo?[NSWorkspace.applicationUserInfoKey]

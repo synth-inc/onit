@@ -125,6 +125,9 @@ struct SetUpDialogs: View {
             if false && !closedDeepSeek {
                 expired(.deepSeek)
             }
+            if false && !closedPerplexity {
+                expired(.perplexity)
+            }
         }
     }
 

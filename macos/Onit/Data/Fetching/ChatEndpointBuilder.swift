@@ -59,6 +59,14 @@ struct ChatEndpointBuilder {
                 apiToken: apiToken,
                 systemMessage: systemMessage,
                 userMessages: userMessages)
+        case .perplexity:
+            return ChatEndpointBuilder.perplexity(
+                model: model,
+                images: images,
+                responses: responses,
+                apiToken: apiToken,
+                systemMessage: systemMessage,
+                userMessages: userMessages)
         case .custom:
             return try ChatEndpointBuilder.custom(
                 model: model,
@@ -166,6 +174,24 @@ struct ChatEndpointBuilder {
             userMessages: userMessages)
 
         return DeepSeekChatEndpoint(
+            messages: messages, model: model.id, token: apiToken)
+    }
+
+    private static func perplexity(
+        model: AIModel,
+        images: [[URL]],
+        responses: [String],
+        apiToken: String?,
+        systemMessage: String,
+        userMessages: [String]
+    ) -> PerplexityChatEndpoint {
+        let messages = ChatEndpointMessagesBuilder.perplexity(
+            model: model,
+            images: images,
+            responses: responses,
+            systemMessage: systemMessage,
+            userMessages: userMessages)
+        return PerplexityChatEndpoint(
             messages: messages, model: model.id, token: apiToken)
     }
 

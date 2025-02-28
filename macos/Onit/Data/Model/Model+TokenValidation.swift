@@ -108,6 +108,11 @@ extension OnitModel {
                 _ = try await FetchingClient().execute(endpoint)
                 state.setValid(provider: provider)
 
+            case .perplexity:
+                let endpoint = PerplexityValidationEndpoint(apiKey: token)
+                _ = try await FetchingClient().execute(endpoint)
+                state.setValid(provider: provider)
+
             case .custom:
                 // For custom providers, we'll validate by trying to fetch the models list
                 if let customProviderName = Defaults[.remoteModel]?.customProviderName,
@@ -122,6 +127,12 @@ extension OnitModel {
                 } else {
                     throw FetchingError.invalidURL
                 }
+
+            case .perplexity:
+                let endpoint = PerplexityValidationEndpoint(apiKey: token)
+                _ = try await FetchingClient().execute(endpoint)
+                state.setValid(provider: provider)
+
             }
             setTokenIsValid(true)
         } catch let error as FetchingError {

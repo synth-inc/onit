@@ -69,7 +69,7 @@ struct AnthropicSection: View {
                             .isValidating
                 )
             }
-            if case .invalid(let error) = model.tokenValidation.state(for: .openAI) {
+            if case .invalid(let error) = model.tokenValidation.state(for: .anthropic) {
                 Text(error.localizedDescription)
                     .font(.caption)
                     .foregroundStyle(.red)

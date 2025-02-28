@@ -14,6 +14,7 @@ import SwiftData
 struct KeyboardShortcutsManager {
     
     static func configure(model: OnitModel) {
+        KeyboardShortcuts.reset(.escape)
         registerSettingsShortcuts(model: model)
         registerSystemPromptsShortcuts(modelContainer: model.container)
     }

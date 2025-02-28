@@ -258,6 +258,8 @@ extension OnitModel {
             Defaults[.isGoogleAITokenValidated] = isValid
         case .deepSeek:
             Defaults[.isDeepSeekTokenValidated] = isValid
+        case .perplexity:
+            Defaults[.isPerplexityTokenValidated] = isValid
         case .custom:
             break  // TODO: KNA -
         }
@@ -276,9 +278,12 @@ extension OnitModel {
                 return Defaults[.googleAIToken]
             case .deepSeek:
                 return Defaults[.deepSeekToken]
+            case .perplexity:
+                return Defaults[.perplexityToken]
             case .custom:
                 return nil  // TODO: KNA -
             }
+            
         }
         return nil
     }
@@ -301,6 +306,8 @@ extension OnitModel {
             }
             
             return Defaults[.streamResponse].customProviders[providerId] ?? false
+        case .perplexity:
+            return Defaults[.streamResponse].perplexity
         }
     }
     
