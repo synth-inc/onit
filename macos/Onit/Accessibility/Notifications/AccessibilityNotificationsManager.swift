@@ -7,6 +7,7 @@
 
 import ApplicationServices
 import Foundation
+import PostHog
 import SwiftUI
 
 @MainActor
@@ -285,27 +286,52 @@ class AccessibilityNotificationsManager: ObservableObject {
     private func parseAccessibility(for pid: pid_t) {
         guard FeatureFlagManager.shared.accessibilityAutoContext else {
             self.screenResult = .init()
-
             return
         }
         
-        Task.detached(priority: .background) { [pid] in
-            var results = await AccessibilityParser.shared.getAllTextInElement(appElement: pid.getAXUIElement())
-            let elapsedTime = results?[AccessibilityParsedElements.elapsedTime]
-            let appName = results?[AccessibilityParsedElements.applicationName]
-            let appTitle = results?[AccessibilityParsedElements.applicationTitle]
-            
-            results?.removeValue(forKey: AccessibilityParsedElements.elapsedTime)
-            results?.removeValue(forKey: AccessibilityParsedElements.applicationName)
-            results?.removeValue(forKey: AccessibilityParsedElements.applicationTitle)
-
-            await MainActor.run {
-                self.screenResult.elapsedTime = elapsedTime
-                self.screenResult.applicationName = appName
-                self.screenResult.applicationTitle = appTitle
-                self.screenResult.others = results
-
-                self.showDebug()
+        Task.detached(priority: .background) { [pid, weak self] in
+            guard let self = self else { return }
+            do {
+                // Use a task group to race the parsing task against a 20 seconds timeout
+                var results = try await withThrowingTaskGroup(of: [String: String]?.self, body: { group -> [String: String]? in
+                    group.addTask {
+                        return await AccessibilityParser.shared.getAllTextInElement(appElement: pid.getAXUIElement())
+                    }
+                    group.addTask {
+                        try await Task.sleep(nanoseconds: 10_000_000_000) // 10 second timeout
+                        throw NSError(domain: "AccessibilityParsingTimeout", code: 1, userInfo: nil)
+                    }
+                    let firstCompleted = try await group.next()!
+                    group.cancelAll()
+                    return firstCompleted
+                })
+                
+                let elapsedTime = results?[AccessibilityParsedElements.elapsedTime]
+                let appName = results?[AccessibilityParsedElements.applicationName]
+                let appTitle = results?[AccessibilityParsedElements.applicationTitle]
+                
+                results?.removeValue(forKey: AccessibilityParsedElements.elapsedTime)
+                results?.removeValue(forKey: AccessibilityParsedElements.applicationName)
+                results?.removeValue(forKey: AccessibilityParsedElements.applicationTitle)
+                
+                await MainActor.run {
+                    self.screenResult.elapsedTime = elapsedTime
+                    self.screenResult.applicationName = appName
+                    self.screenResult.applicationTitle = appTitle
+                    self.screenResult.others = results
+                    self.showDebug()
+                }
+            } catch {
+                // Timeout occurred, send Posthog event with the application name
+                let appName = pid.getAppName() ?? "Unknown"
+                await MainActor.run {
+                    print("Accessibility timeout")
+                    // Assuming there's a Posthog tracking method available
+                    PostHogSDK.shared.capture("accessibilityParseTimedOut", properties: ["applicationName": appName])
+                    // Optionally, reset the screen result
+                    self.screenResult = .init()
+                    self.showDebug()
+                }
             }
         }
     }
@@ -460,3 +486,4 @@ class AccessibilityNotificationsManager: ObservableObject {
         }
     }
 }
+
