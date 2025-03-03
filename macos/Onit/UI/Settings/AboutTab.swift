@@ -12,7 +12,7 @@ struct AboutTab: View {
                     .font(.system(size: 24, weight: .bold))
 
                 Text(
-                    "Version \(Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0.0")"
+                    "Version \(Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0.0") (Build \(Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "1"))"
                 )
                 .foregroundColor(.secondary)
             }
