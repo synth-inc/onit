@@ -15,6 +15,7 @@ struct KeyboardShortcutsManager {
     
     static func configure(model: OnitModel) {
         registerSettingsShortcuts(model: model)
+        
         registerSystemPromptsShortcuts(modelContainer: model.container)
     }
     
@@ -72,9 +73,6 @@ struct KeyboardShortcutsManager {
     /// - parameter model: Instance of `OnitModel`
     private static func registerSettingsShortcuts(model: OnitModel) {
         KeyboardShortcuts.Name.allCases.forEach { name in
-            if name == .escape && Defaults[.escapeShortcutDisabled] {
-                return
-            }
             KeyboardShortcuts.onKeyUp(for: name) {
                 switch name {
                 case .launch:
@@ -107,6 +105,11 @@ struct KeyboardShortcutsManager {
                 }
             }
         }
+        // Since we support turning on and off shortcuts, we should disable these all after registering.
+        // Then, the shortcuts that are on will be enabled when enable() is called. 
+        var names = KeyboardShortcuts.Name.allCases
+            .filter { ![.launch, .launchWithAutoContext].contains($0) }
+        KeyboardShortcuts.disable(names)
     }
     
     /// Registering keyboard shortcuts for all stored `SystemPrompt`
