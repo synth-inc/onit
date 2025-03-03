@@ -21,7 +21,6 @@ struct App: SwiftUI.App {
     @ObservedObject private var featureFlagsManager = FeatureFlagManager.shared
 
     @Default(.launchOnStartupRequested) var launchOnStartupRequested
-    @Default(.typeAheadConfig) var typeAheadConfig
 
     @State var accessibilityPermissionRequested = false
 

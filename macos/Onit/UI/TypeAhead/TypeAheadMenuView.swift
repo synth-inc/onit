@@ -12,7 +12,7 @@ import SwiftUI
 struct TypeAheadMenuView: View {
     @Environment(\.model) var model
     @Environment(\.openSettings) var openSettings
-    @Default(.typeAheadConfig) var typeAheadConfig
+    @Default(.typeaheadConfig) var typeaheadConfig
     
     private let globalState = TypeAheadState.shared
     private let moreSuggestionsState = TypeAheadMoreSuggestionsState.shared
@@ -83,14 +83,14 @@ struct TypeAheadMenuView: View {
     }
     
     private func pauseForOneHourAction() {
-        typeAheadConfig.resumeAt = .now.addingTimeInterval(3600)
+        typeaheadConfig.resumeAt = .now.addingTimeInterval(3600)
         globalState.showMenu = false
     }
     
     private func excludeAppAction() {
         guard let appName = appName else { return }
         
-        typeAheadConfig.excludedApps.insert(appName)
+        typeaheadConfig.excludedApps.insert(appName)
         globalState.showMenu = false
     }
     

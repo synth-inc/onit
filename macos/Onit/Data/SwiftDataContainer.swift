@@ -15,6 +15,7 @@ actor SwiftDataContainer {
             let schema = Schema([
                 Chat.self,
                 SystemPrompt.self,
+                TypeaheadCase.self
             ])
             let container = try ModelContainer(for: schema)
             

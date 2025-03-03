@@ -55,6 +55,14 @@ actor StreamingClient {
             responses: responses,
             systemMessage: systemMessage,
             userMessages: userMessages)
+        
+        return try await localChat(model: model, localMessages: localMessages, keepAlive: keepAlive, options: options)
+    }
+    
+    func localChat(model: String,
+                   localMessages: [LocalChatMessage],
+                   keepAlive: String?,
+                   options: LocalChatOptions) async throws -> AsyncThrowingStream<String, Error> {
         let endpoint = LocalChatStreamingEndpoint(model: model, messages: localMessages, keepAlive: keepAlive, options: options)
         
         return try await stream(endpoint: endpoint, eventParser: LocalEventParser())

@@ -10,13 +10,13 @@ import SwiftUI
 
 struct TypeAheadView: View {
     @ObservedObject var accessibilityManager = AccessibilityNotificationsManager.shared
-    @Default(.typeAheadConfig) var typeAheadConfig
+    @Default(.typeaheadConfig) var typeaheadConfig
     
     private let state = TypeAheadState.shared
     private let moreSuggestionsState = TypeAheadMoreSuggestionsState.shared
     
     private var isPaused: Bool {
-        guard let resumeAt = typeAheadConfig.resumeAt,
+        guard let resumeAt = typeaheadConfig.resumeAt,
               resumeAt > .now else {
             return false
         }
@@ -27,7 +27,7 @@ struct TypeAheadView: View {
     private var isAppExcluded: Bool {
         guard let appName = accessibilityManager.screenResult.applicationName else { return false }
         
-        return typeAheadConfig.excludedApps.contains(where: appName.contains)
+        return typeaheadConfig.excludedApps.contains(where: appName.contains)
     }
     
     var body: some View {

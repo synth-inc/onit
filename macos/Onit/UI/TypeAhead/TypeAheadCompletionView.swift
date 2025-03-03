@@ -14,6 +14,10 @@ struct TypeAheadCompletionView: View {
     @State private var contentHeight: CGFloat = 0
     private let globalState = TypeAheadState.shared
     
+    private var completion: String {
+        globalState.request?.completion ?? ""
+    }
+    
     var body: some View {
         ScrollView {
             HStack(alignment: .top, spacing: 4) {
@@ -24,7 +28,7 @@ struct TypeAheadCompletionView: View {
                 
                 errorOrCompletion
                 
-                if !globalState.isLoading && !globalState.completion.isEmpty {
+                if !globalState.isLoading && !completion.isEmpty {
                     menuButton
                 }
             }
@@ -68,7 +72,7 @@ struct TypeAheadCompletionView: View {
                         .foregroundStyle(.red)
                 }
             } else {
-                Text(globalState.completion)
+                Text(completion)
                     .font(.system(size: 13, weight: .medium))
                     .foregroundStyle(.gray100)
                     .background {

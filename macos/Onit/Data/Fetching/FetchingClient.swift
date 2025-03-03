@@ -73,8 +73,16 @@ actor FetchingClient {
             systemMessage: systemMessage,
             userMessages: userMessages)
         
+        return try await localChat(model: model, localMessages: localMessages, keepAlive: keepAlive, options: options)
+    }
+    
+    func localChat(model: String,
+                   localMessages: [LocalChatMessage],
+                   keepAlive: String?,
+                   options: LocalChatOptions) async throws -> String {
         let endpoint = LocalChatEndpoint(model: model, messages: localMessages, keepAlive: keepAlive, options: options)
         let response = try await execute(endpoint)
+        
         return response.message.content
     }
     

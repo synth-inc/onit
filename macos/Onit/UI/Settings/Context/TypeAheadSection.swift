@@ -11,23 +11,23 @@ import SwiftUI
 struct TypeAheadSection: View {
     
     @Default(.availableLocalModels) var availableLocalModels
-    @Default(.typeAheadConfig) var typeAheadConfig
+    @Default(.typeaheadConfig) var typeaheadConfig
     
     @State private var currentDate = Date()
     
     private var enableBinding: Binding<Bool> {
         Binding {
-            guard typeAheadConfig.isEnabled else { return false }
-            guard let resumeAt = typeAheadConfig.resumeAt else { return true }
+            guard typeaheadConfig.isEnabled else { return false }
+            guard let resumeAt = typeaheadConfig.resumeAt else { return true }
             
             return currentDate >= resumeAt
         } set: { newValue in
-            typeAheadConfig.isEnabled = newValue
-            typeAheadConfig.resumeAt = nil
+            typeaheadConfig.isEnabled = newValue
+            typeaheadConfig.resumeAt = nil
         }
     }
     private var resumeAt: String {
-        guard let resumeAt = typeAheadConfig.resumeAt,
+        guard let resumeAt = typeaheadConfig.resumeAt,
               resumeAt > currentDate else {
             return ""
         }
@@ -63,10 +63,10 @@ struct TypeAheadSection: View {
                         .foregroundStyle(.gray200)
                 }
             }
-            if typeAheadConfig.isEnabled {
+            if typeaheadConfig.isEnabled {
                 modelSelection
                 
-                if !typeAheadConfig.excludedApps.isEmpty {
+                if !typeaheadConfig.excludedApps.isEmpty {
                     excludedApps
                 }
             }
@@ -91,9 +91,9 @@ struct TypeAheadSection: View {
                 VStack(alignment: .leading, spacing: 0) {
                     ForEach(availableLocalModels, id: \.self) { model in
                         Toggle(isOn: Binding(get: {
-                            return model == typeAheadConfig.model
+                            return model == typeaheadConfig.model
                         }, set: { isOn in
-                            typeAheadConfig.model = isOn ? model : nil
+                            typeaheadConfig.model = isOn ? model : nil
                         })) {
                             Text(model)
                                 .font(.system(size: 13))
@@ -107,10 +107,10 @@ struct TypeAheadSection: View {
                 .padding(.horizontal, 4)
                 .frame(maxWidth: .infinity, alignment: .leading)
             }
-            LocalModelAdvancedOptionsView(storedStreamResponse: $typeAheadConfig.streamResponse,
-                                          storedKeepAlive: $typeAheadConfig.keepAlive,
-                                          storedRequestTimeout: $typeAheadConfig.requestTimeout,
-                                          storedOptions: $typeAheadConfig.options,
+            LocalModelAdvancedOptionsView(storedStreamResponse: $typeaheadConfig.streamResponse,
+                                          storedKeepAlive: $typeaheadConfig.keepAlive,
+                                          storedRequestTimeout: $typeaheadConfig.requestTimeout,
+                                          storedOptions: $typeaheadConfig.options,
                                           streamAdditionalInfo: "If enabled, Onit streams partial responses from model providers, offering quicker auto complete suggestions.")
         }
     }
@@ -122,12 +122,12 @@ struct TypeAheadSection: View {
 
             GroupBox {
                 VStack(alignment: .leading, spacing: 0) {
-                    ForEach(Array(typeAheadConfig.excludedApps.sorted()), id: \.self) { app in
+                    ForEach(Array(typeaheadConfig.excludedApps.sorted()), id: \.self) { app in
                         HStack(alignment: .center) {
                             Text(app)
                             Spacer()
                             Button(action: {
-                                typeAheadConfig.excludedApps.remove(app)
+                                typeaheadConfig.excludedApps.remove(app)
                             }) {
                                 Image(.bin)
                                     .resizable()

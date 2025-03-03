@@ -9,31 +9,11 @@ struct TypeAheadPrompts {
     
     struct AutoCompletion {
         static let systemPrompt = """
-You are a highly optimized text completion AI. Your task is to seamlessly complete words and phrases.
-
-CRITICAL RULES:
-* Start the completion immediately at [COMPLETE HERE]—no prefixes or reformulations.
-* Do NOT repeat any text before [COMPLETE HERE].
-* Limit completions to 20 characters max.
-* Ensure completions are natural, fluid, and contextually relevant.
-* No explanations, no punctuation tricks, no enclosing quotes. Just the continuation.
-
-BAD EXAMPLES (Do NOT do this):
-❌ Input: "I am writ[COMPLETE HERE]"
-"ing" (too short)
-" ing" (unnatural space)
-"I am writing" (repeats existing text)
-
-GOOD EXAMPLES (Follow this format):
-✅ Input: "I am writ[COMPLETE HERE]"
-"ing a letter"
-✅ Input: "The meet[COMPLETE HERE] at 2pm"
-"ing starts"
-✅ Input: "Can you hel[COMPLETE HERE]"
-"p me with this?"
-
-Your completions should always blend naturally into the sentence while following these strict rules.
-"""
+        You are an assistant that helps complete text intelligently.
+        You must analyze the application context and the text already entered to suggest the most relevant completion.
+        Respond only with the completion text, without explanations or formatting.
+        """
+        
         static func instruction(userInput: AccessibilityUserInput) -> String {
             return """
          Complete:

@@ -100,6 +100,8 @@ struct KeyboardShortcutsManager {
                     model.resizeWindow()
                 case .toggleLocalMode:
                     model.toggleLocalVsRemoteShortcutAction()
+                case .showTypeAheadMenu:
+                    TypeAheadState.shared.showMenu.toggle()
                 default:
                     print("KeyboardShortcut not handled: \(name)")
                 }

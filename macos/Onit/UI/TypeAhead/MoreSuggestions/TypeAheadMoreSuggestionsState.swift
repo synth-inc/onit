@@ -35,7 +35,7 @@ final class TypeAheadMoreSuggestionsState {
     
     func getMoreSuggestions() async {
         isLoading = true
-        let config = Defaults[.typeAheadConfig]
+        let config = Defaults[.typeaheadConfig]
         
         guard let model = config.model else {
             reset(error: TypeAheadError.noModelConfigured)

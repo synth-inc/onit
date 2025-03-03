@@ -1,5 +1,5 @@
 //
-//  TypeAheadConfig.swift
+//  TypeaheadConfig.swift
 //  Onit
 //
 //  Created by Kévin Naudin on 13/02/2025.
@@ -9,7 +9,7 @@ import Defaults
 import Foundation
 
 /// Type ahead Configuration
-struct TypeAheadConfig: Codable, Defaults.Serializable {
+struct TypeaheadConfig: Codable, Defaults.Serializable {
     var isEnabled: Bool
     var model: String?
     var streamResponse: Bool
@@ -21,7 +21,7 @@ struct TypeAheadConfig: Codable, Defaults.Serializable {
     var requestTimeout: TimeInterval?
     var options: LocalChatOptions
     
-    static let `default` = TypeAheadConfig(
+    static let `default` = TypeaheadConfig(
         isEnabled: false,
         model: nil,
         streamResponse: true,

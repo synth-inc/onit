@@ -6,6 +6,7 @@
 //
 
 import Defaults
+import SwiftData
 import SwiftUI
 
 @Observable
@@ -19,7 +20,7 @@ final class TypeAheadState {
     
     // MARK: - Properties
     
-    var completion: String = ""
+    var request: Request?
     var isLoading = false
     var error: TypeAheadError?
     var isCompletionInserted = false
@@ -29,70 +30,48 @@ final class TypeAheadState {
     private(set) var shouldShow: Bool = false
     
     private let moreSuggestionsState = TypeAheadMoreSuggestionsState.shared
-    private var currentTaskId: UUID?
     private var shouldSkipNextUpdate: Bool = false
+    
+    private var requestQueue = RequestQueue()
+    
+    struct Request {
+        let input: AccessibilityUserInput
+        let screenResult: ScreenResult
+        var completion: String = ""
+    }
     
     // MARK: - Initializer
     
     private init() {
-        // Listen for userInput changes
-        Task { @MainActor in
-            let manager = AccessibilityNotificationsManager.shared
-            
-            for try await userInput in manager.$userInput.values {
-                Task { @MainActor in
-                    let taskId = UUID()
-
-                    currentTaskId = taskId
-                    updateShouldShow(userInput: userInput)
-                    
-                    guard shouldShow else {
-                        reset()
-                        
-                        return
-                    }
-                    
-                    if shouldSkipNextUpdate {
-                        shouldSkipNextUpdate = false
-                        return
-                    }
-                    
-                    await requestCompletion(taskId: taskId)
-                }
-            }
-        }
+        startObservingUserInput()
     }
     
     // MARK: - Functions
     
     func insertSuggestion() {
+        guard let request = request else { return }
+        
+        
         if let hoveredIndex = moreSuggestionsState.hoveredIndex,
            hoveredIndex < moreSuggestionsState.moreSuggestions.count {
-            insertSuggestion(text: moreSuggestionsState.moreSuggestions[hoveredIndex])
+            var request = request
+            request.completion = moreSuggestionsState.moreSuggestions[hoveredIndex]
+            insertSuggestion(request: request)
         } else {
-            insertSuggestion(text: completion)
+            insertSuggestion(request: request)
         }
     }
     
     // MARK: - Private functions
     
-    private func reset(loading: Bool = false, inserted: Bool = false) {
-        completion = ""
-        isLoading = loading
-        error = nil
-        isCompletionInserted = inserted
-        
-        moreSuggestionsState.reset()
-    }
-    
-    private func insertSuggestion(text: String) {
-        if !isLoading && !text.isEmpty {
+    private func insertSuggestion(request: Request) {
+        if !isLoading && !request.completion.isEmpty {
             // Copy/Paste trick
             let pasteboard = NSPasteboard.general
             let oldValue = pasteboard.string(forType: .string) ?? ""
             
             pasteboard.clearContents()
-            pasteboard.setString(text, forType: .string)
+            pasteboard.setString(request.completion, forType: .string)
 
             let source = CGEventSource(stateID: .hidSystemState)
             let cmdKeyCode: CGKeyCode = 0x37
@@ -110,21 +89,37 @@ final class TypeAheadState {
             vUp?.post(tap: .cghidEventTap)
             cmdUp?.post(tap: .cghidEventTap)
             
-            shouldSkipNextUpdate = true
-            reset(inserted: true)
-            
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
                 pasteboard.clearContents()
                 pasteboard.setString(oldValue, forType: .string)
             }
+            
+            Task {
+                await TypeaheadLearningService.shared.updateCase(
+                    input: request.input,
+                    screenResult: request.screenResult,
+                    aiCompletion: request.completion
+                )
+            }
+            
+            shouldSkipNextUpdate = true
+            reset(inserted: true)
         }
     }
     
-    private func updateShouldShow(userInput: AccessibilityUserInput) {
-        let manager = AccessibilityNotificationsManager.shared
-        let config = Defaults[.typeAheadConfig]
-        let inputText = userInput.fullText.trimmingCharacters(in: .whitespacesAndNewlines)
-        let appName = manager.screenResult.applicationName ?? ""
+    private func reset(loading: Bool = false, inserted: Bool = false) {
+        request = nil
+        isLoading = loading
+        error = nil
+        isCompletionInserted = inserted
+        
+        moreSuggestionsState.reset()
+    }
+    
+    private func updateShouldShow(request: Request) {
+        let config = Defaults[.typeaheadConfig]
+        let inputText = request.input.fullText.trimmingCharacters(in: .whitespacesAndNewlines)
+        let appName = request.screenResult.applicationName ?? ""
         let appExcluded = config.excludedApps.contains(where: appName.contains)
         let resumeAt = config.resumeAt ?? .now
         let isResumed = .now >= resumeAt
@@ -132,30 +127,71 @@ final class TypeAheadState {
         self.shouldShow = config.isEnabled && !inputText.isEmpty && !appExcluded && isResumed
     }
     
-    private func requestCompletion(taskId: UUID) async {
-        guard taskId == currentTaskId else { return }
+    private func startObservingUserInput() {
+        Task { @MainActor in
+            let manager = AccessibilityNotificationsManager.shared
+            
+            for try await userInput in manager.$userInput.values {
+                let request = Request(input: userInput, screenResult: manager.screenResult)
+                
+                await handleUserInputChange(request)
+            }
+        }
+    }
+    
+    private func handleUserInputChange(_ request: Request) async {
+        await requestQueue.cancelAll()
         
+        updateShouldShow(request: request)
+        
+        guard shouldShow else {
+            reset()
+            return
+        }
+        
+        if shouldSkipNextUpdate {
+            shouldSkipNextUpdate = false
+            return
+        }
+        
+        await requestQueue.enqueue {
+            await self.requestCompletion(request: request)
+        }
+    }
+    
+    private func requestCompletion(request: Request) async {
         await MainActor.run {
             reset(loading: true)
         }
         
         do {
+            let config = Defaults[.typeaheadConfig]
+            guard let model = config.model else {
+                throw TypeAheadError.noModelConfigured
+            }
+            
             var fullCompletion = ""
-            let stream = try await Task.detached {
-                return try await self.complete()
-            }.value
+            
+            let stream = try await TypeaheadSuggestionService.shared.generateSuggestion(
+                userInput: request.input,
+                screenResult: request.screenResult,
+                model: model,
+                config: config
+            )
+            
+            self.request = request
             
             for try await chunk in stream {
-                guard taskId == currentTaskId else { return }
+                guard await !requestQueue.isCancelled else { return }
                 
                 fullCompletion += chunk
                 
                 await MainActor.run {
-                    self.completion = fullCompletion
+                    self.request?.completion = fullCompletion
                 }
             }
         } catch {
-            guard taskId == currentTaskId else { return }
+            guard await !requestQueue.isCancelled else { return }
             
             await MainActor.run {
                 if let error = error as? TypeAheadError {
@@ -163,60 +199,34 @@ final class TypeAheadState {
                 } else {
                     self.error = .completionFailed(error.localizedDescription)
                 }
-                self.completion = ""
+                self.request = nil
             }
         }
         
-        if taskId == currentTaskId {
-            await MainActor.run {
-                self.isLoading = false
-            }
+        guard await !requestQueue.isCancelled else { return }
+        
+        await MainActor.run {
+            self.isLoading = false
+        }
+    }
+}
+
+private actor RequestQueue {
+    var isCancelled = false
+    private var currentTask: Task<Void, Never>?
+    
+    func enqueue(_ operation: @MainActor @escaping () async -> Void) {
+        cancelAll()
+        
+        isCancelled = false
+        currentTask = Task { @MainActor in
+            await operation()
         }
     }
     
-    private func complete() async throws -> AsyncThrowingStream<String, Error> {
-        let config = Defaults[.typeAheadConfig]
-        
-        guard let model = config.model else {
-            throw TypeAheadError.noModelConfigured
-        }
-        
-        let userInput = AccessibilityNotificationsManager.shared.userInput
-        guard !userInput.fullText.isEmpty else {
-            throw TypeAheadError.noUserInput
-        }
-        
-        // let appName = AccessibilityNotificationsManager.shared.screenResult.applicationName ?? "l'application"
-        
-        let systemMessage = TypeAheadPrompts.AutoCompletion.systemPrompt
-        let instruction = TypeAheadPrompts.AutoCompletion.instruction(userInput: userInput)
-        
-        if config.streamResponse {
-            return try await StreamingClient().localGenerate(
-                systemMessage: systemMessage,
-                prompt: instruction,
-                model: model,
-                keepAlive: config.keepAlive,
-                options: config.options
-            )
-        } else {
-            return AsyncThrowingStream { continuation in
-                Task {
-                    do {
-                        let response = try await FetchingClient().localGenerate(
-                            systemMessage: systemMessage,
-                            prompt: instruction,
-                            model: model,
-                            keepAlive: config.keepAlive,
-                            options: config.options
-                        )
-                        continuation.yield(response)
-                        continuation.finish()
-                    } catch {
-                        continuation.finish(throwing: error)
-                    }
-                }
-            }
-        }
+    func cancelAll() {
+        isCancelled = true
+        currentTask?.cancel()
+        currentTask = nil
     }
 }

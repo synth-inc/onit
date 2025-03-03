@@ -24,14 +24,6 @@ class AccessibilityNotificationsManager: ObservableObject {
     @Published private(set) var selectedText: String?
     @Published private(set) var inputPosition: CGPoint?
 
-    struct ScreenResult {
-        var elapsedTime: String?
-        var applicationName: String?
-        var applicationTitle: String?
-        var others: [String: String]?
-        var errorMessage: String?  // Renamed field for error message
-    }
-
     // MARK: - Properties
 
     private var model: OnitModel?

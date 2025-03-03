@@ -194,6 +194,8 @@ import SwiftUI
         self.remoteModels = remoteModels
         super.init()
 
+        TypeaheadLearningService.shared.initialize(with: container)
+        
         Task {
             await fetchLocalModels()
             await fetchRemoteModels()
