@@ -12,7 +12,7 @@ import EventSource
 import SwiftData
 
 extension OnitModel {
-    func createAndSavePrompt() -> Prompt {
+    func createAndSavePrompt() {
         let prompt = Prompt(
             instruction: pendingInstruction,
             timestamp: .now,
@@ -39,11 +39,9 @@ extension OnitModel {
                 
                 finishPromptCreation(prompt)
             }
-            return prompt
+        } else {
+            finishPromptCreation(prompt)
         }
-
-        finishPromptCreation(prompt)
-        return prompt
     }
     
     private func finishPromptCreation(_ prompt: Prompt) {
@@ -62,19 +60,25 @@ extension OnitModel {
         } catch {
             print(error.localizedDescription)
         }
+        
+        generate(prompt)
     }
 
     func generate(_ prompt: Prompt) {
         cancelGenerate()
+        
+        let systemPrompt = currentChat?.systemPrompt ?? SystemPrompt.outputOnly
+        
         generatingPrompt = prompt
         generatingPromptPriorState = prompt.generationState
         trackEventGeneration(prompt: prompt)
 
-        generateTask = Task { [weak self] in
+        generateTask = Task { [systemPrompt, weak self] in
             guard let self = self else { return }
 
             prompt.generationState = .generating
             let curInstruction = prompt.instruction
+            
             var filesHistory: [[URL]] = [prompt.contextList.files]
             var inputsHistory: [Input?] = [prompt.input]
             var imagesHistory: [[URL]] = [prompt.contextList.images]
@@ -112,11 +116,8 @@ extension OnitModel {
                             "Mismatched array lengths: instructions, inputs, files, autoContexts and images must be the same length, and one longer than responses."
                     )
                 }
-                
-                let systemPrompt = currentChat?.systemPrompt ?? SystemPrompt.outputOnly
+
                 streamedResponse = ""
-                
-                
                 
                 switch Defaults[.mode] {
                 case .remote:

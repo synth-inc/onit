@@ -78,8 +78,7 @@ struct TextInputView: View {
     }
 
     func sendAction() {
-        let newPrompt = model.createAndSavePrompt()
-        model.generate(newPrompt)
+        model.createAndSavePrompt()
     }
 
     var sendButton: some View {
