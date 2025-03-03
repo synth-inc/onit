@@ -49,8 +49,8 @@ class AccessibilityNotificationsManager: ObservableObject {
     private var selectedElementByApp: [String: AXUIElement] = [:]
 
     private var valueDebounceWorkItem: DispatchWorkItem?
-
     private var selectionDebounceWorkItem: DispatchWorkItem?
+    private var parseDebounceWorkItem: DispatchWorkItem?
 
     private var timedOutPIDs: Set<pid_t> = []  // Track PIDs that have timed out
 
@@ -298,55 +298,60 @@ class AccessibilityNotificationsManager: ObservableObject {
             return
         }
         
-        Task.detached(priority: .background) { [pid, weak self] in
+        parseDebounceWorkItem?.cancel()
+        
+        let workItem = DispatchWorkItem { [weak self] in
             guard let self = self else { return }
-            do {
-                // Use a task group to race the parsing task against a 20 seconds timeout
-                var results = try await withThrowingTaskGroup(of: [String: String]?.self, body: { group -> [String: String]? in
-                    group.addTask {
-                        return await AccessibilityParser.shared.getAllTextInElement(appElement: pid.getAXUIElement())
+            
+            Task.detached(priority: .background) { [pid, weak self] in
+                guard let self = self else { return }
+                do {
+                    var results = try await withThrowingTaskGroup(of: [String: String]?.self) { group -> [String: String]? in
+                        group.addTask {
+                            return await AccessibilityParser.shared.getAllTextInElement(appElement: pid.getAXUIElement())
+                        }
+                        group.addTask {
+                            try await Task.sleep(nanoseconds: 10_000_000_000) // 10 second timeout
+                            throw NSError(domain: "AccessibilityParsingTimeout", code: 1, userInfo: nil)
+                        }
+                        let firstCompleted = try await group.next()!
+                        group.cancelAll()
+                        return firstCompleted
                     }
-                    group.addTask {
-                        try await Task.sleep(nanoseconds: 10_000_000_000) // 10 second timeout
-                        throw NSError(domain: "AccessibilityParsingTimeout", code: 1, userInfo: nil)
+                    
+                    let elapsedTime = results?[AccessibilityParsedElements.elapsedTime]
+                    let appName = results?[AccessibilityParsedElements.applicationName]
+                    let appTitle = results?[AccessibilityParsedElements.applicationTitle]
+                    
+                    results?.removeValue(forKey: AccessibilityParsedElements.elapsedTime)
+                    results?.removeValue(forKey: AccessibilityParsedElements.applicationName)
+                    results?.removeValue(forKey: AccessibilityParsedElements.applicationTitle)
+                    
+                    await MainActor.run {
+                        self.screenResult.elapsedTime = elapsedTime
+                        self.screenResult.applicationName = appName
+                        self.screenResult.applicationTitle = appTitle
+                        self.screenResult.others = results
+                        self.screenResult.errorMessage = nil
+                        self.showDebug()
                     }
-                    let firstCompleted = try await group.next()!
-                    group.cancelAll()
-                    return firstCompleted
-                })
-                
-                let elapsedTime = results?[AccessibilityParsedElements.elapsedTime]
-                let appName = results?[AccessibilityParsedElements.applicationName]
-                let appTitle = results?[AccessibilityParsedElements.applicationTitle]
-                
-                results?.removeValue(forKey: AccessibilityParsedElements.elapsedTime)
-                results?.removeValue(forKey: AccessibilityParsedElements.applicationName)
-                results?.removeValue(forKey: AccessibilityParsedElements.applicationTitle)
-                
-                await MainActor.run {
-                    self.screenResult.elapsedTime = elapsedTime
-                    self.screenResult.applicationName = appName
-                    self.screenResult.applicationTitle = appTitle
-                    self.screenResult.others = results
-                    self.screenResult.errorMessage = nil  // Clear error message on success
-                    self.showDebug()
+                } catch {
+                    let appName = pid.getAppName() ?? "Unknown"
+                    await MainActor.run {
+                        print("Accessibility timeout")
+                        self.timedOutPIDs.insert(pid)
+                        PostHogSDK.shared.capture("accessibilityParseTimedOut", properties: ["applicationName": appName])
+                        self.screenResult = .init()
+                        self.screenResult.errorMessage = "Timeout occurred, could not read application in reasonable amount of time."
+                        self.showDebug()
+                    }   
                 }
-            } catch {
-                // Timeout occurred, send Posthog event with the application name
-                let appName = pid.getAppName() ?? "Unknown"
-                await MainActor.run {
-                    print("Accessibility timeout")
-                    // Add the PID to the timed out set
-                    self.timedOutPIDs.insert(pid)
-                    // Assuming there's a Posthog tracking method available
-                    PostHogSDK.shared.capture("accessibilityParseTimedOut", properties: ["applicationName": appName])
-                    // Optionally, reset the screen result
-                    self.screenResult = .init()
-                    self.screenResult.errorMessage = "Timeout occured, could not read application in reasonable amount of time."  // Set error message on timeout
-                    self.showDebug()
-                }   
             }
         }
+        
+        parseDebounceWorkItem = workItem
+        
+        DispatchQueue.main.asyncAfter(deadline: .now() + Config.debounceInterval, execute: workItem)
     }
 
     // MARK: Value Changed
