@@ -300,14 +300,13 @@ extension OnitModel {
             return Defaults[.streamResponse].googleAI
         case .deepSeek:
             return Defaults[.streamResponse].deepSeek
+        case .perplexity:
+            return Defaults[.streamResponse].perplexity
         case .custom:
             guard let providerId = aiModel.customProviderName else {
                 return false
             }
-            
             return Defaults[.streamResponse].customProviders[providerId] ?? false
-        case .perplexity:
-            return Defaults[.streamResponse].perplexity
         }
     }
     

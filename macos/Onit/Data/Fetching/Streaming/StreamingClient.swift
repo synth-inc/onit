@@ -66,7 +66,14 @@ actor StreamingClient {
         let urlRequest = try endpoint.asURLRequest()
         let eventSource = EventSource(mode: .dataOnly, eventParser: eventParser)
         let dataTask = await eventSource.dataTask(for: urlRequest)
-
+        
+        // Helpful debugging method- put in the endpoint name and you can see the full request
+        if endpoint.baseURL.absoluteString.contains("api.perplexity.ai") {
+            let url = endpoint.baseURL.appendingPathComponent(endpoint.path)
+            FetchingClient.printCurlRequest(endpoint: endpoint, url: url)
+            print("here")
+        }
+        
         return AsyncThrowingStream<String, Error>(
             String.self, bufferingPolicy: .unbounded
         ) { continuation in

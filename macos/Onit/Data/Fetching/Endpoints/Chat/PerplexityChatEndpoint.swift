@@ -10,15 +10,13 @@ struct PerplexityChatEndpoint: Endpoint {
     let model: String
     let token: String?
     
-    var path: String { "/v1/chat/completions" }
+    var path: String { "/chat/completions" }
     var getParams: [String: String]? { nil }
     var method: HTTPMethod { .post }
     var requestBody: PerplexityChatRequest? {
         PerplexityChatRequest(model: model, messages: messages, stream: false)
     }
-    var additionalHeaders: [String: String]? {
-        ["Authorization": "Bearer \(token ?? "")"]
-    }
+    var additionalHeaders: [String: String]? { nil }
     var timeout: TimeInterval? { nil }
     
     func getContent(response: Response) -> String? {
@@ -60,7 +58,11 @@ enum PerplexityChatContent: Codable {
 struct PerplexityChatContentPart: Codable {
     let type: String
     let text: String?
-    let image_url: String?
+    let image_url: ImageURL?
+
+    struct ImageURL: Codable {
+        let url: String
+    }
 }
 
 struct PerplexityChatRequest: Codable {

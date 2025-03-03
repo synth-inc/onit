@@ -73,6 +73,7 @@ struct RemoteModelSection: View {
 
     // MARK: - Body
 
+    
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
             titleView

@@ -178,6 +178,25 @@ struct ChatStreamingEndpointBuilder {
             messages: messages, model: model.id, token: apiToken)
     }
 
+    private static func perplexity(
+        model: AIModel,
+        images: [[URL]],
+        responses: [String],
+        apiToken: String?,
+        systemMessage: String,
+        userMessages: [String]
+    ) -> PerplexityChatStreamingEndpoint {
+        let messages = ChatEndpointMessagesBuilder.perplexity(
+            model: model,
+            images: images,
+            responses: responses,
+            systemMessage: systemMessage,
+            userMessages: userMessages)
+
+        return PerplexityChatStreamingEndpoint(
+            messages: messages, model: model.id, token: apiToken)
+    }
+
     private static func custom(
         model: AIModel,
         images: [[URL]],

@@ -43,6 +43,10 @@ final class RemoteModelsState: ObservableObject {
     @ObservationIgnored
     var useDeepSeek: Bool
 
+    @ObservableDefault(.usePerplexity)
+    @ObservationIgnored
+    var usePerplexity: Bool
+    
     var listedModels: [AIModel] {
         var models = availableRemoteModels.filter {
             Defaults[.visibleModelIds].contains($0.uniqueId)
