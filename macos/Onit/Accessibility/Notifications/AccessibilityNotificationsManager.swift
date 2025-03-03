@@ -51,8 +51,6 @@ class AccessibilityNotificationsManager: ObservableObject {
     private var valueDebounceWorkItem: DispatchWorkItem?
     private var selectionDebounceWorkItem: DispatchWorkItem?
     private var parseDebounceWorkItem: DispatchWorkItem?
-    
-    private let parseDebounceInterval: TimeInterval = 0.3 // 300ms
 
     private var timedOutPIDs: Set<pid_t> = []  // Track PIDs that have timed out
 
@@ -353,7 +351,7 @@ class AccessibilityNotificationsManager: ObservableObject {
         
         parseDebounceWorkItem = workItem
         
-        DispatchQueue.main.asyncAfter(deadline: .now() + parseDebounceInterval, execute: workItem)
+        DispatchQueue.main.asyncAfter(deadline: .now() + Config.debounceInterval, execute: workItem)
     }
 
     // MARK: Value Changed
