@@ -172,7 +172,7 @@ final class TypeAheadState {
             
             var fullCompletion = ""
             
-            let stream = try await TypeaheadSuggestionService.shared.generateSuggestion(
+            let stream = try await TypeaheadAutocompletionService.shared.generateSuggestion(
                 userInput: request.input,
                 screenResult: request.screenResult,
                 model: model,

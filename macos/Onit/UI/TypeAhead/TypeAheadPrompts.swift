@@ -9,16 +9,42 @@ struct TypeAheadPrompts {
     
     struct AutoCompletion {
         static let systemPrompt = """
-        You are an assistant that helps complete text intelligently.
-        You must analyze the application context and the text already entered to suggest the most relevant completion.
-        Respond only with the completion text, without explanations or formatting.
+        You are a highly optimized text completion AI. Your task is to seamlessly complete words and phrases.
+
+        CRITICAL RULES:
+        * Start the completion immediately at [COMPLETE HERE]—no prefixes or reformulations.
+        * Do NOT repeat any text before [COMPLETE HERE].
+        * Limit completions to 20 characters max.
+        * Ensure completions are natural, fluid, and contextually relevant.
+        * No explanations, no punctuation tricks, no enclosing quotes. Just the continuation.
+        
+        Your completions should always blend naturally into the sentence while following these strict rules.
         """
         
-        static func instruction(userInput: AccessibilityUserInput) -> String {
+        static func instruction(input: AccessibilityUserInput, screenResult: ScreenResult) -> String {
+            let application = screenResult.applicationName ?? ""
+            let windowTitle = screenResult.applicationTitle ?? ""
+            let screenContent = screenResult.others?["screen"] ?? ""
+            let currentText = input.fullText
+            let precedingText = input.precedingText
+            let followingText = input.followingText
+            
             return """
-         Complete:
-         \(userInput.precedingText)[COMPLETE HERE]\(userInput.followingText)
-         """
+            In the application "\(application)", window "\(windowTitle)", 
+            the user has typed: "\(currentText)"
+
+            Screen context:
+            \(screenContent)
+
+            Input: \(precedingText)[COMPLETE HERE]\(followingText)
+            """
+        }
+        
+        static func sample(data: TypeaheadExample) -> String {
+            return """
+            Input: "\(data.precedingText)[COMPLETE HERE]\(data.followingText)"
+            Output: "\(data.aiCompletion)"
+            """
         }
     }
     
