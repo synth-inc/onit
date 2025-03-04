@@ -13,9 +13,15 @@ struct TypeAheadCompletionView: View {
     
     @State private var contentHeight: CGFloat = 0
     private let globalState = TypeAheadState.shared
+    private let minHeight: CGFloat = 18
+    private let maxHeight: CGFloat = 200
     
     private var completion: String {
         globalState.request?.completion ?? ""
+    }
+    
+    private var idealHeight: CGFloat {
+        min(max(contentHeight, minHeight), maxHeight)
     }
     
     var body: some View {
@@ -35,7 +41,7 @@ struct TypeAheadCompletionView: View {
         }
         .frame(
             maxWidth: 300,
-            maxHeight: 200
+            idealHeight: idealHeight
         )
         .padding(.vertical, 4)
         .padding(.horizontal, 6)
@@ -74,6 +80,8 @@ struct TypeAheadCompletionView: View {
             } else {
                 Text(completion)
                     .font(.system(size: 13, weight: .medium))
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .fixedSize(horizontal: false, vertical: true)
                     .foregroundStyle(.gray100)
                     .background {
                         GeometryReader { proxy in
