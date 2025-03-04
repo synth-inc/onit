@@ -141,14 +141,10 @@ struct GeneralTab: View {
                                 }
                                 .frame(maxWidth: .infinity)
                                 .padding(.vertical, 8)
-                                .clipShape(RoundedRectangle(cornerRadius: 6))
-                                .background {
-                                    if panelPosition == position {
-                                        Color(.blue300)
-                                    }
-                                }
                             }
                             .buttonStyle(.plain)
+                            .background(panelPosition == position ? Color(.blue300) : Color.clear)
+                            .clipShape(RoundedRectangle(cornerRadius: 6))
                         }
                     }
                 }
