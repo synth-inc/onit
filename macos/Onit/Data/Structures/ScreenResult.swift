@@ -10,4 +10,5 @@ struct ScreenResult {
     var applicationName: String?
     var applicationTitle: String?
     var others: [String: String]?
+    var errorMessage: String?
 }
