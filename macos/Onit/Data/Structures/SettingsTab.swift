@@ -6,6 +6,7 @@ enum SettingsTab: String {
     case prompts
     case shortcuts
     case accessibility
+    case typeahead
     case about
     #if DEBUG
         case debug

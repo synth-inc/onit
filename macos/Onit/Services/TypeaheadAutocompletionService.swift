@@ -59,7 +59,7 @@ actor TypeaheadAutocompletionService {
         localMessageStack.append(LocalChatMessage(role: "system", content: systemMessage, images: nil))
         localMessageStack.append(LocalChatMessage(role: "user", content: instruction, images: nil))
         
-        print("\(localMessageStack)")
+        //print("\(localMessageStack)")
         return localMessageStack
     }
     

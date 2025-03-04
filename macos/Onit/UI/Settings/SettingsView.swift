@@ -45,6 +45,12 @@ struct SettingsView: View {
                     }
                 }
                 .tag(SettingsTab.accessibility)
+            
+            TypeaheadTab()
+                .tabItem {
+                    Label("Typeahead", systemImage: "character.cursor.ibeam")
+                }
+                .tag(SettingsTab.typeahead)
 
             #if DEBUG
                 DebugModeTab()

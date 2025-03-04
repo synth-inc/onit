@@ -19,22 +19,21 @@ class TypeaheadTestingService {
     private let localModelsLimit: Int = 5
     private let syncInterval: TimeInterval = 24 * 60 * 60 // 24 heures
     
-    // TODO: KNA - Should be called somewhere
     func checkUserConsent() {
         let config = Defaults[.typeaheadLearningConfig]
         
-        if Defaults[.typeaheadLearningConfig].hasUserConsent == nil {
+        if config.isEnabled == true {
+            startRemoteTestSync()
+        } else {
             Task {
                 let consent = await requestUserConsent()
                 
-                Defaults[.typeaheadLearningConfig].hasUserConsent = consent
+                Defaults[.typeaheadLearningConfig].isEnabled = consent
                 
                 if consent {
                     startRemoteTestSync()
                 }
             }
-        } else if config.hasUserConsent == true {
-            startRemoteTestSync()
         }
     }
     
@@ -66,9 +65,7 @@ class TypeaheadTestingService {
     private func syncRemoteTests() async {
         let config = Defaults[.typeaheadLearningConfig]
         
-        guard config.isEnabled,
-              config.hasUserConsent == true,
-              let tests = await fetchRemoteTests() else { return }
+        guard config.isEnabled, let tests = await fetchRemoteTests() else { return }
         
         let results = await runTests(tests.tests)
         await submitTestResults(results)

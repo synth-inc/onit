@@ -101,8 +101,6 @@ struct AccessibilityTab: View {
                         "Shortcut", name: .launchWithAutoContext
                     )
                 }
-                
-                TypeAheadSection()
             }
         }
         .formStyle(.grouped)
