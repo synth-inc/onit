@@ -24,6 +24,8 @@ class TypeAheadWindowController: NSObject, NSWindowDelegate {
     private var menuWindow: TypeAheadWindow?
     
     var lastActiveApp: NSRunningApplication?
+    
+    private let screenPadding: CGFloat = 16
 
     // MARK: - Initializers
 
@@ -45,7 +47,7 @@ class TypeAheadWindowController: NSObject, NSWindowDelegate {
         window.configure(self)
         
         self.window = window
-        self.menuWindow = menuWindow
+        self.menuWindow = menuWindow 
         
         setupEventMonitor()
         setupPositionObserver()
@@ -106,18 +108,40 @@ class TypeAheadWindowController: NSObject, NSWindowDelegate {
     }
 
     func showMenu() {
-        guard let window = window else { return }
+        guard let window = window,
+              let menuWindow = menuWindow else { return }
         
-        if let menuWindow = menuWindow {
-            let windowFrame = window.frame
-            let menuPoint = NSPoint(
-                x: windowFrame.maxX - 16,
-                y: windowFrame.maxY - 4
-            )
-            
-            menuWindow.setFrameTopLeftPoint(menuPoint)
-            menuWindow.orderFront(nil)
+        let windowFrame = window.frame
+        var menuPoint = NSPoint(
+            x: windowFrame.maxX - 16,
+            y: windowFrame.maxY - 4
+        )
+        
+        guard let screen = NSScreen.screens.first(where: { $0.frame.contains(menuPoint) }) else {
+            return
         }
+        
+        let visibleFrame = screen.visibleFrame
+        let menuSize = menuWindow.frame.size
+        
+        if menuPoint.x + menuSize.width > visibleFrame.maxX - screenPadding {
+            menuPoint.x = visibleFrame.maxX - menuSize.width - screenPadding
+        }
+        
+        if menuPoint.x < visibleFrame.minX + screenPadding {
+            menuPoint.x = visibleFrame.minX + screenPadding
+        }
+        
+        if menuPoint.y > visibleFrame.maxY - screenPadding {
+            menuPoint.y = visibleFrame.maxY - screenPadding
+        }
+        
+        if menuPoint.y - menuSize.height < visibleFrame.minY + screenPadding {
+            menuPoint.y = visibleFrame.minY + menuSize.height + screenPadding
+        }
+        
+        menuWindow.setFrameTopLeftPoint(menuPoint)
+        menuWindow.orderFront(nil)
     }
     
     func hideMenu() {
