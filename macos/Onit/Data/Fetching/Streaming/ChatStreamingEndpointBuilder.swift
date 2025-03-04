@@ -60,6 +60,14 @@ struct ChatStreamingEndpointBuilder {
                 apiToken: apiToken,
                 systemMessage: systemMessage,
                 userMessages: userMessages)
+        case .perplexity:
+            return ChatStreamingEndpointBuilder.perplexity(
+                model: model,
+                images: images,
+                responses: responses,
+                apiToken: apiToken,
+                systemMessage: systemMessage,
+                userMessages: userMessages)
         case .custom:
             return try ChatStreamingEndpointBuilder.custom(
                 model: model,
@@ -167,6 +175,25 @@ struct ChatStreamingEndpointBuilder {
             userMessages: userMessages)
 
         return DeepSeekChatStreamingEndpoint(
+            messages: messages, model: model.id, token: apiToken)
+    }
+
+    private static func perplexity(
+        model: AIModel,
+        images: [[URL]],
+        responses: [String],
+        apiToken: String?,
+        systemMessage: String,
+        userMessages: [String]
+    ) -> PerplexityChatStreamingEndpoint {
+        let messages = ChatEndpointMessagesBuilder.perplexity(
+            model: model,
+            images: images,
+            responses: responses,
+            systemMessage: systemMessage,
+            userMessages: userMessages)
+
+        return PerplexityChatStreamingEndpoint(
             messages: messages, model: model.id, token: apiToken)
     }
 

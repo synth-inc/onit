@@ -8,19 +8,7 @@
 import Foundation
 import EventSource
 
-protocol StreamingEndpoint: Sendable {
-    associatedtype Request: Encodable
-    associatedtype Response: Decodable
-
-    var baseURL: URL { get }
-    var path: String { get }
-    var getParams: [String: String]? { get }
-    var method: HTTPMethod { get }
-    var token: String? { get }
-    var requestBody: Request? { get }
-    var additionalHeaders: [String: String]? { get }
-    var timeout: TimeInterval? { get }
-    
+protocol StreamingEndpoint: Endpoint {    
     func getContentFromSSE(event: EVEvent) throws -> String?
     func getStreamingErrorMessage(data: Data) -> String?
 }

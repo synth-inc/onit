@@ -121,3 +121,47 @@ struct DeepSeekValidationResponse: Codable {
         let id: String
     }
 }
+
+// Perplexity validation endpoint
+struct PerplexityValidationEndpoint: Endpoint { 
+    var baseURL: URL = URL(string: "https://api.perplexity.ai")!
+
+    typealias Request = PerplexityValidationRequest
+    typealias Response = PerplexityValidationResponse
+
+    var path: String { "/chat/completions" }
+    var getParams: [String: String]? { nil }
+    var method: HTTPMethod { .post }
+    var token: String? { nil }
+    var requestBody: PerplexityValidationRequest? {
+        PerplexityValidationRequest(
+            model: "sonar",
+            messages: [
+                PerplexityValidationMessage(role: "system", content: "Reply with only the word hi and nothing else."),
+                PerplexityValidationMessage(role: "user", content: "Hi")
+            ]
+        )
+    }
+    var additionalHeaders: [String: String]? {
+        [
+            "Authorization": "Bearer \(apiKey)",
+            "Content-Type": "application/json"
+        ]
+    }
+    var timeout: TimeInterval? { nil }
+    let apiKey: String
+}
+
+struct PerplexityValidationRequest: Codable {
+    let model: String
+    let messages: [PerplexityValidationMessage]
+}
+
+struct PerplexityValidationMessage: Codable {
+    let role: String
+    let content: String
+}
+
+struct PerplexityValidationResponse: Codable {
+    let id: String
+}

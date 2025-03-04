@@ -31,8 +31,13 @@ actor StreamingClient {
             apiToken: apiToken,
             systemMessage: systemMessage,
             userMessages: userMessages)
+        var eventParser: EventParser?
+        
+        if model.provider == .perplexity {
+            eventParser = PerplexityEventParser(mode: .dataOnly)
+        }
 
-        return try await stream(endpoint: endpoint)
+        return try await stream(endpoint: endpoint, eventParser: eventParser)
     }
     
     func localChat(systemMessage: String,
@@ -66,7 +71,15 @@ actor StreamingClient {
         let urlRequest = try endpoint.asURLRequest()
         let eventSource = EventSource(mode: .dataOnly, eventParser: eventParser)
         let dataTask = await eventSource.dataTask(for: urlRequest)
-
+        
+        #if DEBUG
+        // Helpful debugging method- put in the endpoint name and you can see the full request
+        if endpoint.baseURL.absoluteString.contains("api.perplexity.ai") {
+            let url = endpoint.baseURL.appendingPathComponent(endpoint.path)
+            FetchingClient.printCurlRequest(endpoint: endpoint, url: url)
+        }
+        #endif
+        
         return AsyncThrowingStream<String, Error>(
             String.self, bufferingPolicy: .unbounded
         ) { continuation in

@@ -193,7 +193,7 @@ class AccessibilityNotificationsManager: ObservableObject {
             }
         }
     }
-
+    
     @objc private func appDeactivationReceived(notification: Notification) {
         if let app = notification.userInfo?[NSWorkspace.applicationUserInfoKey]
             as? NSRunningApplication

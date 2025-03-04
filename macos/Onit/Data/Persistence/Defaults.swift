@@ -20,20 +20,23 @@ extension Defaults.Keys {
     static let xAIToken = Key<String?>("xAIToken", default: nil)
     static let googleAIToken = Key<String?>("googleAIToken", default: nil)
     static let deepSeekToken = Key<String?>("deepSeekToken", default: nil)
-
+    static let perplexityToken = Key<String?>("perplexityToken", default: nil)
+    
     // Remote model validation
     static let isOpenAITokenValidated = Key<Bool>("openAITokenValidated", default: false)
     static let isAnthropicTokenValidated = Key<Bool>("anthropicTokenValidated", default: false)
     static let isXAITokenValidated = Key<Bool>("xAITokenValidated", default: false)
     static let isGoogleAITokenValidated = Key<Bool>("googleAITokenValidated", default: false)
     static let isDeepSeekTokenValidated = Key<Bool>("deepSeekTokenValidated", default: false)
-
+    static let isPerplexityTokenValidated = Key<Bool>("perplexityTokenValidated", default: false)
+        
     // Remote model usage
     static let useOpenAI = Key<Bool>("useOpenAI", default: false)
     static let useAnthropic = Key<Bool>("useAnthropic", default: false)
     static let useXAI = Key<Bool>("useXAI", default: false)
     static let useGoogleAI = Key<Bool>("useGoogleAI", default: false)
     static let useDeepSeek = Key<Bool>("useDeepSeek", default: false)
+    static let usePerplexity = Key<Bool>("usePerplexity", default: false)
     static let useLocal = Key<Bool>("useLocalModel", default: false)
     
     static let streamResponse = Key<StreamResponseConfig>("streamResponse", default: StreamResponseConfig.default)
@@ -46,6 +49,7 @@ extension Defaults.Keys {
     static let closedXAI = Key<Bool>("closedXAI", default: false)
     static let closedGoogleAI = Key<Bool>("closedGoogleAI", default: false)
     static let closedDeepSeek = Key<Bool>("closedDeepSeek", default: false)
+    static let closedPerplexity = Key<Bool>("closedPerplexity", default: false)
     static let closedNoLocalModels = Key<Bool>("closedNoLocalModels", default: false)
     static let closedNoRemoteModels = Key<Bool>("closedNoRemoteModels", default: false)
     static let closedNewRemoteData = Key<Data>("closedNewRemoteData", default: Data())

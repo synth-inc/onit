@@ -92,8 +92,9 @@ struct AIModel: Codable, Identifiable, Hashable, Defaults.Serializable {
         case xAI = "xai"
         case googleAI = "googleai"
         case deepSeek = "deepseek"
+        case perplexity = "perplexity"
         case custom = "custom"
-
+    
         var title: String {
             switch self {
             case .openAI: return "OpenAI"
@@ -101,7 +102,8 @@ struct AIModel: Codable, Identifiable, Hashable, Defaults.Serializable {
             case .xAI: return "xAI"
             case .googleAI: return "Google AI"
             case .deepSeek: return "DeepSeek"
-            case .custom: return "Custom Providers"
+            case .perplexity: return "Perplexity"
+            case .custom: return "Custom Providers" 
             }
         }
 
@@ -112,6 +114,7 @@ struct AIModel: Codable, Identifiable, Hashable, Defaults.Serializable {
             case .xAI: return "Grok"
             case .googleAI: return "Gemini"
             case .deepSeek: return "DeepSeek R1"
+            case .perplexity: return "Sonar"
             case .custom: return "Custom Model"
             }
         }
@@ -128,6 +131,8 @@ struct AIModel: Codable, Identifiable, Hashable, Defaults.Serializable {
                 return URL(string: "https://makersuite.google.com/app/apikey")!
             case .deepSeek:
                 return URL(string: "https://platform.deepseek.com/api_keys")!
+            case .perplexity:
+                return URL(string: "https://www.perplexity.ai/settings/api")!
             case .custom:
                 return URL(string: "about:blank")!
             }

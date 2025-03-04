@@ -25,6 +25,7 @@ struct SetUpDialogs: View {
     @Default(.closedXAI) var closedXAI
     @Default(.closedGoogleAI) var closedGoogleAI
     @Default(.closedDeepSeek) var closedDeepSeek
+    @Default(.closedPerplexity) var closedPerplexity
     @Default(.closedNoLocalModels) var closedNoLocalModels
     @Default(.closedNoRemoteModels) var closedNoRemoteModels
     @Default(.seenLocal) var seenLocal
@@ -124,6 +125,9 @@ struct SetUpDialogs: View {
             }
             if false && !closedDeepSeek {
                 expired(.deepSeek)
+            }
+            if false && !closedPerplexity {
+                expired(.perplexity)
             }
         }
     }
@@ -275,6 +279,8 @@ struct SetUpDialogs: View {
                 closedGoogleAI = true
             case .deepSeek:
                 closedDeepSeek = true
+            case .perplexity:
+                closedPerplexity = true
             case .custom:
                 break  // TODO: KNA -
             }
