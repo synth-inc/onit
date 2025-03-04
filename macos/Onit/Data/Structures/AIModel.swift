@@ -135,7 +135,6 @@ struct AIModel: Codable, Identifiable, Hashable, Defaults.Serializable {
                 return URL(string: "https://www.perplexity.ai/settings/api")!
             case .custom:
                 return URL(string: "about:blank")!
-
             }
         }
     }
