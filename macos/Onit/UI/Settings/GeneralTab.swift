@@ -141,12 +141,9 @@ struct GeneralTab: View {
                                 }
                                 .frame(maxWidth: .infinity)
                                 .padding(.vertical, 8)
+                                .background(panelPosition == position ? Color.accentColor : Color.clear)
                                 .clipShape(RoundedRectangle(cornerRadius: 6))
-                                .background {
-                                    if panelPosition == position {
-                                        Color.accentColor
-                                    }
-                                }
+                                .contentShape(Rectangle())
                             }
                             .buttonStyle(.plain)
                         }
