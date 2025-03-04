@@ -55,10 +55,12 @@ class TypeAheadWindowController: NSObject, NSWindowDelegate {
         NSEvent.addGlobalMonitorForEvents(matching: .keyDown) { [weak self] event in
             guard let self = self else { return }
             
-            if event.keyCode == 48 {
-                Task { @MainActor in
-                    self.state.insertSuggestion()
-                }
+            let modifiers = event.modifierFlags.intersection(.deviceIndependentFlagsMask)
+            
+            guard modifiers.isEmpty, event.keyCode == 48 else { return }
+            
+            Task { @MainActor in
+                self.state.insertSuggestion()
             }
         }
     }

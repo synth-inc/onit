@@ -44,13 +44,13 @@ final class TypeAheadState {
     
     private init() {
         startObservingUserInput()
+        startObservingScreenResult()
     }
     
     // MARK: - Functions
     
     func insertSuggestion() {
         guard let request = request else { return }
-        
         
         if let hoveredIndex = moreSuggestionsState.hoveredIndex,
            hoveredIndex < moreSuggestionsState.moreSuggestions.count {
@@ -135,6 +135,28 @@ final class TypeAheadState {
                 let request = Request(input: userInput, screenResult: manager.screenResult)
                 
                 await handleUserInputChange(request)
+            }
+        }
+    }
+    
+    private func startObservingScreenResult() {
+        Task { @MainActor in
+            let manager = AccessibilityNotificationsManager.shared
+            var previousAppName: String?
+            var previousAppTitle: String?
+            
+            for try await screenResult in manager.$screenResult.values {
+                let currentAppName = screenResult.applicationName
+                let currentAppTitle = screenResult.applicationTitle
+                
+                if currentAppName != previousAppName || currentAppTitle != previousAppTitle {
+                    previousAppName = currentAppName
+                    previousAppTitle = currentAppTitle
+                    
+                    await requestQueue.cancelAll()
+                    shouldShow = false
+                    reset()
+                }
             }
         }
     }
