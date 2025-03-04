@@ -101,6 +101,20 @@ class TypeaheadLearningService {
         try? modelContext.save()
     }
     
+    func getCases(limit: Int? = nil) async throws -> [TypeaheadCase] {
+        guard Defaults[.typeaheadLearningConfig].isEnabled,
+              let modelContext = modelContext
+        else { return [] }
+        
+        var descriptor = FetchDescriptor<TypeaheadCase>(
+            sortBy: [SortDescriptor(\TypeaheadCase.timestamp, order: .reverse)]
+        )
+        
+        descriptor.fetchLimit = limit
+        
+        return try modelContext.fetch(descriptor)
+    }
+    
     func findSimilarCases(
         input: AccessibilityUserInput,
         screenResult: ScreenResult
