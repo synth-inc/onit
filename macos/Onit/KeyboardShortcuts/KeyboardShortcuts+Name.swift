@@ -29,6 +29,7 @@ extension KeyboardShortcuts.Name: @retroactive CaseIterable {
         .escape,
         .newChat,
         .resizeWindow,
-        .toggleLocalMode
+        .toggleLocalMode,
+        .showTypeAheadMenu
     ]
 }

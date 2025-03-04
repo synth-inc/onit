@@ -13,6 +13,10 @@ import SwiftData
 @MainActor
 struct KeyboardShortcutsManager {
     
+    private static let activeShortcuts: [KeyboardShortcuts.Name] = [
+        .launch, .launchWithAutoContext, .showTypeAheadMenu
+    ]
+    
     static func configure(model: OnitModel) {
         registerSettingsShortcuts(model: model)
         
@@ -31,7 +35,7 @@ struct KeyboardShortcutsManager {
     
     static func enable(modelContainer: ModelContainer) {
         var names = KeyboardShortcuts.Name.allCases
-            .filter { ![.launch, .launchWithAutoContext].contains($0) }
+            .filter { !activeShortcuts.contains($0) }
         
         if Defaults[.escapeShortcutDisabled] {
             names.removeAll { $0 == .escape }
@@ -52,7 +56,7 @@ struct KeyboardShortcutsManager {
 
     static func disable(modelContainer: ModelContainer) {
         var names = KeyboardShortcuts.Name.allCases
-            .filter { ![.launch, .launchWithAutoContext].contains($0) }
+            .filter { !activeShortcuts.contains($0) }
         
         do {
             let storedPrompts = try modelContainer.mainContext.fetch(FetchDescriptor<SystemPrompt>())
@@ -110,7 +114,7 @@ struct KeyboardShortcutsManager {
         // Since we support turning on and off shortcuts, we should disable these all after registering.
         // Then, the shortcuts that are on will be enabled when enable() is called. 
         var names = KeyboardShortcuts.Name.allCases
-            .filter { ![.launch, .launchWithAutoContext].contains($0) }
+            .filter { !activeShortcuts.contains($0) }
         KeyboardShortcuts.disable(names)
     }
     
