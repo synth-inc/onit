@@ -144,7 +144,7 @@ struct GeneralTab: View {
                                 .clipShape(RoundedRectangle(cornerRadius: 6))
                                 .background {
                                     if panelPosition == position {
-                                        Color(.blue300)
+                                        Color.accentColor
                                     }
                                 }
                             }
