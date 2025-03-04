@@ -96,9 +96,9 @@ final class TypeAheadState {
             
             Task {
                 await TypeaheadLearningService.shared.updateCase(
+                    with: request.completion,
                     input: request.input,
-                    screenResult: request.screenResult,
-                    aiCompletion: request.completion
+                    screenResult: request.screenResult
                 )
             }
             

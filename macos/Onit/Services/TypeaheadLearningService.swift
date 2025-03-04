@@ -28,12 +28,10 @@ class TypeaheadLearningService {
     
     private func startCollecting() {
         Task { @MainActor in
-            let publisher = Publishers.CombineLatest(
-                AccessibilityNotificationsManager.shared.$userInput,
-                AccessibilityNotificationsManager.shared.$screenResult
-            )
-            .receive(on: RunLoop.main)
-            .debounce(for: .milliseconds(300), scheduler: RunLoop.main)
+            let publisher = AccessibilityNotificationsManager.shared.$userInput
+                .combineLatest(AccessibilityNotificationsManager.shared.$screenResult)
+                .receive(on: RunLoop.main)
+                .debounce(for: .milliseconds(300), scheduler: RunLoop.main)
             
             for try await (userInput, screenResult) in publisher.values {
                 await saveCase(input: userInput, screenResult: screenResult)
@@ -50,7 +48,14 @@ class TypeaheadLearningService {
         
         let allCases = (try? modelContext.fetch(descriptor)) ?? []
         
-        if let existingCase = allCases.first(where: { $0.currentText == input.fullText }) {
+        if let existingCase = allCases.first(where: {
+            (!$0.precedingText.isEmpty && input.precedingText.starts(with: $0.precedingText)) ||
+            (!input.precedingText.isEmpty && $0.precedingText.starts(with: input.precedingText))
+        }) {
+            existingCase.screenContent = screenResult.others?.values.joined(separator: "\n\n") ?? ""
+            existingCase.currentText = input.fullText
+            existingCase.precedingText = input.precedingText
+            existingCase.followingText = input.followingText
             existingCase.timestamp = Date()
         } else {
             let newCase = TypeaheadCase(
@@ -67,7 +72,7 @@ class TypeaheadLearningService {
         try? modelContext.save()
     }
     
-    func updateCase(input: AccessibilityUserInput, screenResult: ScreenResult, aiCompletion: String) async {
+    func updateCase(with aiCompletion: String, input: AccessibilityUserInput, screenResult: ScreenResult) async {
         guard Defaults[.typeaheadLearningConfig].isEnabled,
               let modelContext = modelContext,
               !input.fullText.isEmpty,
@@ -78,6 +83,7 @@ class TypeaheadLearningService {
         
         if let existingCase = allCases.first(where: { $0.currentText == input.fullText }) {
             existingCase.aiCompletion = aiCompletion
+            existingCase.timestamp = Date()
         } else {
             let newCase = TypeaheadCase(
                 applicationName: screenResult.applicationName ?? "",
