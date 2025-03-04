@@ -24,7 +24,7 @@ struct StreamResponseConfig: Codable, Defaults.Serializable {
         xAI: true,
         googleAI: true,
         deepSeek: true,
-        perplexity: false,
+        perplexity: true,
         customProviders: [:],
         local: true
     )
