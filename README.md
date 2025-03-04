@@ -1,6 +1,6 @@
 <div align="center">
   <a href="https://www.getonit.ai">
-    <img src="macos/Onit/Assets.xcassets/AppIcon.appiconset/app_icon_1x.png" alt="Onit Logo" width="128" height="128">
+    <img src="macos/Onit/Assets.xcassets/AppIcon.appiconset/onit_appicon_256.png" alt="Onit Logo" width="128" height="128">
   </a>
 </div>
 
