@@ -393,9 +393,11 @@ struct ChatEndpointMessagesBuilder {
     ) -> [PerplexityChatMessage] {
         var perplexityMessageStack: [PerplexityChatMessage] = []
 
-        // Add system message
-        perplexityMessageStack.append(
-            PerplexityChatMessage(role: "system", content: .text(systemMessage)))
+        // Add system message if supported
+        if model.supportsSystemPrompts {
+            perplexityMessageStack.append(
+                PerplexityChatMessage(role: "system", content: .text(systemMessage)))
+        }
 
         for (index, userMessage) in userMessages.enumerated() {
             if images[index].isEmpty {
