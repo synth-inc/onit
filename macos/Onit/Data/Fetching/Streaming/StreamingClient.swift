@@ -31,8 +31,13 @@ actor StreamingClient {
             apiToken: apiToken,
             systemMessage: systemMessage,
             userMessages: userMessages)
+        var eventParser: EventParser?
+        
+        if model.provider == .perplexity {
+            eventParser = PerplexityEventParser(mode: .dataOnly)
+        }
 
-        return try await stream(endpoint: endpoint)
+        return try await stream(endpoint: endpoint, eventParser: eventParser)
     }
     
     func localChat(systemMessage: String,
