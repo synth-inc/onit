@@ -41,12 +41,9 @@ struct ChatsView: View {
         scrollTask = Task { @MainActor in
             try? await Task.sleep(nanoseconds: 100_000_000)
             
-            guard !Task.isCancelled else {
-                isScrolling = false
-                return
-            }
+            guard !Task.isCancelled else { return }
             
-            withAnimation(.easeInOut(duration: 0.1)) {
+            withAnimation(.smooth(duration: 0.1)) {
                 proxy.scrollTo(chatsID, anchor: .bottom)
             }
             
