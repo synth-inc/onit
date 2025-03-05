@@ -17,19 +17,18 @@ struct SettingsSystemPromptTable: View {
     
     @State private var selected = Set<SystemPrompt.ID>()
     
+    private var clearFilter: String {
+        filter.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+    }
+    
     private var filteredPrompts: [SystemPrompt] {
-        let clearFilter = filter
-            .trimmingCharacters(in: .whitespacesAndNewlines)
-            .lowercased()
-        
-        return if clearFilter.isEmpty {
-            prompts
-        } else {
-            prompts.filter {
-                $0.name.lowercased().contains(clearFilter) ||
-                $0.prompt.lowercased().contains(clearFilter) ||
-                $0.tags.joined(separator: ",").lowercased().contains(clearFilter)
-            }
+        if clearFilter.isEmpty {
+            return prompts
+        }
+        return prompts.filter { prompt in
+            prompt.name.lowercased().contains(clearFilter) ||
+            prompt.prompt.lowercased().contains(clearFilter) ||
+            prompt.tags.joined(separator: ",").lowercased().contains(clearFilter)
         }
     }
     
@@ -61,28 +60,19 @@ struct SettingsSystemPromptTable: View {
         .id(refreshUI)
         .onChange(of: selected) { _, new in
             Task { @MainActor in
-                guard let promptId = new.first else {
+                if let promptId = new.first {
+                    selectedPrompt = prompts.first(where: { $0.id == promptId })
+                } else {
                     selectedPrompt = nil
-                    return
                 }
-                selectionChange(promptId: promptId)
-            }
-        }
-        .onChange(of: selectedPrompt) { _, newPrompt in
-            if let id = newPrompt?.id {
-                selected = [id]
-            } else {
-                selected.removeAll()
             }
         }
         .onChange(of: filter) { _, _ in
-            selected.removeAll()
-            selectedPrompt = nil
+            Task { @MainActor in
+                selected.removeAll()
+                selectedPrompt = nil
+            }
         }
-    }
-    
-    private func selectionChange(promptId: String) {
-        selectedPrompt = prompts.first(where: { $0.id == promptId })
     }
 }
 

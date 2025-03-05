@@ -74,10 +74,18 @@ struct SystemPromptTab: View {
                 resetData()
             }
             .onChange(of: shouldDeleteSelectedPrompt) { _, new in
-                if new { deleteSelectedPrompt() }
+                if new {
+                    Task { @MainActor in
+                        deleteSelectedPrompt()
+                    }
+                }
             }
             .onChange(of: shouldSavePrompt) { _, new in
-                if new { addPrompt() }
+                if new {
+                    Task { @MainActor in
+                        addPrompt()
+                    }
+                }
             }
             .sheet(isPresented: $showAdd) {
                 NewSystemPromptView(prompt: $promptToAdd,

@@ -32,22 +32,21 @@ struct SystemPromptSelectionView: View {
         }
     }
     
+    private var clearFilter: String {
+        searchText.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+    }
+    
     private var filteredPrompts: [SystemPrompt] {
-        let clearFilter = searchText
-            .trimmingCharacters(in: .whitespacesAndNewlines)
-            .lowercased()
+        guard !clearFilter.isEmpty else { return prompts }
         
-        return if clearFilter.isEmpty {
-            prompts
-        } else {
-            prompts.filter {
-                $0.name.lowercased().contains(clearFilter) ||
-                $0.prompt.lowercased().contains(clearFilter) ||
-                $0.applications.contains(where: { url in
-                    url.deletingPathExtension().lastPathComponent.lowercased().contains(clearFilter)
-                }) ||
-                $0.tags.joined(separator: ",").lowercased().contains(clearFilter)
-            }
+        return prompts.filter { prompt in
+            prompt.name.lowercased().contains(clearFilter) ||
+            prompt.prompt.lowercased().contains(clearFilter) ||
+            prompt.applications.contains { url in
+                url.deletingPathExtension().lastPathComponent
+                   .lowercased().contains(clearFilter)
+            } ||
+            prompt.tags.joined(separator: ",").lowercased().contains(clearFilter)
         }
     }
     
@@ -84,8 +83,11 @@ struct SystemPromptSelectionView: View {
             .listStyle(.plain)
             .scrollContentBackground(.hidden)
             .onChange(of: filteredPrompts) { _, _ in
-                withAnimation(.easeIn(duration: 1.0)) {
-                    proxy.scrollTo("topScrollPoint")
+                Task { @MainActor in
+                    try? await Task.sleep(for: .milliseconds(100))
+                    withAnimation(.smooth(duration: 0.3)) {
+                        proxy.scrollTo("topScrollPoint")
+                    }
                 }
             }
         }
