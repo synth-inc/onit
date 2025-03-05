@@ -204,14 +204,21 @@ extension [Context] {
     }
 
     var autoContexts: [String: String] {
-        Dictionary(
-            compactMap { context in
-                if case .auto(let appName, let content) = context {
-                    return (appName, content.values.joined(separator: "\n"))
+        var result: [String: String] = [:]
+        
+        for context in self {
+            if case .auto(let appName, let content) = context {
+                let contentString = content.values.joined(separator: "\n")
+                if let existing = result[appName] {
+                    let combined = existing + "\n" + contentString
+                    
+                    result[appName] = combined
+                } else {
+                    result[appName] = contentString
                 }
-                return nil
-            },
-            uniquingKeysWith: { first, second in first + "\n" + second }
-        )
+            }
+        }
+        
+        return result
     }
 }
