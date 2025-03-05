@@ -58,7 +58,7 @@ struct ChatsView: View {
     var body: some View {
         ScrollViewReader { proxy in
             ScrollView {
-                LazyVStack(spacing: 0) {
+                LazyVStack(spacing: -16) {
                     ForEach(model.currentPrompts ?? []) { prompt in
                         PromptView(prompt: prompt)
                     }
