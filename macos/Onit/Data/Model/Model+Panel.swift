@@ -66,8 +66,18 @@ extension OnitModel: NSWindowDelegate {
         newPanel.contentView?.setFrameOrigin(NSPoint(x: 0, y: 0))
         panel = newPanel
 
-        // Position the panel in the top left and set its width
-        if let screen = NSScreen.main {
+        // Position the panel on the appropriate screen and set its width
+        let targetScreen: NSScreen?
+        if Defaults[.openOnMouseMonitor] {
+            targetScreen = NSScreen.screens.first(where: { screen in
+                let mouseLocation = NSEvent.mouseLocation
+                return screen.frame.contains(mouseLocation)
+            }) ?? NSScreen.main
+        } else {
+            targetScreen = NSScreen.main
+        }
+
+        if let screen = targetScreen {
             let visibleFrame = screen.visibleFrame
             let windowHeight = newPanel.frame.height
             var windowWidth = min(newPanel.frame.width, visibleFrame.width)
@@ -186,25 +196,26 @@ extension OnitModel: NSWindowDelegate {
             return
         }
 
-        guard let panel = panel,
-            let currentScreen = panel.screen,
-            let mouseScreen = NSScreen.screens.first(where: { screen in
-                let mouseLocation = NSEvent.mouseLocation
-                return screen.frame.contains(mouseLocation)
-            }) ?? NSScreen.main
-        else {
-            // If we can't determine screens, just show the panel
-            if let panel = panel {
-                panel.makeKeyAndOrderFront(nil)
-                panel.orderFrontRegardless()
-                self.textFocusTrigger.toggle()
-            }
+        guard let panel = panel else { return }
+
+        let mouseScreen = NSScreen.screens.first(where: { screen in
+            let mouseLocation = NSEvent.mouseLocation
+            return screen.frame.contains(mouseLocation)
+        }) ?? NSScreen.main
+
+        let currentScreen = panel.screen
+
+        // If we can't determine screens, just show the panel
+        guard let targetScreen = Defaults[.openOnMouseMonitor] ? mouseScreen : currentScreen else {
+            panel.makeKeyAndOrderFront(nil)
+            panel.orderFrontRegardless()
+            self.textFocusTrigger.toggle()
             return
         }
 
-        // If panel is not on the active screen, move it
-        if currentScreen != mouseScreen {
-            let visibleFrame = mouseScreen.visibleFrame
+        // If panel is not on the target screen, move it
+        if currentScreen != targetScreen {
+            let visibleFrame = targetScreen.visibleFrame
             let windowHeight = panel.frame.height
 
             // Get the saved width or use current
