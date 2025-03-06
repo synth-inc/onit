@@ -86,13 +86,13 @@ extension OnitModel: NSWindowDelegate {
             let finalXPosition: CGFloat
             switch Defaults[.panelPosition] {
             case .topLeft:
-                finalXPosition = visibleFrame.origin.x
+                finalXPosition = visibleFrame.origin.x + 16
             case .topCenter:
                 finalXPosition = visibleFrame.origin.x + (visibleFrame.width - windowWidth) / 2
             case .topRight:
-                finalXPosition = visibleFrame.origin.x + visibleFrame.width - windowWidth
+                finalXPosition = visibleFrame.origin.x + visibleFrame.width - windowWidth - 16
             }
-            let finalYPosition = visibleFrame.origin.y + visibleFrame.height - windowHeight
+            let finalYPosition = visibleFrame.origin.y + visibleFrame.height - windowHeight - 16
             
             // Set the frame with the new position and width
             let newFrame = NSRect(

@@ -9,6 +9,7 @@ struct GeneralTab: View {
     @Default(.panelPosition) var panelPosition
     @Default(.launchShortcutToggleEnabled) var launchShortcutToggleEnabled
     @Default(.createNewChatOnPanelOpen) var createNewChatOnPanelOpen
+    @Default(.openOnMouseMonitor) var openOnMouseMonitor
 
     @State var isLaunchAtStartupEnabled: Bool = SMAppService.mainApp.status == .enabled
     @State var isAnalyticsEnabled: Bool = PostHogSDK.shared.isOptOut() == false
@@ -195,6 +196,25 @@ struct GeneralTab: View {
                     Toggle(
                         "",
                         isOn: $createNewChatOnPanelOpen
+                    )
+                    .toggleStyle(.switch)
+                    .controlSize(.small)
+                }
+
+                HStack {
+                    Text("Open on mouse monitor")
+                        .font(.system(size: 13))
+                    SettingInfoButton(
+                        title: "Open on Mouse Monitor",
+                        description:
+                            "Enable this to open Onit on the monitor where your mouse cursor is currently located. This can help ensure Onit appears where your attention is focused.",
+                        defaultValue: "off",
+                        valueType: "Bool"
+                    )
+                    Spacer()
+                    Toggle(
+                        "",
+                        isOn: $openOnMouseMonitor
                     )
                     .toggleStyle(.switch)
                     .controlSize(.small)

@@ -1,66 +1,70 @@
 import XCTest
 @testable import Onit
 import Defaults
+import SwiftData
 
+@MainActor
 final class PanelTests: XCTestCase {
-    var model: Model!
+    var model: OnitModel!
+    var container: ModelContainer!
 
-    override func setUp() {
+    override func setUp() async throws {
         super.setUp()
-        model = Model()
+        let config = ModelConfiguration(isStoredInMemoryOnly: true)
+        container = try ModelContainer(for: Chat.self, configurations: config)
+        model = OnitModel()
+        model.container = container
     }
 
     override func tearDown() {
         model = nil
+        container = nil
         super.tearDown()
     }
 
-    func testPanelOpensOnMouseMonitorWhenEnabled() {
+    func testPanelOpensOnMouseMonitorWhenEnabled() async throws {
         // Enable the feature
         Defaults[.openOnMouseMonitor] = true
 
-        // Create a mock mouse location
-        let mockMouseLocation = NSPoint(x: 1000, y: 500)
-        let mockScreen = NSScreen()
-        mockScreen.frame = NSRect(x: 800, y: 0, width: 1920, height: 1080)
-
-        // Mock NSScreen.screens to return our mock screen
-        NSScreen.screens = [mockScreen]
-
-        // Mock NSEvent.mouseLocation to return our mock location
-        NSEvent.mouseLocation = mockMouseLocation
+        // Create a mock screen setup
+        let mockMainScreen = NSScreen.main!
+        let mockSecondaryScreen = NSScreen(frame: NSRect(x: mockMainScreen.frame.width, y: 0, width: 1920, height: 1080))
+        let mouseLocation = NSPoint(x: mockMainScreen.frame.width + 100, y: 500)
 
         // Show the panel
         model.showPanel()
 
-        // Verify the panel is on the correct screen
+        // Wait for the panel to be created and positioned
+        try await Task.sleep(for: .milliseconds(100))
+
+        // Verify the panel exists and is positioned correctly
         XCTAssertNotNil(model.panel)
-        XCTAssertEqual(model.panel?.screen, mockScreen)
+
+        // The panel should be positioned on the secondary screen since that's where the mouse is
+        let panelFrame = model.panel!.frame
+        XCTAssertGreaterThan(panelFrame.origin.x, mockMainScreen.frame.width)
     }
 
-    func testPanelOpensOnMainMonitorWhenDisabled() {
+    func testPanelOpensOnMainMonitorWhenDisabled() async throws {
         // Disable the feature
         Defaults[.openOnMouseMonitor] = false
 
-        // Create a mock mouse location on a different screen
-        let mockMouseLocation = NSPoint(x: 1000, y: 500)
-        let mockMainScreen = NSScreen()
-        mockMainScreen.frame = NSRect(x: 0, y: 0, width: 1920, height: 1080)
-        let mockSecondaryScreen = NSScreen()
-        mockSecondaryScreen.frame = NSRect(x: 1920, y: 0, width: 1920, height: 1080)
-
-        // Mock NSScreen.screens and NSScreen.main
-        NSScreen.screens = [mockMainScreen, mockSecondaryScreen]
-        NSScreen.main = mockMainScreen
-
-        // Mock NSEvent.mouseLocation to return our mock location
-        NSEvent.mouseLocation = mockMouseLocation
+        // Create a mock screen setup
+        let mockMainScreen = NSScreen.main!
+        let mockSecondaryScreen = NSScreen(frame: NSRect(x: mockMainScreen.frame.width, y: 0, width: 1920, height: 1080))
+        let mouseLocation = NSPoint(x: mockMainScreen.frame.width + 100, y: 500)
 
         // Show the panel
         model.showPanel()
 
-        // Verify the panel is on the main screen
+        // Wait for the panel to be created and positioned
+        try await Task.sleep(for: .milliseconds(100))
+
+        // Verify the panel exists and is positioned correctly
         XCTAssertNotNil(model.panel)
-        XCTAssertEqual(model.panel?.screen, mockMainScreen)
+
+        // The panel should be positioned on the main screen even though the mouse is on the secondary screen
+        let panelFrame = model.panel!.frame
+        XCTAssertLessThan(panelFrame.origin.x, mockMainScreen.frame.width)
     }
 }
