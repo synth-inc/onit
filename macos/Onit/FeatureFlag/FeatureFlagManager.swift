@@ -26,6 +26,7 @@ class FeatureFlagManager: ObservableObject {
 
     @Published private(set) var accessibility: Bool = false
     @Published private(set) var autocontextDemoVideoUrl: String? = nil
+    @Published private(set) var openOnMouseMonitor: Bool = false
     
     private var wasAccessibilityInputEnabled: Bool = false
     private var wasAccessibilityAutoContextEnabled: Bool = false
@@ -68,6 +69,11 @@ class FeatureFlagManager: ObservableObject {
         Defaults[.highlightHintMode] = value
 
         highlightHintMode = value
+    }
+
+    func overrideOpenOnMouseMonitor(_ value: Bool) {
+        Defaults[.openOnMouseMonitorEnabled] = value
+        openOnMouseMonitor = value
     }
 
     func overrideAccessibility(_ value: Bool) {
@@ -155,6 +161,13 @@ class FeatureFlagManager: ObservableObject {
             } else {
                 self.highlightHintMode = .none
             }
+        }
+
+        // Check open on mouse monitor feature flag
+        if let openOnMouseMonitorEnabled = Defaults[.openOnMouseMonitorEnabled] {
+            openOnMouseMonitor = openOnMouseMonitorEnabled
+        } else {
+            openOnMouseMonitor = PostHogSDK.shared.isFeatureEnabled("open_on_mouse_monitor")
         }
 
         // Get demo video URL from feature flag
