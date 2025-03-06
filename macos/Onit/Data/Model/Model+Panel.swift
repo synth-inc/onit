@@ -328,6 +328,34 @@ extension OnitModel: NSWindowDelegate {
             Defaults[.isPanelExpanded].toggle()
         }
     }
+
+    @MainActor
+    func updatePanelPosition() {
+        guard let panel = panel,
+            let screen = panel.screen ?? NSScreen.main
+        else { return }
+
+        let visibleFrame = screen.visibleFrame
+        let windowHeight = panel.frame.height
+        let windowWidth = panel.frame.width
+
+        // Calculate position based on preference
+        let finalXPosition: CGFloat
+        switch Defaults[.panelPosition] {
+        case .topLeft:
+            finalXPosition = visibleFrame.origin.x + 16
+        case .topCenter:
+            finalXPosition = visibleFrame.origin.x + (visibleFrame.width - windowWidth) / 2
+        case .topRight:
+            finalXPosition = visibleFrame.origin.x + visibleFrame.width - windowWidth - 16
+        }
+        let finalYPosition = visibleFrame.origin.y + visibleFrame.height - windowHeight
+
+        // Set the frame with the new position and width
+        let newFrame = NSRect(
+            x: finalXPosition, y: finalYPosition, width: windowWidth, height: windowHeight)
+        panel.setFrame(newFrame, display: true, animate: true)
+    }
 }
 
 class CustomPanel: NSPanel {

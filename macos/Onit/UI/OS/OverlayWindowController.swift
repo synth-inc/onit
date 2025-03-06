@@ -23,6 +23,20 @@ class OverlayWindowController<Content: View>: NSObject, NSWindowDelegate {
         super.init()
         createOverlayWindow()
         startEventMonitoring()
+        setupPanelPositionObserver()
+    }
+
+    private func setupPanelPositionObserver() {
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(panelPositionChanged),
+            name: Defaults.didChangeNotification(Defaults.Keys.panelPosition),
+            object: nil
+        )
+    }
+
+    @objc private func panelPositionChanged() {
+        updatePosition()
     }
 
     func createOverlayWindow() {
@@ -99,6 +113,66 @@ class OverlayWindowController<Content: View>: NSObject, NSWindowDelegate {
             return
         }
 
+        let panelPosition = Defaults[.panelPosition]
+
+        switch panelPosition {
+        case .center:
+            positionWindowCenter()
+        case .topRight:
+            positionWindowTopRight()
+        case .bottomRight:
+            positionWindowBottomRight()
+        case .cursor:
+            positionWindowAtCursor()
+        }
+    }
+
+    func updatePosition() {
+        positionWindow()
+    }
+
+    private func positionWindowCenter() {
+        guard let overlayWindow = overlayWindow,
+              let screen = NSScreen.main else { return }
+
+        let screenFrame = screen.visibleFrame
+        let overlaySize = overlayWindow.frame.size
+
+        let x = screenFrame.origin.x + (screenFrame.width - overlaySize.width) / 2
+        let y = screenFrame.origin.y + (screenFrame.height - overlaySize.height) / 2
+
+        overlayWindow.setFrameOrigin(NSPoint(x: x, y: y))
+    }
+
+    private func positionWindowTopRight() {
+        guard let overlayWindow = overlayWindow,
+              let screen = NSScreen.main else { return }
+
+        let screenFrame = screen.visibleFrame
+        let overlaySize = overlayWindow.frame.size
+
+        let x = screenFrame.maxX - overlaySize.width - 20
+        let y = screenFrame.maxY - overlaySize.height - 20
+
+        overlayWindow.setFrameOrigin(NSPoint(x: x, y: y))
+    }
+
+    private func positionWindowBottomRight() {
+        guard let overlayWindow = overlayWindow,
+              let screen = NSScreen.main else { return }
+
+        let screenFrame = screen.visibleFrame
+        let overlaySize = overlayWindow.frame.size
+
+        let x = screenFrame.maxX - overlaySize.width - 20
+        let y = screenFrame.minY + 20
+
+        overlayWindow.setFrameOrigin(NSPoint(x: x, y: y))
+    }
+
+    private func positionWindowAtCursor() {
+        guard let overlayWindow = overlayWindow else { return }
+
         let mouseLocation = NSEvent.mouseLocation
 
         guard
@@ -167,5 +241,6 @@ class OverlayWindowController<Content: View>: NSObject, NSWindowDelegate {
         overlayWindow.orderOut(nil)
         self.overlayWindow = nil
         self.stopEventMonitoring()
+        NotificationCenter.default.removeObserver(self)
     }
 }

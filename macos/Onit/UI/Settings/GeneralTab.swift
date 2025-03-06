@@ -132,6 +132,7 @@ struct GeneralTab: View {
                         ForEach(PanelPosition.allCases, id: \.self) { position in
                             Button {
                                 panelPosition = position
+                                Model.shared.updatePanelPosition()
                             } label: {
                                 VStack(spacing: 4) {
                                     Image(systemName: position.systemImage)

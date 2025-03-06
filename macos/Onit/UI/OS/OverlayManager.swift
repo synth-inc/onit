@@ -12,8 +12,20 @@ import SwiftUI
 class OverlayManager {
     static let shared = OverlayManager()
     private var currentOverlay: OverlayWindowController<AnyView>?
+    private var panelPositionObserver: NSObjectProtocol?
     
-    private init() {}
+    private init() {
+        // Observe changes to panel position setting
+        panelPositionObserver = NotificationCenter.default.addObserver(
+            forName: Defaults.didChangeNotification,
+            object: nil,
+            queue: .main
+        ) { [weak self] notification in
+            guard let key = notification.userInfo?[Defaults.keyPathKey] as? Defaults.Key<PanelPosition>,
+                  key == .panelPosition else { return }
+            self?.updateCurrentOverlayPosition()
+        }
+    }
     
     /// Presents a new overlay by dismissing any existing one.
     func showOverlay<Content: View>(model: OnitModel, content: Content) {
@@ -31,5 +43,16 @@ class OverlayManager {
     func dismissOverlay() {
         currentOverlay?.closeOverlay()
         currentOverlay = nil
+    }
+
+    private func updateCurrentOverlayPosition() {
+        guard let overlay = currentOverlay else { return }
+        overlay.updatePosition()
+    }
+
+    deinit {
+        if let observer = panelPositionObserver {
+            NotificationCenter.default.removeObserver(observer)
+        }
     }
 }
