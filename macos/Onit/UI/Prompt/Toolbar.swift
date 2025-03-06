@@ -23,6 +23,7 @@ struct Toolbar: View {
             Spacer()
             languageModel
             localMode
+            history
             settings
             resize
         }
@@ -164,13 +165,13 @@ struct Toolbar: View {
 
     var history: some View {
         Button {
-            model.showHistory = true
+            OverlayManager.shared.showOverlay(model: model, content: HistoryView())
         } label: {
             Image(.history)
                 .renderingMode(.template)
                 .padding(2)
         }
-        .tooltip(prompt: "History")
+        .tooltip(prompt: "History", shortcut: .none)
     }
 
     @Environment(\.openSettings) var openSettings
