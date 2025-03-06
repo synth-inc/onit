@@ -25,10 +25,6 @@ struct TypeaheadTab: View {
         } set: { newValue in
             typeaheadConfig.isEnabled = newValue
             typeaheadConfig.resumeAt = nil
-            
-            if newValue {
-                TypeaheadTestingService.shared.checkUserConsent()
-            }
         }
     }
     private var resumeAt: String {
@@ -202,9 +198,19 @@ struct TypeaheadTab: View {
                     Text("Enable Testing")
                         .font(.system(size: 13))
                     Spacer()
-                    Toggle("", isOn: $typeaheadLearningConfig.isEnabled)
-                        .toggleStyle(.switch)
-                        .controlSize(.small)
+                    Toggle("", isOn: Binding(
+                        get: { typeaheadLearningConfig.isEnabled },
+                        set: { newValue in
+                            if newValue {
+                                TypeaheadTestingService.shared.checkUserConsent()
+                            } else {
+                                typeaheadLearningConfig.isEnabled = false
+                                TypeaheadTestingService.shared.stopRemoteTesting()
+                            }
+                        }
+                    ))
+                    .toggleStyle(.switch)
+                    .controlSize(.small)
                     SettingInfoButton(
                         title: "Typeahead testing",
                         description:

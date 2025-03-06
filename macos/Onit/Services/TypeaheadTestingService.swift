@@ -15,15 +15,17 @@ import SwiftData
 @Observable
 class TypeaheadTestingService {
     static let shared = TypeaheadTestingService()
-    private let testCasesLimit: Int = 50
+    private let testCasesLimit: Int = 20
     private let localModelsLimit: Int = 5
-    private let syncInterval: TimeInterval = 24 * 60 * 60 // 24 heures
+    private let syncInterval: TimeInterval = 24 * 60 * 60 // 24 hours
+    
+    private var currentTestingTask: Task<Void, Never>?
     
     func checkUserConsent() {
         let config = Defaults[.typeaheadLearningConfig]
         
         if config.isEnabled == true {
-            startRemoteTestSync()
+            startRemoteTesting()
         } else {
             Task {
                 let consent = await requestUserConsent()
@@ -31,10 +33,28 @@ class TypeaheadTestingService {
                 Defaults[.typeaheadLearningConfig].isEnabled = consent
                 
                 if consent {
-                    startRemoteTestSync()
+                    startRemoteTesting()
                 }
             }
         }
+    }
+    
+    func startRemoteTesting() {
+        guard Defaults[.typeaheadLearningConfig].isEnabled else { return }
+        
+        stopRemoteTesting()
+        
+        currentTestingTask = Task {
+            while !Task.isCancelled {
+                await launchRemoteTests()
+                try? await Task.sleep(nanoseconds: UInt64(syncInterval * 1_000_000_000))
+            }
+        }
+    }
+    
+    func stopRemoteTesting() {
+        currentTestingTask?.cancel()
+        currentTestingTask = nil
     }
     
     private func requestUserConsent() async -> Bool {
@@ -53,19 +73,11 @@ class TypeaheadTestingService {
         }
     }
     
-    private func startRemoteTestSync() {
-        Task {
-            while true {
-                await syncRemoteTests()
-                try? await Task.sleep(nanoseconds: UInt64(syncInterval * 1_000_000_000))
-            }
+    private func launchRemoteTests() async {
+        guard Defaults[.typeaheadLearningConfig].isEnabled,
+              let tests = await fetchRemoteTests() else {
+            return
         }
-    }
-    
-    private func syncRemoteTests() async {
-        let config = Defaults[.typeaheadLearningConfig]
-        
-        guard config.isEnabled, let tests = await fetchRemoteTests() else { return }
         
         let results = await runTests(tests.tests)
         await submitTestResults(results)
@@ -111,7 +123,7 @@ class TypeaheadTestingService {
         return results
     }
     
-    private func runTest(model: String, test: TypeaheadTest, testCase: TypeaheadCase) async throws -> [String: Double] {
+    private func runTest(model: String, test: TypeaheadTest, testCase: TypeaheadCase) async throws -> [String: String] {
         let localMessages = buildMessages(testCase: testCase, systemMessage: test.systemMessage, userMessage: test.userMessage)
         let keepAlive: String? = test.parameters[TypeaheadTest.Parameter.keepAlive]
         var options = LocalChatOptions()
@@ -138,23 +150,23 @@ class TypeaheadTestingService {
         )
         let elapsedTime = Date().timeIntervalSince(startDate)
         
-        var metrics: [String: Double] = [:]
+        var metrics: [String: String] = [:]
         
-        metrics[TypeaheadTestResult.Metric.elapsedTime] = elapsedTime
-        metrics[TypeaheadTestResult.Metric.tokenPerSecond] = Double(response.count) / elapsedTime
+        metrics[TypeaheadTestResult.Metric.elapsedTime] = String(elapsedTime)
+        metrics[TypeaheadTestResult.Metric.tokenPerSecond] = String(Double(response.count) / elapsedTime)
         
-        metrics[TypeaheadTestResult.Metric.completionLength] = Double(response.count)
+        metrics[TypeaheadTestResult.Metric.completionLength] = String(response.count)
         if let aiCompletion = testCase.aiCompletion {
-            metrics[TypeaheadTestResult.Metric.similarityScore] = calculateSimilarity(between: response, and: aiCompletion)
+            metrics[TypeaheadTestResult.Metric.similarityScore] = String(calculateSimilarity(between: response, and: aiCompletion))
         }
-        metrics[TypeaheadTestResult.Metric.contextRelevance] = calculateContextRelevance(
+        metrics[TypeaheadTestResult.Metric.contextRelevance] = String(calculateContextRelevance(
             completion: response,
             context: testCase.screenContent
-        )
+        ))
         
-        metrics[TypeaheadTestResult.Metric.contextLength] = Double(testCase.screenContent.count)
-        metrics[TypeaheadTestResult.Metric.precedingTextLength] = Double(testCase.precedingText.count)
-        metrics[TypeaheadTestResult.Metric.followingTextLength] = Double(testCase.followingText.count)
+        metrics[TypeaheadTestResult.Metric.contextLength] = String(testCase.screenContent.count)
+        metrics[TypeaheadTestResult.Metric.precedingTextLength] = String(testCase.precedingText.count)
+        metrics[TypeaheadTestResult.Metric.followingTextLength] = String(testCase.followingText.count)
         
         return metrics
     }
@@ -244,6 +256,6 @@ class TypeaheadTestingService {
     }
     
     private func submitTestResults(_ results: [TypeaheadTestResult]) async {
-        // TODO: KNA - Implement API call
+        
     }
 } 

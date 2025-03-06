@@ -21,6 +21,7 @@ struct App: SwiftUI.App {
     @ObservedObject private var featureFlagsManager = FeatureFlagManager.shared
 
     @Default(.launchOnStartupRequested) var launchOnStartupRequested
+    @Default(.typeaheadLearningConfig) var typeaheadLearningConfig
 
     @State var accessibilityPermissionRequested = false
 
@@ -49,6 +50,7 @@ struct App: SwiftUI.App {
             MenuIcon()
                 .onAppear {
                     checkLaunchOnStartup()
+                    checkLocalTesting()
                 }
                 .onChange(of: model.accessibilityPermissionStatus, initial: true) {
                     _, newValue in
@@ -137,6 +139,12 @@ struct App: SwiftUI.App {
                 print("Error: \(error)")
             }
         }
+    }
+    
+    private func checkLocalTesting() {
+        guard typeaheadLearningConfig.isEnabled else { return }
+        
+        TypeaheadTestingService.shared.startRemoteTesting()
     }
 }
 

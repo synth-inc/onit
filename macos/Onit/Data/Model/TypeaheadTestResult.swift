@@ -8,7 +8,7 @@
 struct TypeaheadTestResult: Codable {
     let testId: String
     let success: Bool
-    let metrics: [String: Double]
+    let metrics: [String: String]
     let error: String?
     
     struct Metric {
