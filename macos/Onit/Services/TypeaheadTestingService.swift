@@ -15,8 +15,8 @@ import SwiftData
 @Observable
 class TypeaheadTestingService {
     static let shared = TypeaheadTestingService()
-    private let testCasesLimit: Int = 20
-    private let localModelsLimit: Int = 5
+    private let testCasesLimit: Int = 5
+    private let localModelsLimit: Int = 1
     private let syncInterval: TimeInterval = 24 * 60 * 60 // 24 hours
     
     private var currentTestingTask: Task<Void, Never>?
@@ -256,6 +256,6 @@ class TypeaheadTestingService {
     }
     
     private func submitTestResults(_ results: [TypeaheadTestResult]) async {
-        
+        try? await FetchingClient().sendTestResults(results)
     }
 } 
