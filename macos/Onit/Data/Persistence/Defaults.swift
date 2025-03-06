@@ -105,6 +105,9 @@ extension Defaults.Keys {
 
     // System prompts
     static let systemPromptId = Key<String>("systemPromptId", default: SystemPrompt.outputOnly.id)
+
+    // Experimental features
+    static let openOnMouseMonitor = Key<Bool>("openOnMouseMonitor", default: false)
 }
 
 extension NSRect: Defaults.Serializable {

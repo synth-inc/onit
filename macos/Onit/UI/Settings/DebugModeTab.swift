@@ -24,6 +24,21 @@ struct DebugModeTab: View {
                     .toggleStyle(.switch)
                     .controlSize(.small)
                 }
+
+                HStack {
+                    Text("Open on mouse monitor (experimental)")
+                        .font(.system(size: 13))
+                    Spacer()
+                    Toggle(
+                        "",
+                        isOn: Binding(
+                            get: { featureFlagsManager.openOnMouseMonitor },
+                            set: { featureFlagsManager.overrideOpenOnMouseMonitor($0) }
+                        )
+                    )
+                    .toggleStyle(.switch)
+                    .controlSize(.small)
+                }
             }
         }
         .padding(.vertical, 20)

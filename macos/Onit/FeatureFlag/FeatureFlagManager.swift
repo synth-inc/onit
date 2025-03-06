@@ -26,6 +26,7 @@ class FeatureFlagManager: ObservableObject {
 
     @Published private(set) var accessibility: Bool = false
     @Published private(set) var autocontextDemoVideoUrl: String? = nil
+    @Published private(set) var openOnMouseMonitor: Bool = false
     
     private var wasAccessibilityInputEnabled: Bool = false
     private var wasAccessibilityAutoContextEnabled: Bool = false
@@ -88,6 +89,11 @@ class FeatureFlagManager: ObservableObject {
             overrideAccessibilityInput(false)
             overrideAccessibilityAutoContext(false)
         }
+    }
+
+    func overrideOpenOnMouseMonitor(_ value: Bool) {
+        Defaults[.openOnMouseMonitor] = value
+        openOnMouseMonitor = value
     }
 
     // MARK: - Objective-C Functions

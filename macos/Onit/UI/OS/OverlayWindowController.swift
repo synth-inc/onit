@@ -46,7 +46,21 @@ class OverlayWindowController<Content: View>: NSObject, NSWindowDelegate {
 
         overlayWindow = window
         updateOverlayWindowSize()
-        positionWindow()
+
+        // Position window based on feature flag
+        if FeatureFlagManager.shared.openOnMouseMonitor {
+            positionWindow()
+        } else {
+            // Default behavior: position on active screen
+            if let screen = NSScreen.main {
+                let screenFrame = screen.frame
+                let windowFrame = window.frame
+                let x = screenFrame.origin.x + (screenFrame.width - windowFrame.width) / 2
+                let y = screenFrame.origin.y + (screenFrame.height - windowFrame.height) / 2
+                window.setFrameOrigin(NSPoint(x: x, y: y))
+            }
+        }
+
         overlayWindow?.alphaValue = 1.0
         overlayWindow?.orderFront(nil)
     }
