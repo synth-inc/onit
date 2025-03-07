@@ -354,7 +354,7 @@ extension OnitModel: NSWindowDelegate {
         // Set the frame with the new position and width
         let newFrame = NSRect(
             x: finalXPosition, y: finalYPosition, width: windowWidth, height: windowHeight)
-        panel.setFrame(newFrame, display: true, animate: true)
+        panel.setFrame(newFrame, display: true, animate: false)
     }
 }
 
