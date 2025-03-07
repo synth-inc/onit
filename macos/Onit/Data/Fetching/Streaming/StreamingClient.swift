@@ -29,6 +29,7 @@ actor StreamingClient {
             images: images,
             responses: responses,
             apiToken: apiToken,
+            
             systemMessage: systemMessage,
             userMessages: userMessages)
         var eventParser: EventParser?

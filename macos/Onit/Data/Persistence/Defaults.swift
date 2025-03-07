@@ -102,6 +102,7 @@ extension Defaults.Keys {
     static let launchShortcutToggleEnabled = Key<Bool>("launchShortcutToggleEnabled", default: false)
     static let createNewChatOnPanelOpen = Key<Bool>("createNewChatOnPanelOpen", default: false)
     static let escapeShortcutDisabled = Key<Bool>("escapeShortcutDisabled", default: true)
+    static let openOnMouseMonitor = Key<Bool>("openOnMouseMonitor", default: false)
 
     // System prompts
     static let systemPromptId = Key<String>("systemPromptId", default: SystemPrompt.outputOnly.id)
