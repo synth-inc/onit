@@ -7,6 +7,7 @@
 
 import AppKit
 import SwiftUI
+import Defaults
 
 @MainActor
 class OverlayWindowController<Content: View>: NSObject, NSWindowDelegate {
@@ -47,7 +48,7 @@ class OverlayWindowController<Content: View>: NSObject, NSWindowDelegate {
         overlayWindow = window
         updateOverlayWindowSize()
 
-        if Defaults.openOnMouseMonitor.value {
+        if Defaults[.openOnMouseMonitor] {
             let mouseLocation = NSEvent.mouseLocation
             if let mouseScreen = NSScreen.screens.first(where: { NSMouseInRect(mouseLocation, $0.frame, false) }) {
                 window.setFrameOrigin(mouseScreen.frame.origin)
