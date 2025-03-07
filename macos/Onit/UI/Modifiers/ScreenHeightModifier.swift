@@ -18,11 +18,11 @@ struct ScreenHeightModifier: ViewModifier {
                 GeometryReader { geometry in
                     Color.clear
                         .onAppear {
-                            print("ScreenHeightModifier: onAppear")
+//                            print("ScreenHeightModifier: onAppear")
                             updateFromGeometry(geometry)
                         }
                         .onChange(of: geometry.frame(in: .global)) { _, frame in
-                            print("ScreenHeightModifier: onChange frame=\(frame)")
+//                            print("ScreenHeightModifier: onChange frame=\(frame)")
                             
                             let now = Date()
 //                            if now.timeIntervalSince(lastUpdateTime) >= debounceInterval {
@@ -36,15 +36,16 @@ struct ScreenHeightModifier: ViewModifier {
     
     private func updateFromGeometry(_ geometry: GeometryProxy) {
         let point = convertToScreenCoordinates(geometry.frame(in: .global).origin)
-        print("ScreenHeightModifier: converted point=\(point)")
+//        print("ScreenHeightModifier: converted point=\(point)")
         
         if let window = findWindow(at: point) {
             if let screen = window.screen {
-                print("ScreenHeightModifier: found screen frame=\(screen.frame)")
+//                print("ScreenHeightModifier: found screen frame=\(screen.frame)")
             }
             updateScreenHeight(from: window)
         } else {
-            print("ScreenHeightModifier: no window found at point")
+            
+//            print("ScreenHeightModifier: no window found at point")
         }
     }
     
@@ -70,7 +71,7 @@ struct ScreenHeightModifier: ViewModifier {
     
     private func updateScreenHeight(from window: NSWindow) {
         if let screen = window.screen {
-            print("ScreenHeightModifier: updateScreenHeight \(screen.visibleFrame.size.height)")
+//            print("ScreenHeightModifier: updateScreenHeight \(screen.visibleFrame.size.height)")
             DispatchQueue.main.async {
                 self.screenHeight = screen.visibleFrame.size.height
             }
