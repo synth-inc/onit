@@ -17,6 +17,7 @@
 		867A647A2D4AD73A00FD4D80 /* Defaults in Frameworks */ = {isa = PBXBuildFile; productRef = 867A64792D4AD73A00FD4D80 /* Defaults */; };
 		867A647C2D4AD73A00FD4D80 /* DefaultsMacros in Frameworks */ = {isa = PBXBuildFile; productRef = 867A647B2D4AD73A00FD4D80 /* DefaultsMacros */; };
 		86A974C12D4A76F800CF6FCE /* Markdown in Frameworks */ = {isa = PBXBuildFile; productRef = 86A974C02D4A76F800CF6FCE /* Markdown */; };
+		86F908912D7AF491008D8027 /* Highlightr in Frameworks */ = {isa = PBXBuildFile; productRef = 86F908902D7AF491008D8027 /* Highlightr */; };
 		A782C1982D383493009976F8 /* FirebaseCrashlytics in Frameworks */ = {isa = PBXBuildFile; productRef = A782C1972D383493009976F8 /* FirebaseCrashlytics */; };
 /* End PBXBuildFile section */
 
@@ -54,6 +55,7 @@
 				28F57E292CAC9262006AAA8C /* MenuBarExtraAccess in Frameworks */,
 				86A974C12D4A76F800CF6FCE /* Markdown in Frameworks */,
 				863817352D3FB5F700919BC7 /* PostHog in Frameworks */,
+				86F908912D7AF491008D8027 /* Highlightr in Frameworks */,
 				867A647A2D4AD73A00FD4D80 /* Defaults in Frameworks */,
 				A782C1982D383493009976F8 /* FirebaseCrashlytics in Frameworks */,
 				2842875E2CD0B6A5000C6C67 /* HighlightSwift in Frameworks */,
@@ -115,6 +117,7 @@
 				862BC3C72D50D0D100806B58 /* EventSource */,
 				867A64792D4AD73A00FD4D80 /* Defaults */,
 				867A647B2D4AD73A00FD4D80 /* DefaultsMacros */,
+				86F908902D7AF491008D8027 /* Highlightr */,
 			);
 			productName = Onit;
 			productReference = 2883E4B32CA5ECBB00F79A48 /* Onit.app */;
@@ -155,6 +158,7 @@
 				86A974BF2D4A76F800CF6FCE /* XCRemoteSwiftPackageReference "swift-markdown" */,
 				862BC3C62D50D0D100806B58 /* XCRemoteSwiftPackageReference "EventSource" */,
 				867A64782D4AD73A00FD4D80 /* XCRemoteSwiftPackageReference "Defaults" */,
+				86F9088F2D7AF491008D8027 /* XCRemoteSwiftPackageReference "Highlightr" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 2883E4B42CA5ECBB00F79A48 /* Products */;
@@ -502,6 +506,14 @@
 				minimumVersion = 0.5.0;
 			};
 		};
+		86F9088F2D7AF491008D8027 /* XCRemoteSwiftPackageReference "Highlightr" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/raspu/Highlightr";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.2.1;
+			};
+		};
 		A782C1962D383493009976F8 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/firebase/firebase-ios-sdk";
@@ -562,6 +574,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 86A974BF2D4A76F800CF6FCE /* XCRemoteSwiftPackageReference "swift-markdown" */;
 			productName = Markdown;
+		};
+		86F908902D7AF491008D8027 /* Highlightr */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 86F9088F2D7AF491008D8027 /* XCRemoteSwiftPackageReference "Highlightr" */;
+			productName = Highlightr;
 		};
 		A782C1972D383493009976F8 /* FirebaseCrashlytics */ = {
 			isa = XCSwiftPackageProductDependency;

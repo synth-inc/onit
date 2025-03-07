@@ -131,12 +131,11 @@ struct ParsedContentView: View {
     
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            ForEach(Array(segments.enumerated()), id: \ .offset) { index, segment in
+            ForEach(Array(segments.enumerated()), id: \.offset) { index, segment in
                 if segment.isThought {
                     ThoughtProcessView(content: segment.content, streaming: segment.isStreaming)
                 } else {
-                    Markdown(segment.content)
-                        .markdownTheme(.custom)
+                    MarkdownLatexView(text: segment.content, fontSize: fontSize, lineHeight: lineHeight)
                         .textSelection(.enabled)
                         .lineSpacing((lineHeight * fontSize) - fontSize)
                         .multilineTextAlignment(.leading)
