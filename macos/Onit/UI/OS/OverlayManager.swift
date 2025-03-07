@@ -6,15 +6,14 @@
 //
 
 import AppKit
+import Defaults
 import SwiftUI
 
 @MainActor
 class OverlayManager {
     static let shared = OverlayManager()
     private var currentOverlay: OverlayWindowController<AnyView>?
-    
-    private init() {}
-    
+
     /// Presents a new overlay by dismissing any existing one.
     func showOverlay<Content: View>(model: OnitModel, content: Content) {
         // Dismiss the current overlay (if any)

@@ -82,21 +82,11 @@ extension OnitModel: NSWindowDelegate {
             let windowHeight = newPanel.frame.height
             var windowWidth = min(newPanel.frame.width, visibleFrame.width)
             
-            // Calculate position based on preference
-            let finalXPosition: CGFloat
-            switch Defaults[.panelPosition] {
-            case .topLeft:
-                finalXPosition = visibleFrame.origin.x + 16
-            case .topCenter:
-                finalXPosition = visibleFrame.origin.x + (visibleFrame.width - windowWidth) / 2
-            case .topRight:
-                finalXPosition = visibleFrame.origin.x + visibleFrame.width - windowWidth - 16
-            }
-            let finalYPosition = visibleFrame.origin.y + visibleFrame.height - windowHeight - 16
-            
-            // Set the frame with the new position and width
-            let newFrame = NSRect(
-                x: finalXPosition, y: finalYPosition, width: windowWidth, height: windowHeight)
+            let newFrame = calculatePanelFrame(
+                for: visibleFrame,
+                windowWidth: windowWidth,
+                windowHeight: windowHeight
+            )
             newPanel.setFrame(newFrame, display: false)
         }
 
@@ -110,6 +100,27 @@ extension OnitModel: NSWindowDelegate {
 
         // Set the defaultPanelFrame to the initial frame of the panel
         Defaults[.defaultPanelFrame] = newPanel.frame
+    }
+
+    private func calculatePanelFrame(for visibleFrame: NSRect, windowWidth: CGFloat, windowHeight: CGFloat) -> NSRect {
+        // Calculate position based on preference
+        let finalXPosition: CGFloat
+        switch Defaults[.panelPosition] {
+        case .topLeft:
+            finalXPosition = visibleFrame.origin.x
+        case .topCenter:
+            finalXPosition = visibleFrame.origin.x + (visibleFrame.width - windowWidth) / 2
+        case .topRight:
+            finalXPosition = visibleFrame.origin.x + visibleFrame.width - windowWidth
+        }
+        let finalYPosition = visibleFrame.origin.y + visibleFrame.height - windowHeight
+        
+        return NSRect(
+            x: finalXPosition,
+            y: finalYPosition,
+            width: windowWidth,
+            height: windowHeight
+        )
     }
 
     func openDebugWindow() {
@@ -224,22 +235,11 @@ extension OnitModel: NSWindowDelegate {
                 // Ensure width is not greater than screen width minus padding
                 windowWidth = min(savedWidth, visibleFrame.width - 32)
             }
-
-            // Calculate position based on preference
-            let finalXPosition: CGFloat
-            switch Defaults[.panelPosition] {
-            case .topLeft:
-                finalXPosition = visibleFrame.origin.x + 16
-            case .topCenter:
-                finalXPosition = visibleFrame.origin.x + (visibleFrame.width - windowWidth) / 2
-            case .topRight:
-                finalXPosition = visibleFrame.origin.x + visibleFrame.width - windowWidth - 16
-            }
-            let finalYPosition = visibleFrame.origin.y + visibleFrame.height - windowHeight
-
-            // Set the frame with the new position and width
-            let newFrame = NSRect(
-                x: finalXPosition, y: finalYPosition, width: windowWidth, height: windowHeight)
+            let newFrame = calculatePanelFrame(
+                for: visibleFrame,
+                windowWidth: windowWidth,
+                windowHeight: windowHeight
+            )
             panel.setFrame(newFrame, display: true, animate: false)
             
             panel.makeKeyAndOrderFront(nil)
@@ -338,6 +338,23 @@ extension OnitModel: NSWindowDelegate {
             }
             Defaults[.isPanelExpanded].toggle()
         }
+    }
+
+    @MainActor
+    func updatePanelPosition() {
+        guard let panel = panel,
+            let screen = panel.screen ?? NSScreen.main
+        else { return }
+
+        let visibleFrame = screen.visibleFrame
+        let windowHeight = panel.frame.height
+        let windowWidth = panel.frame.width
+        let newFrame = calculatePanelFrame(
+            for: visibleFrame,
+            windowWidth: windowWidth,
+            windowHeight: windowHeight
+        )
+        panel.setFrame(newFrame, display: true, animate: false)
     }
 }
 

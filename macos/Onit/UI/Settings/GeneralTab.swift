@@ -4,6 +4,7 @@ import ServiceManagement
 import SwiftUI
 
 struct GeneralTab: View {
+    @Environment(\.model) var model
     @Default(.fontSize) var fontSize
     @Default(.lineHeight) var lineHeight
     @Default(.panelPosition) var panelPosition
@@ -133,6 +134,7 @@ struct GeneralTab: View {
                         ForEach(PanelPosition.allCases, id: \.self) { position in
                             Button {
                                 panelPosition = position
+                                model.updatePanelPosition()
                             } label: {
                                 VStack(spacing: 4) {
                                     Image(systemName: position.systemImage)
