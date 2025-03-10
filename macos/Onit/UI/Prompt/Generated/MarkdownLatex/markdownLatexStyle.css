@@ -1,0 +1,275 @@
+html, body {
+    margin: 0;
+    padding: 0;
+    height: auto;
+    overflow: visible;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    font-size: 16px;
+    padding: 0;
+    background: transparent;
+    color: white;
+    line-height: 1.5;
+}
+
+/* Style pour le conteneur de code avec barre de titre */
+.code-container {
+    margin: 0.5em 0;
+    border-radius: 8px;
+    overflow: hidden;
+    background: transparent;
+    border: 1px solid #3E3E3E;
+}
+
+.code-title-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 12px;
+    background: transparent;
+    border-bottom: 1px solid #3E3E3E;
+}
+    
+.code-title-bar .language {
+    color: #808080;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    font-size: 13px;
+    text-transform: lowercase;
+}
+
+.code-title-bar .copy-button {
+    width: 16px;
+    height: 16px;
+    opacity: 0.5;
+    cursor: pointer;
+    background-image: url('copy.svg');
+    background-size: contain;
+    background-repeat: no-repeat;
+}
+
+.code-title-bar .copy-button:hover {
+    opacity: 1;
+}
+
+.code-title-bar .copy-button:active {
+    transform: scale(1.2);
+}
+
+.code-content {
+    margin: 0;
+    padding: 12px 16px;
+}
+
+pre {
+    margin: 0;
+    padding: 0;
+    background: transparent;
+    overflow-x: auto;
+}
+
+code {
+    font-family: "SF Mono", Monaco, Menlo, Consolas, "Ubuntu Mono", monospace;
+    font-size: 13px;
+    line-height: 1.7;
+}
+
+/* Styles de coloration syntaxique Xcode */
+.hljs-keyword {
+    color: #FC5FA3;  /* rose pour les mots-clés comme func, var, let */
+}
+
+.hljs-built_in {
+    color: #FF7AB2;  /* rose pour les types built-in comme Int, String */
+}
+
+.hljs-type {
+    color: #4EC9B0;  /* bleu-vert pour les types */
+}
+
+.hljs-number {
+    color: #D0BF69;  /* jaune pour les nombres */
+}
+
+.hljs-string {
+    color: #FC6A5D;  /* rouge-orange pour les chaînes */
+}
+
+.hljs-comment {
+    color: #6C7986;  /* gris pour les commentaires */
+}
+
+.hljs-function {
+    color: #DCDCAA;  /* jaune clair pour les noms de fonctions */
+}
+
+.hljs-title {
+    color: #DCDCAA;  /* jaune clair pour les noms de fonctions */
+}
+
+.hljs-params {
+    color: #D4D4D4;  /* blanc cassé pour les paramètres */
+}
+
+.hljs-operator {
+    color: #FF7AB2;  /* rose pour les opérateurs */
+}
+
+.hljs-punctuation {
+    color: #D4D4D4;  /* blanc cassé pour la ponctuation */
+}
+
+.hljs-property {
+    color: #4EC9B0;  /* bleu-vert pour les propriétés */
+}
+
+/* Style par défaut pour le texte non coloré */
+.hljs {
+    background: transparent;
+    padding: 0;
+    color: #D4D4D4;  /* blanc cassé pour le texte par défaut */
+    line-height: 1.7;
+}
+
+/* Styles pour les formules LaTeX */
+.math {
+    color: white;
+}
+
+.MathJax {
+    color: white !important;
+}
+
+.katex {
+    color: white !important;
+    font-size: 1.1em;
+}
+
+.katex-display {
+    margin: 1em 0;
+    padding: 1em;
+    background: #2d2d2d;
+    border-radius: 8px;
+    overflow-x: auto;
+}
+
+/* Styles pour les tableaux */
+table {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 15px 0;
+}
+
+th, td {
+    border: 1px solid #444;
+    padding: 8px;
+    text-align: left;
+}
+
+th {
+    background-color: #333;
+}
+
+/* Styles pour les liens */
+a {
+    color: #0096FF;
+    text-decoration: none;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+/* Styles pour les titres */
+h1, h2, h3, h4, h5, h6 {
+    color: white;
+    margin-top: 1.5em;
+    margin-bottom: 0.5em;
+}
+
+h1 { font-size: 2em; }
+h2 { font-size: 1.5em; }
+h3 { font-size: 1.3em; }
+
+/* Conteneur principal */
+#content {
+    min-height: 20px;
+}
+
+#debug {
+    color: yellow;
+    margin-top: 20px;
+    border-top: 1px solid yellow;
+    font-size: 12px;
+}
+
+/* Style pour les documents LaTeX */
+.latex-document {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 2em;
+    background: #2d2d2d;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+}
+
+/* Styles pour les blocs LaTeX */
+.latex-block {
+    background: #2d2d2d;
+    border-radius: 8px;
+    padding: 1em;
+    margin: 1em 0;
+    overflow-x: auto;
+}
+
+.latex-table {
+    border-collapse: collapse;
+    margin: 1em 0;
+    width: 100%;
+}
+
+.latex-table td {
+    border: 1px solid #444;
+    padding: 8px;
+    text-align: center;
+}
+
+.latex-list {
+    list-style-type: disc;
+    margin: 1em 0;
+    padding-left: 2em;
+}
+
+.latex-figure {
+    text-align: center;
+    margin: 1em 0;
+}
+
+.latex-figure img {
+    max-width: 100%;
+    height: auto;
+}
+
+.latex-figure figcaption {
+    margin-top: 0.5em;
+    font-style: italic;
+    color: #aaa;
+}
+
+.latex-equation {
+    margin: 1em 0;
+    padding: 1em;
+    background: #2d2d2d;
+    border-radius: 8px;
+    overflow-x: auto;
+    text-align: center;
+}
+
+.latex-error {
+    color: #ff6b6b;
+    background: #2d2d2d;
+    padding: 1em;
+    border-radius: 8px;
+    border: 1px solid #ff6b6b;
+}

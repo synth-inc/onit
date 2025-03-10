@@ -84,6 +84,8 @@ struct ParsedContentView: View {
     @Default(.lineHeight) var lineHeight
     @Default(.fontSize) var fontSize
     
+    @State private var webViewHeight: CGFloat = 100
+    
     // ContentSegment represents either normal text or a thought block
     struct ContentSegment {
         let isThought: Bool
@@ -132,11 +134,12 @@ struct ParsedContentView: View {
                 if segment.isThought {
                     ThoughtProcessView(content: segment.content, streaming: segment.isStreaming)
                 } else {
-                    MarkdownLatexView(text: segment.content, fontSize: fontSize, lineHeight: lineHeight)
+                    MarkdownLatexPreview(markdownText: segment.content, webViewHeight: $webViewHeight)
                         .textSelection(.enabled)
-                        .lineSpacing((lineHeight * fontSize) - fontSize)
+                        //.lineSpacing((lineHeight * fontSize) - fontSize)
                         .multilineTextAlignment(.leading)
                         .frame(maxWidth: .infinity, alignment: .leading)
+                        .frame(height: webViewHeight)
                 }
             }
         }
