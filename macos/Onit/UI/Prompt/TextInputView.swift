@@ -78,6 +78,11 @@ struct TextInputView: View {
     }
 
     func sendAction() {
+        let inputText = model.pendingInstruction.trimmingCharacters(in: .whitespacesAndNewlines)
+        
+        // Add empty check
+        guard !inputText.isEmpty else { return }
+        
         model.createAndSavePrompt()
     }
 

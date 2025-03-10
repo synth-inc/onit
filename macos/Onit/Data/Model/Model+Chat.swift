@@ -90,18 +90,27 @@ extension OnitModel {
             let currentModelName = Defaults[.mode] == .local ? Defaults[.localModel] ?? "" : Defaults[.remoteModel]?.displayName ?? ""
             var currentPrompt: Prompt? = prompt.priorPrompt
             while currentPrompt != nil {
-                let response = currentPrompt!.responses[currentPrompt!.generationIndex]
-                if response.type != .error {
-                    instructionsHistory.insert(currentPrompt!.instruction, at: 0)
-                    inputsHistory.insert(currentPrompt!.input, at: 0)
-                    filesHistory.insert(currentPrompt!.contextList.files, at: 0)
-                    imagesHistory.insert(currentPrompt!.contextList.images, at: 0)
-                    autoContextsHistory.insert(currentPrompt!.contextList.autoContexts, at: 0)
-                    responsesHistory.insert(
-                        currentPrompt!.responses[currentPrompt!.generationIndex].text, at: 0)
+                if let generationIndex = currentPrompt?.generationIndex,
+                   let responseCount = currentPrompt?.responses.count,
+                   generationIndex >= 0,
+                   generationIndex < responseCount {
+                    let response = currentPrompt!.responses[generationIndex]
+                    
+                    if response.type != .error {
+                        instructionsHistory.insert(currentPrompt!.instruction, at: 0)
+                        inputsHistory.insert(currentPrompt!.input, at: 0)
+                        filesHistory.insert(currentPrompt!.contextList.files, at: 0)
+                        imagesHistory.insert(currentPrompt!.contextList.images, at: 0)
+                        autoContextsHistory.insert(currentPrompt!.contextList.autoContexts, at: 0)
+                        responsesHistory.insert(
+                            currentPrompt!.responses[currentPrompt!.generationIndex].text, at: 0)
+                    } else {
+                        print("Skipping failed response from prior prompt.")
+                    }
                 } else {
-                    print("Skipping failed response from prior prompt.")
+                    print("Skipping index out of bounds for prior prompt.")
                 }
+                
                 currentPrompt = currentPrompt!.priorPrompt
             }
 
