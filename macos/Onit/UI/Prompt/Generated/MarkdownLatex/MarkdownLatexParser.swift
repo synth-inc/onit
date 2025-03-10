@@ -11,26 +11,36 @@ import SwiftUI
 @objc class MarkdownLatexParser: NSObject {
     enum Element {
         case text(String)
-        case code(String, String?)
-        case latex(String)
+        case code(String, String?, Bool) // content, language, isGenerating
+        case latex(String, Bool) // content, isGenerating
     }
     
     func parse(_ text: String) async -> [Element] {
         var elements: [Element] = []
         
-        let codeBlockPattern = "```(\\w*)\\n([\\s\\S]*?)\\n```"
-        let codeBlockRegex = try! NSRegularExpression(pattern: codeBlockPattern, options: [])
+        // Pattern to match both complete and incomplete code blocks
+        let completeBlockPattern = "```(\\w*)\\n([\\s\\S]*?)\\n```"
+        let incompleteBlockPattern = "```(\\w*)\\n([\\s\\S]*?)$"
+        
+        let completeBlockRegex = try! NSRegularExpression(pattern: completeBlockPattern, options: [])
+        let incompleteBlockRegex = try! NSRegularExpression(pattern: incompleteBlockPattern, options: [])
         
         let nsText = text as NSString
-        let matches = codeBlockRegex.matches(in: text, options: [], range: NSRange(location: 0, length: nsText.length))
-        
         var lastEnd = 0
         
-        for match in matches {
+        // First, handle complete blocks
+        let completeMatches = completeBlockRegex.matches(in: text, options: [], range: NSRange(location: 0, length: nsText.length))
+        
+        for match in completeMatches {
             if match.range.location > lastEnd {
                 let textBefore = nsText.substring(with: NSRange(location: lastEnd, length: match.range.location - lastEnd))
-                if !textBefore.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                    elements.append(.text(textBefore))
+                let normalizedText = textBefore.components(separatedBy: .newlines)
+                    .map { $0.trimmingCharacters(in: .whitespaces) }
+                    .filter { !$0.isEmpty }
+                    .joined(separator: "\n")
+                    .trimmingCharacters(in: .newlines)
+                if !normalizedText.isEmpty {
+                    elements.append(.text(normalizedText))
                 }
             }
             
@@ -48,57 +58,56 @@ import SwiftUI
             }
             
             if language == "latex" {
-                elements.append(.latex(content))
+                elements.append(.latex(content, false)) // Complete block, not generating
             } else {
-                elements.append(.code(content, language))
+                elements.append(.code(content, language, false)) // Complete block, not generating
             }
             
             lastEnd = match.range.location + match.range.length
         }
         
+        // Then, handle incomplete blocks at the end
         if lastEnd < nsText.length {
-            let remainingText = nsText.substring(from: lastEnd)
-            if !remainingText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                elements.append(.text(remainingText))
-            }
-        }
-        
-        var mergedElements: [Element] = []
-        var currentText = ""
-        
-        for element in elements {
-            switch element {
-            case .text(let text):
-                if !currentText.isEmpty {
-                    currentText += "\n"
+            let remainingText = nsText.substring(from: lastEnd) as String
+            let incompleteMatches = incompleteBlockRegex.matches(in: remainingText, options: [], range: NSRange(location: 0, length: remainingText.count))
+            
+            if let incompleteMatch = incompleteMatches.last {
+                let beforeIncomplete = remainingText[..<remainingText.index(remainingText.startIndex, offsetBy: incompleteMatch.range.location)]
+                let normalizedText = beforeIncomplete.components(separatedBy: .newlines)
+                    .map { $0.trimmingCharacters(in: .whitespaces) }
+                    .filter { !$0.isEmpty }
+                    .joined(separator: "\n")
+                    .trimmingCharacters(in: .newlines)
+                if !normalizedText.isEmpty {
+                    elements.append(.text(normalizedText))
                 }
-                currentText += text
-            case .code(_, _), .latex(_):
-                if !currentText.isEmpty {
-                    mergedElements.append(.text(currentText))
-                    currentText = ""
+                
+                let languageRange = incompleteMatch.range(at: 1)
+                let contentRange = incompleteMatch.range(at: 2)
+                
+                let language = languageRange.location != NSNotFound ? (remainingText as NSString).substring(with: languageRange) : nil
+                var content = contentRange.location != NSNotFound ? (remainingText as NSString).substring(with: contentRange) : ""
+                
+                if content.hasPrefix("\n") {
+                    content = String(content.dropFirst())
                 }
-                mergedElements.append(element)
+                
+                if language == "latex" {
+                    elements.append(.latex(content, true)) // Incomplete block, still generating
+                } else {
+                    elements.append(.code(content, language, true)) // Incomplete block, still generating
+                }
+            } else if !remainingText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                let normalizedText = remainingText.components(separatedBy: .newlines)
+                    .map { $0.trimmingCharacters(in: .whitespaces) }
+                    .filter { !$0.isEmpty }
+                    .joined(separator: "\n")
+                    .trimmingCharacters(in: .newlines)
+                elements.append(.text(normalizedText))
             }
         }
         
-        if !currentText.isEmpty {
-            mergedElements.append(.text(currentText))
-        }
-        
-        print("KNA - Parsed elements:")
-        for element in mergedElements {
-            switch element {
-            case .text(let text):
-                print("KNA - Text (\(text.count) chars):", text.prefix(50))
-            case .code(let code, let lang):
-                print("KNA - Code (\(lang ?? "none")):", code.prefix(50))
-            case .latex(let latex):
-                print("KNA - LaTeX:", latex.prefix(50))
-            }
-        }
-        
-        return mergedElements
+        return elements
     }
 }
 

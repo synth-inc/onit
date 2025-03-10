@@ -109,7 +109,7 @@ struct KeyboardShortcutsManager {
         }
         // Since we support turning on and off shortcuts, we should disable these all after registering.
         // Then, the shortcuts that are on will be enabled when enable() is called. 
-        var names = KeyboardShortcuts.Name.allCases
+        let names = KeyboardShortcuts.Name.allCases
             .filter { ![.launch, .launchWithAutoContext].contains($0) }
         KeyboardShortcuts.disable(names)
     }
