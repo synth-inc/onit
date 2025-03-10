@@ -8,7 +8,6 @@
 
 /* Begin PBXBuildFile section */
 		280F35002CB9BF4300D60130 /* Sparkle in Frameworks */ = {isa = PBXBuildFile; productRef = 280F34FF2CB9BF4300D60130 /* Sparkle */; };
-		282E9A1E2CD06218003F3617 /* MarkdownUI in Frameworks */ = {isa = PBXBuildFile; productRef = 282E9A1D2CD06218003F3617 /* MarkdownUI */; };
 		2842875E2CD0B6A5000C6C67 /* HighlightSwift in Frameworks */ = {isa = PBXBuildFile; productRef = 2842875D2CD0B6A5000C6C67 /* HighlightSwift */; };
 		28F57E222CAC84AA006AAA8C /* KeyboardShortcuts in Frameworks */ = {isa = PBXBuildFile; productRef = 28F57E212CAC84AA006AAA8C /* KeyboardShortcuts */; };
 		28F57E292CAC9262006AAA8C /* MenuBarExtraAccess in Frameworks */ = {isa = PBXBuildFile; productRef = 28F57E282CAC9262006AAA8C /* MenuBarExtraAccess */; };
@@ -61,7 +60,6 @@
 				2842875E2CD0B6A5000C6C67 /* HighlightSwift in Frameworks */,
 				28F57E222CAC84AA006AAA8C /* KeyboardShortcuts in Frameworks */,
 				867A647C2D4AD73A00FD4D80 /* DefaultsMacros in Frameworks */,
-				282E9A1E2CD06218003F3617 /* MarkdownUI in Frameworks */,
 				862BC3C82D50D0D100806B58 /* EventSource in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -109,7 +107,6 @@
 				28F57E212CAC84AA006AAA8C /* KeyboardShortcuts */,
 				28F57E282CAC9262006AAA8C /* MenuBarExtraAccess */,
 				280F34FF2CB9BF4300D60130 /* Sparkle */,
-				282E9A1D2CD06218003F3617 /* MarkdownUI */,
 				2842875D2CD0B6A5000C6C67 /* HighlightSwift */,
 				A782C1972D383493009976F8 /* FirebaseCrashlytics */,
 				863817342D3FB5F700919BC7 /* PostHog */,
@@ -151,7 +148,6 @@
 				28F57E202CAC84AA006AAA8C /* XCRemoteSwiftPackageReference "KeyboardShortcuts" */,
 				28F57E272CAC9262006AAA8C /* XCRemoteSwiftPackageReference "MenuBarExtraAccess" */,
 				280F34FE2CB9BF4300D60130 /* XCRemoteSwiftPackageReference "Sparkle" */,
-				282E9A1C2CD06218003F3617 /* XCRemoteSwiftPackageReference "swift-markdown-ui" */,
 				2842875C2CD0B6A5000C6C67 /* XCRemoteSwiftPackageReference "HighlightSwift" */,
 				A782C1962D383493009976F8 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
 				863817332D3FB5F700919BC7 /* XCRemoteSwiftPackageReference "posthog-ios" */,
@@ -442,14 +438,6 @@
 				minimumVersion = 2.6.4;
 			};
 		};
-		282E9A1C2CD06218003F3617 /* XCRemoteSwiftPackageReference "swift-markdown-ui" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/gonzalezreal/swift-markdown-ui";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 2.4.1;
-			};
-		};
 		2842875C2CD0B6A5000C6C67 /* XCRemoteSwiftPackageReference "HighlightSwift" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/blsage/HighlightSwift";
@@ -529,11 +517,6 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 280F34FE2CB9BF4300D60130 /* XCRemoteSwiftPackageReference "Sparkle" */;
 			productName = Sparkle;
-		};
-		282E9A1D2CD06218003F3617 /* MarkdownUI */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 282E9A1C2CD06218003F3617 /* XCRemoteSwiftPackageReference "swift-markdown-ui" */;
-			productName = MarkdownUI;
 		};
 		2842875D2CD0B6A5000C6C67 /* HighlightSwift */ = {
 			isa = XCSwiftPackageProductDependency;
