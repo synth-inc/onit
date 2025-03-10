@@ -30,7 +30,7 @@ class AccessibilityParser {
             ?? "Unknown"
         let parser = parsers[appName] ?? genericParser
 
-        var debugText = "App found: \(appName) use of parser \(parser)\n"
+//        var debugText = "App found: \(appName) use of parser \(parser)\n"
 
         var results = parser.parse(element: appElement)
 

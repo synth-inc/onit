@@ -15,7 +15,7 @@
             background: transparent !important;
             color: white;
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            line-height: 1.5;
+            line-height: 1.3;
             font-size: var(--base-font-size);
             width: 100%;
             height: 100%;
@@ -24,14 +24,14 @@
         .latex-block {
             border: 1px solid rgba(255, 255, 255, 0.2);
             border-radius: 8px;
-            margin: 5px 0;
-            padding: 12px;
+            margin: 2px 0;
+            padding: 8px;
             overflow: hidden;
             background: rgba(30, 30, 30, 0.6) !important;
         }
         .latex-title {
             background: rgba(60, 60, 60, 0.6) !important;
-            padding: 8px 12px;
+            padding: 6px 10px;
             font-size: 12px;
             color: rgba(255, 255, 255, 0.7);
             border-bottom: 1px solid rgba(255, 255, 255, 0.1);
@@ -39,6 +39,8 @@
         .latex-content {
             overflow-x: auto;
             color: white;
+            padding-bottom: 0;
+            margin-bottom: 0;
         }
         #formula {
             background: transparent !important;
@@ -46,88 +48,106 @@
             width: 100%;
             min-height: 100%;
             overflow: visible;
+            padding-bottom: 0;
+            margin-bottom: 0;
         }
-        .MathJax { color: white !important; }
+        .MathJax { 
+            color: white !important; 
+            margin-bottom: 0 !important;
+        }
         .MathJax * { color: white !important; }
-        mjx-container { color: white !important; }
+        mjx-container { 
+            color: white !important; 
+            margin-bottom: 0 !important;
+            padding-bottom: 0 !important;
+        }
         mjx-container * { color: white !important; }
         
         /* Styles for LaTeX.js */
         .latex-js-output {
             color: white !important;
             background: transparent !important;
+            margin-bottom: 0 !important;
+            padding-bottom: 0 !important;
         }
         .latex-js-output * {
             color: white !important;
             background: transparent !important;
         }
         .latex-js-output .section {
-            margin: 1em 0;
+            margin: 0.5em 0;
         }
         .latex-js-output .enumerate {
-            padding-left: 2em;
+            padding-left: 1.5em;
+            margin-bottom: 0.5em;
         }
         .latex-js-output .itemize {
-            padding-left: 2em;
+            padding-left: 1.5em;
+            margin-bottom: 0.5em;
         }
         .latex-js-output table {
             border-collapse: collapse;
-            margin: 1em 0;
+            margin: 0.5em 0;
         }
         .latex-js-output td, .latex-js-output th {
             border: 1px solid rgba(255, 255, 255, 0.3);
-            padding: 0.5em;
+            padding: 0.3em;
         }
         
         /* Styles for LaTeX documents */
         .latex-document {
             color: white;
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            padding-bottom: 0;
+            margin-bottom: 0;
         }
         .latex-document .title {
             font-size: 1.5em;
             font-weight: bold;
             text-align: center;
-            margin: 1em 0;
+            margin: 0.5em 0;
         }
         .latex-document .author {
             text-align: center;
-            margin: 0.5em 0;
+            margin: 0.3em 0;
         }
         .latex-document .date {
             text-align: center;
-            margin: 0.5em 0;
+            margin: 0.3em 0;
         }
         .latex-document .content {
-            margin: 1em 0;
-            line-height: 1.6;
+            margin: 0.5em 0;
+            line-height: 1.4;
+            padding-bottom: 0;
+            margin-bottom: 0;
         }
         
         /* Styles for lists */
         ol {
-            margin: 1em 0;
-            padding-left: 2em;
+            margin: 0.5em 0;
+            padding-left: 1.5em;
         }
         ol li {
-            margin: 0.5em 0;
+            margin: 0.3em 0;
             color: white;
         }
         
         /* Styles for arrays */
         .tabular {
             border-collapse: collapse;
-            margin: 1em 0;
+            margin: 0.5em 0;
             width: auto;
         }
         .tabular td {
             border: 1px solid rgba(255, 255, 255, 0.3);
-            padding: 0.5em;
+            padding: 0.3em;
             color: white;
         }
         
         /* Styles for math formulas */
         .MathJax_Display {
-            margin: 1em 0 !important;
+            margin: 0.5em 0 !important;
+            padding-bottom: 0 !important;
         }
     </style>
 </head>
@@ -157,7 +177,9 @@
             chtml: {
                 scale: 1,
                 minScale: .5,
-                mtextInheritFont: true
+                mtextInheritFont: true,
+                displayAlign: 'left',
+                displayIndent: '0'
             }
         };
         
@@ -262,6 +284,12 @@
                 document.getElementById('formula').innerHTML = html;
                 await MathJax.typesetPromise();
                 console.log('MathJax typesetting complete');
+                
+                document.querySelectorAll('.MathJax, mjx-container, .latex-document, .latex-content, #formula').forEach(el => {
+                    el.style.marginBottom = '0';
+                    el.style.paddingBottom = '0';
+                });
+                
                 window.webkit.messageHandlers.contentProcessed.postMessage('done');
             } catch (e) {
                 console.error('Erreur de traitement:', e);
