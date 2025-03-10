@@ -34,11 +34,25 @@
 		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
+/* Begin PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet section */
+		86826A592D7F3F660072FFE4 /* Exceptions for "Onit" folder in "Compile Sources" phase from "Onit" target */ = {
+			isa = PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet;
+			buildPhase = 2883E4AF2CA5ECBB00F79A48 /* Sources */;
+			membershipExceptions = (
+				UI/Prompt/Generated/MarkdownLatex/injectMarkdown.js,
+				UI/Prompt/Generated/MarkdownLatex/markdownLatex.html,
+				UI/Prompt/Generated/MarkdownLatex/markdownLatexScript.js,
+				UI/Prompt/Generated/MarkdownLatex/markdownLatexStyle.css,
+			);
+		};
+/* End PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		2883E4B52CA5ECBB00F79A48 /* Onit */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
 				28F57E1D2CAC7913006AAA8C /* Exceptions for "Onit" folder in "Onit" target */,
+				86826A592D7F3F660072FFE4 /* Exceptions for "Onit" folder in "Compile Sources" phase from "Onit" target */,
 			);
 			path = Onit;
 			sourceTree = "<group>";
