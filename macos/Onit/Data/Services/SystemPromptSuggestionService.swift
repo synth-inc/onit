@@ -83,7 +83,7 @@ class SystemPromptSuggestionService {
         }.joined(separator: " ")
         
         let context = ModelContext(self.container)
-        var fetchDescriptor = FetchDescriptor<SystemPrompt>(
+        let fetchDescriptor = FetchDescriptor<SystemPrompt>(
             sortBy: [SortDescriptor(\.lastUsed, order: .reverse)]
         )
         let allPrompts = (try? context.fetch(fetchDescriptor)) ?? []

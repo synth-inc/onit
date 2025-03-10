@@ -6,7 +6,6 @@
 //
 
 import HighlightSwift
-import MarkdownUI
 import SwiftUI
 
 struct InputBody: View {
