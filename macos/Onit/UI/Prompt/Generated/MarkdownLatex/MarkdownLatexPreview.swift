@@ -89,10 +89,9 @@ struct MarkdownLatexPreview: NSViewRepresentable {
         // Handle messages from JavaScript
         func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage) {
             if message.name == "heightHandler" {
-                if let height = message.body as? CGFloat {
-                    self.parent.logger.debug("Nouvelle hauteur reçue: \(height)")
+                if let height = message.body as? Double {
                     DispatchQueue.main.async {
-                        self.parent.webViewHeight = height
+                        self.parent.webViewHeight = CGFloat(height)
                     }
                 } else {
                     self.parent.logger.error("Type de hauteur invalide: \(type(of: message.body))")

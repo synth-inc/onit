@@ -3,6 +3,7 @@ html, body {
     padding: 0;
     height: auto;
     overflow: visible;
+    position: relative;
 }
 
 body {
@@ -12,6 +13,9 @@ body {
     background: transparent;
     color: white;
     line-height: var(--line-height);
+    min-height: 100%;
+    display: flex;
+    flex-direction: column;
 }
 
 /* Style pour le conteneur de code avec barre de titre */
@@ -153,6 +157,8 @@ h3 { font-size: 1.3em; }
 /* Conteneur principal */
 #content {
     min-height: 20px;
+    flex: 1;
+    position: relative;
 }
 
 #debug {
@@ -164,12 +170,23 @@ h3 { font-size: 1.3em; }
 
 /* Style pour les documents LaTeX */
 .latex-document {
-    max-width: 800px;
+    width: 100%;
     margin: 0 auto;
-    padding: 2em;
-    background: #2d2d2d;
+    padding: 0;
     border-radius: 8px;
     box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+}
+
+/* Style pour le message de génération LaTeX */
+.latex-generating {
+    display: flex;
+    align-items: left;
+    justify-content: left;
+    padding: 0;
+    margin: 0;
+    font-size: 1.2em;
+    color: #808080;
+    position: relative;
 }
 
 /* Styles pour les blocs LaTeX */

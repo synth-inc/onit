@@ -10,14 +10,24 @@ try {
     // Récupérer le texte markdown
     let markdownText = `[TEXT]`;
     
-    // Détecter si c'est un document LaTeX complet
+    // Détecter si c'est un document LaTeX complet ou partiel
+    const hasLatexCommands = markdownText.includes('\\documentclass') || 
+                            markdownText.includes('\\begin{document}') ||
+                            markdownText.includes('\\end{document}');
+                            
     const isFullLatexDocument = markdownText.includes('\\documentclass') &&
                                markdownText.includes('\\begin{document}') &&
                                markdownText.includes('\\end{document}');
     
+    // Si le document contient des commandes LaTeX mais n'est pas complet, il est en cours de génération
+    const isPartialLatexDocument = hasLatexCommands && !isFullLatexDocument;
+    
     let renderedHTML = '';
     
-    if (isFullLatexDocument) {
+    if (isPartialLatexDocument) {
+        renderedHTML = '<div class="latex-generating">Generating LaTeX document...</div>';
+        log("Document LaTeX partiel détecté, affichage du message de génération");
+    } else if (isFullLatexDocument) {
         log("Document LaTeX complet détecté");
         
         // Extraire le contenu entre \\begin{document} et \\end{document}
@@ -29,39 +39,68 @@ try {
             log("Contenu du document extrait: " + documentContent.substring(0, 50) + "...");
             
             // Préserver les formules mathématiques
-            // Stocker temporairement les formules mathématiques
             const mathFormulas = [];
             let mathCounter = 0;
             
-            // Remplacer les formules en bloc par des placeholders
-            documentContent = documentContent.replace(/\[([\s\S]*?)\]/g, function(match, formula) {
-                const placeholder = `MATH_FORMULA_BLOCK_${mathCounter}`;
+            // Fonction pour créer un placeholder
+            function createPlaceholder(formula, isDisplay = false) {
+                const placeholder = `MATH_FORMULA_${isDisplay ? 'DISPLAY' : 'INLINE'}_${mathCounter++}`;
                 mathFormulas.push({
                     placeholder: placeholder,
-                    formula: `$$${formula}$$`
+                    formula: isDisplay ? `$$${formula}$$` : `$${formula}$`
                 });
-                mathCounter++;
                 return placeholder;
+            }
+            
+            // Prétraiter les commandes LaTeX spéciales
+            documentContent = documentContent
+                // Traiter les sections et sous-sections
+                .replace(/\\section{([^}]*)}/g, (match, content) => {
+                    return `## ${content}`;
+                })
+                .replace(/\\subsection{([^}]*)}/g, (match, content) => {
+                    return `### ${content}`;
+                })
+                // Traiter les environnements enumerate
+                .replace(/\\begin{enumerate}([\s\S]*?)\\end{enumerate}/g, (match, content) => {
+                    const items = content.split('\\item').filter(item => item.trim());
+                    return '\n' + items.map((item, index) => `${index + 1}. ${item.trim()}`).join('\n') + '\n';
+                })
+                // Traiter les environnements itemize
+                .replace(/\\begin{itemize}([\s\S]*?)\\end{itemize}/g, (match, content) => {
+                    const items = content.split('\\item').filter(item => item.trim());
+                    return '\n' + items.map(item => {
+                        // Supprimer les puces LaTeX [$\bullet$] et nettoyer le texte
+                        const cleanedItem = item.trim()
+                            .replace(/\[\$\\bullet\$\]\s*/, '')  // Supprimer [$\bullet$]
+                            .replace(/\[\\bullet\]\s*/, '')      // Supprimer [\bullet]
+                            .trim();
+                        return `* ${cleanedItem}`;
+                    }).join('\n') + '\n';
+                })
+                // Traiter les commandes \left et \right
+                .replace(/\\left/g, '')
+                .replace(/\\right/g, '')
+            
+            // Remplacer les formules en bloc par des placeholders
+            documentContent = documentContent.replace(/\$\$([\s\S]*?)\$\$/g, (match, formula) => {
+                return createPlaceholder(formula, true);
             });
             
             // Remplacer les formules inline par des placeholders
-            documentContent = documentContent.replace(/\(([\s\S]*?)\)/g, function(match, formula) {
-                const placeholder = `MATH_FORMULA_INLINE_${mathCounter}`;
-                mathFormulas.push({
-                    placeholder: placeholder,
-                    formula: `$${formula}$`
-                });
-                mathCounter++;
-                return placeholder;
+            documentContent = documentContent.replace(/\$([^\$]*?)\$/g, (match, formula) => {
+                return createPlaceholder(formula, false);
             });
             
             // Convertir les commandes LaTeX courantes en Markdown
             documentContent = documentContent
-                .replace(/\\section{([^}]*)}/g, '## $1')
-                .replace(/\\subsection{([^}]*)}/g, '### $1')
+                .replace(/\\section\*{([^}]*)}/g, '## $1')
+                .replace(/\\subsection\*{([^}]*)}/g, '### $1')
                 .replace(/\\textbf{([^}]*)}/g, '**$1**')
                 .replace(/\\textit{([^}]*)}/g, '*$1*')
-                .replace(/\\maketitle/g, '');
+                .replace(/\\maketitle/g, '')
+                .replace(/\\\\(\[|\])/g, '\n\n')
+                .replace(/\\%/g, '%');
                 
             // Extraire le titre et l'auteur
             const titleMatch = markdownText.match(/\\title{([^}]*)}/);
@@ -72,7 +111,7 @@ try {
             }
             
             if (authorMatch && authorMatch[1]) {
-                documentContent = documentContent + '\n\n*Par ' + authorMatch[1] + '*';
+                documentContent = documentContent + '\n\n*By ' + authorMatch[1] + '*';
             }
             
             // Restaurer les formules mathématiques
