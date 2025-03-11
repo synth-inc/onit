@@ -18,7 +18,6 @@ body {
     flex-direction: column;
 }
 
-/* Style pour le conteneur de code avec barre de titre */
 .code-container {
     margin: 0.5em 0;
     border-radius: 8px;
@@ -94,7 +93,6 @@ code .plaintext {
     font-weight: normal;
 }
 
-/* Styles pour les formules LaTeX */
 .math {
     color: white;
 }
@@ -116,7 +114,6 @@ code .plaintext {
     overflow-x: auto;
 }
 
-/* Styles pour les tableaux */
 table {
     border-collapse: collapse;
     width: 100%;
@@ -133,7 +130,6 @@ th {
     background-color: #333;
 }
 
-/* Styles pour les liens */
 a {
     color: #0096FF;
     text-decoration: none;
@@ -143,7 +139,6 @@ a:hover {
     text-decoration: underline;
 }
 
-/* Styles pour les titres */
 h1, h2, h3, h4, h5, h6 {
     color: white;
     margin-top: 1.5em;
@@ -154,7 +149,6 @@ h1 { font-size: 2em; }
 h2 { font-size: 1.5em; }
 h3 { font-size: 1.3em; }
 
-/* Conteneur principal */
 #content {
     min-height: 20px;
     flex: 1;
@@ -168,7 +162,6 @@ h3 { font-size: 1.3em; }
     font-size: 12px;
 }
 
-/* Style pour les documents LaTeX */
 .latex-document {
     width: 100%;
     margin: 0 auto;
@@ -177,7 +170,6 @@ h3 { font-size: 1.3em; }
     box-shadow: 0 2px 8px rgba(0,0,0,0.2);
 }
 
-/* Style pour le message de génération LaTeX */
 .latex-generating {
     display: flex;
     align-items: left;
@@ -189,7 +181,6 @@ h3 { font-size: 1.3em; }
     position: relative;
 }
 
-/* Styles pour les blocs LaTeX */
 .latex-block {
     background: #2d2d2d;
     border-radius: 8px;

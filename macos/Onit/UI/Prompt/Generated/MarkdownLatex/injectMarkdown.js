@@ -5,12 +5,9 @@
 //  Created by Kévin Naudin on 10/03/2025.
 //
 
-
 try {
-    // Récupérer le texte markdown
     let markdownText = `[TEXT]`;
     
-    // Détecter si c'est un document LaTeX complet ou partiel
     const hasLatexCommands = markdownText.includes('\\documentclass') || 
                             markdownText.includes('\\begin{document}') ||
                             markdownText.includes('\\end{document}');
@@ -19,30 +16,21 @@ try {
                                markdownText.includes('\\begin{document}') &&
                                markdownText.includes('\\end{document}');
     
-    // Si le document contient des commandes LaTeX mais n'est pas complet, il est en cours de génération
     const isPartialLatexDocument = hasLatexCommands && !isFullLatexDocument;
-    
     let renderedHTML = '';
     
     if (isPartialLatexDocument) {
         renderedHTML = '<div class="latex-generating">Generating LaTeX document...</div>';
-        log("Document LaTeX partiel détecté, affichage du message de génération");
     } else if (isFullLatexDocument) {
-        log("Document LaTeX complet détecté");
-        
-        // Extraire le contenu entre \\begin{document} et \\end{document}
         const documentMatch = markdownText.match(/\\begin{document}([\s\S]*?)\\end{document}/);
         let documentContent = '';
         
         if (documentMatch && documentMatch[1]) {
             documentContent = documentMatch[1].trim();
-            log("Contenu du document extrait: " + documentContent.substring(0, 50) + "...");
             
-            // Préserver les formules mathématiques
             const mathFormulas = [];
             let mathCounter = 0;
             
-            // Fonction pour créer un placeholder
             function createPlaceholder(formula, isDisplay = false) {
                 const placeholder = `MATH_FORMULA_${isDisplay ? 'DISPLAY' : 'INLINE'}_${mathCounter++}`;
                 mathFormulas.push({
@@ -52,47 +40,38 @@ try {
                 return placeholder;
             }
             
-            // Prétraiter les commandes LaTeX spéciales
             documentContent = documentContent
-                // Traiter les sections et sous-sections
                 .replace(/\\section{([^}]*)}/g, (match, content) => {
                     return `## ${content}`;
                 })
                 .replace(/\\subsection{([^}]*)}/g, (match, content) => {
                     return `### ${content}`;
                 })
-                // Traiter les environnements enumerate
                 .replace(/\\begin{enumerate}([\s\S]*?)\\end{enumerate}/g, (match, content) => {
                     const items = content.split('\\item').filter(item => item.trim());
                     return '\n' + items.map((item, index) => `${index + 1}. ${item.trim()}`).join('\n') + '\n';
                 })
-                // Traiter les environnements itemize
                 .replace(/\\begin{itemize}([\s\S]*?)\\end{itemize}/g, (match, content) => {
                     const items = content.split('\\item').filter(item => item.trim());
                     return '\n' + items.map(item => {
-                        // Supprimer les puces LaTeX [$\bullet$] et nettoyer le texte
                         const cleanedItem = item.trim()
-                            .replace(/\[\$\\bullet\$\]\s*/, '')  // Supprimer [$\bullet$]
-                            .replace(/\[\\bullet\]\s*/, '')      // Supprimer [\bullet]
+                            .replace(/\[\$\\bullet\$\]\s*/, '')
+                            .replace(/\[\\bullet\]\s*/, '')
                             .trim();
                         return `* ${cleanedItem}`;
                     }).join('\n') + '\n';
                 })
-                // Traiter les commandes \left et \right
                 .replace(/\\left/g, '')
                 .replace(/\\right/g, '')
             
-            // Remplacer les formules en bloc par des placeholders
             documentContent = documentContent.replace(/\$\$([\s\S]*?)\$\$/g, (match, formula) => {
                 return createPlaceholder(formula, true);
             });
             
-            // Remplacer les formules inline par des placeholders
             documentContent = documentContent.replace(/\$([^\$]*?)\$/g, (match, formula) => {
                 return createPlaceholder(formula, false);
             });
             
-            // Convertir les commandes LaTeX courantes en Markdown
             documentContent = documentContent
                 .replace(/\\section\*{([^}]*)}/g, '## $1')
                 .replace(/\\subsection\*{([^}]*)}/g, '### $1')
@@ -101,8 +80,7 @@ try {
                 .replace(/\\maketitle/g, '')
                 .replace(/\\\\(\[|\])/g, '\n\n')
                 .replace(/\\%/g, '%');
-                
-            // Extraire le titre et l'auteur
+
             const titleMatch = markdownText.match(/\\title{([^}]*)}/);
             const authorMatch = markdownText.match(/\\author{([^}]*)}/);
             
@@ -114,55 +92,46 @@ try {
                 documentContent = documentContent + '\n\n*By ' + authorMatch[1] + '*';
             }
             
-            // Restaurer les formules mathématiques
             mathFormulas.forEach(item => {
                 documentContent = documentContent.replace(item.placeholder, item.formula);
             });
             
-            // Rendre le contenu avec markdown-it
             if (typeof markdownit !== 'undefined' && md) {
                 renderedHTML = md.render(documentContent);
-                log("Document LaTeX rendu en Markdown");
             } else {
                 renderedHTML = '<pre>' + documentContent + '</pre>';
-                log("markdown-it non disponible, affichage du texte brut");
+                log("markdown-it unavailable, render raw text");
             }
         } else {
-            renderedHTML = '<p>Erreur: Impossible d\'extraire le contenu du document LaTeX</p>';
-            log("Erreur: Impossible d'extraire le contenu du document LaTeX");
+            renderedHTML = '<p>Error: Can\'t extract LaTeX document</p>';
+            log("Error: Can't extract LaTeX document");
         }
     } else {
-        // Rendre le markdown normal avec markdown-it
         if (typeof markdownit !== 'undefined' && md) {
             renderedHTML = md.render(markdownText);
-            log("Markdown rendu avec markdown-it");
         } else {
-            // Fallback si markdown-it n'est pas disponible
             renderedHTML = '<pre>' + markdownText + '</pre>';
-            log("markdown-it non disponible, affichage du texte brut");
+            log("markdown-it unavailable, render raw text");
         }
     }
     
-    // Afficher le HTML rendu
     document.getElementById('content').innerHTML = renderedHTML;
     
-    // Rendre les formules LaTeX si MathJax est disponible
     if (typeof MathJax !== 'undefined') {
         MathJax.typesetPromise().then(() => {
-            log("MathJax rendu terminé");
             updateHeight();
         }).catch(err => {
-            log("Erreur MathJax: " + err.message);
+            log("Error MathJax: " + err.message);
             updateHeight();
         });
     } else {
-        log("MathJax non disponible");
+        log("MathJax unavailable");
         updateHeight();
     }
     
-    document.getElementById('debug').innerHTML = '<p>Rendu terminé</p>';
+    document.getElementById('debug').innerHTML = '<p>Rendering completed</p>';
 } catch(e) {
-    document.getElementById('debug').innerHTML = '<p style="color:red">Erreur: ' + e.message + '</p>';
-    log("Erreur lors du rendu: " + e.message);
+    document.getElementById('debug').innerHTML = '<p style="color:red">Error: ' + e.message + '</p>';
+    log("Error while rendering: " + e.message);
     updateHeight();
 }
