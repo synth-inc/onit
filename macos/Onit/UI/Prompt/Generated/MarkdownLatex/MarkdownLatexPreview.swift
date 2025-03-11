@@ -119,13 +119,13 @@ struct MarkdownLatexPreview: NSViewRepresentable {
         
         // Activer les logs de console JavaScript
         let preferences = WKPreferences()
-        preferences.javaScriptCanOpenWindowsAutomatically = true
+        preferences.javaScriptCanOpenWindowsAutomatically = false
         configuration.preferences = preferences
         
         // Create and configure WebView with our custom subclass
-        let webView = ScrollPassthroughWebView(frame: .zero, configuration: configuration)
+        let webView = VerticalScrollPassthroughWebView(frame: .zero, configuration: configuration)
         webView.setValue(false, forKey: "drawsBackground")
-        webView.allowsMagnification = true
+        webView.allowsMagnification = false
         webView.navigationDelegate = context.coordinator
         
         // Load HTML content

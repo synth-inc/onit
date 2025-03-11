@@ -29,95 +29,6 @@ function updateHeight() {
     }
 }
 
-// Fonctions de traitement des environnements LaTeX
-function processTabular(content) {
-    try {
-        // Extraire les spécifications des colonnes
-        const lines = content.trim().split('\\\\');
-        const rows = lines.map(line => {
-            return line.split('&').map(cell => cell.trim());
-        });
-
-        // Construire le tableau HTML
-        let html = '<div class="latex-table"><table>';
-        rows.forEach((row, rowIndex) => {
-            html += '<tr>';
-            row.forEach(cell => {
-                if (cell.includes('\\hline')) {
-                    return; // Ignorer les lignes horizontales
-                }
-                html += `<td>${cell}</td>`;
-            });
-            html += '</tr>';
-        });
-        html += '</table></div>';
-        return html;
-    } catch (err) {
-        log("Erreur lors du traitement du tableau: " + err.message);
-        return `<pre class="latex-error">Erreur de tableau: ${content}</pre>`;
-    }
-}
-
-function processItemize(content) {
-    try {
-        const items = content.split('\\item').filter(item => item.trim());
-        let html = '<ul class="latex-list">';
-        items.forEach(item => {
-            html += `<li>${item.trim()}</li>`;
-        });
-        html += '</ul>';
-        return html;
-    } catch (err) {
-        log("Erreur lors du traitement de la liste: " + err.message);
-        return `<pre class="latex-error">Erreur de liste: ${content}</pre>`;
-    }
-}
-
-function processFigure(content) {
-    try {
-        const centeringMatch = content.match(/\\centering/);
-        const graphicsMatch = content.match(/\\includegraphics(?:\[([^\]]*)\])?{([^}]*)}/);
-        const captionMatch = content.match(/\\caption{([^}]*)}/);
-
-        let html = '<figure class="latex-figure">';
-        
-        if (graphicsMatch) {
-            const options = graphicsMatch[1] || '';
-            const file = graphicsMatch[2];
-            let width = 100;
-            
-            // Extraire la largeur si elle existe
-            if (options && options.includes('width')) {
-                const widthMatch = options.match(/width=([\d.]+)\\textwidth/);
-                if (widthMatch && widthMatch[1]) {
-                    width = parseFloat(widthMatch[1]) * 100;
-                }
-            }
-            
-            html += `<img src="${file}" style="width: ${width}%;">`;
-        }
-        
-        if (captionMatch) {
-            html += `<figcaption>${captionMatch[1]}</figcaption>`;
-        }
-        
-        html += '</figure>';
-        return html;
-    } catch (err) {
-        log("Erreur lors du traitement de la figure: " + err.message);
-        return `<pre class="latex-error">Erreur de figure: ${content}</pre>`;
-    }
-}
-
-function processEquation(content) {
-    try {
-        return `<div class="latex-equation">$$${content}$$</div>`;
-    } catch (err) {
-        log("Erreur lors du traitement de l'équation: " + err.message);
-        return `<pre class="latex-error">Erreur d'équation: ${content}</pre>`;
-    }
-}
-
 // Vérifier si les bibliothèques sont chargées
 log("markdown-it disponible: " + (typeof markdownit !== 'undefined'));
 log("highlight.js disponible: " + (typeof hljs !== 'undefined'));
@@ -157,7 +68,7 @@ try {
             }
             
             // Fallback pour les autres langages
-            return `<div class="code-container"><div class="code-title-bar"><span class="language">${lang || 'texte'}</span><div class="copy-button" onclick="copyCode(this)"></div></div><div class="code-content"><pre><code>${md.utils.escapeHtml(str)}</code></pre></div></div>`;
+            return `<div class="code-container"><div class="code-title-bar"><span class="language">${lang || 'texte'}</span><div class="copy-button" onclick="copyCode(this)"></div></div><div class="code-content"><pre><code class="plaintext">${md.utils.escapeHtml(str)}</code></pre></div></div>`;
         }
     });
     
