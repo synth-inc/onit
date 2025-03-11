@@ -43,11 +43,8 @@ MathJax = {
     },
     startup: {
         ready: () => {
-            log("MathJax est prêt");
             MathJax.startup.defaultReady();
-            MathJax.startup.promise.then(() => {
-                log("MathJax a terminé le chargement initial");
-            });
+            MathJax.startup.promise.then(() => { });
         }
     }
 };
@@ -62,11 +59,6 @@ function updateHeight() {
         window.webkit.messageHandlers.heightHandler.postMessage(totalHeight);
     }, 100);
 }
-
-log("markdown-it disponible: " + (typeof markdownit !== 'undefined'));
-log("highlight.js disponible: " + (typeof hljs !== 'undefined'));
-log("MathJax disponible: " + (typeof MathJax !== 'undefined'));
-log("KaTeX disponible: " + (typeof katex !== 'undefined'));
 
 // Init markdown-it with highlight.js
 let md;
