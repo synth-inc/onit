@@ -1,0 +1,29 @@
+diff a/macos/Onit/UI/Prompt/Files/ContextImage.swift b/macos/Onit/UI/Prompt/Files/ContextImage.swift	(rejected hunks)
+@@ -24,9 +24,24 @@ struct ContextImage: View {
+     }
+ 
+     var autoContext: some View {
+-        Image(.stars)
+-            .resizable()
+-            .frame(width: 20, height: 20)
++        switch context {
++        case .auto(let appName, _):
++            if appName.starts(with: "Web:") {
++                // Use a web icon for web content
++                return Image(systemName: "globe")
++                    .resizable()
++                    .frame(width: 20, height: 20)
++            } else {
++                // Use the default stars icon for other auto context
++                return Image(.stars)
++                    .resizable()
++                    .frame(width: 20, height: 20)
++            }
++        default:
++            return Image(.stars)
++                .resizable()
++                .frame(width: 20, height: 20)
++        }
+     }
+ 
+     var file: some View {

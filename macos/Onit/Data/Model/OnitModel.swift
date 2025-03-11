@@ -213,6 +213,14 @@ import SwiftUI
     func setSettingsTab(tab: SettingsTab) {
         settingsTab = tab
     }
+    
+    /// Removes a context from the pending context list
+    /// - Parameter context: The context to remove
+    func removeContext(context: Context) {
+        if let index = pendingContextList.firstIndex(of: context) {
+            pendingContextList.remove(at: index)
+        }
+    }
 }
 
 extension String {

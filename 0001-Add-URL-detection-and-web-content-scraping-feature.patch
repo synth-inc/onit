@@ -1,0 +1,428 @@
+From 38a275cd82d8122d76cf26053ce02377b848b50b Mon Sep 17 00:00:00 2001
+From: openhands <openhands@all-hands.dev>
+Date: Tue, 11 Mar 2025 18:13:41 +0000
+Subject: [PATCH] Add URL detection and web content scraping feature
+
+---
+ macos/Onit/Data/Model/OnitModel.swift         |   8 ++
+ macos/Onit/Data/Structures/Context.swift      |  13 +-
+ macos/Onit/Data/Utilities/URLDetector.swift   | 113 ++++++++++++++++++
+ .../Data/Utilities/WebContentContext.swift    |  70 +++++++++++
+ macos/Onit/UI/Prompt/Files/ContextImage.swift |  21 +++-
+ macos/Onit/UI/Prompt/Files/ContextItem.swift  |  16 ++-
+ macos/Onit/UI/Prompt/TextInputView.swift      |  61 +++++++++-
+ 7 files changed, 288 insertions(+), 14 deletions(-)
+ create mode 100644 macos/Onit/Data/Utilities/URLDetector.swift
+ create mode 100644 macos/Onit/Data/Utilities/WebContentContext.swift
+
+diff --git a/macos/Onit/Data/Model/OnitModel.swift b/macos/Onit/Data/Model/OnitModel.swift
+index 9c884fa..dffa7d0 100644
+--- a/macos/Onit/Data/Model/OnitModel.swift
++++ b/macos/Onit/Data/Model/OnitModel.swift
+@@ -213,6 +213,14 @@ import SwiftUI
+     func setSettingsTab(tab: SettingsTab) {
+         settingsTab = tab
+     }
++    
++    /// Removes a context from the pending context list
++    /// - Parameter context: The context to remove
++    func removeContext(context: Context) {
++        if let index = pendingContextList.firstIndex(of: context) {
++            pendingContextList.remove(at: index)
++        }
++    }
+ }
+ 
+ extension String {
+diff --git a/macos/Onit/Data/Structures/Context.swift b/macos/Onit/Data/Structures/Context.swift
+index ed28cb4..3fab014 100644
+--- a/macos/Onit/Data/Structures/Context.swift
++++ b/macos/Onit/Data/Structures/Context.swift
+@@ -28,14 +28,17 @@ enum Context {
+ 
+     var fileType: String? {
+         switch self {
+-        case .auto:
+-            "Auto"
++        case .auto(let appName, _):
++            if appName.starts(with: "Web:") {
++                return "Web"
++            }
++            return "Auto"
+         case .file:
+-            "file"
++            return "File"
+         case .image:
+-            "Img"
++            return "Img"
+         default:
+-            nil
++            return nil
+         }
+     }
+ 
+diff --git a/macos/Onit/Data/Utilities/URLDetector.swift b/macos/Onit/Data/Utilities/URLDetector.swift
+new file mode 100644
+index 0000000..6d5b002
+--- /dev/null
++++ b/macos/Onit/Data/Utilities/URLDetector.swift
+@@ -0,0 +1,113 @@
++//
++//  URLDetector.swift
++//  Onit
++//
++//  Created by OpenHands on 3/11/2024.
++//
++
++import Foundation
++
++class URLDetector {
++    
++    /// Detects URLs in the given text
++    /// - Parameter text: The text to search for URLs
++    /// - Returns: An array of detected URLs
++    static func detectURLs(in text: String) -> [URL] {
++        // Define a regex pattern for URLs
++        let detector = try? NSDataDetector(types: NSTextCheckingResult.CheckingType.link.rawValue)
++        let matches = detector?.matches(in: text, options: [], range: NSRange(location: 0, length: text.utf16.count)) ?? []
++        
++        return matches.compactMap { match -> URL? in
++            if let url = match.url, isValidURL(url) {
++                return url
++            }
++            return nil
++        }
++    }
++    
++    /// Checks if a URL is valid for scraping
++    /// - Parameter url: The URL to validate
++    /// - Returns: Boolean indicating if the URL is valid
++    private static func isValidURL(_ url: URL) -> Bool {
++        // Check if the URL has a scheme (http or https)
++        guard let scheme = url.scheme?.lowercased() else { return false }
++        return scheme == "http" || scheme == "https"
++    }
++    
++    /// Scrapes content from a URL
++    /// - Parameter url: The URL to scrape
++    /// - Returns: The scraped text content
++    static func scrapeContent(from url: URL) async throws -> String {
++        let (data, response) = try await URLSession.shared.data(from: url)
++        
++        guard let httpResponse = response as? HTTPURLResponse,
++              (200...299).contains(httpResponse.statusCode) else {
++            throw URLError(.badServerResponse)
++        }
++        
++        // Try to determine the text encoding from the response
++        var encoding = String.Encoding.utf8
++        
++        if let encodingName = httpResponse.textEncodingName {
++            let cfEncoding = CFStringConvertIANACharSetNameToEncoding(encodingName as CFString)
++            if cfEncoding != kCFStringEncodingInvalidId {
++                encoding = String.Encoding(rawValue: CFStringConvertEncodingToNSStringEncoding(cfEncoding))
++            }
++        }
++        
++        // Try to convert the data to a string
++        if let content = String(data: data, encoding: encoding) {
++            // Extract text content from HTML
++            return extractTextFromHTML(content)
++        } else {
++            throw URLError(.cannotDecodeContentData)
++        }
++    }
++    
++    /// Extracts text content from HTML
++    /// - Parameter html: The HTML string
++    /// - Returns: Plain text extracted from HTML
++    private static func extractTextFromHTML(_ html: String) -> String {
++        // Simple HTML tag removal - for a production app, consider using a proper HTML parser
++        var text = html
++        
++        // Remove script and style elements
++        text = text.replacingOccurrences(of: "<script[^>]*>[\\s\\S]*?</script>", with: "", options: .regularExpression)
++        text = text.replacingOccurrences(of: "<style[^>]*>[\\s\\S]*?</style>", with: "", options: .regularExpression)
++        
++        // Remove HTML comments
++        text = text.replacingOccurrences(of: "<!--[\\s\\S]*?-->", with: "", options: .regularExpression)
++        
++        // Replace HTML tags with newlines for better readability
++        text = text.replacingOccurrences(of: "<[^>]+>", with: "\n", options: .regularExpression)
++        
++        // Replace multiple newlines with a single newline
++        text = text.replacingOccurrences(of: "\n+", with: "\n", options: .regularExpression)
++        
++        // Decode HTML entities
++        text = text.decodingHTMLEntities()
++        
++        // Trim whitespace
++        text = text.trimmingCharacters(in: .whitespacesAndNewlines)
++        
++        return text
++    }
++}
++
++extension String {
++    /// Decodes HTML entities in a string
++    func decodingHTMLEntities() -> String {
++        guard let data = self.data(using: .utf8) else { return self }
++        
++        let options: [NSAttributedString.DocumentReadingOptionKey: Any] = [
++            .documentType: NSAttributedString.DocumentType.html,
++            .characterEncoding: String.Encoding.utf8.rawValue
++        ]
++        
++        if let attributedString = try? NSAttributedString(data: data, options: options, documentAttributes: nil) {
++            return attributedString.string
++        }
++        
++        return self
++    }
++}
+\ No newline at end of file
+diff --git a/macos/Onit/Data/Utilities/WebContentContext.swift b/macos/Onit/Data/Utilities/WebContentContext.swift
+new file mode 100644
+index 0000000..c9436eb
+--- /dev/null
++++ b/macos/Onit/Data/Utilities/WebContentContext.swift
+@@ -0,0 +1,70 @@
++//
++//  WebContentContext.swift
++//  Onit
++//
++//  Created by OpenHands on 3/11/2024.
++//
++
++import Foundation
++import SwiftUI
++
++/// A class to handle web content scraping and context creation
++class WebContentContext {
++    
++    /// Maximum length of web content to include in context
++    private static let maxContentLength = 10000
++    
++    /// Processes text input to detect URLs and create context from web content
++    /// - Parameters:
++    ///   - text: The text input that may contain URLs
++    ///   - model: The Onit model to update with context
++    /// - Returns: A tuple containing the processed text (with URL removed) and a boolean indicating if URLs were found
++    static func processTextForURLs(text: String, model: OnitModel) async -> (processedText: String, foundURLs: Bool) {
++        // Detect URLs in the text
++        let urls = URLDetector.detectURLs(in: text)
++        
++        guard !urls.isEmpty else {
++            return (text, false)
++        }
++        
++        // Process each URL
++        for url in urls {
++            do {
++                // Show loading indicator or feedback
++                await MainActor.run {
++                    // You could add a loading indicator here if needed
++                }
++                
++                // Scrape content from the URL
++                let content = try await URLDetector.scrapeContent(from: url)
++                
++                // Truncate content if it's too long
++                let truncatedContent = content.count > maxContentLength 
++                    ? String(content.prefix(maxContentLength)) + "\n[Content truncated due to length...]" 
++                    : content
++                
++                // Create a context with the web content
++                await MainActor.run {
++                    let webContext = Context.auto("Web: \(url.host ?? "URL")", ["content": truncatedContent])
++                    model.pendingContextList.append(webContext)
++                }
++            } catch {
++                print("Error scraping content from URL: \(error.localizedDescription)")
++                // You could add error handling UI here if needed
++            }
++        }
++        
++        // Remove URLs from the text to avoid duplication
++        var processedText = text
++        for url in urls {
++            processedText = processedText.replacingOccurrences(of: url.absoluteString, with: "")
++        }
++        
++        // Clean up any double spaces or newlines that might have been created
++        processedText = processedText.replacingOccurrences(of: "  ", with: " ")
++        processedText = processedText.replacingOccurrences(of: "\n\n", with: "\n")
++        processedText = processedText.trimmingCharacters(in: .whitespacesAndNewlines)
++        
++        return (processedText, true)
++    }
++}
+\ No newline at end of file
+diff --git a/macos/Onit/UI/Prompt/Files/ContextImage.swift b/macos/Onit/UI/Prompt/Files/ContextImage.swift
+index 75c1c50..f61af8d 100644
+--- a/macos/Onit/UI/Prompt/Files/ContextImage.swift
++++ b/macos/Onit/UI/Prompt/Files/ContextImage.swift
+@@ -24,9 +24,24 @@ struct ContextImage: View {
+     }
+ 
+     var autoContext: some View {
+-        Image(.stars)
+-            .resizable()
+-            .frame(width: 20, height: 20)
++        switch context {
++        case .auto(let appName, _):
++            if appName.starts(with: "Web:") {
++                // Use a web icon for web content
++                return Image(systemName: "globe")
++                    .resizable()
++                    .frame(width: 20, height: 20)
++            } else {
++                // Use the default stars icon for other auto context
++                return Image(.stars)
++                    .resizable()
++                    .frame(width: 20, height: 20)
++            }
++        default:
++            return Image(.stars)
++                .resizable()
++                .frame(width: 20, height: 20)
++        }
+     }
+ 
+     var file: some View {
+diff --git a/macos/Onit/UI/Prompt/Files/ContextItem.swift b/macos/Onit/UI/Prompt/Files/ContextItem.swift
+index db0b0db..32ff981 100644
+--- a/macos/Onit/UI/Prompt/Files/ContextItem.swift
++++ b/macos/Onit/UI/Prompt/Files/ContextItem.swift
+@@ -61,13 +61,21 @@ struct ContextItem: View {
+     var name: String {
+         switch item {
+         case .auto(let appName, _):
+-            appName
++            // For web content, show a cleaner name
++            if appName.starts(with: "Web:") {
++                // Extract just the domain part if possible
++                let parts = appName.split(separator: ":")
++                if parts.count > 1 {
++                    return String(parts[1]).trimmingCharacters(in: .whitespacesAndNewlines)
++                }
++            }
++            return appName
+         case .file(let url), .image(let url):
+-            url.lastPathComponent
++            return url.lastPathComponent
+         case .error(_, let error):
+-            error.localizedDescription
++            return error.localizedDescription
+         case .tooBig:
+-            "Upload exceeds model limit"
++            return "Upload exceeds model limit"
+         }
+     }
+ 
+diff --git a/macos/Onit/UI/Prompt/TextInputView.swift b/macos/Onit/UI/Prompt/TextInputView.swift
+index ae57aab..945d2e9 100644
+--- a/macos/Onit/UI/Prompt/TextInputView.swift
++++ b/macos/Onit/UI/Prompt/TextInputView.swift
+@@ -20,6 +20,7 @@ struct TextInputView: View {
+     @Default(.mode) var mode
+     
+     @State private var textHeight: CGFloat = 20
++    @State private var isProcessingURL: Bool = false
+     private let maxHeightLimit: CGFloat = 100
+ 
+     var body: some View {
+@@ -52,9 +53,25 @@ struct TextInputView: View {
+             .frame(height: min(textHeight, maxHeightLimit))
+             .onAppear { focused = true }
+             .onChange(of: model.textFocusTrigger) { focused = true }
++            .onChange(of: model.pendingInstruction) { oldValue, newValue in
++                // Check for URLs when text changes
++                if !isProcessingURL && !newValue.isEmpty {
++                    Task {
++                        await checkForURLs()
++                    }
++                }
++            }
+         }
+         .appFont(.medium16)
+         .foregroundStyle(.white)
++        .overlay(alignment: .topTrailing) {
++            if isProcessingURL {
++                ProgressView()
++                    .scaleEffect(0.7)
++                    .padding(.trailing, 8)
++                    .padding(.top, 4)
++            }
++        }
+     }
+ 
+     var placeholderText: String {
+@@ -76,6 +93,30 @@ struct TextInputView: View {
+             "New instructions..."
+         }
+     }
++    
++    /// Checks for URLs in the pending instruction and processes them
++    func checkForURLs() async {
++        guard !model.pendingInstruction.isEmpty else { return }
++        
++        // Set processing state
++        await MainActor.run {
++            isProcessingURL = true
++        }
++        
++        // Process text for URLs
++        let (processedText, foundURLs) = await WebContentContext.processTextForURLs(
++            text: model.pendingInstruction, 
++            model: model
++        )
++        
++        // Update UI with processed text if URLs were found
++        await MainActor.run {
++            if foundURLs {
++                model.pendingInstruction = processedText
++            }
++            isProcessingURL = false
++        }
++    }
+ 
+     func sendAction() {
+         let inputText = model.pendingInstruction.trimmingCharacters(in: .whitespacesAndNewlines)
+@@ -83,7 +124,23 @@ struct TextInputView: View {
+         // Add empty check
+         guard !inputText.isEmpty else { return }
+         
+-        model.createAndSavePrompt()
++        // Final URL check before sending
++        if !isProcessingURL {
++            Task {
++                await checkForURLs()
++                await MainActor.run {
++                    model.createAndSavePrompt()
++                }
++            }
++        } else {
++            // If we're still processing, wait a bit and then send
++            Task {
++                try? await Task.sleep(nanoseconds: 500_000_000) // 0.5 seconds
++                await MainActor.run {
++                    model.createAndSavePrompt()
++                }
++            }
++        }
+     }
+ 
+     var sendButton: some View {
+@@ -98,7 +155,7 @@ struct TextInputView: View {
+                 .frame(width: 18, height: 18)
+         }
+         .buttonStyle(.plain)
+-        .disabled(model.pendingInstruction.isEmpty)
++        .disabled(model.pendingInstruction.isEmpty || isProcessingURL)
+         .keyboardShortcut(.return, modifiers: [])
+     }
+ 
+-- 
+2.39.5
+

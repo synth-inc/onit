@@ -61,13 +61,21 @@ struct ContextItem: View {
     var name: String {
         switch item {
         case .auto(let appName, _):
-            appName
+            // For web content, show a cleaner name
+            if appName.starts(with: "Web:") {
+                // Extract just the domain part if possible
+                let parts = appName.split(separator: ":")
+                if parts.count > 1 {
+                    return String(parts[1]).trimmingCharacters(in: .whitespacesAndNewlines)
+                }
+            }
+            return appName
         case .file(let url), .image(let url):
-            url.lastPathComponent
+            return url.lastPathComponent
         case .error(_, let error):
-            error.localizedDescription
+            return error.localizedDescription
         case .tooBig:
-            "Upload exceeds model limit"
+            return "Upload exceeds model limit"
         }
     }
 
