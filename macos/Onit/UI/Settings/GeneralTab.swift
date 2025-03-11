@@ -23,8 +23,6 @@ struct GeneralTab: View {
             
             analyticsSection
             
-            openAISection
-            
             appearanceSection
             
             experimentalSection
@@ -33,29 +31,6 @@ struct GeneralTab: View {
         .padding()
     }
     
-    var openAISection: some View {
-        Section {
-            VStack(alignment: .leading, spacing: 4) {
-                HStack {
-                    Text("OpenAI API Key")
-                        .font(.system(size: 13))
-                    Spacer()
-                    SecureField("", text: $openaiApiKey)
-                        .textFieldStyle(.roundedBorder)
-                        .frame(width: 200)
-                }
-                Text("Required for voice transcription using Whisper API")
-                    .font(.system(size: 12))
-                    .foregroundStyle(.gray200)
-            }
-        } header: {
-            HStack {
-                Image(systemName: "key")
-                Text("OpenAI Integration")
-            }
-        }
-    }
-
     var launchOnStartupSection: some View {
         Section {
             VStack(alignment: .leading, spacing: 20) {

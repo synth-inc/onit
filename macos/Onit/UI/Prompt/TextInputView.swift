@@ -27,7 +27,14 @@ struct TextInputView: View {
     @State private var showingAPIKeyAlert = false
     @State private var showingErrorAlert = false
     @State private var errorMessage = ""
-    
+    @Default(.openAIToken) var openAIToken
+    @Default(.useOpenAI) var useOpenAI
+    @Default(.isOpenAITokenValidated) var isOpenAITokenValidated
+
+    @State private var eventMonitor: Any? = nil
+
+    @State private var showingMicrophonePermissionAlert = false
+
     var body: some View {
         HStack(alignment: .bottom) {
             textField
@@ -69,10 +76,18 @@ struct TextInputView: View {
         } message: {
             Text(errorMessage)
         }
+        .alert("Microphone Access Required", isPresented: $showingMicrophonePermissionAlert) {
+            Button("Open System Settings") {
+                NSWorkspace.shared.open(URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Microphone")!)
+            }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("Onit needs access to your microphone for voice input. Please enable it in System Settings.")
+        }
     }
     
     var microphoneButton: some View {
-        Button(action: startRecording) {
+        Button(action: handleMicrophonePress) {
             Image(systemName: "mic.circle.fill")
                 .resizable()
                 .renderingMode(.template)
@@ -80,33 +95,65 @@ struct TextInputView: View {
                 .frame(width: 18, height: 18)
         }
         .buttonStyle(.plain)
-        .disabled(!audioRecorder.permissionGranted || isTranscribing)
-        .help(audioRecorder.permissionGranted ? "Record voice instruction" : "Microphone access not granted")
+        .disabled(isTranscribing || !isOpenAITokenValidated)
+        .help(microphoneButtonHelpText)
     }
     
+    private var microphoneButtonHelpText: String {
+        if !isOpenAITokenValidated {
+            return "Add an OpenAI API key in Settings → Models to use voice input"
+        }
+        if !audioRecorder.permissionGranted {
+            return "Click to enable microphone access"
+        }
+        return audioRecorder.isRecording ? "Stop recording" : "Start voice recording"
+    }
+
+    func handleMicrophonePress() {
+        if audioRecorder.permissionStatus == .denied || audioRecorder.permissionStatus == .restricted {
+            showingMicrophonePermissionAlert = true
+            return
+        }
+        
+        if !audioRecorder.permissionGranted {
+            Task {
+                await audioRecorder.checkPermission()
+                if audioRecorder.permissionGranted {
+                    startRecording()
+                } else if audioRecorder.permissionStatus == .denied {
+                    showingMicrophonePermissionAlert = true
+                }
+            }
+        } else {
+            startRecording()
+        }
+    }
+
     func startRecording() {
         audioRecorder.startRecording()
         
-        // Add a long press gesture recognizer
-        NSEvent.addLocalMonitorForEvents(matching: .leftMouseUp) { _ in
+        eventMonitor = NSEvent.addLocalMonitorForEvents(matching: .leftMouseUp) { _ in
             stopRecordingAndTranscribe()
             return nil
         }
     }
     
     func stopRecordingAndTranscribe() {
+        if let monitor = eventMonitor {
+            NSEvent.removeMonitor(monitor)
+            eventMonitor = nil
+        }
+        
         guard let audioURL = audioRecorder.stopRecording() else { return }
         
         isTranscribing = true
         
-        // Get API key from settings
-        @AppStorage("openai_api_key") var openaiApiKey: String = ""
-        guard !openaiApiKey.isEmpty else {
+        guard let openAIToken = openAIToken, !openAIToken.isEmpty else {
             showingAPIKeyAlert = true
             isTranscribing = false
             return
         }
-        let whisperService = WhisperService(apiKey: openaiApiKey)
+        let whisperService = WhisperService(apiKey: openAIToken)
         
         Task {
             do {
@@ -164,9 +211,8 @@ struct TextInputView: View {
     }
 
     func sendAction() {
-        let inputText = model.pendingInstruction.trimmingCharacters(in: .whitespacesAndNewlines)
+        let inputText = (model.pendingInstruction ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
         
-        // Add empty check
         guard !inputText.isEmpty else { return }
         
         model.createAndSavePrompt()
@@ -178,7 +224,7 @@ struct TextInputView: View {
                 .resizable()
                 .renderingMode(.template)
                 .foregroundStyle(
-                    model.pendingInstruction.isEmpty
+                    (model.pendingInstruction.isEmpty)
                         ? Color.gray700 : (mode == .local ? .limeGreen : Color.blue400)
                 )
                 .frame(width: 18, height: 18)

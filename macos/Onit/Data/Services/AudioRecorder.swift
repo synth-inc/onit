@@ -1,28 +1,33 @@
 import AVFoundation
 import Foundation
 
+@MainActor
 class AudioRecorder: NSObject, ObservableObject {
     @Published var isRecording = false
     @Published var permissionGranted = false
+    @Published var permissionStatus: AVAuthorizationStatus = .notDetermined
     
     private var audioRecorder: AVAudioRecorder?
     private var audioFileURL: URL?
     
     override init() {
         super.init()
-        checkPermission()
+        Task { @MainActor in
+            await checkPermission()
+        }
     }
     
-    func checkPermission() {
-        switch AVCaptureDevice.authorizationStatus(for: .audio) {
+    func checkPermission() async {
+        let status = AVCaptureDevice.authorizationStatus(for: .audio)
+        self.permissionStatus = status
+        
+        switch status {
         case .authorized:
             self.permissionGranted = true
         case .notDetermined:
-            AVCaptureDevice.requestAccess(for: .audio) { granted in
-                DispatchQueue.main.async {
-                    self.permissionGranted = granted
-                }
-            }
+            let granted = await AVCaptureDevice.requestAccess(for: .audio)
+            self.permissionGranted = granted
+            self.permissionStatus = granted ? .authorized : .denied
         default:
             self.permissionGranted = false
         }
