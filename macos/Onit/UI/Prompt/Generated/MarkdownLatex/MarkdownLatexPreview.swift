@@ -6,6 +6,7 @@
 //
 
 import AppKit
+import Defaults
 import SwiftUI
 import WebKit
 import os
@@ -13,6 +14,10 @@ import os
 struct MarkdownLatexPreview: NSViewRepresentable {
     let markdownText: String
     @Binding var webViewHeight: CGFloat
+    @Default(.fontSize) var fontSize
+    @Default(.lineHeight) var lineHeight
+    @Default(.fontSize) var codeFontSize
+    @Default(.lineHeight) var codeLineHeight
 
     // Logger pour le débogage
     private let logger = Logger(subsystem: "com.onit.MarkdownLatexPreview", category: "WebView")
@@ -115,6 +120,26 @@ struct MarkdownLatexPreview: NSViewRepresentable {
         let userContentController = WKUserContentController()
         userContentController.add(context.coordinator, name: "heightHandler")
         userContentController.add(context.coordinator, name: "logHandler")
+        
+        // Injecter les variables CSS
+        let cssVariables = """
+            const style = document.createElement('style');
+            style.textContent = `
+                :root {
+                    --font-size: \(Int(fontSize))px;
+                    --line-height: \(lineHeight);
+                    --code-font-size: \(Int(codeFontSize))px;
+                    --code-line-height: \(codeLineHeight);
+                }
+            `;
+            document.head.appendChild(style);
+        """
+        let cssScript = WKUserScript(
+            source: cssVariables,
+            injectionTime: .atDocumentEnd,
+            forMainFrameOnly: true
+        )
+        userContentController.addUserScript(cssScript)
         configuration.userContentController = userContentController
         
         // Activer les logs de console JavaScript
@@ -140,6 +165,33 @@ struct MarkdownLatexPreview: NSViewRepresentable {
 
     func updateNSView(_ webView: WKWebView, context: Self.Context) {
         logger.debug("updateNSView appelé avec markdownText de longueur: \(markdownText.count)")
+        
+        // Mettre à jour les variables CSS
+        let cssVariables = """
+            const styleElement = document.querySelector('style');
+            if (styleElement) {
+                styleElement.textContent = `
+                    :root {
+                        --font-size: \(Int(fontSize))px;
+                        --line-height: \(lineHeight);
+                        --code-font-size: \(Int(codeFontSize))px;
+                        --code-line-height: \(codeLineHeight);
+                    }
+                `;
+            } else {
+                const style = document.createElement('style');
+                style.textContent = `
+                    :root {
+                        --font-size: \(Int(fontSize))px;
+                        --line-height: \(lineHeight);
+                        --code-font-size: \(Int(codeFontSize))px;
+                        --code-line-height: \(codeLineHeight);
+                    }
+                `;
+                document.head.appendChild(style);
+            }
+        """
+        webView.evaluateJavaScript(cssVariables)
         
         // Mettre à jour le contenu avec rendu Markdown et LaTeX
         let escapedMarkdown = formatMarkdown()
