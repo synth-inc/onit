@@ -15,18 +15,45 @@ struct GeneralTab: View {
     @State var isLaunchAtStartupEnabled: Bool = SMAppService.mainApp.status == .enabled
     @State var isAnalyticsEnabled: Bool = PostHogSDK.shared.isOptOut() == false
 
+    @AppStorage("openai_api_key") private var openaiApiKey: String = ""
+    
     var body: some View {
         Form {
             launchOnStartupSection
             
             analyticsSection
-
+            
+            openAISection
+            
             appearanceSection
             
             experimentalSection
         }
         .formStyle(.grouped)
         .padding()
+    }
+    
+    var openAISection: some View {
+        Section {
+            VStack(alignment: .leading, spacing: 4) {
+                HStack {
+                    Text("OpenAI API Key")
+                        .font(.system(size: 13))
+                    Spacer()
+                    SecureField("", text: $openaiApiKey)
+                        .textFieldStyle(.roundedBorder)
+                        .frame(width: 200)
+                }
+                Text("Required for voice transcription using Whisper API")
+                    .font(.system(size: 12))
+                    .foregroundStyle(.gray200)
+            }
+        } header: {
+            HStack {
+                Image(systemName: "key")
+                Text("OpenAI Integration")
+            }
+        }
     }
 
     var launchOnStartupSection: some View {

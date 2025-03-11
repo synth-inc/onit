@@ -22,9 +22,30 @@ struct TextInputView: View {
     @State private var textHeight: CGFloat = 20
     private let maxHeightLimit: CGFloat = 100
 
+    @StateObject private var audioRecorder = AudioRecorder()
+    @State private var isTranscribing = false
+    @State private var showingAPIKeyAlert = false
+    @State private var showingErrorAlert = false
+    @State private var errorMessage = ""
+    
     var body: some View {
         HStack(alignment: .bottom) {
             textField
+            if audioRecorder.isRecording {
+                Image(systemName: "mic.circle.fill")
+                    .resizable()
+                    .renderingMode(.template)
+                    .foregroundStyle(Color.red)
+                    .frame(width: 18, height: 18)
+                    .help("Recording... Release to stop")
+            } else if isTranscribing {
+                ProgressView()
+                    .scaleEffect(0.5)
+                    .frame(width: 18, height: 18)
+                    .help("Transcribing audio...")
+            } else {
+                microphoneButton
+            }
             sendButton
         }
         .padding(.top, 4)
@@ -34,6 +55,71 @@ struct TextInputView: View {
             upListener
             downListener
             newListener
+        }
+        .alert("OpenAI API Key Required", isPresented: $showingAPIKeyAlert) {
+            Button("Open Settings") {
+                NSWorkspace.shared.open(URL(string: "onit://settings/general")!)
+            }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("Please set your OpenAI API key in Settings to use voice transcription.")
+        }
+        .alert("Transcription Error", isPresented: $showingErrorAlert) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text(errorMessage)
+        }
+    }
+    
+    var microphoneButton: some View {
+        Button(action: startRecording) {
+            Image(systemName: "mic.circle.fill")
+                .resizable()
+                .renderingMode(.template)
+                .foregroundStyle(audioRecorder.permissionGranted ? Color.blue400 : Color.gray700)
+                .frame(width: 18, height: 18)
+        }
+        .buttonStyle(.plain)
+        .disabled(!audioRecorder.permissionGranted || isTranscribing)
+        .help(audioRecorder.permissionGranted ? "Record voice instruction" : "Microphone access not granted")
+    }
+    
+    func startRecording() {
+        audioRecorder.startRecording()
+        
+        // Add a long press gesture recognizer
+        NSEvent.addLocalMonitorForEvents(matching: .leftMouseUp) { _ in
+            stopRecordingAndTranscribe()
+            return nil
+        }
+    }
+    
+    func stopRecordingAndTranscribe() {
+        guard let audioURL = audioRecorder.stopRecording() else { return }
+        
+        isTranscribing = true
+        
+        // Get API key from settings
+        @AppStorage("openai_api_key") var openaiApiKey: String = ""
+        guard !openaiApiKey.isEmpty else {
+            showingAPIKeyAlert = true
+            isTranscribing = false
+            return
+        }
+        let whisperService = WhisperService(apiKey: openaiApiKey)
+        
+        Task {
+            do {
+                let transcription = try await whisperService.transcribe(audioURL: audioURL)
+                DispatchQueue.main.async {
+                    model.pendingInstruction = transcription
+                    isTranscribing = false
+                }
+            } catch {
+                errorMessage = error.localizedDescription
+                showingErrorAlert = true
+                isTranscribing = false
+            }
         }
     }
 
