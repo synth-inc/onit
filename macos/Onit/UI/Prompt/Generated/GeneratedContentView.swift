@@ -109,7 +109,6 @@ struct ParsedContentView: View {
                 } else {
                     MarkdownLatexPreview(markdownText: segment.content, webViewHeight: $webViewHeight)
                         .textSelection(.enabled)
-                        //.lineSpacing((lineHeight * fontSize) - fontSize)
                         .multilineTextAlignment(.leading)
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .frame(height: webViewHeight)
