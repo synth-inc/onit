@@ -10,6 +10,8 @@ import SwiftUI
 
 struct StaticPromptView: View {
     @Environment(\.model) var model
+    @State private var offset: CGFloat = 0
+    @State private var isDragging = false
 
     var shortcut: KeyboardShortcut? {
         KeyboardShortcuts.getShortcut(for: .launch)?.native
@@ -17,6 +19,11 @@ struct StaticPromptView: View {
 
     var body: some View {
         if model.panel == nil {
+            // Reset offset when view appears
+            let _ = DispatchQueue.main.async {
+                offset = 0
+                isDragging = false
+            }
             VStack(spacing: 3) {
                 Image(.smirk)
                     .resizable()
@@ -46,8 +53,35 @@ struct StaticPromptView: View {
                     topTrailingRadius: 0
                 )
             )
+            .offset(x: offset)
+            .gesture(
+                DragGesture()
+                    .onChanged { value in
+                        if value.translation.width > 0 {
+                            isDragging = true
+                            offset = value.translation.width
+                        }
+                    }
+                    .onEnded { value in
+                        if value.translation.width > 50 {
+                            withAnimation(.easeOut) {
+                                offset = NSScreen.main?.frame.width ?? 1000
+                            }
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                                model.dismissPanel()
+                            }
+                        } else {
+                            withAnimation(.easeOut) {
+                                offset = 0
+                                isDragging = false
+                            }
+                        }
+                    }
+            )
             .onTapGesture {
-                model.launchPanel()
+                if !isDragging {
+                    model.launchPanel()
+                }
             }
         }
     }
