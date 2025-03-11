@@ -20,34 +20,53 @@ log("Script démarré");
 
 MathJax = {
     tex: {
+        packages: ['base', 'ams', 'noerrors', 'noundefined', 'newcommand', 'boldsymbol', 'color', 'cancel', 'cases', 'mathtools', 'physics', 'configmacros'],
         inlineMath: [['$', '$'], ['\\(', '\\)']],
         displayMath: [['$$', '$$'], ['\\[', '\\]']],
-        processEscapes: true,
+        processEscapes: false,
         processEnvironments: true,
-        packages: ['base', 'ams', 'noerrors', 'noundefined']
+        processRefs: true,
+        digits: /^(?:[0-9]+(?:\{,\}[0-9]{3})*(?:\.[0-9]*)?|\.[0-9]+)/,
+        tags: 'all',
+        tagSide: 'right',
+        tagIndent: '0.8em',
+        useLabelIds: true,
+        maxMacros: 10000,
+        maxBuffer: 5 * 1024,
+        formatError: (jax, err) => {
+            return jax.formatError(err);
+        }
     },
     options: {
         skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'],
-        processHtmlClass: 'math'
+        processHtmlClass: 'math',
+        ignoreHtmlClass: 'no-math'
+    },
+    loader: {
+        load: ['[tex]/ams', '[tex]/newcommand', '[tex]/boldsymbol', '[tex]/color', '[tex]/cancel', '[tex]/cases', '[tex]/mathtools']
     },
     startup: {
-        typeset: true,
         ready: () => {
             log("MathJax est prêt");
             MathJax.startup.defaultReady();
+            MathJax.startup.promise.then(() => {
+                log("MathJax a terminé le chargement initial");
+            });
         }
     }
 };
 
 // Fonction pour mettre à jour la hauteur
 function updateHeight() {
-    try {
-        const height = document.body.scrollHeight;
-        window.webkit.messageHandlers.heightHandler.postMessage(height);
-        log("Hauteur mise à jour: " + height);
-    } catch (e) {
-        log("Erreur lors de la mise à jour de la hauteur: " + e.message);
-    }
+    setTimeout(() => {
+        const content = document.getElementById('content');
+        const contentHeight = content.getBoundingClientRect().height;
+        const spacerHeight = 0;
+        const totalHeight = contentHeight + spacerHeight;
+        
+        // Envoyer la hauteur à Swift
+        window.webkit.messageHandlers.heightHandler.postMessage(totalHeight);
+    }, 100);
 }
 
 // Vérifier si les bibliothèques sont chargées
@@ -247,7 +266,7 @@ window.onload = function() {
             });
         }
         updateHeight();
-    }, 500);
+    }, 100);
 };
 
 // Fonction pour copier le code
