@@ -18,6 +18,27 @@ function log(message) {
 
 log("Script démarré");
 
+MathJax = {
+    tex: {
+        inlineMath: [['$', '$'], ['\\(', '\\)']],
+        displayMath: [['$$', '$$'], ['\\[', '\\]']],
+        processEscapes: true,
+        processEnvironments: true,
+        packages: ['base', 'ams', 'noerrors', 'noundefined']
+    },
+    options: {
+        skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'],
+        processHtmlClass: 'math'
+    },
+    startup: {
+        typeset: true,
+        ready: () => {
+            log("MathJax est prêt");
+            MathJax.startup.defaultReady();
+        }
+    }
+};
+
 // Fonction pour mettre à jour la hauteur
 function updateHeight() {
     try {
@@ -42,7 +63,7 @@ try {
         html: true,
         linkify: true,
         typographer: true,
-    highlight: function (str, lang) {
+        highlight: function (str, lang) {
             // Traitement spécial pour les blocs LaTeX
             if (lang === 'latex') {
                 try {
@@ -218,10 +239,11 @@ window.onload = function() {
                 delimiters: [
                     {left: '$$', right: '$$', display: true},
                     {left: '$', right: '$', display: false},
-                    {left: '\(', right: '\)', display: false},
-                    {left: '\[', right: '\]', display: true}
+                    {left: '\\(', right: '\\)', display: false},
+                    {left: '\\[', right: '\\]', display: true}
                 ],
-                throwOnError: false
+                throwOnError: false,
+                ignoredTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
             });
         }
         updateHeight();
