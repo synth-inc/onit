@@ -45,33 +45,6 @@ struct GeneratedContentView: View {
     }
 }
 
-//extension Theme {
-//    @MainActor static var custom: Theme {
-//        @Default(.fontSize) var fontSize
-//        @Default(.lineHeight) var lineHeight
-//        
-//        return Theme()
-//            .text {
-//                FontFamily(.custom("Inter"))
-//                FontSize(fontSize)
-//                ForegroundColor(.FG)
-//            }
-//            .code {
-//                FontFamily(.custom("SometypeMono"))
-//                FontFamilyVariant(.monospaced)
-//                FontSize(fontSize)
-//                ForegroundColor(.pink)
-//            }
-//            .codeBlock { configuration in
-//                CodeBlockView(configuration: configuration)
-//            }
-//            .paragraph { configuration in
-//                configuration.label
-//                    .markdownMargin(top: fontSize + (lineHeight * fontSize) - fontSize) // This works
-//            }
-//    }
-//}
-
 #Preview {
     GeneratedContentView(prompt: Prompt.sample)
 }

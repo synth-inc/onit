@@ -62,6 +62,10 @@ body {
     padding: 12px 16px;
 }
 
+.code-content ::-webkit-scrollbar {
+    display: none;
+}
+
 pre {
     margin: 0;
     padding: 0;
@@ -70,66 +74,21 @@ pre {
 }
 
 code {
+    color: #FC5FA3;
     font-family: "SF Mono", Monaco, Menlo, Consolas, "Ubuntu Mono", monospace;
     font-size: 13px;
     line-height: 1.7;
+    font-weight: bold;
+    white-space: pre;
+    min-width: fit-content;
 }
 
-/* Styles de coloration syntaxique Xcode */
-.hljs-keyword {
-    color: #FC5FA3;  /* rose pour les mots-clés comme func, var, let */
-}
-
-.hljs-built_in {
-    color: #FF7AB2;  /* rose pour les types built-in comme Int, String */
-}
-
-.hljs-type {
-    color: #4EC9B0;  /* bleu-vert pour les types */
-}
-
-.hljs-number {
-    color: #D0BF69;  /* jaune pour les nombres */
-}
-
-.hljs-string {
-    color: #FC6A5D;  /* rouge-orange pour les chaînes */
-}
-
-.hljs-comment {
-    color: #6C7986;  /* gris pour les commentaires */
-}
-
-.hljs-function {
-    color: #DCDCAA;  /* jaune clair pour les noms de fonctions */
-}
-
-.hljs-title {
-    color: #DCDCAA;  /* jaune clair pour les noms de fonctions */
-}
-
-.hljs-params {
-    color: #D4D4D4;  /* blanc cassé pour les paramètres */
-}
-
-.hljs-operator {
-    color: #FF7AB2;  /* rose pour les opérateurs */
-}
-
-.hljs-punctuation {
-    color: #D4D4D4;  /* blanc cassé pour la ponctuation */
-}
-
-.hljs-property {
-    color: #4EC9B0;  /* bleu-vert pour les propriétés */
-}
-
-/* Style par défaut pour le texte non coloré */
-.hljs {
-    background: transparent;
-    padding: 0;
-    color: #D4D4D4;  /* blanc cassé pour le texte par défaut */
+code .plaintext {
+    color: white;
+    font-family: "SF Mono", Monaco, Menlo, Consolas, "Ubuntu Mono", monospace;
+    font-size: 13px;
     line-height: 1.7;
+    font-weight: normal;
 }
 
 /* Styles pour les formules LaTeX */
