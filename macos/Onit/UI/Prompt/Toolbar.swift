@@ -8,6 +8,7 @@
 import Defaults
 import KeyboardShortcuts
 import SwiftUI
+import SwiftData
 
 struct Toolbar: View {
     @Environment(\.model) var model
@@ -16,6 +17,8 @@ struct Toolbar: View {
     @Default(.remoteModel) var remoteModel
     @Default(.localModel) var localModel
 
+    @State private var showingHistory = false
+
     var body: some View {
         HStack(spacing: 4) {
             esc
@@ -23,6 +26,7 @@ struct Toolbar: View {
             Spacer()
             languageModel
             localMode
+            history
             settings
             resize
         }
@@ -164,11 +168,17 @@ struct Toolbar: View {
 
     var history: some View {
         Button {
-            model.showHistory = true
+            withAnimation(.spring(response: 0.2, dampingFraction: 0.8, blendDuration: 0)) {
+                showingHistory.toggle()
+            }
         } label: {
             Image(.history)
                 .renderingMode(.template)
                 .padding(2)
+        }
+        .popover(isPresented: $showingHistory) {
+            HistoryView()
+                .modelContainer(SwiftDataContainer.appContainer)
         }
         .tooltip(prompt: "History")
     }

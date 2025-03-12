@@ -9,6 +9,7 @@ import SwiftUI
 
 struct HistorySearchView: View {
     @Binding var text: String
+    @FocusState private var isFocused: Bool
 
     var rect: some Shape {
         .rect(cornerRadius: 10)
@@ -21,8 +22,13 @@ struct HistorySearchView: View {
             ZStack(alignment: .leading) {
                 TextField("", text: $text)
                     .textFieldStyle(PlainTextFieldStyle())
-                    .tint(.blue600.opacity(0.2))
+                    .tint(.blue600)
                     .fixedSize(horizontal: false, vertical: true)
+                    .textFieldStyle(.plain)
+                    .focused($isFocused)
+                    .onSubmit {
+                        // Handle submit if needed
+                    }
 
                 if text.isEmpty {
                     placeholderView
@@ -40,6 +46,7 @@ struct HistorySearchView: View {
             rect.stroke(.gray700)
         }
         .padding(.horizontal, 10)
+        .allowsHitTesting(true)
     }
 
     var placeholderView: some View {

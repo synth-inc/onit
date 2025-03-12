@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import SwiftData
 
 struct HistoryRowView: View {
     @Environment(\.model) var model
@@ -16,7 +17,7 @@ struct HistoryRowView: View {
         Button {
             model.currentChat = chat
             model.currentPrompts = chat.prompts
-            model.showHistory = false
+            OverlayManager.shared.dismissOverlay()
         } label: {
             HStack {
                 Text(chat.prompts.first?.instruction ?? "")

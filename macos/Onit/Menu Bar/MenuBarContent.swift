@@ -6,15 +6,27 @@
 //
 
 import SwiftUI
+@_spi(Advanced) import MenuBarExtraAccess
 
 struct MenuBarContent: View {
     @Environment(\.model) var model
-    @ObservedObject private var featureFlagsManager = FeatureFlagManager.shared
+    @Environment(\.modelContext) private var modelContext
+    @ObservedObject private var featureFlagsManager: FeatureFlagManager
+    @State private var showingHistory = false
+
+    init() {
+        self._featureFlagsManager = ObservedObject(wrappedValue: FeatureFlagManager.shared)
+    }
 
     var body: some View {
         VStack(spacing: 5) {
             MenuCheckForPermissions()
             MenuOpenOnitButton()
+            MenuHistory(isPresented: $showingHistory)
+                .popover(isPresented: $showingHistory) {
+                    HistoryView()
+                        .modelContainer(SwiftDataContainer.appContainer)
+                }
             MenuDivider()
             if featureFlagsManager.accessibility && model.accessibilityPermissionStatus == .granted
             {

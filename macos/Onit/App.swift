@@ -45,6 +45,7 @@ struct App: SwiftUI.App {
 
         MenuBarExtra {
             MenuBarContent()
+                .modelContainer(SwiftDataContainer.appContainer)
         } label: {
             MenuIcon()
                 .onAppear {
