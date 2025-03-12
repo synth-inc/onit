@@ -19,7 +19,7 @@ struct App: SwiftUI.App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) var delegate
     @ObservedObject private var featureFlagsManager = FeatureFlagManager.shared
 
-    @Default(.activationPolicyAccessory) var activationPolicyAccessory
+    @Default(.isRegularApp) var isRegularApp
     @Default(.launchOnStartupRequested) var launchOnStartupRequested
 
     @State var accessibilityPermissionRequested = false
@@ -49,7 +49,7 @@ struct App: SwiftUI.App {
             MenuIcon()
                 .onAppear {
                     checkLaunchOnStartup()
-                    toggleUIElementMode(enable: activationPolicyAccessory)
+                    toggleUIElementMode(enable: isRegularApp)
                 }
                 .onChange(of: model.accessibilityPermissionStatus, initial: true) {
                     _, newValue in
@@ -92,7 +92,7 @@ struct App: SwiftUI.App {
                         model.closeDebugWindow()
                     }
                 }
-                .onChange(of: activationPolicyAccessory) { _, newValue in
+                .onChange(of: isRegularApp) { _, newValue in
                     toggleUIElementMode(enable: newValue)
                 }
         }

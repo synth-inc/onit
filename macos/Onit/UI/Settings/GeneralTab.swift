@@ -8,7 +8,7 @@ struct GeneralTab: View {
     @Default(.fontSize) var fontSize
     @Default(.lineHeight) var lineHeight
     @Default(.panelPosition) var panelPosition
-    @Default(.activationPolicyAccessory) var activationPolicyAccessory
+    @Default(.isRegularApp) var isRegularApp
     @Default(.splitViewModeEnabled) var splitViewModeEnabled
     @Default(.launchShortcutToggleEnabled) var launchShortcutToggleEnabled
     @Default(.createNewChatOnPanelOpen) var createNewChatOnPanelOpen
@@ -180,7 +180,7 @@ struct GeneralTab: View {
                     Spacer()
                     Toggle(
                         "",
-                        isOn: $activationPolicyAccessory
+                        isOn: $isRegularApp
                     )
                     .toggleStyle(.switch)
                     .controlSize(.small)

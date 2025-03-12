@@ -11,6 +11,7 @@ import SwiftUI
 struct ContentView: View {
     @Environment(\.model) var model
     @Default(.panelWidth) var panelWidth
+    @Default(.isRegularApp) var isRegularApp
     
     static let minWidth: CGFloat = 325
     
@@ -22,6 +23,10 @@ struct ContentView: View {
         return screenHeight - 100
     }
     
+    var toolbarPaddingTop: CGFloat {
+        isRegularApp ? -28 : 0
+    }
+    
     var showFileImporterBinding: Binding<Bool> {
         Binding(
             get: { self.model.showFileImporter },
@@ -30,15 +35,18 @@ struct ContentView: View {
     }
 
     var body: some View {
-        VStack(spacing: 0) {
-            Toolbar()
-            PromptDivider()
-            ChatView()
-        }
-        .opacity(model.showHistory ? 0 : 1)
-        .overlay {
-            if model.showHistory {
-                HistoryView()
+        ZStack(alignment: .top) {
+            VStack(spacing: 0) {
+                Toolbar()
+                    .padding(.top, toolbarPaddingTop)
+                PromptDivider()
+                ChatView()
+            }
+            .opacity(model.showHistory ? 0 : 1)
+            .overlay {
+                if model.showHistory {
+                    HistoryView()
+                }
             }
         }
         .background(Color.black)
@@ -48,7 +56,9 @@ struct ContentView: View {
         .overlay {
             RoundedRectangle(cornerRadius: 14)
                 .strokeBorder(.gray600, lineWidth: 2)
+                .edgesIgnoringSafeArea(.top)
         }
+        //.edgesIgnoringSafeArea(.top)
         .gesture(
             DragGesture(minimumDistance: 1)
                 .onEnded { value in

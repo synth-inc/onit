@@ -31,9 +31,15 @@ extension OnitModel: NSWindowDelegate {
             windowWidth = savedWidth
         }
 
+        let styleMask: NSWindow.StyleMask
+        if Defaults[.isRegularApp] {
+            styleMask = [.titled, .closable, .miniaturizable, .resizable, .fullSizeContentView]
+        } else {
+            styleMask = [.nonactivatingPanel, .resizable, .fullSizeContentView]
+        }
         let newPanel = CustomPanel(
             contentRect: NSRect(x: 0, y: 0, width: windowWidth, height: 0),
-            styleMask: [.resizable, .nonactivatingPanel, .fullSizeContentView],
+            styleMask: styleMask,
             backing: .buffered,
             defer: false
         )
@@ -45,11 +51,19 @@ extension OnitModel: NSWindowDelegate {
         newPanel.titlebarAppearsTransparent = true
         newPanel.isMovableByWindowBackground = true
         newPanel.delegate = self
-
-        newPanel.standardWindowButton(.closeButton)?.isHidden = true
-        newPanel.standardWindowButton(.miniaturizeButton)?.isHidden = true
-        newPanel.standardWindowButton(.zoomButton)?.isHidden = true
         newPanel.isFloatingPanel = true
+        
+        if Defaults[.isRegularApp] {
+            newPanel.standardWindowButton(.closeButton)?.superview?.superview?.addTrackingRect(
+                newPanel.standardWindowButton(.closeButton)!.frame,
+                owner: self,
+                userData: nil,
+                assumeInside: true)
+        } else {
+            newPanel.standardWindowButton(.closeButton)?.isHidden = true
+            newPanel.standardWindowButton(.miniaturizeButton)?.isHidden = true
+            newPanel.standardWindowButton(.zoomButton)?.isHidden = true
+        }
 
         let contentView = ContentView()
             .modelContainer(container)

@@ -15,16 +15,26 @@ struct Toolbar: View {
     @Default(.mode) var mode
     @Default(.remoteModel) var remoteModel
     @Default(.localModel) var localModel
+    @Default(.isRegularApp) var isRegularApp
 
     var body: some View {
         HStack(spacing: 4) {
-            esc
+            if isRegularApp {
+                Spacer()
+                    .frame(width: 60)
+            } else {
+                esc
+            }
+            
             add
             Spacer()
             languageModel
             localMode
             settings
-            resize
+            
+            if !isRegularApp {
+                resize
+            }
         }
         .foregroundStyle(.gray200)
         .padding(.horizontal, 14)
