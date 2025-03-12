@@ -8,6 +8,8 @@ struct GeneralTab: View {
     @Default(.fontSize) var fontSize
     @Default(.lineHeight) var lineHeight
     @Default(.panelPosition) var panelPosition
+    @Default(.activationPolicyAccessory) var activationPolicyAccessory
+    @Default(.splitViewModeEnabled) var splitViewModeEnabled
     @Default(.launchShortcutToggleEnabled) var launchShortcutToggleEnabled
     @Default(.createNewChatOnPanelOpen) var createNewChatOnPanelOpen
     @Default(.openOnMouseMonitor) var openOnMouseMonitor
@@ -165,6 +167,44 @@ struct GeneralTab: View {
         Section {
             VStack(spacing: 16) {
                 
+                HStack {
+                    Text("Display app in Dock")
+                        .font(.system(size: 13))
+                    SettingInfoButton(
+                        title: "Display app in Dock",
+                        description:
+                            "Enable this to hide app from Dock.",
+                        defaultValue: "off",
+                        valueType: "Bool"
+                    )
+                    Spacer()
+                    Toggle(
+                        "",
+                        isOn: $activationPolicyAccessory
+                    )
+                    .toggleStyle(.switch)
+                    .controlSize(.small)
+                }
+                
+                HStack {
+                    Text("Position app at the right edge of the active window")
+                        .font(.system(size: 13))
+                    SettingInfoButton(
+                        title: "Position app at the right edge of the active window",
+                        description:
+                            "Enable this option to place the app next to the active window",
+                        defaultValue: "off",
+                        valueType: "Bool"
+                    )
+                    Spacer()
+                    Toggle(
+                        "",
+                        isOn: $splitViewModeEnabled
+                    )
+                    .toggleStyle(.switch)
+                    .controlSize(.small)
+                }
+
                 HStack {
                     Text("Use launch shortcut as a toggle")
                         .font(.system(size: 13))

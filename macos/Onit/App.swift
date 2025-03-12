@@ -15,28 +15,28 @@ import SwiftUI
 
 @main
 struct App: SwiftUI.App {
-
     @Environment(\.model) var model
     @NSApplicationDelegateAdaptor(AppDelegate.self) var delegate
     @ObservedObject private var featureFlagsManager = FeatureFlagManager.shared
 
+    @Default(.activationPolicyAccessory) var activationPolicyAccessory
     @Default(.launchOnStartupRequested) var launchOnStartupRequested
 
     @State var accessibilityPermissionRequested = false
 
     init() {
         KeyboardShortcutsManager.configure(model: model)
-
         featureFlagsManager.configure()
         // For testing new user experience
         // clearTokens()
         model.showPanel()
 
         #if !targetEnvironment(simulator)
-
             AccessibilityPermissionManager.shared.setModel(model)
             AccessibilityNotificationsManager.shared.setModel(model)
-
+            
+            // Start observing application changes
+            SplitViewManager.shared.startObserving()
         #endif
     }
 
@@ -49,6 +49,7 @@ struct App: SwiftUI.App {
             MenuIcon()
                 .onAppear {
                     checkLaunchOnStartup()
+                    toggleUIElementMode(enable: activationPolicyAccessory)
                 }
                 .onChange(of: model.accessibilityPermissionStatus, initial: true) {
                     _, newValue in
@@ -91,6 +92,9 @@ struct App: SwiftUI.App {
                         model.closeDebugWindow()
                     }
                 }
+                .onChange(of: activationPolicyAccessory) { _, newValue in
+                    toggleUIElementMode(enable: newValue)
+                }
         }
         .menuBarExtraStyle(.window)
         .menuBarExtraAccess(isPresented: $model.showMenuBarExtra)
@@ -129,6 +133,14 @@ struct App: SwiftUI.App {
             } catch {
                 print("Error: \(error)")
             }
+        }
+    }
+    
+    private func toggleUIElementMode(enable: Bool) {
+        if enable {
+            NSApp.setActivationPolicy(.regular)
+        } else {
+            NSApp.setActivationPolicy(.accessory)
         }
     }
 }

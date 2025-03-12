@@ -99,6 +99,8 @@ extension Defaults.Keys {
     static let localRequestTimeout = Key<TimeInterval?>("localRequestTimeout", default: 60.0)
     
     // Debug settings
+    static let activationPolicyAccessory = Key<Bool>("activationPolicyAccessory", default: true)
+    static let splitViewModeEnabled = Key<Bool>("splitViewModeEnabled", default: false)
     static let launchShortcutToggleEnabled = Key<Bool>("launchShortcutToggleEnabled", default: false)
     static let createNewChatOnPanelOpen = Key<Bool>("createNewChatOnPanelOpen", default: false)
     static let escapeShortcutDisabled = Key<Bool>("escapeShortcutDisabled", default: true)

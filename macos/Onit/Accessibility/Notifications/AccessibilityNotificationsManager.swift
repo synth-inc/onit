@@ -20,6 +20,7 @@ class AccessibilityNotificationsManager: ObservableObject {
     // MARK: - ScreenResult
 
     @Published private(set) var screenResult: ScreenResult = .init()
+    @Published private(set) var windowBounds: WindowBounds = .init()
 
     struct ScreenResult {
         struct UserInteractions {
@@ -216,6 +217,7 @@ class AccessibilityNotificationsManager: ObservableObject {
 
         currentSource = appName
         processSelectedText(selectedText, for: selectedElement)
+        handleWindowBounds(for: processID.getAXUIElement())
         parseAccessibility(for: processID)
     }
 
@@ -239,6 +241,8 @@ class AccessibilityNotificationsManager: ObservableObject {
             case kAXSelectedRowsChangedNotification:
                 print("Selected Rows Changed Notification!")
                 self?.handleFocusChange(for: element)
+            case kAXWindowMovedNotification, kAXWindowResizedNotification:
+                self?.handleWindowBounds(for: element)
             default:
                 break
             }
@@ -250,6 +254,7 @@ class AccessibilityNotificationsManager: ObservableObject {
             print("Focus change from pid: \(elementPid)")
 
             self?.parseAccessibility(for: elementPid)
+            self?.handleWindowBounds(for: element)
         }
     }
 
@@ -282,6 +287,51 @@ class AccessibilityNotificationsManager: ObservableObject {
         selectionDebounceWorkItem = workItem
 
         DispatchQueue.main.asyncAfter(deadline: .now() + Config.debounceInterval, execute: workItem)
+    }
+    
+    // MARK: - Window resize / move
+    
+    private func handleWindowBounds(for element: AXUIElement) {
+        handleExternalElement(element) { [weak self] elementPid in
+            if let window = self?.findWindow(from: element),
+               let position = window.position(),
+               let size = window.size() {
+                
+                self?.windowBounds = WindowBounds(
+                    window: window,
+                    position: position,
+                    size: size
+                )
+            }
+        }
+    }
+    
+    private func findWindow(from element: AXUIElement) -> AXUIElement? {
+        if let role = element.role(), role == kAXWindowRole {
+            return element
+        }
+        
+        var currentElement = element
+        while true {
+            guard let parent = currentElement.parent() else { break }
+            
+            if let role = parent.role(), role == kAXWindowRole {
+                return parent
+            }
+            
+            currentElement = parent
+        }
+        
+        var value: AnyObject?
+        let result = AXUIElementCopyAttributeValue(currentElement, kAXWindowsAttribute as CFString, &value)
+        
+        if result == .success,
+           let windows = value as? [AXUIElement],
+           let window = windows.first {
+            return window
+        }
+        
+        return nil
     }
 
     // MARK: Parsing

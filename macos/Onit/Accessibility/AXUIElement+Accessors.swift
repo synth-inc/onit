@@ -67,6 +67,13 @@ extension AXUIElement {
     func title() -> String? {
         return self.attribute(forAttribute: kAXTitleAttribute as CFString) as? String
     }
+    
+    func parent() -> AXUIElement? {
+        if let value = self.attribute(forAttribute: kAXParentAttribute as CFString) {
+            return value as! AXUIElement
+        }
+        return nil
+    }
 
     func children() -> [AXUIElement]? {
         return self.attribute(forAttribute: kAXChildrenAttribute as CFString) as? [AXUIElement]
@@ -108,6 +115,32 @@ extension AXUIElement {
         AXValueGetValue(boundsValue, .cgRect, &rect)
 
         return rect
+    }
+
+    func setPosition(_ point: CGPoint) -> Bool {
+        var point = point
+        if let axValue = AXValueCreate(.cgPoint, &point) {
+            let result = AXUIElementSetAttributeValue(self, kAXPositionAttribute as CFString, axValue)
+            
+            return result == .success
+        }
+        
+        return false
+    }
+
+    func setSize(_ size: CGSize) -> Bool {
+        var size = size
+        if let axValue = AXValueCreate(.cgSize, &size) {
+            let result = AXUIElementSetAttributeValue(self, kAXSizeAttribute as CFString, axValue)
+            
+            return result == .success
+        }
+        
+        return false
+    }
+
+    func setFrame(_ frame: CGRect) -> Bool {
+        return setPosition(frame.origin) && setSize(frame.size)
     }
 }
 

@@ -12,6 +12,8 @@ struct ContentView: View {
     @Environment(\.model) var model
     @Default(.panelWidth) var panelWidth
     
+    static let minWidth: CGFloat = 325
+    
     @State var screenHeight: CGFloat = NSScreen.main?.visibleFrame.height ?? 0
 
     var maxHeight: CGFloat {
@@ -42,7 +44,7 @@ struct ContentView: View {
         .background(Color.black)
         .buttonStyle(.plain)
         .screenHeight(binding: $screenHeight)
-        .frame(minWidth: 325, idealWidth: 400, maxHeight: maxHeight)
+        .frame(minWidth: ContentView.minWidth, idealWidth: 400, maxHeight: maxHeight)
         .overlay {
             RoundedRectangle(cornerRadius: 14)
                 .strokeBorder(.gray600, lineWidth: 2)
