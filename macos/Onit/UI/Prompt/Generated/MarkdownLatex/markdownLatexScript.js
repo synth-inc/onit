@@ -166,7 +166,7 @@ function renderMathJax() {
                     } else {
                         resolve();
                     }
-                }, 100);
+                }, 500);
             } else {
                 MathJax.typesetPromise()
                     .then(() => { resolve(); })
