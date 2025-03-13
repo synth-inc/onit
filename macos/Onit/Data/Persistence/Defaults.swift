@@ -100,7 +100,6 @@ extension Defaults.Keys {
     
     // Debug settings
     static let isRegularApp = Key<Bool>("isRegularApp", default: true)
-    static let splitViewModeEnabled = Key<Bool>("splitViewModeEnabled", default: false)
     static let launchShortcutToggleEnabled = Key<Bool>("launchShortcutToggleEnabled", default: false)
     static let createNewChatOnPanelOpen = Key<Bool>("createNewChatOnPanelOpen", default: false)
     static let escapeShortcutDisabled = Key<Bool>("escapeShortcutDisabled", default: true)

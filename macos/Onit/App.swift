@@ -23,20 +23,25 @@ struct App: SwiftUI.App {
     @Default(.launchOnStartupRequested) var launchOnStartupRequested
 
     @State var accessibilityPermissionRequested = false
+    
+    private var frontmostApplication: NSRunningApplication?
 
     init() {
+        frontmostApplication = NSWorkspace.shared.frontmostApplication
+        
         KeyboardShortcutsManager.configure(model: model)
         featureFlagsManager.configure()
+        
         // For testing new user experience
         // clearTokens()
         model.showPanel()
 
         #if !targetEnvironment(simulator)
-            AccessibilityPermissionManager.shared.setModel(model)
-            AccessibilityNotificationsManager.shared.setModel(model)
-            
-            // Start observing application changes
-            SplitViewManager.shared.startObserving()
+        AccessibilityPermissionManager.shared.setModel(model)
+        AccessibilityNotificationsManager.shared.setModel(model)
+
+        SplitViewManager.shared.configure(model: model)
+        SplitViewManager.shared.startObserving()
         #endif
     }
 
@@ -57,7 +62,7 @@ struct App: SwiftUI.App {
                     
                     switch newValue {
                     case .granted:
-                        AccessibilityNotificationsManager.shared.start()
+                        AccessibilityNotificationsManager.shared.start(pid: frontmostApplication?.processIdentifier)
                         TapListener.shared.start()
                     case .denied:
                         AccessibilityNotificationsManager.shared.stop()

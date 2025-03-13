@@ -34,7 +34,7 @@
 	<key>LSApplicationCategoryType</key>
 	<string>public.app-category.utilities</string>
 	<key>LSUIElement</key>
-	<false/>
+	<true/>
 	<key>NSApplicationCrashOnExceptions</key>
 	<true/>
 	<key>NSHumanReadableCopyright</key>

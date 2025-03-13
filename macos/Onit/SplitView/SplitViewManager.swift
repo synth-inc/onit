@@ -13,22 +13,40 @@ import Defaults
 class SplitViewManager: ObservableObject {
     static let shared = SplitViewManager()
     
+    private var model: OnitModel?
     private var cancellables = Set<AnyCancellable>()
     
+    private let minOnitWidth: CGFloat = ContentView.idealWidth
+    private let spaceBetweenWindows: CGFloat = 0
+    
     private init() { }
+    
+    func configure(model: OnitModel) {
+        self.model = model
+    }
     
     func startObserving() {
         stopObserving()
 
-        AccessibilityNotificationsManager.shared.$windowBounds
+        guard let model = model else { return }
+        
+        let activeWindowElement = AccessibilityNotificationsManager.shared.$activeWindowElement
+        let isPanelOpened = model.isPanelOpened
+            .prepend(model.panel != nil)
+        let isPanelMiniaturized = model.isPanelMiniaturized
+            .prepend(model.panel?.isMiniaturized ?? false)
+        let isPanelOpenedAndNotMinimized = Publishers.CombineLatest(isPanelOpened, isPanelMiniaturized)
+            .map { $0 && !$1 }
+        
+        Publishers.CombineLatest(activeWindowElement, isPanelOpenedAndNotMinimized)
+            .debounce(for: 0.05, scheduler: RunLoop.main)
             .receive(on: DispatchQueue.main)
-            .sink { [weak self] bounds in
-                guard Defaults[.splitViewModeEnabled],
-                      let window = bounds.window,
-                      let position = bounds.position,
-                      let size = bounds.size else { return }
+            .sink { [weak self] (window, isPanelOpened) in
+                guard Defaults[.isRegularApp],
+                      let window = window,
+                      isPanelOpened else { return }
                 
-                self?.repositionWindow(window: window, position: position, size: size)
+                self?.repositionWindow(window: window)
             }
             .store(in: &cancellables)
     }
@@ -37,29 +55,30 @@ class SplitViewManager: ObservableObject {
         cancellables.removeAll()
     }
     
-    private func repositionWindow(window: AXUIElement, position: CGPoint, size: CGSize) {
-        guard let screen = NSScreen.main else { return }
+    private func repositionWindow(window: AXUIElement) {
+        guard let screen = NSScreen.main,
+              let panel = model?.panel,
+              let position = window.position(),
+              let size = window.size() else { return }
         
         let screenFrame = screen.visibleFrame
-        let minOnitWidth: CGFloat = ContentView.minWidth
-        let activeAppWidth = min(size.width, screenFrame.width - minOnitWidth)
-        let onitWidth = max(minOnitWidth, screenFrame.width - activeAppWidth)
+        let maxActiveAppWidth = screenFrame.width - minOnitWidth - spaceBetweenWindows
+        let activeAppWidth = min(size.width, maxActiveAppWidth)
+        let onitX = position.x + activeAppWidth + spaceBetweenWindows
+        let onitWidth = max(minOnitWidth, screenFrame.maxX - onitX)
         
         if window.setFrame(CGRect(
-            x: screenFrame.minX,
-            y: screenFrame.minY,
+            x: position.x,
+            y: position.y,
             width: activeAppWidth,
-            height: screenFrame.height
+            height: size.height
         )) {
-            if let onitWindow = NSApp.windows.first {
-                onitWindow.deminiaturize(nil)
-                onitWindow.setFrame(NSRect(
-                    x: screenFrame.minX + activeAppWidth,
-                    y: screenFrame.minY,
-                    width: onitWidth,
-                    height: screenFrame.height
-                ), display: true, animate: true)
-            }
+            panel.setFrame(NSRect(
+                x: onitX,
+                y: screenFrame.minY,
+                width: onitWidth,
+                height: screenFrame.height
+            ), display: true, animate: true)
         }
     }
 }

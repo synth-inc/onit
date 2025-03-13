@@ -13,14 +13,15 @@ struct ContentView: View {
     @Default(.panelWidth) var panelWidth
     @Default(.isRegularApp) var isRegularApp
     
-    static let minWidth: CGFloat = 325
+    static let idealWidth: CGFloat = 400
+    static let bottomPadding: CGFloat = 100
     
     @State var screenHeight: CGFloat = NSScreen.main?.visibleFrame.height ?? 0
 
     var maxHeight: CGFloat {
         guard screenHeight != 0 else { return 0 }
         
-        return screenHeight - 100
+        return isRegularApp ? screenHeight : screenHeight - ContentView.bottomPadding
     }
     
     var toolbarPaddingTop: CGFloat {
@@ -52,7 +53,7 @@ struct ContentView: View {
         .background(Color.black)
         .buttonStyle(.plain)
         .screenHeight(binding: $screenHeight)
-        .frame(minWidth: ContentView.minWidth, idealWidth: 400, maxHeight: maxHeight)
+        .frame(minWidth: 325, idealWidth: ContentView.idealWidth, maxHeight: maxHeight)
         .overlay {
             RoundedRectangle(cornerRadius: 14)
                 .strokeBorder(.gray600, lineWidth: 2)

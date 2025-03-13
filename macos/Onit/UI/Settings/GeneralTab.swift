@@ -9,7 +9,6 @@ struct GeneralTab: View {
     @Default(.lineHeight) var lineHeight
     @Default(.panelPosition) var panelPosition
     @Default(.isRegularApp) var isRegularApp
-    @Default(.splitViewModeEnabled) var splitViewModeEnabled
     @Default(.launchShortcutToggleEnabled) var launchShortcutToggleEnabled
     @Default(.createNewChatOnPanelOpen) var createNewChatOnPanelOpen
     @Default(.openOnMouseMonitor) var openOnMouseMonitor
@@ -168,25 +167,6 @@ struct GeneralTab: View {
             VStack(spacing: 16) {
                 
                 HStack {
-                    Text("Display app in Dock")
-                        .font(.system(size: 13))
-                    SettingInfoButton(
-                        title: "Display app in Dock",
-                        description:
-                            "Enable this to hide app from Dock.",
-                        defaultValue: "off",
-                        valueType: "Bool"
-                    )
-                    Spacer()
-                    Toggle(
-                        "",
-                        isOn: $isRegularApp
-                    )
-                    .toggleStyle(.switch)
-                    .controlSize(.small)
-                }
-                
-                HStack {
                     Text("Position app at the right edge of the active window")
                         .font(.system(size: 13))
                     SettingInfoButton(
@@ -199,10 +179,17 @@ struct GeneralTab: View {
                     Spacer()
                     Toggle(
                         "",
-                        isOn: $splitViewModeEnabled
+                        isOn: $isRegularApp
                     )
                     .toggleStyle(.switch)
                     .controlSize(.small)
+                }
+                // Re-draw the panel on change
+                .onChange(of: isRegularApp, initial: false) {
+                    DispatchQueue.main.async {
+                        model.closePanel()
+                        model.showPanel()
+                    }
                 }
 
                 HStack {
