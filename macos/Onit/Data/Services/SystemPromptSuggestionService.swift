@@ -106,14 +106,28 @@ class SystemPromptSuggestionService {
             
             for appURL in prompt.applications {
                 let lowercaseAppName = appURL.deletingPathExtension().lastPathComponent.lowercased()
-                
-                if apps.contains(lowercaseAppName) { score += 5 }
+                let appNamePattern = "\\b\(NSRegularExpression.escapedPattern(for: lowercaseAppName))\\b"
+            
+                if let regex = try? NSRegularExpression(pattern: appNamePattern, options: []) {
+                    let range = NSRange(location: 0, length: apps.utf16.count)
+                    
+                    if regex.firstMatch(in: apps, options: [], range: range) != nil {
+                        score += 5
+                    }
+                }
             }
             
             for tag in prompt.tags {
                 let lowercaseTag = tag.lowercased()
+                let tagPattern = "\\b\(NSRegularExpression.escapedPattern(for: lowercaseTag))\\b"
                 
-                if text.contains(lowercaseTag) { score += 3 }
+                if let regex = try? NSRegularExpression(pattern: tagPattern, options: []) {
+                    let range = NSRange(location: 0, length: text.utf16.count)
+                    
+                    if regex.firstMatch(in: text, options: [], range: range) != nil {
+                        score += 3
+                    }
+                }
             }
             
             return (prompt, score)
