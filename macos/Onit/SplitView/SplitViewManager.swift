@@ -66,6 +66,8 @@ class SplitViewManager: ObservableObject {
         let activeAppWidth = min(size.width, maxActiveAppWidth)
         let onitX = position.x + activeAppWidth + spaceBetweenWindows
         let onitWidth = max(minOnitWidth, screenFrame.maxX - onitX)
+        let onitHeight = screenFrame.height - ContentView.bottomPadding
+        let onitY = screenFrame.height - onitHeight
         
         if window.setFrame(CGRect(
             x: position.x,
@@ -75,9 +77,9 @@ class SplitViewManager: ObservableObject {
         )) {
             panel.setFrame(NSRect(
                 x: onitX,
-                y: screenFrame.minY,
+                y: onitY,
                 width: onitWidth,
-                height: screenFrame.height
+                height: onitHeight
             ), display: true, animate: true)
         }
     }

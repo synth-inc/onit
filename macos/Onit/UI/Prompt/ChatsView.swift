@@ -27,9 +27,9 @@ struct ChatsView: View {
         
         let availableHeight = screenHeight - model.headerHeight -
         model.inputHeight - model.setUpHeight -
-        model.systemPromptHeight
+        model.systemPromptHeight - ContentView.bottomPadding
         
-        return isRegularApp ? availableHeight : availableHeight - ContentView.bottomPadding
+        return availableHeight
     }
     
     var realHeight: CGFloat {

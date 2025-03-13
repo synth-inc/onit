@@ -21,7 +21,7 @@ struct ContentView: View {
     var maxHeight: CGFloat {
         guard screenHeight != 0 else { return 0 }
         
-        return isRegularApp ? screenHeight : screenHeight - ContentView.bottomPadding
+        return screenHeight - ContentView.bottomPadding
     }
     
     var toolbarPaddingTop: CGFloat {

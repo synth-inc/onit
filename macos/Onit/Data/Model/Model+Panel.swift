@@ -122,7 +122,7 @@ extension OnitModel: NSWindowDelegate {
                 x: visibleFrame.origin.x + visibleFrame.width - windowWidth,
                 y: visibleFrame.origin.y + visibleFrame.height - windowHeight,
                 width: windowWidth,
-                height: visibleFrame.height - visibleFrame.origin.y
+                height: visibleFrame.height - visibleFrame.origin.y - ContentView.bottomPadding
             )
         }
         let finalXPosition: CGFloat
@@ -184,7 +184,7 @@ extension OnitModel: NSWindowDelegate {
             let windowHeight = defaultPanelFrame.height
 
             let finalXPosition = visibleFrame.origin.x + visibleFrame.width - 16 - windowWidth
-            let finalYPosition = visibleFrame.origin.y + visibleFrame.height - 16 - 100
+            let finalYPosition = visibleFrame.origin.y + visibleFrame.height - 16 - ContentView.bottomPadding
             debugPanel.setFrameOrigin(
                 NSPoint(x: finalXPosition, y: finalYPosition - (windowHeight * 2.0) - 16))
             debugPanel.makeKeyAndOrderFront(nil)
