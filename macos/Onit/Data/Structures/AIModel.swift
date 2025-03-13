@@ -54,6 +54,17 @@ struct AIModel: Codable, Identifiable, Hashable, Defaults.Serializable {
         self.customProviderName = providerName
     }
 
+    init(id: String, displayName: String, provider: ModelProvider, defaultOn: Bool, supportsVision: Bool, supportsSystemPrompts: Bool, isNew: Bool = false, isDeprecated: Bool = false) {
+        self.id = id
+        self.displayName = displayName
+        self.provider = provider
+        self.defaultOn = defaultOn
+        self.supportsVision = supportsVision
+        self.supportsSystemPrompts = supportsSystemPrompts
+        self.isNew = isNew
+        self.isDeprecated = isDeprecated
+    }
+    
     init?(from modelInfo: ModelInfo) {
         guard let provider = ModelProvider(rawValue: modelInfo.provider.lowercased()) else {
             return nil

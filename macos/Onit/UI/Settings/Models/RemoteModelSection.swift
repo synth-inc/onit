@@ -7,6 +7,7 @@
 
 import Defaults
 import SwiftUI
+import Foundation
 
 struct RemoteModelSection: View {
     @Environment(\.model) var model
@@ -40,6 +41,7 @@ struct RemoteModelSection: View {
     @Default(.isDeepSeekTokenValidated) var isDeepSeekTokenValidated
     @Default(.isPerplexityTokenValidated) var isPerplexityTokenValidated
     @Default(.streamResponse) var streamResponse
+    @Default(.visibleModelIds) var visibleModelIds
     
 
     var provider: AIModel.ModelProvider
@@ -207,6 +209,10 @@ struct RemoteModelSection: View {
         }
     }
 
+    @State private var showAddModelSheet = false
+    @State private var modelToDelete: AIModel? = nil
+    @State private var showDeleteConfirmation = false
+    
     @ViewBuilder
     var modelsView: some View {
         if use {
@@ -216,10 +222,78 @@ struct RemoteModelSection: View {
                         ModelToggle(aiModel: model)
                             .frame(height: 36)
                     }
+                    
+                    // Add and Delete buttons at the bottom
+                    HStack {
+                        Button(action: {
+                            showAddModelSheet = true
+                        }) {
+                            Image(systemName: "plus")
+                                .frame(width: 16, height: 16)
+                        }
+                        .buttonStyle(.borderless)
+                        .help("Add a new model")
+                        
+                        Spacer()
+                        
+                        Button(action: {
+                            // Show delete model dialog
+                            if let selectedModel = models.first(where: { 
+                                visibleModelIds.contains($0.uniqueId) 
+                            }) {
+                                modelToDelete = selectedModel
+                                showDeleteConfirmation = true
+                            }
+                        }) {
+                            Image(systemName: "minus")
+                                .frame(width: 16, height: 16)
+                        }
+                        .buttonStyle(.borderless)
+                        .help("Delete selected model")
+                        .disabled(models.filter { visibleModelIds.contains($0.uniqueId) }.isEmpty)
+                    }
+                    .padding(.top, 8)
+                    .padding(.horizontal, 4)
                 }
                 .padding(.vertical, -4)
                 .padding(.horizontal, 4)
                 .frame(maxWidth: .infinity, alignment: .leading)
+            }
+            .sheet(isPresented: $showAddModelSheet) {
+                AddModelView(provider: provider) { newModel in
+                    // Model was added successfully
+                }
+            }
+            .alert("Delete Model", isPresented: $showDeleteConfirmation) {
+                Button("Cancel", role: .cancel) {
+                    modelToDelete = nil
+                }
+                Button("Delete", role: .destructive) {
+                    if let modelToDelete = modelToDelete {
+                        deleteModel(modelToDelete)
+                    }
+                }
+            } message: {
+                Text("Are you sure you want to delete this model? This action cannot be undone.")
+            }
+        }
+    }
+    
+    private func deleteModel(_ model: AIModel) {
+        // Remove the model from the available models
+        var models = availableRemoteModels
+        if let index = models.firstIndex(where: { $0.uniqueId == model.uniqueId }) {
+            models.remove(at: index)
+            availableRemoteModels = models
+            
+            // Remove the model from visible models
+            var visible = visibleModelIds
+            visible.remove(model.uniqueId)
+            visibleModelIds = visible
+            
+            // If this was the currently selected model, select another one
+            if remoteModel?.uniqueId == model.uniqueId {
+                remoteModel = remoteModels.listedModels.first
             }
         }
     }

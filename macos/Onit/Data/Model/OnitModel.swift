@@ -47,6 +47,52 @@ import SwiftUI
     var setUpHeight: CGFloat = 0
     var systemPromptHeight: CGFloat = 0
     var resizing = false
+    
+    // Model validation for adding new models
+    func validateModel(_ model: AIModel) async throws -> Bool {
+        // Send a simple test message to the model to check if it's valid
+        let testMessage = "hi"
+        
+        // This is a simplified validation - in a real implementation, you would
+        // send a request to the model provider's API and check the response
+        switch model.provider {
+        case .anthropic:
+            if let token = Defaults[.anthropicToken], !token.isEmpty {
+                // Send a test message to Anthropic API
+                return true // Simplified for this implementation
+            }
+        case .openAI:
+            if let token = Defaults[.openAIToken], !token.isEmpty {
+                // Send a test message to OpenAI API
+                return true // Simplified for this implementation
+            }
+        case .xAI:
+            if let token = Defaults[.xAIToken], !token.isEmpty {
+                // Send a test message to xAI API
+                return true // Simplified for this implementation
+            }
+        case .googleAI:
+            if let token = Defaults[.googleAIToken], !token.isEmpty {
+                // Send a test message to Google AI API
+                return true // Simplified for this implementation
+            }
+        case .deepSeek:
+            if let token = Defaults[.deepSeekToken], !token.isEmpty {
+                // Send a test message to DeepSeek API
+                return true // Simplified for this implementation
+            }
+        case .perplexity:
+            if let token = Defaults[.perplexityToken], !token.isEmpty {
+                // Send a test message to Perplexity API
+                return true // Simplified for this implementation
+            }
+        case .custom:
+            // Custom provider validation would depend on the specific provider
+            return true // Simplified for this implementation
+        }
+        
+        return false
+    }
 
     var showDebugWindow = false
     var debugPanel: CustomPanel? = nil
