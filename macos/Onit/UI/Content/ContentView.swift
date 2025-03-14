@@ -59,7 +59,6 @@ struct ContentView: View {
                 .strokeBorder(.gray600, lineWidth: 2)
                 .edgesIgnoringSafeArea(.top)
         }
-        //.edgesIgnoringSafeArea(.top)
         .gesture(
             DragGesture(minimumDistance: 1)
                 .onEnded { value in

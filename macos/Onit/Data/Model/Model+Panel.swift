@@ -53,13 +53,7 @@ extension OnitModel: NSWindowDelegate {
         newPanel.delegate = self
         newPanel.isFloatingPanel = true
         
-        if Defaults[.isRegularApp] {
-            newPanel.standardWindowButton(.closeButton)?.superview?.superview?.addTrackingRect(
-                newPanel.standardWindowButton(.closeButton)!.frame,
-                owner: self,
-                userData: nil,
-                assumeInside: true)
-        } else {
+        if !Defaults[.isRegularApp] {
             newPanel.standardWindowButton(.closeButton)?.isHidden = true
             newPanel.standardWindowButton(.miniaturizeButton)?.isHidden = true
             newPanel.standardWindowButton(.zoomButton)?.isHidden = true

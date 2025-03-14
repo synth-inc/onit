@@ -24,10 +24,10 @@ struct App: SwiftUI.App {
 
     @State var accessibilityPermissionRequested = false
     
-    private var frontmostApplication: NSRunningApplication?
+    private var frontmostApplicationOnLaunch: NSRunningApplication?
 
     init() {
-        frontmostApplication = NSWorkspace.shared.frontmostApplication
+        frontmostApplicationOnLaunch = NSWorkspace.shared.frontmostApplication
         
         KeyboardShortcutsManager.configure(model: model)
         featureFlagsManager.configure()
@@ -62,7 +62,7 @@ struct App: SwiftUI.App {
                     
                     switch newValue {
                     case .granted:
-                        AccessibilityNotificationsManager.shared.start(pid: frontmostApplication?.processIdentifier)
+                        AccessibilityNotificationsManager.shared.start(pid: frontmostApplicationOnLaunch?.processIdentifier)
                         TapListener.shared.start()
                     case .denied:
                         AccessibilityNotificationsManager.shared.stop()

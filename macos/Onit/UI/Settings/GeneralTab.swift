@@ -186,10 +186,8 @@ struct GeneralTab: View {
                 }
                 // Re-draw the panel on change
                 .onChange(of: isRegularApp, initial: false) {
-                    DispatchQueue.main.async {
-                        model.closePanel()
-                        model.showPanel()
-                    }
+                    model.closePanel()
+                    model.showPanel()
                 }
 
                 HStack {

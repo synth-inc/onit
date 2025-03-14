@@ -25,7 +25,7 @@ import SwiftUI
     var isTooltipActive = false
     var showHistory: Bool = false
     var showMenuBarExtra: Bool = false
-    var panel: CustomPanel? = nil {
+    weak var panel: CustomPanel? = nil {
         didSet {
             isPanelOpened.send(panel != nil)
         }
