@@ -31,8 +31,20 @@ struct GeneratedContentView: View {
                                        citationHoverBackgroundColor: .gray400,
                                        citationTextColor: .gray100)
         let thought = ThoughtConfiguration(icon: Image(.lightBulb))
+        let citation = CitationConfiguration(
+            backgroundColor: .gray600,
+            hoverBackgroundColor: .gray400,
+            textColor: .gray100,
+            hoverTextColor: .white,
+            borderRadius: 6,
+            padding: EdgeInsets(top: 2, leading: 4, bottom: 2, trailing: 4),
+            margin: EdgeInsets(top: 0, leading: 4, bottom: 0, trailing: 4)
+        )
         
-        return LLMStreamConfiguration(font: font, colors: color, thought: thought)
+        return LLMStreamConfiguration(font: font,
+									  colors: color,
+									  thought: thought,
+									  citation: citation)
     }
     
 
@@ -74,7 +86,13 @@ struct GeneratedContentView: View {
     }
     
     private func codeAction(code: String) {
+        let notepadConfig = model.getNotepadConfig(prompt: prompt)
         
+        NotepadWindowController.shared.showWindow(
+            oldText: notepadConfig.oldText,
+            newText: code,
+            isStreaming: notepadConfig.isStreaming
+        )
     }
 }
 

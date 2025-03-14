@@ -93,10 +93,6 @@ class ContextWindowController: NSObject, NSWindowDelegate {
         window.ignoresMouseEvents = false
         window.hidesOnDeactivate = false
 
-        // TODO: KNA - WIP: Display the stars icon in title's left
-        window.representedURL = URL(string: "")
-        window.standardWindowButton(.documentIconButton)?.image = .stars
-
         self.window = window
     }
 
