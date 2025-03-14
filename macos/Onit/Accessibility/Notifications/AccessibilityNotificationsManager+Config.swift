@@ -19,6 +19,8 @@ extension AccessibilityNotificationsManager {
             kAXValueChangedNotification,
             kAXSelectedColumnsChangedNotification,
             kAXSelectedRowsChangedNotification,
+            kAXWindowMovedNotification,
+            kAXWindowResizedNotification
 
             //            kAXAnnouncementRequestedNotification,
             //            kAXApplicationActivatedNotification,

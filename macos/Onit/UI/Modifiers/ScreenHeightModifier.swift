@@ -8,79 +8,49 @@
 import SwiftUI
 
 struct ScreenHeightModifier: ViewModifier {
+    @Environment(\.model) var model
     @Binding var screenHeight: CGFloat
-//    private let debounceInterval: TimeInterval = 0.1
-//    @State private var lastUpdateTime: Date = .now
     
     func body(content: Content) -> some View {
         content
             .background(
-                GeometryReader { geometry in
-                    Color.clear
-                        .onAppear {
-//                            print("ScreenHeightModifier: onAppear")
-                            updateFromGeometry(geometry)
-                        }
-                        .onChange(of: geometry.frame(in: .global)) { _, frame in
-//                            print("ScreenHeightModifier: onChange frame=\(frame)")
-                            
-                            let now = Date()
-//                            if now.timeIntervalSince(lastUpdateTime) >= debounceInterval {
-//                                lastUpdateTime = now
-                                updateFromGeometry(geometry)
-//                            }
-                        }
+                WindowAccessor { window in
+                    if let screen = window.screen, screenHeight != screen.frame.height {
+                        screenHeight = screen.frame.height
+                        model.adjustPanelSize()
+                    }
                 }
             )
     }
-    
-    private func updateFromGeometry(_ geometry: GeometryProxy) {
-        let point = convertToScreenCoordinates(geometry.frame(in: .global).origin)
-//        print("ScreenHeightModifier: converted point=\(point)")
-        
-        if let window = findWindow(at: point) {
-            if let screen = window.screen {
-//                print("ScreenHeightModifier: found screen frame=\(screen.frame)")
-            }
-            updateScreenHeight(from: window)
-        } else {
+}
+
+struct WindowAccessor: NSViewRepresentable {
+    var onUpdate: @MainActor (NSWindow) -> Void
+
+    func makeNSView(context: Self.Context) -> NSView {
+        let view = NSView()
+        DispatchQueue.main.async { [weak view] in
+            guard let window = view?.window else { return }
             
-//            print("ScreenHeightModifier: no window found at point")
-        }
-    }
-    
-    private func convertToScreenCoordinates(_ point: CGPoint) -> CGPoint {
-        guard let mainScreen = NSScreen.main else { return point }
-        
-        return CGPoint(
-            x: point.x,
-            y: mainScreen.frame.height - point.y
-        )
-    }
-    
-    private func findWindow(at point: CGPoint) -> NSWindow? {
-        for screen in NSScreen.screens {
-            if screen.frame.contains(point) {
-                return NSApp.windows.first { window in
-                    window.screen == screen && window.isVisible
+            Task { @MainActor in
+                onUpdate(window)
+                NotificationCenter.default.addObserver(forName: NSWindow.didChangeScreenNotification, object: window, queue: .main) { _ in
+                    Task { @MainActor in
+                        onUpdate(window)
+                    }
                 }
             }
         }
-        return nil
+        return view
     }
-    
-    private func updateScreenHeight(from window: NSWindow) {
-        if let screen = window.screen {
-//            print("ScreenHeightModifier: updateScreenHeight \(screen.visibleFrame.size.height)")
-            DispatchQueue.main.async {
-                self.screenHeight = screen.visibleFrame.size.height
-            }
-        }
+
+    func updateNSView(_ nsView: NSView, context: Self.Context) {
+        
     }
 }
 
 extension View {
-    func screenHeight(binding: Binding<CGFloat>) -> some View {
-        self.modifier(ScreenHeightModifier(screenHeight: binding))
+    func trackScreenHeight(_ height: Binding<CGFloat>) -> some View {
+        self.modifier(ScreenHeightModifier(screenHeight: height))
     }
 }

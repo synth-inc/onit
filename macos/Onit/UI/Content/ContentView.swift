@@ -11,13 +11,21 @@ import SwiftUI
 struct ContentView: View {
     @Environment(\.model) var model
     @Default(.panelWidth) var panelWidth
+    @Default(.isRegularApp) var isRegularApp
+    
+    static let idealWidth: CGFloat = 400
+    static let bottomPadding: CGFloat = 100
     
     @State var screenHeight: CGFloat = NSScreen.main?.visibleFrame.height ?? 0
 
     var maxHeight: CGFloat {
         guard screenHeight != 0 else { return 0 }
         
-        return screenHeight - 100
+        return screenHeight - ContentView.bottomPadding
+    }
+    
+    var toolbarPaddingTop: CGFloat {
+        isRegularApp ? -28 : 0
     }
     
     var showFileImporterBinding: Binding<Bool> {
@@ -28,24 +36,28 @@ struct ContentView: View {
     }
 
     var body: some View {
-        VStack(spacing: 0) {
-            Toolbar()
-            PromptDivider()
-            ChatView()
-        }
-        .opacity(model.showHistory ? 0 : 1)
-        .overlay {
-            if model.showHistory {
-                HistoryView()
+        ZStack(alignment: .top) {
+            VStack(spacing: 0) {
+                Toolbar()
+                    .padding(.top, toolbarPaddingTop)
+                PromptDivider()
+                ChatView()
+            }
+            .opacity(model.showHistory ? 0 : 1)
+            .overlay {
+                if model.showHistory {
+                    HistoryView()
+                }
             }
         }
         .background(Color.black)
         .buttonStyle(.plain)
-        .screenHeight(binding: $screenHeight)
-        .frame(minWidth: 325, idealWidth: 400, maxHeight: maxHeight)
+        .trackScreenHeight($screenHeight)
+        .frame(minWidth: 325, idealWidth: ContentView.idealWidth, maxHeight: maxHeight)
         .overlay {
             RoundedRectangle(cornerRadius: 14)
                 .strokeBorder(.gray600, lineWidth: 2)
+                .edgesIgnoringSafeArea(.top)
         }
         .gesture(
             DragGesture(minimumDistance: 1)

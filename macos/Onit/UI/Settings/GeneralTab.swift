@@ -8,6 +8,7 @@ struct GeneralTab: View {
     @Default(.fontSize) var fontSize
     @Default(.lineHeight) var lineHeight
     @Default(.panelPosition) var panelPosition
+    @Default(.isRegularApp) var isRegularApp
     @Default(.launchShortcutToggleEnabled) var launchShortcutToggleEnabled
     @Default(.createNewChatOnPanelOpen) var createNewChatOnPanelOpen
     @Default(.openOnMouseMonitor) var openOnMouseMonitor
@@ -165,6 +166,30 @@ struct GeneralTab: View {
         Section {
             VStack(spacing: 16) {
                 
+                HStack {
+                    Text("Position app at the right edge of the active window")
+                        .font(.system(size: 13))
+                    SettingInfoButton(
+                        title: "Position app at the right edge of the active window",
+                        description:
+                            "Enable this option to place the app next to the active window",
+                        defaultValue: "off",
+                        valueType: "Bool"
+                    )
+                    Spacer()
+                    Toggle(
+                        "",
+                        isOn: $isRegularApp
+                    )
+                    .toggleStyle(.switch)
+                    .controlSize(.small)
+                }
+                // Re-draw the panel on change
+                .onChange(of: isRegularApp, initial: false) {
+                    model.closePanel()
+                    model.showPanel()
+                }
+
                 HStack {
                     Text("Use launch shortcut as a toggle")
                         .font(.system(size: 13))

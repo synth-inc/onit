@@ -20,6 +20,7 @@ class AccessibilityNotificationsManager: ObservableObject {
     // MARK: - ScreenResult
 
     @Published private(set) var screenResult: ScreenResult = .init()
+    @Published private(set) var activeWindowElement: AXUIElement?
 
     struct ScreenResult {
         struct UserInteractions {
@@ -66,8 +67,19 @@ class AccessibilityNotificationsManager: ObservableObject {
 
     // MARK: Start / Stop
 
-    func start() {
+    func start(pid: pid_t?) {
         startAppActivationObservers()
+        
+        guard let pid = pid else { return }
+        
+        // Ensure we're listening the active app on Onit launch
+        let appName = Bundle.main.object(forInfoDictionaryKey: "CFBundleName") as? String
+        if pid == getpid() || pid.getAppName() == appName {
+            print("Accessibility started with Onit process identifier")
+        } else {
+            handleAppActivation(appName: pid.getAppName(), processID: pid)
+            startAccessibilityObservers(for: pid)
+        }
     }
 
     func stop() {
@@ -216,6 +228,7 @@ class AccessibilityNotificationsManager: ObservableObject {
 
         currentSource = appName
         processSelectedText(selectedText, for: selectedElement)
+        handleWindowBounds(for: processID.getAXUIElement())
         parseAccessibility(for: processID)
     }
 
@@ -239,6 +252,8 @@ class AccessibilityNotificationsManager: ObservableObject {
             case kAXSelectedRowsChangedNotification:
                 print("Selected Rows Changed Notification!")
                 self?.handleFocusChange(for: element)
+            case kAXWindowMovedNotification, kAXWindowResizedNotification:
+                self?.handleWindowBounds(for: element)
             default:
                 break
             }
@@ -250,6 +265,7 @@ class AccessibilityNotificationsManager: ObservableObject {
             print("Focus change from pid: \(elementPid)")
 
             self?.parseAccessibility(for: elementPid)
+            self?.handleWindowBounds(for: element)
         }
     }
 
@@ -282,6 +298,16 @@ class AccessibilityNotificationsManager: ObservableObject {
         selectionDebounceWorkItem = workItem
 
         DispatchQueue.main.asyncAfter(deadline: .now() + Config.debounceInterval, execute: workItem)
+    }
+    
+    // MARK: - Window resize / move
+    
+    private func handleWindowBounds(for element: AXUIElement) {
+        handleExternalElement(element) { [weak self] elementPid in
+            if let window = element.findWindow() {
+                self?.activeWindowElement = window
+            }
+        }
     }
 
     // MARK: Parsing

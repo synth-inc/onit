@@ -15,28 +15,33 @@ import SwiftUI
 
 @main
 struct App: SwiftUI.App {
-
     @Environment(\.model) var model
     @NSApplicationDelegateAdaptor(AppDelegate.self) var delegate
     @ObservedObject private var featureFlagsManager = FeatureFlagManager.shared
 
+    @Default(.isRegularApp) var isRegularApp
     @Default(.launchOnStartupRequested) var launchOnStartupRequested
 
     @State var accessibilityPermissionRequested = false
+    
+    private var frontmostApplicationOnLaunch: NSRunningApplication?
 
     init() {
+        frontmostApplicationOnLaunch = NSWorkspace.shared.frontmostApplication
+        
         KeyboardShortcutsManager.configure(model: model)
-
         featureFlagsManager.configure()
+        
         // For testing new user experience
         // clearTokens()
         model.showPanel()
 
         #if !targetEnvironment(simulator)
+        AccessibilityPermissionManager.shared.setModel(model)
+        AccessibilityNotificationsManager.shared.setModel(model)
 
-            AccessibilityPermissionManager.shared.setModel(model)
-            AccessibilityNotificationsManager.shared.setModel(model)
-
+        SplitViewManager.shared.configure(model: model)
+        SplitViewManager.shared.startObserving()
         #endif
     }
 
@@ -49,6 +54,7 @@ struct App: SwiftUI.App {
             MenuIcon()
                 .onAppear {
                     checkLaunchOnStartup()
+                    toggleUIElementMode(enable: isRegularApp)
                 }
                 .onChange(of: model.accessibilityPermissionStatus, initial: true) {
                     _, newValue in
@@ -56,7 +62,7 @@ struct App: SwiftUI.App {
                     
                     switch newValue {
                     case .granted:
-                        AccessibilityNotificationsManager.shared.start()
+                        AccessibilityNotificationsManager.shared.start(pid: frontmostApplicationOnLaunch?.processIdentifier)
                         TapListener.shared.start()
                     case .denied:
                         AccessibilityNotificationsManager.shared.stop()
@@ -90,6 +96,9 @@ struct App: SwiftUI.App {
                     } else {
                         model.closeDebugWindow()
                     }
+                }
+                .onChange(of: isRegularApp) { _, newValue in
+                    toggleUIElementMode(enable: newValue)
                 }
         }
         .menuBarExtraStyle(.window)
@@ -129,6 +138,14 @@ struct App: SwiftUI.App {
             } catch {
                 print("Error: \(error)")
             }
+        }
+    }
+    
+    private func toggleUIElementMode(enable: Bool) {
+        if enable {
+            NSApp.setActivationPolicy(.regular)
+        } else {
+            NSApp.setActivationPolicy(.accessory)
         }
     }
 }
