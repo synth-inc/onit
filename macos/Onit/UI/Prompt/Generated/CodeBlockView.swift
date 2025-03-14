@@ -10,7 +10,7 @@ import MarkdownUI
 import SwiftUI
 
 struct CodeBlockView: View {
-    var configuration: CodeBlockConfiguration
+    var configuration: CodeBlockConfiguration?
 
     var rect: RoundedRectangle {
         .rect(cornerRadius: 10)
@@ -34,13 +34,14 @@ struct CodeBlockView: View {
 
     var top: some View {
         HStack {
-            if let language = configuration.language {
+            if let language = configuration?.language {
                 Text(language)
                     .appFont(.medium13)
             }
 
             Spacer()
-
+            
+            notepadButton
             copyButton
         }
         .foregroundStyle(.gray100)
@@ -48,9 +49,18 @@ struct CodeBlockView: View {
         .padding(.leading, 12)
         .padding(.trailing, 8)
     }
+    
+    var notepadButton: some View {
+        Button(action: {
+            // NotepadWindowController.shared.showWindow(prompt: , newValue: )
+        }) {
+            Image(.notes)
+        }
+        .tooltip(prompt: "Notepad")
+    }
 
     var copyButton: some View {
-        CopyButton(text: configuration.content)
+        CopyButton(text: configuration?.content ?? "")
     }
 
     var bottom: some View {
@@ -72,14 +82,14 @@ struct CodeBlockView: View {
                 .containerRelativeFrame(.horizontal)
 
             Group {
-                if let language = configuration.language,
+                if let language = configuration?.language,
                     let language = HighlightLanguage.language(for: language)
                 {
-                    CodeText(configuration.content)
+                    CodeText(configuration?.content ?? "")
                         .codeFont(AppFont.code.nsFont)
                         .highlightLanguage(language)
                 } else {
-                    CodeText(configuration.content)
+                    CodeText(configuration?.content ?? "")
                 }
             }
             .environment(\.colorScheme, .dark)
@@ -88,4 +98,8 @@ struct CodeBlockView: View {
             .padding(.top, 12)
         }
     }
+}
+
+#Preview {
+    CodeBlockView(configuration: nil)
 }

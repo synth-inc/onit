@@ -194,6 +194,7 @@ extension OnitModel {
                 
                 let response = Response(text: String(streamedResponse), type: .success, model: currentModelName)
                 updatePrompt(prompt: prompt, response: response, instruction: curInstruction)
+                
                 setTokenIsValid(true)
             } catch let error as FetchingError {
                 print("Fetching Error: \(error.localizedDescription)")
@@ -328,6 +329,9 @@ extension OnitModel {
         
         generatingPrompt = nil
         generatingPromptPriorState = nil
+        
+        // TODO: KNA Remove this after test
+        NotepadWindowController.shared.showWindow(prompt: prompt)
     }
     
     func updatePrompt(prompt: Prompt, response: Response, instruction: String) {
@@ -343,5 +347,8 @@ extension OnitModel {
         
         generatingPrompt = nil
         generatingPromptPriorState = nil
+        
+        // TODO: KNA Remove this after test
+        NotepadWindowController.shared.showWindow(prompt: prompt)
     }
 }

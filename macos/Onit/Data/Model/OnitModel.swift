@@ -26,6 +26,7 @@ import SwiftUI
     var showHistory: Bool = false
     var showMenuBarExtra: Bool = false
     var panel: CustomPanel? = nil
+    let notepadPanel: NSPanel
 
     var currentChat: Chat?
     var currentPrompts: [Prompt]?
@@ -210,6 +211,13 @@ import SwiftUI
         // self.pendingInstruction = String.load("instructions") ?? ""
         self.container = container
         self.remoteModels = remoteModels
+        self.notepadPanel = NSPanel(contentRect: .zero,
+                                    styleMask: [.titled, .closable, .resizable, .nonactivatingPanel],
+                                    backing: .buffered,
+                                    defer: false)
+        self.notepadPanel.isFloatingPanel = true
+        self.notepadPanel.level = .floating
+        
         super.init()
 
         Task {

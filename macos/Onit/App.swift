@@ -26,6 +26,7 @@ struct App: SwiftUI.App {
 
     init() {
         KeyboardShortcutsManager.configure(model: model)
+        NotepadWindowController.shared.configure(model: model)
 
         featureFlagsManager.configure()
         // For testing new user experience
