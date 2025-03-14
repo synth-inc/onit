@@ -32,6 +32,7 @@ import SwiftUI
     }
     var isPanelOpened = PassthroughSubject<Bool, Never>()
     var isPanelMiniaturized = PassthroughSubject<Bool, Never>()
+    let notepadPanel: NSPanel
 
     var currentChat: Chat?
     var currentPrompts: [Prompt]?
@@ -216,6 +217,13 @@ import SwiftUI
         // self.pendingInstruction = String.load("instructions") ?? ""
         self.container = container
         self.remoteModels = remoteModels
+        self.notepadPanel = NSPanel(contentRect: .zero,
+                                    styleMask: [.titled, .closable, .resizable, .nonactivatingPanel],
+                                    backing: .buffered,
+                                    defer: false)
+        self.notepadPanel.isFloatingPanel = true
+        self.notepadPanel.level = .floating
+        
         super.init()
 
         Task {
