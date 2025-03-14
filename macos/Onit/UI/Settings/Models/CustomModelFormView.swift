@@ -13,13 +13,17 @@ struct CustomModelFormView: View {
     @Environment(\.model) var model
     
     @Default(.availableRemoteModels) var availableRemoteModels
+    @Default(.visibleModelIds) var visibleModelIds
     
     let provider: AIModel.ModelProvider
+    let token: String?
     
     @State private var modelName = ""
     @State private var displayName = ""
     @State private var supportsSystemPrompts = true
     @State private var supportsVision = false
+    @State private var isVerifying = false
+    @State private var errorMessage: String? = nil
     
     @Binding var isSubmitted: Bool
     
@@ -39,6 +43,7 @@ struct CustomModelFormView: View {
                             .padding(.vertical, 5)
                             .textFieldStyle(.plain)
                     }
+                    .onSubmit(submit)
             }
             .frame(maxWidth: .infinity)
             
@@ -56,7 +61,7 @@ struct CustomModelFormView: View {
                             .padding(.vertical, 5)
                             .textFieldStyle(.plain)
                     }
-                    .textFieldStyle(.plain)
+                    .onSubmit(submit)
             }
             .frame(maxWidth: .infinity)
             
@@ -81,29 +86,48 @@ struct CustomModelFormView: View {
             }
             .frame(maxWidth: .infinity)
             
-            HStack {
-                Button("Cancel") {
-                    dismiss()
+            VStack {
+                HStack {
+                    if let error = errorMessage {
+                        Text(error)
+                            .foregroundColor(.red)
+                            .font(.system(size: 13))
+                    }
+                    
+                    Spacer(minLength: 16)
+                    
+                    Button("Cancel") {
+                        dismiss()
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .tint(.secondary)
+                    .controlSize(.small)
+                    .padding(.vertical, 4)
+                    
+                    Button {
+                        Task {
+                            await validateAndAddModel()
+                        }
+                    } label: {
+                        if isVerifying {
+                            ProgressView()
+                                .controlSize(.small)
+                        } else {
+                            Text("Verify & Add")
+                        }
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .controlSize(.small)
+                    .padding(.vertical, 4)
+                    .disabled(modelName.isEmpty || isVerifying)
                 }
-                .buttonStyle(.borderedProminent)
-                .tint(.secondary)
-                .controlSize(.small)
-                .padding(.vertical, 4)
-                
-                Button("Verify & Add") {
-                    addModel()
-                    isSubmitted = true
-                    dismiss()
-                }
-                .buttonStyle(.borderedProminent)
-                .controlSize(.small)
-                .padding(.vertical, 4)
-                .disabled(modelName.isEmpty)
             }
             .frame(maxWidth: .infinity, alignment: .trailing)
             .padding(.top, 8)
         }
-        .padding(20)
+        .padding(.top,20)
+        .padding(.horizontal,20)
+        .padding(.bottom, 16)
         .frame(width: 330)
     }
     
@@ -118,6 +142,60 @@ struct CustomModelFormView: View {
         }
     }
     
+    private func validateAndAddModel() async {
+        isVerifying = true
+        errorMessage = nil
+        
+        // First check if the model has already been added to Onit.
+        let potentialModel = AIModel(
+            id: modelName,
+            displayName: displayName.isEmpty ? modelName : displayName,
+            provider: provider,
+            defaultOn: false,
+            supportsVision: supportsVision,
+            supportsSystemPrompts: supportsSystemPrompts
+        )
+        
+        if availableRemoteModels.contains(where: { $0.uniqueId == potentialModel.uniqueId }) {
+            errorMessage = "Model already added."
+            isVerifying = false
+            return
+        }
+        
+        // If we get here, the model has yet to be added, so it's safe to proceed with model validation.
+        do {
+            let endpoint = ModelValidationEndpoint(
+                model: modelName,
+                token: token,
+                provider: provider
+            )
+            
+            let client = FetchingClient()
+            print("Validating model: \(modelName) for provider: \(provider)")
+            
+            _ = try await client.execute(endpoint)
+            
+            // If we get here, validation succeeded.
+            // The model will be added to Onit and will automatically be checked.
+            addModel()
+            isSubmitted = true
+            dismiss()
+        } catch let error {
+            print("\n\n\n")
+            print("Unexpected validation error: \(error)")
+            if let urlError = error as? URLError {
+                print("Network error: \(urlError.localizedDescription)")
+            } else {
+                print("Invalid model name: \(error.localizedDescription)")
+            }
+            print("\n\n\n")
+            
+            errorMessage = "Model name invalid."
+        }
+        
+        isVerifying = false
+    }
+    
     private func addModel() {
         let newModel = AIModel(
             id: modelName,
@@ -128,8 +206,17 @@ struct CustomModelFormView: View {
             supportsSystemPrompts: supportsSystemPrompts
         )
         
-        
         availableRemoteModels.append(newModel)
+        
+        visibleModelIds.insert(newModel.uniqueId)
+    }
+    
+    private func submit() {
+        if !modelName.isEmpty && !isVerifying {
+            Task {
+                await validateAndAddModel()
+            }
+        }
     }
 }
 

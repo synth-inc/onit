@@ -20,6 +20,7 @@ struct RemoteModelSection: View {
     @State private var showCustomModelForm = false
     @State private var isCustomModelSubmitted = false
     @State private var showDeleteConfirmation = false
+    @State private var showDeleteModelsView = false
 
     @Default(.mode) var mode
     @Default(.remoteModel) var remoteModel
@@ -215,15 +216,24 @@ struct RemoteModelSection: View {
             GroupBox {
                 VStack(alignment: .leading, spacing: 0) {
                     VStack(alignment: .leading, spacing: 0) {
-                        ForEach(models) { model in
-                            ModelToggle(aiModel: model)
-                                .frame(height: 36)
+                        if models.isEmpty {
+                            Text("No models added.")
+                                .font(.system(size: 13))
+                                .foregroundColor(.secondary)
+                                .padding(.vertical, 8)
+                                .padding(.horizontal, 4)
+                        } else {
+                            ForEach(models) { model in
+                                ModelToggle(aiModel: model)
+                                    .frame(height: 36)
+                            }
                         }
                     }
                     .padding(.vertical, -4)
                     .padding(.horizontal, 4)
                     .padding(.bottom, 5)
                     
+                    // Divider
                     Rectangle()
                         .frame(height:1)
                         .foregroundColor(.gray.opacity(0.2))
@@ -249,7 +259,7 @@ struct RemoteModelSection: View {
                         
                         // Deletes selected remote models
                         Button {
-                            showDeleteConfirmation = true
+                            showDeleteModelsView = true
                         } label: {
                             HStack {
                                 Image(systemName: "minus")
@@ -260,28 +270,6 @@ struct RemoteModelSection: View {
                         }
                         .buttonStyle(.plain)
                         .opacity(0.7)
-                        .disabled(models.filter { visibleModelIds.contains($0.uniqueId) }.isEmpty)
-                        .confirmationDialog(
-                            "Are you sure you want to delete this model? Once deleted, it will be removed until you add it again.",
-                            isPresented: $showDeleteConfirmation
-                        ) {
-                            Button("Delete", role: .destructive) {
-                                // Get selected models
-                                let selectedModels = models.filter { visibleModelIds.contains($0.uniqueId) }
-                                
-                                // Remove from availableRemoteModels
-                                availableRemoteModels.removeAll { model in
-                                    selectedModels.contains { $0.uniqueId == model.uniqueId }
-                                }
-                                
-                                // Clear selection
-                                visibleModelIds.subtract(selectedModels.map { $0.uniqueId })
-                                
-                                // Update UI
-                                model.shrinkContent()
-                            }
-                            Button("Cancel", role: .cancel) {}
-                        }
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(.top, 2)
@@ -291,6 +279,7 @@ struct RemoteModelSection: View {
             .sheet(isPresented: $showCustomModelForm) {
                 CustomModelFormView(
                     provider: provider,
+                    token: getToken(),
                     isSubmitted: $isCustomModelSubmitted
                 )
             }
@@ -299,6 +288,9 @@ struct RemoteModelSection: View {
                     isCustomModelSubmitted = false
                     model.shrinkContent()
                 }
+            }
+            .sheet(isPresented: $showDeleteModelsView) {
+                DeleteModelsView()
             }
         }
     }
@@ -430,6 +422,25 @@ struct RemoteModelSection: View {
         } else if case .invalid(_) = state {
             use = false
             validated = false
+        }
+    }
+    
+    func getToken() -> String? {
+        switch provider {
+        case .openAI:
+            return openAIToken
+        case .anthropic:
+            return anthropicToken
+        case .xAI:
+            return xAIToken
+        case .googleAI:
+            return googleAIToken
+        case .deepSeek:
+            return deepSeekToken
+        case .perplexity:
+            return perplexityToken
+        case .custom:
+            return nil
         }
     }
 }
