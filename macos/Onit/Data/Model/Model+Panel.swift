@@ -304,8 +304,7 @@ extension OnitModel: NSWindowDelegate {
     @MainActor
     func adjustPanelSize() {
         guard let panel = panel,
-              let contentView = panel.contentView,
-              !Defaults[.isRegularApp]
+              let contentView = panel.contentView
         else {
             return
         }
@@ -314,9 +313,9 @@ extension OnitModel: NSWindowDelegate {
         let idealSize = contentView.fittingSize
 
         // Clamp the window height so it doesn't fall off-screen
-        guard let screen = NSScreen.main else { return }
+        guard let screen = panel.screen ?? NSScreen.main else { return }
         let visibleFrame = screen.visibleFrame
-        let maxAllowedHeight = visibleFrame.height - 16
+        let maxAllowedHeight = visibleFrame.height - ContentView.bottomPadding
         let newHeight = min(idealSize.height, maxAllowedHeight)
         let currentWidth = panel.frame.width
 

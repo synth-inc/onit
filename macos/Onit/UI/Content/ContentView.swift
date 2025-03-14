@@ -52,7 +52,7 @@ struct ContentView: View {
         }
         .background(Color.black)
         .buttonStyle(.plain)
-        .screenHeight(binding: $screenHeight)
+        .trackScreenHeight($screenHeight)
         .frame(minWidth: 325, idealWidth: ContentView.idealWidth, maxHeight: maxHeight)
         .overlay {
             RoundedRectangle(cornerRadius: 14)

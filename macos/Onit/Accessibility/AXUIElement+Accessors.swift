@@ -6,6 +6,7 @@
 //
 
 @preconcurrency import ApplicationServices
+import AppKit
 
 extension AXUIElement {
     func attribute(forAttribute attribute: CFString) -> Any? {
@@ -31,6 +32,27 @@ extension AXUIElement {
         } else {
             return nil
         }
+    }
+
+    func findWindow() -> AXUIElement? {
+        var elementPid: pid_t = 0
+
+        guard AXUIElementGetPid(self, &elementPid) == .success, elementPid != getpid() else {
+            return nil
+        }
+        
+        let appElement = AXUIElementCreateApplication(elementPid)
+        
+        var windowList: CFArray?
+        let result = AXUIElementCopyAttributeValues(appElement, kAXWindowsAttribute as CFString, 0, 1, &windowList)
+        
+        guard result == .success,
+              let windows = windowList as? [AXUIElement],
+              let firstWindow = windows.first else {
+            return nil
+        }
+        
+        return firstWindow
     }
 
     func size() -> CGSize? {

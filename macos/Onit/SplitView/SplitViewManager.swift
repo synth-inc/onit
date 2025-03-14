@@ -59,18 +59,22 @@ class SplitViewManager: ObservableObject {
     }
     
     private func repositionWindow(window: AXUIElement) {
-        guard let screen = NSScreen.main,
-              let panel = model?.panel,
+        guard let panel = model?.panel,
               let position = window.position(),
               let size = window.size() else { return }
+        
+        guard let screen = NSRect(origin: position, size: size).findScreen() else { return }
         
         let screenFrame = screen.visibleFrame
         let maxActiveAppWidth = screenFrame.width - minOnitWidth - spaceBetweenWindows
         let activeAppWidth = min(size.width, maxActiveAppWidth)
-        let onitX = position.x + activeAppWidth + spaceBetweenWindows
+        
+        let relativeX = max(position.x - screenFrame.minX, 0)
+        let relativeOnitX = relativeX + activeAppWidth + spaceBetweenWindows
+        let onitX = screenFrame.minX + min(relativeOnitX, screenFrame.width - minOnitWidth)
         let onitWidth = max(minOnitWidth, screenFrame.maxX - onitX)
         let onitHeight = screenFrame.height - ContentView.bottomPadding
-        let onitY = screenFrame.height - onitHeight
+        let onitY = screenFrame.minY + (screenFrame.height - onitHeight)
         
         if window.setFrame(CGRect(
             x: position.x,

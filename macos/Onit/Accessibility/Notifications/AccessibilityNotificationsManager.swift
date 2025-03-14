@@ -304,38 +304,10 @@ class AccessibilityNotificationsManager: ObservableObject {
     
     private func handleWindowBounds(for element: AXUIElement) {
         handleExternalElement(element) { [weak self] elementPid in
-            if let window = self?.findWindow(from: element) {
+            if let window = element.findWindow() {
                 self?.activeWindowElement = window
             }
         }
-    }
-    
-    private func findWindow(from element: AXUIElement) -> AXUIElement? {
-        if let role = element.role(), role == kAXWindowRole {
-            return element
-        }
-        
-        var currentElement = element
-        while true {
-            guard let parent = currentElement.parent() else { break }
-            
-            if let role = parent.role(), role == kAXWindowRole {
-                return parent
-            }
-            
-            currentElement = parent
-        }
-        
-        var value: AnyObject?
-        let result = AXUIElementCopyAttributeValue(currentElement, kAXWindowsAttribute as CFString, &value)
-        
-        if result == .success,
-           let windows = value as? [AXUIElement],
-           let window = windows.first {
-            return window
-        }
-        
-        return nil
     }
 
     // MARK: Parsing
