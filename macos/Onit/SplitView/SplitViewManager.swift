@@ -37,12 +37,15 @@ class SplitViewManager: ObservableObject {
             .prepend(model.panel?.isMiniaturized ?? false)
         let isPanelOpenedAndNotMinimized = Publishers.CombineLatest(isPanelOpened, isPanelMiniaturized)
             .map { $0 && !$1 }
+        let fitActiveWindowPublisher = Defaults.publisher(.fitActiveWindow)
+            .map(\.newValue)
         
-        Publishers.CombineLatest(activeWindowElement, isPanelOpenedAndNotMinimized)
+        Publishers.CombineLatest3(activeWindowElement, isPanelOpenedAndNotMinimized, fitActiveWindowPublisher)
             .debounce(for: 0.05, scheduler: RunLoop.main)
             .receive(on: DispatchQueue.main)
-            .sink { [weak self] (window, isPanelOpened) in
+            .sink { [weak self] (window, isPanelOpened, fitActiveWindow) in
                 guard Defaults[.isRegularApp],
+                      fitActiveWindow,
                       let window = window,
                       isPanelOpened else { return }
                 
