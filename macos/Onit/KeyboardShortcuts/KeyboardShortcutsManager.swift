@@ -91,7 +91,9 @@ struct KeyboardShortcutsManager {
                     PostHogSDK.shared.capture(
                         "shortcut_launch_with_auto_context", properties: eventProperties)
                     model.addAutoContext()
-                    model.launchPanel()
+                    if (model.panel == nil) {
+                        model.launchPanel()
+                    }
                 case .escape:
                     model.escapeAction()
                 case .newChat:
