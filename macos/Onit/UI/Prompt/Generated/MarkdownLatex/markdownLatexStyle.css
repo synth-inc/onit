@@ -101,19 +101,6 @@ code .plaintext {
     color: white !important;
 }
 
-.katex {
-    color: white !important;
-    font-size: 1.1em;
-}
-
-.katex-display {
-    margin: 1em 0;
-    padding: 1em;
-    background: #2d2d2d;
-    border-radius: 8px;
-    overflow-x: auto;
-}
-
 table {
     border-collapse: collapse;
     width: 100%;
@@ -163,11 +150,14 @@ h3 { font-size: 1.3em; }
 }
 
 .latex-document {
-    width: 100%;
+    font-family: 'Latin Modern Roman', 'Times New Roman', Times, serif;
+    font-size: 1.1em;
+    line-height: 1.5;
     margin: 0 auto;
-    padding: 0;
-    border-radius: 8px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    max-width: 800px;
+    padding: 20px;
+    color: white;
+    background-color: transparent;
 }
 
 .latex-generating {
@@ -191,20 +181,44 @@ h3 { font-size: 1.3em; }
 
 .latex-table {
     border-collapse: collapse;
-    margin: 1em 0;
-    width: 100%;
+    margin: 1.5em auto;
+    width: auto;
+    max-width: 100%;
+    overflow-x: auto;
+    display: table;
+    border: 1px solid #444;
+}
+
+.latex-table tr {
+    border-bottom: 1px solid #444;
 }
 
 .latex-table td {
     border: 1px solid #444;
-    padding: 8px;
+    padding: 0.5em 0.8em;
     text-align: center;
 }
 
+.latex-table tr:nth-child(even) {
+    background-color: rgba(255, 255, 255, 0.05);
+}
+
 .latex-list {
-    list-style-type: disc;
     margin: 1em 0;
     padding-left: 2em;
+}
+
+ul.latex-list {
+    list-style-type: disc;
+}
+
+ol.latex-list {
+    list-style-type: decimal;
+}
+
+.latex-list li {
+    margin-bottom: 0.5em;
+    line-height: 1.4;
 }
 
 .latex-figure {
@@ -238,4 +252,263 @@ h3 { font-size: 1.3em; }
     padding: 1em;
     border-radius: 8px;
     border: 1px solid #ff6b6b;
+}
+
+#latex-container, #mathjax-container {
+    width: 100%;
+    margin: 1em 0;
+    padding: 1em;
+    background-color: transparent;
+    border-radius: 6px;
+    overflow-x: auto;
+}
+
+/* Remplacer par un style unique pour le conteneur MathJax */
+#mathjax-container {
+    width: 100%;
+    margin: 1em 0;
+    padding: 1em;
+    background-color: transparent;
+    border-radius: 6px;
+    overflow-x: auto;
+}
+
+/* Optionnel : si vous préférez un fond gris pour les deux */
+/*
+#latex-container, #mathjax-container {
+    width: 100%;
+    margin: 1em 0;
+    padding: 1em;
+    background-color: var(--code-background-color, #1e1e1e);
+    border-radius: 6px;
+    overflow-x: auto;
+}
+*/
+
+.latex-document {
+    font-family: var(--font-family, 'Latin Modern Roman', serif);
+    color: var(--text-color, #e0e0e0);
+    line-height: 1.5;
+}
+
+/* Styles pour les éléments LaTeX spécifiques */
+.latex-document h1, 
+.latex-document h2, 
+.latex-document h3 {
+    color: var(--heading-color, #f0f0f0);
+    margin-top: 1em;
+    margin-bottom: 0.5em;
+}
+
+.latex-document p {
+    margin-bottom: 1em;
+}
+
+.latex-document .math {
+    font-family: 'Latin Modern Math', 'STIX Two Math', serif;
+}
+
+.latex-document table {
+    border-collapse: collapse;
+    margin: 1em 0;
+}
+
+.latex-document th, 
+.latex-document td {
+    border: 1px solid var(--border-color, #444);
+    padding: 0.5em;
+}
+
+.latex-document figure {
+    margin: 1em 0;
+    text-align: center;
+}
+
+.latex-document figcaption {
+    font-style: italic;
+    margin-top: 0.5em;
+}
+
+.latex-error {
+    color: #ff5555;
+    background-color: #331111;
+    padding: 1em;
+    border-radius: 4px;
+    white-space: pre-wrap;
+    font-family: var(--code-font-family, monospace);
+}
+
+/* Styles pour les théorèmes et preuves */
+.theorem, .proof {
+    margin: 1em 0;
+    padding: 0.5em 1em;
+    border-left: 3px solid;
+}
+
+.theorem {
+    border-color: #4a90e2;
+    background-color: rgba(74, 144, 226, 0.1);
+}
+
+.proof {
+    border-color: #50c878;
+    background-color: rgba(80, 200, 120, 0.1);
+}
+
+.theorem strong, .proof strong {
+    font-weight: bold;
+    font-style: italic;
+}
+
+/* Style pour le contenu centré */
+.centered-content {
+    text-align: center;
+    margin: 1em 0;
+}
+
+.code-block {
+    background-color: #1e1e1e;
+    border: 1px solid #333;
+    border-radius: 4px;
+    padding: 1em;
+    margin: 1em 0;
+    font-family: 'SF Mono', Monaco, Menlo, Consolas, 'Courier New', monospace;
+    font-size: 0.9em;
+    line-height: 1.4;
+    overflow-x: auto;
+    white-space: pre;
+    color: #e0e0e0;
+}
+
+.code-caption {
+    font-style: italic;
+    margin-bottom: 0.5em;
+    color: #aaa;
+}
+
+/* Style pour l'environnement verbatim */
+.verbatim, pre.verbatim {
+    background-color: #1e1e1e;
+    border: 1px solid #333;
+    border-radius: 4px;
+    padding: 1em;
+    margin: 1em 0;
+    font-family: 'SF Mono', Monaco, Menlo, Consolas, 'Courier New', monospace;
+    font-size: 0.9em;
+    line-height: 1.4;
+    overflow-x: auto;
+    white-space: pre;
+    color: #e0e0e0;
+}
+
+/* Style pour la bibliographie */
+.bibliography {
+    margin-top: 2em;
+    border-top: 1px solid #444;
+    padding-top: 1em;
+}
+
+.bibliography h2 {
+    font-size: 1.5em;
+    margin-bottom: 1em;
+}
+
+.bibliography-item {
+    margin-bottom: 0.8em;
+    padding-left: 2em;
+    text-indent: -2em;
+}
+
+.document-title {
+    text-align: center;
+    margin: 2em 0;
+    padding-bottom: 1em;
+    border-bottom: 1px solid #444;
+}
+
+.document-title h1 {
+    font-size: 2em;
+    margin-bottom: 0.5em;
+}
+
+.author {
+    font-size: 1.2em;
+    font-style: italic;
+    color: #aaa;
+}
+
+/* Styles pour les sections */
+h1 {
+    font-size: 1.8em;
+    margin-top: 1.5em;
+    margin-bottom: 0.8em;
+    color: #e0e0e0;
+}
+
+h2 {
+    font-size: 1.5em;
+    margin-top: 1.2em;
+    margin-bottom: 0.6em;
+    color: #d0d0d0;
+}
+
+h3 {
+    font-size: 1.3em;
+    margin-top: 1em;
+    margin-bottom: 0.5em;
+    color: #c0c0c0;
+}
+
+/* Style pour les figures */
+.figure-content {
+    text-align: center;
+    margin: 1.5em 0;
+}
+
+.figure-content img {
+    max-width: 100%;
+    height: auto;
+}
+
+.figure-caption {
+    margin-top: 0.5em;
+    font-style: italic;
+    color: #aaa;
+    text-align: center;
+}
+
+.table-container {
+    margin: 2em 0;
+    overflow-x: auto;
+    width: 100%;
+}
+
+.table-caption {
+    text-align: center;
+    font-style: italic;
+    margin-bottom: 0.5em;
+    color: #aaa;
+}
+
+/* Styles pour les tableaux MathJax */
+.MathJax_Display table {
+    border-collapse: collapse;
+    margin: 0 auto;
+    display: inline-table;
+}
+
+.MathJax_Display td {
+    text-align: center;
+    padding: 0.3em 0.5em;
+}
+
+/* Amélioration des styles pour les formules mathématiques */
+.MathJax {
+    font-size: 1.1em !important;
+}
+
+.MathJax_Display {
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding: 0.5em 0;
 }
