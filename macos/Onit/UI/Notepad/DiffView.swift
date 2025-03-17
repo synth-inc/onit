@@ -8,9 +8,9 @@
 import SwiftUI
 
 struct DiffView: View {
-    let oldText: String
-    let newText: String
-    let isStreaming: Bool
+    @Binding var oldText: String
+    @Binding var newText: String
+    @Binding var isStreaming: Bool
     
     struct Diff: Hashable {
         let id: UUID
@@ -105,15 +105,15 @@ struct DiffView: View {
 
 #Preview {
     DiffView(
-        oldText: """
+        oldText: .constant("""
             Bonjour
             Ceci est un test
             Une ligne supprimée
-            """,
-        newText: """
+            """),
+        newText: .constant("""
             Bonjour
             Ceci est un test modifié
             Une ligne ajoutée
-            """,
-        isStreaming: true)
+            """),
+        isStreaming: .constant(true))
 }

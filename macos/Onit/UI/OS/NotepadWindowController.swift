@@ -8,6 +8,18 @@
 import AppKit
 import SwiftUI
 
+class NotepadConfig: ObservableObject {
+    @Published var oldText: String
+    @Published var newText: String
+    @Published var isStreaming: Bool
+    
+    init(oldText: String = "", newText: String = "", isStreaming: Bool = false) {
+        self.oldText = oldText
+        self.newText = newText
+        self.isStreaming = isStreaming
+    }
+}
+
 @MainActor
 class NotepadWindowController: NSObject, NSWindowDelegate {
     
@@ -21,7 +33,45 @@ class NotepadWindowController: NSObject, NSWindowDelegate {
     private var contentView: NotepadView?
     private var panel: NSPanel?
     
-    @Published var prompt: Prompt?
+    @Published private var config = NotepadConfig()
+    
+//    private var oldText: String {
+//        guard let prompt = prompt else { return "" }
+//        
+//        let autoContexts = prompt.contextList.autoContexts
+//        
+//        if let input = prompt.input {
+//            print("NotepadView oldText : \(input.selectedText)")
+//            return input.selectedText
+//        } else if !autoContexts.isEmpty {
+//            print("NotepadView oldText : \(autoContexts.values.joined(separator: "\n"))")
+//            return autoContexts.values.joined(separator: "\n")
+//        }
+//        
+//        return ""
+//    }
+//    private var newText: String {
+//        guard let prompt = prompt else { return "" }
+//        
+//        let response = prompt.responses[prompt.generationIndex]
+//        
+//        print("NotepadView newText : \(response.isPartial ? model.streamedResponse : response.text)")
+//        
+//        return response.isPartial ? model.streamedResponse : response.text
+//    }
+//    private var isStreaming: Bool {
+//        guard let prompt = prompt else {
+//            return false
+//        }
+//        
+//        let response = prompt.responses[prompt.generationIndex]
+//        
+//        print("NotepadView isStreaming : \(response.isPartial)")
+//        
+//        return response.isPartial
+//    }
+    
+    
 
     // MARK: - Initializers
 
@@ -30,15 +80,12 @@ class NotepadWindowController: NSObject, NSWindowDelegate {
         
         // Update content view initialization
         self.contentView = NotepadView(
-            prompt: Binding(
-                get: { [weak self] in self?.prompt },
-                set: { [weak self] in self?.prompt = $0 }
-            ),
             closeCompletion: closeWindow
         )
 
         let contentView = contentView
             .environment(\.model, model)
+            .environmentObject(config)
 
         let panelContentView = NSHostingView(rootView: contentView)
         panelContentView.wantsLayer = true
@@ -75,8 +122,11 @@ class NotepadWindowController: NSObject, NSWindowDelegate {
 
     // MARK: - Functions
 
-    func showWindow(prompt: Prompt) {
-        self.prompt = prompt
+    func showWindow(oldText: String, newText: String, isStreaming: Bool) {
+        print("showWindow called - oldText: \(oldText.prefix(20))... newText: \(newText.prefix(20))... isStreaming: \(isStreaming)")
+        config.oldText = oldText
+        config.newText = newText
+        config.isStreaming = isStreaming
         
         positionWindow()
         bringToFront()

@@ -149,6 +149,13 @@ extension OnitModel {
                                                                        apiToken: apiToken)
                         for try await response in asyncText {
                             streamedResponse += response
+                            
+                            let notepadConfig = getNotepadConfig(prompt: prompt)
+                            NotepadWindowController.shared.showWindow(
+                                oldText: notepadConfig.oldText,
+                                newText: notepadConfig.newText,
+                                isStreaming: notepadConfig.isStreaming
+                            )
                         }
                     } else {
                         streamedResponse = try await client.chat(systemMessage: systemPrompt.prompt,
@@ -179,6 +186,13 @@ extension OnitModel {
                                                                             model: model)
                         for try await response in asyncText {
                             streamedResponse += response
+                            
+                            let notepadConfig = getNotepadConfig(prompt: prompt)
+                            NotepadWindowController.shared.showWindow(
+                                oldText: notepadConfig.oldText,
+                                newText: notepadConfig.newText,
+                                isStreaming: notepadConfig.isStreaming
+                            )
                         }
                     } else {
                         streamedResponse = try await client.localChat(systemMessage: systemPrompt.prompt,
@@ -321,6 +335,38 @@ extension OnitModel {
         }
     }
     
+    func getNotepadConfig(prompt: Prompt) -> NotepadConfig {
+        var oldText: String {
+            let autoContexts = prompt.contextList.autoContexts
+            
+            if let input = prompt.input {
+                print("NotepadView oldText : \(input.selectedText)")
+                return input.selectedText
+            } else if !autoContexts.isEmpty {
+                print("NotepadView oldText : \(autoContexts.values.joined(separator: "\n"))")
+                return autoContexts.values.joined(separator: "\n")
+            }
+            
+            return ""
+        }
+        var newText: String {
+            let response = prompt.responses[prompt.generationIndex]
+            
+            print("NotepadView newText : \(response.isPartial ? streamedResponse : response.text)")
+            
+            return response.isPartial ? streamedResponse : response.text
+        }
+        var isStreaming: Bool {
+            let response = prompt.responses[prompt.generationIndex]
+            
+            print("NotepadView isStreaming : \(response.isPartial)")
+            
+            return response.isPartial
+        }
+        
+        return NotepadConfig(oldText: oldText, newText: newText, isStreaming: isStreaming)
+    }
+    
     func addPartialPrompt(prompt: Prompt, instruction: String) {
         prompt.priorInstructions.append(instruction)
         prompt.responses.append(Response.partial)
@@ -329,9 +375,6 @@ extension OnitModel {
         
         generatingPrompt = nil
         generatingPromptPriorState = nil
-        
-        // TODO: KNA Remove this after test
-        NotepadWindowController.shared.showWindow(prompt: prompt)
     }
     
     func updatePrompt(prompt: Prompt, response: Response, instruction: String) {
@@ -348,7 +391,11 @@ extension OnitModel {
         generatingPrompt = nil
         generatingPromptPriorState = nil
         
-        // TODO: KNA Remove this after test
-        NotepadWindowController.shared.showWindow(prompt: prompt)
+        let notepadConfig = getNotepadConfig(prompt: prompt)
+        NotepadWindowController.shared.showWindow(
+            oldText: notepadConfig.oldText,
+            newText: notepadConfig.newText,
+            isStreaming: notepadConfig.isStreaming
+        )
     }
 }

@@ -10,7 +10,58 @@ import MarkdownUI
 import SwiftUI
 
 struct CodeBlockView: View {
+    @Environment(\.model) var model
+    
     var configuration: CodeBlockConfiguration?
+    var content: String {
+        configuration?.content ?? ""
+    }
+    
+    var prompt: (Prompt, Bool)? {
+        for prompt in model.currentPrompts ?? [] {
+            if let response = prompt.responses.first(where: {
+                let promptText = $0.text
+                    .trimmingCharacters(in: .whitespacesAndNewlines)
+                    .replacingOccurrences(of: "\\s+", with: " ", options: .regularExpression)
+                let content = content
+                    .trimmingCharacters(in: .whitespacesAndNewlines)
+                    .replacingOccurrences(of: "\\s+", with: " ", options: .regularExpression)
+                
+                return promptText.contains(content)
+            }) {
+                return (prompt, response.isPartial)
+            }
+        }
+        
+        return nil
+    }
+    
+    private var notepadOldText: String {
+        guard let (prompt, _) = prompt else { return "" }
+        
+        let autoContexts = prompt.contextList.autoContexts
+        
+        if let input = prompt.input {
+            print("CodeBlockView notepadOldText : \(input.selectedText)")
+            return input.selectedText
+        } else if !autoContexts.isEmpty {
+            print("CodeBlockView notepadOldText : \(autoContexts.values.joined(separator: "\n"))")
+            return autoContexts.values.joined(separator: "\n")
+        }
+        
+        return ""
+    }
+    
+    private var notepadNewText: String {
+        print("CodeBlockView notepadNewText : \(configuration?.content ?? "")")
+        return configuration?.content ?? ""
+    }
+    
+    private var notepadIsStreaming: Bool {
+        guard let (_, isStreaming) = prompt else { return false }
+        
+        return isStreaming
+    }
 
     var rect: RoundedRectangle {
         .rect(cornerRadius: 10)
@@ -52,7 +103,11 @@ struct CodeBlockView: View {
     
     var notepadButton: some View {
         Button(action: {
-            // NotepadWindowController.shared.showWindow(prompt: , newValue: )
+            NotepadWindowController.shared.showWindow(
+                oldText: notepadOldText,
+                newText: notepadNewText,
+                isStreaming: notepadIsStreaming
+            )
         }) {
             Image(.notes)
         }
@@ -60,7 +115,7 @@ struct CodeBlockView: View {
     }
 
     var copyButton: some View {
-        CopyButton(text: configuration?.content ?? "")
+        CopyButton(text: content)
     }
 
     var bottom: some View {
@@ -85,11 +140,11 @@ struct CodeBlockView: View {
                 if let language = configuration?.language,
                     let language = HighlightLanguage.language(for: language)
                 {
-                    CodeText(configuration?.content ?? "")
+                    CodeText(content)
                         .codeFont(AppFont.code.nsFont)
                         .highlightLanguage(language)
                 } else {
-                    CodeText(configuration?.content ?? "")
+                    CodeText(content)
                 }
             }
             .environment(\.colorScheme, .dark)
