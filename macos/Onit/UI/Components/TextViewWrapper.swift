@@ -12,12 +12,15 @@ import SwiftUI
 /// - Works like a TextField - press enter will call `onSubmit`
 /// - Has a dynamic height that is limited by `maxHeight`, when max height is reached the content become scrollable
 /// - Manage a placeholder 
+/// - Can show a waveform indicator at the end of text when recording
 struct TextViewWrapper: NSViewRepresentable {
     @Binding var text: String
     @Binding var dynamicHeight: CGFloat
     var onSubmit: (() -> Void)? = nil
     var maxHeight: CGFloat? = nil
     var placeholder: String? = nil
+    var showWaveform: Bool = false
+    var showLoading: Bool = false
     
     var font: NSFont = AppFont.medium16.nsFont
     var textColor: NSColor = .white
@@ -29,7 +32,9 @@ struct TextViewWrapper: NSViewRepresentable {
                                       customFont: font,
                                       textColor: textColor,
                                       placeholderColor: placeholderColor,
-                                      placeholder: placeholder)
+                                      placeholder: placeholder,
+                                      showWaveform: showWaveform,
+                                      showLoading: showLoading)
         
         textView.delegate = context.coordinator
         scrollView.hasVerticalScroller = false
@@ -65,6 +70,10 @@ struct TextViewWrapper: NSViewRepresentable {
             nsView.hasVerticalScroller = dynamicHeight > maxHeight
         }
         
+        // Update waveform and loading state
+        textView.showWaveform = showWaveform
+        textView.showLoading = showLoading
+        
         if textView.string != text {
             let selectedRanges = textView.selectedRanges
             textView.string = text
@@ -77,6 +86,11 @@ struct TextViewWrapper: NSViewRepresentable {
             }
             
             context.coordinator.updateHeight()
+        }
+        
+        // Force redraw when waveform or loading state changes
+        if textView.needsDisplay == false {
+            textView.needsDisplay = true
         }
     }
 
@@ -122,11 +136,15 @@ private class CustomTextView: NSTextView {
     let customFont: NSFont
     let placeholderColor: NSColor
     let placeholder: String?
+    var showWaveform: Bool = false
+    var showLoading: Bool = false
     
-    init(text: String, customFont: NSFont, textColor: NSColor, placeholderColor: NSColor, placeholder: String?) {
+    init(text: String, customFont: NSFont, textColor: NSColor, placeholderColor: NSColor, placeholder: String?, showWaveform: Bool = false, showLoading: Bool = false) {
         self.customFont = customFont
         self.placeholderColor = placeholderColor
         self.placeholder = placeholder
+        self.showWaveform = showWaveform
+        self.showLoading = showLoading
         
         let storage = NSTextStorage()
         let layoutManager = NSLayoutManager()
@@ -179,6 +197,16 @@ private class CustomTextView: NSTextView {
                             height: bounds.height)
             
             placeholder.draw(in: rect, withAttributes: attributes)
+        }
+        
+        // Add padding to the right side of the text field when waveform or loading is shown
+        if showWaveform || showLoading {
+            // Create a right padding by adjusting the text container insets
+            textContainerInset = NSSize(width: 5, height: 5)
+            textContainer?.lineFragmentPadding = 40 // Add extra padding for the indicator
+        } else {
+            textContainerInset = NSSize(width: 5, height: 5)
+            textContainer?.lineFragmentPadding = 0
         }
     }
     

@@ -9,6 +9,7 @@ import Defaults
 import KeyboardShortcuts
 import SwiftData
 import SwiftUI
+import Combine
 
 struct TextInputView: View {
     @Environment(\.model) var model
@@ -38,19 +39,7 @@ struct TextInputView: View {
     var body: some View {
         HStack(alignment: .bottom) {
             textField
-            if audioRecorder.isRecording {
-                Image(systemName: "mic.circle.fill")
-                    .resizable()
-                    .renderingMode(.template)
-                    .foregroundStyle(Color.red)
-                    .frame(width: 18, height: 18)
-                    .help("Recording... Release to stop")
-            } else if isTranscribing {
-                ProgressView()
-                    .scaleEffect(0.5)
-                    .frame(width: 18, height: 18)
-                    .help("Transcribing audio...")
-            } else {
+            if !audioRecorder.isRecording && !isTranscribing {
                 microphoneButton
             }
             sendButton
@@ -174,17 +163,33 @@ struct TextInputView: View {
     var textField: some View {
         @Bindable var model = model
 
-        ZStack(alignment: .leading) {
+        ZStack(alignment: .trailing) {
             TextViewWrapper(
                 text: $model.pendingInstruction,
                 dynamicHeight: $textHeight,
                 onSubmit: sendAction,
                 maxHeight: maxHeightLimit,
-                placeholder: placeholderText)
+                placeholder: placeholderText,
+                showWaveform: audioRecorder.isRecording,
+                showLoading: isTranscribing)
             .focused($focused)
             .frame(height: min(textHeight, maxHeightLimit))
             .onAppear { focused = true }
             .onChange(of: model.textFocusTrigger) { focused = true }
+            
+            if audioRecorder.isRecording || isTranscribing {
+                HStack(spacing: 0) {
+                    if audioRecorder.isRecording {
+                        WaveformIndicator(audioLevel: audioRecorder.audioLevel)
+                            .padding(.trailing, 8)
+                    } else if isTranscribing {
+                        LoadingIndicator()
+                            .padding(.trailing, 8)
+                    }
+                }
+                .frame(height: min(textHeight, maxHeightLimit))
+                .padding(.trailing, 5)
+            }
         }
         .appFont(.medium16)
         .foregroundStyle(.white)
