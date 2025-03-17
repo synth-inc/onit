@@ -12,13 +12,15 @@ import WebKit
 import os
 
 struct MarkdownLatexPreview: NSViewRepresentable {
-    let markdownText: String
-    @Binding var webViewHeight: CGFloat
     @Default(.fontSize) var fontSize
     @Default(.lineHeight) var lineHeight
     @Default(.fontSize) var codeFontSize
     @Default(.lineHeight) var codeLineHeight
-
+    
+    let markdownText: String
+    @Binding var webViewHeight: CGFloat
+    
+    private let textProcessor = MarkdownLatexTextProcessor()
     private let logger = Logger(subsystem: "com.onit.MarkdownLatexPreview", category: "WebView")
     
     private let htmlURL: URL? = Bundle.main.url(forResource: "markdownLatex", withExtension: "html")
@@ -189,68 +191,6 @@ struct MarkdownLatexPreview: NSViewRepresentable {
     }
 
     private func formatMarkdown() -> String {
-        var preservedFormulas: [(placeholder: String, formula: String)] = []
-        var counter = 0
-        
-        func createPlaceholder() -> String {
-            counter += 1
-            return "___LATEX_FORMULA_\(counter)___"
-        }
-        
-        func preserveFormula(_ formula: String) -> String {
-            let placeholder = createPlaceholder()
-            let processedFormula = formula
-                .replacingOccurrences(of: "\\_", with: "_")
-                .replacingOccurrences(of: "\\\\", with: "\\\\\\\\")
-            
-            preservedFormulas.append((placeholder, processedFormula))
-            return placeholder
-        }
-        
-        var processedText = markdownText
-        
-        if let displayPattern = try? NSRegularExpression(pattern: "\\\\\\[([\\s\\S]*?)\\\\\\]") {
-            let nsRange = NSRange(processedText.startIndex..., in: processedText)
-            let matches = displayPattern.matches(in: processedText, range: nsRange)
-            
-            for match in matches.reversed() {
-                if let range = Range(match.range, in: processedText),
-                   let formulaRange = Range(match.range(at: 1), in: processedText) {
-                    let formula = String(processedText[formulaRange])
-                    let placeholder = preserveFormula("\\\\[\(formula)\\\\]")
-                    
-                    processedText.replaceSubrange(range, with: placeholder)
-                }
-            }
-        }
-
-        if let inlinePattern = try? NSRegularExpression(pattern: "\\\\\\(([\\s\\S]*?)\\\\\\)") {
-            let nsRange = NSRange(processedText.startIndex..., in: processedText)
-            let matches = inlinePattern.matches(in: processedText, range: nsRange)
-            
-            for match in matches.reversed() {
-                if let range = Range(match.range, in: processedText),
-                   let formulaRange = Range(match.range(at: 1), in: processedText) {
-                    let formula = String(processedText[formulaRange])
-                    let placeholder = preserveFormula("\\\\(\(formula)\\\\)")
-                    
-                    processedText.replaceSubrange(range, with: placeholder)
-                }
-            }
-        }
-        
-        var formattedText = processedText
-            .replacingOccurrences(of: "\\", with: "\\\\")
-            .replacingOccurrences(of: "`", with: "\\`")
-            .replacingOccurrences(of: "$", with: "\\$")
-            .replacingOccurrences(of: "\n", with: "\\n")
-            .replacingOccurrences(of: "\r", with: "\\r")
-            .replacingOccurrences(of: "\t", with: "\\t")
-
-        for (placeholder, formula) in preservedFormulas {
-            formattedText = formattedText.replacingOccurrences(of: placeholder, with: formula)
-        }
-        
-        return formattedText
+        return textProcessor.process(markdownText)
     }
 }

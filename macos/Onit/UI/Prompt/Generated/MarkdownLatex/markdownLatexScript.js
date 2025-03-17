@@ -16,10 +16,10 @@ function log(message) {
 
 MathJax = {
     tex: {
-        packages: ['base', 'ams', 'noerrors', 'noundefined', 'newcommand', 'boldsymbol', 'color', 'cancel', 'cases', 'mathtools', 'physics', 'configmacros'],
+        packages: ['base', 'ams', 'noerrors', 'noundefined', 'newcommand', 'boldsymbol', 'color', 'cancel', 'cases', 'mathtools', 'physics', 'configmacros', 'autoload', 'require'],
         inlineMath: [['$', '$'], ['\\(', '\\)']],
         displayMath: [['$$', '$$'], ['\\[', '\\]']],
-        processEscapes: false,
+        processEscapes: true,
         processEnvironments: true,
         processRefs: true,
         digits: /^(?:[0-9]+(?:\{,\}[0-9]{3})*(?:\.[0-9]*)?|\.[0-9]+)/,
@@ -28,34 +28,61 @@ MathJax = {
         tagIndent: '0.8em',
         useLabelIds: true,
         maxMacros: 10000,
-        maxBuffer: 5 * 1024,
+        maxBuffer: 15 * 1024,
         formatError: (jax, err) => {
             return jax.formatError(err);
+        },
+        macros: {
+            // Définir des macros pour les commandes courantes
+            'R': '{\\mathbb{R}}',
+            'N': '{\\mathbb{N}}',
+            'Z': '{\\mathbb{Z}}',
+            'Q': '{\\mathbb{Q}}',
+            'C': '{\\mathbb{C}}'
         }
     },
     options: {
+        enableMenu: false,
         skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'],
         processHtmlClass: 'math',
         ignoreHtmlClass: 'no-math'
     },
     loader: {
-        load: ['[tex]/ams', '[tex]/newcommand', '[tex]/boldsymbol', '[tex]/color', '[tex]/cancel', '[tex]/cases', '[tex]/mathtools']
+        load: ['[tex]/ams', '[tex]/newcommand', '[tex]/boldsymbol', '[tex]/color', '[tex]/cancel', '[tex]/cases', '[tex]/mathtools', '[tex]/autoload', '[tex]/require']
     },
     startup: {
         ready: () => {
             MathJax.startup.defaultReady();
-            MathJax.startup.promise.then(() => { });
+            MathJax.startup.promise.then(() => { 
+                log("✅ MathJax initialization completed");
+            });
         }
     }
 };
 
 function updateHeight() {
+    log("📏 Calculating document height");
     setTimeout(() => {
         const content = document.getElementById('content');
-        const contentHeight = content.getBoundingClientRect().height;
+        const latexContainer = document.getElementById('latex-container');
+        
+        let contentHeight = content.getBoundingClientRect().height;
+        
+        // Si le conteneur LaTeX existe, assurez-vous qu'il est pris en compte dans la hauteur
+        if (latexContainer) {
+            const latexHeight = latexContainer.getBoundingClientRect().height;
+            log(`📏 LaTeX container height: ${latexHeight}px`);
+            
+            // Assurez-vous que la hauteur du conteneur LaTeX est incluse
+            if (latexHeight > 0 && contentHeight < latexHeight) {
+                contentHeight = latexHeight + 40; // Ajouter une marge
+            }
+        }
+        
         const spacerHeight = 0;
         const totalHeight = contentHeight + spacerHeight;
         
+        log(`📏 Final content height: ${totalHeight}px`);
         window.webkit.messageHandlers.heightHandler.postMessage(totalHeight);
     }, 100);
 }
@@ -115,12 +142,22 @@ try {
     };
 
     md.core.ruler.before('normalize', 'handle_latex', state => {
+        log("🔄 Pre-processing LaTeX in markdown source");
+        
+        // Convertir \begin{equation}...\end{equation} en \[...\]
+        state.src = state.src.replace(/\\begin\{equation\}([\s\S]*?)\\end\{equation\}/g, (match, formula) => {
+            log(`🔄 Pre-processing equation environment: ${formula.substring(0, 50)}${formula.length > 50 ? '...' : ''}`);
+            return `\\[${formula}\\]`;
+        });
+        
         state.src = state.src
             .replace(/\\\\_/g, '_')
             .replace(/\\\\\[([\\s\\S]*?)\\\\\]/g, (match, formula) => {
+                log(`🔢 Pre-processing display math: ${formula.substring(0, 50)}${formula.length > 50 ? '...' : ''}`);
                 return `$$${formula}$$`;
             })
             .replace(/\\\\\(([\\s\\S]*?)\\\\\)/g, (match, formula) => {
+                log(`🔢 Pre-processing inline math: ${formula.substring(0, 50)}${formula.length > 50 ? '...' : ''}`);
                 return `$${formula}$`;
             });
     });
@@ -134,12 +171,20 @@ try {
 }
 
 function postProcessContent(content) {
+    // Convertir \begin{equation}...\end{equation} en \[...\]
+    content = content.replace(/\\begin\{equation\}([\s\S]*?)\\end\{equation\}/g, (match, formula) => {
+        log(`🔄 Converting equation environment to display math: ${formula.substring(0, 50)}${formula.length > 50 ? '...' : ''}`);
+        return `\\[${formula}\\]`;
+    });
+    
     content = content
         .replace(/\\\\_/g, '_')
         .replace(/\\\\\[([\\s\\S]*?)\\\\\]/g, (match, formula) => {
+            log(`🔢 Processing display math: ${formula.substring(0, 50)}${formula.length > 50 ? '...' : ''}`);
             return `$$${formula}$$`;
         })
         .replace(/\\\\\(([\\s\\S]*?)\\\\\)/g, (match, formula) => {
+            log(`🔢 Processing inline math: ${formula.substring(0, 50)}${formula.length > 50 ? '...' : ''}`);
             return `$${formula}$`;
         });
         
@@ -205,21 +250,17 @@ function updateContent(markdownText) {
 }
 
 window.onload = function() {
-    setTimeout(() => {
-        if (typeof katex !== 'undefined') {
-            renderMathInElement(document.body, {
-                delimiters: [
-                    {left: '$$', right: '$$', display: true},
-                    {left: '$', right: '$', display: false},
-                    {left: '\\(', right: '\\)', display: false},
-                    {left: '\\[', right: '\\]', display: true}
-                ],
-                throwOnError: false,
-                ignoredTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
-            });
-        }
-        updateHeight();
-    }, 100);
+    log("🟢 Window loaded");
+    
+    // Vérifier uniquement MathJax
+    if (typeof MathJax !== 'undefined') {
+        log("✅ MathJax is available");
+    } else {
+        log("⚠️ MathJax is not available");
+    }
+    
+    // Mettre à jour la hauteur après un court délai
+    setTimeout(updateHeight, 100);
 };
 
 function copyCode(button) {
