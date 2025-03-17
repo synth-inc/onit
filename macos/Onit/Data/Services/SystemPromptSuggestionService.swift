@@ -21,30 +21,61 @@ class SystemPromptSuggestionService {
     init(model: OnitModel) {
         self.container = model.container
 
-        let inputPublisher = Optional.Publisher(model.pendingInput)
-            .prepend(model.pendingInput)
-            .eraseToAnyPublisher()
-        let contextListPublisher = Timer.publish(every: 0.3, on: .main, in: .common)
-            .autoconnect()
-            .map { _ in model.pendingContextList }
-            .removeDuplicates()
-            .prepend(model.pendingContextList)
+        let instructionPublisher = model.pendingInstructionSubject
+            .map { $0.lowercased() }
+        let inputTextPublisher = model.pendingInputSubject
+            .map { $0?.selectedText.lowercased() ?? "" }
+        let contextListTextPublisher = model.pendingContextListSubject
+            .map { contexts in
+                var temp = ""
+                
+                for context in contexts {
+                    if case .auto(_, let content) = context {
+                        temp += content.values.joined(separator: " ").lowercased() + " "
+                    } else if case .file(let url) = context {
+                        if let contentFile = try? String(contentsOf: url).lowercased() {
+                            temp += contentFile + " "
+                        }
+                    }
+                }
+                
+                return temp
+            }
+        
+        let inputAppPublisher = model.pendingInputSubject
+            .map { $0?.application?.lowercased() ?? "" }
+        let contextListAppPublisher = model.pendingContextListSubject
+            .map { contexts in
+                var temp = ""
+                
+                for context in contexts {
+                    if case .auto(let appName, _) = context {
+                        temp += appName.lowercased() + " "
+                    }
+                }
+                
+                return temp
+            }
+        
         let frontMostAppPublisher = NSWorkspace.shared.publisher(for: \.frontmostApplication)
             .map { $0?.localizedName?.lowercased() ?? "" }
             .prepend(NSWorkspace.shared.frontmostApplication?.localizedName?.lowercased() ?? "")
         
-        Publishers.CombineLatest3(
-            inputPublisher,
-            contextListPublisher,
-            frontMostAppPublisher
+        let textPublisher = Publishers.CombineLatest3(instructionPublisher, inputTextPublisher, contextListTextPublisher)
+            .map { $0 + " " + $1 + " " + $2 }
+        let appPublisher = Publishers.CombineLatest3(frontMostAppPublisher, inputAppPublisher, contextListAppPublisher)
+            .map { $0 + " " + $1 + " " + $2 }
+        
+        Publishers.CombineLatest(
+            textPublisher,
+            appPublisher
         )
         .receive(on: DispatchQueue.main)
-        .sink { [weak self] (input, contextList, activeApp) in
+        .sink { [weak self] (text, app) in
             guard let self = self else { return }
             self.updateSuggestions(
-                input: input,
-                contextList: contextList,
-                activeApp: activeApp
+                text: text,
+                apps: app
             )
             
             guard model.currentChat?.systemPrompt == nil else { return }
@@ -60,30 +91,11 @@ class SystemPromptSuggestionService {
     }
     
     private func updateSuggestions(
-        input: Input?,
-        contextList: [Context],
-        activeApp: String?
+        text: String,
+        apps: String
     ) {
-        let selectedApp = input?.application?.lowercased()
-        let selectedText = input?.selectedText.lowercased()
-        let contextApps = contextList.compactMap { context -> String? in
-            guard case .auto(let appName, _) = context else { return nil }
-            return appName.lowercased()
-        }
-        
-        let contextContent = contextList.compactMap { context -> String? in
-            switch context {
-            case .auto(_, let content):
-                return content.values.joined(separator: " ").lowercased()
-            case .file(let url):
-                return try? String(contentsOf: url).lowercased()
-            default:
-                return nil
-            }
-        }.joined(separator: " ")
-        
         let context = ModelContext(self.container)
-        var fetchDescriptor = FetchDescriptor<SystemPrompt>(
+        let fetchDescriptor = FetchDescriptor<SystemPrompt>(
             sortBy: [SortDescriptor(\.lastUsed, order: .reverse)]
         )
         let allPrompts = (try? context.fetch(fetchDescriptor)) ?? []
@@ -94,16 +106,28 @@ class SystemPromptSuggestionService {
             
             for appURL in prompt.applications {
                 let lowercaseAppName = appURL.deletingPathExtension().lastPathComponent.lowercased()
-                
-                if lowercaseAppName == activeApp { score += 5 }
-                if lowercaseAppName == selectedApp { score += 5 }
-                if contextApps.contains(lowercaseAppName) { score += 5 }
+                let appNamePattern = "\\b\(NSRegularExpression.escapedPattern(for: lowercaseAppName))\\b"
+            
+                if let regex = try? NSRegularExpression(pattern: appNamePattern, options: []) {
+                    let range = NSRange(location: 0, length: apps.utf16.count)
+                    
+                    if regex.firstMatch(in: apps, options: [], range: range) != nil {
+                        score += 5
+                    }
+                }
             }
             
             for tag in prompt.tags {
                 let lowercaseTag = tag.lowercased()
-                if selectedText?.contains(lowercaseTag) == true { score += 3 }
-                if contextContent.contains(lowercaseTag) { score += 3 }
+                let tagPattern = "\\b\(NSRegularExpression.escapedPattern(for: lowercaseTag))\\b"
+                
+                if let regex = try? NSRegularExpression(pattern: tagPattern, options: []) {
+                    let range = NSRange(location: 0, length: text.utf16.count)
+                    
+                    if regex.firstMatch(in: text, options: [], range: range) != nil {
+                        score += 3
+                    }
+                }
             }
             
             return (prompt, score)
