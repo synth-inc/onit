@@ -269,7 +269,7 @@ struct MarkdownLatexTextProcessor {
         var processedText = text
         
         // Liste des environnements problématiques
-        let problematicEnvironments = ["table", "figure", "tabular", "tabularx", "longtable", "array", "center", "proof", "theorem"]
+        let problematicEnvironments = ["center", "proof", "theorem"]
         
         for env in problematicEnvironments {
             if let pattern = try? NSRegularExpression(pattern: "[ \\t]*\\\\begin\\{\(env)\\}([\\s\\S]*?)[ \\t]*\\\\end\\{\(env)\\}") {
@@ -294,11 +294,9 @@ struct MarkdownLatexTextProcessor {
                             // Pour center, on garde juste le contenu
                             replacement = content
                         } else if env == "theorem" {
-                            // Pour theorem, on ajoute un titre
-                            replacement = "\\textbf{Théorème.} \(content)"
+                            replacement = "\\textbf{Theorem.} \(content)"
                         } else if env == "proof" {
-                            // Pour proof, on ajoute un titre
-                            replacement = "\\textbf{Preuve.} \(content)"
+                            replacement = "\\textbf{Proof.} \(content)"
                         } else {
                             // Pour les autres, on garde juste le contenu
                             replacement = content
@@ -323,7 +321,8 @@ struct MarkdownLatexTextProcessor {
             ("\\\\bottomrule", "\\\\hline\\\\hline"),
             ("\\\\cmidrule(\\{[^}]*\\})*", "\\\\hline"),
             ("\\\\multicolumn(\\{[^}]*\\})*", ""),
-            ("\\\\includegraphics(\\{[^}]*\\})*", "\\\\textbf{[Image]}"),
+            // Ne pas remplacer includegraphics car nous le traitons spécifiquement dans injectMarkdown.js
+            // ("\\\\includegraphics(\\{[^}]*\\})*", "\\\\textbf{[Image]}"),
             ("\\\\caption(\\{[^}]*\\})*", "\\\\textbf{Caption:}"),
             ("\\\\label(\\{[^}]*\\})*", ""),
             ("\\\\ref(\\{[^}]*\\})*", "??"),
