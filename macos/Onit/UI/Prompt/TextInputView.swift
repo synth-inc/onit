@@ -153,6 +153,8 @@ struct TextInputView: View {
         
         addSpacesAtCursor()
         
+        addSpacesAtCursor()
+        
         eventMonitor = NSEvent.addLocalMonitorForEvents(matching: .leftMouseUp) { _ in
             stopRecordingAndTranscribe()
             return nil
@@ -224,7 +226,6 @@ struct TextInputView: View {
                                                        offsetBy: endPosition)
 
          model.pendingInstruction.removeSubrange(startIndex..<endIndex)
-
          addedRecordingSpaces = false
      }
 

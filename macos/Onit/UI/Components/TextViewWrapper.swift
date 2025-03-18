@@ -213,7 +213,7 @@ private class CustomTextView: NSTextView {
                 .foregroundColor: placeholderColor
             ]
             
-            let rect = NSRect(x: textContainerInset.width + 5,
+            let rect = NSRect(x: textContainerInset.width,
                             y: textContainerInset.height,
                             width: bounds.width - textContainerInset.width * 2,
                             height: bounds.height)
