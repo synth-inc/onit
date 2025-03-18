@@ -32,6 +32,7 @@ import SwiftUI
 
     // User inputs that have not yet been submitted
     var pendingInstruction = ""
+    var pendingInstructionCursorPosition: Int = 0 
     var pendingContextList: [Context] = []
     var pendingInput: Input? = nil
 

@@ -36,12 +36,13 @@ struct TextInputView: View {
 
     @State private var showingMicrophonePermissionAlert = false
 
+    @State private var addedRecordingSpaces = false
+    private let recordingSpacesCount = 8
+
     var body: some View {
         HStack(alignment: .bottom) {
             textField
-            if !audioRecorder.isRecording && !isTranscribing {
-                microphoneButton
-            }
+            microphoneButton
             sendButton
         }
         .padding(.top, 4)
@@ -77,11 +78,19 @@ struct TextInputView: View {
     
     var microphoneButton: some View {
         Button(action: handleMicrophonePress) {
-            Image(systemName: "mic.circle.fill")
-                .resizable()
-                .renderingMode(.template)
-                .foregroundStyle(audioRecorder.permissionGranted ? Color.blue400 : Color.gray700)
-                .frame(width: 18, height: 18)
+            if audioRecorder.isRecording {
+                Image("recording")
+                    .resizable()
+                    .renderingMode(.template)
+                    .foregroundStyle(Color.red)
+                    .frame(width: 20, height: 20)
+            } else {
+                Image("voice")
+                    .resizable()
+                    .renderingMode(.template)
+                    .foregroundStyle(audioRecorder.permissionGranted ? Color.gray200 : Color.gray700)
+                    .frame(width: 20, height: 20)
+            }
         }
         .buttonStyle(.plain)
         .disabled(isTranscribing || !isOpenAITokenValidated)
@@ -121,6 +130,8 @@ struct TextInputView: View {
     func startRecording() {
         audioRecorder.startRecording()
         
+        addSpacesAtCursor()
+        
         eventMonitor = NSEvent.addLocalMonitorForEvents(matching: .leftMouseUp) { _ in
             stopRecordingAndTranscribe()
             return nil
@@ -134,12 +145,13 @@ struct TextInputView: View {
         }
         
         guard let audioURL = audioRecorder.stopRecording() else { return }
-        
         isTranscribing = true
+        audioRecorder.isTranscribing = true
         
         guard let openAIToken = openAIToken, !openAIToken.isEmpty else {
             showingAPIKeyAlert = true
             isTranscribing = false
+            audioRecorder.isTranscribing = false
             return
         }
         let whisperService = WhisperService(apiKey: openAIToken)
@@ -148,49 +160,74 @@ struct TextInputView: View {
             do {
                 let transcription = try await whisperService.transcribe(audioURL: audioURL)
                 DispatchQueue.main.async {
-                    model.pendingInstruction = transcription
+                    removeSpacesAtCursor()
+                    let cursorPosition = model.pendingInstructionCursorPosition
+                    model.pendingInstruction.insert(contentsOf: transcription, at: model.pendingInstruction.index(model.pendingInstruction.startIndex, offsetBy: cursorPosition))
                     isTranscribing = false
+                    audioRecorder.isTranscribing = false
                 }
             } catch {
+                removeSpacesAtCursor()
                 errorMessage = error.localizedDescription
                 showingErrorAlert = true
                 isTranscribing = false
+                audioRecorder.isTranscribing = false
             }
         }
     }
+
+     private func addSpacesAtCursor() {
+         guard !addedRecordingSpaces else { return }
+        
+         let cursorPosition = model.pendingInstructionCursorPosition
+         let spaces = String(repeating: " ", count: recordingSpacesCount)
+        
+         model.pendingInstruction.insert(contentsOf: spaces, at:
+             model.pendingInstruction.index(model.pendingInstruction.startIndex,
+                                           offsetBy: cursorPosition))
+        
+         addedRecordingSpaces = true
+     }
+     
+     private func removeSpacesAtCursor() {
+         print("Removing spaces at cursor positon \(model.pendingInstructionCursorPosition)")
+         guard addedRecordingSpaces else { return }
+        
+         let cursorPosition = model.pendingInstructionCursorPosition
+         let startPosition = cursorPosition
+         let endPosition = max(0, startPosition + recordingSpacesCount)
+         let startIndex = model.pendingInstruction.index(model.pendingInstruction.startIndex,
+                                                         offsetBy: startPosition)
+         let endIndex = model.pendingInstruction.index(model.pendingInstruction.startIndex,
+                                                       offsetBy: endPosition)
+
+         print("endPosition: \(endPosition), startPosition: \(startPosition)")
+         print("startIndex: \(startIndex), endIndex: \(endIndex)")
+
+         print("Before removing: \"\(model.pendingInstruction)\"")
+         model.pendingInstruction.removeSubrange(startIndex..<endIndex)
+         print("After removing: \"\(model.pendingInstruction)\"")
+
+         addedRecordingSpaces = false
+     }
 
     @ViewBuilder
     var textField: some View {
         @Bindable var model = model
 
-        ZStack(alignment: .trailing) {
-            TextViewWrapper(
-                text: $model.pendingInstruction,
-                dynamicHeight: $textHeight,
-                onSubmit: sendAction,
-                maxHeight: maxHeightLimit,
-                placeholder: placeholderText,
-                showWaveform: audioRecorder.isRecording,
-                showLoading: isTranscribing)
-            .focused($focused)
-            .frame(height: min(textHeight, maxHeightLimit))
-            .onAppear { focused = true }
-            .onChange(of: model.textFocusTrigger) { focused = true }
-            
-            if audioRecorder.isRecording || isTranscribing {
-                HStack(spacing: 0) {
-                    if audioRecorder.isRecording {
-                        WaveformIndicator(audioLevel: audioRecorder.audioLevel)
-                            .padding(.trailing, 8)
-                    } else if isTranscribing {
-                        LoadingIndicator()
-                            .padding(.trailing, 8)
-                    }
-                }
-                .frame(height: min(textHeight, maxHeightLimit))
-                .padding(.trailing, 5)
-            }
-        }
+        TextViewWrapper(
+            text: $model.pendingInstruction,
+            cursorPosition: $model.pendingInstructionCursorPosition,
+            dynamicHeight: $textHeight,
+            onSubmit: sendAction,
+            maxHeight: maxHeightLimit,
+            placeholder: placeholderText,
+            audioRecorder: audioRecorder,
+            showLoading: $isTranscribing)
+        .focused($focused)
+        .frame(height: min(textHeight, maxHeightLimit))
+        .onAppear { focused = true }
+        .onChange(of: model.textFocusTrigger) { focused = true }
         .appFont(.medium16)
         .foregroundStyle(.white)
     }
@@ -232,7 +269,7 @@ struct TextInputView: View {
                     (model.pendingInstruction.isEmpty)
                         ? Color.gray700 : (mode == .local ? .limeGreen : Color.blue400)
                 )
-                .frame(width: 18, height: 18)
+                .frame(width: 22, height: 22, alignment: .center)
         }
         .buttonStyle(.plain)
         .disabled(model.pendingInstruction.isEmpty)
