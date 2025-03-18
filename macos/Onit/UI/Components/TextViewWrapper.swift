@@ -21,7 +21,6 @@ struct TextViewWrapper: NSViewRepresentable {
     var maxHeight: CGFloat? = nil
     var placeholder: String? = nil
     var audioRecorder: AudioRecorder
-    @Binding var showLoading: Bool
     
     var font: NSFont = AppFont.medium16.nsFont
     var textColor: NSColor = .white
@@ -34,8 +33,7 @@ struct TextViewWrapper: NSViewRepresentable {
                                       textColor: textColor,
                                       placeholderColor: placeholderColor,
                                       placeholder: placeholder,
-                                      audioRecorder: audioRecorder,
-                                      showLoading: $showLoading)
+                                      audioRecorder: audioRecorder)
         
         textView.delegate = context.coordinator
         scrollView.hasVerticalScroller = false
@@ -73,7 +71,6 @@ struct TextViewWrapper: NSViewRepresentable {
         
         // Update waveform and loading state
         textView.audioRecorder = audioRecorder
-        textView.showLoading = showLoading
         
         if textView.string != text {
             let selectedRanges = textView.selectedRanges
@@ -158,16 +155,14 @@ private class CustomTextView: NSTextView {
     let placeholderColor: NSColor
     let placeholder: String?
     @ObservedObject var audioRecorder: AudioRecorder
-    @Binding var showLoading: Bool
     var recordingIndicator: NSHostingView<RecordingIndicator>? = nil
     var parentCursorPosition: Int = 0
     
-    init(text: String, customFont: NSFont, textColor: NSColor, placeholderColor: NSColor, placeholder: String?, audioRecorder: AudioRecorder, showLoading: Binding<Bool>) {
+    init(text: String, customFont: NSFont, textColor: NSColor, placeholderColor: NSColor, placeholder: String?, audioRecorder: AudioRecorder) {
         self.customFont = customFont
         self.placeholderColor = placeholderColor
         self.placeholder = placeholder
         self.audioRecorder = audioRecorder
-        self._showLoading = showLoading
 
         let storage = NSTextStorage()
         let layoutManager = NSLayoutManager()
@@ -209,16 +204,16 @@ private class CustomTextView: NSTextView {
         super.draw(dirtyRect)
         
         // Disable typing and hide cursor when recording or loading
-        isEditable = !(audioRecorder.isRecording || showLoading)
-        insertionPointColor = (audioRecorder.isRecording || showLoading) ? .clear : textColor
+        isEditable = !(audioRecorder.isRecording || audioRecorder.isTranscribing)
+        insertionPointColor = (audioRecorder.isRecording || audioRecorder.isTranscribing) ? .clear : textColor
         
-        if string.isEmpty && !audioRecorder.isRecording && !showLoading, let placeholder = placeholder {
+        if string.isEmpty && !audioRecorder.isRecording && !audioRecorder.isTranscribing, let placeholder = placeholder {
             let attributes: [NSAttributedString.Key: Any] = [
                 .font: customFont,
                 .foregroundColor: placeholderColor
             ]
             
-            let rect = NSRect(x: textContainerInset.width,
+            let rect = NSRect(x: textContainerInset.width + 5,
                             y: textContainerInset.height,
                             width: bounds.width - textContainerInset.width * 2,
                             height: bounds.height)
@@ -229,20 +224,15 @@ private class CustomTextView: NSTextView {
         // Add padding to the right side of the text field when waveform or loading is shown
         if audioRecorder.isRecording || audioRecorder.isTranscribing {            
             if recordingIndicator == nil {
-                let recordingView = RecordingIndicator(audioRecorder: audioRecorder, showLoading: showLoading)
+                let recordingView = RecordingIndicator(audioRecorder: audioRecorder)
                 let hostingView = NSHostingView(rootView: recordingView)
                 recordingIndicator = hostingView
-            } else {
-                if let recordingIndicator = recordingIndicator {
-                    let rootView = recordingIndicator.rootView as! RecordingIndicator
-                    rootView.showLoading = showLoading
-                }
             }
             
             if let recordingIndicator = recordingIndicator {
                 let glyphRange = layoutManager?.glyphRange(forCharacterRange: NSRange(location: parentCursorPosition, length: 0), actualCharacterRange: nil)
                 let glyphRect = layoutManager?.boundingRect(forGlyphRange: glyphRange!, in: textContainer!)
-                recordingIndicator.frame = NSRect(x: glyphRect!.maxX + 5, y: glyphRect!.minY + 5, width: 33, height: 22)
+                recordingIndicator.frame = NSRect(x: glyphRect!.maxX, y: glyphRect!.minY, width: 33, height: 20)
                 if recordingIndicator.superview == nil {
                     addSubview(recordingIndicator)
                 }

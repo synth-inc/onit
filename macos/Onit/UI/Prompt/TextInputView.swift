@@ -24,7 +24,6 @@ struct TextInputView: View {
     private let maxHeightLimit: CGFloat = 100
 
     @StateObject private var audioRecorder = AudioRecorder()
-    @State private var isTranscribing = false
     @State private var showingAPIKeyAlert = false
     @State private var showingErrorAlert = false
     @State private var errorMessage = ""
@@ -93,7 +92,7 @@ struct TextInputView: View {
             }
         }
         .buttonStyle(.plain)
-        .disabled(isTranscribing || !isOpenAITokenValidated)
+        .disabled(audioRecorder.isTranscribing || !isOpenAITokenValidated)
         .help(microphoneButtonHelpText)
     }
     
@@ -145,12 +144,10 @@ struct TextInputView: View {
         }
         
         guard let audioURL = audioRecorder.stopRecording() else { return }
-        isTranscribing = true
         audioRecorder.isTranscribing = true
         
         guard let openAIToken = openAIToken, !openAIToken.isEmpty else {
             showingAPIKeyAlert = true
-            isTranscribing = false
             audioRecorder.isTranscribing = false
             return
         }
@@ -163,14 +160,12 @@ struct TextInputView: View {
                     removeSpacesAtCursor()
                     let cursorPosition = model.pendingInstructionCursorPosition
                     model.pendingInstruction.insert(contentsOf: transcription, at: model.pendingInstruction.index(model.pendingInstruction.startIndex, offsetBy: cursorPosition))
-                    isTranscribing = false
                     audioRecorder.isTranscribing = false
                 }
             } catch {
                 removeSpacesAtCursor()
                 errorMessage = error.localizedDescription
                 showingErrorAlert = true
-                isTranscribing = false
                 audioRecorder.isTranscribing = false
             }
         }
@@ -222,8 +217,7 @@ struct TextInputView: View {
             onSubmit: sendAction,
             maxHeight: maxHeightLimit,
             placeholder: placeholderText,
-            audioRecorder: audioRecorder,
-            showLoading: $isTranscribing)
+            audioRecorder: audioRecorder)
         .focused($focused)
         .frame(height: min(textHeight, maxHeightLimit))
         .onAppear { focused = true }

@@ -9,7 +9,6 @@ import SwiftUI
 
 struct RecordingIndicator: View {
     @ObservedObject var audioRecorder: AudioRecorder
-    @State var showLoading: Bool
 
     var body: some View {
         Group {
@@ -112,7 +111,7 @@ struct LoadingIndicator: View {
 
 #Preview {
     VStack(spacing: 20) {
-        RecordingIndicator(audioRecorder: AudioRecorder(), showLoading: false)
+        RecordingIndicator(audioRecorder: AudioRecorder())
         LoadingIndicator()
     }
     .padding()
