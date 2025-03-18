@@ -79,40 +79,13 @@ extension OnitModel {
             prompt.generationState = .generating
             let curInstruction = prompt.instruction
             
-            var filesHistory: [[URL]] = [prompt.contextList.files]
-            var inputsHistory: [Input?] = [prompt.input]
-            var imagesHistory: [[URL]] = [prompt.contextList.images]
-            var instructionsHistory: [String] = [curInstruction]
-            var autoContextsHistory: [[String: String]] = [prompt.contextList.autoContexts]
-            var responsesHistory: [String] = []
-
-            // Go through prior prompts and add them to the history
-            let currentModelName = Defaults[.mode] == .local ? Defaults[.localModel] ?? "" : Defaults[.remoteModel]?.displayName ?? ""
-            var currentPrompt: Prompt? = prompt.priorPrompt
-            while currentPrompt != nil {
-                if let generationIndex = currentPrompt?.generationIndex,
-                   let responseCount = currentPrompt?.responses.count,
-                   generationIndex >= 0,
-                   generationIndex < responseCount {
-                    let response = currentPrompt!.responses[generationIndex]
-                    
-                    if response.type != .error {
-                        instructionsHistory.insert(currentPrompt!.instruction, at: 0)
-                        inputsHistory.insert(currentPrompt!.input, at: 0)
-                        filesHistory.insert(currentPrompt!.contextList.files, at: 0)
-                        imagesHistory.insert(currentPrompt!.contextList.images, at: 0)
-                        autoContextsHistory.insert(currentPrompt!.contextList.autoContexts, at: 0)
-                        responsesHistory.insert(
-                            currentPrompt!.responses[currentPrompt!.generationIndex].text, at: 0)
-                    } else {
-                        print("Skipping failed response from prior prompt.")
-                    }
-                } else {
-                    print("Skipping index out of bounds for prior prompt.")
-                }
-                
-                currentPrompt = currentPrompt!.priorPrompt
-            }
+            let histories = self.getHistories(for: prompt)
+            let filesHistory = histories.files
+            let inputsHistory = histories.inputs
+            let imagesHistory = histories.images
+            let instructionsHistory = histories.instructions
+            let autoContextsHistory = histories.autoContexts
+            let responsesHistory = histories.responses
 
             do {
                 guard instructionsHistory.count == inputsHistory.count,
@@ -133,33 +106,33 @@ extension OnitModel {
                     guard let model = Defaults[.remoteModel] else {
                         throw FetchingError.invalidRequest(message: "Model is required")
                     }
-                    let apiToken = getTokenForModel(model)
+                    let apiToken = self.getTokenForModel(model)
                     
-                    if shouldUseStream(model) {
-                        addPartialPrompt(prompt: prompt, instruction: curInstruction)
+                    if self.shouldUseStream(model) {
+                        self.addPartialPrompt(prompt: prompt, instruction: curInstruction)
                         
-                        let asyncText = try await streamingClient.chat(systemMessage: systemPrompt.prompt,
-                                                                       instructions: instructionsHistory,
-                                                                       inputs: inputsHistory,
-                                                                       files: filesHistory,
-                                                                       images: imagesHistory,
-                                                                       autoContexts: autoContextsHistory,
-                                                                       responses: responsesHistory,
-                                                                       model: model,
-                                                                       apiToken: apiToken)
+                        let asyncText = try await self.streamingClient.chat(systemMessage: systemPrompt.prompt,
+                                                                           instructions: instructionsHistory,
+                                                                           inputs: inputsHistory,
+                                                                           files: filesHistory,
+                                                                           images: imagesHistory,
+                                                                           autoContexts: autoContextsHistory,
+                                                                           responses: responsesHistory,
+                                                                           model: model,
+                                                                           apiToken: apiToken)
                         for try await response in asyncText {
                             streamedResponse += response
                         }
                     } else {
-                        streamedResponse = try await client.chat(systemMessage: systemPrompt.prompt,
-                                                                 instructions: instructionsHistory,
-                                                                 inputs: inputsHistory,
-                                                                 files: filesHistory,
-                                                                 images: imagesHistory,
-                                                                 autoContexts: autoContextsHistory,
-                                                                 responses: responsesHistory,
-                                                                 model: model,
-                                                                 apiToken: apiToken)
+                        streamedResponse = try await self.client.chat(systemMessage: systemPrompt.prompt,
+                                                                     instructions: instructionsHistory,
+                                                                     inputs: inputsHistory,
+                                                                     files: filesHistory,
+                                                                     images: imagesHistory,
+                                                                     autoContexts: autoContextsHistory,
+                                                                     responses: responsesHistory,
+                                                                     model: model,
+                                                                     apiToken: apiToken)
                     }
                 case .local:
                     guard let model = Defaults[.localModel] else {
@@ -167,48 +140,51 @@ extension OnitModel {
                     }
                     
                     if Defaults[.streamResponse].local {
-                        addPartialPrompt(prompt: prompt, instruction: curInstruction)
+                        self.addPartialPrompt(prompt: prompt, instruction: curInstruction)
                         
-                        let asyncText = try await streamingClient.localChat(systemMessage: systemPrompt.prompt,
-                                                                            instructions: instructionsHistory,
-                                                                            inputs: inputsHistory,
-                                                                            files: filesHistory,
-                                                                            images: imagesHistory,
-                                                                            autoContexts: autoContextsHistory,
-                                                                            responses: responsesHistory,
-                                                                            model: model)
+                        let asyncText = try await self.streamingClient.localChat(systemMessage: systemPrompt.prompt,
+                                                                                instructions: instructionsHistory,
+                                                                                inputs: inputsHistory,
+                                                                                files: filesHistory,
+                                                                                images: imagesHistory,
+                                                                                autoContexts: autoContextsHistory,
+                                                                                responses: responsesHistory,
+                                                                                model: model)
                         for try await response in asyncText {
                             streamedResponse += response
                         }
                     } else {
-                        streamedResponse = try await client.localChat(systemMessage: systemPrompt.prompt,
-                                                                      instructions: instructionsHistory,
-                                                                      inputs: inputsHistory,
-                                                                      files: filesHistory,
-                                                                      images: imagesHistory,
-                                                                      autoContexts: autoContextsHistory,
-                                                                      responses: responsesHistory,
-                                                                      model: model)
+                        streamedResponse = try await self.client.localChat(systemMessage: systemPrompt.prompt,
+                                                                          instructions: instructionsHistory,
+                                                                          inputs: inputsHistory,
+                                                                          files: filesHistory,
+                                                                          images: imagesHistory,
+                                                                          autoContexts: autoContextsHistory,
+                                                                          responses: responsesHistory,
+                                                                          model: model)
                     }
                 }
                 
+                let currentModelName = self.getCurrentModelName()
                 let response = Response(text: String(streamedResponse), type: .success, model: currentModelName)
-                updatePrompt(prompt: prompt, response: response, instruction: curInstruction)
-                setTokenIsValid(true)
+                self.updatePrompt(prompt: prompt, response: response, instruction: curInstruction)
+                self.setTokenIsValid(true)
             } catch let error as FetchingError {
                 print("Fetching Error: \(error.localizedDescription)")
                 if case .forbidden = error {
-                    setTokenIsValid(false)
+                    self.setTokenIsValid(false)
                 }
                 if case .unauthorized = error {
-                    setTokenIsValid(false)
+                    self.setTokenIsValid(false)
                 }
+                let currentModelName = self.getCurrentModelName()
                 let response = Response(text: error.localizedDescription, type: .error, model: currentModelName)
-                updatePrompt(prompt: prompt, response: response, instruction: curInstruction)
+                self.updatePrompt(prompt: prompt, response: response, instruction: curInstruction)
             } catch {
                 print("Unexpected Error: \(error.localizedDescription)")
+                let currentModelName = self.getCurrentModelName()
                 let response = Response(text: error.localizedDescription, type: .error, model: currentModelName)
-                updatePrompt(prompt: prompt, response: response, instruction: curInstruction)
+                self.updatePrompt(prompt: prompt, response: response, instruction: curInstruction)
             }
         }
     }
@@ -343,5 +319,52 @@ extension OnitModel {
         
         generatingPrompt = nil
         generatingPromptPriorState = nil
+    }
+
+    private func getCurrentModelName() -> String {
+        if Defaults[.mode] == .remote {
+            if let model = Defaults[.remoteModel] {
+                if let customProviderName = model.customProviderName {
+                    return "\(customProviderName)/\(model.displayName)"
+                } else {
+                    return model.displayName
+                }
+            }
+        } else {
+            return Defaults[.localModel] ?? ""
+        }
+        return ""
+    }
+
+    private func getHistories(for prompt: Prompt) -> (files: [[URL]], inputs: [Input?], images: [[URL]], instructions: [String], autoContexts: [[String: String]], responses: [String]) {
+        var filesHistory = [prompt.contextList.files]
+        var inputsHistory = [prompt.input]
+        var imagesHistory = [prompt.contextList.images]
+        var instructionsHistory = [prompt.instruction]
+        var autoContextsHistory = [prompt.contextList.autoContexts]
+        var responsesHistory: [String] = []
+        
+        var currentPrompt = prompt.priorPrompt
+        while currentPrompt != nil {
+            if let generationIndex = currentPrompt?.generationIndex,
+               let responseCount = currentPrompt?.responses.count,
+               generationIndex >= 0,
+               generationIndex < responseCount {
+                let response = currentPrompt!.responses[generationIndex]
+                
+                if response.type != .error {
+                    instructionsHistory.insert(currentPrompt!.instruction, at: 0)
+                    inputsHistory.insert(currentPrompt!.input, at: 0)
+                    filesHistory.insert(currentPrompt!.contextList.files, at: 0)
+                    imagesHistory.insert(currentPrompt!.contextList.images, at: 0)
+                    autoContextsHistory.insert(currentPrompt!.contextList.autoContexts, at: 0)
+                    responsesHistory.insert(
+                        currentPrompt!.responses[currentPrompt!.generationIndex].text, at: 0)
+                }
+            }
+            currentPrompt = currentPrompt!.priorPrompt
+        }
+        
+        return (filesHistory, inputsHistory, imagesHistory, instructionsHistory, autoContextsHistory, responsesHistory)
     }
 }

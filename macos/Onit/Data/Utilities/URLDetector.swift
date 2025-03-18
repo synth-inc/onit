@@ -2,10 +2,13 @@
 //  URLDetector.swift
 //  Onit
 //
-//  Created by OpenHands on 3/11/2024.
+//  Created by Loyd Kim on 3/11/2024.
 //
 
 import Foundation
+import LinkPresentation
+import UniformTypeIdentifiers
+import AppKit
 
 class URLDetector {
     
@@ -34,10 +37,11 @@ class URLDetector {
         return scheme == "http" || scheme == "https"
     }
     
-    /// Scrapes content from a URL
+    /// Scrapes metadata from a URL
     /// - Parameter url: The URL to scrape
-    /// - Returns: The scraped text content
-    static func scrapeContent(from url: URL) async throws -> String {
+    /// - Returns: A tuple of content and metadata
+    static func scrapeContentAndMetadata(from url: URL) async throws -> WebContentAndMetadata {
+        // First get the content
         let (data, response) = try await URLSession.shared.data(from: url)
         
         guard let httpResponse = response as? HTTPURLResponse,
@@ -45,25 +49,132 @@ class URLDetector {
             throw URLError(.badServerResponse)
         }
         
-        // Try to determine the text encoding from the response
-        var encoding = String.Encoding.utf8
+        // Get content with existing method
+        let content = extractTextFromHTML(String(data: data, encoding: .utf8) ?? "")
         
-        if let encodingName = httpResponse.textEncodingName {
-            let cfEncoding = CFStringConvertIANACharSetNameToEncoding(encodingName as CFString)
-            if cfEncoding != kCFStringEncodingInvalidId {
-                encoding = String.Encoding(rawValue: CFStringConvertEncodingToNSStringEncoding(cfEncoding))
+        // Use LinkPresentation for metadata
+        let provider = LPMetadataProvider()
+        let lpMetadata = try await provider.startFetchingMetadata(for: url)
+        
+        // Get the icon data with better error handling
+        var faviconImageData: Data? = nil
+        if let iconProvider = lpMetadata.iconProvider {
+            do {
+                if let loadedItem = try? await iconProvider.loadItem(forTypeIdentifier: UTType.image.identifier, options: nil) {
+                    if let nsImage = loadedItem as? NSImage {
+                        // We got an NSImage directly
+                        if let tiffData = nsImage.tiffRepresentation,
+                           let bitmap = NSBitmapImageRep(data: tiffData),
+                           let pngData = bitmap.representation(using: .png, properties: [:]) {
+                            faviconImageData = pngData
+                        }
+                    } else if let imageData = loadedItem as? Data {
+                        // We got raw data, try to create an image from it
+                        if let nsImage = NSImage(data: imageData) {
+                            // Convert to PNG for consistency
+                            if let tiffData = nsImage.tiffRepresentation,
+                               let bitmap = NSBitmapImageRep(data: tiffData),
+                               let pngData = bitmap.representation(using: .png, properties: [:]) {
+                                faviconImageData = pngData
+                            }
+                        }
+                    }
+                }
+            } catch {
+                // Silently fail, will use fallback icon
             }
         }
         
-        // Try to convert the data to a string
-        if let content = String(data: data, encoding: encoding) {
-            // Extract text content from HTML
-            return extractTextFromHTML(content)
-        } else {
-            throw URLError(.cannotDecodeContentData)
+        // If still no icon, try the default favicon.ico
+        if faviconImageData == nil {
+            do {
+                let faviconURL = url.deletingLastPathComponent().appendingPathComponent("favicon.ico")
+                let (data, response) = try await URLSession.shared.data(from: faviconURL)
+                
+                if let httpResponse = response as? HTTPURLResponse,
+                   (200...299).contains(httpResponse.statusCode),
+                   let image = NSImage(data: data),
+                   let tiffData = image.tiffRepresentation,
+                   let bitmap = NSBitmapImageRep(data: tiffData),
+                   let pngData = bitmap.representation(using: .png, properties: [:]) {
+                    faviconImageData = pngData
+                }
+            } catch {
+                print("Error fetching favicon.ico: \(error)")
+            }
         }
+        
+        return WebContentAndMetadata(
+            content: content,
+            title: lpMetadata.title,
+            faviconImageData: faviconImageData
+        )
     }
     
+    private static func extractTitle(from html: String) -> String? {
+        // First try standard title tag with lookahead/lookbehind
+        let titlePattern = "(?<=<title[^>]*>)([^<]+)(?=</title>)"
+        if let range = html.range(of: titlePattern, options: .regularExpression) {
+            let title = String(html[range])
+            let decodedTitle = title.decodingHTMLEntities()
+            return decodedTitle.trimmingCharacters(in: .whitespacesAndNewlines)
+        }
+        
+        // Try Open Graph title as fallback with lookahead/lookbehind
+        let ogPattern = "(?<=<meta[^>]+property=\"og:title\"[^>]+content=\")[^\"]+(?=\")"
+        if let range = html.range(of: ogPattern, options: .regularExpression) {
+            let title = String(html[range])
+            let decodedTitle = title.decodingHTMLEntities()
+            return decodedTitle.trimmingCharacters(in: .whitespacesAndNewlines)
+        }
+        
+        return nil
+    }
+    
+    private static func getFaviconURL(for url: URL, from html: String) async throws -> URL? {
+        // Try to find favicon in HTML with multiple patterns using lookahead/lookbehind
+        let faviconPatterns = [
+            // Apple touch icon with lookahead/lookbehind
+            "(?<=<link[^>]*rel=\"apple-touch-icon\"[^>]*href=\")[^\"]+(?=\")",
+            // Standard favicon with lookahead/lookbehind
+            "(?<=<link[^>]*rel=\"(?:shortcut )?icon\"[^>]*href=\")[^\"]+(?=\")",
+            // Open Graph image with lookahead/lookbehind
+            "(?<=<meta[^>]+property=\"og:image\"[^>]+content=\")[^\"]+(?=\")"
+        ]
+        
+        for pattern in faviconPatterns {
+            if let range = html.range(of: pattern, options: .regularExpression) {
+                let path = String(html[range])
+                if let faviconURL = URL(string: path, relativeTo: url)?.absoluteURL {
+                    // Verify the URL is accessible
+                    do {
+                        let (_, response) = try await URLSession.shared.data(from: faviconURL)
+                        if let httpResponse = response as? HTTPURLResponse,
+                           (200...299).contains(httpResponse.statusCode) {
+                            return faviconURL
+                        }
+                    } catch {
+                        continue
+                    }
+                }
+            }
+        }
+        
+        // Try default favicon.ico location as last resort
+        let defaultFaviconURL = url.deletingLastPathComponent().appendingPathComponent("favicon.ico")
+        do {
+            let (_, response) = try await URLSession.shared.data(from: defaultFaviconURL)
+            if let httpResponse = response as? HTTPURLResponse,
+               (200...299).contains(httpResponse.statusCode) {
+                return defaultFaviconURL
+            }
+        } catch {
+            return nil
+        }
+        
+        return nil
+    }
+
     /// Extracts text content from HTML
     /// - Parameter html: The HTML string
     /// - Returns: Plain text extracted from HTML

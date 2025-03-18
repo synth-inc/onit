@@ -11,43 +11,56 @@ struct ContextImage: View {
     var context: Context
 
     var body: some View {
-        switch context {
-        case .auto:
-            autoContext
-        case .image(let url):
-            image(url: url)
-        case .file:
-            file
-        default:
-            warning
+        if case .loading = context {
+            ProgressView()
+                .scaleEffect(0.5)
+                .frame(width: 12, height: 12)
+                .padding(.trailing, 1)
+        } else {
+            switch context {
+            case .webAuto(_, _, let metadata):
+                Group {
+                    if let image = metadata.faviconImage {
+                        Image(nsImage: image)
+                            .resizable()
+                            .interpolation(.high)
+                            .frame(width: 16, height: 16)
+                            .clipShape(imageRect)
+                    } else {
+                        fallbackGlobeIcon
+                    }
+                }
+            case .auto(let appName, _):
+                if appName.starts(with: "Web:") {
+                    fallbackGlobeIcon
+                } else {
+                    Image(.stars)
+                        .resizable()
+                        .frame(width: 16, height: 16)
+                        .clipShape(imageRect)
+                }
+            case .image(let url):
+                image(url: url)
+            case .file:
+                file
+            default:
+                warning
+            }
         }
     }
 
-    var autoContext: some View {
-        switch context {
-        case .auto(let appName, _):
-            if appName.starts(with: "Web:") {
-                // Use a web icon for web content
-                return Image(systemName: "globe")
-                    .resizable()
-                    .frame(width: 20, height: 20)
-            } else {
-                // Use the default stars icon for other auto context
-                return Image(.stars)
-                    .resizable()
-                    .frame(width: 20, height: 20)
-            }
-        default:
-            return Image(.stars)
-                .resizable()
-                .frame(width: 20, height: 20)
-        }
+    var fallbackGlobeIcon: some View {
+        Image(systemName: "globe")
+            .resizable()
+            .frame(width: 16, height: 16)
+            .clipShape(imageRect)
     }
 
     var file: some View {
         Image(.file)
             .resizable()
             .frame(width: 20, height: 20)
+            .clipShape(imageRect)
     }
 
     var imageRect: RoundedRectangle {
@@ -74,5 +87,6 @@ struct ContextImage: View {
         Image(.warning)
             .resizable()
             .frame(width: 20, height: 20)
+            .clipShape(imageRect)
     }
 }

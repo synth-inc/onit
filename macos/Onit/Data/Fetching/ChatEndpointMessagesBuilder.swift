@@ -25,7 +25,7 @@ struct ChatEndpointMessagesBuilder {
                 }
             }
             
-            // TODO: add error handling for contexts too long & incorrect file types
+            // TODO: add error handling for contexts too long & incorrect file types            
             if !files[index].isEmpty {
                 for file in files[index] {
                     if let fileContent = try? String(contentsOf: file, encoding: .utf8) {
@@ -36,7 +36,16 @@ struct ChatEndpointMessagesBuilder {
             
             if !autoContexts[index].isEmpty {
                 for (appName, appContent) in autoContexts[index] {
-                    message += "\n\nContent from application \(appName):\n\(appContent)"
+                    if appName.starts(with: "Web:") {
+                        // Formatting for web contexts
+                        message += "\n\n[WEB CONTEXT START]\n"
+                        message += "Source: \(appName)\n"
+                        message += "Content:\n\(appContent)\n"
+                        message += "[WEB CONTEXT END]"
+                    } else {
+                        // Regular formatting for non-web contexts
+                        message += "\n\nContent from application \(appName):\n\(appContent)"
+                    }
                 }
             }
 

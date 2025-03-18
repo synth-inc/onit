@@ -16,6 +16,8 @@ struct QLImage: NSViewRepresentable {
         self.name = name
     }
     
+    @State private var hasActivePreview = false
+    
     func makeNSView(context: NSViewRepresentableContext<QLImage>) -> QLPreviewView {
         guard let url = Bundle.main.url(forResource: name, withExtension: "gif")
         else {
@@ -25,23 +27,40 @@ struct QLImage: NSViewRepresentable {
         
         let preview = QLPreviewView(frame: .zero, style: .normal)
         preview?.autostarts = true
-        preview?.previewItem = url as QLPreviewItem
+        
+        // Set initial preview item safely
+        DispatchQueue.main.async {
+            preview?.previewItem = url as QLPreviewItem
+            self.hasActivePreview = true
+        }
         
         return preview ?? QLPreviewView()
     }
     
     func updateNSView(_ nsView: QLPreviewView, context: NSViewRepresentableContext<QLImage>) {
-        guard let url = Bundle.main.url(forResource: name, withExtension: "gif")
-        else {
+        // Only update if the preview is active and the view is still valid
+        guard hasActivePreview,
+              nsView.window != nil,
+              let url = Bundle.main.url(forResource: name, withExtension: "gif") else {
             let _ = print("Cannot get image \(name)")
             return
         }
         
-        // Check if the nsView is still valid before setting the preview item
-        if nsView.window != nil {
-            nsView.previewItem = url as QLPreviewItem
-        } else {
-            print("Cannot set preview item on a closed preview view")
+        // Update preview item on main thread
+        DispatchQueue.main.async {
+            if nsView.window != nil {
+                nsView.previewItem = url as QLPreviewItem
+            } else {
+                print("Cannot set preview item on a closed preview view")
+                self.hasActivePreview = false
+            }
+        }
+    }
+    
+    static func dismantleNSView(_ nsView: QLPreviewView, coordinator: Coordinator) {
+        // Clear preview item before dismissal
+        DispatchQueue.main.async {
+            nsView.previewItem = nil
         }
     }
     

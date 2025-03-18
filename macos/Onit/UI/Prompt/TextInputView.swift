@@ -20,8 +20,9 @@ struct TextInputView: View {
     @Default(.mode) var mode
     
     @State private var textHeight: CGFloat = 20
-    @State private var isProcessingURL: Bool = false
     private let maxHeightLimit: CGFloat = 100
+    
+    @State private var isProcessingURLs = false
 
     var body: some View {
         HStack(alignment: .bottom) {
@@ -55,7 +56,7 @@ struct TextInputView: View {
             .onChange(of: model.textFocusTrigger) { focused = true }
             .onChange(of: model.pendingInstruction) { oldValue, newValue in
                 // Check for URLs when text changes
-                if !isProcessingURL && !newValue.isEmpty {
+                if !isProcessingURLs && !newValue.isEmpty {
                     Task {
                         await checkForURLs()
                     }
@@ -64,14 +65,6 @@ struct TextInputView: View {
         }
         .appFont(.medium16)
         .foregroundStyle(.white)
-        .overlay(alignment: .topTrailing) {
-            if isProcessingURL {
-                ProgressView()
-                    .scaleEffect(0.7)
-                    .padding(.trailing, 8)
-                    .padding(.top, 4)
-            }
-        }
     }
 
     var placeholderText: String {
@@ -98,23 +91,63 @@ struct TextInputView: View {
     func checkForURLs() async {
         guard !model.pendingInstruction.isEmpty else { return }
         
-        // Set processing state
-        await MainActor.run {
-            isProcessingURL = true
-        }
+        isProcessingURLs = true
+        defer { isProcessingURLs = false }
         
-        // Process text for URLs
-        let (processedText, foundURLs) = await WebContentContext.processTextForURLs(
-            text: model.pendingInstruction, 
-            model: model
-        )
+        let urls = URLDetector.detectURLs(in: model.pendingInstruction)
         
-        // Update UI with processed text if URLs were found
-        await MainActor.run {
-            if foundURLs {
-                model.pendingInstruction = processedText
+        for url in urls {
+            let urlHost = url.host ?? "URL"
+            
+            let isDuplicate = await model.pendingContextList.contains { context in
+                if case .webAuto(let appName, _, _) = context {
+                    return appName == "Web: \(urlHost)"
+                }
+                if case .auto(let appName, _) = context {
+                    return appName == "Web: \(urlHost)"
+                }
+                return false
             }
-            isProcessingURL = false
+            
+            if isDuplicate {
+                continue
+            }
+            
+            await MainActor.run {
+                model.pendingContextList.append(.loading(urlHost))
+            }
+            
+            do {
+                let result = try await URLDetector.scrapeContentAndMetadata(from: url)
+                
+                await MainActor.run {
+                    // Remove loading context
+                    model.pendingContextList.removeAll { context in
+                        if case .loading(let host) = context {
+                            return host == urlHost
+                        }
+                        return false
+                    }
+                    
+                    // Add web context with metadata
+                    let webContext = Context.webAuto(
+                        "Web: \(urlHost)",
+                        ["content": result.content],
+                        result.asWebMetadata
+                    )
+                    model.pendingContextList.append(webContext)
+                }
+            } catch {
+                print("Error scraping content from URL: \(error)")
+                await MainActor.run {
+                    model.pendingContextList.removeAll { context in
+                        if case .loading(let host) = context {
+                            return host == urlHost
+                        }
+                        return false
+                    }
+                }
+            }
         }
     }
 
@@ -125,20 +158,10 @@ struct TextInputView: View {
         guard !inputText.isEmpty else { return }
         
         // Final URL check before sending
-        if !isProcessingURL {
-            Task {
-                await checkForURLs()
-                await MainActor.run {
-                    model.createAndSavePrompt()
-                }
-            }
-        } else {
-            // If we're still processing, wait a bit and then send
-            Task {
-                try? await Task.sleep(nanoseconds: 500_000_000) // 0.5 seconds
-                await MainActor.run {
-                    model.createAndSavePrompt()
-                }
+        Task {
+            await checkForURLs()
+            await MainActor.run {
+                model.createAndSavePrompt()
             }
         }
     }
@@ -155,7 +178,7 @@ struct TextInputView: View {
                 .frame(width: 18, height: 18)
         }
         .buttonStyle(.plain)
-        .disabled(model.pendingInstruction.isEmpty || isProcessingURL)
+        .disabled(model.pendingInstruction.isEmpty)
         .keyboardShortcut(.return, modifiers: [])
     }
 
