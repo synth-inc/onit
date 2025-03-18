@@ -10,6 +10,14 @@ try {
     let markdownText = `[TEXT]`;
     log("📝 Initial text length: " + markdownText.length);
     
+    // Vérifier si le texte contient des commandes includegraphics et subfigures
+    const hasIncludeGraphics = markdownText.includes("\\includegraphics");
+    const hasSubfigures = markdownText.includes("\\begin{subfigure}");
+    log(`📊 Initial check: includegraphics=${hasIncludeGraphics ? "présent" : "absent"}, subfigures=${hasSubfigures ? "présentes" : "absentes"}`);
+    
+    // Afficher un échantillon du texte pour débogage
+    log("📝 Text sample: " + markdownText.substring(markdownText.indexOf("\\documentclass"), markdownText.indexOf("\\documentclass") + 200));
+    
     // Traiter directement le contenu sans vérifier latex.js
     processContent();
     
@@ -83,6 +91,24 @@ try {
             const bodyContent = bodyMatch[1];
             log("📝 Extracted body content length: " + bodyContent.length);
             
+            // Loguer les 100 premiers caractères du contenu pour débogage
+            log("📝 Body content preview: " + bodyContent.substring(0, 100) + "...");
+            
+            // Chercher des images pour débogage
+            const includegraphicsRegex = /\\includegraphics(\[([^\]]*)\])?\{([^}]*)\}/g;
+            let imgMatch;
+            while ((imgMatch = includegraphicsRegex.exec(bodyContent)) !== null) {
+                log(`📊 Found image: ${imgMatch[3]} with options: ${imgMatch[2] || 'none'}`);
+            }
+            
+            // Chercher des subfigures pour débogage
+            const subfigRegex = /\\begin\{subfigure\}/g;
+            let subfigCount = 0;
+            while (subfigRegex.exec(bodyContent) !== null) {
+                subfigCount++;
+            }
+            log(`📊 Found ${subfigCount} subfigures in the document`);
+            
             // Créer un conteneur pour le document LaTeX
             const container = document.createElement('div');
             container.id = 'mathjax-container';
@@ -112,6 +138,10 @@ try {
                 
                 // Ajouter des classes aux tableaux pour le styling
                 styleTableElements();
+                
+                // Vérifier si des subfigures ont été rendues
+                const renderedSubfigures = document.querySelectorAll('.subfigure');
+                log(`📊 Rendered ${renderedSubfigures.length} subfigures after processing`);
                 
                 updateHeight();
             }).catch(err => {
@@ -175,13 +205,13 @@ try {
         if (!container) return;
         
         // Traiter les théorèmes
-        const theoremRegex = /\\textbf\{Théorème\.\}\s*([\s\S]*?)(?=\\textbf\{|$)/g;
+        const theoremRegex = /\\textbf\{Theorem\.\}\s*([\s\S]*?)(?=\\textbf\{|$)/g;
         let html = container.innerHTML;
-        html = html.replace(theoremRegex, '<div class="theorem"><strong>Théorème.</strong> $1</div>');
+        html = html.replace(theoremRegex, '<div class="theorem"><strong>Theorem.</strong> $1</div>');
         
         // Traiter les preuves
-        const proofRegex = /\\textbf\{Preuve\.\}\s*([\s\S]*?)(?=\\textbf\{|$)/g;
-        html = html.replace(proofRegex, '<div class="proof"><strong>Preuve.</strong> $1</div>');
+        const proofRegex = /\\textbf\{Proof\.\}\s*([\s\S]*?)(?=\\textbf\{|$)/g;
+        html = html.replace(proofRegex, '<div class="proof"><strong>Proof.</strong> $1</div>');
         
         // Traiter le contenu centré
         const centerRegex = /<div\s+style="text-align:center">([\s\S]*?)<\/div>/g;
@@ -195,14 +225,78 @@ try {
     function preprocessLatexDocument(latexContent) {
         log("🔄 Preprocessing LaTeX document to handle problematic environments");
         
-        // Remplacer l'environnement table par un environnement center avec tabular
-        let processedContent = latexContent;
+        // Normaliser le contenu LaTeX pour éviter les problèmes d'échappement
+        let processedContent = normalizeLatexCommands(latexContent);
         
-        // Traiter les tableaux et les environnements de tableau
+        // Garder une trace des labels pour les références
+        const labelMap = {};
+        
+        // Extraire les labels et les associer à leur environnement
+        const labelRegex = /\\label\{([^}]*)\}/g;
+        let labelMatch;
+        while ((labelMatch = labelRegex.exec(processedContent)) !== null) {
+            const label = labelMatch[1];
+            
+            // Trouver le type d'environnement contenant ce label
+            let envType = "unknown";
+            let envNumber = "??";
+            
+            // Vérifier si le label est dans une figure
+            const figureCheck = processedContent.substring(0, labelMatch.index).lastIndexOf("\\begin{figure}");
+            const figureEndCheck = processedContent.substring(0, labelMatch.index).lastIndexOf("\\end{figure}");
+            if (figureCheck > figureEndCheck && figureCheck !== -1) {
+                envType = "figure";
+                
+                // Extraire le numéro de la figure (implémentation simplifiée)
+                // Dans une vraie implémentation, on compterait les figures
+                envNumber = countEnvironment(processedContent, "figure", labelMatch.index);
+            }
+            
+            // Vérifier si le label est dans une table
+            const tableCheck = processedContent.substring(0, labelMatch.index).lastIndexOf("\\begin{table}");
+            const tableEndCheck = processedContent.substring(0, labelMatch.index).lastIndexOf("\\end{table}");
+            if (tableCheck > tableEndCheck && tableCheck !== -1) {
+                envType = "table";
+                envNumber = countEnvironment(processedContent, "table", labelMatch.index);
+            }
+            
+            // Vérifier si le label est dans une équation
+            const equationCheck = processedContent.substring(0, labelMatch.index).lastIndexOf("\\begin{equation}");
+            const equationEndCheck = processedContent.substring(0, labelMatch.index).lastIndexOf("\\end{equation}");
+            if (equationCheck > equationEndCheck && equationCheck !== -1) {
+                envType = "equation";
+                envNumber = countEnvironment(processedContent, "equation", labelMatch.index);
+            }
+            
+            // Stocker les informations du label
+            labelMap[label] = {
+                type: envType,
+                number: envNumber
+            };
+            
+            log(`🔖 Found label: ${label} (${envType} ${envNumber})`);
+        }
+        
+        // Remplacer les \ref par les numéros correspondants
+        processedContent = processedContent.replace(/\\ref\{([^}]*)\}/g, (match, label) => {
+            if (labelMap[label]) {
+                const ref = labelMap[label];
+                log(`🔄 Replacing reference to ${label} with ${ref.number}`);
+                return ref.number;
+            } else {
+                log(`⚠️ Reference to unknown label: ${label}`);
+                return "??";
+            }
+        });
+        
+        // IMPORTANT: Traiter les figures et sous-figures AVANT de remplacer les commandes
+        // Cela permet de préserver les commandes \includegraphics pour le traitement des figures
         processedContent = processTableEnvironments(processedContent);
-        
-        // Traiter les listes (itemize, enumerate)
         processedContent = processListEnvironments(processedContent);
+        processedContent = processFigureEnvironments(processedContent);
+        
+        // Maintenant, remplacer les commandes problématiques
+        processedContent = replaceUnsupportedCommands(processedContent);
         
         // Liste des environnements problématiques à convertir en center
         const problematicEnvironments = [
@@ -222,11 +316,11 @@ try {
                 
                 // Pour theorem et proof, on ajoute un titre
                 if (env === 'theorem') {
-                    return "\\textbf{Théorème.} " + content;
+                    return "\\textbf{Theorem.} " + content;
                 }
                 
                 if (env === 'proof') {
-                    return "\\textbf{Preuve.} " + content;
+                    return "\\textbf{Proof.} " + content;
                 }
                 
                 // Pour verbatim, on enveloppe dans un pre
@@ -255,9 +349,6 @@ try {
                 return "\\[" + content + "\\]";
             });
         });
-        
-        // Remplacer les commandes problématiques
-        processedContent = replaceUnsupportedCommands(processedContent);
         
         // Traiter la bibliographie
         const bibRegex = /\\printbibliography/g;
@@ -308,6 +399,49 @@ try {
         
         log("✅ LaTeX preprocessing completed");
         return processedContent;
+    }
+    
+    // Fonction pour normaliser les commandes LaTeX et corriger les problèmes d'échappement
+    function normalizeLatexCommands(content) {
+        log("🔄 Normalizing LaTeX commands");
+        
+        // Corriger les doubles backslashes (sauf dans les newlines et tabulations)
+        let normalizedContent = content.replace(/\\\\(?![rnt])/g, "\\");
+        
+        // S'assurer que les commandes includegraphics sont correctement formatées
+        normalizedContent = normalizedContent.replace(/\\\\includegraphics/g, "\\includegraphics");
+        
+        // Normaliser les options de includegraphics
+        normalizedContent = normalizedContent.replace(/\\includegraphics\s*\[/g, "\\includegraphics[");
+        
+        // Corriger les problèmes éventuels dans les subfigures
+        normalizedContent = normalizedContent.replace(/\\\\begin\{subfigure\}/g, "\\begin{subfigure}");
+        normalizedContent = normalizedContent.replace(/\\\\end\{subfigure\}/g, "\\end{subfigure}");
+        
+        // Corriger les problèmes éventuels avec les captions
+        normalizedContent = normalizedContent.replace(/\\\\caption/g, "\\caption");
+        
+        // Corriger les problèmes éventuels avec les centering
+        normalizedContent = normalizedContent.replace(/\\\\centering/g, "\\centering");
+        
+        log("✅ LaTeX commands normalized");
+        return normalizedContent;
+    }
+    
+    // Fonction pour compter les environnements jusqu'à un certain point dans le document
+    function countEnvironment(content, envType, endIndex) {
+        const regex = new RegExp(`\\\\begin\\{${envType}\\}`, 'g');
+        let match;
+        let count = 0;
+        
+        // Limiter la recherche jusqu'à l'index spécifié
+        const searchText = content.substring(0, endIndex);
+        
+        while ((match = regex.exec(searchText)) !== null) {
+            count++;
+        }
+        
+        return count.toString();
     }
     
     // Fonction pour traiter les environnements de liste
@@ -389,11 +523,19 @@ try {
         content = content.replace(tableRegex, (match, placement, tableContent) => {
             log("🔄 Processing table environment");
             
+            // Extraire l'identifiant de label s'il existe
+            let tableId = "";
+            const labelMatch = tableContent.match(/\\label\{([^}]*)\}/);
+            if (labelMatch) {
+                tableId = `id="tab-${labelMatch[1]}"`;
+                log(`🔖 Table has label: ${labelMatch[1]}`);
+            }
+            
             // Extraire la légende si elle existe
             let caption = "";
             const captionMatch = tableContent.match(/\\caption\{([^}]*)\}/);
             if (captionMatch) {
-                caption = `<div class="table-caption">${captionMatch[1]}</div>`;
+                caption = `<div class="table-caption"><strong>Table:</strong> ${captionMatch[1]}</div>`;
             }
             
             // Vérifier s'il y a un environnement tabular à l'intérieur
@@ -401,11 +543,11 @@ try {
             if (tabularMatch) {
                 const [fullMatch, envType, args, tabularContent] = tabularMatch;
                 const htmlTable = convertTabularToHtml(envType, args, tabularContent);
-                return `<div class="table-container">${caption}${htmlTable}</div>`;
+                return `<div class="table-container" ${tableId}>${caption}${htmlTable}</div>`;
             }
             
             // Conserver le contenu du tableau
-            return `<div class="table-container">${caption}${tableContent}</div>`;
+            return `<div class="table-container" ${tableId}>${caption}${tableContent}</div>`;
         });
         
         return content;
@@ -461,6 +603,9 @@ try {
     function replaceUnsupportedCommands(content) {
         log("🔄 Replacing unsupported LaTeX commands");
         
+        // Ne pas remplacer includegraphics maintenant car cela peut interférer avec la détection des subfigures
+        // On le traitera directement dans processFigureEnvironments
+        
         // Dictionnaire des commandes à remplacer
         const commandReplacements = {
             '\\toprule': '\\hline\\hline',
@@ -468,7 +613,6 @@ try {
             '\\bottomrule': '\\hline\\hline',
             '\\cmidrule': '\\hline',
             '\\multicolumn': '', // Suppression complète car difficile à remplacer simplement
-            '\\includegraphics': '\\textbf{[Image]}', // Remplacer par un texte indicatif
             '\\caption': '\\textbf{Caption:}', // Simplifier la légende
             '\\label': '', // Supprimer les labels
             '\\ref': '??', // Remplacer les références par ??
@@ -530,6 +674,166 @@ try {
             .replace(/>/g, "&gt;")
             .replace(/"/g, "&quot;")
             .replace(/'/g, "&#039;");
+    }
+    
+    // Fonction pour traiter les environnements de figure et subfigure
+    function processFigureEnvironments(content) {
+        log("🔄 Processing figure environments");
+        
+        // Accéder à la carte des labels (définie dans preprocessLatexDocument)
+        // On utilisera une approche différente pour intégrer les références
+        
+        // Traiter les figures avec subfigures
+        content = content.replace(/\\begin\{figure\}(\[.*?\])?([\s\S]*?)\\end\{figure\}/g, (match, placement, figureContent) => {
+            // Vérifier si cette figure contient des subfigures
+            if (figureContent.includes('\\begin{subfigure}')) {
+                log("🔄 Converting figure with subfigures to HTML");
+                
+                // Extraire l'identifiant de label s'il existe
+                let figureId = "";
+                const labelMatch = figureContent.match(/\\label\{([^}]*)\}/);
+                if (labelMatch) {
+                    figureId = `id="fig-${labelMatch[1]}"`;
+                    log(`🔖 Figure has label: ${labelMatch[1]}`);
+                }
+                
+                // Extraire la légende principale
+                const mainCaptionMatch = figureContent.match(/\\caption\{([^}]*)\}/);
+                const mainCaption = mainCaptionMatch ? mainCaptionMatch[1] : "";
+                
+                // Extraire toutes les subfigures
+                const subfigures = [];
+                const subfigureRegex = /\\begin\{subfigure\}(\{[^}]*\})([\s\S]*?)\\end\{subfigure\}/g;
+                let subfigMatch;
+                
+                while ((subfigMatch = subfigureRegex.exec(figureContent)) !== null) {
+                    const size = subfigMatch[1];
+                    const content = subfigMatch[2];
+                    
+                    // Extraire l'image avec un regex correct pour includegraphics
+                    // Le pattern inclut les crochets optionnels et les accolades obligatoires
+                    const imageMatch = content.match(/\\includegraphics(\[([^\]]*)\])?\{([^}]*)\}/);
+                    const captionMatch = content.match(/\\caption\{([^}]*)\}/);
+                    
+                    // Extraire le label de la subfigure si présent
+                    let subfigId = "";
+                    const sublabelMatch = content.match(/\\label\{([^}]*)\}/);
+                    if (sublabelMatch) {
+                        subfigId = `id="fig-${sublabelMatch[1]}"`;
+                        log(`🔖 Subfigure has label: ${sublabelMatch[1]}`);
+                    }
+                    
+                    subfigures.push({
+                        size: size,
+                        imagePath: imageMatch ? imageMatch[3] : null, // Chemin est dans group 3 maintenant
+                        imageOptions: imageMatch ? imageMatch[2] : null, // Options dans group 2
+                        caption: captionMatch ? captionMatch[1] : null,
+                        id: subfigId
+                    });
+                    
+                    log(`📊 Extracted subfigure: ${imageMatch ? imageMatch[3] : 'No image'}`);
+                }
+                
+                log(`🔄 Found ${subfigures.length} subfigures`);
+                
+                // Créer le HTML pour les subfigures
+                let subfiguresHtml = '<div class="subfigures-container">';
+                
+                // Ajouter chaque subfigure
+                subfigures.forEach((subfig, index) => {
+                    subfiguresHtml += `<div class="subfigure" ${subfig.id}>`;
+                    if (subfig.imagePath) {
+                        subfiguresHtml += `<div class="subfigure-image">[Image: ${subfig.imagePath}${subfig.imageOptions ? ' avec options: ' + subfig.imageOptions : ''}]</div>`;
+                    }
+                    if (subfig.caption) {
+                        subfiguresHtml += `<div class="subfigure-caption">${subfig.caption}</div>`;
+                    }
+                    subfiguresHtml += '</div>';
+                });
+                
+                // Fermer le conteneur des subfigures
+                subfiguresHtml += '</div>';
+                
+                // Ajouter la légende principale
+                if (mainCaption) {
+                    subfiguresHtml += `<div class="figure-caption"><strong>Figure:</strong> ${mainCaption}</div>`;
+                }
+                
+                // Encapsuler dans un conteneur de figure avec l'ID de figure
+                return `<div class="figure-container" ${figureId}>${subfiguresHtml}</div>`;
+            } else {
+                // Traiter l'environnement figure standard (sans subfigures)
+                log("🔄 Converting standard figure to HTML");
+                
+                // Extraire l'image avec un regex correct
+                const imageMatch = figureContent.match(/\\includegraphics(\[([^\]]*)\])?\{([^}]*)\}/);
+                const captionMatch = figureContent.match(/\\caption\{([^}]*)\}/);
+                
+                // Extraire l'identifiant de label s'il existe
+                let figureId = "";
+                const labelMatch = figureContent.match(/\\label\{([^}]*)\}/);
+                if (labelMatch) {
+                    figureId = `id="fig-${labelMatch[1]}"`;
+                    log(`🔖 Figure has label: ${labelMatch[1]}`);
+                }
+                
+                let figureHtml = `<div class="figure-container" ${figureId}>`;
+                
+                // Ajouter l'image
+                if (imageMatch) {
+                    const imagePath = imageMatch[3]; // Chemin est dans group 3 maintenant
+                    const imageOptions = imageMatch[2]; // Options dans group 2
+                    figureHtml += `<div class="figure-image">[Image: ${imagePath}${imageOptions ? ' avec options: ' + imageOptions : ''}]</div>`;
+                    log(`📊 Extracted figure image: ${imagePath}`);
+                }
+                
+                // Ajouter la légende
+                if (captionMatch) {
+                    figureHtml += `<div class="figure-caption"><strong>Figure:</strong> ${captionMatch[1]}</div>`;
+                }
+                
+                figureHtml += '</div>';
+                return figureHtml;
+            }
+        });
+        
+        // Traiter l'environnement subfigure individuel (au cas où)
+        const subfigureRegex = /\\begin\{subfigure\}(\{[^}]*\})([\s\S]*?)\\end\{subfigure\}/g;
+        content = content.replace(subfigureRegex, (match, size, subfigContent) => {
+            log("🔄 Converting standalone subfigure to HTML");
+            
+            // Extraire l'image avec un regex correct
+            const imageMatch = subfigContent.match(/\\includegraphics(\[([^\]]*)\])?\{([^}]*)\}/);
+            const captionMatch = subfigContent.match(/\\caption\{([^}]*)\}/);
+            
+            // Extraire le label s'il existe
+            let subfigId = "";
+            const labelMatch = subfigContent.match(/\\label\{([^}]*)\}/);
+            if (labelMatch) {
+                subfigId = `id="fig-${labelMatch[1]}"`;
+                log(`🔖 Standalone subfigure has label: ${labelMatch[1]}`);
+            }
+            
+            let subfigureHtml = `<div class="subfigure" ${subfigId}>`;
+            
+            // Ajouter l'image
+            if (imageMatch) {
+                const imagePath = imageMatch[3]; // Chemin est dans group 3 maintenant
+                const imageOptions = imageMatch[2]; // Options dans group 2
+                subfigureHtml += `<div class="subfigure-image">[Image: ${imagePath}${imageOptions ? ' avec options: ' + imageOptions : ''}]</div>`;
+                log(`📊 Extracted standalone subfigure image: ${imagePath}`);
+            }
+            
+            // Ajouter la légende
+            if (captionMatch) {
+                subfigureHtml += `<div class="subfigure-caption">${captionMatch[1]}</div>`;
+            }
+            
+            subfigureHtml += '</div>';
+            return subfigureHtml;
+        });
+        
+        return content;
     }
 } catch(e) {
     log("❌ Error while rendering: " + e.message);

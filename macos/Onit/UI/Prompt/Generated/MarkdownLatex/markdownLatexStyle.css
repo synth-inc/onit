@@ -512,3 +512,89 @@ h3 {
     overflow-y: hidden;
     padding: 0.5em 0;
 }
+
+/* Styles pour les subfigures */
+.subfigures-container {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 20px;
+    margin: 1.5em 0;
+}
+
+.subfigure {
+    flex: 1;
+    min-width: 200px;
+    max-width: 45%;
+    text-align: center;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+    padding: 10px;
+    background-color: rgba(255, 255, 255, 0.03);
+}
+
+.subfigure-image {
+    margin-bottom: 10px;
+    padding: 5px;
+    background-color: rgba(0, 0, 0, 0.2);
+    border-radius: 3px;
+    color: #aaa;
+    font-style: italic;
+}
+
+.subfigure-caption {
+    font-size: 0.9em;
+    font-style: italic;
+    color: #aaa;
+}
+
+.figure-container {
+    margin: 2em 0;
+    text-align: center;
+}
+
+.figure-image {
+    margin: 1em auto;
+    padding: 10px;
+    background-color: rgba(0, 0, 0, 0.2);
+    border-radius: 4px;
+    color: #aaa;
+    font-style: italic;
+    display: inline-block;
+}
+
+.figure-caption {
+    font-size: 0.9em;
+    font-style: italic;
+    color: #aaa;
+}
+
+/* Styles pour les références */
+.table-container:target,
+.figure-container:target,
+.subfigure:target {
+    animation: highlight-pulse 2s ease-in-out;
+    border: 2px solid rgba(102, 175, 233, 0.6);
+    box-shadow: 0 0 8px rgba(102, 175, 233, 0.6);
+}
+
+@keyframes highlight-pulse {
+    0% {
+        background-color: rgba(102, 175, 233, 0.2);
+    }
+    50% {
+        background-color: rgba(102, 175, 233, 0.4);
+    }
+    100% {
+        background-color: rgba(102, 175, 233, 0.2);
+    }
+}
+
+.table-caption, 
+.figure-caption {
+    font-size: 0.9em;
+    font-style: italic;
+    color: #aaa;
+    text-align: center;
+    margin: 0.5em 0 1em 0;
+}

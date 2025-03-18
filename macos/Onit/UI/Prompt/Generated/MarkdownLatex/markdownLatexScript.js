@@ -33,7 +33,6 @@ MathJax = {
             return jax.formatError(err);
         },
         macros: {
-            // Définir des macros pour les commandes courantes
             'R': '{\\mathbb{R}}',
             'N': '{\\mathbb{N}}',
             'Z': '{\\mathbb{Z}}',
@@ -98,7 +97,6 @@ try {
             if (lang === 'latex') {
                 try {
                     const latexContent = str.trim();
-                    
                     return `<div class="latex-equation">$$${latexContent}$$</div>`;
                 } catch (err) {
                     log("Error with LaTeX: " + err.message);
@@ -211,7 +209,7 @@ function renderMathJax() {
                     } else {
                         resolve();
                     }
-                }, 500);
+                }, 200);
             } else {
                 MathJax.typesetPromise()
                     .then(() => { resolve(); })
