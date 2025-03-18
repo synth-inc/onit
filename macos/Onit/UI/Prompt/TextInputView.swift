@@ -52,6 +52,11 @@ struct TextInputView: View {
             downListener
             newListener
         }
+        .onDisappear {
+            if audioRecorder.isRecording {
+                cancelRecording()
+            }
+        }
         .alert("OpenAI API Key Required", isPresented: $showingAPIKeyAlert) {
             Button("Open Settings") {
                 NSWorkspace.shared.open(URL(string: "onit://settings/general")!)
@@ -310,6 +315,20 @@ struct TextInputView: View {
             EmptyView()
         }
         .keyboardShortcut("n")
+    }
+
+    func cancelRecording() {
+        if let monitor = eventMonitor {
+            NSEvent.removeMonitor(monitor)
+            eventMonitor = nil
+        }
+        
+        _ = audioRecorder.stopRecording()
+        audioRecorder.isTranscribing = false
+        
+        if addedRecordingSpaces {
+            removeSpacesAtCursor()
+        }
     }
 }
 
