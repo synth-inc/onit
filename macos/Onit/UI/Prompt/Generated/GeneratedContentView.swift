@@ -7,6 +7,7 @@
 
 import Defaults
 import Foundation
+import MarkdownLatexWebview
 import SwiftUI
 
 struct GeneratedContentView: View {
@@ -107,7 +108,7 @@ struct ParsedContentView: View {
                 if segment.isThought {
                     ThoughtProcessView(content: segment.content, streaming: segment.isStreaming)
                 } else {
-                    MarkdownLatexPreview(markdownText: segment.content, webViewHeight: $webViewHeight)
+                    MarkdownLatexView(content: segment.content, height: $webViewHeight, fontSize: fontSize, lineHeight: lineHeight)
                         .textSelection(.enabled)
                         .multilineTextAlignment(.leading)
                         .frame(maxWidth: .infinity, alignment: .leading)

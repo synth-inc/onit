@@ -1,5 +1,5 @@
 {
-  "originHash" : "eaa06714ba82815bc579e99d21cebc0a6966a4a6663d1cf3a795cfb13366e288",
+  "originHash" : "bb5e2ccc4e87c6d3bf38dc29d7db3f13e1447e14ee438a8f5cb6418f8c36abf1",
   "pins" : [
     {
       "identity" : "abseil-cpp-binary",
@@ -134,6 +134,15 @@
       "state" : {
         "revision" : "a0bc79961d7be727d258d33d5a6b2f1023270ba1",
         "version" : "1.22.5"
+      }
+    },
+    {
+      "identity" : "markdown-latex-webview",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/synth-inc/Markdown-Latex-Webview",
+      "state" : {
+        "branch" : "main",
+        "revision" : "baa1613cd64c3af0b7d522201fc65f6c361daa88"
       }
     },
     {
