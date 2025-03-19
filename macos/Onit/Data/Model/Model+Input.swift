@@ -104,15 +104,6 @@ extension OnitModel {
         }
     }
 
-    func removeContext(context: Context) {
-        self.pendingContextList.removeAll { $0 == context }
-        if case .image(let url) = context {
-            uploadTasks[url]?.cancel()
-            uploadTasks[url] = nil
-            imageUploads[url] = nil
-        }
-    }
-
     func focusText() {
         textFocusTrigger.toggle()
     }

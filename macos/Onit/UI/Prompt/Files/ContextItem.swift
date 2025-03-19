@@ -16,7 +16,7 @@ struct ContextItem: View {
     var body: some View {
         HStack(spacing: 0) {
             switch item {
-            case .auto:
+            case .auto, .webAuto:
                 Button {
                     model.showAutoContextWindow(context: item)
                 } label: {
@@ -33,6 +33,7 @@ struct ContextItem: View {
         }
         .padding(3)
         .background(isEditing ? .gray700 : .clear, in: .rect(cornerRadius: 4))
+        .frame(maxWidth: isEditing ? 250 : nil)
     }
 
     var contentView: some View {
@@ -50,6 +51,8 @@ struct ContextItem: View {
         HStack(spacing: 2) {
             Text(name)
                 .foregroundStyle(.white)
+                .lineLimit(1)
+                .truncationMode(.tail)
             if let fileType = item.fileType {
                 Text(fileType)
                     .foregroundStyle(.gray200)
@@ -60,14 +63,42 @@ struct ContextItem: View {
 
     var name: String {
         switch item {
+        case .webAuto(let appName, _, let metadata):
+            // Extract domain
+            let domain: String
+            if appName.starts(with: "Web:") {
+                let parts = appName.split(separator: ":")
+                if parts.count > 1 {
+                    domain = String(parts[1]).trimmingCharacters(in: .whitespacesAndNewlines)
+                } else {
+                    domain = appName
+                }
+            } else {
+                domain = appName
+            }
+            
+            // Combine domain with title if available
+            if let title = metadata.title {
+                return "\(domain) • \(title)"
+            }
+            return domain
+            
         case .auto(let appName, _):
-            appName
+            if appName.starts(with: "Web:") {
+                let parts = appName.split(separator: ":")
+                if parts.count > 1 {
+                    return String(parts[1]).trimmingCharacters(in: .whitespacesAndNewlines)
+                }
+            }
+            return appName
         case .file(let url), .image(let url):
-            url.lastPathComponent
+            return url.lastPathComponent
         case .error(_, let error):
-            error.localizedDescription
+            return error.localizedDescription
         case .tooBig:
-            "Upload exceeds model limit"
+            return "Upload exceeds model limit"
+        case .loading(let urlHost):
+            return urlHost
         }
     }
 

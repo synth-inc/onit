@@ -21,6 +21,8 @@ struct TextInputView: View {
     
     @State private var textHeight: CGFloat = 20
     private let maxHeightLimit: CGFloat = 100
+    
+    @State private var isProcessingURLs = false
 
     var body: some View {
         HStack(alignment: .bottom) {
@@ -52,6 +54,14 @@ struct TextInputView: View {
             .frame(height: min(textHeight, maxHeightLimit))
             .onAppear { focused = true }
             .onChange(of: model.textFocusTrigger) { focused = true }
+            .onChange(of: model.pendingInstruction) { oldValue, newValue in
+                // Check for URLs when text changes
+                if !isProcessingURLs && !newValue.isEmpty {
+                    Task {
+                        await checkForURLs()
+                    }
+                }
+            }
         }
         .appFont(.medium16)
         .foregroundStyle(.white)
@@ -76,6 +86,70 @@ struct TextInputView: View {
             "New instructions..."
         }
     }
+    
+    /// Checks for URLs in the pending instruction and processes them
+    func checkForURLs() async {
+        guard !model.pendingInstruction.isEmpty else { return }
+        
+        isProcessingURLs = true
+        defer { isProcessingURLs = false }
+        
+        let urls = URLDetector.detectURLs(in: model.pendingInstruction)
+        
+        for url in urls {
+            let urlHost = url.host ?? "URL"
+            
+            let isDuplicate = await model.pendingContextList.contains { context in
+                if case .webAuto(let appName, _, _) = context {
+                    return appName == "Web: \(urlHost)"
+                }
+                if case .auto(let appName, _) = context {
+                    return appName == "Web: \(urlHost)"
+                }
+                return false
+            }
+            
+            if isDuplicate {
+                continue
+            }
+            
+            await MainActor.run {
+                model.pendingContextList.append(.loading(urlHost))
+            }
+            
+            do {
+                let result = try await URLDetector.scrapeContentAndMetadata(from: url)
+                
+                await MainActor.run {
+                    // Remove loading context
+                    model.pendingContextList.removeAll { context in
+                        if case .loading(let host) = context {
+                            return host == urlHost
+                        }
+                        return false
+                    }
+                    
+                    // Add web context with metadata
+                    let webContext = Context.webAuto(
+                        "Web: \(urlHost)",
+                        ["content": result.content],
+                        result.asWebMetadata
+                    )
+                    model.pendingContextList.append(webContext)
+                }
+            } catch {
+                print("Error scraping content from URL: \(error)")
+                await MainActor.run {
+                    model.pendingContextList.removeAll { context in
+                        if case .loading(let host) = context {
+                            return host == urlHost
+                        }
+                        return false
+                    }
+                }
+            }
+        }
+    }
 
     func sendAction() {
         let inputText = model.pendingInstruction.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -83,7 +157,13 @@ struct TextInputView: View {
         // Add empty check
         guard !inputText.isEmpty else { return }
         
-        model.createAndSavePrompt()
+        // Final URL check before sending
+        Task {
+            await checkForURLs()
+            await MainActor.run {
+                model.createAndSavePrompt()
+            }
+        }
     }
 
     var sendButton: some View {

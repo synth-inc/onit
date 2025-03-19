@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import AppKit
 
 enum Context {
     case auto(String, [String: String])
@@ -13,6 +14,8 @@ enum Context {
     case image(URL)
     case tooBig(URL)
     case error(URL, Error)
+    case loading(String)
+    case webAuto(String, [String: String], WebMetadata)
 
     static let maxFileSize: Int = 1024 * 1024 * 1
     static let maxImageSize: Int = 1024 * 1024 * 20
@@ -23,25 +26,39 @@ enum Context {
             return nil
         case .file(let url), .image(let url), .tooBig(let url), .error(let url, _):
             return url
+        case .loading:
+            return nil
+        case .webAuto:
+            return nil
         }
     }
 
     var fileType: String? {
         switch self {
-        case .auto:
-            "Auto"
+        case .auto(let appName, _):
+            if appName.starts(with: "Web:") {
+                return "Web"
+            }
+            return "Auto"
         case .file:
-            "file"
+            return "File"
         case .image:
-            "Img"
+            return "Img"
+        case .loading:
+            return "Web"
+        case .webAuto(let appName, _, _):
+            if appName.starts(with: "Web:") {
+                return "Web"
+            }
+            return "Auto"
         default:
-            nil
+            return nil
         }
     }
 
     var isAutoContext: Bool {
         switch self {
-        case .auto:
+        case .auto, .webAuto:
             return true
         default:
             return false
@@ -72,11 +89,11 @@ extension Context {
 
 extension Context: Codable {
     enum CodingKeys: String, CodingKey {
-        case appName, appContent, type, url, error
+        case appName, appContent, type, url, error, faviconImage, title
     }
 
     enum ContextType: String, Codable {
-        case auto, file, image, tooBig, error
+        case auto, file, image, tooBig, error, loading, webAuto
     }
 
     init(from decoder: Decoder) throws {
@@ -103,6 +120,16 @@ extension Context: Codable {
             let error = NSError(
                 domain: "", code: 0, userInfo: [NSLocalizedDescriptionKey: errorDescription])
             self = .error(url, error)
+        case .loading:
+            let loadingString = try container.decode(String.self, forKey: .appName)
+            self = .loading(loadingString)
+        case .webAuto:
+            let appName = try container.decode(String.self, forKey: .appName)
+            let appContent = try container.decode([String: String].self, forKey: .appContent)
+            let faviconImageData = try container.decodeIfPresent(Data.self, forKey: .faviconImage)
+            let title = try container.decodeIfPresent(String.self, forKey: .title)
+            let metadata = WebMetadata(title: title, faviconImageData: faviconImageData)
+            self = .webAuto(appName, appContent, metadata)
         }
     }
 
@@ -128,6 +155,17 @@ extension Context: Codable {
             try container.encode(ContextType.error, forKey: .type)
             let errorDescription = (error as NSError).localizedDescription
             try container.encode(errorDescription, forKey: .error)
+        case .loading(let loadingString):
+            try container.encode(loadingString, forKey: .appName)
+            try container.encode(ContextType.loading, forKey: .type)
+        case .webAuto(let appName, let appContent, let metadata):
+            try container.encode(appName, forKey: .appName)
+            try container.encode(appContent, forKey: .appContent)
+            try container.encode(metadata.title, forKey: .title)
+            if let faviconImageData = metadata.faviconImageData {
+                try container.encode(faviconImageData, forKey: .faviconImage)
+            }
+            try container.encode(ContextType.webAuto, forKey: .type)
         }
     }
 }
@@ -143,6 +181,10 @@ extension Context: Equatable, Hashable {
             return url1 == url2
         case (.auto(let appName1, let content1), .auto(let appName2, let content2)):
             return appName1 == appName2 && content1 == content2
+        case (.loading(let loadingString1), .loading(let loadingString2)):
+            return loadingString1 == loadingString2
+        case (.webAuto(let appName1, let content1, let metadata1), .webAuto(let appName2, let content2, let metadata2)):
+            return appName1 == appName2 && content1 == content2 && metadata1 == metadata2
         default:
             return false
         }
@@ -155,7 +197,34 @@ extension Context: Equatable, Hashable {
         case .auto(let appName, let appContent):
             hasher.combine(appName)
             hasher.combine(appContent)
+        case .loading(let loadingString):
+            hasher.combine(loadingString)
+        case .webAuto(let appName, let appContent, let metadata):
+            hasher.combine(appName)
+            hasher.combine(appContent)
+            hasher.combine(metadata)
         }
+    }
+}
+
+struct WebMetadata: Hashable, Sendable {
+    let title: String?
+    let faviconImageData: Data?
+    
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(title)
+        hasher.combine(faviconImageData)
+    }
+    
+    static func == (lhs: WebMetadata, rhs: WebMetadata) -> Bool {
+        lhs.title == rhs.title && lhs.faviconImageData == rhs.faviconImageData
+    }
+    
+    var faviconImage: NSImage? {
+        if let data = faviconImageData {
+            return NSImage(data: data)
+        }
+        return nil
     }
 }
 
@@ -208,6 +277,15 @@ extension [Context] {
         
         for context in self {
             if case .auto(let appName, let content) = context {
+                let contentString = content.values.joined(separator: "\n")
+                if let existing = result[appName] {
+                    let combined = existing + "\n" + contentString
+                    
+                    result[appName] = combined
+                } else {
+                    result[appName] = contentString
+                }
+            } else if case .webAuto(let appName, let content, _) = context {
                 let contentString = content.values.joined(separator: "\n")
                 if let existing = result[appName] {
                     let combined = existing + "\n" + contentString
