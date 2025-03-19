@@ -231,6 +231,19 @@ import SwiftUI
     func setSettingsTab(tab: SettingsTab) {
         settingsTab = tab
     }
+
+    func switchToChat(_ chat: Chat) {
+        do {
+            try container.mainContext.transaction {
+                self.currentChat = chat
+                self.currentPrompts = chat.prompts
+            }
+            // Only dismiss if the transaction succeeds
+            OverlayManager.shared.dismissOverlay()
+        } catch {
+            print("Error switching chat:", error)
+        }
+    }
 }
 
 extension String {

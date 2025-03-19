@@ -10,20 +10,19 @@ import SwiftUI
 
 struct HistoryView: View {
     @Environment(\.modelContext) private var modelContext
-    @Environment(\.dismiss) private var dismiss
 
     @Query(sort: \Chat.timestamp, order: .reverse) private var chats: [Chat]
 
     @State private var searchQuery: String = ""
-
+    @State private var debouncedQuery: String = ""
     @State private var isShowing = false
     
     var filteredChats: [Chat] {
-        if searchQuery.isEmpty {
+        if debouncedQuery.isEmpty {
             return chats
         } else {
             return chats.filter {
-                $0.fullText.localizedCaseInsensitiveContains(searchQuery)
+                $0.fullText.localizedCaseInsensitiveContains(debouncedQuery)
             }
         }
     }
@@ -57,7 +56,9 @@ struct HistoryView: View {
                 .padding(.top, 16)
                 .padding(.horizontal, 16)
 
-            HistorySearchView(text: $searchQuery)
+            HistorySearchView(text: $searchQuery, onSearch: { debouncedText in
+                debouncedQuery = debouncedText
+            })
                 .padding(.horizontal, 4)
 
             ScrollView {
@@ -87,12 +88,6 @@ struct HistoryView: View {
             RoundedRectangle(cornerRadius: 8)
                 .stroke(Color.gray800, lineWidth: 1)
         )
-        .overlay(alignment: .top) {
-            Triangle()
-                .fill(.black)
-                .frame(width: 12, height: 6)
-                .offset(y: -6)
-        }
         .scaleEffect(isShowing ? 1 : 0.8)
         .opacity(isShowing ? 1 : 0)
         .onAppear {
@@ -101,16 +96,6 @@ struct HistoryView: View {
             }
         }
         .environment(\.modelContext, modelContext)
-    }
-
-    struct Triangle: Shape {
-        func path(in rect: CGRect) -> Path {
-            var path = Path()
-            path.move(to: CGPoint(x: rect.midX, y: rect.minY))
-            path.addLine(to: CGPoint(x: rect.minX, y: rect.maxY))
-            path.closeSubpath()
-            return path
-        }
     }
 }
 

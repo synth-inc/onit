@@ -168,9 +168,7 @@ struct Toolbar: View {
 
     var history: some View {
         Button {
-            withAnimation(.spring(response: 0.2, dampingFraction: 0.8, blendDuration: 0)) {
-                showingHistory.toggle()
-            }
+            showingHistory.toggle()
         } label: {
             Image(.history)
                 .renderingMode(.template)

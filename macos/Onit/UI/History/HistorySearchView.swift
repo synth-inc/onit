@@ -9,7 +9,19 @@ import SwiftUI
 
 struct HistorySearchView: View {
     @Binding var text: String
+    var onSearch: (String) -> Void
     @FocusState private var isFocused: Bool
+
+    @State private var debounceTask: Task<Void, Never>? = nil
+
+    private var debouncedBinding: Binding<String> {
+        Binding(
+            get: { text },
+            set: { newValue in
+                text = newValue
+            }
+        )
+    }
 
     var rect: some Shape {
         .rect(cornerRadius: 10)
@@ -20,14 +32,20 @@ struct HistorySearchView: View {
             Image(.search)
 
             ZStack(alignment: .leading) {
-                TextField("", text: $text)
-                    .textFieldStyle(PlainTextFieldStyle())
+                TextField("", text: debouncedBinding)
                     .tint(.blue600)
                     .fixedSize(horizontal: false, vertical: true)
                     .textFieldStyle(.plain)
                     .focused($isFocused)
-                    .onSubmit {
-                        // Handle submit if needed
+                    .onChange(of: text) { _, newValue in
+                        // Cancel any existing task
+                        debounceTask?.cancel()
+                        // Create new task with delay
+                        debounceTask = Task { @MainActor in
+                            try? await Task.sleep(nanoseconds: 300_000_000) // 300ms
+                            guard !Task.isCancelled else { return }
+                            onSearch(newValue)  // Notify parent after debounce
+                        }
                     }
 
                 if text.isEmpty {
@@ -57,5 +75,5 @@ struct HistorySearchView: View {
 }
 
 #Preview {
-    HistorySearchView(text: .constant("Hellow"))
+    HistorySearchView(text: .constant("Hello"), onSearch: { _ in })
 }

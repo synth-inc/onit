@@ -8,7 +8,6 @@
 import SwiftUI
 
 struct MenuHistory: View {
-    @Environment(\.model) var model
     @Binding var isPresented: Bool
     
     var body: some View {

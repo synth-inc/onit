@@ -15,9 +15,7 @@ struct HistoryRowView: View {
 
     var body: some View {
         Button {
-            model.currentChat = chat
-            model.currentPrompts = chat.prompts
-            OverlayManager.shared.dismissOverlay()
+            model.switchToChat(chat)
         } label: {
             HStack {
                 Text(chat.prompts.first?.instruction ?? "")
