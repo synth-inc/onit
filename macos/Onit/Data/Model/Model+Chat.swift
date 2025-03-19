@@ -345,24 +345,21 @@ extension OnitModel {
         var responsesHistory: [String] = []
         
         var currentPrompt = prompt.priorPrompt
-        while currentPrompt != nil {
-            if let generationIndex = currentPrompt?.generationIndex,
-               let responseCount = currentPrompt?.responses.count,
-               generationIndex >= 0,
-               generationIndex < responseCount {
-                let response = currentPrompt!.responses[generationIndex]
+        while let current = currentPrompt {
+            let generationIndex = current.generationIndex
+            if generationIndex >= 0 && generationIndex < current.responses.count {
+                let response = current.responses[generationIndex]
                 
                 if response.type != .error {
-                    instructionsHistory.insert(currentPrompt!.instruction, at: 0)
-                    inputsHistory.insert(currentPrompt!.input, at: 0)
-                    filesHistory.insert(currentPrompt!.contextList.files, at: 0)
-                    imagesHistory.insert(currentPrompt!.contextList.images, at: 0)
-                    autoContextsHistory.insert(currentPrompt!.contextList.autoContexts, at: 0)
-                    responsesHistory.insert(
-                        currentPrompt!.responses[currentPrompt!.generationIndex].text, at: 0)
+                    instructionsHistory.insert(current.instruction, at: 0)
+                    inputsHistory.insert(current.input, at: 0)
+                    filesHistory.insert(current.contextList.files, at: 0)
+                    imagesHistory.insert(current.contextList.images, at: 0)
+                    autoContextsHistory.insert(current.contextList.autoContexts, at: 0)
+                    responsesHistory.insert(current.responses[generationIndex].text, at: 0)
                 }
             }
-            currentPrompt = currentPrompt!.priorPrompt
+            currentPrompt = current.priorPrompt
         }
         
         return (filesHistory, inputsHistory, imagesHistory, instructionsHistory, autoContextsHistory, responsesHistory)

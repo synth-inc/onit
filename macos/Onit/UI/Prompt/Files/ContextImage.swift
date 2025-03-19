@@ -18,7 +18,7 @@ struct ContextImage: View {
                 .padding(.trailing, 1)
         } else {
             switch context {
-            case .webAuto(_, _, let metadata):
+            case .webAuto(let appName, _, let metadata):
                 Group {
                     if let image = metadata.faviconImage {
                         Image(nsImage: image)
@@ -26,8 +26,13 @@ struct ContextImage: View {
                             .interpolation(.high)
                             .frame(width: 16, height: 16)
                             .clipShape(imageRect)
-                    } else {
+                    } else if appName.starts(with: "Web:") {
                         fallbackGlobeIcon
+                    } else {
+                        Image(.stars)
+                            .resizable()
+                            .frame(width: 16, height: 16)
+                            .clipShape(imageRect)
                     }
                 }
             case .auto(let appName, _):

@@ -49,8 +49,11 @@ class URLDetector {
             throw URLError(.badServerResponse)
         }
         
-        // Get content with existing method
-        let content = extractTextFromHTML(String(data: data, encoding: .utf8) ?? "")
+        // Detect the correct encoding
+        let encoding = detectEncoding(from: httpResponse, data: data)
+        
+        // Get content with detected encoding
+        let content = extractTextFromHTML(data: data, encoding: encoding)
         
         // Use LinkPresentation for metadata
         let provider = LPMetadataProvider()
@@ -175,9 +178,82 @@ class URLDetector {
         return nil
     }
 
-    /// Extracts text content from HTML
-    /// - Parameter html: The HTML string
-    /// - Returns: Plain text extracted from HTML
+    // Detects the character encoding from HTTP response and HTML content
+    // - Parameters:
+    //   - response: The HTTP response
+    //   - data: The raw data
+    // - Returns: The detected encoding
+    private static func detectEncoding(from response: HTTPURLResponse, data: Data) -> String.Encoding {
+        // First try the HTTP Content-Type header
+        if let textEncodingName = response.textEncodingName {
+            let cfEncoding = CFStringConvertIANACharSetNameToEncoding(textEncodingName as CFString)
+            if cfEncoding != kCFStringEncodingInvalidId {
+                let encoding = String.Encoding(rawValue: CFStringConvertEncodingToNSStringEncoding(cfEncoding))
+                return encoding
+            }
+        }
+        
+        // Try to detect from HTML meta tags
+        if let htmlString = String(data: data, encoding: .isoLatin1) {
+            // Look for charset in meta tags
+            let metaPattern = "<meta[^>]+charset=['\"]?([^'\"\\s/>]+)['\"]?"
+            if let range = htmlString.range(of: metaPattern, options: .regularExpression),
+               let charsetRange = htmlString[range].range(of: "charset=['\"]?([^'\"\\s/>]+)['\"]?", options: .regularExpression) {
+                let charset = htmlString[charsetRange]
+                    .replacingOccurrences(of: "charset=", with: "", options: .regularExpression)
+                    .replacingOccurrences(of: "['\"]", with: "", options: .regularExpression)
+                
+                let cfEncoding = CFStringConvertIANACharSetNameToEncoding(charset as CFString)
+                if cfEncoding != kCFStringEncodingInvalidId {
+                    let encoding = String.Encoding(rawValue: CFStringConvertEncodingToNSStringEncoding(cfEncoding))
+                    return encoding
+                }
+            }
+        }
+        
+        // Fall back to UTF-8
+        return .utf8
+    }
+    
+    // Extracts text content from HTML data using the detected encoding
+    // - Parameters:
+    //   - data: The raw data
+    //   - encoding: The character encoding to use
+    // - Returns: Plain text extracted from HTML
+    private static func extractTextFromHTML(data: Data, encoding: String.Encoding) -> String {
+        // Try to create string with detected encoding
+        guard let html = String(data: data, encoding: encoding) ?? String(data: data, encoding: .isoLatin1) else {
+            return ""
+        }
+        
+        // Remove script and style elements
+        var text = html
+        
+        // Remove script and style elements
+        text = text.replacingOccurrences(of: "<script[^>]*>[\\s\\S]*?</script>", with: "", options: .regularExpression)
+        text = text.replacingOccurrences(of: "<style[^>]*>[\\s\\S]*?</style>", with: "", options: .regularExpression)
+        
+        // Remove HTML comments
+        text = text.replacingOccurrences(of: "<!--[\\s\\S]*?-->", with: "", options: .regularExpression)
+        
+        // Replace HTML tags with newlines for better readability
+        text = text.replacingOccurrences(of: "<[^>]+>", with: "\n", options: .regularExpression)
+        
+        // Replace multiple newlines with a single newline
+        text = text.replacingOccurrences(of: "\n+", with: "\n", options: .regularExpression)
+        
+        // Decode HTML entities
+        text = text.decodingHTMLEntities()
+        
+        // Trim whitespace
+        text = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        
+        return text
+    }
+    
+    // Extracts text content from HTML
+    // - Parameter html: The HTML string
+    // - Returns: Plain text extracted from HTML
     private static func extractTextFromHTML(_ html: String) -> String {
         // Simple HTML tag removal - for a production app, consider using a proper HTML parser
         var text = html
@@ -206,7 +282,7 @@ class URLDetector {
 }
 
 extension String {
-    /// Decodes HTML entities in a string
+    // Decodes HTML entities in a string
     func decodingHTMLEntities() -> String {
         guard let data = self.data(using: .utf8) else { return self }
         

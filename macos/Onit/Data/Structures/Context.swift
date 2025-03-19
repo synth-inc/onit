@@ -213,10 +213,11 @@ struct WebMetadata: Hashable, Sendable {
     
     func hash(into hasher: inout Hasher) {
         hasher.combine(title)
+        hasher.combine(faviconImageData)
     }
     
     static func == (lhs: WebMetadata, rhs: WebMetadata) -> Bool {
-        lhs.title == rhs.title
+        lhs.title == rhs.title && lhs.faviconImageData == rhs.faviconImageData
     }
     
     var faviconImage: NSImage? {

@@ -232,8 +232,9 @@ import SwiftUI
         settingsTab = tab
     }
     
-    /// Removes a context from the pending context list
-    /// - Parameter context: The context to remove
+    // Removes a context from the pending context list
+    // - Parameter context: The context to remove
+    @MainActor
     func removeContext(context: Context) {
         if let index = pendingContextList.firstIndex(of: context) {
             pendingContextList.remove(at: index)

@@ -16,7 +16,13 @@ struct QLImage: NSViewRepresentable {
         self.name = name
     }
     
-    @State private var hasActivePreview = false
+    class Coordinator {
+        var hasActivePreview = false
+    }
+    
+    func makeCoordinator() -> Coordinator {
+        Coordinator()
+    }
     
     func makeNSView(context: NSViewRepresentableContext<QLImage>) -> QLPreviewView {
         guard let url = Bundle.main.url(forResource: name, withExtension: "gif")
@@ -31,7 +37,7 @@ struct QLImage: NSViewRepresentable {
         // Set initial preview item safely
         DispatchQueue.main.async {
             preview?.previewItem = url as QLPreviewItem
-            self.hasActivePreview = true
+            context.coordinator.hasActivePreview = true
         }
         
         return preview ?? QLPreviewView()
@@ -39,7 +45,7 @@ struct QLImage: NSViewRepresentable {
     
     func updateNSView(_ nsView: QLPreviewView, context: NSViewRepresentableContext<QLImage>) {
         // Only update if the preview is active and the view is still valid
-        guard hasActivePreview,
+        guard context.coordinator.hasActivePreview,
               nsView.window != nil,
               let url = Bundle.main.url(forResource: name, withExtension: "gif") else {
             let _ = print("Cannot get image \(name)")
@@ -52,7 +58,7 @@ struct QLImage: NSViewRepresentable {
                 nsView.previewItem = url as QLPreviewItem
             } else {
                 print("Cannot set preview item on a closed preview view")
-                self.hasActivePreview = false
+                context.coordinator.hasActivePreview = false
             }
         }
     }
@@ -61,6 +67,7 @@ struct QLImage: NSViewRepresentable {
         // Clear preview item before dismissal
         DispatchQueue.main.async {
             nsView.previewItem = nil
+            coordinator.hasActivePreview = false
         }
     }
     

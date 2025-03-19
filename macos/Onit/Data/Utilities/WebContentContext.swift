@@ -15,6 +15,18 @@ class WebContentContext {
     /// Maximum length of web content to include in context
     internal static let maxContentLength = 10000
     
+    private struct LoadingIdentifier: Hashable {
+        let url: URL
+        let host: String
+        let id: UUID
+        
+        init(url: URL) {
+            self.url = url
+            self.host = url.host ?? "URL"
+            self.id = UUID()
+        }
+    }
+    
     /// Processes text input to detect URLs and create context from web content
     /// - Parameters:
     ///   - text: The text input that may contain URLs
@@ -30,16 +42,16 @@ class WebContentContext {
         
         // Process each URL
         for (index, url) in urls.enumerated() {
-            let urlHost = url.host ?? "URL"
+            let loadingIdentifier = LoadingIdentifier(url: url)
             
             // Check for duplicates on the main actor
             let isDuplicate = await MainActor.run {
                 model.pendingContextList.contains { context in
                     if case .webAuto(let appName, _, _) = context {
-                        return appName == "Web: \(urlHost)"
+                        return appName == "Web: \(loadingIdentifier.host)"
                     }
                     if case .auto(let appName, _) = context {
-                        return appName == "Web: \(urlHost)"
+                        return appName == "Web: \(loadingIdentifier.host)"
                     }
                     return false
                 }
@@ -50,7 +62,7 @@ class WebContentContext {
             }
             
             await MainActor.run {
-                model.pendingContextList.append(.loading(urlHost))
+                model.pendingContextList.append(.loading("\(loadingIdentifier.host):\(loadingIdentifier.id)"))
             }
             
             do {
@@ -59,31 +71,62 @@ class WebContentContext {
                 
                 // Scrape content from the URL
                 let result = try await URLDetector.scrapeContentAndMetadata(from: url)
-                let truncatedContent = result.content.count > maxContentLength
-                    ? String(result.content.prefix(maxContentLength)) + "\n[Content truncated due to length...]"
-                    : result.content
+                let content = result.content.trimmingCharacters(in: .whitespacesAndNewlines)
+                
+                // Skip if content is empty or just whitespace
+                guard !content.isEmpty else {
+                    await MainActor.run {
+                        // Remove loading context
+                        model.pendingContextList.removeAll { context in
+                            if case .loading(let identifier) = context {
+                                return identifier == "\(loadingIdentifier.host):\(loadingIdentifier.id)"
+                            }
+                            return false
+                        }
+                        
+                        // Add empty content error context
+                        let errorContext = Context.webAuto(
+                            "Web: \(loadingIdentifier.host)",
+                            [
+                                "url": url.absoluteString,
+                                "title": "No content found",
+                                "content": "The page appears to be empty or contains no meaningful content.",
+                                "index": String(index),
+                                "domain": loadingIdentifier.host,
+                                "error": "true",
+                                "requestId": loadingIdentifier.id.uuidString
+                            ],
+                            WebMetadata(title: "No content found", faviconImageData: nil)
+                        )
+                        model.pendingContextList.append(errorContext)
+                    }
+                    continue
+                }
+                
+                let truncatedContent = content.count > maxContentLength
+                    ? String(content.prefix(maxContentLength)) + "\n[Content truncated due to length...]"
+                    : content
                 
                 // Create a context with the web content
                 await MainActor.run {
                     // Remove loading context
                     model.pendingContextList.removeAll { context in
-                        if case .loading(let host) = context {
-                            return host == urlHost
+                        if case .loading(let identifier) = context {
+                            return identifier == "\(loadingIdentifier.host):\(loadingIdentifier.id)"
                         }
                         return false
                     }
                     
                     // Add web context with structured content and index
                     let webContext = Context.webAuto(
-                        "Web: \(urlHost)",
+                        "Web: \(loadingIdentifier.host)",
                         [
                             "url": url.absoluteString,
-                            "title": result.title ?? urlHost,
+                            "title": result.title ?? loadingIdentifier.host,
                             "content": truncatedContent,
-                            // Add index to maintain order
                             "index": String(index),
-                            // Add domain for better identification
-                            "domain": urlHost
+                            "domain": loadingIdentifier.host,
+                            "requestId": loadingIdentifier.id.uuidString  // Store the request ID for reference
                         ],
                         result.asWebMetadata
                     )
@@ -93,24 +136,39 @@ class WebContentContext {
                 await MainActor.run {
                     // Remove loading context
                     model.pendingContextList.removeAll { context in
-                        if case .loading(let host) = context {
-                            return host == urlHost
+                        if case .loading(let identifier) = context {
+                            return identifier == "\(loadingIdentifier.host):\(loadingIdentifier.id)"
                         }
                         return false
                     }
+                    
+                    // Add error context instead of just printing to console
+                    let errorContext = Context.webAuto(
+                        "Web: \(loadingIdentifier.host)",
+                        [
+                            "url": url.absoluteString,
+                            "title": "Error loading content",
+                            "content": "Failed to load content: \(error.localizedDescription)",
+                            "index": String(index),
+                            "domain": loadingIdentifier.host,
+                            "error": "true",
+                            "requestId": loadingIdentifier.id.uuidString  // Store the request ID for reference
+                        ],
+                        WebMetadata(title: "Error loading content", faviconImageData: nil)
+                    )
+                    model.pendingContextList.append(errorContext)
                 }
-                print("Error scraping content from URL: \(error.localizedDescription)")
-                // You could add error handling UI here if needed
             }
         }
         
-        // Remove URLs from the text to avoid duplication
+        // Replace URLs with placeholders to maintain sentence context
         var processedText = text
-        for url in urls {
-            processedText = processedText.replacingOccurrences(of: url.absoluteString, with: "")
+        for (index, url) in urls.enumerated() {
+            let placeholder = "[Link \(index + 1)]"
+            processedText = processedText.replacingOccurrences(of: url.absoluteString, with: placeholder)
         }
         
-        // Clean up any double spaces or newlines that might have been created
+        // Clean up any double spaces or newlines
         processedText = processedText.replacingOccurrences(of: "  ", with: " ")
         processedText = processedText.replacingOccurrences(of: "\n\n", with: "\n")
         processedText = processedText.trimmingCharacters(in: .whitespacesAndNewlines)
