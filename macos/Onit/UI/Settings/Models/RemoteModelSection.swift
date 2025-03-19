@@ -283,8 +283,8 @@ struct RemoteModelSection: View {
                     isSubmitted: $isCustomModelSubmitted
                 )
             }
-            .onChange(of: isCustomModelSubmitted) { old, new in
-                if new {
+            .onChange(of: isCustomModelSubmitted) { oldValue, newValue in
+                if !oldValue && newValue {
                     isCustomModelSubmitted = false
                     model.shrinkContent()
                 }

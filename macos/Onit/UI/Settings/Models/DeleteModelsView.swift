@@ -158,6 +158,7 @@ struct DeleteModelsView: View {
                 availableRemoteModels.removeAll { model in
                     selectedModels.contains(model.uniqueId)
                 }
+                selectedModels.removeAll()
                 
                 // Clear selected models from visibleModelIds
                 visibleModelIds.subtract(selectedModels)

@@ -144,6 +144,7 @@ struct CustomModelFormView: View {
     
     private func validateAndAddModel() async {
         isVerifying = true
+        defer { isVerifying = false }
         errorMessage = nil
         
         // First check if the model has already been added to Onit.
@@ -181,16 +182,27 @@ struct CustomModelFormView: View {
             isSubmitted = true
             dismiss()
         } catch let error {
-            print("\n\n\n")
-            print("Unexpected validation error: \(error)")
             if let urlError = error as? URLError {
-                print("Network error: \(urlError.localizedDescription)")
+                switch urlError.code {
+                case .notConnectedToInternet:
+                    errorMessage = "No internet connection."
+                case .timedOut:
+                    errorMessage = "Request timed out. Please try again."
+                case .cannotConnectToHost:
+                    errorMessage = "Network error. Please try again."
+                default:
+                    errorMessage = "Model name invalid."
+                }
             } else {
-                print("Invalid model name: \(error.localizedDescription)")
+                errorMessage = "Model name invalid."
             }
-            print("\n\n\n")
             
-            errorMessage = "Model name invalid."
+            #if DEBUG
+                print("\n\n\n")
+                print("Error Message: \(errorMessage ?? "")")
+                print("Custom model validation error details: \(error)")
+                print("\n\n\n")
+            #endif
         }
         
         isVerifying = false

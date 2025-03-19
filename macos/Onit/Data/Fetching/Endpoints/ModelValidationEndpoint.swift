@@ -26,7 +26,7 @@ struct ModelValidationEndpoint: Endpoint {
             return URL(string: "")!
         }
     }
-    
+
     typealias Request = ValidationRequest
     typealias Response = ValidationResponse
     
@@ -65,17 +65,18 @@ struct ModelValidationEndpoint: Endpoint {
     }
     
     var additionalHeaders: [String: String]? {
+        // Return nil if token is missing to fail early
+        guard let token = token else { return nil }
+        
         var headers = [String: String]()
         switch provider {
         case .openAI:
-            headers["Authorization"] = "Bearer \(token ?? "")"
+            headers["Authorization"] = "Bearer \(token)"
         case .anthropic:
-            headers["x-api-key"] = token ?? ""
+            headers["x-api-key"] = token
             headers["anthropic-version"] = "2023-06-01"
-        case .perplexity:
-            break
-        default: // .xAI, .googleAI, .deepSeek, .custom
-            headers["Authorization"] = "Bearer \(token ?? "")"
+        default: // .xAI, .googleAI, .deepSeek, .perplexity, .custom
+            headers["Authorization"] = "Bearer \(token)"
         }
         return headers
     }
