@@ -38,11 +38,11 @@ struct InputBarView: View {
             Color.clear
                 .onAppear {
                     model.inputHeight = proxy.size.height
-                    model.adjustPanelSize()
+//                    model.adjustPanelSize()
                 }
                 .onChange(of: proxy.size.height) { _, new in
                     model.inputHeight = new
-                    model.adjustPanelSize()
+//                    model.adjustPanelSize()
                 }
         }
     }

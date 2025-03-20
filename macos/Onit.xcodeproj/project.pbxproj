@@ -16,7 +16,7 @@
 		867A647A2D4AD73A00FD4D80 /* Defaults in Frameworks */ = {isa = PBXBuildFile; productRef = 867A64792D4AD73A00FD4D80 /* Defaults */; };
 		867A647C2D4AD73A00FD4D80 /* DefaultsMacros in Frameworks */ = {isa = PBXBuildFile; productRef = 867A647B2D4AD73A00FD4D80 /* DefaultsMacros */; };
 		86A974C12D4A76F800CF6FCE /* Markdown in Frameworks */ = {isa = PBXBuildFile; productRef = 86A974C02D4A76F800CF6FCE /* Markdown */; };
-		86C0C38F2D8B1AAC00E85747 /* MarkdownLatexWebview in Frameworks */ = {isa = PBXBuildFile; productRef = 86C0C38E2D8B1AAC00E85747 /* MarkdownLatexWebview */; };
+		86D2426C2D8C150500A9831E /* LLMStream in Frameworks */ = {isa = PBXBuildFile; productRef = 86D2426B2D8C150500A9831E /* LLMStream */; };
 		86F908912D7AF491008D8027 /* Highlightr in Frameworks */ = {isa = PBXBuildFile; productRef = 86F908902D7AF491008D8027 /* Highlightr */; };
 		A782C1982D383493009976F8 /* FirebaseCrashlytics in Frameworks */ = {isa = PBXBuildFile; productRef = A782C1972D383493009976F8 /* FirebaseCrashlytics */; };
 /* End PBXBuildFile section */
@@ -61,7 +61,7 @@
 				2842875E2CD0B6A5000C6C67 /* HighlightSwift in Frameworks */,
 				28F57E222CAC84AA006AAA8C /* KeyboardShortcuts in Frameworks */,
 				867A647C2D4AD73A00FD4D80 /* DefaultsMacros in Frameworks */,
-				86C0C38F2D8B1AAC00E85747 /* MarkdownLatexWebview in Frameworks */,
+				86D2426C2D8C150500A9831E /* LLMStream in Frameworks */,
 				862BC3C82D50D0D100806B58 /* EventSource in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -117,7 +117,7 @@
 				867A64792D4AD73A00FD4D80 /* Defaults */,
 				867A647B2D4AD73A00FD4D80 /* DefaultsMacros */,
 				86F908902D7AF491008D8027 /* Highlightr */,
-				86C0C38E2D8B1AAC00E85747 /* MarkdownLatexWebview */,
+				86D2426B2D8C150500A9831E /* LLMStream */,
 			);
 			productName = Onit;
 			productReference = 2883E4B32CA5ECBB00F79A48 /* Onit.app */;
@@ -158,7 +158,7 @@
 				862BC3C62D50D0D100806B58 /* XCRemoteSwiftPackageReference "EventSource" */,
 				867A64782D4AD73A00FD4D80 /* XCRemoteSwiftPackageReference "Defaults" */,
 				86F9088F2D7AF491008D8027 /* XCRemoteSwiftPackageReference "Highlightr" */,
-				86C0C38D2D8B1AAC00E85747 /* XCRemoteSwiftPackageReference "Markdown-Latex-Webview" */,
+				86D2426A2D8C150500A9831E /* XCRemoteSwiftPackageReference "LLMStream" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 2883E4B42CA5ECBB00F79A48 /* Products */;
@@ -498,9 +498,9 @@
 				minimumVersion = 0.5.0;
 			};
 		};
-		86C0C38D2D8B1AAC00E85747 /* XCRemoteSwiftPackageReference "Markdown-Latex-Webview" */ = {
+		86D2426A2D8C150500A9831E /* XCRemoteSwiftPackageReference "LLMStream" */ = {
 			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/synth-inc/Markdown-Latex-Webview";
+			repositoryURL = "https://github.com/synth-inc/LLMStream";
 			requirement = {
 				branch = main;
 				kind = branch;
@@ -570,10 +570,10 @@
 			package = 86A974BF2D4A76F800CF6FCE /* XCRemoteSwiftPackageReference "swift-markdown" */;
 			productName = Markdown;
 		};
-		86C0C38E2D8B1AAC00E85747 /* MarkdownLatexWebview */ = {
+		86D2426B2D8C150500A9831E /* LLMStream */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = 86C0C38D2D8B1AAC00E85747 /* XCRemoteSwiftPackageReference "Markdown-Latex-Webview" */;
-			productName = MarkdownLatexWebview;
+			package = 86D2426A2D8C150500A9831E /* XCRemoteSwiftPackageReference "LLMStream" */;
+			productName = LLMStream;
 		};
 		86F908902D7AF491008D8027 /* Highlightr */ = {
 			isa = XCSwiftPackageProductDependency;
