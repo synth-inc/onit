@@ -1,5 +1,5 @@
 {
-  "originHash" : "bb5e2ccc4e87c6d3bf38dc29d7db3f13e1447e14ee438a8f5cb6418f8c36abf1",
+  "originHash" : "6295138d5a8f58d20b3b5cbdb878d3c9bf43a60c753e43e631d3ce50dc346353",
   "pins" : [
     {
       "identity" : "abseil-cpp-binary",
@@ -137,12 +137,12 @@
       }
     },
     {
-      "identity" : "markdown-latex-webview",
+      "identity" : "llmstream",
       "kind" : "remoteSourceControl",
-      "location" : "https://github.com/synth-inc/Markdown-Latex-Webview",
+      "location" : "https://github.com/synth-inc/LLMStream",
       "state" : {
         "branch" : "main",
-        "revision" : "baa1613cd64c3af0b7d522201fc65f6c361daa88"
+        "revision" : "f5e49c6362a6f4a37ed2e34d48ed463a5b97cbaa"
       }
     },
     {
