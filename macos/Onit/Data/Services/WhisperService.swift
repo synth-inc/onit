@@ -10,7 +10,8 @@ class WhisperService {
     
     func transcribe(audioURL: URL) async throws -> String {
         let boundary = UUID().uuidString
-        var request = URLRequest(url: URL(string: endpoint)!)
+        guard let url = URL(string: endpoint) else { throw FetchingError.invalidURL }
+        var request = URLRequest(url: url)
         request.httpMethod = "POST"
         request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
         request.setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
@@ -34,9 +35,16 @@ class WhisperService {
         
         request.httpBody = data
         
-        let (responseData, _) = try await URLSession.shared.data(for: request)
-        let response = try JSONDecoder().decode(WhisperResponse.self, from: responseData)
-        return response.text
+        let (responseData, response) = try await URLSession.shared.data(for: request)
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw FetchingError.invalidResponse(message: "Invalid response")
+        }
+        if !(200...299).contains(httpResponse.statusCode) {
+            let message = HTTPURLResponse.localizedString(forStatusCode: httpResponse.statusCode)
+            throw FetchingError.invalidResponse(message: message)
+        }
+        let responseDecoded = try JSONDecoder().decode(WhisperResponse.self, from: responseData)
+        return responseDecoded.text
     }
 }
 

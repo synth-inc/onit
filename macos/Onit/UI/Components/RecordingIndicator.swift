@@ -29,7 +29,6 @@ struct RecordingIndicator: View {
 struct WaveformIndicator: View {
     var audioLevel: Float
     
-    @State private var phase = 0.0
     private let numberOfBars = 4
     private let animationDuration = 0.6
     private let minHeight: CGFloat = 2
@@ -55,7 +54,6 @@ struct WaveformIndicator: View {
         )
         .onAppear {
             withAnimation(.linear(duration: animationDuration).repeatForever(autoreverses: false)) {
-                phase = 1.0
             }
         }
     }
@@ -87,8 +85,6 @@ struct WaveformIndicator: View {
 }
 
 struct LoadingIndicator: View {
-    @State private var isAnimating = false
-    
     var body: some View {
         ZStack {
             RoundedRectangle(cornerRadius: 11)

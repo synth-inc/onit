@@ -14,8 +14,6 @@ struct GeneralTab: View {
 
     @State var isLaunchAtStartupEnabled: Bool = SMAppService.mainApp.status == .enabled
     @State var isAnalyticsEnabled: Bool = PostHogSDK.shared.isOptOut() == false
-
-    @AppStorage("openai_api_key") private var openaiApiKey: String = ""
     
     var body: some View {
         Form {

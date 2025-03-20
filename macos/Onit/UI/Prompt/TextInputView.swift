@@ -38,6 +38,8 @@ struct TextInputView: View {
     @State private var addedRecordingSpaces = false
     private let recordingSpacesCount = 8
 
+    @State private var transcriptionTask: Task<Void, Never>? = nil
+
     var body: some View {
         HStack(alignment: .bottom) {
             textField
@@ -56,6 +58,8 @@ struct TextInputView: View {
             if audioRecorder.isRecording {
                 cancelRecording()
             }
+            transcriptionTask?.cancel()
+            transcriptionTask = nil
         }
         .alert("OpenAI API Key Required", isPresented: $showingAPIKeyAlert) {
             Button("Open Settings") {
@@ -77,6 +81,16 @@ struct TextInputView: View {
             Button("Cancel", role: .cancel) {}
         } message: {
             Text("Onit needs access to your microphone for voice input. Please enable it in System Settings.")
+        }
+        .alert("Recording Error", isPresented: Binding<Bool>(
+            get: { audioRecorder.recordingError != nil },
+            set: { if !$0 { audioRecorder.clearError() } }
+        )) {
+            Button("OK", role: .cancel) {
+                audioRecorder.clearError()
+            }
+        } message: {
+            Text(audioRecorder.recordingError?.localizedDescription ?? "An unknown error occurred")
         }
     }
     
@@ -132,7 +146,10 @@ struct TextInputView: View {
     }
 
     func startRecording() {
-        audioRecorder.startRecording()
+        guard audioRecorder.startRecording() else {
+            // Recording failed to start
+            return
+        }
         
         addSpacesAtCursor()
         
@@ -158,20 +175,26 @@ struct TextInputView: View {
         }
         let whisperService = WhisperService(apiKey: openAIToken)
         
-        Task {
+        transcriptionTask = Task {
             do {
                 let transcription = try await whisperService.transcribe(audioURL: audioURL)
-                DispatchQueue.main.async {
-                    removeSpacesAtCursor()
-                    let cursorPosition = model.pendingInstructionCursorPosition
-                    model.pendingInstruction.insert(contentsOf: transcription, at: model.pendingInstruction.index(model.pendingInstruction.startIndex, offsetBy: cursorPosition))
-                    audioRecorder.isTranscribing = false
+                if !Task.isCancelled {
+                    DispatchQueue.main.async {
+                        removeSpacesAtCursor()
+                        let cursorPosition = model.pendingInstructionCursorPosition
+                        model.pendingInstruction.insert(contentsOf: transcription, at: model.pendingInstruction.index(model.pendingInstruction.startIndex, offsetBy: cursorPosition))
+                        audioRecorder.isTranscribing = false
+                    }
                 }
             } catch {
-                removeSpacesAtCursor()
-                errorMessage = error.localizedDescription
-                showingErrorAlert = true
-                audioRecorder.isTranscribing = false
+                if !Task.isCancelled {
+                    DispatchQueue.main.async {
+                        removeSpacesAtCursor()
+                        errorMessage = error.localizedDescription
+                        showingErrorAlert = true
+                        audioRecorder.isTranscribing = false
+                    }
+                }
             }
         }
     }
@@ -190,7 +213,6 @@ struct TextInputView: View {
      }
      
      private func removeSpacesAtCursor() {
-         print("Removing spaces at cursor positon \(model.pendingInstructionCursorPosition)")
          guard addedRecordingSpaces else { return }
         
          let cursorPosition = model.pendingInstructionCursorPosition
@@ -201,12 +223,7 @@ struct TextInputView: View {
          let endIndex = model.pendingInstruction.index(model.pendingInstruction.startIndex,
                                                        offsetBy: endPosition)
 
-         print("endPosition: \(endPosition), startPosition: \(startPosition)")
-         print("startIndex: \(startIndex), endIndex: \(endIndex)")
-
-         print("Before removing: \"\(model.pendingInstruction)\"")
          model.pendingInstruction.removeSubrange(startIndex..<endIndex)
-         print("After removing: \"\(model.pendingInstruction)\"")
 
          addedRecordingSpaces = false
      }

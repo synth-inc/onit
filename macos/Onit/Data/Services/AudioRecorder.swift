@@ -9,11 +9,11 @@ class AudioRecorder: NSObject, ObservableObject {
     @Published var permissionGranted = false
     @Published var permissionStatus: AVAuthorizationStatus = .notDetermined
     @Published var audioLevel: Float = 0.0
+    @Published var recordingError: Error? = nil
     
     private var audioRecorder: AVAudioRecorder?
     private var audioFileURL: URL?
     private var levelTimer: Timer?
-    private var silenceTimer: Timer?
     private var lastSignificantAudioTime: Date?
     private let silenceThreshold: Float = 0.02
     private var minDB: Float = 0.0
@@ -42,7 +42,10 @@ class AudioRecorder: NSObject, ObservableObject {
         }
     }
     
-    func startRecording() {
+    func startRecording() -> Bool {
+        // Reset any previous error
+        recordingError = nil
+        
         let audioFilename = getDocumentsDirectory().appendingPathComponent("recording.m4a")
         self.audioFileURL = audioFilename
         
@@ -64,8 +67,12 @@ class AudioRecorder: NSObject, ObservableObject {
             
             // Reset the last significant audio time
             lastSignificantAudioTime = Date()
+            return true
         } catch {
             print("Could not start recording: \(error)")
+            recordingError = error  // Set the error property
+            stopMonitoringAudioLevels()
+            return false
         }
     }
     
@@ -79,7 +86,6 @@ class AudioRecorder: NSObject, ObservableObject {
     private func startMonitoringAudioLevels() {
         // Stop any existing timers
         levelTimer?.invalidate()
-        silenceTimer?.invalidate()
         
         // Create a timer to update audio levels
         levelTimer = Timer.scheduledTimer(withTimeInterval: 0.05, repeats: true) { [weak self] _ in
@@ -94,7 +100,6 @@ class AudioRecorder: NSObject, ObservableObject {
                 self.maxDB = max(self.maxDB, averagePower)
 
                 // Convert decibels to a linear scale (0.0 to 1.0)
-//                let minDb: Float = -45.0
                 let normalizedValue = max(0.0, (averagePower - self.minDB) / abs(self.maxDB - self.minDB))
                 
                 // Apply more smoothing to avoid jumpy animation
@@ -111,12 +116,14 @@ class AudioRecorder: NSObject, ObservableObject {
     private func stopMonitoringAudioLevels() {
         levelTimer?.invalidate()
         levelTimer = nil
-        silenceTimer?.invalidate()
-        silenceTimer = nil
         audioLevel = 0.0
     }
     
     private func getDocumentsDirectory() -> URL {
         FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
+    }
+    
+    func clearError() {
+        recordingError = nil
     }
 }

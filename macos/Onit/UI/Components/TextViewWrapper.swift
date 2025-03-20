@@ -115,7 +115,7 @@ struct TextViewWrapper: NSViewRepresentable {
             guard let textView = self.textView else { return }
             parent.text = textView.string
             // Only update the cursor position when we're not recording, so we can restore it afterwards.
-            if !(parent.audioRecorder.isRecording ||  parent.audioRecorder.isTranscribing) {
+            if !(parent.audioRecorder.isRecording || parent.audioRecorder.isTranscribing) {
                 parent.cursorPosition = textView.selectedRange().location
             }
             
