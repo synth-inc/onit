@@ -74,7 +74,7 @@ struct ChatsView: View {
                 .id(chatsID)
                 .background(heightReader(scrollProxy: proxy))
             }
-            .trackScreenHeight($screenHeight)
+//            .trackScreenHeight($screenHeight)
             .frame(
                 minHeight: 0,
                 idealHeight: realHeight,
