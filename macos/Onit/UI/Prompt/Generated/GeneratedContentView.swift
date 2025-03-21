@@ -9,6 +9,7 @@ import Defaults
 import Foundation
 import MarkdownUI
 import SwiftUI
+import KeyboardShortcuts
 
 struct GeneratedContentView: View {
     @Environment(\.model) var model
@@ -42,8 +43,40 @@ struct GeneratedContentView: View {
                     Spacer()
                 }
             }
+            if isPartial {
+                HStack {
+                    Spacer()
+                    Text(cancelText)
+                        .foregroundStyle(.gray200)
+                        .appFont(.medium13)
+                        .underline()
+                        .onTapGesture {
+                            model.cancelGenerate()
+                            model.textFocusTrigger.toggle()
+                        }
+                        .onHover { isHovering in
+                            if isHovering {
+                                NSCursor.pointingHand.push()
+                            } else {
+                                NSCursor.pop()
+                            }
+                        }
+                    Spacer()
+                }
+            }
         }
     }
+    
+    var cancelText: String {
+        if let keyboardShortcutString = KeyboardShortcuts.getShortcut(for: .cancelGeneration)?
+            .description
+        {
+            "Cancel Generation " + keyboardShortcutString
+        } else {
+            "Cancel Generation"
+        }
+    }
+    
 }
 
 extension Theme {

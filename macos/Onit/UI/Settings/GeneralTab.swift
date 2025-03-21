@@ -164,7 +164,6 @@ struct GeneralTab: View {
     var experimentalSection: some View {
         Section {
             VStack(spacing: 16) {
-                
                 HStack {
                     Text("Use launch shortcut as a toggle")
                         .font(.system(size: 13))

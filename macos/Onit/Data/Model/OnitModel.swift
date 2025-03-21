@@ -81,7 +81,8 @@ import SwiftUI
     var generateTask: Task<Void, Never>? = nil
     var generatingPrompt: Prompt?
     var generatingPromptPriorState: GenerationState?
-
+    var generatingInput: Input?
+    
     var client = FetchingClient()
     var updater = SPUStandardUpdaterController(
         startingUpdater: true, updaterDelegate: nil, userDriverDelegate: nil)

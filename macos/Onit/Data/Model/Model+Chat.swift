@@ -61,6 +61,7 @@ extension OnitModel {
             print(error.localizedDescription)
         }
         
+        
         generate(prompt)
     }
 
@@ -71,6 +72,7 @@ extension OnitModel {
         
         generatingPrompt = prompt
         generatingPromptPriorState = prompt.generationState
+        generatingInput = prompt.input
         trackEventGeneration(prompt: prompt)
 
         generateTask = Task { [systemPrompt, weak self] in
@@ -245,9 +247,10 @@ extension OnitModel {
         generateTask?.cancel()
         generateTask = nil
         
-        if let curPrompt = generatingPrompt, let priorState = generatingPromptPriorState {
+        if let curPrompt = generatingPrompt, let priorState = generatingPromptPriorState, let priorInput = generatingInput {
             // Restore the prompt's previous state
             curPrompt.generationState = priorState
+            pendingInput = priorInput
             
             // If this is the most recent prompt (last in the chat), remove it from the chat history
             if let currentChat = currentChat, let lastPrompt = currentChat.prompts.last, lastPrompt.id == curPrompt.id {
@@ -256,13 +259,25 @@ extension OnitModel {
                 
                 // Remove the prompt from the chat
                 currentChat.prompts.removeLast()
-                if let currentPrompts = currentPrompts, !currentPrompts.isEmpty {
-                    currentPrompts.removeLast()
+                if currentPrompts != nil && !currentPrompts!.isEmpty {
+                    currentPrompts!.removeLast()
                 }
                 
+                // If we're back to an empty chat, we need to reset some things
+                if currentPrompts?.isEmpty ?? true {
+                    self.currentChat = nil
+                    historyIndex = -1
+                    currentPrompts = nil
+                }
+                
+                // There's a lot of duplicated logic here from newChat()
+                // With exceptions for resetting the instruction and the Context/Inputs
+
                 // Restore the instruction to the text input
                 pendingInstruction = instruction
-                
+                focusText()
+                shrinkContent()
+
                 // Save the changes to the model context
                 do {
                     try container.mainContext.save()
@@ -354,8 +369,8 @@ extension OnitModel {
         prompt.generationIndex = (prompt.responses.count - 1)
         prompt.generationState = .done
         
-        generatingPrompt = nil
-        generatingPromptPriorState = nil
+//        generatingPrompt = nil
+//        generatingPromptPriorState = nil
     }
     
     func updatePrompt(prompt: Prompt, response: Response, instruction: String) {
@@ -369,7 +384,7 @@ extension OnitModel {
         prompt.generationIndex = (prompt.responses.count - 1)
         prompt.generationState = .done
         
-        generatingPrompt = nil
-        generatingPromptPriorState = nil
+//        generatingPrompt = nil
+//        generatingPromptPriorState = nil
     }
 }

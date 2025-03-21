@@ -34,6 +34,9 @@ struct ChatSystemPromptView: View {
             Button {
                 withAnimation {
                     isExpanded.toggle()
+                    if !isExpanded {
+                        model.shrinkContent()
+                    }
                 }
             } label: {
                 HStack(alignment: .center, spacing: 6) {
