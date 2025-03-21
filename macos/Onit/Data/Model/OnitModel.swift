@@ -37,9 +37,27 @@ import SwiftUI
     var currentPrompts: [Prompt]?
 
     // User inputs that have not yet been submitted
-    var pendingInstruction = ""
-    var pendingContextList: [Context] = []
-    var pendingInput: Input? = nil
+    var pendingInstruction = "" {
+        didSet {
+            pendingInstructionSubject.send(pendingInstruction)
+        }
+    }
+    var pendingInstructionSubject = CurrentValueSubject<String, Never>("")
+    var pendingInstructionCursorPosition: Int = 0
+    
+    var pendingContextList: [Context] = [] {
+        didSet {
+            pendingContextListSubject.send(pendingContextList)
+        }
+    }
+    var pendingContextListSubject = CurrentValueSubject<[Context], Never>([])
+    
+    var pendingInput: Input? = nil {
+        didSet {
+            pendingInputSubject.send(pendingInput)
+        }
+    }
+    var pendingInputSubject = CurrentValueSubject<Input?, Never>(nil)
 
     var imageUploads: [URL: UploadProgress] = [:]
     var uploadTasks: [URL: Task<URL?, Never>] = [:]

@@ -76,13 +76,15 @@ extension OnitModel: NSWindowDelegate {
 
         // Position the panel on the appropriate screen and set its width
         let targetScreen: NSScreen?
+
+        // Handles both single and multi-display setups.
         if Defaults[.openOnMouseMonitor] {
             targetScreen = NSScreen.screens.first(where: { screen in
                 let mouseLocation = NSEvent.mouseLocation
                 return screen.frame.contains(mouseLocation)
-            }) ?? NSScreen.main
+            })
         } else {
-            targetScreen = NSScreen.main
+            targetScreen = panel?.screen ?? NSScreen.screens.first
         }
 
         if let screen = targetScreen {
@@ -225,12 +227,12 @@ extension OnitModel: NSWindowDelegate {
         let mouseScreen = NSScreen.screens.first(where: { screen in
             let mouseLocation = NSEvent.mouseLocation
             return screen.frame.contains(mouseLocation)
-        }) ?? NSScreen.main
+        })
 
         let currentScreen = panel.screen
+        let targetScreen = Defaults[.openOnMouseMonitor] ? mouseScreen : currentScreen
 
-        // If we can't determine screens, just show the panel
-        guard let targetScreen = Defaults[.openOnMouseMonitor] ? mouseScreen : currentScreen else {
+        guard let screen = targetScreen ?? NSScreen.screens.first else {
             panel.makeKeyAndOrderFront(nil)
             panel.orderFrontRegardless()
             self.textFocusTrigger.toggle()
@@ -238,8 +240,8 @@ extension OnitModel: NSWindowDelegate {
         }
 
         // If panel is not on the target screen, move it
-        if currentScreen != targetScreen {
-            let visibleFrame = targetScreen.visibleFrame
+        if currentScreen != screen {
+            let visibleFrame = screen.visibleFrame
             let windowHeight = panel.frame.height
 
             // Get the saved width or use current

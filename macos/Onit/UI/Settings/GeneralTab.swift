@@ -15,13 +15,13 @@ struct GeneralTab: View {
 
     @State var isLaunchAtStartupEnabled: Bool = SMAppService.mainApp.status == .enabled
     @State var isAnalyticsEnabled: Bool = PostHogSDK.shared.isOptOut() == false
-
+    
     var body: some View {
         Form {
             launchOnStartupSection
             
             analyticsSection
-
+            
             appearanceSection
             
             experimentalSection
@@ -29,7 +29,7 @@ struct GeneralTab: View {
         .formStyle(.grouped)
         .padding()
     }
-
+    
     var launchOnStartupSection: some View {
         Section {
             VStack(alignment: .leading, spacing: 20) {

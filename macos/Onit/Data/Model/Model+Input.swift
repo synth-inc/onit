@@ -91,6 +91,7 @@ extension OnitModel {
         shrinkContent()
         
         SystemPromptState.shared.shouldShowSelection = false
+        SystemPromptState.shared.userSelectedPrompt = false
         let suggestedPrompts = promptSuggestionService?.suggestedPrompts ?? []
         SystemPromptState.shared.shouldShowSystemPrompt = shouldSystemPrompt || !suggestedPrompts.isEmpty
     }
