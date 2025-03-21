@@ -166,6 +166,33 @@ struct GeneralTab: View {
             VStack(spacing: 16) {
                 
                 HStack {
+<<<<<<< Updated upstream
+=======
+                    Text("Use Onit as a standard application")
+                        .font(.system(size: 13))
+                    SettingInfoButton(
+                        title: "Use Onit as a standard application",
+                        description:
+                            "When enabled, Onit will be a standard application, meaing it can be accessed from the Dock and Spotlight.",
+                        defaultValue: "off",
+                        valueType: "Bool"
+                    )
+                    Spacer()
+                    Toggle(
+                        "",
+                        isOn: $isRegularApp
+                    )
+                    .toggleStyle(.switch)
+                    .controlSize(.small)
+                }
+                // Re-draw the panel on change
+                .onChange(of: isRegularApp, initial: false) {
+                    model.closePanel()
+                    model.showPanel()
+                }
+
+                HStack {
+>>>>>>> Stashed changes
                     Text("Use launch shortcut as a toggle")
                         .font(.system(size: 13))
                     SettingInfoButton(
