@@ -8,6 +8,7 @@ struct GeneralTab: View {
     @Default(.fontSize) var fontSize
     @Default(.lineHeight) var lineHeight
     @Default(.panelPosition) var panelPosition
+    @Default(.isRegularApp) var isRegularApp
     @Default(.launchShortcutToggleEnabled) var launchShortcutToggleEnabled
     @Default(.createNewChatOnPanelOpen) var createNewChatOnPanelOpen
     @Default(.openOnMouseMonitor) var openOnMouseMonitor
@@ -164,10 +165,7 @@ struct GeneralTab: View {
     var experimentalSection: some View {
         Section {
             VStack(spacing: 16) {
-                
                 HStack {
-<<<<<<< Updated upstream
-=======
                     Text("Use Onit as a standard application")
                         .font(.system(size: 13))
                     SettingInfoButton(
@@ -192,7 +190,6 @@ struct GeneralTab: View {
                 }
 
                 HStack {
->>>>>>> Stashed changes
                     Text("Use launch shortcut as a toggle")
                         .font(.system(size: 13))
                     SettingInfoButton(
