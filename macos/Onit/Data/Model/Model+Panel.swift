@@ -25,15 +25,21 @@ extension OnitModel: NSWindowDelegate {
             newChat(clearContext: false)
         }
 
-        var windowWidth: CGFloat = 400
-        if let savedWidth = Defaults[.panelWidth] {
+        var windowWidth: CGFloat = ContentView.idealWidth
+        if let savedWidth = Defaults[.panelWidth], !Defaults[.isRegularApp] {
             // Ensure width is not greater than screen width minus padding
             windowWidth = savedWidth
         }
 
+        let styleMask: NSWindow.StyleMask
+        if Defaults[.isRegularApp] {
+            styleMask = [.titled, .closable, .miniaturizable, .nonactivatingPanel, .fullSizeContentView]
+        } else {
+            styleMask = [.nonactivatingPanel, .resizable, .fullSizeContentView]
+        }
         let newPanel = CustomPanel(
             contentRect: NSRect(x: 0, y: 0, width: windowWidth, height: 0),
-            styleMask: [.resizable, .nonactivatingPanel, .fullSizeContentView],
+            styleMask: styleMask,
             backing: .buffered,
             defer: false
         )
@@ -45,11 +51,13 @@ extension OnitModel: NSWindowDelegate {
         newPanel.titlebarAppearsTransparent = true
         newPanel.isMovableByWindowBackground = true
         newPanel.delegate = self
-
-        newPanel.standardWindowButton(.closeButton)?.isHidden = true
-        newPanel.standardWindowButton(.miniaturizeButton)?.isHidden = true
-        newPanel.standardWindowButton(.zoomButton)?.isHidden = true
         newPanel.isFloatingPanel = true
+        
+        if !Defaults[.isRegularApp] {
+            newPanel.standardWindowButton(.closeButton)?.isHidden = true
+            newPanel.standardWindowButton(.miniaturizeButton)?.isHidden = true
+            newPanel.standardWindowButton(.zoomButton)?.isHidden = true
+        }
 
         let contentView = ContentView()
             .modelContainer(container)
@@ -82,7 +90,6 @@ extension OnitModel: NSWindowDelegate {
         if let screen = targetScreen {
             let visibleFrame = screen.visibleFrame
             let windowHeight = newPanel.frame.height
-            var windowWidth = min(newPanel.frame.width, visibleFrame.width)
             
             let newFrame = calculatePanelFrame(
                 for: visibleFrame,
@@ -106,6 +113,14 @@ extension OnitModel: NSWindowDelegate {
 
     private func calculatePanelFrame(for visibleFrame: NSRect, windowWidth: CGFloat, windowHeight: CGFloat) -> NSRect {
         // Calculate position based on preference
+        guard !Defaults[.isRegularApp] else {
+            return NSRect(
+                x: visibleFrame.origin.x + visibleFrame.width - windowWidth,
+                y: visibleFrame.origin.y + visibleFrame.height - windowHeight,
+                width: windowWidth,
+                height: visibleFrame.height - visibleFrame.origin.y - ContentView.bottomPadding
+            )
+        }
         let finalXPosition: CGFloat
         switch Defaults[.panelPosition] {
         case .topLeft:
@@ -165,7 +180,7 @@ extension OnitModel: NSWindowDelegate {
             let windowHeight = defaultPanelFrame.height
 
             let finalXPosition = visibleFrame.origin.x + visibleFrame.width - 16 - windowWidth
-            let finalYPosition = visibleFrame.origin.y + visibleFrame.height - 16 - 100
+            let finalYPosition = visibleFrame.origin.y + visibleFrame.height - 16 - ContentView.bottomPadding
             debugPanel.setFrameOrigin(
                 NSPoint(x: finalXPosition, y: finalYPosition - (windowHeight * 2.0) - 16))
             debugPanel.makeKeyAndOrderFront(nil)
@@ -204,12 +219,10 @@ extension OnitModel: NSWindowDelegate {
     }
     
     func launchPanel() {
-        if panel == nil {
+        guard let panel = panel else {
             showPanel()
             return
         }
-
-        guard let panel = panel else { return }
 
         let mouseScreen = NSScreen.screens.first(where: { screen in
             let mouseLocation = NSEvent.mouseLocation
@@ -233,7 +246,7 @@ extension OnitModel: NSWindowDelegate {
 
             // Get the saved width or use current
             var windowWidth = panel.frame.width
-            if let savedWidth = Defaults[.panelWidth] {
+            if let savedWidth = Defaults[.panelWidth], !Defaults[.isRegularApp] {
                 // Ensure width is not greater than screen width minus padding
                 windowWidth = min(savedWidth, visibleFrame.width - 32)
             }
@@ -293,7 +306,7 @@ extension OnitModel: NSWindowDelegate {
     @MainActor
     func adjustPanelSize() {
         guard let panel = panel,
-            let contentView = panel.contentView
+              let contentView = panel.contentView
         else {
             return
         }
@@ -302,9 +315,9 @@ extension OnitModel: NSWindowDelegate {
         let idealSize = contentView.fittingSize
 
         // Clamp the window height so it doesn't fall off-screen
-        guard let screen = NSScreen.main else { return }
+        guard let screen = panel.screen ?? NSScreen.main else { return }
         let visibleFrame = screen.visibleFrame
-        let maxAllowedHeight = visibleFrame.height - 16
+        let maxAllowedHeight = visibleFrame.height - ContentView.bottomPadding
         let newHeight = min(idealSize.height, maxAllowedHeight)
         let currentWidth = panel.frame.width
 
@@ -357,6 +370,20 @@ extension OnitModel: NSWindowDelegate {
             windowHeight: windowHeight
         )
         panel.setFrame(newFrame, display: true, animate: false)
+    }
+    
+    func windowDidMiniaturize(_ notification: Notification) {
+        isPanelMiniaturized.send(true)
+    }
+    
+    func windowDidDeminiaturize(_ notification: Notification) {
+        isPanelMiniaturized.send(false)
+    }
+    
+    func windowShouldClose(_ sender: NSWindow) -> Bool {
+        closePanel()
+        
+        return true
     }
 }
 

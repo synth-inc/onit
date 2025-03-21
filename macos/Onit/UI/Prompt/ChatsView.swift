@@ -11,6 +11,7 @@ import SwiftUI
 struct ChatsView: View {
     @Environment(\.model) var model
     @Default(.isPanelExpanded) var isPanelExpanded: Bool
+    @Default(.isRegularApp) var isRegularApp: Bool
     
     @State private var contentHeight: CGFloat = 0
 
@@ -30,13 +31,16 @@ struct ChatsView: View {
     
     var maxHeight: CGFloat {
         guard !model.resizing, screenHeight != 0 else { return 0 }
-        return screenHeight - model.headerHeight -
-            model.inputHeight - model.setUpHeight -
-            model.systemPromptHeight - 100
+        
+        let availableHeight = screenHeight - model.headerHeight -
+        model.inputHeight - model.setUpHeight -
+        model.systemPromptHeight - ContentView.bottomPadding
+        
+        return availableHeight
     }
     
     var realHeight: CGFloat {
-        isPanelExpanded ? maxHeight : min(contentHeight, maxHeight)
+        return isRegularApp ? maxHeight : (isPanelExpanded ? maxHeight : min(contentHeight, maxHeight))
     }
     
     private func scrollToBottom(using proxy: ScrollViewProxy) {
@@ -70,6 +74,7 @@ struct ChatsView: View {
                 .id(chatsID)
                 .background(heightReader(scrollProxy: proxy))
             }
+            .trackScreenHeight($screenHeight)
             .frame(
                 minHeight: 0,
                 idealHeight: realHeight,

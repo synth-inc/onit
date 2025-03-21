@@ -6,6 +6,7 @@
 //
 
 @preconcurrency import ApplicationServices
+import AppKit
 
 extension AXUIElement {
     func attribute(forAttribute attribute: CFString) -> Any? {
@@ -31,6 +32,27 @@ extension AXUIElement {
         } else {
             return nil
         }
+    }
+
+    func findWindow() -> AXUIElement? {
+        var elementPid: pid_t = 0
+
+        guard AXUIElementGetPid(self, &elementPid) == .success, elementPid != getpid() else {
+            return nil
+        }
+        
+        let appElement = AXUIElementCreateApplication(elementPid)
+        
+        var windowList: CFArray?
+        let result = AXUIElementCopyAttributeValues(appElement, kAXWindowsAttribute as CFString, 0, 1, &windowList)
+        
+        guard result == .success,
+              let windows = windowList as? [AXUIElement],
+              let firstWindow = windows.first else {
+            return nil
+        }
+        
+        return firstWindow
     }
 
     func size() -> CGSize? {
@@ -66,6 +88,13 @@ extension AXUIElement {
 
     func title() -> String? {
         return self.attribute(forAttribute: kAXTitleAttribute as CFString) as? String
+    }
+    
+    func parent() -> AXUIElement? {
+        if let value = self.attribute(forAttribute: kAXParentAttribute as CFString) {
+            return value as! AXUIElement
+        }
+        return nil
     }
 
     func children() -> [AXUIElement]? {
@@ -108,6 +137,32 @@ extension AXUIElement {
         AXValueGetValue(boundsValue, .cgRect, &rect)
 
         return rect
+    }
+
+    func setPosition(_ point: CGPoint) -> Bool {
+        var point = point
+        if let axValue = AXValueCreate(.cgPoint, &point) {
+            let result = AXUIElementSetAttributeValue(self, kAXPositionAttribute as CFString, axValue)
+            
+            return result == .success
+        }
+        
+        return false
+    }
+
+    func setSize(_ size: CGSize) -> Bool {
+        var size = size
+        if let axValue = AXValueCreate(.cgSize, &size) {
+            let result = AXUIElementSetAttributeValue(self, kAXSizeAttribute as CFString, axValue)
+            
+            return result == .success
+        }
+        
+        return false
+    }
+
+    func setFrame(_ frame: CGRect) -> Bool {
+        return setPosition(frame.origin) && setSize(frame.size)
     }
 }
 
