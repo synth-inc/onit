@@ -38,7 +38,7 @@ struct GeneratedContentView: View {
     var body: some View {
 
         VStack(alignment: .leading) {
-            LLMStreamView(text: textToRead, configuration: configuration)
+            LLMStreamView(text: textToRead, configuration: configuration, onCodeAction: codeAction)
                 .padding(.horizontal, 16)
             Spacer()
             if textToRead.isEmpty {
@@ -51,6 +51,10 @@ struct GeneratedContentView: View {
                 }
             }
         }
+    }
+    
+    private func codeAction(code: String) {
+        
     }
 }
 

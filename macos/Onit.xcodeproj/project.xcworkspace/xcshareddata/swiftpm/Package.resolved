@@ -1,5 +1,5 @@
 {
-  "originHash" : "6295138d5a8f58d20b3b5cbdb878d3c9bf43a60c753e43e631d3ce50dc346353",
+  "originHash" : "eaa06714ba82815bc579e99d21cebc0a6966a4a6663d1cf3a795cfb13366e288",
   "pins" : [
     {
       "identity" : "abseil-cpp-binary",
@@ -134,15 +134,6 @@
       "state" : {
         "revision" : "a0bc79961d7be727d258d33d5a6b2f1023270ba1",
         "version" : "1.22.5"
-      }
-    },
-    {
-      "identity" : "llmstream",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/synth-inc/LLMStream",
-      "state" : {
-        "branch" : "main",
-        "revision" : "f5e49c6362a6f4a37ed2e34d48ed463a5b97cbaa"
       }
     },
     {
