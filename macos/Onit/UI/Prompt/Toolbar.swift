@@ -175,6 +175,7 @@ struct Toolbar: View {
         @Bindable var model = model
 
         Button {
+            OverlayManager.shared.captureClickPosition()
             OverlayManager.shared.showOverlay(model: model, content: ModelSelectionView())
         } label: {
             HStack(spacing: 0) {
