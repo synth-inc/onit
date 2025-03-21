@@ -13,7 +13,13 @@ import SwiftUI
 class OverlayManager {
     static let shared = OverlayManager()
     private var currentOverlay: OverlayWindowController<AnyView>?
+    private var clickPosition: NSPoint?
 
+    /// Captures the current mouse position for later use
+    func captureClickPosition() {
+        clickPosition = NSEvent.mouseLocation
+    }
+    
     /// Presents a new overlay by dismissing any existing one.
     func showOverlay<Content: View>(model: OnitModel, content: Content) {
         // Dismiss the current overlay (if any)
@@ -21,9 +27,11 @@ class OverlayManager {
         currentOverlay = nil
         
         // Create and store the new overlay
-        let overlay = OverlayWindowController(model: model, content: AnyView(content))
+        let overlay = OverlayWindowController(model: model, content: AnyView(content), clickPosition: clickPosition)
         currentOverlay = overlay
-        // Additional logic to actually display the overlay if needed
+        
+        // Reset click position after use
+        clickPosition = nil
     }
     
     /// Dismisses the current overlay.
