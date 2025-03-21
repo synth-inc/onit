@@ -36,8 +36,8 @@ import SwiftUI
             pendingInstructionSubject.send(pendingInstruction)
         }
     }
-    
     var pendingInstructionSubject = CurrentValueSubject<String, Never>("")
+    var pendingInstructionCursorPosition: Int = 0
     
     var pendingContextList: [Context] = [] {
         didSet {
