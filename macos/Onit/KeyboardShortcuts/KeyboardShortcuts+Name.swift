@@ -18,6 +18,8 @@ extension KeyboardShortcuts.Name {
     static let resizeWindow = Self("resizeWindow", default: .init(.eight, modifiers: [.command]))
     static let toggleLocalMode = Self(
         "toggleLocalMode", default: .init(.seven, modifiers: [.shift, .command]))
+    static let cancelGeneration = Self(
+        "cancelGeneration", default: .init(.delete, modifiers: [.command]))
 }
 
 extension KeyboardShortcuts.Name: @retroactive CaseIterable {
@@ -27,6 +29,7 @@ extension KeyboardShortcuts.Name: @retroactive CaseIterable {
         .escape,
         .newChat,
         .resizeWindow,
-        .toggleLocalMode
+        .toggleLocalMode,
+        .cancelGeneration
     ]
 }

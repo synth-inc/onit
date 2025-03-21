@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import KeyboardShortcuts
 
 struct GeneratingView: View {
     @Environment(\.model) var model
@@ -28,7 +29,9 @@ struct GeneratingView: View {
             .padding(20)
         }
         .buttonStyle(.plain)
-        .keyboardShortcut(.delete)
+        .keyboardShortcut(delete)
+        .keyboardShortcut(.escape)
+        .help("Cancel generation and restore your prompt (CMD+Delete or Esc)")
     }
 
     var icon: some View {
@@ -38,7 +41,7 @@ struct GeneratingView: View {
 
     var text: some View {
         HStack(spacing: 4) {
-            Text("Cancel")
+            Text("Cancel Generation")
                 .foregroundStyle(.gray200)
             KeyboardShortcutView(shortcut: delete)
                 .foregroundStyle(.gray300)

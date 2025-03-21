@@ -52,6 +52,11 @@ struct ShortcutsTab: View {
                 )
                 .padding()
                 
+                KeyboardShortcuts.Recorder(
+                    "Cancel Generation", name: .cancelGeneration
+                )
+                .padding()
+                
                 Toggle("Disable 'ESC' shortcut", isOn: $escapeShortcutDisabled)
                 .padding()
             }

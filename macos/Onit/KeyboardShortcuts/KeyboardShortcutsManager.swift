@@ -102,6 +102,9 @@ struct KeyboardShortcutsManager {
                     model.resizeWindow()
                 case .toggleLocalMode:
                     model.toggleLocalVsRemoteShortcutAction()
+                case .cancelGeneration:
+                    model.cancelGenerate()
+                    model.textFocusTrigger.toggle()
                 default:
                     print("KeyboardShortcut not handled: \(name)")
                 }

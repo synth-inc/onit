@@ -244,9 +244,37 @@ extension OnitModel {
     func cancelGenerate() {
         generateTask?.cancel()
         generateTask = nil
+        
         if let curPrompt = generatingPrompt, let priorState = generatingPromptPriorState {
+            // Restore the prompt's previous state
             curPrompt.generationState = priorState
+            
+            // If this is the most recent prompt (last in the chat), remove it from the chat history
+            if let currentChat = currentChat, let lastPrompt = currentChat.prompts.last, lastPrompt.id == curPrompt.id {
+                // Get the instruction before removing the prompt
+                let instruction = curPrompt.instruction
+                
+                // Remove the prompt from the chat
+                currentChat.prompts.removeLast()
+                if let currentPrompts = currentPrompts, !currentPrompts.isEmpty {
+                    currentPrompts.removeLast()
+                }
+                
+                // Restore the instruction to the text input
+                pendingInstruction = instruction
+                
+                // Save the changes to the model context
+                do {
+                    try container.mainContext.save()
+                } catch {
+                    print("Error saving after cancellation: \(error.localizedDescription)")
+                }
+            }
         }
+        
+        // Reset the generating prompt references
+        generatingPrompt = nil
+        generatingPromptPriorState = nil
     }
 
     func setTokenIsValid(_ isValid: Bool) {
