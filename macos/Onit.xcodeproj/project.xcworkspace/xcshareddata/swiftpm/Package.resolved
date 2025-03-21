@@ -1,5 +1,5 @@
 {
-  "originHash" : "e48c7f63d5d4469189796b9fceb0b824b24945fde48e0bdac90e3d8f3a1cad67",
+  "originHash" : "eaa06714ba82815bc579e99d21cebc0a6966a4a6663d1cf3a795cfb13366e288",
   "pins" : [
     {
       "identity" : "abseil-cpp-binary",
@@ -92,6 +92,15 @@
       }
     },
     {
+      "identity" : "highlightr",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/raspu/Highlightr",
+      "state" : {
+        "revision" : "bcf2d0590f32ac2528feb72d7e34f5b463801a47",
+        "version" : "2.2.1"
+      }
+    },
+    {
       "identity" : "highlightswift",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/blsage/HighlightSwift",
@@ -146,15 +155,6 @@
       }
     },
     {
-      "identity" : "networkimage",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/gonzalezreal/NetworkImage",
-      "state" : {
-        "revision" : "2849f5323265386e200484b0d0f896e73c3411b9",
-        "version" : "6.0.1"
-      }
-    },
-    {
       "identity" : "posthog-ios",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/PostHog/posthog-ios.git",
@@ -184,7 +184,7 @@
     {
       "identity" : "swift-cmark",
       "kind" : "remoteSourceControl",
-      "location" : "https://github.com/swiftlang/swift-cmark",
+      "location" : "https://github.com/apple/swift-cmark.git",
       "state" : {
         "revision" : "3ccff77b2dc5b96b77db3da0d68d28068593fa53",
         "version" : "0.5.0"
@@ -197,15 +197,6 @@
       "state" : {
         "revision" : "8f79cb175981458a0a27e76cb42fee8e17b1a993",
         "version" : "0.5.0"
-      }
-    },
-    {
-      "identity" : "swift-markdown-ui",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/gonzalezreal/swift-markdown-ui",
-      "state" : {
-        "revision" : "5f613358148239d0292c0cef674a3c2314737f9e",
-        "version" : "2.4.1"
       }
     },
     {
