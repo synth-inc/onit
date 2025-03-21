@@ -165,14 +165,13 @@ struct GeneralTab: View {
     var experimentalSection: some View {
         Section {
             VStack(spacing: 16) {
-                
                 HStack {
-                    Text("Position app at the right edge of the active window")
+                    Text("Use Onit as a standard application")
                         .font(.system(size: 13))
                     SettingInfoButton(
-                        title: "Position app at the right edge of the active window",
+                        title: "Use Onit as a standard application",
                         description:
-                            "Enable this option to place the app next to the active window",
+                            "When enabled, Onit will be a standard application, meaing it can be accessed from the Dock and Spotlight.",
                         defaultValue: "off",
                         valueType: "Bool"
                     )
