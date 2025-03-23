@@ -15,13 +15,7 @@ struct ChatsView: View {
     
     @State private var contentHeight: CGFloat = 0
 
-    var screenHeight: CGFloat {
-        if let panel = model.panel,
-           let screen = panel.screen {
-            return screen.visibleFrame.height
-        }
-        return 0
-    }
+    @State var screenHeight: CGFloat = NSScreen.main?.visibleFrame.height ?? 0
     @State private var isScrolling: Bool = false
     @State private var scrollTask: Task<Void, Never>?
     
@@ -74,7 +68,7 @@ struct ChatsView: View {
                 .id(chatsID)
                 .background(heightReader(scrollProxy: proxy))
             }
-//            .trackScreenHeight($screenHeight)
+            .trackScreenHeight($screenHeight)
             .frame(
                 minHeight: 0,
                 idealHeight: realHeight,
