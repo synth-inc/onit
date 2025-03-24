@@ -15,12 +15,14 @@ class OverlayWindowController<Content: View>: NSObject, NSWindowDelegate {
     weak var model: OnitModel?
     var eventMonitor: Any?
     var localEventMonitor: Any?
-
+    var clickPosition: NSPoint?
+    
     private let contentView: Content
 
-    init(model: OnitModel, content: Content) {
+    init(model: OnitModel, content: Content, clickPosition: NSPoint?) {
         self.model = model
         contentView = content
+        self.clickPosition = clickPosition
         super.init()
         createOverlayWindow()
         startEventMonitoring()
@@ -47,13 +49,6 @@ class OverlayWindowController<Content: View>: NSObject, NSWindowDelegate {
 
         overlayWindow = window
         updateOverlayWindowSize()
-
-        if Defaults[.openOnMouseMonitor] {
-            let mouseLocation = NSEvent.mouseLocation
-            if let mouseScreen = NSScreen.screens.first(where: { NSMouseInRect(mouseLocation, $0.frame, false) }) {
-                window.setFrameOrigin(mouseScreen.frame.origin)
-            }
-        }
 
         positionWindow()
         overlayWindow?.alphaValue = 1.0
@@ -108,7 +103,7 @@ class OverlayWindowController<Content: View>: NSObject, NSWindowDelegate {
             return
         }
 
-        let mouseLocation = NSEvent.mouseLocation
+        let mouseLocation = clickPosition ?? NSEvent.mouseLocation
 
         guard
             let screen = NSScreen.screens.first(where: {

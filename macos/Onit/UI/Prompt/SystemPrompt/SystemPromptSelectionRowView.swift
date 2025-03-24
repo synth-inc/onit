@@ -18,6 +18,7 @@ struct SystemPromptSelectionRowView: View {
         Button(action: {
             systemPromptId = prompt.id
             prompt.lastUsed = Date()
+            SystemPromptState.shared.userSelectedPrompt = true
         }) {
             HStack {
                 Text(prompt.name)

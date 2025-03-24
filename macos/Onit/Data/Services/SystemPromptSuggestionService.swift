@@ -78,7 +78,8 @@ class SystemPromptSuggestionService {
                 apps: app
             )
             
-            guard model.currentChat?.systemPrompt == nil else { return }
+            guard model.currentChat?.systemPrompt == nil && 
+                  !SystemPromptState.shared.userSelectedPrompt else { return }
             
             if let firstPrompt = self.suggestedPrompts.first {
                 Defaults[.systemPromptId] = firstPrompt.id
