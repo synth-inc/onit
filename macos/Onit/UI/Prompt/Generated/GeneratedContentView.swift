@@ -32,20 +32,12 @@ struct GeneratedContentView: View {
     }
     
     var configuration: LLMStreamConfiguration {
+        let color = ColorConfiguration(citationBackgroundColor: .gray600,
+                                       citationHoverBackgroundColor: .gray400,
+                                       citationTextColor: .gray100)
         let thought = ThoughtConfiguration(icon: Image(.lightBulb))
         
-        let citation = CitationConfiguration(
-            backgroundColor: .gray600,
-            hoverBackgroundColor: .gray400,
-            textColor: .gray100,
-            hoverTextColor: .white,
-            borderRadius: 6,
-            padding: EdgeInsets(top: 2, leading: 4, bottom: 2, trailing: 4),
-            margin: EdgeInsets(top: 0, leading: 4, bottom: 0, trailing: 4)
-        )
-        
-        return LLMStreamConfiguration(thought: thought,
-                                      citation: citation)
+        return LLMStreamConfiguration(colors: color, thought: thought)
     }
     
     var body: some View {
