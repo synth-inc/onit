@@ -33,6 +33,7 @@ struct ContextItem: View {
         }
         .padding(3)
         .background(isEditing ? .gray700 : .clear, in: .rect(cornerRadius: 4))
+        .frame(maxWidth: isEditing ? 250 : nil)
     }
 
     var contentView: some View {
@@ -50,6 +51,8 @@ struct ContextItem: View {
         HStack(spacing: 2) {
             Text(name)
                 .foregroundStyle(.white)
+                .lineLimit(1)
+                .truncationMode(.tail)
             if let fileType = item.fileType {
                 Text(fileType)
                     .foregroundStyle(.gray200)
@@ -68,6 +71,8 @@ struct ContextItem: View {
             error.localizedDescription
         case .tooBig:
             "Upload exceeds model limit"
+        case .web(let url):
+            url.host() ?? "Unknown URL"
         }
     }
 

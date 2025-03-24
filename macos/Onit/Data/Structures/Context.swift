@@ -13,6 +13,7 @@ enum Context {
     case image(URL)
     case tooBig(URL)
     case error(URL, Error)
+    case web(URL)
 
     static let maxFileSize: Int = 1024 * 1024 * 1
     static let maxImageSize: Int = 1024 * 1024 * 20
@@ -21,7 +22,7 @@ enum Context {
         switch self {
         case .auto:
             return nil
-        case .file(let url), .image(let url), .tooBig(let url), .error(let url, _):
+        case .file(let url), .image(let url), .tooBig(let url), .error(let url, _), .web(let url):
             return url
         }
     }
@@ -34,6 +35,8 @@ enum Context {
             "file"
         case .image:
             "Img"
+        case .web:
+            "Web"
         default:
             nil
         }
@@ -55,6 +58,13 @@ extension Context {
     }
 
     init(url: URL) {
+        // Initialization for web context urls.
+        if url.scheme == "http" || url.scheme == "https" {
+            self = .web(url)
+            return
+        }
+        
+        // Initialization for non-web-context urls.
         do {
             let size = try url.size
             if url.isImage {
@@ -76,7 +86,7 @@ extension Context: Codable {
     }
 
     enum ContextType: String, Codable {
-        case auto, file, image, tooBig, error
+        case auto, file, image, tooBig, error, web
     }
 
     init(from decoder: Decoder) throws {
@@ -103,6 +113,9 @@ extension Context: Codable {
             let error = NSError(
                 domain: "", code: 0, userInfo: [NSLocalizedDescriptionKey: errorDescription])
             self = .error(url, error)
+        case .web:
+            let url = try container.decode(URL.self, forKey: .url)
+            self = .web(url)
         }
     }
 
@@ -128,6 +141,9 @@ extension Context: Codable {
             try container.encode(ContextType.error, forKey: .type)
             let errorDescription = (error as NSError).localizedDescription
             try container.encode(errorDescription, forKey: .error)
+        case .web(let url):
+            try container.encode(url, forKey: .url)
+            try container.encode(ContextType.web, forKey: .type)
         }
     }
 }
@@ -143,6 +159,8 @@ extension Context: Equatable, Hashable {
             return url1 == url2
         case (.auto(let appName1, let content1), .auto(let appName2, let content2)):
             return appName1 == appName2 && content1 == content2
+        case (.web(let url1), .web(let url2)):
+            return url1 == url2
         default:
             return false
         }
@@ -150,7 +168,7 @@ extension Context: Equatable, Hashable {
 
     func hash(into hasher: inout Hasher) {
         switch self {
-        case .file(let url), .image(let url), .tooBig(let url), .error(let url, _):
+        case .file(let url), .image(let url), .tooBig(let url), .error(let url, _), .web(let url):
             hasher.combine(url)
         case .auto(let appName, let appContent):
             hasher.combine(appName)
@@ -196,6 +214,17 @@ extension [Context] {
         compactMap {
             switch $0 {
             case .image(let url):
+                return url
+            default:
+                return nil
+            }
+        }
+    }
+    
+    var webs: [URL] {
+        compactMap {
+            switch $0 {
+            case .web(let url):
                 return url
             default:
                 return nil

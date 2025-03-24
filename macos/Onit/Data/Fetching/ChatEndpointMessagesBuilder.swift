@@ -27,9 +27,23 @@ struct ChatEndpointMessagesBuilder {
             
             // TODO: add error handling for contexts too long & incorrect file types
             if !files[index].isEmpty {
-                for file in files[index] {
-                    if let fileContent = try? String(contentsOf: file, encoding: .utf8) {
-                        message += "\n\nFile: \(file.lastPathComponent)\nContent:\n\(fileContent)"
+                // Split URLs into web and file URLs.
+                let (webUrls, fileUrls) = files[index].partition { url in
+                    url.scheme == "http" || url.scheme == "https"
+                }
+                
+                // Handle web URLs
+                if !webUrls.isEmpty {
+                    message += "\n\nWeb References:\n"
+                    for webUrl in webUrls {
+                        message += "- \(webUrl.absoluteString)\n"
+                    }
+                }
+                
+                // Handle file URLs
+                for fileUrl in fileUrls {
+                    if let fileContent = try? String(contentsOf: fileUrl, encoding: .utf8) {
+                        message += "\n\nFile: \(fileUrl.lastPathComponent)\nContent:\n\(fileContent)"
                     }
                 }
             }
@@ -503,5 +517,24 @@ struct ChatEndpointMessagesBuilder {
         }
 
         return openAIMessageStack
+    }
+}
+
+
+// Extension to help with URL partitioning between web URLs and file URLs.
+extension Array {
+    func partition(by predicate: (Element) -> Bool) -> ([Element], [Element]) {
+        var matching: [Element] = []
+        var nonMatching: [Element] = []
+        
+        forEach { element in
+            if predicate(element) {
+                matching.append(element)
+            } else {
+                nonMatching.append(element)
+            }
+        }
+        
+        return (matching, nonMatching)
     }
 }

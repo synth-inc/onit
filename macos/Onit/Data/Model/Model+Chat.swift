@@ -79,7 +79,7 @@ extension OnitModel {
             prompt.generationState = .generating
             let curInstruction = prompt.instruction
             
-            var filesHistory: [[URL]] = [prompt.contextList.files]
+            var filesHistory: [[URL]] = [(prompt.contextList.files + prompt.contextList.webs)]
             var inputsHistory: [Input?] = [prompt.input]
             var imagesHistory: [[URL]] = [prompt.contextList.images]
             var instructionsHistory: [String] = [curInstruction]
@@ -99,7 +99,7 @@ extension OnitModel {
                     if response.type != .error {
                         instructionsHistory.insert(currentPrompt!.instruction, at: 0)
                         inputsHistory.insert(currentPrompt!.input, at: 0)
-                        filesHistory.insert(currentPrompt!.contextList.files, at: 0)
+                        filesHistory.insert(currentPrompt!.contextList.files + currentPrompt!.contextList.webs, at: 0)
                         imagesHistory.insert(currentPrompt!.contextList.images, at: 0)
                         autoContextsHistory.insert(currentPrompt!.contextList.autoContexts, at: 0)
                         responsesHistory.insert(
@@ -121,8 +121,7 @@ extension OnitModel {
                       imagesHistory.count == autoContextsHistory.count,
                       autoContextsHistory.count == responsesHistory.count + 1 else {
                     throw FetchingError.invalidRequest(
-                        message:
-                            "Mismatched array lengths: instructions, inputs, files, autoContexts and images must be the same length, and one longer than responses."
+                        message: "Mismatched array lengths in chat history: instructions, inputs, files, autoContexts and images must be the same length, and one longer than responses."
                     )
                 }
 
@@ -138,29 +137,32 @@ extension OnitModel {
                     if shouldUseStream(model) {
                         addPartialPrompt(prompt: prompt, instruction: curInstruction)
                         
-                        let asyncText = try await streamingClient.chat(systemMessage: systemPrompt.prompt,
-                                                                       instructions: instructionsHistory,
-                                                                       inputs: inputsHistory,
-                                                                       files: filesHistory,
-                                                                       images: imagesHistory,
-                                                                       autoContexts: autoContextsHistory,
-                                                                       responses: responsesHistory,
-                                                                       model: model,
-                                                                       apiToken: apiToken)
+                        let asyncText = try await streamingClient.chat(
+                            systemMessage: systemPrompt.prompt,
+                            instructions: instructionsHistory,
+                            inputs: inputsHistory,
+                            files: filesHistory,
+                            images: imagesHistory,
+                            autoContexts: autoContextsHistory,
+                            responses: responsesHistory,
+                            model: model,
+                            apiToken: apiToken)
                         for try await response in asyncText {
                             streamedResponse += response
                         }
                     } else {
-                        streamedResponse = try await client.chat(systemMessage: systemPrompt.prompt,
-                                                                 instructions: instructionsHistory,
-                                                                 inputs: inputsHistory,
-                                                                 files: filesHistory,
-                                                                 images: imagesHistory,
-                                                                 autoContexts: autoContextsHistory,
-                                                                 responses: responsesHistory,
-                                                                 model: model,
-                                                                 apiToken: apiToken)
+                        streamedResponse = try await client.chat(
+                            systemMessage: systemPrompt.prompt,
+                            instructions: instructionsHistory,
+                            inputs: inputsHistory,
+                            files: filesHistory,
+                            images: imagesHistory,
+                            autoContexts: autoContextsHistory,
+                            responses: responsesHistory,
+                            model: model,
+                            apiToken: apiToken)
                     }
+                
                 case .local:
                     guard let model = Defaults[.localModel] else {
                         throw FetchingError.invalidRequest(message: "Model is required")
@@ -169,26 +171,28 @@ extension OnitModel {
                     if Defaults[.streamResponse].local {
                         addPartialPrompt(prompt: prompt, instruction: curInstruction)
                         
-                        let asyncText = try await streamingClient.localChat(systemMessage: systemPrompt.prompt,
-                                                                            instructions: instructionsHistory,
-                                                                            inputs: inputsHistory,
-                                                                            files: filesHistory,
-                                                                            images: imagesHistory,
-                                                                            autoContexts: autoContextsHistory,
-                                                                            responses: responsesHistory,
-                                                                            model: model)
+                        let asyncText = try await streamingClient.localChat(
+                            systemMessage: systemPrompt.prompt,
+                            instructions: instructionsHistory,
+                            inputs: inputsHistory,
+                            files: filesHistory,
+                            images: imagesHistory,
+                            autoContexts: autoContextsHistory,
+                            responses: responsesHistory,
+                            model: model)
                         for try await response in asyncText {
                             streamedResponse += response
                         }
                     } else {
-                        streamedResponse = try await client.localChat(systemMessage: systemPrompt.prompt,
-                                                                      instructions: instructionsHistory,
-                                                                      inputs: inputsHistory,
-                                                                      files: filesHistory,
-                                                                      images: imagesHistory,
-                                                                      autoContexts: autoContextsHistory,
-                                                                      responses: responsesHistory,
-                                                                      model: model)
+                        streamedResponse = try await client.localChat(
+                            systemMessage: systemPrompt.prompt,
+                            instructions: instructionsHistory,
+                            inputs: inputsHistory,
+                            files: filesHistory,
+                            images: imagesHistory,
+                            autoContexts: autoContextsHistory,
+                            responses: responsesHistory,
+                            model: model)
                     }
                 }
                 
