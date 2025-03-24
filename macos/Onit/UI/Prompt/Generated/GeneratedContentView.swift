@@ -12,6 +12,8 @@ import SwiftUI
 
 struct GeneratedContentView: View {
     @Environment(\.model) var model
+    @Environment(\.openURL) var openURL
+    
     @Default(.fontSize) var fontSize
     @Default(.lineHeight) var lineHeight
 
@@ -32,13 +34,27 @@ struct GeneratedContentView: View {
     var configuration: LLMStreamConfiguration {
         let thought = ThoughtConfiguration(icon: Image(.lightBulb))
         
-        return LLMStreamConfiguration(thought: thought)
+        let citation = CitationConfiguration(
+            backgroundColor: .gray600,
+            hoverBackgroundColor: .gray400,
+            textColor: .gray100,
+            hoverTextColor: .white,
+            borderRadius: 6,
+            padding: EdgeInsets(top: 2, leading: 4, bottom: 2, trailing: 4),
+            margin: EdgeInsets(top: 0, leading: 4, bottom: 0, trailing: 4)
+        )
+        
+        return LLMStreamConfiguration(thought: thought,
+                                      citation: citation)
     }
     
     var body: some View {
 
         VStack(alignment: .leading) {
-            LLMStreamView(text: textToRead, configuration: configuration, onCodeAction: codeAction)
+            LLMStreamView(text: textToRead,
+                          configuration: configuration,
+                          onUrlClicked: onUrlClicked,
+                          onCodeAction: codeAction)
                 .padding(.horizontal, 16)
             Spacer()
             if textToRead.isEmpty {
@@ -50,6 +66,12 @@ struct GeneratedContentView: View {
                     Spacer()
                 }
             }
+        }
+    }
+    
+    private func onUrlClicked(urlString: String) {
+        if let url = URL(string: urlString) {
+            openURL(url)
         }
     }
     
