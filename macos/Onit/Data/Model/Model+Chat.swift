@@ -149,13 +149,6 @@ extension OnitModel {
                                                                        apiToken: apiToken)
                         for try await response in asyncText {
                             streamedResponse += response
-                            
-                            let notepadConfig = getNotepadConfig(prompt: prompt)
-                            NotepadWindowController.shared.showWindow(
-                                oldText: notepadConfig.oldText,
-                                newText: notepadConfig.newText,
-                                isStreaming: notepadConfig.isStreaming
-                            )
                         }
                     } else {
                         streamedResponse = try await client.chat(systemMessage: systemPrompt.prompt,
@@ -186,13 +179,6 @@ extension OnitModel {
                                                                             model: model)
                         for try await response in asyncText {
                             streamedResponse += response
-                            
-                            let notepadConfig = getNotepadConfig(prompt: prompt)
-                            NotepadWindowController.shared.showWindow(
-                                oldText: notepadConfig.oldText,
-                                newText: notepadConfig.newText,
-                                isStreaming: notepadConfig.isStreaming
-                            )
                         }
                     } else {
                         streamedResponse = try await client.localChat(systemMessage: systemPrompt.prompt,
@@ -286,7 +272,7 @@ extension OnitModel {
         case .perplexity:
             Defaults[.isPerplexityTokenValidated] = isValid
         case .custom:
-            break  // TODO: KNA -
+            break
         }
     }
 
@@ -306,7 +292,7 @@ extension OnitModel {
             case .perplexity:
                 return Defaults[.perplexityToken]
             case .custom:
-                return nil  // TODO: KNA -
+                return nil
             }
             
         }
@@ -390,12 +376,5 @@ extension OnitModel {
         
         generatingPrompt = nil
         generatingPromptPriorState = nil
-        
-        let notepadConfig = getNotepadConfig(prompt: prompt)
-        NotepadWindowController.shared.showWindow(
-            oldText: notepadConfig.oldText,
-            newText: notepadConfig.newText,
-            isStreaming: notepadConfig.isStreaming
-        )
     }
 }
