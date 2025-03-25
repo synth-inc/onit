@@ -8,8 +8,6 @@
 import SwiftUI
 
 struct GeneratedView: View {
-    @Environment(\.model) var model
-    
     var prompt: Prompt
 
     var body: some View {
@@ -33,11 +31,9 @@ struct GeneratedView: View {
 
 #if DEBUG
     #Preview {
-        ModelContainerPreview {
-            var prompt = Prompt.sample
-            prompt.input = Input(selectedText: "blablabla", application: "Xcode")
-            
-            return GeneratedView(prompt: prompt)
-        }
+        var prompt = Prompt.sample
+        prompt.input = Input(selectedText: "blablabla", application: "Xcode")
+        
+        return GeneratedView(prompt: prompt)
     }
 #endif

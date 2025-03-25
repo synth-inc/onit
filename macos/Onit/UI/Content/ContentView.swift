@@ -9,7 +9,10 @@ import Defaults
 import SwiftUI
 
 struct ContentView: View {
-    @Environment(\.model) var model
+    @Environment(\.openSettings) var openSettings
+    @Environment(\.windowState) private var state
+    
+    @Default(.mode) var mode
     @Default(.panelWidth) var panelWidth
     @Default(.isRegularApp) var isRegularApp
     
@@ -24,39 +27,71 @@ struct ContentView: View {
         return screenHeight - ContentView.bottomPadding
     }
     
-    var toolbarPaddingTop: CGFloat {
-        isRegularApp ? -28 : 0
-    }
-    
     var showFileImporterBinding: Binding<Bool> {
         Binding(
-            get: { self.model.showFileImporter },
-            set: { self.model.showFileImporter = $0 }
+            get: { state.showFileImporter },
+            set: { state.showFileImporter = $0 }
         )
     }
 
     var body: some View {
-        ZStack(alignment: .top) {
-            VStack(spacing: 0) {
-                Toolbar()
-                    .padding(.top, toolbarPaddingTop)
-                PromptDivider()
-                ChatView()
+        HStack(spacing: -TetheredButton.width / 2) {
+            if isRegularApp {
+                TetheredButton()
             }
+            
+            ZStack(alignment: .top) {
+                VStack(spacing: 0) {
+                    if !isRegularApp {
+                        Toolbar()
+                    } else {
+                        Spacer()
+                            .frame(height: 38)
+                    }
+                    PromptDivider()
+                    ChatView()
+                }
+                .opacity(state.showHistory ? 0 : 1)
+                .overlay {
+                    if state.showHistory {
+                        HistoryView()
+                    }
+                }
+            }
+            .trackScreenHeight($screenHeight)
+            .frame(minWidth: 325, idealWidth: ContentView.idealWidth, maxHeight: maxHeight)
+            .background(Color.black)
+            .overlay {
+                RoundedRectangle(cornerRadius: 14)
+                    .strokeBorder(.gray600, lineWidth: 2)
+            }
+            .clipShape(RoundedRectangle(cornerRadius: 14))
+            .edgesIgnoringSafeArea(.top)
         }
-        .background(Color.black)
         .buttonStyle(.plain)
-        .trackScreenHeight($screenHeight)
-        .frame(minWidth: 325, idealWidth: ContentView.idealWidth, maxHeight: maxHeight)
-        .overlay {
-            RoundedRectangle(cornerRadius: 14)
-                .strokeBorder(.gray600, lineWidth: 2)
-                .edgesIgnoringSafeArea(.top)
+        .toolbar {
+            ToolbarItem(placement: .navigation) {
+                if isRegularApp {
+                    ToolbarAddButton()
+                } else {
+                    EmptyView()
+                }
+            }
+            ToolbarItem(placement: .automatic) {
+                Spacer()
+            }
+            ToolbarItem(placement: .primaryAction) {
+                if isRegularApp {
+                    Toolbar()
+                } else {
+                    EmptyView()
+                }
+            }
         }
         .gesture(
             DragGesture(minimumDistance: 1)
                 .onEnded { value in
-                    if let panel = model.panel {
+                    if let panel = state.panel {
                         panelWidth = panel.frame.width
                     }
                 }
@@ -73,7 +108,7 @@ struct ContentView: View {
     private func handleFileImport(_ result: Result<[URL], any Error>) {
         switch result {
         case .success(let urls):
-            model.addContext(urls: urls)
+            state.addContext(urls: urls)
         case .failure(let error):
             print(error.localizedDescription)
         }
@@ -81,9 +116,7 @@ struct ContentView: View {
 }
 
 #if DEBUG
-    #Preview {
-        ModelContainerPreview {
-            ContentView()
-        }
-    }
+#Preview {
+    ContentView()
+}
 #endif

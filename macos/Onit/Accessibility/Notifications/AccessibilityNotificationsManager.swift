@@ -38,8 +38,6 @@ class AccessibilityNotificationsManager: ObservableObject {
 
     // MARK: - Properties
 
-    private var model: OnitModel?
-
     private var currentSource: String?
 
     private var observers: [pid_t: AXObserver] = [:]
@@ -60,10 +58,6 @@ class AccessibilityNotificationsManager: ObservableObject {
     private init() {}
 
     // MARK: - Functions
-
-    func setModel(_ model: OnitModel) {
-        self.model = model
-    }
 
     // MARK: Start / Stop
 
@@ -227,8 +221,8 @@ class AccessibilityNotificationsManager: ObservableObject {
         print("\nApplication activated: \(appName ?? "Unknown") \(processID)")
 
         currentSource = appName
-        processSelectedText(selectedText, for: selectedElement)
         handleWindowBounds(for: processID.getAXUIElement())
+        processSelectedText(selectedText, for: selectedElement)
         parseAccessibility(for: processID)
     }
 
@@ -264,8 +258,8 @@ class AccessibilityNotificationsManager: ObservableObject {
         handleExternalElement(element) { [weak self] elementPid in
             print("Focus change from pid: \(elementPid)")
 
-            self?.parseAccessibility(for: elementPid)
             self?.handleWindowBounds(for: element)
+            self?.parseAccessibility(for: elementPid)
         }
     }
 
@@ -304,7 +298,7 @@ class AccessibilityNotificationsManager: ObservableObject {
     
     private func handleWindowBounds(for element: AXUIElement) {
         handleExternalElement(element) { [weak self] elementPid in
-            if let window = element.findWindow() {
+            if let window = element.getWindows().first {
                 self?.activeWindowElement = window
             }
         }
@@ -423,7 +417,7 @@ class AccessibilityNotificationsManager: ObservableObject {
         else {
 
             selectedSource = nil
-            model?.pendingInput = nil
+            OnitPanelManager.shared.state.pendingInput = nil
             HighlightHintWindowController.shared.hide()
 
             return
@@ -435,7 +429,7 @@ class AccessibilityNotificationsManager: ObservableObject {
         let bound = selectedElement.selectedTextBound()
         HighlightHintWindowController.shared.show(bound)
 
-        model?.pendingInput = Input(selectedText: selectedText, application: currentSource ?? "")
+        OnitPanelManager.shared.state.pendingInput = Input(selectedText: selectedText, application: currentSource ?? "")
     }
 
     private func extractSelectedText(from element: AXUIElement) -> String? {
@@ -527,9 +521,7 @@ class AccessibilityNotificationsManager: ObservableObject {
             debugText += "\nNo additional data available.\n"
         }
 
-        if let model = self.model {
-            model.debugText = debugText
-        }
+        DebugManager.shared.debugText = debugText
     }
 }
 

@@ -9,11 +9,10 @@ import Defaults
 import SwiftUI
 
 struct SetUpDialogs: View {
-    @Environment(\.model) var model
+    @Environment(\.appState) var appState
     @Environment(\.remoteModels) var remoteModels
     @Environment(\.openSettings) var openSettings
-
-    
+    @Environment(\.windowState) private var state
 
     @State private var fetchingRemote = false
     @State private var fetchingLocal = false
@@ -60,16 +59,16 @@ struct SetUpDialogs: View {
                 GeometryReader { g in
                     Color.clear
                         .onAppear {
-                            model.setUpHeight = g.size.height
-                            model.adjustPanelSize()
+                            state.setUpHeight = g.size.height
+                            state.panel?.adjustSize()
                         }
                         .onChange(of: g.size.height) {
-                            model.setUpHeight = g.size.height
-                            model.adjustPanelSize()
+                            state.setUpHeight = g.size.height
+                            state.panel?.adjustSize()
                         }
                         .onDisappear {
-                            model.setUpHeight = 0
-                            model.adjustPanelSize()
+                            state.setUpHeight = 0
+                            state.panel?.adjustSize()
                         }
                 }
             }
@@ -83,7 +82,7 @@ struct SetUpDialogs: View {
     @ViewBuilder
     var content: some View {
         Group {
-            if availableRemoteModels.isEmpty && model.remoteFetchFailed && !closedNoRemoteModels {
+            if availableRemoteModels.isEmpty && appState.remoteFetchFailed && !closedNoRemoteModels {
                 noRemote
             }
             if remoteModels.remoteNeedsSetup && !closedRemote {
@@ -150,7 +149,7 @@ struct SetUpDialogs: View {
         } action: {
             Task {
                 fetchingRemote = true
-                await model.fetchRemoteModels()
+                await appState.fetchRemoteModels()
                 fetchingRemote = false
             }
         } closeAction: {
@@ -214,7 +213,6 @@ struct SetUpDialogs: View {
                 closedDeprecatedRemoteData = encoded
             }
         }
-        model.shrinkContent()
     }
 
     enum ClosureType {
@@ -246,7 +244,7 @@ struct SetUpDialogs: View {
         } action: {
             Task {
                 fetchingLocal = true
-                await model.fetchLocalModels()
+                await appState.fetchLocalModels()
                 fetchingLocal = false
             }
         } closeAction: {
@@ -257,7 +255,7 @@ struct SetUpDialogs: View {
     func settings() {
         NSApp.activate()
         if NSApp.isActive {
-            model.setSettingsTab(tab: .models)
+            appState.setSettingsTab(tab: .models)
             openSettings()
         }
     }

@@ -8,7 +8,6 @@
 import SwiftUI
 
 struct ToggleOutputsView: View {
-    //    @Environment(\.model) var model
     var prompt: Prompt
 
     var body: some View {
@@ -62,8 +61,6 @@ struct ToggleOutputsView: View {
 
 #if DEBUG
     #Preview {
-        ModelContainerPreview {
-            //        ToggleOutputsView()
-        }
+        //        ToggleOutputsView()
     }
 #endif

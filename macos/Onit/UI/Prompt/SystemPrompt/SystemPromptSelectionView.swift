@@ -9,9 +9,10 @@ import SwiftData
 import SwiftUI
 
 struct SystemPromptSelectionView: View {
-    @Environment(\.model) private var model
+    @Environment(\.appState) private var appState
     @Environment(\.modelContext) private var modelContext
     @Environment(\.openSettings) private var openSettings
+    @Environment(\.windowState) private var state
     
     @Query(sort: \SystemPrompt.timestamp, order: .reverse) var prompts: [SystemPrompt]
     
@@ -23,7 +24,7 @@ struct SystemPromptSelectionView: View {
     }
     
     private var suggestedPrompts: [SystemPrompt] {
-        model.promptSuggestionService?.suggestedPrompts ?? []
+        state.promptSuggestionService?.suggestedPrompts ?? []
     }
     
     private var allPrompts: [SystemPrompt] {
@@ -110,7 +111,7 @@ struct SystemPromptSelectionView: View {
     private var buttons: some View {
         HStack {
             Button {
-                model.setSettingsTab(tab: .prompts)
+                appState.setSettingsTab(tab: .prompts)
                 openSettings()
             } label: {
                 Label("Settings", systemImage: "message")

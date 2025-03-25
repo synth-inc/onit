@@ -8,13 +8,13 @@
 import SwiftUI
 
 struct ContextPickerView: View {
-    @Environment(\.model) var model
+    @Environment(\.windowState) private var state
 
     var body: some View {
         VStack(spacing: 4) {
             Button(action: {
                 OverlayManager.shared.dismissOverlay()
-                model.showFileImporter = true
+                state.showFileImporter = true
             }) {
                 ContextPickerItemView(
                     imageRes: .file, title: "Upload file", subtitle: "Choose from computer")
@@ -24,7 +24,7 @@ struct ContextPickerView: View {
 
             Button(action: {
                 OverlayManager.shared.dismissOverlay()
-                model.addAutoContext()
+                state.addAutoContext()
             }) {
                 ContextPickerItemView(
                     imageRes: .stars, title: "Auto-context", subtitle: "Current window activity")

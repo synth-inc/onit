@@ -9,15 +9,18 @@ import SwiftData
 import SwiftUI
 
 struct HistoryView: View {
+    @Environment(\.windowState) var windowState
     @Query(sort: \Chat.timestamp, order: .reverse) private var chats: [Chat]
 
     @State private var searchQuery: String = ""
 
     var filteredChats: [Chat] {
+        let filteredChatByPid = chats.filter { $0.windowPid == windowState.activeWindowPid }
+        
         if searchQuery.isEmpty {
-            return chats
+            return filteredChatByPid
         } else {
-            return chats.filter {
+            return filteredChatByPid.filter {
                 $0.fullText.localizedCaseInsensitiveContains(searchQuery)
             }
         }

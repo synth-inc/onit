@@ -4,7 +4,8 @@ import ServiceManagement
 import SwiftUI
 
 struct GeneralTab: View {
-    @Environment(\.model) var model
+    @Environment(\.windowState) private var state
+    
     @Default(.fontSize) var fontSize
     @Default(.lineHeight) var lineHeight
     @Default(.panelPosition) var panelPosition
@@ -12,7 +13,7 @@ struct GeneralTab: View {
     @Default(.launchShortcutToggleEnabled) var launchShortcutToggleEnabled
     @Default(.createNewChatOnPanelOpen) var createNewChatOnPanelOpen
     @Default(.openOnMouseMonitor) var openOnMouseMonitor
-
+    
     @State var isLaunchAtStartupEnabled: Bool = SMAppService.mainApp.status == .enabled
     @State var isAnalyticsEnabled: Bool = PostHogSDK.shared.isOptOut() == false
     
@@ -135,7 +136,7 @@ struct GeneralTab: View {
                         ForEach(PanelPosition.allCases, id: \.self) { position in
                             Button {
                                 panelPosition = position
-                                model.updatePanelPosition()
+                                state.panel?.updatePosition()
                             } label: {
                                 VStack(spacing: 4) {
                                     Image(systemName: position.systemImage)
@@ -185,8 +186,7 @@ struct GeneralTab: View {
                 }
                 // Re-draw the panel on change
                 .onChange(of: isRegularApp, initial: false) {
-                    model.closePanel()
-                    model.showPanel()
+                    OnitPanelManager.shared.setAppAsRegular(isRegularApp)
                 }
 
                 HStack {

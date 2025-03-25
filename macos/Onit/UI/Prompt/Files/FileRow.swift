@@ -37,8 +37,6 @@ struct FileRow: View {
 
 #if DEBUG
     #Preview {
-        ModelContainerPreview {
-            FileRow(contextList: [])
-        }
+        FileRow(contextList: [])
     }
 #endif

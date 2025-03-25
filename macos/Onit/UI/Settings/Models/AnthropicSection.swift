@@ -9,8 +9,6 @@ import Defaults
 import SwiftUI
 
 struct AnthropicSection: View {
-    @Environment(\.model) var model
-
     @State private var anthropicKey: String = ""
     @State private var showAnthropicKey: Bool = false
 
@@ -18,6 +16,8 @@ struct AnthropicSection: View {
     @Default(.visibleModelIds) var visibleModelIds
     @Default(.isAnthropicTokenValidated) var isAnthropicTokenValidated
     @Default(.anthropicToken) var anthropicToken
+    
+    private let tokenManager = TokenValidationManager.shared
 
     var visibleModelsList: [AIModel] {
         availableRemoteModels
@@ -45,11 +45,11 @@ struct AnthropicSection: View {
                 Button(action: {
                     guard !anthropicKey.isEmpty else { return }
                     Task {
-                        await model.validateToken(
+                        await tokenManager.validateToken(
                             provider: AIModel.ModelProvider.anthropic, token: anthropicKey)
                     }
                 }) {
-                    switch model.tokenValidation.state(for: AIModel.ModelProvider.anthropic) {
+                    switch tokenManager.tokenValidation.state(for: AIModel.ModelProvider.anthropic) {
                     case .notValidated:
                         Text("Validate")
                     case .validating:
@@ -65,11 +65,11 @@ struct AnthropicSection: View {
                 }
                 .disabled(
                     anthropicKey.isEmpty
-                        || model.tokenValidation.state(for: AIModel.ModelProvider.anthropic)
+                        || tokenManager.tokenValidation.state(for: AIModel.ModelProvider.anthropic)
                             .isValidating
                 )
             }
-            if case .invalid(let error) = model.tokenValidation.state(for: .anthropic) {
+            if case .invalid(let error) = tokenManager.tokenValidation.state(for: .anthropic) {
                 Text(error.localizedDescription)
                     .font(.caption)
                     .foregroundStyle(.red)

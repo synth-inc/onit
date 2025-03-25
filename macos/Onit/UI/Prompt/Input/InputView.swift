@@ -37,8 +37,6 @@ struct InputView: View {
 
 #if DEBUG
     #Preview {
-        ModelContainerPreview {
-            InputView(input: .sample)
-        }
+        InputView(input: .sample)
     }
 #endif

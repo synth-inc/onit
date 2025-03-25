@@ -13,10 +13,10 @@ import SwiftData
 @MainActor
 struct KeyboardShortcutsManager {
     
-    static func configure(model: OnitModel) {
-        registerSettingsShortcuts(model: model)
+    static func configure() {
+        registerSettingsShortcuts()
         
-        registerSystemPromptsShortcuts(modelContainer: model.container)
+        registerSystemPromptsShortcuts()
     }
     
     static func register(systemPrompt: SystemPrompt) {
@@ -70,38 +70,37 @@ struct KeyboardShortcutsManager {
     // MARK: - Private functions
     
     /// Registering keyboard shortcuts specified in Settings/Shortcuts
-    /// - parameter model: Instance of `OnitModel`
-    private static func registerSettingsShortcuts(model: OnitModel) {
+    private static func registerSettingsShortcuts() {
+        
         KeyboardShortcuts.Name.allCases.forEach { name in
             KeyboardShortcuts.onKeyUp(for: name) {
+                let state = OnitPanelManager.shared.state
+                
                 switch name {
                 case .launch:
                     let eventProperties: [String: Any] = [
-                        "app_hidden": model.panel == nil,
+                        "app_hidden": state.panel == nil,
                         "highlight_hint_visible": HighlightHintWindowController.shared.isVisible(),
                         "highlight_hint_mode": FeatureFlagManager.shared.highlightHintMode,
                     ]
                     PostHogSDK.shared.capture("shortcut_launch", properties: eventProperties)
-
-                    model.launchShortcutAction()
+                    state.launchPanel()
                 case .launchWithAutoContext:
                     let eventProperties: [String: Any] = [
-                        "app_hidden": model.panel == nil
+                        "app_hidden": state.panel == nil
                     ]
                     PostHogSDK.shared.capture(
                         "shortcut_launch_with_auto_context", properties: eventProperties)
-                    model.addAutoContext()
-                    if (model.panel == nil) {
-                        model.launchPanel()
-                    }
+                    state.addAutoContext()
+                    state.launchPanel()
                 case .escape:
-                    model.escapeAction()
+                    state.escapeAction()
                 case .newChat:
-                    model.newChat()
+                    state.newChat()
                 case .resizeWindow:
-                    model.resizeWindow()
+                    state.panel?.toggleFullscreen()
                 case .toggleLocalMode:
-                    model.toggleLocalVsRemoteShortcutAction()
+                    Defaults[.mode] = Defaults[.mode] == .local ? .remote : .local
                 default:
                     print("KeyboardShortcut not handled: \(name)")
                 }
@@ -115,8 +114,9 @@ struct KeyboardShortcutsManager {
     }
     
     /// Registering keyboard shortcuts for all stored `SystemPrompt`
-    /// - parameter modelContainer: ModelContainer used to query SwiftData
-    private static func registerSystemPromptsShortcuts(modelContainer: ModelContainer) {
+    private static func registerSystemPromptsShortcuts() {
+        let modelContainer = SwiftDataContainer.appContainer
+        
         do {
             let storedPrompts = try modelContainer.mainContext.fetch(FetchDescriptor<SystemPrompt>())
             

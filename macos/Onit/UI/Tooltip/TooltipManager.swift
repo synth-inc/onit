@@ -1,14 +1,30 @@
 //
-//  Model+Tooltip.swift
+//  TooltipManager.swift
 //  Onit
 //
-//  Created by Benjamin Sage on 10/29/24.
+//  Created by Kévin Naudin on 02/04/2025.
 //
 
-import AppKit
 import SwiftUI
 
-extension OnitModel {
+@MainActor
+class TooltipManager {
+    
+    // MARK: - Singleton
+    
+    static let shared = TooltipManager()
+    
+    // MARK: - Properties
+    
+    var tooltipWindow: NSWindow?
+    var tooltip: Tooltip?
+    var tooltipTask: Task<Void, Never>?
+    var tooltipWidth: CGFloat = 0
+    var tooltipHeight: CGFloat = 0
+    var isTooltipActive = false
+    
+    // MARK: - Functions
+    
     func setTooltip(_ tooltip: Tooltip?, immediate: Bool = false) {
         tooltipTask?.cancel()
 
@@ -17,7 +33,6 @@ extension OnitModel {
                 resetTooltip(tooltip)
                 updateTooltipWindowSize()
                 moveTooltip()
-                showTooltip = true
                 showWindowWithoutAnimation()
             } else {
                 tooltipTask = Task {
@@ -27,7 +42,6 @@ extension OnitModel {
                     setupTooltip(tooltip)
                     updateTooltipWindowSize()
                     moveTooltip()
-                    showTooltip = true
                     showWindowWithoutAnimation()
                 }
             }
@@ -36,7 +50,6 @@ extension OnitModel {
                 try? await Task.sleep(for: .seconds(immediate ? 0 : 0.2))
                 if Task.isCancelled { return }
                 isTooltipActive = false
-                showTooltip = false
                 if immediate {
                     hideWindowWithoutAnimation()
                 } else {
@@ -118,7 +131,7 @@ extension OnitModel {
     func showWindowWithoutAnimation() {
         guard let tooltipWindow = self.tooltipWindow else { return }
         tooltipWindow.alphaValue = 1.0
-        tooltipWindow.makeKeyAndOrderFront(nil)
+        tooltipWindow.orderFront(nil)
     }
 
     func hideWindowWithAnimation() {
@@ -154,7 +167,7 @@ extension OnitModel {
 
         // Set initial state
         tooltipWindow.alphaValue = 0.0
-        tooltipWindow.makeKeyAndOrderFront(nil)
+        tooltipWindow.orderFront(nil)
 
         NSAnimationContext.runAnimationGroup { context in
             context.duration = 0.3  // Adjust duration as needed

@@ -9,7 +9,8 @@ import Defaults
 import SwiftUI
 
 struct ChatsView: View {
-    @Environment(\.model) var model
+    @Environment(\.windowState) private var state
+    
     @Default(.isPanelExpanded) var isPanelExpanded: Bool
     @Default(.isRegularApp) var isRegularApp: Bool
     
@@ -20,15 +21,15 @@ struct ChatsView: View {
     @State private var scrollTask: Task<Void, Never>?
     
     private var chatsID: Int? {
-        model.currentChat?.hashValue
+        state.currentChat?.hashValue
     }
     
     var maxHeight: CGFloat {
-        guard !model.resizing, screenHeight != 0 else { return 0 }
+        guard screenHeight != 0 else { return 0 }
         
-        let availableHeight = screenHeight - model.headerHeight -
-        model.inputHeight - model.setUpHeight -
-        model.systemPromptHeight - ContentView.bottomPadding
+        let availableHeight = screenHeight - state.headerHeight -
+        state.inputHeight - state.setUpHeight -
+        state.systemPromptHeight - ContentView.bottomPadding
         
         return availableHeight
     }
@@ -61,7 +62,7 @@ struct ChatsView: View {
         ScrollViewReader { proxy in
             ScrollView {
                 LazyVStack(spacing: -16) {
-                    ForEach(model.currentPrompts ?? []) { prompt in
+                    ForEach(state.currentPrompts ?? []) { prompt in
                         PromptView(prompt: prompt)
                     }
                 }
@@ -75,10 +76,10 @@ struct ChatsView: View {
                 maxHeight: maxHeight,
                 alignment: .top
             )
-            .onChange(of: model.currentPrompts?.count) { _, _ in
+            .onChange(of: state.currentPrompts?.count) { _, _ in
                 scrollToBottom(using: proxy)
             }
-            .onChange(of: model.currentChat) { old, new in
+            .onChange(of: state.currentChat) { old, new in
                 if old == nil && new != nil {
                     return
                 }
@@ -95,7 +96,7 @@ struct ChatsView: View {
                     contentHeight = proxy.size.height
                     
                     if oldHeight != realHeight {
-                        model.adjustPanelSize()
+                        state.panel?.adjustSize()
                     } else {
                         scrollToBottom(using: scrollProxy)
                     }
@@ -105,7 +106,7 @@ struct ChatsView: View {
                     contentHeight = newHeight
                     
                     if oldHeight != realHeight {
-                        model.adjustPanelSize()
+                        state.panel?.adjustSize()
                     } else {
                         scrollToBottom(using: scrollProxy)
                     }

@@ -8,7 +8,8 @@
 import SwiftUI
 
 struct ChatSystemPromptView: View {
-    @Environment(\.model) var model
+    @Environment(\.windowState) private var state
+    
     @State var isExpanded: Bool = false
     @State private var contentHeight: CGFloat = 0
     
@@ -100,7 +101,7 @@ struct ChatSystemPromptView: View {
                                     .foregroundStyle(.blue300)
                                     .underline()
                                     .onTapGesture {
-                                        model.newChat(shouldSystemPrompt: true)
+                                        state.newChat(shouldSystemPrompt: true)
                                     }
                             }
                         }
@@ -120,13 +121,13 @@ struct ChatSystemPromptView: View {
             GeometryReader { g in
                 Color.clear
                     .onAppear {
-                        model.systemPromptHeight = g.size.height
+                        state.systemPromptHeight = g.size.height
                     }
                     .onChange(of: g.size.height) { _, new in
-                        model.systemPromptHeight = new
+                        state.systemPromptHeight = new
                     }
                     .onDisappear {
-                        model.systemPromptHeight = 0
+                        state.systemPromptHeight = 0
                     }
             }
         }

@@ -9,7 +9,7 @@ import Defaults
 import SwiftUI
 
 struct ModelSelectionView: View {
-    @Environment(\.model) var model
+    @Environment(\.appState) var appState
     @Environment(\.openSettings) var openSettings
     @Environment(\.remoteModels) var remoteModels
 
@@ -87,7 +87,7 @@ struct ModelSelectionView: View {
 
             if remoteModels.listedModels.isEmpty {
                 Button("Setup remote models") {
-                    model.settingsTab = .models
+                    appState.settingsTab = .models
                     openSettings()
                 }
                 .buttonStyle(SetUpButtonStyle(showArrow: true))
@@ -119,7 +119,7 @@ struct ModelSelectionView: View {
 
             if remoteModels.listedModels.isEmpty {
                 Button("Setup remote models") {
-                    model.settingsTab = .models
+                    appState.settingsTab = .models
                     openSettings()
                 }
                 .buttonStyle(SetUpButtonStyle(showArrow: true))
@@ -177,7 +177,7 @@ struct ModelSelectionView: View {
 
             if availableLocalModels.isEmpty {
                 Button("Setup local models") {
-                    model.settingsTab = .models
+                    appState.settingsTab = .models
                     openSettings()
                 }
                 .buttonStyle(SetUpButtonStyle(showArrow: true))
@@ -228,7 +228,7 @@ struct ModelSelectionView: View {
         Button {
             NSApp.activate()
             if NSApp.isActive {
-                model.setSettingsTab(tab: .models)
+                appState.setSettingsTab(tab: .models)
                 openSettings()
                 OverlayManager.shared.dismissOverlay()
             }

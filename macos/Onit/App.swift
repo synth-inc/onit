@@ -15,8 +15,10 @@ import SwiftUI
 
 @main
 struct App: SwiftUI.App {
-    @Environment(\.model) var model
+    @Environment(\.appState) var appState
     @NSApplicationDelegateAdaptor(AppDelegate.self) var delegate
+    @ObservedObject private var debugManager = DebugManager.shared
+    @ObservedObject private var accessibilityPermissionManager = AccessibilityPermissionManager.shared
     @ObservedObject private var featureFlagsManager = FeatureFlagManager.shared
 
     @Default(.isRegularApp) var isRegularApp
@@ -29,24 +31,19 @@ struct App: SwiftUI.App {
     init() {
         frontmostApplicationOnLaunch = NSWorkspace.shared.frontmostApplication
         
-        KeyboardShortcutsManager.configure(model: model)
+        KeyboardShortcutsManager.configure()
         featureFlagsManager.configure()
         
         // For testing new user experience
         // clearTokens()
-        model.showPanel()
-
-        #if !targetEnvironment(simulator)
-        AccessibilityPermissionManager.shared.setModel(model)
-        AccessibilityNotificationsManager.shared.setModel(model)
-
-        SplitViewManager.shared.configure(model: model)
-        SplitViewManager.shared.startObserving()
-        #endif
+        
+        if !isRegularApp {
+            OnitPanelManager.shared.state.launchPanel()
+        }
     }
 
     var body: some Scene {
-        @Bindable var model = model
+        @Bindable var appState = appState
 
         MenuBarExtra {
             MenuBarContent()
@@ -56,16 +53,20 @@ struct App: SwiftUI.App {
                     checkLaunchOnStartup()
                     toggleUIElementMode(enable: isRegularApp)
                 }
-                .onChange(of: model.accessibilityPermissionStatus, initial: true) {
+                .onChange(of: accessibilityPermissionManager.accessibilityPermissionStatus, initial: true) {
                     _, newValue in
                     AccessibilityAnalytics.logPermission(local: newValue)
                     
                     switch newValue {
                     case .granted:
                         AccessibilityNotificationsManager.shared.start(pid: frontmostApplicationOnLaunch?.processIdentifier)
+                        OnitPanelManager.shared.startObserving()
+                        TetherAppsManager.shared.startObserving()
                         TapListener.shared.start()
                     case .denied:
                         AccessibilityNotificationsManager.shared.stop()
+                        OnitPanelManager.shared.stopObserving()
+                        TetherAppsManager.shared.stopObserving()
                         TapListener.shared.stop()
                     default:
                         break
@@ -90,11 +91,11 @@ struct App: SwiftUI.App {
                 ], initial: true) { oldValue, newValue in
                     AccessibilityAnalytics.logFlags()
                 }
-                .onChange(of: model.showDebugWindow, initial: true) { oldValue, newValue in
+                .onChange(of: debugManager.showDebugWindow, initial: true) { oldValue, newValue in
                     if newValue {
-                        model.openDebugWindow()
+                        debugManager.openDebugWindow()
                     } else {
-                        model.closeDebugWindow()
+                        debugManager.closeDebugWindow()
                     }
                 }
                 .onChange(of: isRegularApp) { _, newValue in
@@ -102,12 +103,12 @@ struct App: SwiftUI.App {
                 }
         }
         .menuBarExtraStyle(.window)
-        .menuBarExtraAccess(isPresented: $model.showMenuBarExtra)
+        .menuBarExtraAccess(isPresented: $appState.showMenuBarExtra)
         .commands {}
 
         Settings {
             SettingsView()
-                .modelContainer(model.container)
+                .modelContainer(SwiftDataContainer.appContainer)
                 .onAppear {
                     if let window = NSApplication.shared.windows.first(where: {
                         $0.contentViewController is NSHostingController<SettingsView>

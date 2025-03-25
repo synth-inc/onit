@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct ContextItem: View {
-    @Environment(\.model) var model
+    @Environment(\.windowState) private var state
 
     var item: Context
     var isEditing: Bool = true
@@ -23,7 +23,7 @@ struct ContextItem: View {
                 )
             case .auto:
                 Button {
-                    model.showContextWindow(context: item)
+                    ContextWindowsManager.shared.showContextWindow(windowState: state, context: item)
                 } label: {
                     contentView
                 }
@@ -85,8 +85,8 @@ struct ContextItem: View {
 
     var xButton: some View {
         Button {
-            model.closeContextWindow(context: item)
-            model.removeContext(context: item)
+            ContextWindowsManager.shared.closeContextWindow(context: item)
+            state.removeContext(context: item)
         } label: {
             Color.clear
                 .frame(width: 16, height: 16)
@@ -99,8 +99,6 @@ struct ContextItem: View {
 
 #if DEBUG
     #Preview {
-        ModelContainerPreview {
-            ContextItem(item: .file(URL(fileURLWithPath: "")))
-        }
+        ContextItem(item: .file(URL(fileURLWithPath: "")))
     }
 #endif

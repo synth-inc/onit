@@ -1,11 +1,11 @@
 //
-//  Model+History.swift
+//  OnitPanelState+History.swift
 //  Onit
 //
 //  Created by Loyd Kim on 3/31/25.
 //
 
-extension OnitModel {
+extension OnitPanelState {
     func setChat(chat: Chat, index: Int) {
         currentChat = chat
         currentPrompts = chat.prompts

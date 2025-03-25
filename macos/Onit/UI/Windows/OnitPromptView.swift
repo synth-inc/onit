@@ -9,14 +9,17 @@ import KeyboardShortcuts
 import SwiftUI
 
 struct OnitPromptView: View {
-    @Environment(\.model) var model
+    
+    private var state: OnitPanelState {
+        OnitPanelManager.shared.state
+    }
 
     var shortcut: KeyboardShortcut? {
         KeyboardShortcuts.getShortcut(for: .launch)?.native
     }
 
     var body: some View {
-        if model.panel == nil {
+        if state.panel == nil {
             HStack(spacing: 3) {
                 Image(.smirk)
                     .resizable()
@@ -34,7 +37,7 @@ struct OnitPromptView: View {
             }
             .padding(.vertical, 5)
             .onTapGesture {
-                model.launchPanel()
+                state.launchPanel()
             }
         }
     }
