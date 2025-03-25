@@ -39,10 +39,16 @@ struct TextInputView: View {
     private let recordingSpacesCount = 8
 
     @State private var transcriptionTask: Task<Void, Never>? = nil
+    
+    @State private var webSearchEnabled = false
+    @State private var isSearching = false
+    @State private var showingSearchErrorAlert = false
+    @State private var searchErrorMessage = ""
 
     var body: some View {
         HStack(alignment: .bottom) {
             textField
+            webSearchButton
             microphoneButton
             sendButton
         }
@@ -82,6 +88,11 @@ struct TextInputView: View {
         } message: {
             Text("Onit needs access to your microphone for voice input. Please enable it in System Settings.")
         }
+        .alert("Web Search Error", isPresented: $showingSearchErrorAlert) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text(searchErrorMessage)
+        }
         .alert("Recording Error", isPresented: Binding<Bool>(
             get: { audioRecorder.recordingError != nil },
             set: { if !$0 { audioRecorder.clearError() } }
@@ -92,6 +103,19 @@ struct TextInputView: View {
         } message: {
             Text(audioRecorder.recordingError?.localizedDescription ?? "An unknown error occurred")
         }
+    }
+    
+    var webSearchButton: some View {
+        Button(action: toggleWebSearch) {
+            Image(systemName: "magnifyingglass")
+                .resizable()
+                .renderingMode(.template)
+                .foregroundStyle(webSearchEnabled ? Color.blue400 : Color.gray200)
+                .frame(width: 20, height: 20)
+        }
+        .buttonStyle(.plain)
+        .disabled(isSearching)
+        .help(webSearchEnabled ? "Disable web search" : "Enable web search")
     }
     
     var microphoneButton: some View {
@@ -274,22 +298,86 @@ struct TextInputView: View {
         
         guard !inputText.isEmpty else { return }
         
-        model.createAndSavePrompt()
+        if webSearchEnabled {
+            performWebSearch(query: inputText)
+        } else {
+            model.createAndSavePrompt()
+        }
+    }
+    
+    func performWebSearch(query: String) {
+        isSearching = true
+        
+        // Create conversation history for context
+        var history: [[String]] = []
+        if let currentChat = model.currentChat {
+            for prompt in currentChat.prompts {
+                history.append(["human", prompt.instruction])
+                if let response = prompt.responses.last?.text {
+                    history.append(["assistant", response])
+                }
+            }
+        }
+        
+        Task {
+            do {
+                let webSearchService = WebSearchService()
+                let result = try await webSearchService.search(query: query, history: history)
+                
+                // Create a context from the search results
+                let searchResultsContent = createSearchResultsContent(result)
+                
+                // Add the search results to the context
+                let context = Context(appName: "Web Search", appContent: ["results": searchResultsContent])
+                model.pendingContextList.append(context)
+                
+                // Now create and save the prompt with the search context
+                await MainActor.run {
+                    isSearching = false
+                    model.createAndSavePrompt()
+                }
+            } catch {
+                await MainActor.run {
+                    isSearching = false
+                    searchErrorMessage = "Web search failed: \(error.localizedDescription)"
+                    showingSearchErrorAlert = true
+                    
+                    // If search fails, still send the prompt without search context
+                    model.createAndSavePrompt()
+                }
+            }
+        }
+    }
+    
+    func createSearchResultsContent(_ result: WebSearchResult) -> String {
+        var content = result.message + "\n\nSources:\n"
+        
+        for (index, source) in result.sources.enumerated() {
+            content += "[\(index + 1)] \(source.metadata.title) - \(source.metadata.url)\n"
+        }
+        
+        return content
     }
 
     var sendButton: some View {
         Button(action: sendAction) {
-            Image(mode == .local ? .circleArrowUpDotted : .circleArrowUp)
-                .resizable()
-                .renderingMode(.template)
-                .foregroundStyle(
-                    (model.pendingInstruction.isEmpty)
-                        ? Color.gray700 : (mode == .local ? .limeGreen : Color.blue400)
-                )
-                .frame(width: 22, height: 22, alignment: .center)
+            if isSearching {
+                ProgressView()
+                    .progressViewStyle(CircularProgressViewStyle())
+                    .frame(width: 22, height: 22, alignment: .center)
+            } else {
+                Image(mode == .local ? .circleArrowUpDotted : .circleArrowUp)
+                    .resizable()
+                    .renderingMode(.template)
+                    .foregroundStyle(
+                        (model.pendingInstruction.isEmpty)
+                            ? Color.gray700 : (mode == .local ? .limeGreen : Color.blue400)
+                    )
+                    .frame(width: 22, height: 22, alignment: .center)
+            }
         }
         .buttonStyle(.plain)
-        .disabled(model.pendingInstruction.isEmpty)
+        .disabled(model.pendingInstruction.isEmpty || isSearching)
         .keyboardShortcut(.return, modifiers: [])
     }
 
@@ -335,6 +423,10 @@ struct TextInputView: View {
         .keyboardShortcut("n")
     }
 
+    func toggleWebSearch() {
+        webSearchEnabled.toggle()
+    }
+    
     func cancelRecording() {
         if let monitor = eventMonitor {
             NSEvent.removeMonitor(monitor)
