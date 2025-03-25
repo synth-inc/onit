@@ -270,11 +270,6 @@ import SwiftUI
         isPerformingWebSearch = false
     }
     
-    func removeContext(context: Context) {
-        if let index = pendingContextList.firstIndex(of: context) {
-            pendingContextList.remove(at: index)
-        }
-    }
 }
 
 extension String {
