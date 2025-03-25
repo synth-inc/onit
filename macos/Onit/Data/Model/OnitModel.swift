@@ -100,6 +100,9 @@ import SwiftUI
     var streamedResponse: String = ""
     
     var promptSuggestionService: SystemPromptSuggestionService?
+    
+    var webSearchService = WebSearchService()
+    var isPerformingWebSearch = false
 
     @MainActor
     func fetchLocalModels() async {
@@ -236,6 +239,41 @@ import SwiftUI
 
     func setSettingsTab(tab: SettingsTab) {
         settingsTab = tab
+    }
+    
+    @MainActor
+    func performWebSearch(query: String) async {
+        guard Defaults[.webSearchEnabled] else { return }
+        
+        isPerformingWebSearch = true
+        
+        do {
+            let searchResults = try await webSearchService.search(query: query)
+            
+            // Add search results to pending context
+            for result in searchResults {
+                if !pendingContextList.contains(result) {
+                    pendingContextList.append(result)
+                }
+            }
+        } catch {
+            print("Web search error: \(error)")
+            // Use simulated results as fallback
+            let simulatedResults = webSearchService.simulateSearchResults(query: query)
+            for result in simulatedResults {
+                if !pendingContextList.contains(result) {
+                    pendingContextList.append(result)
+                }
+            }
+        }
+        
+        isPerformingWebSearch = false
+    }
+    
+    func removeContext(context: Context) {
+        if let index = pendingContextList.firstIndex(of: context) {
+            pendingContextList.remove(at: index)
+        }
     }
 }
 

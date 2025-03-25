@@ -40,9 +40,12 @@ struct TextInputView: View {
 
     @State private var transcriptionTask: Task<Void, Never>? = nil
 
+    @Default(.webSearchEnabled) var webSearchEnabled
+    
     var body: some View {
         HStack(alignment: .bottom) {
             textField
+            webSearchButton
             microphoneButton
             sendButton
         }
@@ -92,6 +95,39 @@ struct TextInputView: View {
         } message: {
             Text(audioRecorder.recordingError?.localizedDescription ?? "An unknown error occurred")
         }
+    }
+    
+    var webSearchButton: some View {
+        Button(action: toggleWebSearch) {
+            if model.isPerformingWebSearch {
+                ProgressView()
+                    .scaleEffect(0.7)
+                    .frame(width: 20, height: 20)
+            } else {
+                Image(systemName: "magnifyingglass")
+                    .resizable()
+                    .renderingMode(.template)
+                    .foregroundStyle(webSearchEnabled ? Color.blue400 : Color.gray200)
+                    .frame(width: 20, height: 20)
+            }
+        }
+        .buttonStyle(.plain)
+        .disabled(model.isPerformingWebSearch)
+        .help(webSearchButtonHelpText)
+    }
+    
+    private var webSearchButtonHelpText: String {
+        if model.isPerformingWebSearch {
+            return "Searching the web..."
+        } else if webSearchEnabled {
+            return "Web search enabled"
+        } else {
+            return "Enable web search"
+        }
+    }
+    
+    func toggleWebSearch() {
+        webSearchEnabled.toggle()
     }
     
     var microphoneButton: some View {
@@ -274,7 +310,16 @@ struct TextInputView: View {
         
         guard !inputText.isEmpty else { return }
         
-        model.createAndSavePrompt()
+        if webSearchEnabled {
+            Task {
+                await model.performWebSearch(query: inputText)
+                await MainActor.run {
+                    model.createAndSavePrompt()
+                }
+            }
+        } else {
+            model.createAndSavePrompt()
+        }
     }
 
     var sendButton: some View {
@@ -283,13 +328,13 @@ struct TextInputView: View {
                 .resizable()
                 .renderingMode(.template)
                 .foregroundStyle(
-                    (model.pendingInstruction.isEmpty)
+                    (model.pendingInstruction.isEmpty || model.isPerformingWebSearch)
                         ? Color.gray700 : (mode == .local ? .limeGreen : Color.blue400)
                 )
                 .frame(width: 22, height: 22, alignment: .center)
         }
         .buttonStyle(.plain)
-        .disabled(model.pendingInstruction.isEmpty)
+        .disabled(model.pendingInstruction.isEmpty || model.isPerformingWebSearch)
         .keyboardShortcut(.return, modifiers: [])
     }
 

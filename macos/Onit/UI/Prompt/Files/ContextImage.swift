@@ -18,6 +18,8 @@ struct ContextImage: View {
             image(url: url)
         case .file:
             file
+        case .webSearch:
+            webSearch
         default:
             warning
         }
@@ -55,6 +57,13 @@ struct ContextImage: View {
             }
     }
 
+    var webSearch: some View {
+        Image(systemName: "globe")
+            .resizable()
+            .frame(width: 20, height: 20)
+            .foregroundStyle(Color.blue400)
+    }
+    
     var warning: some View {
         Image(.warning)
             .resizable()

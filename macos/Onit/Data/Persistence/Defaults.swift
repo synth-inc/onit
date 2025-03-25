@@ -108,6 +108,9 @@ extension Defaults.Keys {
 
     // System prompts
     static let systemPromptId = Key<String>("systemPromptId", default: SystemPrompt.outputOnly.id)
+    
+    // Web search
+    static let webSearchEnabled = Key<Bool>("webSearchEnabled", default: false)
 }
 
 extension NSRect: Defaults.Serializable {

@@ -13,13 +13,14 @@ enum Context {
     case image(URL)
     case tooBig(URL)
     case error(URL, Error)
+    case webSearch(String, String) // (title, content)
 
     static let maxFileSize: Int = 1024 * 1024 * 1
     static let maxImageSize: Int = 1024 * 1024 * 20
 
     var url: URL? {
         switch self {
-        case .auto:
+        case .auto, .webSearch:
             return nil
         case .file(let url), .image(let url), .tooBig(let url), .error(let url, _):
             return url
@@ -34,6 +35,8 @@ enum Context {
             "file"
         case .image:
             "Img"
+        case .webSearch:
+            "Web"
         default:
             nil
         }
@@ -41,7 +44,7 @@ enum Context {
 
     var isAutoContext: Bool {
         switch self {
-        case .auto:
+        case .auto, .webSearch:
             return true
         default:
             return false
@@ -72,11 +75,11 @@ extension Context {
 
 extension Context: Codable {
     enum CodingKeys: String, CodingKey {
-        case appName, appContent, type, url, error
+        case appName, appContent, type, url, error, title, content
     }
 
     enum ContextType: String, Codable {
-        case auto, file, image, tooBig, error
+        case auto, file, image, tooBig, error, webSearch
     }
 
     init(from decoder: Decoder) throws {
@@ -103,6 +106,10 @@ extension Context: Codable {
             let error = NSError(
                 domain: "", code: 0, userInfo: [NSLocalizedDescriptionKey: errorDescription])
             self = .error(url, error)
+        case .webSearch:
+            let title = try container.decode(String.self, forKey: .title)
+            let content = try container.decode(String.self, forKey: .content)
+            self = .webSearch(title, content)
         }
     }
 
@@ -128,6 +135,10 @@ extension Context: Codable {
             try container.encode(ContextType.error, forKey: .type)
             let errorDescription = (error as NSError).localizedDescription
             try container.encode(errorDescription, forKey: .error)
+        case .webSearch(let title, let content):
+            try container.encode(title, forKey: .title)
+            try container.encode(content, forKey: .content)
+            try container.encode(ContextType.webSearch, forKey: .type)
         }
     }
 }
@@ -143,6 +154,8 @@ extension Context: Equatable, Hashable {
             return url1 == url2
         case (.auto(let appName1, let content1), .auto(let appName2, let content2)):
             return appName1 == appName2 && content1 == content2
+        case (.webSearch(let title1, let content1), .webSearch(let title2, let content2)):
+            return title1 == title2 && content1 == content2
         default:
             return false
         }
@@ -155,6 +168,9 @@ extension Context: Equatable, Hashable {
         case .auto(let appName, let appContent):
             hasher.combine(appName)
             hasher.combine(appContent)
+        case .webSearch(let title, let content):
+            hasher.combine(title)
+            hasher.combine(content)
         }
     }
 }
@@ -202,6 +218,17 @@ extension [Context] {
             }
         }
     }
+    
+    var webSearchResults: [(title: String, content: String)] {
+        compactMap {
+            switch $0 {
+            case .webSearch(let title, let content):
+                return (title, content)
+            default:
+                return nil
+            }
+        }
+    }
 
     var autoContexts: [String: String] {
         var result: [String: String] = [:]
@@ -217,6 +244,13 @@ extension [Context] {
                     result[appName] = contentString
                 }
             }
+        }
+        
+        // Add web search results
+        let webResults = webSearchResults
+        if !webResults.isEmpty {
+            let webContent = webResults.map { "Title: \($0.title)\nContent: \($0.content)" }.joined(separator: "\n\n")
+            result["Web Search"] = webContent
         }
         
         return result

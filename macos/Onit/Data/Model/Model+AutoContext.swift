@@ -13,14 +13,14 @@ extension OnitModel {
 
     /**
      * Display the AutoContext's window
-     * - parameter context: `Context` with `.auto` type
+     * - parameter context: `Context` with `.auto` or `.webSearch` type
      */
     func showAutoContextWindow(context: Context) {
         if let controller = autoContextWindowControllers[context] {
             controller.bringToFront()
         } else {
             guard let controller = AutoContextWindowController(model: self, context: context) else {
-                /** Skip when context isn't `.auto` */
+                /** Skip when context isn't `.auto` or `.webSearch` */
                 return
             }
 
