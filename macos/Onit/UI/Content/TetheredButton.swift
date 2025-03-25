@@ -16,6 +16,14 @@ struct TetheredButton: View {
     
     @Default(.fitActiveWindow) var fitActiveWindow
     
+    static let width: CGFloat = 16
+    static let height: CGFloat = 42
+    
+    var onDrag: ((CGFloat) -> Void)?
+    
+    @State private var isDragging = false
+    @State private var dragStartTime: Date?
+    
     private var isAccessibilityFlagsEnabled: Bool {
         featureFlagsManager.accessibility && featureFlagsManager.accessibilityAutoContext
     }
@@ -43,6 +51,8 @@ struct TetheredButton: View {
             Spacer()
             
             Button(action: {
+                guard !isDragging else { return }
+                
                 guard isAccessibilityFlagsEnabled else {
                     model.setSettingsTab(tab: .accessibility)
                     openSettings()
@@ -54,12 +64,13 @@ struct TetheredButton: View {
                 }
                 
                 fitActiveWindow.toggle()
+                model.launchPanel()
             }) {
                 Image(.smallChevRight)
                     .renderingMode(.template)
                     .foregroundColor(.white)
                     .rotationEffect(fitActiveWindow ? .degrees(0) : .degrees(180))
-                    .frame(width: ContentView.fitActiveWindowWidth, height: 42, alignment: .center)
+                    .frame(width: TetheredButton.width, height: TetheredButton.height, alignment: .center)
                     .overlay(
                         Group {
                             if !isAccessibilityFlagsEnabled || !isAccessibilityAuthorized {
@@ -79,10 +90,31 @@ struct TetheredButton: View {
                     )
             }
             .background {
-                RoundedRectangle(cornerRadius: ContentView.fitActiveWindowWidth / 2)
+                RoundedRectangle(cornerRadius: TetheredButton.width / 2)
                     .fill(.black)
             }
             .tooltip(prompt: fitActiveWindowPrompt)
+            .simultaneousGesture(
+                DragGesture()
+                    .onChanged { value in
+                        if dragStartTime == nil {
+                            dragStartTime = Date()
+                        }
+                        
+                        if let startTime = dragStartTime,
+                           Date().timeIntervalSince(startTime) > 0.1 {
+                            isDragging = true
+                            onDrag?(value.translation.height)
+                        }
+                    }
+                    .onEnded { value in
+                        dragStartTime = nil
+                        
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                            isDragging = false
+                        }
+                    }
+            )
                 
             Spacer()
         }

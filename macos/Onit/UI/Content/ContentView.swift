@@ -18,7 +18,6 @@ struct ContentView: View {
     
     static let idealWidth: CGFloat = 400
     static let bottomPadding: CGFloat = 100
-    static let fitActiveWindowWidth: CGFloat = 16
     
     @State var screenHeight: CGFloat = NSScreen.main?.visibleFrame.height ?? 0
 
@@ -36,7 +35,7 @@ struct ContentView: View {
     }
 
     var body: some View {
-        HStack(spacing: -ContentView.fitActiveWindowWidth / 2) {
+        HStack(spacing: -TetheredButton.width / 2) {
             if isRegularApp {
                 TetheredButton()
             }
