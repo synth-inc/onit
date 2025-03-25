@@ -525,22 +525,3 @@ struct ChatEndpointMessagesBuilder {
         return openAIMessageStack
     }
 }
-
-
-// Extension to help with URL partitioning between web URLs and file URLs.
-extension Array {
-    func partition(by predicate: (Element) -> Bool) -> ([Element], [Element]) {
-        var matching: [Element] = []
-        var nonMatching: [Element] = []
-        
-        forEach { element in
-            if predicate(element) {
-                matching.append(element)
-            } else {
-                nonMatching.append(element)
-            }
-        }
-        
-        return (matching, nonMatching)
-    }
-}

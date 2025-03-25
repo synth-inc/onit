@@ -120,14 +120,14 @@ class WebContentFetchService {
 
                 var content = "WEBPAGE_START\n"
             
-                // Add metadata
+                // Add metadata.
                 content += "URL: \(url.absoluteString)\n"
                 content += "Title: \(try parsedWebpageHTML.title())\n\n"
                 
-                // Remove noise
+                // Remove unnecessary HTML tags.
                 try parsedWebpageHTML.select("script, style, svg, iframe").remove()
                 
-                // Try to get main content
+                // Try to get main web content.
                 if let article = try parsedWebpageHTML.select("article, main").first() {
                     content += try article.text()
                 } else {
