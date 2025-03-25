@@ -27,25 +27,31 @@ struct ChatEndpointMessagesBuilder {
             
             // TODO: add error handling for contexts too long & incorrect file types
             if !files[index].isEmpty {
-                // Split URLs into web and file URLs.
-                let (webUrls, fileUrls) = files[index].partition { url in
-                    url.scheme == "http" || url.scheme == "https"
-                }
-                
-                // Handle web URLs
-                if !webUrls.isEmpty {
-                    message += "\n\nWeb References:\n"
-                    for webUrl in webUrls {
-                        message += "- \(webUrl.absoluteString)\n"
+                var webUrls: [URL] = []
+                var fileUrls: [URL] = []
+            
+                // Separating files into their respective categories.
+                for url in files[index] {
+                    if url.scheme == "http" || url.scheme == "https" {
+                        webUrls.append(url)
+                    } else {
+                        fileUrls.append(url)
                     }
                 }
-                
-                // Handle file URLs
-                for fileUrl in fileUrls {
-                    if let fileContent = try? String(contentsOf: fileUrl, encoding: .utf8) {
-                        message += "\n\nFile: \(fileUrl.lastPathComponent)\nContent:\n\(fileContent)"
-                    }
-                }
+               
+               if webUrls.count > 0 {
+                   for webUrl in webUrls {
+                       message += "\n\n Web Context URL Content: - \(webUrl.absoluteString) \n"
+                   }
+               }
+               
+               if fileUrls.count > 0 {
+                   for fileUrl in fileUrls {
+                       if let fileContent = try? String(contentsOf: fileUrl, encoding: .utf8) {
+                           message += "\n\n File Context: \(fileUrl.lastPathComponent) \n Content: \n \(fileContent)"
+                       }
+                   }
+               }
             }
             
             if !autoContexts[index].isEmpty {

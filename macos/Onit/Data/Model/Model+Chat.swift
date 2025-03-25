@@ -79,7 +79,12 @@ extension OnitModel {
             prompt.generationState = .generating
             let curInstruction = prompt.instruction
             
-            var filesHistory: [[URL]] = [(prompt.contextList.files + prompt.contextList.webs)]
+            let webContentFiles = prompt.contextList.webContents.compactMap { $0 }
+            
+            var filesHistory: [[URL]] = [(
+                prompt.contextList.files + prompt.contextList.webs + webContentFiles
+            )]
+            
             var inputsHistory: [Input?] = [prompt.input]
             var imagesHistory: [[URL]] = [prompt.contextList.images]
             var instructionsHistory: [String] = [curInstruction]
@@ -99,7 +104,15 @@ extension OnitModel {
                     if response.type != .error {
                         instructionsHistory.insert(currentPrompt!.instruction, at: 0)
                         inputsHistory.insert(currentPrompt!.input, at: 0)
-                        filesHistory.insert(currentPrompt!.contextList.files + currentPrompt!.contextList.webs, at: 0)
+                        
+                        let priorWebContentFiles = currentPrompt!.contextList.webContents.compactMap { $0 }
+                        
+                        filesHistory.insert(
+                            currentPrompt!.contextList.files +
+                            currentPrompt!.contextList.webs +
+                            priorWebContentFiles,
+                            at: 0
+                        )
                         imagesHistory.insert(currentPrompt!.contextList.images, at: 0)
                         autoContextsHistory.insert(currentPrompt!.contextList.autoContexts, at: 0)
                         responsesHistory.insert(

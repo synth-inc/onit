@@ -323,15 +323,22 @@ struct TextInputView: View {
                 
                 detectedURLs = urls
                 
-                for url in urls {
-                    if !model.pendingContextList.contains(Context.web(url)) {
-                        model.pendingContextList.append(.web(url))
-                    }
-                }
+                 for url in urls {
+                     let urlExists = model.pendingContextList.contains { context in
+                         if case .web(let existingUrl, _) = context {
+                             return existingUrl == url
+                         }
+                         return false
+                     }
+                     
+                     if !urlExists {
+                         model.pendingContextList.append(.web(url, nil))
+                     }
+                 }
             } catch {
                 // This catches errors thrown by the async Task.sleep method.
                 // This is most likely an okay error, as it's tied to the guarded task cancellation.
-                
+                //
                 // Uncomment the debug prints below if you want to see more details.
                 
                 // #if DEBUG
