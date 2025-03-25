@@ -247,8 +247,10 @@ import SwiftUI
         
         isPerformingWebSearch = true
         
+        let searchService = self.webSearchService
+        
         do {
-            let searchResults = try await webSearchService.search(query: query)
+            let searchResults = try await searchService.search(query: query)
             
             // Add search results to pending context
             for result in searchResults {
@@ -259,7 +261,7 @@ import SwiftUI
         } catch {
             print("Web search error: \(error)")
             // Use simulated results as fallback
-            let simulatedResults = webSearchService.simulateSearchResults(query: query)
+            let simulatedResults = searchService.simulateSearchResults(query: query)
             for result in simulatedResults {
                 if !pendingContextList.contains(result) {
                     pendingContextList.append(result)
