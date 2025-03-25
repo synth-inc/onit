@@ -11,16 +11,24 @@ import Defaults
 
 @MainActor
 class SplitViewManager: ObservableObject {
+    
+    // MARK: - Singleton instance
     static let shared = SplitViewManager()
     
+    // MARK: - Properties
     private var model: OnitModel?
     private var cancellables = Set<AnyCancellable>()
     
     private let minOnitWidth: CGFloat = ContentView.idealWidth
-    private let spaceBetweenWindows: CGFloat = 0
+    private let spaceBetweenWindows: CGFloat = -(ContentView.fitActiveWindowWidth / 2)
     
+    private var targetApplicationPID: pid_t?
+    private var targetInitialFrame: CGRect?
+    
+    // MARK: - Private initializer
     private init() { }
     
+    // MARK: - Functions
     func configure(model: OnitModel) {
         self.model = model
     }
@@ -40,20 +48,56 @@ class SplitViewManager: ObservableObject {
         let fitActiveWindowPublisher = Defaults.publisher(.fitActiveWindow)
             .map(\.newValue)
         
+        Publishers.CombineLatest(fitActiveWindowPublisher, isPanelOpenedAndNotMinimized)
+            .sink { [weak self] isEnabled, isOpened in
+                if isEnabled && isOpened {
+                    if let window = AccessibilityNotificationsManager.shared.activeWindowElement {
+                        self?.targetInitialFrame = window.frame()
+                        
+                        if let pid = window.pid() {
+                            self?.targetApplicationPID = pid
+                            self?.model?.panel?.level = .floating
+                        }
+                    }
+                } else {
+                    if let pid = self?.targetApplicationPID,
+                       let initialFrame = self?.targetInitialFrame,
+                       let window = pid.getAXUIElement().children()?.first {
+                        
+                        _ = window.setFrame(initialFrame)
+                    }
+                    
+                    self?.targetApplicationPID = nil
+                    self?.targetInitialFrame = nil
+                    self?.model?.panel?.level = .floating
+                }
+            }
+            .store(in: &cancellables)
+        
         Publishers.CombineLatest3(activeWindowElement, isPanelOpenedAndNotMinimized, fitActiveWindowPublisher)
             .debounce(for: 0.05, scheduler: RunLoop.main)
             .receive(on: DispatchQueue.main)
             .sink { [weak self] (window, isPanelOpened, fitActiveWindow) in
                 guard Defaults[.isRegularApp],
                       fitActiveWindow,
+                      isPanelOpened,
                       let window = window,
-                      isPanelOpened else { return }
+                      let currentPID = window.pid() else { return }
+                
+                if currentPID == self?.targetApplicationPID {
+                    self?.model?.panel?.level = .floating
+                } else {
+                    self?.model?.panel?.level = .normal
+                }
+                
+                guard currentPID == self?.targetApplicationPID else { return }
                 
                 self?.repositionWindow(window: window)
             }
             .store(in: &cancellables)
     }
     
+    // MARK: - Private functions
     private func stopObserving() {
         cancellables.removeAll()
     }

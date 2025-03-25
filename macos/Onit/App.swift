@@ -41,7 +41,6 @@ struct App: SwiftUI.App {
         AccessibilityNotificationsManager.shared.setModel(model)
 
         SplitViewManager.shared.configure(model: model)
-        SplitViewManager.shared.startObserving()
         #endif
     }
 
@@ -63,6 +62,7 @@ struct App: SwiftUI.App {
                     switch newValue {
                     case .granted:
                         AccessibilityNotificationsManager.shared.start(pid: frontmostApplicationOnLaunch?.processIdentifier)
+                        SplitViewManager.shared.startObserving()
                         TapListener.shared.start()
                     case .denied:
                         AccessibilityNotificationsManager.shared.stop()

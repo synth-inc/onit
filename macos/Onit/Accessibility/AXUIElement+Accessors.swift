@@ -164,6 +164,16 @@ extension AXUIElement {
     func setFrame(_ frame: CGRect) -> Bool {
         return setPosition(frame.origin) && setSize(frame.size)
     }
+    
+    func pid() -> pid_t? {
+        var pid: pid_t = 0
+        
+        if AXUIElementGetPid(self, &pid) == .success {
+            return pid
+        }
+        
+        return nil
+    }
 }
 
 //

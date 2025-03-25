@@ -68,7 +68,7 @@ extension OnitModel: NSWindowDelegate {
         panelContentView.layer?.cornerRadius = 14
         panelContentView.layer?.cornerCurve = .continuous
         panelContentView.layer?.masksToBounds = true
-        panelContentView.layer?.backgroundColor = NSColor.windowBackgroundColor.cgColor
+        panelContentView.layer?.backgroundColor = .clear
 
         newPanel.contentView = panelContentView
         newPanel.contentView?.setFrameOrigin(NSPoint(x: 0, y: 0))
