@@ -306,7 +306,8 @@ extension OnitModel: NSWindowDelegate {
     @MainActor
     func adjustPanelSize() {
         guard let panel = panel,
-              let contentView = panel.contentView
+              let contentView = panel.contentView,
+              !Defaults[.isRegularApp]
         else {
             return
         }

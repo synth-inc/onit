@@ -64,7 +64,9 @@ struct TetheredButton: View {
                 }
                 
                 fitActiveWindow.toggle()
-                model.launchPanel()
+                if model.panel == nil {
+                    model.launchPanel()
+                }
             }) {
                 Image(.smallChevRight)
                     .renderingMode(.template)
