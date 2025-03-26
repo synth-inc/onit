@@ -30,8 +30,8 @@ import SwiftUI
             isPanelOpened.send(panel != nil)
         }
     }
-    var isPanelOpened = PassthroughSubject<Bool, Never>()
-    var isPanelMiniaturized = PassthroughSubject<Bool, Never>()
+    var isPanelOpened = CurrentValueSubject<Bool, Never>(false)
+    var isPanelMiniaturized = CurrentValueSubject<Bool, Never>(false)
 
     var currentChat: Chat?
     var currentPrompts: [Prompt]?

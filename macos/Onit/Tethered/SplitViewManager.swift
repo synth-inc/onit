@@ -23,7 +23,7 @@ class SplitViewManager: ObservableObject {
     private let minOnitWidth: CGFloat = ContentView.idealWidth
     private let spaceBetweenWindows: CGFloat = -(TetheredButton.width / 2)
     
-    private var targetApplicationPID: pid_t?
+    @Published private var targetApplicationPID: pid_t?
     private var targetInitialFrame: CGRect?
     private var tetherWindow: NSWindow?
     private var lastYComputed: CGFloat?
@@ -53,69 +53,21 @@ class SplitViewManager: ObservableObject {
             .map(\.newValue)
         let isRegularAppPublisher = Defaults.publisher(.isRegularApp)
             .map(\.newValue)
-
-        Publishers.CombineLatest3(isRegularAppPublisher, fitActiveWindowPublisher, isPanelOpenedAndNotMinimized)
-            .sink { [weak self] isRegularApp, fitActiveWindow, isPanelOpened in
-                if isRegularApp && !fitActiveWindow && !isPanelOpened {
-                    self?.showTetherWindow()
-                } else {
-                    self?.hideTetherWindow()
-                }
-            }
-            .store(in: &cancellables)
-
-        activeWindowElement
-            .sink { [weak self] window in
-                self?.updateTetherWindowPosition(for: window)
-            }
-            .store(in: &cancellables)
         
         Publishers.CombineLatest(fitActiveWindowPublisher, isPanelOpenedAndNotMinimized)
-            .sink { [weak self] isEnabled, isOpened in
-                if isEnabled && isOpened {
-                    if let window = AccessibilityNotificationsManager.shared.activeWindowElement {
-                        self?.targetInitialFrame = window.frame()
-                        
-                        if let pid = window.pid() {
-                            self?.targetApplicationPID = pid
-                            self?.model?.panel?.level = .floating
-                        }
-                    }
-                } else {
-                    if let pid = self?.targetApplicationPID,
-                       let initialFrame = self?.targetInitialFrame,
-                       let window = pid.getAXUIElement().children()?.first {
-                        
-                        _ = window.setFrame(initialFrame)
-                    }
-                    
-                    self?.targetApplicationPID = nil
-                    self?.targetInitialFrame = nil
-                    self?.model?.panel?.level = .floating
-                }
-            }
+            .sink(receiveValue: appStateObserver)
+            .store(in: &cancellables)
+        
+        Publishers.CombineLatest3(isRegularAppPublisher, activeWindowElement, $targetApplicationPID)
+            .sink(receiveValue: tetheredWindowVisibilityObserver)
+            .store(in: &cancellables)
+
+        Publishers.CombineLatest(activeWindowElement, $targetApplicationPID)
+            .sink(receiveValue: tetheredWindowPositionObserver)
             .store(in: &cancellables)
         
         Publishers.CombineLatest3(activeWindowElement, isPanelOpenedAndNotMinimized, fitActiveWindowPublisher)
-            .debounce(for: 0.05, scheduler: RunLoop.main)
-            .receive(on: DispatchQueue.main)
-            .sink { [weak self] (window, isPanelOpened, fitActiveWindow) in
-                guard Defaults[.isRegularApp],
-                      fitActiveWindow,
-                      isPanelOpened,
-                      let window = window,
-                      let currentPID = window.pid() else { return }
-                
-                if currentPID == self?.targetApplicationPID {
-                    self?.model?.panel?.level = .floating
-                } else {
-                    self?.model?.panel?.level = .normal
-                }
-                
-                guard currentPID == self?.targetApplicationPID else { return }
-                
-                self?.repositionWindow(window: window)
-            }
+            .sink(receiveValue: windowPositioningObserver)
             .store(in: &cancellables)
     }
     
@@ -123,6 +75,71 @@ class SplitViewManager: ObservableObject {
     private func stopObserving() {
         cancellables.removeAll()
         hideTetherWindow()
+    }
+    
+    // MARK: - Observers
+    private func appStateObserver(isTethered: Bool, isPanelOpened: Bool) {
+        if isTethered && isPanelOpened {
+            // Restore previous tethered window if exists
+            if let previousPID = self.targetApplicationPID,
+               let previousFrame = self.targetInitialFrame,
+               let previousWindow = previousPID.getAXUIElement().children()?.first {
+                _ = previousWindow.setFrame(previousFrame)
+            }
+            
+            if let window = AccessibilityNotificationsManager.shared.activeWindowElement {
+                self.targetInitialFrame = window.frame()
+                
+                if let pid = window.pid() {
+                    self.targetApplicationPID = pid
+                    self.model?.panel?.level = .floating
+                }
+            }
+        } else {
+            if let pid = self.targetApplicationPID,
+               let initialFrame = self.targetInitialFrame,
+               let window = pid.getAXUIElement().children()?.first {
+                
+                _ = window.setFrame(initialFrame)
+            }
+            
+            self.targetApplicationPID = nil
+            self.targetInitialFrame = nil
+            self.model?.panel?.level = .floating
+        }
+    }
+    
+    private func tetheredWindowVisibilityObserver(
+        isRegularApp: Bool,
+        activeWindow: AXUIElement?,
+        targetPID: pid_t?
+    ) {
+        let shouldShowTether = isRegularApp && (targetPID == nil || activeWindow?.pid() != targetPID)
+        
+        if shouldShowTether {
+            self.showTetherWindow()
+        } else {
+            self.hideTetherWindow()
+        }
+    }
+    
+    private func tetheredWindowPositionObserver(window: AXUIElement?, targetPID: pid_t?) {
+        updateTetherWindowPosition(for: window)
+    }
+    
+    private func windowPositioningObserver(window: AXUIElement?, isPanelOpened: Bool, isTethered: Bool) {
+        guard Defaults[.isRegularApp],
+              isTethered,
+              isPanelOpened,
+              let window = window,
+              let currentPID = window.pid() else { return }
+        
+        if currentPID == self.targetApplicationPID {
+            self.model?.panel?.level = .floating
+            self.repositionWindow(window: window)
+        } else {
+            self.model?.panel?.level = .normal
+        }
     }
     
     private func repositionWindow(window: AXUIElement) {
@@ -175,10 +192,11 @@ class SplitViewManager: ObservableObject {
         window.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
         window.isReleasedWhenClosed = false
         
-        // Create the SwiftUI button view with drag callback
-        let buttonView = NSHostingView(rootView: TetheredButton(onDrag: { [weak self] translation in
-            self?.updateWindowPosition(y: translation)
-        }))
+        let buttonView = NSHostingView(rootView: TetheredButton(
+            onDrag: { [weak self] translation in
+                self?.tetheredWindowMoved(y: translation)
+            }
+        ))
         buttonView.wantsLayer = true
         buttonView.layer?.cornerRadius = TetheredButton.width / 2
         buttonView.layer?.masksToBounds = true
@@ -218,7 +236,7 @@ class SplitViewManager: ObservableObject {
         tetherWindow.setFrame(frame, display: true)
     }
     
-    func updateWindowPosition(y: CGFloat) {
+    func tetheredWindowMoved(y: CGFloat) {
         guard let activeWindow = AccessibilityNotificationsManager.shared.activeWindowElement else {
             return
         }

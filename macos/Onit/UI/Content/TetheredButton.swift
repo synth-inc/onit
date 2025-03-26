@@ -63,7 +63,13 @@ struct TetheredButton: View {
                     return
                 }
                 
-                fitActiveWindow.toggle()
+                if onDrag == nil {
+                    fitActiveWindow.toggle()
+                } else {
+                    fitActiveWindow = false
+                    fitActiveWindow = true
+                }
+                
                 model.launchPanel()
             }) {
                 Image(.smallChevRight)

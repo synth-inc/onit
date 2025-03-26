@@ -238,6 +238,8 @@ extension OnitModel: NSWindowDelegate {
             self.textFocusTrigger.toggle()
             return
         }
+        
+        isPanelOpened.send(true)
 
         // If panel is not on the target screen, move it
         if currentScreen != screen {
@@ -377,7 +379,9 @@ extension OnitModel: NSWindowDelegate {
     }
     
     func windowDidDeminiaturize(_ notification: Notification) {
-        isPanelMiniaturized.send(false)
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+            self.isPanelMiniaturized.send(false)
+        }
     }
     
     func windowShouldClose(_ sender: NSWindow) -> Bool {
