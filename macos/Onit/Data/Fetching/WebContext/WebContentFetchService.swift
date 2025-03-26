@@ -8,6 +8,7 @@
 import Foundation
 import SwiftSoup
 import PDFKit
+import WebKit
 
 // This class is used in `Model+Input.swift` (extends `OnitModel.swift`) to
 // allow webpage content parsing for web contexts.
@@ -99,57 +100,58 @@ class WebContentFetchService {
         }
     }
     
+    @MainActor
     private static func fetchHTMLContent(from url: URL) async throws -> URL {
-        let (data, response) = try await URLSession.shared.data(from: url)
-        
-        guard let httpResponse = response as? HTTPURLResponse,
-              (200...299).contains(httpResponse.statusCode) else {
-            throw FetchError.invalidResponse
-        }
-        
-        // Limiting non-PDF webpage size to 20MB.
-        guard data.count < 20_000_000 else {
-            throw FetchError.contentTooLarge
-        }
-        
-        // Converting HTML to plain text
-        if let htmlString = String(data: data, encoding: .utf8) {
-            do {
-                // Converting the non-PDF webpage contents into parsed text.
-                let parsedWebpageHTML = try SwiftSoup.parse(htmlString)
+        // Load webpage with `WKWebView`.
+        let webView = WKWebView(frame: .zero, configuration: WKWebViewConfiguration())
+        let request = URLRequest(url: url)
+        webView.load(request)
 
-                var content = "WEBPAGE_START\n"
-            
-                // Add metadata.
-                content += "URL: \(url.absoluteString)\n"
-                content += "Title: \(try parsedWebpageHTML.title())\n\n"
-                
-                // Remove unnecessary HTML tags.
-                try parsedWebpageHTML.select("script, style, svg, iframe").remove()
-                
-                // Try to get main web content.
-                if let article = try parsedWebpageHTML.select("article, main").first() {
-                    content += try article.text()
-                } else {
-                    content += try parsedWebpageHTML.body()?.text() ?? ""
-                }
-                
-                content += "\nWEBPAGE_END"
-                
-                // Create a text file with for the non-PDF webpage.
-                let tempHtmlTextFile = FileManager.default.temporaryDirectory
-                    .appendingPathComponent("\(url.host ?? "webpage")-\(UUID().uuidString)")
-                    .appendingPathExtension("txt")
-
-                // try webpageAsText.write(to: tempHtmlTextFile, atomically: true, encoding: .utf8)
-                try content.write(to: tempHtmlTextFile, atomically: true, encoding: .utf8)
-                
-                return tempHtmlTextFile
-            } catch {
-                throw FetchError.parsingError(error)
+        // Giving webpage JS content time to load (2 seconds).
+        try await Task.sleep(nanoseconds: 2_000_000_000)
+        
+        var renderedHTML = ""
+        
+        if let HTML = try await webView.evaluateJavaScript("new XMLSerializer().serializeToString(document)") as? String {
+            renderedHTML = HTML
+        } else if let outerHTMLFallback = try await webView.evaluateJavaScript("document.documentElement.outerHTML") as? String {
+            renderedHTML = outerHTMLFallback
+        } else if let innerHTMLFallback = try await webView.evaluateJavaScript("document.documentElement.innerHTML") as? String {
+            renderedHTML = innerHTMLFallback
+        }
+    
+        do {
+            // Parse the rendered HTML (rest of your existing parsing logic)
+            let parsedWebpageHTML = try SwiftSoup.parse(renderedHTML)
+       
+            // Remove undesired HTML tags.
+            try parsedWebpageHTML.select("script, style, svg, video, iframe").remove()
+           
+            let headText = try parsedWebpageHTML.head()?.text() ?? ""
+            let bodyText = try parsedWebpageHTML.body()?.text() ?? ""
+           
+            var fullWebpageText = headText + "\n" + bodyText
+            if bodyText == "" {
+                fullWebpageText = "No text found for webpage with URL: \(url)."
             }
-        } else {
-            throw FetchError.parsingError(NSError(domain: "WebContentFetch", code: 1))
+            
+            // Metadata.
+            let contentUrl = "URL: \(url.absoluteString)"
+            let contentTitle = "Title: \(try parsedWebpageHTML.title())"
+            let contentCutoffDescription = "\(contentUrl) \(contentTitle)"
+            let contentMetaDescription = contentUrl + "\n" + contentTitle + "\n\n"
+            
+            let content = "\n\n\(contentCutoffDescription) WEBPAGE START\n\n" + contentMetaDescription + fullWebpageText + "\n\n\(contentCutoffDescription)  WEBPAGE END\n\n"
+            
+            // Create a text file with for the non-PDF webpage.
+            let tempHtmlTextFile = FileManager.default.temporaryDirectory
+                .appendingPathComponent("\(url.host ?? "webpage")-\(UUID().uuidString)")
+                .appendingPathExtension("txt")
+            try content.write(to: tempHtmlTextFile, atomically: true, encoding: .utf8)
+           
+            return tempHtmlTextFile
+        } catch {
+            throw FetchError.parsingError(error)
         }
     }
 }
