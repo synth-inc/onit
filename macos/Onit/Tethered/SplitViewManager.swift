@@ -220,10 +220,11 @@ class SplitViewManager: ObservableObject {
         } else {
             lastYComputed = computeTetheredWindowY(activeWindow: activeWindow, offset: nil)
         }
+        guard let lastYComputed = lastYComputed else { return }
         
         let frame = NSRect(
             x: position.x + size.width - TetheredButton.width,
-            y: lastYComputed!,
+            y: lastYComputed,
             width: TetheredButton.width,
             height: TetheredButton.height
         )
