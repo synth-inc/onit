@@ -95,7 +95,7 @@ struct ChatsView: View {
                     contentHeight = proxy.size.height
                     
                     if oldHeight != realHeight {
-                        model.adjustPanelSize()
+                        model.panel?.adjustSize()
                     } else {
                         scrollToBottom(using: scrollProxy)
                     }
@@ -105,7 +105,7 @@ struct ChatsView: View {
                     contentHeight = newHeight
                     
                     if oldHeight != realHeight {
-                        model.adjustPanelSize()
+                        model.panel?.adjustSize()
                     } else {
                         scrollToBottom(using: scrollProxy)
                     }

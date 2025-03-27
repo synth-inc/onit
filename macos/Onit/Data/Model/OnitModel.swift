@@ -25,7 +25,7 @@ import SwiftUI
     var isTooltipActive = false
     var showHistory: Bool = false
     var showMenuBarExtra: Bool = false
-    weak var panel: CustomPanel? = nil {
+    weak var panel: OnitPanel? = nil {
         didSet {
             isPanelOpened.send(panel != nil)
         }
@@ -73,7 +73,7 @@ import SwiftUI
     var resizing = false
 
     var showDebugWindow = false
-    var debugPanel: CustomPanel? = nil
+    var debugPanel: NSPanel? = nil
     var debugText: String?
 
     var autoContextWindowControllers: [Context: AutoContextWindowController] = [:]

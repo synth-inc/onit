@@ -70,7 +70,7 @@ struct TetheredButton: View {
                     fitActiveWindow = true
                 }
                 
-                model.launchPanel()
+                model.showPanel()
             }) {
                 Image(.smallChevRight)
                     .renderingMode(.template)

@@ -180,7 +180,7 @@ class SplitViewManager: ObservableObject {
         
         let window = NSWindow(
             contentRect: NSRect(x: 0, y: 0, width: TetheredButton.width, height: TetheredButton.height),
-            styleMask: [.borderless],
+            styleMask: [.borderless, .titled],
             backing: .buffered,
             defer: false
         )
@@ -191,6 +191,11 @@ class SplitViewManager: ObservableObject {
         window.hasShadow = false
         window.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
         window.isReleasedWhenClosed = false
+        window.titlebarAppearsTransparent = true
+        window.titleVisibility = .hidden
+        window.standardWindowButton(.closeButton)?.isHidden = true
+        window.standardWindowButton(.miniaturizeButton)?.isHidden = true
+        window.standardWindowButton(.zoomButton)?.isHidden = true
         
         let buttonView = NSHostingView(rootView: TetheredButton(
             onDrag: { [weak self] translation in

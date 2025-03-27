@@ -61,15 +61,15 @@ struct SetUpDialogs: View {
                     Color.clear
                         .onAppear {
                             model.setUpHeight = g.size.height
-                            model.adjustPanelSize()
+                            model.panel?.adjustSize()
                         }
                         .onChange(of: g.size.height) {
                             model.setUpHeight = g.size.height
-                            model.adjustPanelSize()
+                            model.panel?.adjustSize()
                         }
                         .onDisappear {
                             model.setUpHeight = 0
-                            model.adjustPanelSize()
+                            model.panel?.adjustSize()
                         }
                 }
             }

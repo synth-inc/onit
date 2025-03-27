@@ -64,7 +64,7 @@ struct Toolbar: View {
 
     var resize: some View {
         Button {
-            model.togglePanelSize()
+            model.panel?.toggleFullscreen()
         } label: {
             Image(.resize)
                 .renderingMode(.template)

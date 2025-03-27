@@ -83,7 +83,7 @@ struct KeyboardShortcutsManager {
                     ]
                     PostHogSDK.shared.capture("shortcut_launch", properties: eventProperties)
 
-                    model.launchShortcutAction()
+                    model.launchPanel()
                 case .launchWithAutoContext:
                     let eventProperties: [String: Any] = [
                         "app_hidden": model.panel == nil
@@ -99,9 +99,9 @@ struct KeyboardShortcutsManager {
                 case .newChat:
                     model.newChat()
                 case .resizeWindow:
-                    model.resizeWindow()
+                    model.panel?.toggleFullscreen()
                 case .toggleLocalMode:
-                    model.toggleLocalVsRemoteShortcutAction()
+                    Defaults[.mode] = Defaults[.mode] == .local ? .remote : .local
                 default:
                     print("KeyboardShortcut not handled: \(name)")
                 }
@@ -109,7 +109,7 @@ struct KeyboardShortcutsManager {
         }
         // Since we support turning on and off shortcuts, we should disable these all after registering.
         // Then, the shortcuts that are on will be enabled when enable() is called. 
-        var names = KeyboardShortcuts.Name.allCases
+        let names = KeyboardShortcuts.Name.allCases
             .filter { ![.launch, .launchWithAutoContext].contains($0) }
         KeyboardShortcuts.disable(names)
     }
