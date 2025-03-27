@@ -14,8 +14,10 @@ struct WebContextItem: View {
     // Local states.
     private let item: Context
     private let url: URL
+    //
     @State private var title: String
-    @State private var favicon: URL? = nil
+    @State private var faviconUrl: URL? = nil
+    //
     @State private var fetchingWebpageFavicon: Bool = false
     @State private var fetchingWebpageTitle: Bool = false
     @State private var fetchingWebpageContents: Bool = false
@@ -44,10 +46,16 @@ struct WebContextItem: View {
                             .scaleEffect(0.5)
                             .frame(width: 16, height: 16)
                     }
-                    else if let favicon = favicon {
-                        Image(nsImage: NSImage(contentsOf: favicon) ?? NSImage())
-                              .resizable()
-                              .frame(width: 16, height: 16)
+                    else if let faviconUrl = faviconUrl {
+                        AsyncImage(url: faviconUrl) { image in
+                            if let faviconImage = image.image {
+                                return faviconImage.resizable().frame(width: 16, height: 16)
+                            } else {
+                                return Image(systemName: "globe")
+                                    .resizable()
+                                    .frame(width: 16, height: 16)
+                            }
+                        }
                     } else {
                         Image(systemName: "globe")
                             .resizable()
@@ -72,70 +80,31 @@ struct WebContextItem: View {
             }
         }
         .onAppear() {
+            fetchWebpageFavicon()
+            
             Task {
-                await fetchWebpageFavicon()
-                await fetchWebpageTitle()
-                await fetchWebpageContents()
+                await withTaskGroup(of: Void.self) { group in
+                    group.addTask { await fetchWebpageTitle() }
+                    group.addTask { await fetchWebpageContents() }
+                }
             }
         }
     }
     
-    func fetchWebpageFavicon() async {
+    func fetchWebpageFavicon() {
         if let webpageDomain = url.host() {
-            // Setting loading state for favicon fetch.
-            await MainActor.run {
-                fetchingWebpageFavicon = true
-            }
-            
-            // URL that will be used to fetch the favicon of the webpage.
-            let faviconUrl = URL(string: "https://\(webpageDomain)/favicon.ico")
-            
-            // Fetching the favicon image.
-            guard let faviconUrl = faviconUrl,
-                  let (data, _) = try? await URLSession.shared.data(from: faviconUrl) else {
-                    // Removing loading state for favicon fetch.
-                    await MainActor.run {
-                        fetchingWebpageFavicon = false
-                    }
-                    return
-            }
-            
-            // Updating favicon state with fetched favicon image.
-            do {
-                let tempFileURL = FileManager.default.temporaryDirectory
-                    .appendingPathComponent(UUID().uuidString)
-                    .appendingPathExtension("ico")
-                
-                try data.write(to: tempFileURL)
-                
-                await MainActor.run {
-                    self.favicon = tempFileURL
-                    fetchingWebpageFavicon = false
-                }
-            } catch {
-                #if DEBUG
-                    print("Failed to save favicon: \(error)")
-                #endif
-                
-                // Removing loading state for favicon fetch.
-                await MainActor.run {
-                    fetchingWebpageFavicon = false
-                }
-            }
+            faviconUrl = URL(string: "https://\(webpageDomain)/favicon.ico")
         }
     }
     
     func fetchWebpageTitle() async {
-        // Setting loading state for webpage title fetch.
         await MainActor.run {
             fetchingWebpageTitle = true
         }
         
         do {
-            // Fetch webpage contents.
             let (data, response) = try await URLSession.shared.data(from: url)
             
-            // Check if we got a valid response and, if valid, set `htmlString`.
             guard let httpResponse = response as? HTTPURLResponse,
                   (200...299).contains(httpResponse.statusCode),
                   let htmlString = String(data: data, encoding: .utf8) else {
@@ -149,7 +118,6 @@ struct WebContextItem: View {
            let titleElement = try parsedWebpage.select("title").first()
            let extractedTitle = try titleElement?.text() ?? ""
            
-           // Update title state.
            await MainActor.run {
                self.title = extractedTitle.isEmpty ? url.host() ?? url.absoluteString : extractedTitle
                fetchingWebpageTitle = false
@@ -159,7 +127,6 @@ struct WebContextItem: View {
                 print("Failed to fetch webpage title: \(error)")
             #endif
             
-            // Removing loading state for webpage title fetch.
             await MainActor.run {
                 self.title = url.host() ?? url.absoluteString
                 fetchingWebpageTitle = false
@@ -169,37 +136,31 @@ struct WebContextItem: View {
     
     func fetchWebpageContents() async {
         do {
-            // Setting loading state for webpage contents fetch.
             await MainActor.run {
                 fetchingWebpageContents = true
             }
             
-            let webContentUrl = try await WebContentFetchService.fetchWebpageContent(from: url)
-            
-            if let webContextIndex = model.pendingContextList.firstIndex(where: { context in
-                switch context {
-                case .web (let webContextURL, _):
-                    return webContextURL == url
-                default:
-                    return false
-                }
-            }) {
-                if case .web(let persistedWebUrl, _) = model.pendingContextList[webContextIndex] {
-                    model.pendingContextList[webContextIndex] = .web(persistedWebUrl, webContentUrl)
-                }
-                
-                // Removing loading state for webpage contents fetch.
-                await MainActor.run {
-                    fetchingWebpageContents = false
-                }
-            } else {
-                // Removing loading state for webpage contents fetch.
-                await MainActor.run {
-                    fetchingWebpageContents = false
+            if let webContextItemIndex = getWebContextItemIndex(
+                pendingContextList: model.pendingContextList,
+                comparativeWebUrl: url
+            ) {
+                if case .web(
+                    let persistedWebUrl,
+                    let persistedWebContentUrl
+                ) = model.pendingContextList[webContextItemIndex] {
+                    if persistedWebContentUrl != nil {
+                        model.pendingContextList[webContextItemIndex] = .web(persistedWebUrl, persistedWebContentUrl)
+                    } else {
+                        let webContentUrl = try await WebContentFetchService.fetchWebpageContent(from: url)
+                        model.pendingContextList[webContextItemIndex] = .web(persistedWebUrl, webContentUrl)
+                    }
                 }
             }
+            
+            await MainActor.run {
+                fetchingWebpageContents = false
+            }
         } catch {
-            // Removing loading state for webpage contents fetch.
             await MainActor.run {
                 fetchingWebpageContents = false
             }

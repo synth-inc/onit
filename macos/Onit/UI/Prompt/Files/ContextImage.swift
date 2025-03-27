@@ -18,8 +18,6 @@ struct ContextImage: View {
             image(url: url)
         case .file:
             file
-        case .web:
-            Image(systemName: "globe")
         default:
             warning
         }

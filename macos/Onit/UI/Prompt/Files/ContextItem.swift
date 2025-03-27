@@ -17,7 +17,7 @@ struct ContextItem: View {
         HStack(spacing: 0) {
             switch item {
             case .web(let url, _):
-                WebContextItem(item: item, url: url, title: url.host() ?? "Unknown")
+                WebContextItem(item: item, url: url, title: url.host() ?? url.absoluteString)
             case .auto:
                 Button {
                     model.showAutoContextWindow(context: item)
@@ -74,7 +74,7 @@ struct ContextItem: View {
         case .tooBig:
             "Upload exceeds model limit"
         case .web(let url, _):
-            url.host() ?? "Unknown URL"
+            url.host() ?? url.absoluteString
         }
     }
 

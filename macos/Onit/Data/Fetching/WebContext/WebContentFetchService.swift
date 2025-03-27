@@ -29,7 +29,13 @@ class WebContentFetchService {
         }
         
         if let contentType = httpResponse.value(forHTTPHeaderField: "Content-Type"),
-           contentType.lowercased().contains("application/pdf") {
+           (
+            contentType.lowercased().contains("application/pdf") ||
+            contentType.lowercased().contains("application/x-pdf") ||
+            contentType.lowercased().contains("application/vnd.pdf") ||
+            contentType.lowercased().contains("application/acrobat") ||
+            url.pathExtension.lowercased() == "pdf"
+           ){
             return try await fetchPDFContent(from: url)
         } else {
             return try await fetchHTMLContent(from: url)
@@ -91,6 +97,14 @@ class WebContentFetchService {
                 .appendingPathExtension("txt")
             
             try content.write(to: tempPdfTextFile, atomically: true, encoding: .utf8)
+
+            do {
+                try FileManager.default.removeItem(at: tempPdfUrl)
+            } catch {
+                #if DEBUG
+                print("Failed to delete temporary PDF file: \(error)")
+                #endif
+            }
             
             return tempPdfTextFile
         } else {
@@ -104,8 +118,8 @@ class WebContentFetchService {
         let request = URLRequest(url: url)
         webView.load(request)
 
-        // Giving webpage JS content time to load (2 seconds).
-        try await Task.sleep(nanoseconds: 2_000_000_000)
+        // Giving webpage JS content time to load (3 seconds).
+        try await Task.sleep(nanoseconds: 3_000_000_000)
         
         var renderedHTML = ""
         
@@ -136,13 +150,13 @@ class WebContentFetchService {
             
             let content = "\n\n\(contentCutoffDescription) WEBPAGE START\n\n" + contentMetaDescription + fullWebpageText + "\n\n\(contentCutoffDescription)  WEBPAGE END\n\n"
             
-            let tempHtmlTextFile = FileManager.default.temporaryDirectory
+            let tempHtmlTextFileUrl = FileManager.default.temporaryDirectory
                 .appendingPathComponent("\(url.host ?? "webpage")-\(UUID().uuidString)")
                 .appendingPathExtension("txt")
 
-            try content.write(to: tempHtmlTextFile, atomically: true, encoding: .utf8)
+            try content.write(to: tempHtmlTextFileUrl, atomically: true, encoding: .utf8)
            
-            return tempHtmlTextFile
+            return tempHtmlTextFileUrl
         } catch {
             throw FetchError.parsingError(error)
         }

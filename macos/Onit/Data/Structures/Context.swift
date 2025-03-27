@@ -59,7 +59,7 @@ extension Context {
 
     init(url: URL) {
         // Initialization for web context urls.
-        if url.scheme == "http" || url.scheme == "https" {
+        if (url.scheme == "http" || url.scheme == "https") && url.host != nil {
             self = .web(url, nil)
             return
         }

@@ -274,10 +274,12 @@ struct TextInputView: View {
     }
 
     private func detectURLs(in text: String) -> [URL] {
-        let detectUrlRegex = try! NSRegularExpression(
+        guard let detectUrlRegex = try? NSRegularExpression(
             pattern: "https?://(?:www\\.|(?!www))[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\\.[^\\s]{2,}|www\\.[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\\.[^\\s]{2,}|https?://(?:www\\.|(?!www))[a-zA-Z0-9]+\\.[^\\s]{2,}|www\\.[a-zA-Z0-9]+\\.[^\\s]{2,}",
             options: .caseInsensitive
-        )
+        ) else {
+            return []
+        }
         
         let urlMatches = detectUrlRegex.matches(
             in: text,
