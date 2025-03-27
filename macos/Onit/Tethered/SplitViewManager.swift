@@ -149,29 +149,42 @@ class SplitViewManager: ObservableObject {
         
         guard let screen = NSRect(origin: position, size: size).findScreen() else { return }
         
-        let screenFrame = screen.visibleFrame
-        let maxActiveAppWidth = screenFrame.width - minOnitWidth - spaceBetweenWindows
-        let activeAppWidth = min(size.width, maxActiveAppWidth)
+        let screenFrame = screen.frame
+        let onitWidth = minOnitWidth
+        let onitHeight = min(size.height, screenFrame.height - ContentView.bottomPadding)
+        let onitY = screenFrame.maxY - (position.y + onitHeight)
         
-        let relativeX = max(position.x - screenFrame.minX, 0)
-        let relativeOnitX = relativeX + activeAppWidth + spaceBetweenWindows
-        let onitX = screenFrame.minX + min(relativeOnitX, screenFrame.width - minOnitWidth)
-        let onitWidth = max(minOnitWidth, screenFrame.maxX - onitX)
-        let onitHeight = screenFrame.height - ContentView.bottomPadding
-        let onitY = screenFrame.minY + (screenFrame.height - onitHeight)
+        let spaceOnRight = screenFrame.maxX - (position.x + size.width)
+        let hasEnoughSpace = spaceOnRight >= onitWidth + spaceBetweenWindows
         
-        if window.setFrame(CGRect(
-            x: position.x,
-            y: position.y,
-            width: activeAppWidth,
-            height: size.height
-        )) {
+        if hasEnoughSpace {
+            let onitX = position.x + size.width + spaceBetweenWindows
+            
             panel.setFrame(NSRect(
                 x: onitX,
                 y: onitY,
                 width: onitWidth,
                 height: onitHeight
             ), display: true, animate: true)
+        } else {
+            let maxActiveAppWidth = screenFrame.width - onitWidth - spaceBetweenWindows
+            let activeAppWidth = min(size.width, maxActiveAppWidth)
+            
+            if window.setFrame(CGRect(
+                x: position.x,
+                y: position.y,
+                width: activeAppWidth,
+                height: size.height
+            )) {
+                let onitX = position.x + activeAppWidth + spaceBetweenWindows
+                
+                panel.setFrame(NSRect(
+                    x: onitX,
+                    y: onitY,
+                    width: onitWidth,
+                    height: onitHeight
+                ), display: true, animate: true)
+            }
         }
     }
 
@@ -228,12 +241,13 @@ class SplitViewManager: ObservableObject {
         if lastYComputed == nil {
             lastYComputed = (size.height / 2) - (TetheredButton.height / 2)
         } else {
-            lastYComputed = computeFinalY(activeWindow: activeWindow, offset: nil)
+            lastYComputed = computeTetheredWindowY(activeWindow: activeWindow, offset: nil)
         }
+        guard let lastYComputed = lastYComputed else { return }
         
         let frame = NSRect(
             x: position.x + size.width - TetheredButton.width,
-            y: lastYComputed!,
+            y: lastYComputed,
             width: TetheredButton.width,
             height: TetheredButton.height
         )
@@ -246,11 +260,11 @@ class SplitViewManager: ObservableObject {
             return
         }
         
-        self.lastYComputed = computeFinalY(activeWindow: activeWindow, offset: y)
+        self.lastYComputed = computeTetheredWindowY(activeWindow: activeWindow, offset: y)
         self.updateTetherWindowPosition(for: activeWindow)
     }
     
-    private func computeFinalY(activeWindow: AXUIElement, offset: CGFloat?) -> CGFloat? {
+    private func computeTetheredWindowY(activeWindow: AXUIElement, offset: CGFloat?) -> CGFloat? {
         guard let position = activeWindow.position(),
               let size = activeWindow.size(),
               let screenFrame = NSScreen.main?.visibleFrame else { return nil }
