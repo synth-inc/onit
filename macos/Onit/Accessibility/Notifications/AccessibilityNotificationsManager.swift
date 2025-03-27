@@ -264,8 +264,8 @@ class AccessibilityNotificationsManager: ObservableObject {
         handleExternalElement(element) { [weak self] elementPid in
             print("Focus change from pid: \(elementPid)")
 
-            self?.parseAccessibility(for: elementPid)
             self?.handleWindowBounds(for: element)
+            self?.parseAccessibility(for: elementPid)
         }
     }
 

@@ -15,7 +15,8 @@ extension OnitModel: NSWindowDelegate {
             existingPanel.makeKeyAndOrderFront(nil)
             existingPanel.orderFrontRegardless()
             // Focus the text input when we're activating the panel
-            self.textFocusTrigger.toggle()
+            textFocusTrigger.toggle()
+            
             return
         }
 
@@ -34,7 +35,7 @@ extension OnitModel: NSWindowDelegate {
         KeyboardShortcutsManager.enable(modelContainer: container)
 
         // Focus the text input when we're activating the panel
-        self.textFocusTrigger.toggle()
+        textFocusTrigger.toggle()
     }
 
     func closePanel() {
@@ -61,16 +62,15 @@ extension OnitModel: NSWindowDelegate {
             closePanel()
         } else {
             panel.show()
-            
             isPanelOpened.send(true)
-            self.textFocusTrigger.toggle()
+            textFocusTrigger.toggle()
         }
     }
 
     func escapeAction() {
         if panel != nil {
-            if self.pendingInput != nil {
-                self.pendingInput = nil
+            if pendingInput != nil {
+                pendingInput = nil
             } else {
                 closePanel()
             }

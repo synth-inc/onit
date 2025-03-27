@@ -44,6 +44,9 @@ struct ContentView: View {
                 VStack(spacing: 0) {
                     if !isRegularApp {
                         Toolbar()
+                    } else {
+                        Spacer()
+                            .frame(height: 38)
                     }
                     PromptDivider()
                     ChatView()

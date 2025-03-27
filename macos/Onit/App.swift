@@ -66,6 +66,7 @@ struct App: SwiftUI.App {
                         TapListener.shared.start()
                     case .denied:
                         AccessibilityNotificationsManager.shared.stop()
+                        SplitViewManager.shared.stopObserving()
                         TapListener.shared.stop()
                     default:
                         break
