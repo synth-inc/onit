@@ -123,10 +123,6 @@ struct WebContextItem: View {
                fetchingWebpageTitle = false
            }
         } catch {
-            #if DEBUG
-                print("Failed to fetch webpage title: \(error)")
-            #endif
-            
             await MainActor.run {
                 self.title = url.host() ?? url.absoluteString
                 fetchingWebpageTitle = false
@@ -163,6 +159,13 @@ struct WebContextItem: View {
         } catch {
             await MainActor.run {
                 fetchingWebpageContents = false
+                
+                if let webContextItemIndex = getWebContextItemIndex(
+                    pendingContextList: model.pendingContextList,
+                    comparativeWebUrl: url
+                ) {
+                    model.pendingContextList[webContextItemIndex] = .error(url, error)
+                }
             }
         }
     }

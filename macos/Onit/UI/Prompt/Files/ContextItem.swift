@@ -35,7 +35,7 @@ struct ContextItem: View {
         }
         .padding(3)
         .background(isEditing ? .gray700 : .clear, in: .rect(cornerRadius: 4))
-        .frame(maxWidth: isEditing ? 250 : nil)
+        .frame(maxWidth: isEditing && !item.isError ? 250 : nil)
     }
 
     var contentView: some View {

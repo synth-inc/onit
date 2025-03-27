@@ -78,6 +78,13 @@ extension Context {
             self = .error(url, error)
         }
     }
+    
+    var isError: Bool {
+        if case .error = self {
+            return true
+        }
+        return false
+    }
 }
 
 extension Context: Codable {
