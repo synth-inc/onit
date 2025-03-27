@@ -14,18 +14,11 @@ import WebKit
 // allow webpage content parsing for web contexts.
 
 class WebContentFetchService {
-    enum FetchError: Error {
-        case networkError(Error)
-        case parsingError(Error)
-        case invalidResponse
-        case contentTooLarge
-    }
-    
     static func fetchWebpageContent(from url: URL) async throws -> URL {
         // Check Content-Type header.
         let (_, response) = try await URLSession.shared.data(from: url)
         guard let httpResponse = response as? HTTPURLResponse else {
-            throw FetchError.invalidResponse
+            throw FetchingError.invalidResponse(message: url.absoluteString)
         }
         
         if let contentType = httpResponse.value(forHTTPHeaderField: "Content-Type"),
@@ -47,12 +40,12 @@ class WebContentFetchService {
         
         guard let httpResponse = response as? HTTPURLResponse,
               (200...299).contains(httpResponse.statusCode) else {
-            throw FetchError.invalidResponse
+            throw FetchingError.invalidResponse(message: url.absoluteString)
         }
         
         // Limiting PDF webpage size to 50MB.
-        guard data.count < 50_000_000 else {
-            throw FetchError.contentTooLarge
+         guard data.count < 50_000_000 else {
+            throw FetchingError.failedRequest(message: "PDF too large: \(url.absoluteString)")
         }
     
         // Maintaining context to the original PDF file.
@@ -108,7 +101,9 @@ class WebContentFetchService {
             
             return tempPdfTextFile
         } else {
-            throw FetchError.parsingError(NSError(domain: "PDFContentFetch", code: 2))
+            throw FetchingError.failedRequest(
+                message: "Could not read PDF content from URL: \(url)"
+            )
         }
     }
     
@@ -158,7 +153,9 @@ class WebContentFetchService {
            
             return tempHtmlTextFileUrl
         } catch {
-            throw FetchError.parsingError(error)
+            throw FetchingError.invalidResponse(
+                message: "Could not read content from URL: \(url.absoluteString)"
+            )
         }
     }
 }
