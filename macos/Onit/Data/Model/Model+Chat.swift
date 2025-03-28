@@ -35,10 +35,7 @@ extension OnitModel {
                 currentPrompts = []
                 SystemPromptState.shared.shouldShowSystemPrompt = false
                 let modelContext = container.mainContext
-
-                // Preventing crash for when unwrapping currentChat fails.
-                guard let chat = currentChat else { return }
-                modelContext.insert(chat)
+                modelContext.insert(currentChat!)
                 
                 finishPromptCreation(prompt)
             }
@@ -114,7 +111,7 @@ extension OnitModel {
                     print("Skipping index out of bounds for prior prompt.")
                 }
                 
-                currentPrompt = currentPrompt?.priorPrompt
+                currentPrompt = currentPrompt!.priorPrompt
             }
 
             do {
