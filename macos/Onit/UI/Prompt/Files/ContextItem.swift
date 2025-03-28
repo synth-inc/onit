@@ -17,7 +17,7 @@ struct ContextItem: View {
         HStack(spacing: 0) {
             switch item {
             case .web(let url, _):
-                WebContextItem(item: item, url: url, title: url.host() ?? url.absoluteString)
+                WebContextItem(item: item, url: url, title: url.host() ?? url.absoluteString, isEditing: isEditing)
             case .auto:
                 Button {
                     model.showAutoContextWindow(context: item)
@@ -35,7 +35,7 @@ struct ContextItem: View {
         }
         .padding(3)
         .background(isEditing ? .gray700 : .clear, in: .rect(cornerRadius: 4))
-        .frame(maxWidth: isEditing && !item.isError ? 250 : nil)
+        .frame(maxWidth: item.isError ? 350 : isEditing ? 250 : nil)
     }
 
     var contentView: some View {

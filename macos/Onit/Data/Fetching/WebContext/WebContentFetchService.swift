@@ -44,7 +44,7 @@ class WebContentFetchService {
         }
         
         // Limiting PDF webpage size to 50MB.
-         guard data.count < 50_000_000 else {
+        guard data.count < 50_000_000 else {
             throw FetchingError.failedRequest(message: "PDF too large: \(url.absoluteString)")
         }
     
@@ -142,8 +142,9 @@ class WebContentFetchService {
             let contentTitle = "Title: \(try parsedWebpageHTML.title())"
             let contentCutoffDescription = "\(contentUrl) \(contentTitle)"
             let contentMetaDescription = contentUrl + "\n" + contentTitle + "\n\n"
+            let invalidWebpageInstruction = "\n\n If the webpage content is empty, requires authentication, or doesn't show valid content, just respond telling me that."
             
-            let content = "\n\n\(contentCutoffDescription) WEBPAGE START\n\n" + contentMetaDescription + fullWebpageText + "\n\n\(contentCutoffDescription)  WEBPAGE END\n\n"
+            let content = "\n\n\(contentCutoffDescription) WEBPAGE START\n\n" + contentMetaDescription + fullWebpageText + invalidWebpageInstruction + "\n\n\(contentCutoffDescription)  WEBPAGE END\n\n"
             
             let tempHtmlTextFileUrl = FileManager.default.temporaryDirectory
                 .appendingPathComponent("\(url.host ?? "webpage")-\(UUID().uuidString)")

@@ -14,6 +14,7 @@ struct WebContextItem: View {
     // Local states.
     private let item: Context
     private let url: URL
+    private let isEditing: Bool
     //
     @State private var title: String
     @State private var faviconUrl: URL? = nil
@@ -27,11 +28,12 @@ struct WebContextItem: View {
     }
     
     // Initializing local states.
-    init(item: Context, url: URL, title: String) {
+    init(item: Context, url: URL, title: String, isEditing: Bool) {
         self.item = item
         self.url = url
         // self.title = title.isEmpty ? url.host ?? url.absoluteString : title
         self.title = title
+        self.isEditing = isEditing
     }
     
     var body: some View {
@@ -82,10 +84,12 @@ struct WebContextItem: View {
         .onAppear() {
             fetchWebpageFavicon()
             
-            Task {
-                await withTaskGroup(of: Void.self) { group in
-                    group.addTask { await fetchWebpageTitle() }
-                    group.addTask { await fetchWebpageContents() }
+            if isEditing {
+                Task {
+                    await withTaskGroup(of: Void.self) { group in
+                        group.addTask { await fetchWebpageTitle() }
+                        group.addTask { await fetchWebpageContents() }
+                    }
                 }
             }
         }

@@ -243,12 +243,12 @@ struct TextInputView: View {
             onSubmit: sendAction,
             maxHeight: maxHeightLimit,
             placeholder: placeholderText,
-            audioRecorder: audioRecorder)
+            audioRecorder: audioRecorder
+        )
         .focused($focused)
         .frame(height: min(textHeight, maxHeightLimit))
         .onAppear { focused = true }
         .onChange(of: model.textFocusTrigger) { focused = true }
-        .onChange(of: model.pendingInstruction, handleUrlDetection)
         .appFont(.medium16)
         .foregroundStyle(.white)
     }
@@ -270,85 +270,6 @@ struct TextInputView: View {
             }
         } else {
             "New instructions..."
-        }
-    }
-
-    private func detectURLs(in text: String) -> [URL] {
-        guard let detectUrlRegex = try? NSRegularExpression(
-            pattern: "https?://(?:www\\.|(?!www))[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\\.[^\\s]{2,}|www\\.[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\\.[^\\s]{2,}|https?://(?:www\\.|(?!www))[a-zA-Z0-9]+\\.[^\\s]{2,}|www\\.[a-zA-Z0-9]+\\.[^\\s]{2,}",
-            options: .caseInsensitive
-        ) else {
-            return []
-        }
-        
-        let urlMatches = detectUrlRegex.matches(
-            in: text,
-            options: [],
-            range: NSRange(location: 0, length: text.utf16.count)
-        )
-        
-        let detectedURLs = urlMatches.compactMap { match -> URL? in
-            if let range = Range(match.range, in: text) {
-                let urlString = String(text[range])
-                // Add https:// to www. URLs that don't have a scheme
-                let fixedURLString = urlString.hasPrefix("www.") && !urlString.hasPrefix("http") 
-                    ? "https://" + urlString 
-                    : urlString
-                return URL(string: fixedURLString)
-            }
-            return nil
-        }
-        
-        // Remove duplicate links. Not using Set<URL> here, because we want to preserve the links in the order they appear in chat.
-        return detectedURLs.reduce(into: [URL]()) { uniqueURLs, url in
-            if !uniqueURLs.contains(url) {
-                uniqueURLs.append(url)
-            }
-        }
-    }
-    
-    // Used for debounced URL detection in user input (for detecting web context).
-    @MainActor
-    private func handleUrlDetection(_ oldValue: String, newValue: String) -> Void {
-        // Cancel previous URL detection task to reset (if it isn't `nil`).
-        urlDetectionTask?.cancel()
-        
-        // Create new debounced detection task (200ms).
-        urlDetectionTask = Task {
-            do {
-                try await Task.sleep(for: .seconds(0.2))
-                
-                // Prevents errors due to trying to cancel a Task that's already been cancelled.
-                guard !Task.isCancelled else { return }
-                
-                let urls = detectURLs(in: newValue)
-                
-                detectedURLs = urls
-                
-                 for url in urls {
-                     let urlExists = model.pendingContextList.contains { context in
-                         if case .web(let existingUrl, _) = context {
-                             return existingUrl == url
-                         }
-                         return false
-                     }
-                     
-                     if !urlExists {
-                         model.pendingContextList.append(.web(url, nil))
-                     }
-                 }
-            } catch {
-                // This catches errors thrown by the async Task.sleep method.
-                // This is most likely an okay error, as it's tied to the guarded task cancellation.
-                //
-                // Uncomment the debug prints below if you want to see more details.
-                
-                // #if DEBUG
-                //    print("\n\n\n")
-                //    print("Error: \(error)")
-                //    print("\n\n\n")
-                //#endif
-            }
         }
     }
 
