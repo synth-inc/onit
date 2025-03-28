@@ -77,6 +77,28 @@ extension Context: Codable {
 
     enum ContextType: String, Codable {
         case auto, file, image, tooBig, error
+
+        init(from decoder: Decoder) throws {
+            let container = try decoder.singleValueContainer()
+            let rawValue = try container.decode(String.self)
+            
+            // Handle legacy 'webAuto' case
+            if rawValue == "webAuto" {
+                self = .auto
+                return
+            }
+            
+            if let type = ContextType(rawValue: rawValue) {
+                self = type
+            } else {
+                throw DecodingError.dataCorrupted(
+                    DecodingError.Context(
+                        codingPath: decoder.codingPath,
+                        debugDescription: "Cannot initialize ContextType from invalid String value \(rawValue)"
+                    )
+                )
+            }
+        }
     }
 
     init(from decoder: Decoder) throws {

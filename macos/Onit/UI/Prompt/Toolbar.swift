@@ -8,6 +8,7 @@
 import Defaults
 import KeyboardShortcuts
 import SwiftUI
+import SwiftData
 
 struct Toolbar: View {
     @Environment(\.model) var model
@@ -43,6 +44,8 @@ struct Toolbar: View {
         return fitActiveWindow ? "Detach from active window" : "Fit to active window"
     }
 
+    @State private var showingHistory = false
+
     var body: some View {
         HStack(spacing: 4) {
             if isRegularApp {
@@ -59,6 +62,7 @@ struct Toolbar: View {
                 fitActiveWindowButton
             }
             localMode
+            history
             settings
             
             if !isRegularApp {
@@ -244,11 +248,15 @@ struct Toolbar: View {
 
     var history: some View {
         Button {
-            model.showHistory = true
+            showingHistory.toggle()
         } label: {
             Image(.history)
                 .renderingMode(.template)
                 .padding(2)
+        }
+        .popover(isPresented: $showingHistory) {
+            HistoryView()
+                .modelContainer(SwiftDataContainer.appContainer)
         }
         .tooltip(prompt: "History")
     }
