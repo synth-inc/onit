@@ -23,7 +23,7 @@ struct ModelValidationEndpoint: Endpoint {
         case .perplexity:
             return URL(string: "https://api.perplexity.ai")!
         default: // e.g. .custom
-            return URL(string: "")!
+            fatalError("Custom providers must provide a base URL")
         }
     }
 
@@ -69,13 +69,12 @@ struct ModelValidationEndpoint: Endpoint {
         guard let token = token else { return nil }
         
         var headers = [String: String]()
+        
         switch provider {
-        case .openAI:
-            headers["Authorization"] = "Bearer \(token)"
         case .anthropic:
             headers["x-api-key"] = token
             headers["anthropic-version"] = "2023-06-01"
-        default: // .xAI, .googleAI, .deepSeek, .perplexity, .custom
+        default: // .openAI, .xAI, .googleAI, .deepSeek, .perplexity, .custom
             headers["Authorization"] = "Bearer \(token)"
         }
         return headers
