@@ -9,12 +9,16 @@ import SwiftUI
 import UniformTypeIdentifiers
 
 enum DropItem: Transferable {
+    case data(Data)
     case url(URL)
-    case image(NSImage)
-
+    
     static var transferRepresentation: some TransferRepresentation {
-        ProxyRepresentation { DropItem.url($0) }
-        ProxyRepresentation { DropItem.image($0) }
+        DataRepresentation(contentType: UTType.image) { image in
+            image.data!
+        } importing: { data in
+            return DropItem.data(data)
+        }
+        ProxyRepresentation { return DropItem.url($0) }
     }
 
     var url: URL? {
@@ -24,10 +28,10 @@ enum DropItem: Transferable {
         }
     }
 
-    var image: NSImage? {
-        switch self {
-        case .image(let image): return image
-        default: return nil
-        }
-    }
+   var data: Data? {
+       switch self {
+       case .data(let data): return data
+       default: return nil
+       }
+   }
 }

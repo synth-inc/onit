@@ -25,7 +25,13 @@ import SwiftUI
     var isTooltipActive = false
     var showHistory: Bool = false
     var showMenuBarExtra: Bool = false
-    var panel: CustomPanel? = nil
+    weak var panel: CustomPanel? = nil {
+        didSet {
+            isPanelOpened.send(panel != nil)
+        }
+    }
+    var isPanelOpened = PassthroughSubject<Bool, Never>()
+    var isPanelMiniaturized = PassthroughSubject<Bool, Never>()
 
     var currentChat: Chat?
     var currentPrompts: [Prompt]?
@@ -36,8 +42,8 @@ import SwiftUI
             pendingInstructionSubject.send(pendingInstruction)
         }
     }
-    
     var pendingInstructionSubject = CurrentValueSubject<String, Never>("")
+    var pendingInstructionCursorPosition: Int = 0
     
     var pendingContextList: [Context] = [] {
         didSet {
