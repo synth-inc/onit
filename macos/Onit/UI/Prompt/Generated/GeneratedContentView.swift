@@ -16,13 +16,13 @@ struct GeneratedContentView: View {
     var prompt: Prompt
     
     var isPartial: Bool {
-        let response = prompt.responses[prompt.generationIndex]
+        let response = prompt.sortedResponses[prompt.generationIndex]
         
         return response.isPartial
     }
     
     var textToRead: String {
-        let response = prompt.responses[prompt.generationIndex]
+        let response = prompt.sortedResponses[prompt.generationIndex]
         
         return response.isPartial ? model.streamedResponse : response.text
     }

@@ -19,7 +19,7 @@ struct HistoryRowView: View {
             model.showHistory = false
         } label: {
             HStack {
-                Text(chat.prompts.first?.instruction ?? "")
+                Text(chat.prompts.first?.responses[chat.prompts.first?.generationIndex ?? 0].instruction ?? "")
                     .appFont(.medium16)
                     .foregroundStyle(.FG)
                 Spacer()

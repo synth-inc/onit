@@ -22,7 +22,7 @@ struct GeneratedToolbar: View {
             Spacer()
             if prompt.generationIndex >= 0 &&
                 prompt.generationIndex < prompt.responses.count,
-                let model = prompt.responses[prompt.generationIndex].model {
+                let model = prompt.sortedResponses[prompt.generationIndex].model {
                 Text("\(model)")
                     .foregroundColor(Color.gray300)
             }
@@ -72,7 +72,7 @@ struct GeneratedToolbar: View {
     var insert: some View {
         Button {
             if prompt.generationIndex != -1 && !prompt.responses.isEmpty {
-                let text = prompt.responses[prompt.generationIndex].text
+                let text = prompt.sortedResponses[prompt.generationIndex].text
                 HighlightHintWindowController.shared.insertText(text)
                 model.closePanel()
             } else {
