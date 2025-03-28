@@ -68,7 +68,7 @@ import SwiftData
 
     func updateGenerationIndex(_ newIndex: Int) {
         generationIndex = newIndex
-        if generationIndex >= 0 && generationIndex < priorInstructions.count {
+        if generationIndex >= 0 && generationIndex < sortedResponses.count {
             instruction = sortedResponses[generationIndex].instruction ?? ""
         }
     }
