@@ -1,0 +1,3 @@
+[submodule "LLMStream"]
+	path = LLMStream
+	url = https://github.com/synth-inc/LLMStream
