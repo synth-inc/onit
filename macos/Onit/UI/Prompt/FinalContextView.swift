@@ -114,6 +114,7 @@ struct FinalContextView: View {
                             // Handle send action
                             isEditing = false
                             model.generate(prompt)
+                            model.textFocusTrigger.toggle()
                         }
                         .padding(.vertical, 6)
                         .padding(.horizontal, 8)
@@ -143,6 +144,7 @@ struct FinalContextView: View {
                     .cornerRadius(6)
                     .opacity(isHoveringInstruction && !isEditing ? 1 : 0) // Initially hidden
                     .offset(x: -8, y: 6) // 6 pixels down from the top edge and 8 pixels in from the right edge
+                    .allowsHitTesting(false)
             }
             .onHover { hovering in
                 isHoveringInstruction = hovering
