@@ -304,7 +304,7 @@ class AccessibilityNotificationsManager: ObservableObject {
     
     private func handleWindowBounds(for element: AXUIElement) {
         handleExternalElement(element) { [weak self] elementPid in
-            if let window = element.findWindow() {
+            if let window = element.getWindows().first {
                 self?.activeWindowElement = window
             }
         }

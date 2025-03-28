@@ -14,8 +14,6 @@ struct TetheredButton: View {
     
     @ObservedObject private var featureFlagsManager = FeatureFlagManager.shared
     
-    @Default(.fitActiveWindow) var fitActiveWindow
-    
     static let width: CGFloat = 16
     static let height: CGFloat = 42
     
@@ -43,7 +41,7 @@ struct TetheredButton: View {
             return "⚠ Allow Onit application in \"Privacy & Security/Accessibility\""
         }
         
-        return fitActiveWindow ? "Detach from active window" : "Fit to active window"
+        return onDrag == nil ? "Detach from active window" : "Fit to active window"
     }
     
     var body: some View {
@@ -64,21 +62,15 @@ struct TetheredButton: View {
                 }
                 
                 if onDrag == nil {
-                    fitActiveWindow.toggle()
+                    model.closePanel()
                 } else {
-                    fitActiveWindow = false
-                    fitActiveWindow = true
-                }
-                if model.panel == nil {
-                    model.showPanel()
-                } else {
-                    model.panel?.orderFront(nil)
+                    model.launchPanel()
                 }
             }) {
                 Image(.smallChevRight)
                     .renderingMode(.template)
                     .foregroundColor(.white)
-                    .rotationEffect(fitActiveWindow ? .degrees(0) : .degrees(180))
+                    .rotationEffect(onDrag == nil ? .degrees(0) : .degrees(180))
                     .frame(width: TetheredButton.width, height: TetheredButton.height, alignment: .center)
                     .overlay(
                         Group {

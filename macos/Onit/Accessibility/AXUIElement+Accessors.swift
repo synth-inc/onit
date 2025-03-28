@@ -34,11 +34,11 @@ extension AXUIElement {
         }
     }
 
-    func findWindow() -> AXUIElement? {
+    func getWindows() -> [AXUIElement] {
         var elementPid: pid_t = 0
 
         guard AXUIElementGetPid(self, &elementPid) == .success, elementPid != getpid() else {
-            return nil
+            return []
         }
         
         let appElement = AXUIElementCreateApplication(elementPid)
@@ -47,12 +47,11 @@ extension AXUIElement {
         let result = AXUIElementCopyAttributeValues(appElement, kAXWindowsAttribute as CFString, 0, 1, &windowList)
         
         guard result == .success,
-              let windows = windowList as? [AXUIElement],
-              let firstWindow = windows.first else {
-            return nil
+              let windows = windowList as? [AXUIElement] else {
+            return []
         }
         
-        return firstWindow
+        return windows
     }
 
     func size() -> CGSize? {

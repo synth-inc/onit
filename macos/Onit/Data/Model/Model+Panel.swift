@@ -62,6 +62,7 @@ extension OnitModel: NSWindowDelegate {
             closePanel()
         } else {
             panel.show()
+            isPanelOpened.send(false)
             isPanelOpened.send(true)
             textFocusTrigger.toggle()
         }

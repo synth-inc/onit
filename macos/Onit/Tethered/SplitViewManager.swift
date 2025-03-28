@@ -76,22 +76,15 @@ class SplitViewManager: ObservableObject {
             .prepend(model.panel?.isMiniaturized ?? false)
         let isPanelOpenedAndNotMinimized = Publishers.CombineLatest(isPanelOpened, isPanelMiniaturized)
             .map { $0 && !$1 }
-        let fitActiveWindowPublisher = Defaults.publisher(.fitActiveWindow)
-            .map(\.newValue)
         
-        // App State Observer
-        Publishers.CombineLatest(fitActiveWindowPublisher, isPanelOpenedAndNotMinimized)
-            .sink(receiveValue: appStateObserver)
-            .store(in: &otherCancellables)
-        
-        // Window Visibility Observer
-        Publishers.CombineLatest(activeWindowElement, $targetApplicationPID)
-            .sink(receiveValue: tetheredWindowVisibilityObserver)
-            .store(in: &otherCancellables)
-        
-        // Window Positioning Observer
-        Publishers.CombineLatest3(activeWindowElement, isPanelOpenedAndNotMinimized, fitActiveWindowPublisher)
+        // Window positioning observer
+        Publishers.CombineLatest(activeWindowElement, isPanelOpenedAndNotMinimized)
             .sink(receiveValue: windowPositioningObserver)
+            .store(in: &otherCancellables)
+        
+        // Tether hint visibility observer
+        Publishers.CombineLatest(activeWindowElement, $targetApplicationPID)
+            .sink(receiveValue: tetherHintVisibilityObserver)
             .store(in: &otherCancellables)
     }
     
@@ -101,45 +94,13 @@ class SplitViewManager: ObservableObject {
     }
     
     // MARK: - Observers
-    private func appStateObserver(isTethered: Bool, isPanelOpened: Bool) {
+    private func tetherHintVisibilityObserver(activeWindow: AXUIElement?, targetApplicationPID: pid_t?) {
         if shouldLog {
-            print("SplitViewManager - appStateObserver - isTethered: \(isTethered), isPanelOpened: \(isPanelOpened)")
+            print("SplitViewManager - tetherHintVisibilityObserver - targetPID \(String(describing: targetApplicationPID)), activeWindow pid \(String(describing: activeWindow?.pid()))")
         }
         
-        // If we're untethering, restore the window frame first
-        if !isTethered {
-            if let pid = self.targetApplicationPID,
-               let initialFrame = self.targetInitialFrame,
-               let window = pid.getAXUIElement().children()?.first {
-                _ = window.setFrame(initialFrame)
-            }
-            
-            self.targetApplicationPID = nil
-            self.targetInitialFrame = nil
-            self.model?.panel?.level = .floating
-            return
-        }
-        
-        // If we're tethering and panel is opened
-        if isTethered && isPanelOpened {
-            // Only update if we don't have a target or if the target has changed
-            if let window = AccessibilityNotificationsManager.shared.activeWindowElement,
-               window.pid() != self.targetApplicationPID {
-                self.targetInitialFrame = window.frame()
-                
-                if let pid = window.pid() {
-                    self.targetApplicationPID = pid
-                    self.model?.panel?.level = .floating
-                }
-            }
-        }
-    }
-    
-    private func tetheredWindowVisibilityObserver(activeWindow: AXUIElement?, targetPID: pid_t?) {
-        if shouldLog {
-            print("SplitViewManager - tetheredWindowVisibilityObserver - targetPID \(String(describing: targetPID)), activeWindow pid \(String(describing: activeWindow?.pid()))")
-        }
-        let shouldShowTether = targetPID == nil || activeWindow?.pid() != targetPID
+        // Always show tether hint if we're not tethered to the active window
+        let shouldShowTether = targetApplicationPID == nil || activeWindow?.pid() != targetApplicationPID
         
         if shouldShowTether {
             self.showTetherWindow(activeWindow: activeWindow)
@@ -148,25 +109,44 @@ class SplitViewManager: ObservableObject {
         }
     }
     
-    private func windowPositioningObserver(window: AXUIElement?, isPanelOpened: Bool, isTethered: Bool) {
-        guard isTethered,
-              isPanelOpened,
-              let window = window,
+    private func windowPositioningObserver(window: AXUIElement?, isPanelOpened: Bool) {
+        guard let window = window,
               let currentPID = window.pid() else {
             if shouldLog {
-                print("SplitViewManager - windowPositioningObserver - ERROR isTethered:\(isTethered) isPanelOpened:\(isPanelOpened) windowIsNil:\(window == nil) windowPidIsNil:\(window?.pid() == nil)")
+                print("SplitViewManager - windowPositioningObserver - ERROR windowIsNil:\(window == nil) windowPidIsNil:\(window?.pid() == nil)")
             }
             return
         }
-        if shouldLog {
-            print("SplitViewManager - windowPositioningObserver - isPanelOpened: \(isPanelOpened), isTethered: \(isTethered) isTetheredApp \(currentPID == self.targetApplicationPID)")
-        }
         
-        if currentPID == self.targetApplicationPID {
-            self.model?.panel?.level = .floating
-            self.repositionWindow(window: window)
+        if isPanelOpened {
+            // When panel is opened, tether to the current window if we're not already tethered
+            if self.targetApplicationPID == nil {
+                if shouldLog {
+                    print("SplitViewManager - windowPositioningObserver - Tether to the active app \(currentPID)")
+                }
+                self.targetInitialFrame = window.frame()
+                self.targetApplicationPID = currentPID
+            }
+            
+            // If we're tethered to this window, update its position
+            if currentPID == self.targetApplicationPID {
+                if shouldLog {
+                    print("SplitViewManager - windowPositioningObserver - Already tethered to this app \(currentPID)")
+                }
+                self.repositionWindow(window: window)
+                self.model?.panel?.level = .floating
+            } else {
+                self.model?.panel?.level = .normal
+            }
         } else {
-            self.model?.panel?.level = .normal
+            // When panel is closed, untether
+            if let targetPID = self.targetApplicationPID,
+               let initialFrame = self.targetInitialFrame,
+               let targetWindow = targetPID.getAXUIElement().getWindows().first {
+                _ = targetWindow.setFrame(initialFrame)
+            }
+            self.targetApplicationPID = nil
+            self.targetInitialFrame = nil
         }
     }
     
@@ -182,6 +162,26 @@ class SplitViewManager: ObservableObject {
         if shouldLog {
             print("SplitViewManager - repositionWindow - position: \(position), size: \(size)")
         }
+        
+        // Special case for Finder (desktop)
+        if isFinderShowingDesktopOnly(activeWindow: window) {
+            if let mouseScreen = NSRect(origin: NSEvent.mouseLocation, size: NSSize(width: 1, height: 1)).findScreen() {
+                let screenFrame = mouseScreen.frame
+                let onitWidth = minOnitWidth
+                let onitHeight = screenFrame.height - ContentView.bottomPadding
+                let onitY = screenFrame.maxY - onitHeight
+                let onitX = screenFrame.maxX - onitWidth
+                
+                panel.setFrame(NSRect(
+                    x: onitX,
+                    y: onitY,
+                    width: onitWidth,
+                    height: onitHeight
+                ), display: true, animate: true)
+            }
+            return
+        }
+        
         guard let screen = NSRect(origin: position, size: size).findScreen() else { return }
         
         let screenFrame = screen.frame
@@ -228,6 +228,7 @@ class SplitViewManager: ObservableObject {
         if shouldLog {
             print("SplitViewManager - showTetherWindow")
         }
+        
         let window = NSWindow(
             contentRect: NSRect(x: 0, y: 0, width: TetheredButton.width, height: TetheredButton.height),
             styleMask: [.borderless, .titled],
@@ -261,7 +262,22 @@ class SplitViewManager: ObservableObject {
         window.orderFront(nil)
         
         self.tetherWindow = window
-        updateTetherWindowPosition(for: activeWindow)
+        
+        if isFinderShowingDesktopOnly(activeWindow: activeWindow) {
+            if let mouseScreen = NSRect(origin: NSEvent.mouseLocation, size: NSSize(width: 1, height: 1)).findScreen() {
+                let screenFrame = mouseScreen.frame
+                
+                let frame = NSRect(
+                    x: screenFrame.maxX - TetheredButton.width,
+                    y: screenFrame.maxY - TetheredButton.height,
+                    width: TetheredButton.width,
+                    height: TetheredButton.height
+                )
+                window.setFrame(frame, display: true)
+            }
+        } else {
+            updateTetherWindowPosition(for: activeWindow)
+        }
     }
     
     private func hideTetherWindow() {
@@ -324,11 +340,10 @@ class SplitViewManager: ObservableObject {
         let maxY = (screenFrame.maxY - screenFrame.minY) - position.y
         let minY = maxY - size.height + TetheredButton.height
         
-        let lastYComputed: CGFloat
+        var lastYComputed = self.lastYComputed ?? ((size.height / 2) - (TetheredButton.height / 2))
+        
         if let offset = offset {
-            lastYComputed = self.lastYComputed! - offset
-        } else {
-            lastYComputed = self.lastYComputed!
+            lastYComputed -= offset
         }
         
         let finalOffset: CGFloat
@@ -342,5 +357,18 @@ class SplitViewManager: ObservableObject {
         }
         
         return finalOffset
+    }
+    
+    private func isFinderShowingDesktopOnly(activeWindow: AXUIElement?) -> Bool {
+        let runningApps = NSWorkspace.shared.runningApplications
+        
+        guard let finderAppPid = runningApps.first(where: { $0.bundleIdentifier == "com.apple.finder" })?.processIdentifier,
+              let activeWindow = activeWindow,
+              activeWindow.pid() == finderAppPid else {
+            
+            return false
+        }
+        
+        return activeWindow.getWindows().first?.role() == "AXScrollArea"
     }
 }
