@@ -22,6 +22,9 @@ struct TextInputView: View {
     
     @State private var textHeight: CGFloat = 20
     private let maxHeightLimit: CGFloat = 100
+    
+    @State private var detectedURLs: [URL] = []
+    @State private var urlDetectionTask: Task<Void, Never>? = nil
 
     @StateObject private var audioRecorder = AudioRecorder()
     @State private var showingAPIKeyAlert = false
@@ -240,7 +243,8 @@ struct TextInputView: View {
             onSubmit: sendAction,
             maxHeight: maxHeightLimit,
             placeholder: placeholderText,
-            audioRecorder: audioRecorder)
+            audioRecorder: audioRecorder
+        )
         .focused($focused)
         .frame(height: min(textHeight, maxHeightLimit))
         .onAppear { focused = true }

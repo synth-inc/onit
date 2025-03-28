@@ -106,12 +106,33 @@ extension OnitModel {
     }
 
     func removeContext(context: Context) {
-        self.pendingContextList.removeAll { $0 == context }
-        if case .image(let url) = context {
+        switch context {
+        case .image(let url):
             uploadTasks[url]?.cancel()
             uploadTasks[url] = nil
             imageUploads[url] = nil
+        case .web(let existingWebUrl, _):
+            if let webContextItemIndex = getWebContextItemIndex(
+                pendingContextList:self.pendingContextList,
+                comparativeWebUrl: existingWebUrl
+            ) {
+                let webContextItem = self.pendingContextList[webContextItemIndex]
+                
+                if case .web(_, let extractedWebContentUrl) = webContextItem {
+                    do {
+                        try FileManager.default.removeItem(at: extractedWebContentUrl!)
+                    } catch {
+                        #if DEBUG
+                        print("Failed to delete web content file: \(error)")
+                        #endif
+                    }
+                }
+            }
+        default:
+            break
         }
+        
+        self.pendingContextList.removeAll { $0 == context }
     }
 
     func focusText() {

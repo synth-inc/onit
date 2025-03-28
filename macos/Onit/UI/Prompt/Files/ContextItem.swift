@@ -16,6 +16,8 @@ struct ContextItem: View {
     var body: some View {
         HStack(spacing: 0) {
             switch item {
+            case .web(let url, _):
+                WebContextItem(item: item, url: url, title: url.host() ?? url.absoluteString, isEditing: isEditing)
             case .auto:
                 Button {
                     model.showAutoContextWindow(context: item)
@@ -33,6 +35,7 @@ struct ContextItem: View {
         }
         .padding(3)
         .background(isEditing ? .gray700 : .clear, in: .rect(cornerRadius: 4))
+        .frame(maxWidth: item.isError ? 350 : isEditing ? 250 : nil)
     }
 
     var contentView: some View {
@@ -50,6 +53,8 @@ struct ContextItem: View {
         HStack(spacing: 2) {
             Text(name)
                 .foregroundStyle(.white)
+                .lineLimit(1)
+                .truncationMode(.tail)
             if let fileType = item.fileType {
                 Text(fileType)
                     .foregroundStyle(.gray200)
@@ -68,6 +73,8 @@ struct ContextItem: View {
             error.localizedDescription
         case .tooBig:
             "Upload exceeds model limit"
+        case .web(let url, _):
+            url.host() ?? url.absoluteString
         }
     }
 

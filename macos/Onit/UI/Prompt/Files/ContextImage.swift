@@ -26,13 +26,13 @@ struct ContextImage: View {
     var autoContext: some View {
         Image(.stars)
             .resizable()
-            .frame(width: 20, height: 20)
+            .frame(width: 16, height: 16)
     }
 
     var file: some View {
         Image(.file)
             .resizable()
-            .frame(width: 20, height: 20)
+            .frame(width: 16, height: 16)
     }
 
     var imageRect: RoundedRectangle {
@@ -41,7 +41,7 @@ struct ContextImage: View {
 
     func image(url: URL) -> some View {
         Color.clear
-            .frame(width: 20, height: 20)
+            .frame(width: 16, height: 16)
             .overlay {
                 Image(nsImage: NSImage(byReferencing: url))
                     .resizable()
@@ -58,6 +58,6 @@ struct ContextImage: View {
     var warning: some View {
         Image(.warning)
             .resizable()
-            .frame(width: 20, height: 20)
+            .frame(width: 16, height: 16)
     }
 }
