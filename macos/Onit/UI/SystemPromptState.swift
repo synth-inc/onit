@@ -15,4 +15,5 @@ final class SystemPromptState {
     var activeApplication: String?
     var shouldShowSystemPrompt: Bool = false
     var shouldShowSelection: Bool = false
+    var userSelectedPrompt: Bool = false
 }

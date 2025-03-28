@@ -8,19 +8,20 @@ struct GeneralTab: View {
     @Default(.fontSize) var fontSize
     @Default(.lineHeight) var lineHeight
     @Default(.panelPosition) var panelPosition
+    @Default(.isRegularApp) var isRegularApp
     @Default(.launchShortcutToggleEnabled) var launchShortcutToggleEnabled
     @Default(.createNewChatOnPanelOpen) var createNewChatOnPanelOpen
     @Default(.openOnMouseMonitor) var openOnMouseMonitor
 
     @State var isLaunchAtStartupEnabled: Bool = SMAppService.mainApp.status == .enabled
     @State var isAnalyticsEnabled: Bool = PostHogSDK.shared.isOptOut() == false
-
+    
     var body: some View {
         Form {
             launchOnStartupSection
             
             analyticsSection
-
+            
             appearanceSection
             
             experimentalSection
@@ -28,7 +29,7 @@ struct GeneralTab: View {
         .formStyle(.grouped)
         .padding()
     }
-
+    
     var launchOnStartupSection: some View {
         Section {
             VStack(alignment: .leading, spacing: 20) {
@@ -164,7 +165,30 @@ struct GeneralTab: View {
     var experimentalSection: some View {
         Section {
             VStack(spacing: 16) {
-                
+                HStack {
+                    Text("Use Onit as a standard application")
+                        .font(.system(size: 13))
+                    SettingInfoButton(
+                        title: "Use Onit as a standard application",
+                        description:
+                            "When enabled, Onit will be a standard application, meaing it can be accessed from the Dock and Spotlight.",
+                        defaultValue: "off",
+                        valueType: "Bool"
+                    )
+                    Spacer()
+                    Toggle(
+                        "",
+                        isOn: $isRegularApp
+                    )
+                    .toggleStyle(.switch)
+                    .controlSize(.small)
+                }
+                // Re-draw the panel on change
+                .onChange(of: isRegularApp, initial: false) {
+                    model.closePanel()
+                    model.showPanel()
+                }
+
                 HStack {
                     Text("Use launch shortcut as a toggle")
                         .font(.system(size: 13))

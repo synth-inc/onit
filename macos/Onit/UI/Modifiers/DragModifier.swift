@@ -30,15 +30,17 @@ struct DragModifier: ViewModifier {
                 Color.clear
                     .dropDestination(for: DropItem.self) { items, location in
                         guard let item = items.first else { return false }
-                        if let image = item.image {
-                            model.addContext(images: [image])
-                            return true
+                        if let data = item.data {
+                            if let image = NSImage(data: data) {
+                                model.addContext(images: [image])
+                                return true
+                            }
+                            return false
                         } else if let url = item.url {
                             model.addContext(urls: [url])
                             return true
-                        } else {
-                            return false
                         }
+                        return false
                     } isTargeted: { isHovering in
                         dragging = isHovering
                     }
