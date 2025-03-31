@@ -22,6 +22,9 @@ extension Defaults.Keys {
     static let deepSeekToken = Key<String?>("deepSeekToken", default: nil)
     static let perplexityToken = Key<String?>("perplexityToken", default: nil)
     
+    // Web search tokens
+    static let tavilyAPIToken = Key<String>("tavilyAPIToken", default: "")
+    
     // Remote model validation
     static let isOpenAITokenValidated = Key<Bool>("openAITokenValidated", default: false)
     static let isAnthropicTokenValidated = Key<Bool>("anthropicTokenValidated", default: false)
@@ -29,6 +32,9 @@ extension Defaults.Keys {
     static let isGoogleAITokenValidated = Key<Bool>("googleAITokenValidated", default: false)
     static let isDeepSeekTokenValidated = Key<Bool>("deepSeekTokenValidated", default: false)
     static let isPerplexityTokenValidated = Key<Bool>("perplexityTokenValidated", default: false)
+    
+    // Web search validation
+    static let isTavilyAPITokenValidated = Key<Bool>("tavilyAPITokenValidated", default: false)
         
     // Remote model usage
     static let useOpenAI = Key<Bool>("useOpenAI", default: false)

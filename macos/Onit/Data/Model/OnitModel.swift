@@ -100,7 +100,27 @@ import SwiftUI
     var streamedResponse: String = ""
     
     var promptSuggestionService: SystemPromptSuggestionService?
+    
+    // Web search state
+    var isWebSearchEnabled: Bool = false
+    var isSearchingWeb: Bool = false
+    var webSearchResults: [WebSearchResult] = []
 
+    @MainActor
+    func createPrompt() -> Prompt {
+        let prompt = Prompt()
+        prompt.instruction = pendingInstruction
+        prompt.input = pendingInput
+        prompt.contextList = pendingContextList
+        
+        if let currentChat = currentChat {
+            currentChat.prompts.append(prompt)
+            currentPrompts = currentChat.prompts
+        }
+        
+        return prompt
+    }
+    
     @MainActor
     func fetchLocalModels() async {
         do {

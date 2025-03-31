@@ -21,7 +21,9 @@ struct GeneratedView: View {
 
     var content: some View {
         VStack(spacing: 16) {
-            if !prompt.responses.isEmpty {
+            if model.isSearchingWeb && prompt == model.generatingPrompt {
+                WebSearchingView()
+            } else if !prompt.responses.isEmpty {
                 let curResponse = prompt.sortedResponses[prompt.generationIndex]
                 switch curResponse.type {
                 case .error:

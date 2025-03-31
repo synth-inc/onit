@@ -18,6 +18,8 @@ struct ContextImage: View {
             image(url: url)
         case .file:
             file
+        case .web:
+            webContext
         default:
             warning
         }
@@ -55,6 +57,14 @@ struct ContextImage: View {
             }
     }
 
+    var webContext: some View {
+        Image(systemName: "globe")
+            .resizable()
+            .frame(width: 16, height: 16)
+            .padding(2)
+            .foregroundStyle(.blue400)
+    }
+    
     var warning: some View {
         Image(.warning)
             .resizable()
