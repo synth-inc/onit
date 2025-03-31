@@ -45,23 +45,22 @@ struct HistoryView: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
+        VStack(spacing: 0) {
             HistoryTitle()
             HistorySearchView(text: $searchQuery)
             
-            Group {
-                if sortedChats.count == 0 { emptyText }
-                else { historyRows }
-            }
-            .frame(maxHeight: .infinity, alignment: .topLeading)
+            if sortedChats.isEmpty { emptyText }
+            else { historyRows }
         }
+        .frame(width: 350)
+        .background(.BG)
     }
     
     var emptyText: some View {
         Text("No prompts found")
             .foregroundStyle(.gray200)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(.top, 16)
+            .padding(.vertical, 16)
             .padding(.horizontal, 16)
     }
     
@@ -77,13 +76,14 @@ struct HistoryView: View {
                             .padding(.top, 4)
                             .padding(.leading, 4)
 
-                        ForEach(chats) { chat in
-                            HistoryRowView(chat: chat)
+                        ForEach(Array(chats.enumerated()), id: \.element.id) { index, chat in
+                            HistoryRowView(chat: chat, index: index)
                         }
                     }
                 }
             }
             .padding(.horizontal, 10)
+            .padding(.bottom, 10)
         }
     }
 

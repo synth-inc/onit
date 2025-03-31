@@ -9,20 +9,17 @@ import SwiftUI
 
 struct HistoryRowView: View {
     @Environment(\.model) var model
-    @Environment(\.modelContext) var modelContext
     
     @State private var showDelete: Bool = false
-    @State private var deleteFailed: Bool = false
 
     var chat: Chat
+    var index: Int
 
     var body: some View {
         Button {
-            model.currentChat = chat
-            model.currentPrompts = chat.prompts
-            model.showHistory = false
+            model.setChat(chat: chat, index: index)
         } label: {
-            HStack {
+            HStack(alignment: .center) {
                 Text(chat.prompts.first?.instruction ?? "")
                     .appFont(.medium16)
                     .foregroundStyle(.FG)
@@ -34,9 +31,9 @@ struct HistoryRowView: View {
                     else { chatResponseCount }
                 }
             }
-            .padding(.vertical, 8)
-            .padding(.horizontal, 10)
+            .padding(.leading, 10)
         }
+        .frame(height: 36)
         .buttonStyle(HoverableButtonStyle(background: true))
         .onHover { hovering in showDelete = hovering }
     }
@@ -46,33 +43,22 @@ struct HistoryRowView: View {
             .appFont(.medium13)
             .monospacedDigit()
             .foregroundStyle(.gray200)
+            .padding(.trailing, 10)
     }
     
     var deleteButton: some View {
         HStack(alignment: .center) {
-            Text(deleteFailed ? "Delete failed" : "")
+            Text(model.deleteChatFailed ? "Delete failed" : "")
                 .foregroundColor(Color.red)
             
             Image(systemName: "trash")
                 .frame(width: 14, height: 14)
                 .onTapGesture {
-                    deleteChat()
+                    model.deleteChat(chat: chat)
                 }
         }
-    }
-    
-    func deleteChat() {
-        do {
-            deleteFailed = false
-            modelContext.delete(chat)
-            try modelContext.save()
-        } catch {
-            deleteFailed = true
-            
-            #if DEBUG
-            print("Chat delete error: \(error)")
-            #endif
-        }
+        .frame(height: 34)
+        .padding(.horizontal, 10)
     }
 }
 
