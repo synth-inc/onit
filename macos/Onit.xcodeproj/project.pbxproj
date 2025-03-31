@@ -17,7 +17,7 @@
 		867A647C2D4AD73A00FD4D80 /* DefaultsMacros in Frameworks */ = {isa = PBXBuildFile; productRef = 867A647B2D4AD73A00FD4D80 /* DefaultsMacros */; };
 		86A974C12D4A76F800CF6FCE /* Markdown in Frameworks */ = {isa = PBXBuildFile; productRef = 86A974C02D4A76F800CF6FCE /* Markdown */; };
 		86F908912D7AF491008D8027 /* Highlightr in Frameworks */ = {isa = PBXBuildFile; productRef = 86F908902D7AF491008D8027 /* Highlightr */; };
-		A77025B72D976ADA00AAEF65 /* LLMStream in Frameworks */ = {isa = PBXBuildFile; productRef = A77025B62D976ADA00AAEF65 /* LLMStream */; };
+		904266782D9B40DF002AF820 /* LLMStream in Frameworks */ = {isa = PBXBuildFile; productRef = 904266772D9B40DF002AF820 /* LLMStream */; };
 		A782C1982D383493009976F8 /* FirebaseCrashlytics in Frameworks */ = {isa = PBXBuildFile; productRef = A782C1972D383493009976F8 /* FirebaseCrashlytics */; };
 /* End PBXBuildFile section */
 
@@ -61,7 +61,7 @@
 				2842875E2CD0B6A5000C6C67 /* HighlightSwift in Frameworks */,
 				28F57E222CAC84AA006AAA8C /* KeyboardShortcuts in Frameworks */,
 				867A647C2D4AD73A00FD4D80 /* DefaultsMacros in Frameworks */,
-				A77025B72D976ADA00AAEF65 /* LLMStream in Frameworks */,
+				904266782D9B40DF002AF820 /* LLMStream in Frameworks */,
 				862BC3C82D50D0D100806B58 /* EventSource in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -117,7 +117,7 @@
 				867A64792D4AD73A00FD4D80 /* Defaults */,
 				867A647B2D4AD73A00FD4D80 /* DefaultsMacros */,
 				86F908902D7AF491008D8027 /* Highlightr */,
-				A77025B62D976ADA00AAEF65 /* LLMStream */,
+				904266772D9B40DF002AF820 /* LLMStream */,
 			);
 			productName = Onit;
 			productReference = 2883E4B32CA5ECBB00F79A48 /* Onit.app */;
@@ -158,7 +158,7 @@
 				862BC3C62D50D0D100806B58 /* XCRemoteSwiftPackageReference "EventSource" */,
 				867A64782D4AD73A00FD4D80 /* XCRemoteSwiftPackageReference "Defaults" */,
 				86F9088F2D7AF491008D8027 /* XCRemoteSwiftPackageReference "Highlightr" */,
-				A77025B52D976ADA00AAEF65 /* XCLocalSwiftPackageReference "../LLMStream" */,
+				904266762D9B40DF002AF820 /* XCLocalSwiftPackageReference "../LLMStream" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 2883E4B42CA5ECBB00F79A48 /* Products */;
@@ -434,7 +434,7 @@
 /* End XCConfigurationList section */
 
 /* Begin XCLocalSwiftPackageReference section */
-		A77025B52D976ADA00AAEF65 /* XCLocalSwiftPackageReference "../LLMStream" */ = {
+		904266762D9B40DF002AF820 /* XCLocalSwiftPackageReference "../LLMStream" */ = {
 			isa = XCLocalSwiftPackageReference;
 			relativePath = ../LLMStream;
 		};
@@ -574,7 +574,7 @@
 			package = 86F9088F2D7AF491008D8027 /* XCRemoteSwiftPackageReference "Highlightr" */;
 			productName = Highlightr;
 		};
-		A77025B62D976ADA00AAEF65 /* LLMStream */ = {
+		904266772D9B40DF002AF820 /* LLMStream */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = LLMStream;
 		};
