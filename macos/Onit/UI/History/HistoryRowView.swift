@@ -19,8 +19,8 @@ struct HistoryRowView: View {
         Button {
             model.setChat(chat: chat, index: index)
         } label: {
-            HStack(alignment: .center) {
-                Text(chat.prompts.first?.instruction ?? "")
+            HStack {
+                Text(chat.prompts.first?.responses[chat.prompts.first?.generationIndex ?? 0].instruction ?? "")
                     .appFont(.medium16)
                     .foregroundStyle(.FG)
                 

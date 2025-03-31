@@ -6,6 +6,7 @@
 //
 
 import SwiftData
+import Defaults
 
 actor SwiftDataContainer {
     
@@ -16,7 +17,9 @@ actor SwiftDataContainer {
                 Chat.self,
                 SystemPrompt.self,
             ])
-            let container = try ModelContainer(for: schema)
+                        
+            let container = try ModelContainer(for: schema) // , migrationPlan: migrationPlan)
+            maybeUpdatePromptPriorInstructions(container: container)
             
             // Make sure the persistent store is empty. If it's not, return the non-empty container.
             var itemFetchDescriptor = FetchDescriptor<SystemPrompt>()
@@ -40,7 +43,8 @@ actor SwiftDataContainer {
         ])
         let configuration = ModelConfiguration(isStoredInMemoryOnly: true)
         let container = try ModelContainer(for: schema, configurations: [configuration])
-        
+        maybeUpdatePromptPriorInstructions(container: container)
+
         let sampleData: [any PersistentModel] = [
             Chat.sample,
             SystemPrompt.outputOnly
@@ -50,5 +54,30 @@ actor SwiftDataContainer {
         }
         
         return container
+    }
+    
+    @MainActor
+    // This function moves the instruction to the response object, which is needed to allow for editing the instruction in a prompt you've already sent once.
+    static func maybeUpdatePromptPriorInstructions(container: ModelContainer) {
+        // Check if migration has already been performed
+        guard !Defaults[.hasPerformedInstructionResponseMigration] else { return }
+        
+        let context = container.mainContext
+        let promptDescriptor = FetchDescriptor<Prompt>()
+        do {
+            let prompts = try context.fetch(promptDescriptor)
+            for prompt in prompts {                
+                // Update each response's instruction field
+                for response in prompt.responses {
+                    response.instruction = prompt.instruction
+                }
+            }
+            
+            try context.save()
+            // Mark migration as performed
+            Defaults[.hasPerformedInstructionResponseMigration] = true
+        } catch {
+            print("Error updating prior instructions: \(error)")
+        }
     }
 }

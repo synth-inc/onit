@@ -22,7 +22,7 @@ struct ToggleOutputsView: View {
 
     var left: some View {
         Button {
-            prompt.generationIndex -= 1
+            prompt.updateGenerationIndex(prompt.generationIndex - 1)
         } label: {
             Color.clear
                 .frame(width: 20, height: 20)
@@ -46,7 +46,7 @@ struct ToggleOutputsView: View {
 
     var right: some View {
         Button {
-            prompt.generationIndex += 1
+            prompt.updateGenerationIndex(prompt.generationIndex + 1)
         } label: {
             Color.clear
                 .frame(width: 20, height: 20)

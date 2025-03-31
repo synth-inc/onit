@@ -30,7 +30,19 @@ struct PerplexityChatStreamingEndpoint: StreamingEndpoint {
     func getContentFromSSE(event: EVEvent) throws -> String? {
         if let data = event.data?.data(using: .utf8) {
             let response = try JSONDecoder().decode(Response.self, from: data)
-            return response.choices.first?.delta.content
+            var content = response.choices.first?.delta.content
+            
+            guard let citations = response.citations, !citations.isEmpty else {
+                return content
+            }
+            
+            for (index, citation) in citations.enumerated() {
+                let realIndex = index + 1
+                let citation = "[CITATION, \(realIndex), \(citation)]"
+                content?.replace("[\(realIndex)]", with: citation)
+            }
+            
+            return content
         }
         return nil
     }
@@ -43,6 +55,7 @@ struct PerplexityChatStreamingEndpoint: StreamingEndpoint {
 
 struct PerplexityChatStreamingResponse: Codable {
     let choices: [Choice]
+    let citations: [String]?
 
     struct Choice: Codable {
         let delta: Delta
