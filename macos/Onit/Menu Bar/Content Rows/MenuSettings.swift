@@ -16,6 +16,7 @@ struct MenuSettings: View {
         MenuBarRow {
             NSApp.activate()
             if NSApp.isActive {
+                model.setSettingsTab(tab: .general)
                 openSettings()
             }
         } leading: {

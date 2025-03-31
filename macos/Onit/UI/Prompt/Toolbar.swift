@@ -257,6 +257,7 @@ struct Toolbar: View {
         Button {
             NSApp.activate()
             if NSApp.isActive {
+                model.setSettingsTab(tab: .general)
                 openSettings()
             }
         } label: {
