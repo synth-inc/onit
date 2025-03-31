@@ -45,28 +45,45 @@ struct HistoryView: View {
     }
 
     var body: some View {
-        VStack(spacing: 0) {
+        VStack(alignment: .leading, spacing: 0) {
             HistoryTitle()
             HistorySearchView(text: $searchQuery)
-            ScrollView {
-                LazyVStack(alignment: .leading) {
-                    Spacer().frame(height: 12)
-                    ForEach(sortedChats, id: \.key) { section, chats in
-                        VStack(alignment: .leading, spacing: 8) {
-                            Text(section)
-                                .appFont(.medium13)
-                                .foregroundStyle(.white.opacity(0.6))
-                                .padding(.top, 4)
-                                .padding(.leading, 4)
+            
+            Group {
+                if sortedChats.count == 0 { emptyText }
+                else { historyRows }
+            }
+            .frame(maxHeight: .infinity, alignment: .topLeading)
+        }
+    }
+    
+    var emptyText: some View {
+        Text("No prompts found")
+            .foregroundStyle(.gray200)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.top, 16)
+            .padding(.horizontal, 16)
+    }
+    
+    var historyRows: some View {
+        ScrollView {
+            LazyVStack(alignment: .leading) {
+                Spacer().frame(height: 12)
+                ForEach(sortedChats, id: \.key) { section, chats in
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text(section)
+                            .appFont(.medium13)
+                            .foregroundStyle(.white.opacity(0.6))
+                            .padding(.top, 4)
+                            .padding(.leading, 4)
 
-                            ForEach(chats) { chat in
-                                HistoryRowView(chat: chat)
-                            }
+                        ForEach(chats) { chat in
+                            HistoryRowView(chat: chat)
                         }
                     }
                 }
-                .padding(.horizontal, 10)
             }
+            .padding(.horizontal, 10)
         }
     }
 

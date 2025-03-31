@@ -59,6 +59,7 @@ struct Toolbar: View {
                 fitActiveWindowButton
             }
             localMode
+            history
             settings
             
             if !isRegularApp {
