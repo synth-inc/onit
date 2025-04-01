@@ -35,6 +35,8 @@ import SwiftUI
 
     var currentChat: Chat?
     var currentPrompts: [Prompt]?
+    
+    var deleteChatFailed: Bool = false
 
     // User inputs that have not yet been submitted
     var pendingInstruction = "" {

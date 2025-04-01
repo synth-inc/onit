@@ -9,29 +9,70 @@ import SwiftUI
 
 struct HistoryRowView: View {
     @Environment(\.model) var model
+    
+    @State private var showDelete: Bool = false
 
     var chat: Chat
+    var index: Int
 
     var body: some View {
         Button {
-            model.currentChat = chat
-            model.currentPrompts = chat.prompts
-            model.showHistory = false
+            model.setChat(chat: chat, index: index)
         } label: {
             HStack {
-                Text(chat.prompts.first?.instruction ?? "")
+                Text(getPromptText())
                     .appFont(.medium16)
                     .foregroundStyle(.FG)
+                
                 Spacer()
-                Text("\(chat.responseCount)")
-                    .appFont(.medium13)
-                    .monospacedDigit()
-                    .foregroundStyle(.gray200)
+                
+                Group {
+                    if showDelete { deleteButton }
+                    else { chatResponseCount }
+                }
             }
-            .padding(.vertical, 8)
-            .padding(.horizontal, 10)
+            .padding(.leading, 10)
         }
+        .frame(height: 36)
         .buttonStyle(HoverableButtonStyle(background: true))
+        .onHover { hovering in showDelete = hovering }
+    }
+    
+    var chatResponseCount: some View {
+        Text("\(chat.responseCount)")
+            .appFont(.medium13)
+            .monospacedDigit()
+            .foregroundStyle(.gray200)
+            .padding(.trailing, 10)
+    }
+    
+    var deleteButton: some View {
+        HStack(alignment: .center) {
+            Text(model.deleteChatFailed ? "Delete failed" : "")
+                .foregroundColor(Color.red)
+            
+            Image(systemName: "trash")
+                .frame(width: 14, height: 14)
+                .padding(.trailing, 10)
+        }
+        .frame(height: 34)
+        .contentShape(Rectangle())
+        .onTapGesture {
+            // We want the padding around the button to also be a tap target
+            if !model.deleteChatFailed {
+                model.deleteChat(chat: chat)
+            }
+        }
+    }
+    
+    private func getPromptText() -> String {
+        guard let firstPrompt = chat.prompts.first,
+              !firstPrompt.responses.isEmpty,
+              firstPrompt.generationIndex < firstPrompt.responses.count else {
+            return "Empty"
+        }
+        
+        return firstPrompt.responses[firstPrompt.generationIndex].instruction ?? ""
     }
 }
 

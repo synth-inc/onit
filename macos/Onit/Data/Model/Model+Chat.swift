@@ -68,11 +68,11 @@ extension OnitModel {
         cancelGenerate()
         
         let systemPrompt = currentChat?.systemPrompt ?? SystemPrompt.outputOnly
-        
+        addPartialResponse(prompt: prompt)
         generatingPrompt = prompt
         generatingPromptPriorState = prompt.generationState
         trackEventGeneration(prompt: prompt)
-
+        
         generateTask = Task { [systemPrompt, weak self] in
             guard let self = self else { return }
 
@@ -96,7 +96,7 @@ extension OnitModel {
                    let responseCount = currentPrompt?.responses.count,
                    generationIndex >= 0,
                    generationIndex < responseCount {
-                    let response = currentPrompt!.responses[generationIndex]
+                    let response = currentPrompt!.sortedResponses[generationIndex]
                     
                     if response.type != .error {
                         instructionsHistory.insert(currentPrompt!.instruction, at: 0)
@@ -105,7 +105,7 @@ extension OnitModel {
                         imagesHistory.insert(currentPrompt!.contextList.images, at: 0)
                         autoContextsHistory.insert(currentPrompt!.contextList.autoContexts, at: 0)
                         responsesHistory.insert(
-                            currentPrompt!.responses[currentPrompt!.generationIndex].text, at: 0)
+                            currentPrompt!.sortedResponses[currentPrompt!.generationIndex].text, at: 0)
                     } else {
                         print("Skipping failed response from prior prompt.")
                     }
@@ -137,7 +137,9 @@ extension OnitModel {
                     let apiToken = getTokenForModel(model)
                     
                     if shouldUseStream(model) {
-                        addPartialPrompt(prompt: prompt, instruction: curInstruction)
+                        // This is tells the model it's streaming, otherwise we display the legacy loading view.
+                        // It's a nice 'hack', but not a good long term solution since it confused me!
+                        prompt.generationState = .done
                         
                         let asyncText = try await streamingClient.chat(
                             systemMessage: systemPrompt.prompt,
@@ -171,7 +173,9 @@ extension OnitModel {
                     }
                     
                     if Defaults[.streamResponse].local {
-                        addPartialPrompt(prompt: prompt, instruction: curInstruction)
+                        // This is tells the model it's streaming, otherwise we display the legacy loading view.
+                        // It's a nice 'hack', but not a good long term solution since it confused me!
+                        prompt.generationState = .done
                         
                         let asyncText = try await streamingClient.localChat(
                             systemMessage: systemPrompt.prompt,
@@ -198,8 +202,8 @@ extension OnitModel {
                     }
                 }
                 
-                let response = Response(text: String(streamedResponse), type: .success, model: currentModelName)
-                updatePrompt(prompt: prompt, response: response, instruction: curInstruction)
+                let response = Response(text: String(streamedResponse), instruction: curInstruction, type: .success, model: currentModelName)
+                replacePartialResponse(prompt: prompt, response: response)
                 setTokenIsValid(true)
             } catch let error as FetchingError {
                 print("Fetching Error: \(error.localizedDescription)")
@@ -209,13 +213,14 @@ extension OnitModel {
                 if case .unauthorized = error {
                     setTokenIsValid(false)
                 }
-                let response = Response(text: error.localizedDescription, type: .error, model: currentModelName)
-                updatePrompt(prompt: prompt, response: response, instruction: curInstruction)
+                let response = Response(text: error.localizedDescription, instruction: curInstruction, type: .error, model: currentModelName)
+                replacePartialResponse(prompt: prompt, response: response)
             } catch {
                 print("Unexpected Error: \(error.localizedDescription)")
-                let response = Response(text: error.localizedDescription, type: .error, model: currentModelName)
-                updatePrompt(prompt: prompt, response: response, instruction: curInstruction)
+                let response = Response(text: error.localizedDescription, instruction: curInstruction, type: .error, model: currentModelName)
+                replacePartialResponse(prompt: prompt, response: response)
             }
+            generatingPrompt = nil
         }
     }
     
@@ -326,28 +331,18 @@ extension OnitModel {
         }
     }
     
-    func addPartialPrompt(prompt: Prompt, instruction: String) {
-        prompt.priorInstructions.append(instruction)
+    func addPartialResponse(prompt: Prompt) {
         prompt.responses.append(Response.partial)
+        prompt.priorInstructions.append(prompt.instruction)
         prompt.generationIndex = (prompt.responses.count - 1)
-        prompt.generationState = .done
-        
-        generatingPrompt = nil
-        generatingPromptPriorState = nil
     }
     
-    func updatePrompt(prompt: Prompt, response: Response, instruction: String) {
+    func replacePartialResponse(prompt: Prompt, response: Response) {
+        // TODO could this cause isues where the generation index is beyond the lnegth of responses?
         if let partialResponseIndex = prompt.responses.firstIndex(where: { $0.isPartial }) {
             prompt.responses.remove(at: partialResponseIndex)
-            prompt.priorInstructions.removeLast()
         }
-        
-        prompt.priorInstructions.append(instruction)
         prompt.responses.append(response)
-        prompt.generationIndex = (prompt.responses.count - 1)
         prompt.generationState = .done
-        
-        generatingPrompt = nil
-        generatingPromptPriorState = nil
     }
 }

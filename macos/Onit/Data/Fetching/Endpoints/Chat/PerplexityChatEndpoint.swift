@@ -20,7 +20,17 @@ struct PerplexityChatEndpoint: Endpoint {
     var timeout: TimeInterval? { nil }
     
     func getContent(response: Response) -> String? {
-        return response.choices.first?.message.content
+        guard let citations = response.citations, !citations.isEmpty else {
+            return response.choices.first?.message.content
+        }
+        var content = response.choices.first?.message.content
+        for (index, citation) in citations.enumerated() {
+            let realIndex = index + 1
+            let citation = "[CITATION, \(realIndex), \(citation)]"
+            content?.replace("[\(realIndex)]", with: citation)
+        }
+        
+        return content
     }
 }
 
@@ -73,6 +83,7 @@ struct PerplexityChatRequest: Codable {
 
 struct PerplexityChatResponse: Codable {
     let choices: [Choice]
+    let citations: [String]?
     
     struct Choice: Codable {
         let message: Message
