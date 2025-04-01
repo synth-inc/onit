@@ -19,14 +19,12 @@ struct HistoryTitle: View {
             Button {
                 model.showHistory = false
             } label: {
-                Color.clear
+                Image(.smallCross)
+                    .renderingMode(.template)
+                    .foregroundStyle(.gray200)
                     .frame(width: 20, height: 20)
-                    .overlay {
-                        Image(.smallCross)
-                            .renderingMode(.template)
-                            .foregroundStyle(.gray200)
-                    }
             }
+            .buttonStyle(BorderlessButtonStyle())
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 12)
