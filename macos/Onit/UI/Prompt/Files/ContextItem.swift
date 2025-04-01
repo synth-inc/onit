@@ -16,8 +16,13 @@ struct ContextItem: View {
     var body: some View {
         HStack(spacing: 0) {
             switch item {
-            case .web(let url, _):
-                WebContextItem(item: item, url: url, title: url.host() ?? url.absoluteString, isEditing: isEditing)
+            case .web(let websiteUrl, let websiteTitle, _):
+                WebContextItem(
+                    item: item,
+                    websiteUrl: websiteUrl,
+                    websiteTitle: websiteTitle.isEmpty ? websiteUrl.host() ?? websiteUrl.absoluteString : websiteTitle,
+                    isEditing: isEditing
+                )
             case .auto:
                 Button {
                     model.showAutoContextWindow(context: item)
@@ -73,8 +78,8 @@ struct ContextItem: View {
             error.localizedDescription
         case .tooBig:
             "Upload exceeds model limit"
-        case .web(let url, _):
-            url.host() ?? url.absoluteString
+        case .web(let websiteUrl, let websiteTitle, _):
+            websiteTitle.isEmpty ? websiteUrl.host() ?? websiteUrl.absoluteString : websiteTitle
         }
     }
 

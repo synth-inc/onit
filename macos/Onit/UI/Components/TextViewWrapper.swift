@@ -129,40 +129,6 @@ struct TextViewWrapper: NSViewRepresentable {
             updateHeight()
         }
         
-        private func detectURLs(in text: String) -> [URL] {
-            guard let detectUrlRegex = try? NSRegularExpression(
-                pattern: "https?://(?:www\\.|(?!www))[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\\.[^\\s]{2,}|www\\.[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\\.[^\\s]{2,}|https?://(?:www\\.|(?!www))[a-zA-Z0-9]+\\.[^\\s]{2,}|www\\.[a-zA-Z0-9]+\\.[^\\s]{2,}",
-                options: .caseInsensitive
-            ) else {
-                return []
-            }
-            
-            let urlMatches = detectUrlRegex.matches(
-                in: text,
-                options: [],
-                range: NSRange(location: 0, length: text.utf16.count)
-            )
-            
-            let detectedURLs = urlMatches.compactMap { match -> URL? in
-                if let range = Range(match.range, in: text) {
-                    let urlString = String(text[range])
-                    // Add https:// to www. URLs that don't have a scheme
-                    let fixedURLString = urlString.hasPrefix("www.") && !urlString.hasPrefix("http")
-                        ? "https://" + urlString
-                        : urlString
-                    return URL(string: fixedURLString)
-                }
-                return nil
-            }
-            
-            // Remove duplicate links. Not using Set<URL> here, because we want to preserve the links in the order they appear in chat.
-            return detectedURLs.reduce(into: [URL]()) { uniqueURLs, url in
-                if !uniqueURLs.contains(url) {
-                    uniqueURLs.append(url)
-                }
-            }
-        }
-        
         // Used for debounced URL detection in user input (for detecting web context).
         @MainActor
         private func handleUrlDetection(text: String) -> Void {
@@ -180,19 +146,30 @@ struct TextViewWrapper: NSViewRepresentable {
                     let urls = detectURLs(in: text)
                     
                     detectedURLs = urls
+
+                    var textWithoutWebsiteUrls = text
                     
-                     for url in urls {
-                         let urlExists = parent.model.pendingContextList.contains { context in
-                             if case .web(let existingUrl, _) = context {
-                                 return existingUrl == url
-                             }
-                             return false
-                         }
-                         
-                         if !urlExists {
-                             parent.model.pendingContextList.append(.web(url, nil))
-                         }
-                     }
+                    for url in urls {
+                        let pendingContextList = parent.model.getPendingContextList()
+                        
+                        let urlExists = pendingContextList.contains { context in
+                            if case .web(let existingWebsiteUrl, _, _) = context {
+                                return existingWebsiteUrl == url
+                            }
+                            return false
+                        }
+                        
+                        if !urlExists {
+                            parent.model.addContext(urls: [url])
+                            
+                            textWithoutWebsiteUrls = removeWebsiteUrlFromText(
+                                text: textWithoutWebsiteUrls,
+                                websiteUrl: url
+                            )
+                        }
+                    }
+                    
+                    if textWithoutWebsiteUrls != text { parent.text = textWithoutWebsiteUrls }
                 } catch {
                     // This catches errors thrown by the async Task.sleep method.
                     // This is most likely an okay error, as it's tied to the guarded task cancellation.

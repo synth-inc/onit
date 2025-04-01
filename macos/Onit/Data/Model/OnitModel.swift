@@ -102,6 +102,9 @@ import SwiftUI
     var streamedResponse: String = ""
     
     var promptSuggestionService: SystemPromptSuggestionService?
+    
+    typealias WebsiteUrlScrapeTask = Task<Void, Never>
+    var websiteUrlsScrapeQueue: [String: WebsiteUrlScrapeTask] = [:]
 
     @MainActor
     func fetchLocalModels() async {

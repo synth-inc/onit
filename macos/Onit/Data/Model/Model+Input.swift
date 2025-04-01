@@ -43,10 +43,23 @@ extension OnitModel {
         let autoContext = Context(appName: appName, appContent: appContent)
         pendingContextList.insert(autoContext, at: 0)
     }
+    
+    func getPendingContextList() -> [Context] {
+        return pendingContextList
+    }
 
     func addContext(urls: [URL]) {
         let contextItems = urls.map(Context.init)
         pendingContextList += contextItems
+        
+        for context in contextItems {
+            if case .web(let websiteUrl, _, _) = context {
+                addWebsiteUrlScrapeTask(
+                    websiteUrl: websiteUrl,
+                    scrapeTask: Task { await scrapeWebsiteUrl(websiteUrl: websiteUrl) }
+                )
+            }
+        }
 
         // We are going to upload the images to
         //        if preferences.mode == .remote {
@@ -111,20 +124,26 @@ extension OnitModel {
             uploadTasks[url]?.cancel()
             uploadTasks[url] = nil
             imageUploads[url] = nil
-        case .web(let existingWebUrl, _):
-            if let webContextItemIndex = getWebContextItemIndex(
+        case .web(let websiteUrl, _, _): // Handles removing temporary local web files.
+            removeWebsiteUrlScrapeTask(websiteUrl: websiteUrl)
+            
+            let webContextItemIndex = getWebContextItemIndex(
                 pendingContextList:self.pendingContextList,
-                comparativeWebUrl: existingWebUrl
-            ) {
+                comparativeWebUrl: websiteUrl
+            )
+            
+            if let webContextItemIndex = webContextItemIndex {
                 let webContextItem = self.pendingContextList[webContextItemIndex]
                 
-                if case .web(_, let extractedWebContentUrl) = webContextItem {
-                    do {
-                        try FileManager.default.removeItem(at: extractedWebContentUrl!)
-                    } catch {
-                        #if DEBUG
-                        print("Failed to delete web content file: \(error)")
-                        #endif
+                if case .web(_, _, let existingWebFileUrl) = webContextItem {
+                    if let existingWebFileUrl = existingWebFileUrl {
+                        do {
+                            try FileManager.default.removeItem(at: existingWebFileUrl)
+                        } catch {
+                            #if DEBUG
+                            print("Failed to delete web content file: \(error)")
+                            #endif
+                        }
                     }
                 }
             }

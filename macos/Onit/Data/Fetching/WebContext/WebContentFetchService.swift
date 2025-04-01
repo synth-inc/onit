@@ -14,11 +14,11 @@ import WebKit
 // allow webpage content parsing for web contexts.
 
 class WebContentFetchService {
-    static func fetchWebpageContent(from url: URL) async throws -> URL {
+    static func fetchWebpageContent(websiteUrl: URL) async throws -> (URL, String) {
         // Check Content-Type header.
-        let (_, response) = try await URLSession.shared.data(from: url)
+        let (_, response) = try await URLSession.shared.data(from: websiteUrl)
         guard let httpResponse = response as? HTTPURLResponse else {
-            throw FetchingError.invalidResponse(message: url.absoluteString)
+            throw FetchingError.invalidResponse(message: websiteUrl.absoluteString)
         }
         
         if let contentType = httpResponse.value(forHTTPHeaderField: "Content-Type"),
@@ -27,30 +27,30 @@ class WebContentFetchService {
             contentType.lowercased().contains("application/x-pdf") ||
             contentType.lowercased().contains("application/vnd.pdf") ||
             contentType.lowercased().contains("application/acrobat") ||
-            url.pathExtension.lowercased() == "pdf"
+            websiteUrl.pathExtension.lowercased() == "pdf"
            ){
-            return try await fetchPDFContent(from: url)
+            return try await fetchPDFContent(websiteUrl: websiteUrl)
         } else {
-            return try await fetchHTMLContent(from: url)
+            return try await fetchHTMLContent(websiteUrl: websiteUrl)
         }
     }
     
-    private static func fetchPDFContent(from url: URL) async throws -> URL {
-        let (data, response) = try await URLSession.shared.data(from: url)
+    private static func fetchPDFContent(websiteUrl: URL) async throws -> (URL, String) {
+        let (data, response) = try await URLSession.shared.data(from: websiteUrl)
         
         guard let httpResponse = response as? HTTPURLResponse,
               (200...299).contains(httpResponse.statusCode) else {
-            throw FetchingError.invalidResponse(message: url.absoluteString)
+            throw FetchingError.invalidResponse(message: websiteUrl.absoluteString)
         }
         
         // Limiting PDF webpage size to 50MB.
         guard data.count < 50_000_000 else {
-            throw FetchingError.failedRequest(message: "PDF too large: \(url.absoluteString)")
+            throw FetchingError.failedRequest(message: "PDF too large: \(websiteUrl.absoluteString)")
         }
     
         // Maintaining context to the original PDF file.
         let tempPdfUrl = FileManager.default.temporaryDirectory
-            .appendingPathComponent(url.lastPathComponent)
+            .appendingPathComponent(websiteUrl.lastPathComponent)
             .appendingPathExtension("pdf")
         try data.write(to: tempPdfUrl)
         
@@ -86,7 +86,7 @@ class WebContentFetchService {
             content += "\n\n\(contentCutoffDescription)  PDF DOCUMENT END\n\n"
             
             let tempPdfTextFile = FileManager.default.temporaryDirectory
-                .appendingPathComponent(url.lastPathComponent)
+                .appendingPathComponent(websiteUrl.lastPathComponent)
                 .appendingPathExtension("txt")
             
             try content.write(to: tempPdfTextFile, atomically: true, encoding: .utf8)
@@ -99,18 +99,23 @@ class WebContentFetchService {
                 #endif
             }
             
-            return tempPdfTextFile
+            let pdfTitle = pdfDocument.documentAttributes?[PDFDocumentAttribute.titleAttribute] as? String ?? ""
+            
+            var websiteTitle = websiteUrl.host() ?? websiteUrl.absoluteString
+            if !pdfTitle.isEmpty { websiteTitle = "\(pdfTitle) - \(websiteTitle)" }
+            
+            return (tempPdfTextFile, websiteTitle)
         } else {
             throw FetchingError.failedRequest(
-                message: "Could not read PDF content from URL: \(url)"
+                message: "Could not read PDF content from URL: \(websiteUrl)"
             )
         }
     }
     
     @MainActor
-    private static func fetchHTMLContent(from url: URL) async throws -> URL {
+    private static func fetchHTMLContent(websiteUrl: URL) async throws -> (URL, String) {
         let webView = WKWebView(frame: .zero, configuration: WKWebViewConfiguration())
-        let request = URLRequest(url: url)
+        let request = URLRequest(url: websiteUrl)
         webView.load(request)
 
         // Giving webpage JS content time to load (3 seconds).
@@ -135,10 +140,10 @@ class WebContentFetchService {
            
             var fullWebpageText = headText + "\n" + bodyText
             if bodyText == "" {
-                fullWebpageText = "No text found for webpage with URL: \(url)."
+                fullWebpageText = "No text found for webpage with URL: \(websiteUrl)."
             }
             
-            let contentUrl = "URL: \(url.absoluteString)"
+            let contentUrl = "URL: \(websiteUrl.absoluteString)"
             let contentTitle = "Title: \(try parsedWebpageHTML.title())"
             let contentCutoffDescription = "\(contentUrl) \(contentTitle)"
             let contentMetaDescription = contentUrl + "\n" + contentTitle + "\n\n"
@@ -147,15 +152,17 @@ class WebContentFetchService {
             let content = "\n\n\(contentCutoffDescription) WEBPAGE START\n\n" + contentMetaDescription + fullWebpageText + invalidWebpageInstruction + "\n\n\(contentCutoffDescription)  WEBPAGE END\n\n"
             
             let tempHtmlTextFileUrl = FileManager.default.temporaryDirectory
-                .appendingPathComponent("\(url.host ?? "webpage")-\(UUID().uuidString)")
+                .appendingPathComponent("\(websiteUrl.host ?? "webpage")-\(UUID().uuidString)")
                 .appendingPathExtension("txt")
 
             try content.write(to: tempHtmlTextFileUrl, atomically: true, encoding: .utf8)
            
-            return tempHtmlTextFileUrl
+            let websiteTitle = try parsedWebpageHTML.title()
+            
+            return (tempHtmlTextFileUrl, "\(websiteTitle) - \(websiteUrl.host() ?? websiteUrl.absoluteString)")
         } catch {
             throw FetchingError.invalidResponse(
-                message: "Could not read content from URL: \(url.absoluteString)"
+                message: "Could not read content from URL: \(websiteUrl.host() ?? websiteUrl.absoluteString)"
             )
         }
     }

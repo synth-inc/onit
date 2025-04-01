@@ -13,7 +13,7 @@ enum Context {
     case image(URL)
     case tooBig(URL)
     case error(URL, Error)
-    case web(URL, URL?) // First URL is the webpage URL. Second URL is the webpage contents as a txt file.
+    case web(URL, String, URL?) // (Website URL, Website Title, Scraped Website As File URL)
 
     static let maxFileSize: Int = 1024 * 1024 * 1
     static let maxImageSize: Int = 1024 * 1024 * 20
@@ -22,7 +22,7 @@ enum Context {
         switch self {
         case .auto:
             return nil
-        case .file(let url), .image(let url), .tooBig(let url), .error(let url, _), .web(let url, _):
+        case .file(let url), .image(let url), .tooBig(let url), .error(let url, _), .web(let url, _, _):
             return url
         }
     }
@@ -60,7 +60,7 @@ extension Context {
     init(url: URL) {
         // Initialization for web context urls.
         if (url.scheme == "http" || url.scheme == "https") && url.host != nil {
-            self = .web(url, nil)
+            self = .web(url, url.host() ?? url.absoluteString, nil)
             return
         }
         
@@ -89,7 +89,7 @@ extension Context {
 
 extension Context: Codable {
     enum CodingKeys: String, CodingKey {
-        case appName, appContent, type, url, webContentUrl, error
+        case appName, appContent, type, url, websiteUrl, websiteTitle, error
     }
 
     enum ContextType: String, Codable {
@@ -121,9 +121,10 @@ extension Context: Codable {
                 domain: "", code: 0, userInfo: [NSLocalizedDescriptionKey: errorDescription])
             self = .error(url, error)
         case .web:
-            let url = try container.decode(URL.self, forKey: .url)
-            let webContentUrl = try container.decodeIfPresent(URL.self, forKey: .webContentUrl)
-            self = .web(url, webContentUrl)
+            let websiteUrl = try container.decode(URL.self, forKey: .websiteUrl)
+            let websiteTitle = try container.decode(String.self, forKey: .websiteTitle)
+            let webFileUrl = try container.decodeIfPresent(URL.self, forKey: .url)
+            self = .web(websiteUrl, websiteTitle, webFileUrl)
         }
     }
 
@@ -149,11 +150,12 @@ extension Context: Codable {
             try container.encode(ContextType.error, forKey: .type)
             let errorDescription = (error as NSError).localizedDescription
             try container.encode(errorDescription, forKey: .error)
-        case .web(let url, let webContentUrl):
-            try container.encode(url, forKey: .url)
+        case .web(let websiteUrl, let websiteTitle, let webFileUrl):
+            try container.encode(websiteUrl, forKey: .websiteUrl)
+            try container.encode(websiteTitle, forKey: .websiteTitle)
             try container.encode(ContextType.web, forKey: .type)
-            if let webContentUrl = webContentUrl {
-                try container.encode(webContentUrl, forKey: .webContentUrl)
+            if let webFileUrl = webFileUrl {
+                try container.encode(webFileUrl, forKey: .url)
             }
         }
     }
@@ -170,8 +172,8 @@ extension Context: Equatable, Hashable {
             return url1 == url2
         case (.auto(let appName1, let content1), .auto(let appName2, let content2)):
             return appName1 == appName2 && content1 == content2
-        case (.web(let url1, _), .web(let url2, _)):
-            return url1 == url2
+        case (.web(let websiteUrl1, _, _), .web(let websiteUrl2, _, _)):
+            return websiteUrl1 == websiteUrl2
         default:
             return false
         }
@@ -179,9 +181,7 @@ extension Context: Equatable, Hashable {
 
     func hash(into hasher: inout Hasher) {
         switch self {
-        case .file(let url), .image(let url), .tooBig(let url), .error(let url, _):
-            hasher.combine(url)
-        case .web(let url, _):
+        case .file(let url), .image(let url), .tooBig(let url), .error(let url, _), .web(let url, _, _):
             hasher.combine(url)
         case .auto(let appName, let appContent):
             hasher.combine(appName)
@@ -234,22 +234,11 @@ extension [Context] {
         }
     }
     
-    var webs: [URL] {
+    var scrapedWebFiles: [URL] {
         compactMap {
             switch $0 {
-            case .web(let url, _):
-                return url
-            default:
-                return nil
-            }
-        }
-    }
-    
-    var webContents: [URL] {
-        compactMap {
-            switch $0 {
-            case .web(_, let webContentUrl):
-                return webContentUrl
+            case .web(_, _, let webFileUrl):
+                return webFileUrl
             default:
                 return nil
             }

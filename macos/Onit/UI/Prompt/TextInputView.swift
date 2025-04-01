@@ -22,9 +22,6 @@ struct TextInputView: View {
     
     @State private var textHeight: CGFloat = 20
     private let maxHeightLimit: CGFloat = 100
-    
-    @State private var detectedURLs: [URL] = []
-    @State private var urlDetectionTask: Task<Void, Never>? = nil
 
     @StateObject private var audioRecorder = AudioRecorder()
     @State private var showingAPIKeyAlert = false
@@ -57,6 +54,7 @@ struct TextInputView: View {
             downListener
             newListener
         }
+        .opacity(model.websiteUrlsScrapeQueue.isEmpty ? 1 : 0.5)
         .onDisappear {
             if audioRecorder.isRecording {
                 cancelRecording()
@@ -274,11 +272,13 @@ struct TextInputView: View {
     }
 
     func sendAction() {
-        let inputText = (model.pendingInstruction ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
-        
-        guard !inputText.isEmpty else { return }
-        
-        model.createAndSavePrompt()
+        if model.websiteUrlsScrapeQueue.isEmpty {
+            let inputText = (model.pendingInstruction ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+            
+            guard !inputText.isEmpty else { return }
+            
+            model.createAndSavePrompt()
+        }
     }
 
     var sendButton: some View {
