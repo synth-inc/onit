@@ -3,51 +3,48 @@ import Defaults
 
 struct WebSearchButton: View {
     @Environment(\.model) var model
+    @Environment(\.openSettings) var openSettings
     @State private var showingWebSearchAPIKeyAlert = false
+
+    @Default(.tavilyAPIToken) var tavilyAPIToken
+    @Default(.isTavilyAPITokenValidated) var isTavilyAPITokenValidated
+    @Default(.webSearchEnabled) var webSearchEnabled
     
     var body: some View {
-        @Default(.tavilyAPIToken) var tavilyAPIToken
-        @Default(.isTavilyAPITokenValidated) var isTavilyAPITokenValidated
-        
         return Button(action: toggleWebSearch) {
-            Image(systemName: "magnifyingglass")
+            Image(.web)
                 .resizable()
                 .renderingMode(.template)
-                .foregroundStyle(model.isWebSearchEnabled ? Color.blue400 : Color.gray200)
+                .foregroundStyle(webSearchEnabled ? Color.blue400 : (isTavilyAPITokenValidated ? Color.gray200 : Color.gray700))
                 .frame(width: 18, height: 18)
         }
         .buttonStyle(.plain)
-        .disabled(!isTavilyAPITokenValidated)
         .help(webSearchButtonHelpText)
-        .alert("Web Search API Key Required", isPresented: $showingWebSearchAPIKeyAlert) {
+        .alert("API Token Required", isPresented: $showingWebSearchAPIKeyAlert) {
             Button("Open Settings") {
-                NSWorkspace.shared.open(URL(string: "onit://settings/webSearch")!)
+                model.setSettingsTab(tab: .webSearch)
+                openSettings()
             }
             Button("Cancel", role: .cancel) {}
         } message: {
-            Text("Please set your Tavily API key in Settings to use web search.")
+            Text("To use web search, you need to add an web search API token in Settings.")
         }
     }
     
     private var webSearchButtonHelpText: String {
         @Default(.isTavilyAPITokenValidated) var isTavilyAPITokenValidated
-        
         if !isTavilyAPITokenValidated {
             return "Add a Tavily API key in Settings > Web Search to enable web search"
         }
-        return model.isWebSearchEnabled ? "Web search enabled" : "Enable web search"
+        return Defaults[.webSearchEnabled] ? "Web search enabled" : "Enable web search"
     }
     
     private func toggleWebSearch() {
-        @Default(.tavilyAPIToken) var tavilyAPIToken
-        @Default(.isTavilyAPITokenValidated) var isTavilyAPITokenValidated
-        
         if !isTavilyAPITokenValidated || tavilyAPIToken.isEmpty {
             showingWebSearchAPIKeyAlert = true
             return
         }
-        
-        model.isWebSearchEnabled.toggle()
+        webSearchEnabled.toggle()
     }
 }
 

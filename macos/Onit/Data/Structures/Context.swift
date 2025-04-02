@@ -61,6 +61,15 @@ enum Context {
             return false
         }
     }
+
+    var webURL: URL? {
+        switch self {
+        case .web(_, _, _, let url):
+            return url
+        default:
+            return nil
+        }
+    }
 }
 
 extension Context {

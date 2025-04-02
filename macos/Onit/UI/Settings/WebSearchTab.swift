@@ -2,6 +2,7 @@ import SwiftUI
 import Defaults
 
 struct WebSearchTab: View {
+    @Default(.webSearchEnabled) var webSearchEnabled
     @Default(.tavilyAPIToken) var tavilyAPIToken
     @Default(.isTavilyAPITokenValidated) var isTavilyAPITokenValidated
     
@@ -99,12 +100,14 @@ struct WebSearchTab: View {
                     
                     if !validated {
                         validationError = "Invalid API key. Please check and try again."
+                        webSearchEnabled = false
                     }
                 }
             } catch {
                 await MainActor.run {
                     isValidating = false
                     isTavilyAPITokenValidated = false
+                    webSearchEnabled = false
                     validationError = "Error validating API key: \(error.localizedDescription)"
                 }
             }

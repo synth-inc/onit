@@ -76,7 +76,7 @@ extension OnitModel {
         generateTask = Task { [systemPrompt, weak self] in
             guard let self = self else { return }
 
-            prompt.generationState = .generating
+            prompt.generationState = .starting
             let curInstruction = prompt.instruction
             
             var filesHistory: [[URL]] = [prompt.contextList.files]
@@ -84,6 +84,7 @@ extension OnitModel {
             var imagesHistory: [[URL]] = [prompt.contextList.images]
             var instructionsHistory: [String] = [curInstruction]
             var autoContextsHistory: [[String: String]] = [prompt.contextList.autoContexts]
+            var webContextsHistory: [[(title: String, content: String, source: String, url: URL?)]] = [prompt.contextList.webContexts]
             var responsesHistory: [String] = []
 
             // Go through prior prompts and add them to the history
@@ -102,6 +103,7 @@ extension OnitModel {
                         filesHistory.insert(currentPrompt!.contextList.files, at: 0)
                         imagesHistory.insert(currentPrompt!.contextList.images, at: 0)
                         autoContextsHistory.insert(currentPrompt!.contextList.autoContexts, at: 0)
+                        webContextsHistory.insert(currentPrompt!.contextList.webContexts, at: 0)
                         responsesHistory.insert(
                             currentPrompt!.sortedResponses[currentPrompt!.generationIndex].text, at: 0)
                     } else {
@@ -128,6 +130,31 @@ extension OnitModel {
 
                 streamedResponse = ""
                 
+                let isNewInstruction = !prompt.priorInstructions.dropLast().contains(prompt.instruction)
+                if Defaults[.webSearchEnabled] && isNewInstruction {
+                    isSearchingWeb[prompt.id] = true
+                    let searchResults = await performWebSearch(query: curInstruction)
+                    if !searchResults.isEmpty {
+                        var updatedContextList = prompt.contextList
+                        // Convert each WebSearchResult to a Context.web object and add to pendingContextList
+                        for searchResult in searchResults {
+                            let searchResultURL = URL(string: searchResult.url)
+                            // Check if the URL already exists in the contextList
+                            if !updatedContextList.contains(where: { $0.url == searchResultURL }) {
+                                updatedContextList.append(searchResult.toContext())
+                                let webContext = (searchResult.title, searchResult.fullContent, searchResult.source, searchResultURL)
+                                webContextsHistory[webContextsHistory.count - 1].append(webContext)
+                            } else {
+                                print("removing duplicate!")
+                            }
+                        }
+                        prompt.contextList = updatedContextList // Reassign the entire array
+                        // Tell SwiftData to process the changes
+                        try container.mainContext.save()
+                    }
+                    isSearchingWeb[prompt.id] = false
+                }
+                
                 switch Defaults[.mode] {
                 case .remote:
                     guard let model = Defaults[.remoteModel] else {
@@ -136,29 +163,29 @@ extension OnitModel {
                     let apiToken = getTokenForModel(model)
                     
                     if shouldUseStream(model) {
-                        // This is tells the model it's streaming, otherwise we display the legacy loading view.
-                        // It's a nice 'hack', but not a good long term solution since it confused me!
-                        prompt.generationState = .done
-                        
+                        prompt.generationState = .streaming
                         let asyncText = try await streamingClient.chat(systemMessage: systemPrompt.prompt,
                                                                        instructions: instructionsHistory,
                                                                        inputs: inputsHistory,
                                                                        files: filesHistory,
                                                                        images: imagesHistory,
                                                                        autoContexts: autoContextsHistory,
+                                                                       webContexts: webContextsHistory,
                                                                        responses: responsesHistory,
                                                                        model: model,
                                                                        apiToken: apiToken)
                         for try await response in asyncText {
-                            streamedResponse += response
+                            self.streamedResponse += response
                         }
                     } else {
+                        prompt.generationState = .generating
                         streamedResponse = try await client.chat(systemMessage: systemPrompt.prompt,
                                                                  instructions: instructionsHistory,
                                                                  inputs: inputsHistory,
                                                                  files: filesHistory,
                                                                  images: imagesHistory,
                                                                  autoContexts: autoContextsHistory,
+                                                                 webContexts: webContextsHistory,
                                                                  responses: responsesHistory,
                                                                  model: model,
                                                                  apiToken: apiToken)
@@ -169,28 +196,28 @@ extension OnitModel {
                     }
                     
                     if Defaults[.streamResponse].local {
-                        // This is tells the model it's streaming, otherwise we display the legacy loading view.
-                        // It's a nice 'hack', but not a good long term solution since it confused me!
-                        prompt.generationState = .done
-                        
+                        prompt.generationState = .streaming
                         let asyncText = try await streamingClient.localChat(systemMessage: systemPrompt.prompt,
                                                                             instructions: instructionsHistory,
                                                                             inputs: inputsHistory,
                                                                             files: filesHistory,
                                                                             images: imagesHistory,
                                                                             autoContexts: autoContextsHistory,
+                                                                            webContexts: webContextsHistory,
                                                                             responses: responsesHistory,
                                                                             model: model)
                         for try await response in asyncText {
-                            streamedResponse += response
+                            self.streamedResponse += response
                         }
                     } else {
+                        prompt.generationState = .generating
                         streamedResponse = try await client.localChat(systemMessage: systemPrompt.prompt,
                                                                       instructions: instructionsHistory,
                                                                       inputs: inputsHistory,
                                                                       files: filesHistory,
                                                                       images: imagesHistory,
                                                                       autoContexts: autoContextsHistory,
+                                                                      webContexts: webContextsHistory,
                                                                       responses: responsesHistory,
                                                                       model: model)
                     }

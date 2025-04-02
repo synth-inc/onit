@@ -13,17 +13,8 @@ struct GeneratedView: View {
     var prompt: Prompt
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            FinalContextView(prompt: prompt)
-            content
-        }
-    }
-
-    var content: some View {
-        VStack(spacing: 16) {
-            if model.isSearchingWeb && prompt == model.generatingPrompt {
-                WebSearchingView()
-            } else if !prompt.responses.isEmpty {
+        VStack(spacing: 0) {
+            if !prompt.responses.isEmpty {
                 let curResponse = prompt.sortedResponses[prompt.generationIndex]
                 switch curResponse.type {
                 case .error:
@@ -32,8 +23,10 @@ struct GeneratedView: View {
                     GeneratedContentView(prompt: prompt)
                 }
             }
-            GeneratedToolbar(prompt: prompt)
-                .padding(.horizontal, 16)
+            if prompt.generationState == .done {
+                GeneratedToolbar(prompt: prompt)
+                    .padding(.horizontal, 16)
+            }
         }
     }
 }

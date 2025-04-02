@@ -35,7 +35,8 @@ class TavilyService {
         let parameters: [String: Any] = [
             "query": query,
             "search_depth": "advanced",
-            "include_answer": true,
+            "include_answer": false,
+            "include_raw_content": true,
             "max_results": maxResults
         ]
         

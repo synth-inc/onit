@@ -91,6 +91,9 @@ extension Defaults.Keys {
         "accessibilityAutoContextEnabled", default: nil)
     static let highlightHintMode = Key<HighlightHintMode?>("highlightHintMode", default: nil)
 
+    // Web search
+    static let webSearchEnabled = Key<Bool>("webSearchEnabled", default: false)
+
     // Window state
     static let panelWidth = Key<Double?>("panelWidth", default: nil)
     static let panelPosition = Key<PanelPosition>("panelPosition", default: .topRight)

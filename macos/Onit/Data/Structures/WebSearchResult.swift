@@ -5,12 +5,14 @@ struct WebSearchResult: Identifiable, Codable {
     var title: String
     var url: String
     var content: String
+    var rawContent: String
     var score: Double
     
-    init(title: String, url: String, content: String, score: Double) {
+    init(title: String, url: String, content: String, rawContent: String, score: Double) {
         self.title = title
         self.url = url
         self.content = content
+        self.rawContent = rawContent
         self.score = score
     }
     
@@ -19,17 +21,33 @@ struct WebSearchResult: Identifiable, Codable {
         self.title = tavilyResult["title"] as? String ?? "Unknown Title"
         self.url = tavilyResult["url"] as? String ?? ""
         self.content = tavilyResult["content"] as? String ?? ""
+        self.rawContent = tavilyResult["rawContent"] as? String ?? ""
         self.score = tavilyResult["score"] as? Double ?? 0.0
+    }
+    
+    public var fullContent: String {
+        return content + " " + rawContent
     }
     
     // Convert to Context
     func toContext() -> Context {
         return Context(
-            type: .web,
             title: title,
-            content: content,
-            url: URL(string: url),
-            source: "Tavily Web Search"
+            content: fullContent,
+            source: source,
+            url: URL(string: url)
         )
+    }
+    
+    private func extractRootDomain(from urlString: String) -> String {
+        guard let url = URL(string: urlString),
+              let host = url.host else {
+            return ""
+        }
+        return host
+    }
+    
+    public var source : String {
+        return extractRootDomain(from: url)
     }
 }
