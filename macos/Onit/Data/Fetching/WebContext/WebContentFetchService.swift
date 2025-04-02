@@ -69,7 +69,7 @@ class WebContentFetchService {
             
             for i in 0..<pdfDocument.pageCount {
                 if let page = pdfDocument.page(at: i) {
-                    content += "PAGE \(i + 1) START \n"
+                    content += "\nPAGE \(i + 1) START \n"
                     
                     if let pageContent = page.string {
                         content += pageContent
@@ -83,7 +83,7 @@ class WebContentFetchService {
                         }
                     }
                     
-                    content += "\nPAGE \(i + 1) END"
+                    content += "\nPAGE \(i + 1) END\n"
                 }
             }
 
