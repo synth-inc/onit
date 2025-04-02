@@ -95,23 +95,6 @@ struct TextInputView: View {
         }
     }
 
-//    var webSearchButton: some View {
-//        Button(action: toggleWebSearch) {
-//            Image(systemName: "web")
-//                .resizable()
-//                .renderingMode(.template)
-//                .foregroundStyle(Defaults[.webSearchEnabled] ? Color.blue400 : Color.gray200)
-//                .frame(width: 20, height: 20)
-//        }
-//        .buttonStyle(.plain)
-//        .disabled(!isOpenAITokenValidated)
-//        .help(webSearchButtonHelpText)
-//    }
-//    
-//    private func toggleWebSearch() {
-//        Defaults[.webSearchEnabled].toggle()
-//    }
-    
     var microphoneButton: some View {
         Button(action: handleMicrophonePress) {
             if audioRecorder.isRecording {
@@ -294,7 +277,6 @@ struct TextInputView: View {
     }
 
     var sendButton: some View {
-        
         Button(action: sendAction) {
             Image(mode == .local ? .circleArrowUpDotted : .circleArrowUp)
                 .resizable()

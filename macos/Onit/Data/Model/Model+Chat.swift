@@ -175,7 +175,7 @@ extension OnitModel {
                                                                        model: model,
                                                                        apiToken: apiToken)
                         for try await response in asyncText {
-                            self.streamedResponse += response
+                            streamedResponse += response
                         }
                     } else {
                         prompt.generationState = .generating
@@ -207,7 +207,7 @@ extension OnitModel {
                                                                             responses: responsesHistory,
                                                                             model: model)
                         for try await response in asyncText {
-                            self.streamedResponse += response
+                            streamedResponse += response
                         }
                     } else {
                         prompt.generationState = .generating
