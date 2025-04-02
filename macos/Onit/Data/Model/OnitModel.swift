@@ -78,7 +78,7 @@ import SwiftUI
     var debugPanel: CustomPanel? = nil
     var debugText: String?
 
-    var autoContextWindowControllers: [Context: AutoContextWindowController] = [:]
+    var contextWindowControllers: [Context: ContextWindowController] = [:]
 
     var showFileImporter = false
 

@@ -21,6 +21,8 @@ class WebContentFetchService {
             throw FetchingError.invalidResponse(message: websiteUrl.absoluteString)
         }
         
+        let invalidWebpageInstruction = "If the webpage content is empty, requires authentication, or doesn't show valid content, just respond telling me that."
+        
         if let contentType = httpResponse.value(forHTTPHeaderField: "Content-Type"),
            (
             contentType.lowercased().contains("application/pdf") ||
@@ -29,13 +31,13 @@ class WebContentFetchService {
             contentType.lowercased().contains("application/acrobat") ||
             websiteUrl.pathExtension.lowercased() == "pdf"
            ){
-            return try await fetchPDFContent(websiteUrl: websiteUrl)
+            return try await fetchPDFContent(websiteUrl: websiteUrl, invalidWebpageInstruction: invalidWebpageInstruction)
         } else {
-            return try await fetchHTMLContent(websiteUrl: websiteUrl)
+            return try await fetchHTMLContent(websiteUrl: websiteUrl, invalidWebpageInstruction: invalidWebpageInstruction)
         }
     }
     
-    private static func fetchPDFContent(websiteUrl: URL) async throws -> (URL, String) {
+    private static func fetchPDFContent(websiteUrl: URL, invalidWebpageInstruction: String) async throws -> (URL, String) {
         let (data, response) = try await URLSession.shared.data(from: websiteUrl)
         
         guard let httpResponse = response as? HTTPURLResponse,
@@ -57,11 +59,13 @@ class WebContentFetchService {
         if let pdfDocument = PDFDocument(data: data) {
             let contentTitle = "Title: \(pdfDocument.documentAttributes?[PDFDocumentAttribute.titleAttribute] as? String ?? "Unknown")"
             let contentAuthor = "Author: \(pdfDocument.documentAttributes?[PDFDocumentAttribute.authorAttribute] as? String ?? "Unknown")"
-            let contentPages = "Pages: \(pdfDocument.pageCount)\n\n"
+            let contentPages = "Pages: \(pdfDocument.pageCount)\n"
+            
             let contentCutoffDescription = "\(contentTitle) \(contentAuthor)"
-            let contentPDFDescription = contentTitle + "\n\n" + contentAuthor + "\n" + contentPages + "\n\n"
+            
+            let contentPDFDescription = "\n" + contentTitle + "\n" + contentAuthor + "\n" + contentPages + "\n"
 
-            var content = "\n\n\(contentCutoffDescription) PDF DOCUMENT START\n\n" + contentPDFDescription
+            var content = "\n\(contentCutoffDescription) PDF DOCUMENT START\n" + contentPDFDescription
             
             for i in 0..<pdfDocument.pageCount {
                 if let page = pdfDocument.page(at: i) {
@@ -79,11 +83,11 @@ class WebContentFetchService {
                         }
                     }
                     
-                    content += "\nPAGE \(i + 1) END \n\n"
+                    content += "\nPAGE \(i + 1) END"
                 }
             }
 
-            content += "\n\n\(contentCutoffDescription)  PDF DOCUMENT END\n\n"
+            content += "\n\n" + contentCutoffDescription + "\n\n" + invalidWebpageInstruction + "\nPDF DOCUMENT END\n"
             
             let tempPdfTextFile = FileManager.default.temporaryDirectory
                 .appendingPathComponent(websiteUrl.lastPathComponent)
@@ -113,7 +117,7 @@ class WebContentFetchService {
     }
     
     @MainActor
-    private static func fetchHTMLContent(websiteUrl: URL) async throws -> (URL, String) {
+    private static func fetchHTMLContent(websiteUrl: URL, invalidWebpageInstruction: String) async throws -> (URL, String) {
         let webView = WKWebView(frame: .zero, configuration: WKWebViewConfiguration())
         let request = URLRequest(url: websiteUrl)
         webView.load(request)
@@ -147,9 +151,8 @@ class WebContentFetchService {
             let contentTitle = "Title: \(try parsedWebpageHTML.title())"
             let contentCutoffDescription = "\(contentUrl) \(contentTitle)"
             let contentMetaDescription = contentUrl + "\n" + contentTitle + "\n\n"
-            let invalidWebpageInstruction = "\n\n If the webpage content is empty, requires authentication, or doesn't show valid content, just respond telling me that."
             
-            let content = "\n\n\(contentCutoffDescription) WEBPAGE START\n\n" + contentMetaDescription + fullWebpageText + invalidWebpageInstruction + "\n\n\(contentCutoffDescription)  WEBPAGE END\n\n"
+            let content = "\n\(contentCutoffDescription) WEBPAGE START\n\n" + contentMetaDescription + fullWebpageText + "\n\n" + invalidWebpageInstruction + "\n\n\(contentCutoffDescription)  WEBPAGE END\n"
             
             let tempHtmlTextFileUrl = FileManager.default.temporaryDirectory
                 .appendingPathComponent("\(websiteUrl.host ?? "webpage")-\(UUID().uuidString)")

@@ -17,15 +17,17 @@ struct ContextItem: View {
         HStack(spacing: 0) {
             switch item {
             case .web(let websiteUrl, let websiteTitle, _):
+                let websiteUrlDomain = websiteUrl.host() ?? websiteUrl.absoluteString
+                
                 WebContextItem(
                     item: item,
                     websiteUrl: websiteUrl,
-                    websiteTitle: websiteTitle.isEmpty ? websiteUrl.host() ?? websiteUrl.absoluteString : websiteTitle,
+                    websiteTitle: websiteTitle.isEmpty ? websiteUrlDomain : websiteTitle,
                     isEditing: isEditing
                 )
             case .auto:
                 Button {
-                    model.showAutoContextWindow(context: item)
+                    model.showContextWindow(context: item)
                 } label: {
                     contentView
                 }
@@ -85,7 +87,7 @@ struct ContextItem: View {
 
     var xButton: some View {
         Button {
-            model.closeAutoContextWindow(context: item)
+            model.closeContextWindow(context: item)
             model.removeContext(context: item)
         } label: {
             Color.clear

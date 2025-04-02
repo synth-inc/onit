@@ -124,27 +124,16 @@ extension OnitModel {
             uploadTasks[url]?.cancel()
             uploadTasks[url] = nil
             imageUploads[url] = nil
-        case .web(let websiteUrl, _, _): // Handles removing temporary local web files.
+        case .web(let websiteUrl, _, let existingWebFileUrl): // Handles removing temporary local web files.
             removeWebsiteUrlScrapeTask(websiteUrl: websiteUrl)
             
-            let webContextItemIndex = getWebContextItemIndex(
-                pendingContextList:self.pendingContextList,
-                comparativeWebUrl: websiteUrl
-            )
-            
-            if let webContextItemIndex = webContextItemIndex {
-                let webContextItem = self.pendingContextList[webContextItemIndex]
-                
-                if case .web(_, _, let existingWebFileUrl) = webContextItem {
-                    if let existingWebFileUrl = existingWebFileUrl {
-                        do {
-                            try FileManager.default.removeItem(at: existingWebFileUrl)
-                        } catch {
-                            #if DEBUG
-                            print("Failed to delete web content file: \(error)")
-                            #endif
-                        }
-                    }
+            if let existingWebFileUrl = existingWebFileUrl {
+                do {
+                    try FileManager.default.removeItem(at: existingWebFileUrl)
+                } catch {
+                    #if DEBUG
+                    print("Failed to delete web content file: \(error)")
+                    #endif
                 }
             }
         default:

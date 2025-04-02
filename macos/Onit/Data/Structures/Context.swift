@@ -22,8 +22,10 @@ enum Context {
         switch self {
         case .auto:
             return nil
-        case .file(let url), .image(let url), .tooBig(let url), .error(let url, _), .web(let url, _, _):
+        case .file(let url), .image(let url), .tooBig(let url), .error(let url, _):
             return url
+        case .web(_, _, let webFileUrl):
+            return webFileUrl
         }
     }
 
@@ -217,6 +219,8 @@ extension [Context] {
             switch $0 {
             case .file(let url):
                 return url
+            case .web(_, _, let webFileUrl):
+                return webFileUrl
             default:
                 return nil
             }
@@ -228,17 +232,6 @@ extension [Context] {
             switch $0 {
             case .image(let url):
                 return url
-            default:
-                return nil
-            }
-        }
-    }
-    
-    var scrapedWebFiles: [URL] {
-        compactMap {
-            switch $0 {
-            case .web(_, _, let webFileUrl):
-                return webFileUrl
             default:
                 return nil
             }
