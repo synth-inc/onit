@@ -62,7 +62,7 @@ enum Context {
         }
     }
     
-    var isWebContext: Bool {
+    var isWebSearchContext: Bool {
         switch self {
         case .webSearch:
             return true

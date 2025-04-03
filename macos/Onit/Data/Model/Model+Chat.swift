@@ -205,8 +205,8 @@ extension OnitModel {
                             inputs: inputsHistory,
                             files: filesHistory,
                             images: imagesHistory,
-                            webSearchContexts: webSearchContextsHistory,
                             autoContexts: autoContextsHistory,
+                            webSearchContexts: webSearchContextsHistory,
                             responses: responsesHistory,
                             model: model)
                         for try await response in asyncText {

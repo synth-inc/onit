@@ -154,10 +154,10 @@ struct FinalContextView: View {
 
                     if usingContext {
                         ContextList(contextList: prompt.contextList, direction: .vertical, onItemTap: { context in
-                            if context.isWebContext, let url = context.webURL {
+                            if context.isWebSearchContext, let url = context.webURL {
                                 NSWorkspace.shared.open(url)
                             } else {
-                                model.showAutoContextWindow(context: context)
+                                model.showContextWindow(context: context)
                             }
                         })
                             .background {
