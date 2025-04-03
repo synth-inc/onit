@@ -247,12 +247,9 @@ private class WebViewNavigationDelegate: NSObject, WKNavigationDelegate {
         guard !isCompleted else { return }
         isCompleted = true
         
-        // Remove webView on error
-        #if DEBUG
         Task { @MainActor in
             webView.removeFromSuperview()
         }
-        #endif
         
         completion(.failure(FetchingError.failedRequest(
             message: "Failed to load webpage: \(webView.url?.absoluteString ?? "unknown") - \(error.localizedDescription)"
