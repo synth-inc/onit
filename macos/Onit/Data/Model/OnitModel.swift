@@ -78,7 +78,7 @@ import SwiftUI
     var debugPanel: CustomPanel? = nil
     var debugText: String?
 
-    var autoContextWindowControllers: [Context: AutoContextWindowController] = [:]
+    var contextWindowControllers: [Context: ContextWindowController] = [:]
 
     var showFileImporter = false
 
@@ -102,6 +102,9 @@ import SwiftUI
     var streamedResponse: String = ""
     
     var promptSuggestionService: SystemPromptSuggestionService?
+    
+    typealias WebsiteUrlScrapeTask = Task<Void, Never>
+    var websiteUrlsScrapeQueue: [String: WebsiteUrlScrapeTask] = [:]
 
     @MainActor
     func fetchLocalModels() async {

@@ -1,5 +1,5 @@
 //
-//  AutoContextWindowController.swift
+//  ContextWindowController.swift
 //  Onit
 //
 //  Created by Kévin Naudin on 25/01/2025.
@@ -9,26 +9,69 @@ import AppKit
 import SwiftUI
 
 @MainActor
-class AutoContextWindowController: NSObject, NSWindowDelegate {
+class ContextWindowController: NSObject, NSWindowDelegate {
 
     // MARK: - Properties
 
     private weak var model: OnitModel?
     private let context: Context
-    private let contentView: AutoContextView?
+    private let contentView: ContextView?
     private var window: NSWindow?
+    private var webFileContents: String = ""
 
     // MARK: - Initializers
 
     init?(model: OnitModel, context: Context) {
-        guard case let .auto(appName, _) = context else {
+        var title: String
+        
+        switch context {
+        case .auto(let appName, _):
+            title = appName
+        case .web(let websiteUrl, let websiteTitle, _):
+            let websiteUrlDomain = websiteUrl.host() ?? websiteUrl.absoluteString
+            title = websiteTitle.isEmpty ? websiteUrlDomain : websiteTitle
+
+            self.webFileContents = "Contents for \(websiteUrlDomain) are still loading."
+            
+            let websiteContentsUnavailableText = "Website contents not available."
+            let pendingContextList = model.getPendingContextList()
+            
+            let webContextItemIndex = getWebContextItemIndex(
+                pendingContextList: pendingContextList,
+                comparativeWebUrl: websiteUrl
+            )
+            
+            if let webContextItemIndex = webContextItemIndex,
+               pendingContextList.indices.contains(webContextItemIndex)
+            {
+                let webContextItem = pendingContextList[webContextItemIndex]
+                
+                if case .web(_, _, let recentWebFileUrl) = webContextItem,
+                   let recentWebFileUrl = recentWebFileUrl
+                {
+                    do {
+                        let webFileContents = try String(contentsOf: recentWebFileUrl)
+                        
+                        let webFileContentsSplit = webFileContents.split(separator: "\n")
+                        let splitCount = webFileContentsSplit.count
+                        let contents = webFileContentsSplit[2..<splitCount-2].joined(separator: "")
+
+                        self.webFileContents = contents
+                    } catch {
+                        self.webFileContents = websiteContentsUnavailableText
+                    }
+                }
+            } else {
+                self.webFileContents = websiteContentsUnavailableText
+            }
+        default:
             return nil
         }
 
         self.model = model
         self.context = context
 
-        self.contentView = AutoContextView(context: context)
+        self.contentView = ContextView(context: context, webFileContents: self.webFileContents)
 
         super.init()
 
@@ -40,7 +83,7 @@ class AutoContextWindowController: NSObject, NSWindowDelegate {
 
         let window = NSWindow(contentViewController: hostingController)
         window.styleMask = [.titled, .closable, .miniaturizable, .resizable]
-        window.title = appName
+        window.title = title
         window.isOpaque = false
         window.backgroundColor = NSColor.black
         window.level = .modalPanel
@@ -157,7 +200,7 @@ class AutoContextWindowController: NSObject, NSWindowDelegate {
     // MARK: - NSWindowDelegate
 
     func windowWillClose(_ notification: Notification) {
-        model?.autoContextWindowControllers.removeValue(forKey: context)
+        model?.contextWindowControllers.removeValue(forKey: context)
     }
 
 }

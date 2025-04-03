@@ -13,6 +13,11 @@ enum Context {
     case image(URL)
     case tooBig(URL)
     case error(URL, Error)
+    
+    typealias WebsiteUrl = URL
+    typealias WebsiteTitle = String
+    typealias WebsiteFileUrl = URL?
+    case web (WebsiteUrl,  WebsiteTitle, WebsiteFileUrl)
 
     static let maxFileSize: Int = 1024 * 1024 * 1
     static let maxImageSize: Int = 1024 * 1024 * 20
@@ -23,6 +28,8 @@ enum Context {
             return nil
         case .file(let url), .image(let url), .tooBig(let url), .error(let url, _):
             return url
+        case .web(_, _, let webFileUrl):
+            return webFileUrl
         }
     }
 
@@ -34,6 +41,8 @@ enum Context {
             "file"
         case .image:
             "Img"
+        case .web:
+            "Web"
         default:
             nil
         }
@@ -55,6 +64,14 @@ extension Context {
     }
 
     init(url: URL) {
+        // Initialization for web context urls.
+        if (url.scheme == "http" || url.scheme == "https") && url.host != nil {
+            let websiteTitle = url.host() ?? url.absoluteString
+            self = .web(url, websiteTitle, nil)
+            return
+        }
+        
+        // Initialization for non-web-context urls.
         do {
             let size = try url.size
             if url.isImage {
@@ -68,15 +85,22 @@ extension Context {
             self = .error(url, error)
         }
     }
+    
+    var isError: Bool {
+        if case .error = self {
+            return true
+        }
+        return false
+    }
 }
 
 extension Context: Codable {
     enum CodingKeys: String, CodingKey {
-        case appName, appContent, type, url, error
+        case appName, appContent, type, url, websiteUrl, websiteTitle, error
     }
 
     enum ContextType: String, Codable {
-        case auto, file, image, tooBig, error
+        case auto, file, image, tooBig, error, web
     }
 
     init(from decoder: Decoder) throws {
@@ -103,6 +127,11 @@ extension Context: Codable {
             let error = NSError(
                 domain: "", code: 0, userInfo: [NSLocalizedDescriptionKey: errorDescription])
             self = .error(url, error)
+        case .web:
+            let websiteUrl = try container.decode(URL.self, forKey: .websiteUrl)
+            let websiteTitle = try container.decode(String.self, forKey: .websiteTitle)
+            let webFileUrl = try container.decodeIfPresent(URL.self, forKey: .url)
+            self = .web(websiteUrl, websiteTitle, webFileUrl)
         }
     }
 
@@ -128,6 +157,13 @@ extension Context: Codable {
             try container.encode(ContextType.error, forKey: .type)
             let errorDescription = (error as NSError).localizedDescription
             try container.encode(errorDescription, forKey: .error)
+        case .web(let websiteUrl, let websiteTitle, let webFileUrl):
+            try container.encode(websiteUrl, forKey: .websiteUrl)
+            try container.encode(websiteTitle, forKey: .websiteTitle)
+            try container.encode(ContextType.web, forKey: .type)
+            if let webFileUrl = webFileUrl {
+                try container.encode(webFileUrl, forKey: .url)
+            }
         }
     }
 }
@@ -143,6 +179,8 @@ extension Context: Equatable, Hashable {
             return url1 == url2
         case (.auto(let appName1, let content1), .auto(let appName2, let content2)):
             return appName1 == appName2 && content1 == content2
+        case (.web(let websiteUrl1, _, _), .web(let websiteUrl2, _, _)):
+            return websiteUrl1 == websiteUrl2
         default:
             return false
         }
@@ -150,7 +188,7 @@ extension Context: Equatable, Hashable {
 
     func hash(into hasher: inout Hasher) {
         switch self {
-        case .file(let url), .image(let url), .tooBig(let url), .error(let url, _):
+        case .file(let url), .image(let url), .tooBig(let url), .error(let url, _), .web(let url, _, _):
             hasher.combine(url)
         case .auto(let appName, let appContent):
             hasher.combine(appName)
@@ -186,6 +224,8 @@ extension [Context] {
             switch $0 {
             case .file(let url):
                 return url
+            case .web(_, _, let webFileUrl):
+                return webFileUrl
             default:
                 return nil
             }

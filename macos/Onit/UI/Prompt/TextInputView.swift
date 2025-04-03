@@ -54,6 +54,7 @@ struct TextInputView: View {
             downListener
             newListener
         }
+        .opacity(model.websiteUrlsScrapeQueue.isEmpty ? 1 : 0.5)
         .onDisappear {
             if audioRecorder.isRecording {
                 cancelRecording()
@@ -240,7 +241,9 @@ struct TextInputView: View {
             onSubmit: sendAction,
             maxHeight: maxHeightLimit,
             placeholder: placeholderText,
-            audioRecorder: audioRecorder)
+            audioRecorder: audioRecorder,
+            detectLinks: true
+        )
         .focused($focused)
         .frame(height: min(textHeight, maxHeightLimit))
         .onAppear { focused = true }
@@ -270,11 +273,13 @@ struct TextInputView: View {
     }
 
     func sendAction() {
-        let inputText = (model.pendingInstruction ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
-        
-        guard !inputText.isEmpty else { return }
-        
-        model.createAndSavePrompt()
+        if model.websiteUrlsScrapeQueue.isEmpty {
+            let inputText = (model.pendingInstruction ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+            
+            guard !inputText.isEmpty else { return }
+            
+            model.createAndSavePrompt()
+        }
     }
 
     var sendButton: some View {

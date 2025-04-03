@@ -17,6 +17,7 @@
 		867A647C2D4AD73A00FD4D80 /* DefaultsMacros in Frameworks */ = {isa = PBXBuildFile; productRef = 867A647B2D4AD73A00FD4D80 /* DefaultsMacros */; };
 		86A974C12D4A76F800CF6FCE /* Markdown in Frameworks */ = {isa = PBXBuildFile; productRef = 86A974C02D4A76F800CF6FCE /* Markdown */; };
 		86F908912D7AF491008D8027 /* Highlightr in Frameworks */ = {isa = PBXBuildFile; productRef = 86F908902D7AF491008D8027 /* Highlightr */; };
+		900CD80A2D9C0A1E0049592B /* SwiftSoup in Frameworks */ = {isa = PBXBuildFile; productRef = 900CD8092D9C0A1E0049592B /* SwiftSoup */; };
 		904266782D9B40DF002AF820 /* LLMStream in Frameworks */ = {isa = PBXBuildFile; productRef = 904266772D9B40DF002AF820 /* LLMStream */; };
 		A782C1982D383493009976F8 /* FirebaseCrashlytics in Frameworks */ = {isa = PBXBuildFile; productRef = A782C1972D383493009976F8 /* FirebaseCrashlytics */; };
 /* End PBXBuildFile section */
@@ -60,6 +61,7 @@
 				A782C1982D383493009976F8 /* FirebaseCrashlytics in Frameworks */,
 				2842875E2CD0B6A5000C6C67 /* HighlightSwift in Frameworks */,
 				28F57E222CAC84AA006AAA8C /* KeyboardShortcuts in Frameworks */,
+				900CD80A2D9C0A1E0049592B /* SwiftSoup in Frameworks */,
 				867A647C2D4AD73A00FD4D80 /* DefaultsMacros in Frameworks */,
 				904266782D9B40DF002AF820 /* LLMStream in Frameworks */,
 				862BC3C82D50D0D100806B58 /* EventSource in Frameworks */,
@@ -118,6 +120,7 @@
 				867A647B2D4AD73A00FD4D80 /* DefaultsMacros */,
 				86F908902D7AF491008D8027 /* Highlightr */,
 				904266772D9B40DF002AF820 /* LLMStream */,
+				900CD8092D9C0A1E0049592B /* SwiftSoup */,
 			);
 			productName = Onit;
 			productReference = 2883E4B32CA5ECBB00F79A48 /* Onit.app */;
@@ -159,6 +162,7 @@
 				867A64782D4AD73A00FD4D80 /* XCRemoteSwiftPackageReference "Defaults" */,
 				86F9088F2D7AF491008D8027 /* XCRemoteSwiftPackageReference "Highlightr" */,
 				904266762D9B40DF002AF820 /* XCLocalSwiftPackageReference "../LLMStream" */,
+				900CD8082D9C0A1E0049592B /* XCRemoteSwiftPackageReference "SwiftSoup" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 2883E4B42CA5ECBB00F79A48 /* Products */;
@@ -513,6 +517,14 @@
 				minimumVersion = 2.2.1;
 			};
 		};
+		900CD8082D9C0A1E0049592B /* XCRemoteSwiftPackageReference "SwiftSoup" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/scinfu/SwiftSoup";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.8.7;
+			};
+		};
 		A782C1962D383493009976F8 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/firebase/firebase-ios-sdk";
@@ -573,6 +585,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 86F9088F2D7AF491008D8027 /* XCRemoteSwiftPackageReference "Highlightr" */;
 			productName = Highlightr;
+		};
+		900CD8092D9C0A1E0049592B /* SwiftSoup */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 900CD8082D9C0A1E0049592B /* XCRemoteSwiftPackageReference "SwiftSoup" */;
+			productName = SwiftSoup;
 		};
 		904266772D9B40DF002AF820 /* LLMStream */ = {
 			isa = XCSwiftPackageProductDependency;
