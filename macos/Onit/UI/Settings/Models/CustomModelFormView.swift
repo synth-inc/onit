@@ -165,19 +165,19 @@ struct CustomModelFormView: View {
         
         // If we get here, the model has yet to be added, so it's safe to proceed with model validation.
         do {
-            let endpoint = ModelValidationEndpoint(
+            let modelValidationEndpoint = ModelValidationEndpoint(
+                provider: provider,
                 model: modelName,
-                token: token,
-                provider: provider
+                token: token
             )
             
             let client = FetchingClient()
             print("Validating model: \(modelName) for provider: \(provider)")
-            
-            _ = try await client.execute(endpoint)
+
+            _ = try await client.execute(modelValidationEndpoint)
             
             // If we get here, validation succeeded.
-            // The model will be added to Onit and will automatically be checked.
+            // The model will be added to Onit and will automatically be selected for use.
             addModel()
             isSubmitted = true
             dismiss()
@@ -231,8 +231,6 @@ struct CustomModelFormView: View {
         }
     }
 }
-
-// MARK: - AIModel Extension
 
 extension AIModel {
     init(id: String,

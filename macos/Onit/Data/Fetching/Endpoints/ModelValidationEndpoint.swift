@@ -8,79 +8,63 @@
 import Foundation
 
 struct ModelValidationEndpoint: Endpoint {
-    var baseURL: URL {
+    typealias BaseURL = URL
+    typealias Path = String
+    typealias AdditionalHeaders = [String: String]?
+    
+    typealias Request = ValidationRequest
+    typealias Response = ValidationResponse
+    var getParams: AdditionalHeaders { nil }
+    var method: HTTPMethod { .post }
+    var timeout: TimeInterval? { nil }
+    
+    let provider: AIModel.ModelProvider
+    let model: String
+    let token: String?
+    
+    var baseURL: BaseURL { handleProviderValues().0 }
+    var path: Path { handleProviderValues().1 }
+    var additionalHeaders: AdditionalHeaders { handleProviderValues().2 }
+
+    var requestBody: Request? {
+        let validationTestMessage = [ValidationMessage(role: "user", content: "hi")]
+        
+        switch provider {
+        case .anthropic:
+            return ValidationRequest(model: model, messages: validationTestMessage, maxTokens: 1024)
+        case .googleAI:
+            return ValidationRequest(model: model, messages: validationTestMessage, stream: false, n: 1)
+        default: // e.g. .openAI, .xAI, .deepSeek, .perplexity, .custom
+            return ValidationRequest(model: model, messages: validationTestMessage, stream: false)
+        }
+    }
+}
+
+extension ModelValidationEndpoint {
+    private func handleProviderValues() -> (BaseURL, Path, AdditionalHeaders) {
         switch provider {
         case .openAI:
-            return URL(string: "https://api.openai.com")!
+            let openAI = OpenAIChatEndpoint(messages: [], token: token, model: model)
+            return (openAI.baseURL, openAI.path, openAI.additionalHeaders)
         case .anthropic:
-            return URL(string: "https://api.anthropic.com")!
+            let anthropic = AnthropicChatEndpoint(model: model, system: "", token: token, messages: [], maxTokens: 0)
+            return (anthropic.baseURL, anthropic.path, anthropic.additionalHeaders)
         case .xAI:
-            return URL(string: "https://api.x.ai")!
+            let xAI = XAIChatEndpoint(messages: [], model: model, token: token)
+            return (xAI.baseURL, xAI.path, xAI.additionalHeaders)
         case .googleAI:
-            return URL(string: "https://generativelanguage.googleapis.com")!
-        case .deepSeek:
-            return URL(string: "https://api.deepseek.com")!
+            let googleAI = GoogleAIChatEndpoint(messages: [], model: model, token: token)
+            return (googleAI.baseURL, googleAI.path, googleAI.additionalHeaders)
+        case.deepSeek:
+            let deepSeek = DeepSeekChatEndpoint(messages: [], model: model, token: token)
+            return (deepSeek.baseURL, deepSeek.path, deepSeek.additionalHeaders)
         case .perplexity:
-            return URL(string: "https://api.perplexity.ai")!
-        default: // e.g. .custom
+            let perplexity = PerplexityChatEndpoint(messages: [], model: model, token: token)
+            return (perplexity.baseURL, perplexity.path, perplexity.additionalHeaders)
+        default: // .custom
             fatalError("Custom providers must provide a base URL")
         }
     }
-
-    typealias Request = ValidationRequest
-    typealias Response = ValidationResponse
-    
-    let model: String
-    let token: String?
-    let provider: AIModel.ModelProvider
-    
-    var path: String {
-        switch provider {
-        case .openAI: return "/v1/chat/completions"
-        case .anthropic: return "/v1/messages"
-        case .xAI: return "/v1/chat/completions"
-        case .googleAI: return "/v1beta:chatCompletions"
-        case .deepSeek: return "/v1/chat/completions"
-        case .perplexity: return "/chat/completions"
-        default: return "/v1/chat/completions" // e.g. .custom
-        }
-    }
-    
-    var getParams: [String: String]? { nil }
-    var method: HTTPMethod { .post }
-    
-    var requestBody: ValidationRequest? {
-        // This is only used to validate the validity of added models in CustomModelFormView
-        //   so it's preferred to keep the validation message simple.
-        let messages = [ValidationMessage(role: "user", content: "hi")]
-        
-        switch provider {
-        case .anthropic:
-            return ValidationRequest(model: model, messages: messages, maxTokens: 1024)
-        case .googleAI:
-            return ValidationRequest(model: model, messages: messages, stream: false, n: 1)
-        default: // e.g. .openAI, .xAI, .deepSeek, .perplexity, .custom
-            return ValidationRequest(model: model, messages: messages, stream: false)
-        }
-    }
-    
-    var additionalHeaders: [String: String]? {
-        // Return nil if token is missing to fail early
-        guard let token = token else { return nil }
-        
-        var headers = [String: String]()
-        
-        switch provider {
-        case .anthropic:
-            headers["x-api-key"] = token
-            headers["anthropic-version"] = "2023-06-01"
-        default: // .openAI, .xAI, .googleAI, .deepSeek, .perplexity, .custom
-            headers["Authorization"] = "Bearer \(token)"
-        }
-        return headers
-    }
-    
-    var timeout: TimeInterval? { nil }
 }
 
 struct ValidationMessage: Codable {
@@ -110,6 +94,5 @@ struct ValidationRequest: Codable {
     }
 }
 
-struct ValidationResponse: Codable {
-    // Empty response since we only care about success/failure
-}
+// Only used for `Endpoint` protocol conformance.
+struct ValidationResponse: Codable {}

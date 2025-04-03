@@ -14,8 +14,8 @@ struct DeleteModelsView: View {
     
     @Default(.availableRemoteModels) var availableRemoteModels
     @Default(.visibleModelIds) var visibleModelIds
+    @Default(.remoteModel) var remoteModel
     
-    // Add these properties after other @Default properties
     @Default(.openAIToken) var openAIToken
     @Default(.anthropicToken) var anthropicToken
     @Default(.xAIToken) var xAIToken
@@ -23,14 +23,12 @@ struct DeleteModelsView: View {
     @Default(.deepSeekToken) var deepSeekToken
     @Default(.perplexityToken) var perplexityToken
 
-    // Track selected models for deletion
     @State private var selectedModels = Set<String>()
     @State private var showDeleteConfirmation = false
     
-    // Group models by provider
+    // Sorting providers based on the same order found in the Settings -> Models tab.
     var modelsByProvider: [(AIModel.ModelProvider, [AIModel])] {
         let filteredModels = availableRemoteModels.filter { model in
-            // Only include models whose providers have valid tokens
             switch model.provider {
             case .openAI:
                 return openAIToken != nil
@@ -44,13 +42,12 @@ struct DeleteModelsView: View {
                 return deepSeekToken != nil
             case .perplexity:
                 return perplexityToken != nil
-            case .custom:
-                return false // Not including custom provider models.
+            case .custom: // Not including custom provider models.
+                return false
             }
         }
         
         let groupedByProvider = Dictionary(grouping: filteredModels) { $0.provider }
-        
         
         let providerOrder: [AIModel.ModelProvider] = [
             .openAI,
@@ -61,7 +58,6 @@ struct DeleteModelsView: View {
             .perplexity
         ]
         
-        // Sorting providers based on the same order found in the Settings -> Models tab.
         return providerOrder.compactMap { provider in
             if let models = groupedByProvider[provider] {
                 return (provider, models)
@@ -154,16 +150,31 @@ struct DeleteModelsView: View {
             isPresented: $showDeleteConfirmation
         ) {
             Button("Delete", role: .destructive) {
-                // Remove the selected models
                 availableRemoteModels.removeAll { model in
                     selectedModels.contains(model.uniqueId)
                 }
-                selectedModels.removeAll()
-                
-                // Clear selected models from visibleModelIds
                 visibleModelIds.subtract(selectedModels)
                 
-                // Update UI
+                // If the currently-selected model was a member of the models that were just deleted,
+                // set the first model in the list of available models are the new currently-selected model.
+                if let currentRemoteModel = remoteModel {
+                    if !availableRemoteModels.contains(where: { $0.uniqueId == currentRemoteModel.uniqueId }) {
+                        if !modelsByProvider.isEmpty {
+                            let firstProvider = modelsByProvider[0].1
+                            if !firstProvider.isEmpty { remoteModel = firstProvider[0] }
+                            else { remoteModel = nil }
+                        } else {
+                            remoteModel = nil
+                        }
+                    }
+                } else {
+                    if !modelsByProvider.isEmpty {
+                        let firstProvider = modelsByProvider[0].1
+                        if !firstProvider.isEmpty { remoteModel = firstProvider[0] }
+                    }
+                }
+                
+                selectedModels.removeAll()
                 model.shrinkContent()
                 dismiss()
             }

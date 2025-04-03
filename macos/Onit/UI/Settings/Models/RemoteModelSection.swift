@@ -279,7 +279,7 @@ struct RemoteModelSection: View {
             .sheet(isPresented: $showCustomModelForm) {
                 CustomModelFormView(
                     provider: provider,
-                    token: getToken(),
+                    token: getModelToken(provider: provider),
                     isSubmitted: $isCustomModelSubmitted
                 )
             }
@@ -422,25 +422,6 @@ struct RemoteModelSection: View {
         } else if case .invalid(_) = state {
             use = false
             validated = false
-        }
-    }
-    
-    func getToken() -> String? {
-        switch provider {
-        case .openAI:
-            return openAIToken
-        case .anthropic:
-            return anthropicToken
-        case .xAI:
-            return xAIToken
-        case .googleAI:
-            return googleAIToken
-        case .deepSeek:
-            return deepSeekToken
-        case .perplexity:
-            return perplexityToken
-        case .custom:
-            return nil
         }
     }
 }
