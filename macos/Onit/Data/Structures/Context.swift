@@ -13,7 +13,7 @@ enum Context {
     case image(URL)
     case tooBig(URL)
     case error(URL, Error)
-    case web(String, String, String, URL?)
+    case webSearch(String, String, String, URL?)
 
     static let maxFileSize: Int = 1024 * 1024 * 1
     static let maxImageSize: Int = 1024 * 1024 * 20
@@ -24,7 +24,7 @@ enum Context {
             return nil
         case .file(let url), .image(let url), .tooBig(let url), .error(let url, _):
             return url
-        case .web(_, _, _, let url):
+        case .webSearch(_, _, _, let url):
             return url
         }
     }
@@ -37,8 +37,8 @@ enum Context {
             "file"
         case .image:
             "Img"
-        case .web:
-            "Web"
+        case .webSearch:
+            "WebSearch"
         default:
             nil
         }
@@ -55,7 +55,7 @@ enum Context {
     
     var isWebContext: Bool {
         switch self {
-        case .web:
+        case .webSearch:
             return true
         default:
             return false
@@ -64,7 +64,7 @@ enum Context {
 
     var webURL: URL? {
         switch self {
-        case .web(_, _, _, let url):
+        case .webSearch(_, _, _, let url):
             return url
         default:
             return nil
@@ -78,7 +78,7 @@ extension Context {
     }
     
     init(title: String, content: String, source: String, url: URL? = nil) {
-        self = .web(title, content, source, url)
+        self = .webSearch(title, content, source, url)
     }
 
     init(url: URL) {
@@ -103,7 +103,7 @@ extension Context: Codable {
     }
 
     enum ContextType: String, Codable {
-        case auto, file, image, tooBig, error, web
+        case auto, file, image, tooBig, error, webSearch
     }
 
     init(from decoder: Decoder) throws {
@@ -130,12 +130,12 @@ extension Context: Codable {
             let error = NSError(
                 domain: "", code: 0, userInfo: [NSLocalizedDescriptionKey: errorDescription])
             self = .error(url, error)
-        case .web:
+        case .webSearch:
             let title = try container.decode(String.self, forKey: .title)
             let content = try container.decode(String.self, forKey: .content)
             let source = try container.decode(String.self, forKey: .source)
             let url = try container.decodeIfPresent(URL.self, forKey: .url)
-            self = .web(title, content, source, url)
+            self = .webSearch(title, content, source, url)
         }
     }
 
@@ -161,14 +161,14 @@ extension Context: Codable {
             try container.encode(ContextType.error, forKey: .type)
             let errorDescription = (error as NSError).localizedDescription
             try container.encode(errorDescription, forKey: .error)
-        case .web(let title, let content, let source, let url):
+        case .webSearch(let title, let content, let source, let url):
             try container.encode(title, forKey: .title)
             try container.encode(content, forKey: .content)
             try container.encode(source, forKey: .source)
             if let url = url {
                 try container.encode(url, forKey: .url)
             }
-            try container.encode(ContextType.web, forKey: .type)
+            try container.encode(ContextType.webSearch, forKey: .type)
         }
     }
 }
@@ -184,7 +184,7 @@ extension Context: Equatable, Hashable {
             return url1 == url2
         case (.auto(let appName1, let content1), .auto(let appName2, let content2)):
             return appName1 == appName2 && content1 == content2
-        case (.web(let title1, let content1, let source1, _), .web(let title2, let content2, let source2, _)):
+        case (.webSearch(let title1, let content1, let source1, _), .webSearch(let title2, let content2, let source2, _)):
             return title1 == title2 && content1 == content2 && source1 == source2
         default:
             return false
@@ -198,7 +198,7 @@ extension Context: Equatable, Hashable {
         case .auto(let appName, let appContent):
             hasher.combine(appName)
             hasher.combine(appContent)
-        case .web(let title, let content, let source, _):
+        case .webSearch(let title, let content, let source, _):
             hasher.combine(title)
             hasher.combine(content)
             hasher.combine(source)
@@ -250,10 +250,10 @@ extension [Context] {
         }
     }
     
-    var webContexts: [(title: String, content: String, source: String, url: URL?)] {
+    var webSearchContexts: [(title: String, content: String, source: String, url: URL?)] {
         compactMap {
             switch $0 {
-            case .web(let title, let content, let source, let url):
+            case .webSearch(let title, let content, let source, let url):
                 return (title, content, source, url)
             default:
                 return nil

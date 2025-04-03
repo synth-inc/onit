@@ -68,7 +68,7 @@ struct ContextItem: View {
             error.localizedDescription
         case .tooBig:
             "Upload exceeds model limit"
-        case .web(let title, _, _, _):
+        case .webSearch(let title, _, _, _):
             title
         }
     }

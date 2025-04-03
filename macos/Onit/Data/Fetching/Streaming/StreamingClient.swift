@@ -16,7 +16,7 @@ actor StreamingClient {
               files: [[URL]],
               images: [[URL]],
               autoContexts: [[String: String]],
-              webContexts: [[(title: String, content: String, source: String, url: URL?)]],
+              webSearchContexts: [[(title: String, content: String, source: String, url: URL?)]],
               responses: [String],
               model: AIModel,
               apiToken: String?) async throws -> AsyncThrowingStream<String, Error> {
@@ -25,7 +25,7 @@ actor StreamingClient {
             inputs: inputs,
             files: files,
             autoContexts: autoContexts,
-            webContexts: webContexts)
+            webSearchContexts: webSearchContexts)
         let endpoint = try ChatStreamingEndpointBuilder.build(
             model: model,
             images: images,
@@ -48,7 +48,7 @@ actor StreamingClient {
                    files: [[URL]],
                    images: [[URL]],
                    autoContexts: [[String: String]],
-                   webContexts: [[(title: String, content: String, source: String, url: URL?)]],
+                   webSearchContexts: [[(title: String, content: String, source: String, url: URL?)]],
                    responses: [String],
                    model: String) async throws -> AsyncThrowingStream<String, Error> {
         let userMessages = ChatEndpointMessagesBuilder.user(
@@ -56,7 +56,7 @@ actor StreamingClient {
             inputs: inputs,
             files: files,
             autoContexts: autoContexts,
-            webContexts: webContexts)
+            webSearchContexts: webSearchContexts)
         let localMessages = ChatEndpointMessagesBuilder.local(
             images: images,
             responses: responses,

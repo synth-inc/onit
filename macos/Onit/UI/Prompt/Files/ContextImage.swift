@@ -18,8 +18,8 @@ struct ContextImage: View {
             image(url: url)
         case .file:
             file
-        case .web:
-            webContext
+        case .webSearch(_, _, let source, _):
+            webSearchContext(domain: source)
         default:
             warning
         }
@@ -57,12 +57,20 @@ struct ContextImage: View {
             }
     }
 
-    var webContext: some View {
-        Image(systemName: "globe")
-            .resizable()
-            .frame(width: 16, height: 16)
-            .padding(2)
-            .foregroundStyle(.blue400)
+    func webSearchContext(domain: String) -> some View {
+        AsyncImage(url: URL(string: "https://\(domain)/favicon.ico")) { image in
+            if let faviconImage = image.image {
+                faviconImage
+                    .resizable()
+                    .frame(width: 16, height: 16)
+                    .padding(2)
+            } else {
+                Image(systemName: "globe")
+                    .resizable()
+                    .frame(width: 16, height: 16)
+                    .padding(2)
+            }
+        }
     }
     
     var warning: some View {

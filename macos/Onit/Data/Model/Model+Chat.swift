@@ -84,7 +84,7 @@ extension OnitModel {
             var imagesHistory: [[URL]] = [prompt.contextList.images]
             var instructionsHistory: [String] = [curInstruction]
             var autoContextsHistory: [[String: String]] = [prompt.contextList.autoContexts]
-            var webContextsHistory: [[(title: String, content: String, source: String, url: URL?)]] = [prompt.contextList.webContexts]
+            var webSearchContextsHistory: [[(title: String, content: String, source: String, url: URL?)]] = [prompt.contextList.webSearchContexts]
             var responsesHistory: [String] = []
 
             // Go through prior prompts and add them to the history
@@ -103,7 +103,7 @@ extension OnitModel {
                         filesHistory.insert(currentPrompt!.contextList.files, at: 0)
                         imagesHistory.insert(currentPrompt!.contextList.images, at: 0)
                         autoContextsHistory.insert(currentPrompt!.contextList.autoContexts, at: 0)
-                        webContextsHistory.insert(currentPrompt!.contextList.webContexts, at: 0)
+                        webSearchContextsHistory.insert(currentPrompt!.contextList.webSearchContexts, at: 0)
                         responsesHistory.insert(
                             currentPrompt!.sortedResponses[currentPrompt!.generationIndex].text, at: 0)
                     } else {
@@ -136,14 +136,14 @@ extension OnitModel {
                     let searchResults = await performWebSearch(query: curInstruction)
                     if !searchResults.isEmpty {
                         var updatedContextList = prompt.contextList
-                        // Convert each WebSearchResult to a Context.web object and add to pendingContextList
+                        // Convert each WebSearchResult to a Context.webSearch object and add to pendingContextList
                         for searchResult in searchResults {
                             let searchResultURL = URL(string: searchResult.url)
                             // Check if the URL already exists in the contextList
                             if !updatedContextList.contains(where: { $0.url == searchResultURL }) {
                                 updatedContextList.append(searchResult.toContext())
                                 let webContext = (searchResult.title, searchResult.fullContent, searchResult.source, searchResultURL)
-                                webContextsHistory[webContextsHistory.count - 1].append(webContext)
+                                webSearchContextsHistory[webSearchContextsHistory.count - 1].append(webContext)
                             } else {
                                 print("removing duplicate!")
                             }
@@ -170,7 +170,7 @@ extension OnitModel {
                                                                        files: filesHistory,
                                                                        images: imagesHistory,
                                                                        autoContexts: autoContextsHistory,
-                                                                       webContexts: webContextsHistory,
+                                                                       webSearchContexts: webSearchContextsHistory,
                                                                        responses: responsesHistory,
                                                                        model: model,
                                                                        apiToken: apiToken)
@@ -185,7 +185,7 @@ extension OnitModel {
                                                                  files: filesHistory,
                                                                  images: imagesHistory,
                                                                  autoContexts: autoContextsHistory,
-                                                                 webContexts: webContextsHistory,
+                                                                 webSearchContexts: webSearchContextsHistory,
                                                                  responses: responsesHistory,
                                                                  model: model,
                                                                  apiToken: apiToken)
@@ -203,7 +203,7 @@ extension OnitModel {
                                                                             files: filesHistory,
                                                                             images: imagesHistory,
                                                                             autoContexts: autoContextsHistory,
-                                                                            webContexts: webContextsHistory,
+                                                                            webSearchContexts: webSearchContextsHistory,
                                                                             responses: responsesHistory,
                                                                             model: model)
                         for try await response in asyncText {
@@ -217,7 +217,7 @@ extension OnitModel {
                                                                       files: filesHistory,
                                                                       images: imagesHistory,
                                                                       autoContexts: autoContextsHistory,
-                                                                      webContexts: webContextsHistory,
+                                                                      webSearchContexts: webSearchContextsHistory,
                                                                       responses: responsesHistory,
                                                                       model: model)
                     }
