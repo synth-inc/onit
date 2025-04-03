@@ -59,6 +59,7 @@ struct Toolbar: View {
                 fitActiveWindowButton
             }
             localMode
+            history
             settings
             
             if !isRegularApp {
@@ -242,21 +243,35 @@ struct Toolbar: View {
         .tooltip(prompt: "Local Mode", shortcut: .keyboardShortcuts(.toggleLocalMode))
     }
 
+    var showHistoryBinding: Binding<Bool> {
+        Binding(
+            get: { self.model.showHistory },
+            set: { self.model.showHistory = $0 }
+        )
+    }
+    
     var history: some View {
         Button {
-            model.showHistory = true
+            model.showHistory.toggle()
         } label: {
             Image(.history)
                 .renderingMode(.template)
                 .padding(2)
         }
         .tooltip(prompt: "History")
+        .popover(
+            isPresented: showHistoryBinding,
+            arrowEdge: .bottom
+        )  {
+            HistoryView()
+        }
     }
 
     var settings: some View {
         Button {
             NSApp.activate()
             if NSApp.isActive {
+                model.setSettingsTab(tab: .general)
                 openSettings()
             }
         } label: {

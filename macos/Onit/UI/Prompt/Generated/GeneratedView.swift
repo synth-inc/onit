@@ -22,10 +22,10 @@ struct GeneratedView: View {
     var content: some View {
         VStack(spacing: 16) {
             if !prompt.responses.isEmpty {
-                let curResponse = prompt.responses[prompt.generationIndex]
+                let curResponse = prompt.sortedResponses[prompt.generationIndex]
                 switch curResponse.type {
                 case .error:
-                    GeneratedErrorView(errorDescription: prompt.responses[prompt.generationIndex].text)
+                    GeneratedErrorView(errorDescription: prompt.sortedResponses[prompt.generationIndex].text)
                 default:
                     GeneratedContentView(prompt: prompt)
                 }

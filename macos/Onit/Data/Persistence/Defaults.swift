@@ -71,6 +71,10 @@ extension Defaults.Keys {
     static let hasPerformedModelIdMigration = Key<Bool>(
         "hasPerformedModelIdMigration", default: false)
 
+    // This migration adds the 'instruction' the response object, so it can be dynamic
+    static let hasPerformedInstructionResponseMigration = Key<Bool>(
+        "hasPerformedInstructionResponseMigration", default: false)
+
     static let localEndpointURL = Key<URL>(
         "localEndpointURL", default: URL(string: "http://localhost:11434")!)
 

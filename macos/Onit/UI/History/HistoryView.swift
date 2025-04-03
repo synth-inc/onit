@@ -48,25 +48,42 @@ struct HistoryView: View {
         VStack(spacing: 0) {
             HistoryTitle()
             HistorySearchView(text: $searchQuery)
-            ScrollView {
-                LazyVStack(alignment: .leading) {
-                    Spacer().frame(height: 12)
-                    ForEach(sortedChats, id: \.key) { section, chats in
-                        VStack(alignment: .leading, spacing: 8) {
-                            Text(section)
-                                .appFont(.medium13)
-                                .foregroundStyle(.white.opacity(0.6))
-                                .padding(.top, 4)
-                                .padding(.leading, 4)
+            
+            if sortedChats.isEmpty { emptyText }
+            else { historyRows }
+        }
+        .frame(width: 350)
+        .background(.BG)
+    }
+    
+    var emptyText: some View {
+        Text("No prompts found")
+            .foregroundStyle(.gray200)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.vertical, 16)
+            .padding(.horizontal, 16)
+    }
+    
+    var historyRows: some View {
+        ScrollView {
+            LazyVStack(alignment: .leading) {
+                Spacer().frame(height: 12)
+                ForEach(sortedChats, id: \.key) { section, chats in
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text(section)
+                            .appFont(.medium13)
+                            .foregroundStyle(.white.opacity(0.6))
+                            .padding(.top, 4)
+                            .padding(.leading, 4)
 
-                            ForEach(chats) { chat in
-                                HistoryRowView(chat: chat)
-                            }
+                        ForEach(Array(chats.enumerated()), id: \.element.id) { index, chat in
+                            HistoryRowView(chat: chat, index: index)
                         }
                     }
                 }
-                .padding(.horizontal, 10)
             }
+            .padding(.horizontal, 10)
+            .padding(.bottom, 10)
         }
     }
 
