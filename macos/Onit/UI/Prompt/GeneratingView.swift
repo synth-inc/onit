@@ -30,7 +30,7 @@ struct GeneratingView: View {
                 .padding(20)
             }
             .buttonStyle(.plain)
-            .keyboardShortcut(.delete)
+            .keyboardShortcut(delete)
             Spacer()
         }
     }
