@@ -14,6 +14,11 @@ enum Context {
     case tooBig(URL)
     case error(URL, Error)
     case webSearch(String, String, String, URL?)
+    
+    typealias WebsiteUrl = URL
+    typealias WebsiteTitle = String
+    typealias WebsiteFileUrl = URL?
+    case web (WebsiteUrl,  WebsiteTitle, WebsiteFileUrl)
 
     static let maxFileSize: Int = 1024 * 1024 * 1
     static let maxImageSize: Int = 1024 * 1024 * 20
@@ -26,6 +31,8 @@ enum Context {
             return url
         case .webSearch(_, _, _, let url):
             return url
+        case .web(_, _, let webFileUrl):
+            return webFileUrl
         }
     }
 
@@ -39,6 +46,8 @@ enum Context {
             "Img"
         case .webSearch:
             "WebSearch"
+        case .web:
+            "Web"
         default:
             nil
         }
@@ -82,6 +91,14 @@ extension Context {
     }
 
     init(url: URL) {
+        // Initialization for web context urls.
+        if (url.scheme == "http" || url.scheme == "https") && url.host != nil {
+            let websiteTitle = url.host() ?? url.absoluteString
+            self = .web(url, websiteTitle, nil)
+            return
+        }
+        
+        // Initialization for non-web-context urls.
         do {
             let size = try url.size
             if url.isImage {
@@ -95,15 +112,21 @@ extension Context {
             self = .error(url, error)
         }
     }
+    
+    var isError: Bool {
+        if case .error = self {
+            return true
+        }
+        return false
+    }
 }
 
 extension Context: Codable {
     enum CodingKeys: String, CodingKey {
-        case appName, appContent, type, url, error, title, content, source
+        case appName, appContent, type, url, error, websiteUrl, websiteTitle, title, content, source
     }
-
     enum ContextType: String, Codable {
-        case auto, file, image, tooBig, error, webSearch
+        case auto, file, image, tooBig, error, web, webSearch
     }
 
     init(from decoder: Decoder) throws {
@@ -136,6 +159,11 @@ extension Context: Codable {
             let source = try container.decode(String.self, forKey: .source)
             let url = try container.decodeIfPresent(URL.self, forKey: .url)
             self = .webSearch(title, content, source, url)
+        case .web:
+            let websiteUrl = try container.decode(URL.self, forKey: .websiteUrl)
+            let websiteTitle = try container.decode(String.self, forKey: .websiteTitle)
+            let webFileUrl = try container.decodeIfPresent(URL.self, forKey: .url)
+            self = .web(websiteUrl, websiteTitle, webFileUrl)
         }
     }
 
@@ -169,6 +197,13 @@ extension Context: Codable {
                 try container.encode(url, forKey: .url)
             }
             try container.encode(ContextType.webSearch, forKey: .type)
+        case .web(let websiteUrl, let websiteTitle, let webFileUrl):
+            try container.encode(websiteUrl, forKey: .websiteUrl)
+            try container.encode(websiteTitle, forKey: .websiteTitle)
+            try container.encode(ContextType.web, forKey: .type)
+            if let webFileUrl = webFileUrl {
+                try container.encode(webFileUrl, forKey: .url)
+            }
         }
     }
 }
@@ -186,6 +221,8 @@ extension Context: Equatable, Hashable {
             return appName1 == appName2 && content1 == content2
         case (.webSearch(let title1, let content1, let source1, _), .webSearch(let title2, let content2, let source2, _)):
             return title1 == title2 && content1 == content2 && source1 == source2
+        case (.web(let websiteUrl1, _, _), .web(let websiteUrl2, _, _)):
+            return websiteUrl1 == websiteUrl2
         default:
             return false
         }
@@ -193,7 +230,7 @@ extension Context: Equatable, Hashable {
 
     func hash(into hasher: inout Hasher) {
         switch self {
-        case .file(let url), .image(let url), .tooBig(let url), .error(let url, _):
+        case .file(let url), .image(let url), .tooBig(let url), .error(let url, _), .web(let url, _, _):
             hasher.combine(url)
         case .auto(let appName, let appContent):
             hasher.combine(appName)
@@ -233,6 +270,8 @@ extension [Context] {
             switch $0 {
             case .file(let url):
                 return url
+            case .web(_, _, let webFileUrl):
+                return webFileUrl
             default:
                 return nil
             }

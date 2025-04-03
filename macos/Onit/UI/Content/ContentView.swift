@@ -43,12 +43,6 @@ struct ContentView: View {
                 PromptDivider()
                 ChatView()
             }
-            .opacity(model.showHistory ? 0 : 1)
-            .overlay {
-                if model.showHistory {
-                    HistoryView()
-                }
-            }
         }
         .background(Color.black)
         .buttonStyle(.plain)

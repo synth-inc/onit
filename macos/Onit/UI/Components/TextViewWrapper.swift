@@ -14,6 +14,8 @@ import SwiftUI
 /// - Manage a placeholder
 /// - Can show a waveform indicator at the end of text when recording
 struct TextViewWrapper: NSViewRepresentable {
+    @Environment(\.model) var model
+    
     @Binding var text: String
     @Binding var cursorPosition: Int
     @Binding var dynamicHeight: CGFloat
@@ -25,6 +27,7 @@ struct TextViewWrapper: NSViewRepresentable {
     var font: NSFont = AppFont.medium16.nsFont
     var textColor: NSColor = .white
     var placeholderColor: NSColor = .gray300
+    var detectLinks: Bool = true // TODO remove this once we use TextInputView for prompt editing
 
     func makeNSView(context: Self.Context) -> NSScrollView {
         let scrollView = NSScrollView()
@@ -106,6 +109,9 @@ struct TextViewWrapper: NSViewRepresentable {
     class Coordinator: NSObject, NSTextViewDelegate {
         var parent: TextViewWrapper
         fileprivate weak var textView: CustomTextView?
+        
+        @State private var detectedURLs: [URL] = []
+        @State private var urlDetectionTask: Task<Void, Never>? = nil
 
         init(_ parent: TextViewWrapper) {
             self.parent = parent
@@ -119,7 +125,67 @@ struct TextViewWrapper: NSViewRepresentable {
                 parent.cursorPosition = textView.selectedRange().location
             }
             
+            if parent.detectLinks {
+                handleUrlDetection(text: textView.string)
+            }
+            
             updateHeight()
+        }
+        
+        // Used for debounced URL detection in user input (for detecting web context).
+        @MainActor
+        private func handleUrlDetection(text: String) -> Void {
+            // Cancel previous URL detection task to reset (if it isn't `nil`).
+            urlDetectionTask?.cancel()
+            
+            // Create new debounced detection task (200ms).
+            urlDetectionTask = Task {
+                do {
+                    try await Task.sleep(for: .seconds(0.2))
+                    
+                    // Prevents errors due to trying to cancel a Task that's already been cancelled.
+                    guard !Task.isCancelled else { return }
+                    
+                    let urls = detectURLs(in: text)
+                    
+                    detectedURLs = urls
+
+                    var textWithoutWebsiteUrls = text
+                    
+                    for url in urls {
+                        let pendingContextList = parent.model.getPendingContextList()
+                        
+                        let urlExists = pendingContextList.contains { context in
+                            if case .web(let existingWebsiteUrl, _, _) = context {
+                                return existingWebsiteUrl == url
+                            }
+                            return false
+                        }
+                        
+                        if !urlExists {
+                            parent.model.addContext(urls: [url])
+                            
+                            textWithoutWebsiteUrls = removeWebsiteUrlFromText(
+                                text: textWithoutWebsiteUrls,
+                                websiteUrl: url
+                            )
+                        }
+                    }
+                    
+                    if textWithoutWebsiteUrls != text { parent.text = textWithoutWebsiteUrls }
+                } catch {
+                    // This catches errors thrown by the async Task.sleep method.
+                    // This is most likely an okay error, as it's tied to the guarded task cancellation.
+                    //
+                    // Uncomment the debug prints below if you want to see more details.
+                    
+                    // #if DEBUG
+                    //    print("\n\n\n")
+                    //    print("Error: \(error)")
+                    //    print("\n\n\n")
+                    //#endif
+                }
+            }
         }
         
         func textViewDidChangeSelection(_ notification: Notification) {

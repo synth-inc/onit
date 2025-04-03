@@ -35,6 +35,8 @@ import SwiftUI
 
     var currentChat: Chat?
     var currentPrompts: [Prompt]?
+    
+    var deleteChatFailed: Bool = false
 
     // User inputs that have not yet been submitted
     var pendingInstruction = "" {
@@ -76,7 +78,7 @@ import SwiftUI
     var debugPanel: CustomPanel? = nil
     var debugText: String?
 
-    var autoContextWindowControllers: [Context: AutoContextWindowController] = [:]
+    var contextWindowControllers: [Context: ContextWindowController] = [:]
 
     var showFileImporter = false
 
@@ -105,6 +107,9 @@ import SwiftUI
     var webSearchError: Error? = nil
     var isSearchingWeb: [PersistentIdentifier: Bool] = [:]
     
+    typealias WebsiteUrlScrapeTask = Task<Void, Never>
+    var websiteUrlsScrapeQueue: [String: WebsiteUrlScrapeTask] = [:]
+
     @MainActor
     func fetchLocalModels() async {
         do {
