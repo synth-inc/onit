@@ -10,7 +10,7 @@ import SwiftUI
 
 struct FinalContextView: View {
     @Environment(\.model) var model
-    @State var isExpanded: Bool = true
+    @State var isExpanded: Bool = false
     @State private var isEditing: Bool = false
     @State private var isHoveringInstruction: Bool = false
     @FocusState private var isTextFieldFocused: Bool
@@ -34,41 +34,7 @@ struct FinalContextView: View {
         @Default(.lineHeight) var lineHeight
         @Default(.fontSize) var fontSize
         
-        
         VStack(alignment: .leading, spacing: 12) {
-            if usingContextOrInput {
-                Button {
-                    isExpanded.toggle()
-                } label: {
-                    HStack(alignment: .center) {
-                        Image(.paperclipStars)
-                        Text("Final context used")
-                            .appFont(.medium14)
-                        Image(.smallChevDown)
-                            .renderingMode(.template)
-                            .rotationEffect(isExpanded ? .degrees(180) : .degrees(0))
-                        Spacer()
-                    }
-                }
-                .foregroundStyle(.gray100)
-                .buttonStyle(.plain)
-
-                if isExpanded {
-                    if let input = prompt.input {
-                        InputView(input: input, isEditing: false)
-                    }
-
-                    if usingContext {
-                        ContextList(contextList: prompt.contextList, direction: .vertical)
-                            .background {
-                                RoundedRectangle(cornerRadius: 8)
-                                    .fill(.clear)
-                                    .strokeBorder(.gray700)
-                            }
-                    }
-                }
-            }
-
             VStack {
                 TextViewWrapper(
                     text: Binding(
@@ -149,6 +115,58 @@ struct FinalContextView: View {
             }
             .onHover { hovering in
                 isHoveringInstruction = hovering
+            }
+            
+            if model.isSearchingWeb[prompt.id] ?? false {
+                HStack {
+                    Image(.web)
+                        .resizable()
+                        .frame(width: 16, height: 16)
+                        .padding(4)
+                        .foregroundColor(.gray200)
+                    Text("Searching the web")
+                        .appFont(.medium16)
+                        .foregroundColor(.gray200)
+                    Spacer()
+                }
+                .shimmering()
+            } else if usingContextOrInput {
+                Button {
+                    isExpanded.toggle()
+                } label: {
+                    HStack(alignment: .center) {
+                        Image(.paperclipStars)
+                        Text("Final context used")
+                            .appFont(.medium14)
+                        Image(.smallChevDown)
+                            .renderingMode(.template)
+                            .rotationEffect(isExpanded ? .degrees(180) : .degrees(0))
+                        Spacer()
+                    }
+                }
+                .foregroundStyle(.gray100)
+                .buttonStyle(.plain)
+
+                if isExpanded {
+                    if let input = prompt.input {
+                        InputView(input: input, isEditing: false)
+                    }
+
+                    if usingContext {
+                        ContextList(contextList: prompt.contextList, direction: .vertical, onItemTap: { context in
+                            if context.isWebSearchContext, let url = context.webURL {
+                                NSWorkspace.shared.open(url)
+                            } else {
+                                model.showContextWindow(context: context)
+                            }
+                        })
+                            .background {
+                                RoundedRectangle(cornerRadius: 8)
+                                    .fill(.clear)
+                                    .strokeBorder(.gray700)
+                            }
+                    }
+                }
             }
         }
         .padding()

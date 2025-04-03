@@ -49,7 +49,7 @@ struct GeneratedContentView: View {
                           onCodeAction: codeAction)
                 .padding(.horizontal, 16)
             Spacer()
-            if textToRead.isEmpty {
+            if textToRead.isEmpty && !(model.isSearchingWeb[prompt.id] ?? false) {
                 HStack {
                     Spacer()
                     QLImage("loader_rotated-200")

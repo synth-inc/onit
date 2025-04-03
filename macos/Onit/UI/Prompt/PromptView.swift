@@ -20,13 +20,16 @@ struct PromptView: View {
 
     @ViewBuilder
     var content: some View {
-        switch prompt.generationState {
-        case .generating:
-            GeneratingView(prompt: prompt)
-        case .done:
-            GeneratedView(prompt: prompt)
-        default:
-            EmptyView()
+        VStack(alignment: .leading, spacing: 0) {
+            FinalContextView(prompt: prompt)
+            switch prompt.generationState {
+            case .generating:
+                GeneratingView(prompt: prompt)
+            case .streaming,.done:
+                GeneratedView(prompt: prompt)
+            default:
+                EmptyView()
+            }
         }
     }
 }

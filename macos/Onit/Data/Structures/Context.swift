@@ -13,6 +13,7 @@ enum Context {
     case image(URL)
     case tooBig(URL)
     case error(URL, Error)
+    case webSearch(String, String, String, URL?)
     
     typealias WebsiteUrl = URL
     typealias WebsiteTitle = String
@@ -28,6 +29,8 @@ enum Context {
             return nil
         case .file(let url), .image(let url), .tooBig(let url), .error(let url, _):
             return url
+        case .webSearch(_, _, _, let url):
+            return url
         case .web(_, _, let webFileUrl):
             return webFileUrl
         }
@@ -41,6 +44,8 @@ enum Context {
             "file"
         case .image:
             "Img"
+        case .webSearch:
+            "WebSearch"
         case .web:
             "Web"
         default:
@@ -56,11 +61,33 @@ enum Context {
             return false
         }
     }
+    
+    var isWebSearchContext: Bool {
+        switch self {
+        case .webSearch:
+            return true
+        default:
+            return false
+        }
+    }
+
+    var webURL: URL? {
+        switch self {
+        case .webSearch(_, _, _, let url):
+            return url
+        default:
+            return nil
+        }
+    }
 }
 
 extension Context {
     init(appName: String, appContent: [String: String]) {
         self = .auto(appName, appContent)
+    }
+    
+    init(title: String, content: String, source: String, url: URL? = nil) {
+        self = .webSearch(title, content, source, url)
     }
 
     init(url: URL) {
@@ -96,11 +123,10 @@ extension Context {
 
 extension Context: Codable {
     enum CodingKeys: String, CodingKey {
-        case appName, appContent, type, url, websiteUrl, websiteTitle, error
+        case appName, appContent, type, url, error, websiteUrl, websiteTitle, title, content, source
     }
-
     enum ContextType: String, Codable {
-        case auto, file, image, tooBig, error, web
+        case auto, file, image, tooBig, error, web, webSearch
     }
 
     init(from decoder: Decoder) throws {
@@ -127,6 +153,12 @@ extension Context: Codable {
             let error = NSError(
                 domain: "", code: 0, userInfo: [NSLocalizedDescriptionKey: errorDescription])
             self = .error(url, error)
+        case .webSearch:
+            let title = try container.decode(String.self, forKey: .title)
+            let content = try container.decode(String.self, forKey: .content)
+            let source = try container.decode(String.self, forKey: .source)
+            let url = try container.decodeIfPresent(URL.self, forKey: .url)
+            self = .webSearch(title, content, source, url)
         case .web:
             let websiteUrl = try container.decode(URL.self, forKey: .websiteUrl)
             let websiteTitle = try container.decode(String.self, forKey: .websiteTitle)
@@ -157,6 +189,14 @@ extension Context: Codable {
             try container.encode(ContextType.error, forKey: .type)
             let errorDescription = (error as NSError).localizedDescription
             try container.encode(errorDescription, forKey: .error)
+        case .webSearch(let title, let content, let source, let url):
+            try container.encode(title, forKey: .title)
+            try container.encode(content, forKey: .content)
+            try container.encode(source, forKey: .source)
+            if let url = url {
+                try container.encode(url, forKey: .url)
+            }
+            try container.encode(ContextType.webSearch, forKey: .type)
         case .web(let websiteUrl, let websiteTitle, let webFileUrl):
             try container.encode(websiteUrl, forKey: .websiteUrl)
             try container.encode(websiteTitle, forKey: .websiteTitle)
@@ -179,6 +219,8 @@ extension Context: Equatable, Hashable {
             return url1 == url2
         case (.auto(let appName1, let content1), .auto(let appName2, let content2)):
             return appName1 == appName2 && content1 == content2
+        case (.webSearch(let title1, let content1, let source1, _), .webSearch(let title2, let content2, let source2, _)):
+            return title1 == title2 && content1 == content2 && source1 == source2
         case (.web(let websiteUrl1, _, _), .web(let websiteUrl2, _, _)):
             return websiteUrl1 == websiteUrl2
         default:
@@ -193,6 +235,10 @@ extension Context: Equatable, Hashable {
         case .auto(let appName, let appContent):
             hasher.combine(appName)
             hasher.combine(appContent)
+        case .webSearch(let title, let content, let source, _):
+            hasher.combine(title)
+            hasher.combine(content)
+            hasher.combine(source)
         }
     }
 }
@@ -237,6 +283,17 @@ extension [Context] {
             switch $0 {
             case .image(let url):
                 return url
+            default:
+                return nil
+            }
+        }
+    }
+    
+    var webSearchContexts: [(title: String, content: String, source: String, url: URL?)] {
+        compactMap {
+            switch $0 {
+            case .webSearch(let title, let content, let source, let url):
+                return (title, content, source, url)
             default:
                 return nil
             }

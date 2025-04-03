@@ -11,6 +11,7 @@ struct ContextList: View {
 
     var contextList: [Context]
     var direction: Axis.Set = .horizontal
+    var onItemTap: ((Context) -> Void)? = nil
 
     var body: some View {
         if direction == .vertical {
@@ -20,6 +21,10 @@ struct ContextList: View {
                         ContextItem(item: context, isEditing: false)
                             .frame(maxWidth: .infinity, alignment: .leading)
                             .scrollTargetLayout()
+                            .contentShape(Rectangle())
+                            .onTapGesture {
+                                onItemTap?(context)
+                            }
                     }
                 }
                 .padding(5)
@@ -33,6 +38,10 @@ struct ContextList: View {
                     ForEach(contextList, id: \.self) { context in
                         ContextItem(item: context, isEditing: true)
                             .scrollTargetLayout()
+                            .contentShape(Rectangle())
+                            .onTapGesture {
+                                onItemTap?(context)
+                            }
                     }
                 }
             }

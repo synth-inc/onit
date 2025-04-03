@@ -12,7 +12,7 @@ import Foundation
  */
 struct ChatEndpointMessagesBuilder {
     
-    static func user(instructions: [String], inputs: [Input?], files: [[URL]], autoContexts: [[String: String]]) -> [String] {
+    static func user(instructions: [String], inputs: [Input?], files: [[URL]], autoContexts: [[String: String]], webSearchContexts: [[(title: String, content: String, source: String, url: URL?)]]) -> [String] {
         var userMessages: [String] = []
         for (index, instruction) in instructions.enumerated() {
             var message = ""
@@ -37,6 +37,17 @@ struct ChatEndpointMessagesBuilder {
             if !autoContexts[index].isEmpty {
                 for (appName, appContent) in autoContexts[index] {
                     message += "\n\nContent from application \(appName):\n\(appContent)"
+                }
+            }
+            
+            // Add web contexts
+            if index < webSearchContexts.count && !webSearchContexts[index].isEmpty {
+                for webSearchContext in webSearchContexts[index] {
+                    message += "\n\nWeb Search Result: \(webSearchContext.title)"
+                    if !webSearchContext.source.isEmpty {
+                        message += " (Source: \(webSearchContext.source))"
+                    }
+                    message += "\n\(webSearchContext.content)"
                 }
             }
 

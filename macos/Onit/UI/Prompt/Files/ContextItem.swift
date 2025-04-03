@@ -76,6 +76,8 @@ struct ContextItem: View {
             error.localizedDescription
         case .tooBig:
             "Upload exceeds model limit"
+        case .webSearch(let title, _, _, _):
+            title
         case .web(let websiteUrl, let websiteTitle, _):
             websiteTitle.isEmpty ? websiteUrl.host() ?? websiteUrl.absoluteString : websiteTitle
         }

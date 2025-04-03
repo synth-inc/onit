@@ -16,19 +16,23 @@ struct GeneratingView: View {
     }
 
     var body: some View {
-        FinalContextView(prompt: prompt)
-        Button {
-            model.cancelGenerate()
-            model.textFocusTrigger.toggle()
-        } label: {
-            VStack(spacing: 12) {
-                icon
-                text
+        HStack {
+            Spacer()
+            
+            Button {
+                model.cancelGenerate()
+                model.textFocusTrigger.toggle()
+            } label: {
+                VStack(spacing: 12) {
+                    icon
+                    text
+                }
+                .padding(20)
             }
-            .padding(20)
+            .buttonStyle(.plain)
+            .keyboardShortcut(delete)
+            Spacer()
         }
-        .buttonStyle(.plain)
-        .keyboardShortcut(.delete)
     }
 
     var icon: some View {

@@ -103,6 +103,10 @@ import SwiftUI
     
     var promptSuggestionService: SystemPromptSuggestionService?
     
+    // Web search state
+    var webSearchError: Error? = nil
+    var isSearchingWeb: [PersistentIdentifier: Bool] = [:]
+    
     typealias WebsiteUrlScrapeTask = Task<Void, Never>
     var websiteUrlsScrapeQueue: [String: WebsiteUrlScrapeTask] = [:]
 

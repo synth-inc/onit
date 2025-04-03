@@ -43,6 +43,7 @@ struct TextInputView: View {
     var body: some View {
         HStack(alignment: .bottom) {
             textField
+            WebSearchButton()
             microphoneButton
             sendButton
         }
@@ -94,7 +95,7 @@ struct TextInputView: View {
             Text(audioRecorder.recordingError?.localizedDescription ?? "An unknown error occurred")
         }
     }
-    
+
     var microphoneButton: some View {
         Button(action: handleMicrophonePress) {
             if audioRecorder.isRecording {
@@ -275,9 +276,7 @@ struct TextInputView: View {
     func sendAction() {
         if model.websiteUrlsScrapeQueue.isEmpty {
             let inputText = (model.pendingInstruction ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
-            
-            guard !inputText.isEmpty else { return }
-            
+            guard !inputText.isEmpty else { return }   
             model.createAndSavePrompt()
         }
     }

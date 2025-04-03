@@ -29,7 +29,7 @@ extension Defaults.Keys {
     static let isGoogleAITokenValidated = Key<Bool>("googleAITokenValidated", default: false)
     static let isDeepSeekTokenValidated = Key<Bool>("deepSeekTokenValidated", default: false)
     static let isPerplexityTokenValidated = Key<Bool>("perplexityTokenValidated", default: false)
-        
+    
     // Remote model usage
     static let useOpenAI = Key<Bool>("useOpenAI", default: false)
     static let useAnthropic = Key<Bool>("useAnthropic", default: false)
@@ -84,6 +84,11 @@ extension Defaults.Keys {
     static let accessibilityAutoContextEnabled = Key<Bool?>(
         "accessibilityAutoContextEnabled", default: nil)
     static let highlightHintMode = Key<HighlightHintMode?>("highlightHintMode", default: nil)
+
+    // Web search
+    static let webSearchEnabled = Key<Bool>("webSearchEnabled", default: false)
+    static let tavilyAPIToken = Key<String>("tavilyAPIToken", default: "")
+    static let isTavilyAPITokenValidated = Key<Bool>("tavilyAPITokenValidated", default: false)
 
     // Window state
     static let panelWidth = Key<Double?>("panelWidth", default: nil)

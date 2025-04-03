@@ -45,6 +45,12 @@ struct SettingsView: View {
                     }
                 }
                 .tag(SettingsTab.accessibility)
+                
+            WebSearchTab()
+                .tabItem {
+                    Label("Web Search", systemImage: "magnifyingglass")
+                }
+                .tag(SettingsTab.webSearch)
 
             #if DEBUG
                 DebugModeTab()
