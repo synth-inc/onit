@@ -241,7 +241,8 @@ struct TextInputView: View {
             onSubmit: sendAction,
             maxHeight: maxHeightLimit,
             placeholder: placeholderText,
-            audioRecorder: audioRecorder
+            audioRecorder: audioRecorder,
+            detectLinks: true
         )
         .focused($focused)
         .frame(height: min(textHeight, maxHeightLimit))

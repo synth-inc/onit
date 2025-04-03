@@ -79,7 +79,7 @@ extension OnitModel {
             prompt.generationState = .generating
             let curInstruction = prompt.instruction
             
-            var filesHistory: [[URL]] = [(prompt.contextList.files)]
+            var filesHistory: [[URL]] = [prompt.contextList.files]
             var inputsHistory: [Input?] = [prompt.input]
             var imagesHistory: [[URL]] = [prompt.contextList.images]
             var instructionsHistory: [String] = [curInstruction]

@@ -27,6 +27,7 @@ struct TextViewWrapper: NSViewRepresentable {
     var font: NSFont = AppFont.medium16.nsFont
     var textColor: NSColor = .white
     var placeholderColor: NSColor = .gray300
+    var detectLinks: Bool = true // TODO remove this once we use TextInputView for prompt editing
 
     func makeNSView(context: Self.Context) -> NSScrollView {
         let scrollView = NSScrollView()
@@ -124,7 +125,9 @@ struct TextViewWrapper: NSViewRepresentable {
                 parent.cursorPosition = textView.selectedRange().location
             }
             
-            handleUrlDetection(text: textView.string)
+            if parent.detectLinks {
+                handleUrlDetection(text: textView.string)
+            }
             
             updateHeight()
         }

@@ -45,11 +45,6 @@ class WebContentFetchService {
             throw FetchingError.invalidResponse(message: websiteUrl.absoluteString)
         }
         
-        // Limiting PDF webpage size to 50MB.
-        guard data.count < 50_000_000 else {
-            throw FetchingError.failedRequest(message: "PDF too large: \(websiteUrl.absoluteString)")
-        }
-    
         // Maintaining context to the original PDF file.
         let tempPdfUrl = FileManager.default.temporaryDirectory
             .appendingPathComponent(websiteUrl.lastPathComponent)
@@ -94,6 +89,10 @@ class WebContentFetchService {
                 .appendingPathExtension("txt")
             
             try content.write(to: tempPdfTextFile, atomically: true, encoding: .utf8)
+            #if DEBUG
+            let fileSize = try FileManager.default.attributesOfItem(atPath: tempPdfTextFile.path)[.size] as? Int ?? 0
+            print("Debug: Size of tempPDFTextFile is \(fileSize) bytes")
+            #endif
 
             do {
                 try FileManager.default.removeItem(at: tempPdfUrl)
@@ -118,55 +117,146 @@ class WebContentFetchService {
     
     @MainActor
     private static func fetchHTMLContent(websiteUrl: URL, invalidWebpageInstruction: String) async throws -> (URL, String) {
-        let webView = WKWebView(frame: .zero, configuration: WKWebViewConfiguration())
-        let request = URLRequest(url: websiteUrl)
-        webView.load(request)
-
-        // Giving webpage JS content time to load (3 seconds).
-        try await Task.sleep(nanoseconds: 3_000_000_000)
-        
-        var renderedHTML = ""
-        
-        if let HTML = try await webView.evaluateJavaScript("new XMLSerializer().serializeToString(document)") as? String {
-            renderedHTML = HTML
-        } else if let outerHTMLFallback = try await webView.evaluateJavaScript("document.documentElement.outerHTML") as? String {
-            renderedHTML = outerHTMLFallback
-        } else if let innerHTMLFallback = try await webView.evaluateJavaScript("document.documentElement.innerHTML") as? String {
-            renderedHTML = innerHTMLFallback
-        }
-    
-        do {
-            let parsedWebpageHTML = try SwiftSoup.parse(renderedHTML)
-            try parsedWebpageHTML.select("script, style, svg, video, iframe").remove()
-           
-            let headText = try parsedWebpageHTML.head()?.text() ?? ""
-            let bodyText = try parsedWebpageHTML.body()?.text() ?? ""
-           
-            var fullWebpageText = headText + "\n" + bodyText
-            if bodyText == "" {
-                fullWebpageText = "No text found for webpage with URL: \(websiteUrl)."
+        return try await withCheckedThrowingContinuation { continuation in
+            // Create a visible webView for debugging
+            let webView = WKWebView(frame: .zero, configuration: WKWebViewConfiguration())
+            if let window = NSApplication.shared.windows.first {
+                window.contentView?.addSubview(webView)
             }
             
-            let contentUrl = "URL: \(websiteUrl.absoluteString)"
-            let contentTitle = "Title: \(try parsedWebpageHTML.title())"
-            let contentCutoffDescription = "\(contentUrl) \(contentTitle)"
-            let contentMetaDescription = contentUrl + "\n" + contentTitle + "\n\n"
+            let navigationDelegate = WebViewNavigationDelegate(websiteUrl: websiteUrl, invalidWebpageInstruction: invalidWebpageInstruction, completion: { result in
+                // Remove the webView when done
+                Task { @MainActor in
+                    webView.removeFromSuperview()
+                }
+                continuation.resume(with: result)
+            })
+            webView.navigationDelegate = navigationDelegate
             
-            let content = "\n\(contentCutoffDescription) WEBPAGE START\n\n" + contentMetaDescription + fullWebpageText + "\n\n" + invalidWebpageInstruction + "\n\n\(contentCutoffDescription)  WEBPAGE END\n"
+            // Set a timeout in case the page never finishes loading
+            let task = Task {
+                try await Task.sleep(nanoseconds: 10_000_000_000) // 10 second timeout
+                if !navigationDelegate.isCompleted {
+                    navigationDelegate.isCompleted = true
+                    // Add webView removal when timeout occurs
+                    Task { @MainActor in
+                        webView.removeFromSuperview()
+                    }
+                    continuation.resume(throwing: FetchingError.failedRequest(message: "Timeout loading webpage: \(websiteUrl)"))
+                }
+            }
             
-            let tempHtmlTextFileUrl = FileManager.default.temporaryDirectory
-                .appendingPathComponent("\(websiteUrl.host ?? "webpage")-\(UUID().uuidString)")
-                .appendingPathExtension("txt")
-
-            try content.write(to: tempHtmlTextFileUrl, atomically: true, encoding: .utf8)
-           
-            let websiteTitle = try parsedWebpageHTML.title()
+            // Store task reference to cancel it when navigation completes
+            navigationDelegate.timeoutTask = task
             
-            return (tempHtmlTextFileUrl, "\(websiteTitle) - \(websiteUrl.host() ?? websiteUrl.absoluteString)")
-        } catch {
-            throw FetchingError.invalidResponse(
-                message: "Could not read content from URL: \(websiteUrl.host() ?? websiteUrl.absoluteString)"
-            )
+            let request = URLRequest(url: websiteUrl)
+            webView.load(request)
         }
     }
+}
+
+// Helper class to handle navigation events
+private class WebViewNavigationDelegate: NSObject, WKNavigationDelegate {
+    var completion: (Result<(URL, String), Error>) -> Void
+    var isCompleted = false
+    var timeoutTask: Task<Void, Error>?
+    var websiteUrl: URL
+    var invalidWebpageInstruction: String
+    
+    init(websiteUrl: URL, invalidWebpageInstruction: String, completion: @escaping (Result<(URL, String), Error>) -> Void) {
+        self.websiteUrl = websiteUrl
+        self.invalidWebpageInstruction = invalidWebpageInstruction
+        self.completion = completion
+        super.init()
+    }
+    
+    func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
+        // Cancel timeout task
+        timeoutTask?.cancel()
+        
+        // Give a small delay for any final JS to execute
+        Task { @MainActor in
+            // TODO replace this with dynamic loading. It should rapidly ping the page and see if new elements are being added.
+            try? await Task.sleep(nanoseconds: 500_000_000) // 0.5 second grace period
+            
+            guard !isCompleted else { return }
+            isCompleted = true
+            
+            do {
+                var renderedHTML = ""
+                
+                if let HTML = try await webView.evaluateJavaScript("new XMLSerializer().serializeToString(document)") as? String {
+                    renderedHTML = HTML
+                } else if let outerHTMLFallback = try await webView.evaluateJavaScript("document.documentElement.outerHTML") as? String {
+                    renderedHTML = outerHTMLFallback
+                } else if let innerHTMLFallback = try await webView.evaluateJavaScript("document.documentElement.innerHTML") as? String {
+                    renderedHTML = innerHTMLFallback
+                }
+                
+                do {
+                    let parsedWebpageHTML = try SwiftSoup.parse(renderedHTML)
+                    try parsedWebpageHTML.select("script, style, svg, video, iframe").remove()
+                   
+                    let headText = try parsedWebpageHTML.head()?.text() ?? ""
+                    let bodyText = try parsedWebpageHTML.body()?.text() ?? ""
+                   
+                    var fullWebpageText = headText + "\n" + bodyText
+                    if bodyText == "" {
+                        fullWebpageText = "No text found for webpage with URL: \(webView.url?.absoluteString ?? "unknown")."
+                    }
+                    
+                    let contentUrl = "URL: \(webView.url?.absoluteString ?? websiteUrl.absoluteString)"
+                    let contentTitle = "Title: \(try parsedWebpageHTML.title())"
+                    let contentCutoffDescription = "\(contentUrl) \(contentTitle)"
+                    let contentMetaDescription = contentUrl + "\n" + contentTitle + "\n\n"
+                    
+                    let content = "\n\(contentCutoffDescription) WEBPAGE START\n\n" + contentMetaDescription + fullWebpageText + "\n\n" + invalidWebpageInstruction + "\n\n\(contentCutoffDescription)  WEBPAGE END\n"
+                    
+                    let tempHtmlTextFileUrl = FileManager.default.temporaryDirectory
+                        .appendingPathComponent("\(webView.url?.host ?? "webpage")-\(UUID().uuidString)")
+                        .appendingPathExtension("txt")
+
+                    try content.write(to: tempHtmlTextFileUrl, atomically: true, encoding: .utf8)
+                   
+                    let websiteTitle = try parsedWebpageHTML.title()
+                    let host = webView.url?.host() ?? webView.url?.absoluteString ?? websiteUrl.absoluteString
+                    
+                    completion(.success((tempHtmlTextFileUrl, "\(websiteTitle) - \(host)")))
+                } catch {
+                    completion(.failure(FetchingError.invalidResponse(
+                        message: "Could not read content from URL: \(webView.url?.host() ?? webView.url?.absoluteString ?? websiteUrl.absoluteString)"
+                    )))
+                }
+            } catch {
+                completion(.failure(error))
+            }
+        }
+    }
+    
+    func webView(_ webView: WKWebView, didFail navigation: WKNavigation!, withError error: Error) {
+        handleError(error, webView: webView)
+    }
+    
+    func webView(_ webView: WKWebView, didFailProvisionalNavigation navigation: WKNavigation!, withError error: Error) {
+        handleError(error, webView: webView)
+    }
+    
+    private func handleError(_ error: Error, webView: WKWebView) {
+        timeoutTask?.cancel()
+        
+        guard !isCompleted else { return }
+        isCompleted = true
+        
+        // Remove webView on error
+        #if DEBUG
+        Task { @MainActor in
+            webView.removeFromSuperview()
+        }
+        #endif
+        
+        completion(.failure(FetchingError.failedRequest(
+            message: "Failed to load webpage: \(webView.url?.absoluteString ?? "unknown") - \(error.localizedDescription)"
+        )))
+    }
+
 }

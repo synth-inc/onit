@@ -85,7 +85,8 @@ struct FinalContextView: View {
                     },
                     maxHeight: maxHeightLimit,
                     placeholder: "",
-                    audioRecorder: audioRecorder
+                    audioRecorder: audioRecorder,
+                    detectLinks: false
                 )
                 .appFont(.medium16)
                 .frame(height: min(textHeight, maxHeightLimit))
