@@ -13,7 +13,11 @@ enum Context {
     case image(URL)
     case tooBig(URL)
     case error(URL, Error)
-    case web(URL, String, URL?) // (Website URL, Website Title, Scraped Website As File URL)
+    
+    typealias WebsiteUrl = URL
+    typealias WebsiteTitle = String
+    typealias WebsiteFileUrl = URL?
+    case web (WebsiteUrl,  WebsiteTitle, WebsiteFileUrl)
 
     static let maxFileSize: Int = 1024 * 1024 * 1
     static let maxImageSize: Int = 1024 * 1024 * 20
@@ -62,7 +66,8 @@ extension Context {
     init(url: URL) {
         // Initialization for web context urls.
         if (url.scheme == "http" || url.scheme == "https") && url.host != nil {
-            self = .web(url, url.host() ?? url.absoluteString, nil)
+            let websiteTitle = url.host() ?? url.absoluteString
+            self = .web(url, websiteTitle, nil)
             return
         }
         

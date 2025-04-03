@@ -13,10 +13,8 @@ struct WebContextItem: View {
     
     private let item: Context
     private let websiteUrl: URL
+    private let websiteTitle: String
     private let isEditing: Bool
-    //
-    @State private var websiteTitle: String
-    @State private var faviconUrl: URL? = nil
     //
     @State private var fetchingWebpageFavicon: Bool = false
     @State private var fetchingWebpageTitle: Bool = false
@@ -45,12 +43,12 @@ struct WebContextItem: View {
                         .progressViewStyle(CircularProgressViewStyle())
                         .scaleEffect(0.5)
                         .frame(width: 16, height: 16)
-                } else if let faviconUrl = faviconUrl {
-                    AsyncImage(url: faviconUrl) { image in
+                } else if let webpageDomain = websiteUrl.host() {
+                    AsyncImage(url: URL(string: "https://\(webpageDomain)/favicon.ico")) { image in
                         if let faviconImage = image.image {
-                            return faviconImage.resizable().frame(width: 16, height: 16)
+                            faviconImage.resizable().frame(width: 16, height: 16)
                         } else {
-                            return Image(systemName: "globe")
+                            Image(systemName: "globe")
                                 .resizable()
                                 .frame(width: 16, height: 16)
                         }
@@ -79,9 +77,6 @@ struct WebContextItem: View {
         }
         .opacity(beingScraped ? 0.5 : 1)
         .disabled(beingScraped)
-        .onAppear() {
-            fetchWebpageFavicon()
-        }
     }
     
     private func getCurrentWebsiteTitle() -> String {
@@ -102,11 +97,5 @@ struct WebContextItem: View {
         }
 
         return websiteTitle
-    }
-    
-    private func fetchWebpageFavicon() {
-        if let webpageDomain = websiteUrl.host() {
-            faviconUrl = URL(string: "https://\(webpageDomain)/favicon.ico")
-        }
     }
 }
