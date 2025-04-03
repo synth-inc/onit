@@ -16,13 +16,9 @@ struct ContextItem: View {
     var body: some View {
         HStack(spacing: 0) {
             switch item {
-            case .web(let websiteUrl, let websiteTitle, _):
-                let websiteUrlDomain = websiteUrl.host() ?? websiteUrl.absoluteString
-                
+            case .web(_, _, _):
                 WebContextItem(
                     item: item,
-                    websiteUrl: websiteUrl,
-                    websiteTitle: websiteTitle.isEmpty ? websiteUrlDomain : websiteTitle,
                     isEditing: isEditing
                 )
             case .auto:

@@ -15,19 +15,15 @@ struct WebContextItem: View {
     private let websiteUrl: URL
     private let websiteTitle: String
     private let isEditing: Bool
-    //
-    @State private var fetchingWebpageFavicon: Bool = false
-    @State private var fetchingWebpageTitle: Bool = false
-    @State private var fetchingWebpageContents: Bool = false
     
-    var fetchingWebpageData: Bool {
-        return fetchingWebpageFavicon || fetchingWebpageTitle || fetchingWebpageContents
-    }
-    
-    init(item: Context, websiteUrl: URL, websiteTitle: String, isEditing: Bool) {
+    init(item: Context, isEditing: Bool) {
         self.item = item
-        self.websiteUrl = websiteUrl
-        self.websiteTitle = websiteTitle
+        if case .web(let websiteUrl, let websiteTitle, _) = self.item {
+            self.websiteUrl = websiteUrl
+            self.websiteTitle = websiteTitle.isEmpty ? (websiteUrl.host() ?? websiteUrl.absoluteString) : websiteTitle
+        } else {
+            fatalError("Expected a web context item")
+        }
         self.isEditing = isEditing
     }
     
