@@ -28,6 +28,9 @@ extension OnitModel {
             
             container.mainContext.delete(chat)
             try container.mainContext.save()
+        } catch is CancellationError {
+            // This catch clause is only meant to prevent the system from mistaking
+            // the cancellation of chat deletion tasks as errors. Cancellation is fine.
         } catch {
             addChatToDeleteFailedQueue(chatId: chat.id)
             

@@ -48,10 +48,9 @@ struct ManualProgressBar: View {
     
     var body: some View {
         GeometryReader { geometry in
-            HStack {}
-                .frame(maxHeight: .infinity)
+            Rectangle()
                 .frame(width: geometry.size.width * progressPercentage)
-                .background(.white)
+                .foregroundColor(.white)
         }
     }
 }
@@ -64,12 +63,11 @@ struct TimedProgressBar: View {
     
     var body: some View {
         GeometryReader { geometry in
-            HStack {}
-                .frame(maxHeight: .infinity)
+            Rectangle()
                 .frame(width: geometry.size.width * (
                     isDecreasing ? 1 - progress : progress)
                 )
-                .background(.white)
+                .foregroundColor(.white)
         }
         .onAppear {
             withAnimation(.linear(duration: duration)) {
