@@ -33,13 +33,14 @@ class OnitPanelManager: ObservableObject {
     // MARK: - Functions
     
     func updateLevelState(elementIdentifier: AXUIElementIdentifier?) {
-        let elementIdentifier = elementIdentifier ?? ""
-        for (key, value) in states {
-            if key == elementIdentifier {
-                value.panel?.level = .floating
-            } else if value.panel?.level == .floating {
-                value.panel?.level = .normal
-                value.panel?.orderBack(nil)
+        if let elementIdentifier = elementIdentifier { 
+            for (key, value) in states {
+                if key == elementIdentifier {
+                    value.panel?.level = .floating
+                } else if value.panel?.level == .floating {
+                    value.panel?.level = .normal
+                    value.panel?.orderBack(nil)
+                }
             }
         }
     }
