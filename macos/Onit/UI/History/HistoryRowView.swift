@@ -20,9 +20,11 @@ struct HistoryRowView: View {
             model.setChat(chat: chat, index: index)
         } label: {
             HStack {
-                Text(getPromptText())
+                Text(HistoryRowView.getPromptText(chat: chat))
                     .appFont(.medium16)
                     .foregroundStyle(.FG)
+                    .lineLimit(1)
+                    .truncationMode(.tail)
                 
                 Spacer()
                 
@@ -47,25 +49,25 @@ struct HistoryRowView: View {
     }
     
     var deleteButton: some View {
-        HStack(alignment: .center) {
-            Text(model.deleteChatFailed ? "Delete failed" : "")
+        let deletionFailed = model.deleteChatFailedQueue.keys.contains(chat.id)
+        
+        return HStack(alignment: .center) {
+            Text(deletionFailed ? "Delete failed" : "")
                 .foregroundColor(Color.red)
             
             Image(systemName: "trash")
                 .frame(width: 14, height: 14)
                 .padding(.trailing, 10)
+                .opacity(deletionFailed ? 0.5 : 1)
         }
         .frame(height: 34)
         .contentShape(Rectangle())
         .onTapGesture {
-            // We want the padding around the button to also be a tap target
-            if !model.deleteChatFailed {
-                model.deleteChat(chat: chat)
-            }
+            if !deletionFailed { model.addChatToDeleteQueue(chat: chat) }
         }
     }
     
-    private func getPromptText() -> String {
+    static func getPromptText(chat: Chat) -> String {
         guard let firstPrompt = chat.prompts.first,
               !firstPrompt.responses.isEmpty,
               firstPrompt.generationIndex < firstPrompt.responses.count else {

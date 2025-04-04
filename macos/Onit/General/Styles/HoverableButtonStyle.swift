@@ -60,7 +60,7 @@ struct HoverableButtonStyle: ButtonStyle {
             RoundedRectangle(cornerRadius: 6)
                 .fill(.gray800)
                 .opacity(hovering ? 1 : 0)
-                .animation(.easeInOut(duration: 0.15), value: hovering)
+                .animation(.easeInOut(duration: animationDuration), value: hovering)
         }
     }
 
