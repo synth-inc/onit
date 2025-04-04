@@ -24,7 +24,7 @@ class TetherAppsManager: ObservableObject {
     private let minOnitWidth: CGFloat = ContentView.idealWidth
     private let spaceBetweenWindows: CGFloat = -(TetheredButton.width / 2)
     
-    var targetInitialFrames: [pid_t: CGRect] = [:]
+    var targetInitialFrames: [AXUIElement: CGRect] = [:]
     
     private let tetherWindow: NSWindow
     private var lastYComputed: CGFloat?
@@ -77,9 +77,9 @@ class TetherAppsManager: ObservableObject {
                 if isRegularApp {
                     self?.startAllObservers()
                 } else {
-                    self?.targetInitialFrames.forEach { pid, initialFrame in
+                    self?.targetInitialFrames.forEach { element, initialFrame in
                         guard let self = self,
-                              let window = pid.getAXUIElement().getWindows().first,
+                              let window = element.getWindows().first,
                               let position = window.position(),
                               let size = window.size() else {
                             return
@@ -144,8 +144,8 @@ class TetherAppsManager: ObservableObject {
     private func panelOpened(windowState: ActiveWindowState, window: AXUIElement, windowPid: pid_t) {
         hideTetherWindow()
         
-        if targetInitialFrames[windowPid] == nil, let position = window.position(), let size = window.size() {
-            targetInitialFrames[windowPid] = CGRect(x: position.x,
+        if targetInitialFrames[window] == nil, let position = window.position(), let size = window.size() {
+            targetInitialFrames[window] = CGRect(x: position.x,
                                                     y: position.y,
                                                     width: size.width,
                                                     height: size.height)
@@ -153,11 +153,11 @@ class TetherAppsManager: ObservableObject {
         
         repositionWindow(window: window, state: windowState.state)
         
-        OnitPanelManager.shared.updateLevelState(pid: windowPid)
+        OnitPanelManager.shared.updateLevelState(elementIdentifier: window.identifier())
     }
     
     private func panelClosed(windowState: ActiveWindowState, window: AXUIElement, windowPid: pid_t) {
-        if let initialFrame = targetInitialFrames[windowPid] {
+        if let initialFrame = targetInitialFrames[window] {
             if let panel = windowState.state.panel, let position = window.position(), let size = window.size() {
                 let fromActive = NSRect(origin: position, size: size)
                 let toPanelX = initialFrame.minX + initialFrame.maxX - (panel.frame.width / 2)
@@ -174,7 +174,7 @@ class TetherAppsManager: ObservableObject {
     }
     
     private func panelMinimized(windowState: ActiveWindowState, window: AXUIElement, windowPid: pid_t) {
-        if let initialFrame = targetInitialFrames[windowPid] {
+        if let initialFrame = targetInitialFrames[window] {
             if let position = window.position(), let size = window.size() {
                 let fromActive = NSRect(origin: position, size: size)
                 
@@ -183,7 +183,7 @@ class TetherAppsManager: ObservableObject {
                 _ = window.setFrame(initialFrame)
             }
             
-            targetInitialFrames.removeValue(forKey: windowPid)
+            targetInitialFrames.removeValue(forKey: window)
         }
         
         showTetherWindow(windowState: windowState, activeWindow: window)

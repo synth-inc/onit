@@ -73,11 +73,8 @@ extension TetherAppsManager {
                     windowState.state.panel = nil
                 }
                 
-                if let pid = activeWindow.pid() {
-                    self.targetInitialFrames.removeValue(forKey: pid)
-                }
-                
-                OnitPanelManager.shared.updateLevelState(pid: nil)
+                self.targetInitialFrames.removeValue(forKey: activeWindow)
+                OnitPanelManager.shared.updateLevelState(elementIdentifier: activeWindow.identifier())
             }
         }
     }

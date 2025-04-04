@@ -173,6 +173,25 @@ extension AXUIElement {
         
         return nil
     }
+
+    func identifier() -> AXUIElementIdentifier? {
+        return AXUIElementIdentifier(element: self)
+    }
+}
+
+struct AXUIElementIdentifier: Hashable {
+    let pid: pid_t
+    let identifier: String
+    
+    init?(element: AXUIElement?) {
+        guard let element = element,
+              let pid = element.pid() else {
+            return nil
+        }
+        
+        self.pid = pid
+        self.identifier = "\(Unmanaged.passUnretained(element as AnyObject).toOpaque())"
+    }
 }
 
 //

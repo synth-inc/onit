@@ -19,7 +19,7 @@ class OnitPanelManager: ObservableObject {
     // MARK: - Properties
     
     @Published var state: OnitPanelState
-    var states: [pid_t: OnitPanelState] = [:]
+    var states: [AXUIElementIdentifier: OnitPanelState] = [:]
     
     private let defaultState = OnitPanelState(activeWindow: nil)
     private var cancellables = Set<AnyCancellable>()
@@ -32,11 +32,10 @@ class OnitPanelManager: ObservableObject {
     
     // MARK: - Functions
     
-    func updateLevelState(pid: pid_t?) {
-        let pid = pid ?? 0
-        
+    func updateLevelState(elementIdentifier: AXUIElementIdentifier?) {
+        let elementIdentifier = elementIdentifier ?? ""
         for (key, value) in states {
-            if key == pid {
+            if key == elementIdentifier {
                 value.panel?.level = .floating
             } else if value.panel?.level == .floating {
                 value.panel?.level = .normal
@@ -69,16 +68,16 @@ class OnitPanelManager: ObservableObject {
     // MARK: - Private functions
     
     private func activeAppObserver(window: AXUIElement?) {
-        guard let pid = window?.pid() else {
+        guard let elementIdentifier = AXUIElementIdentifier(element: window) else {
             state = defaultState
             return
         }
         
-        if let activeState = states[pid] {
+        if let activeState = states[elementIdentifier] {
             state = activeState
         } else {
             let newState = OnitPanelState(activeWindow: window)
-            states[pid] = newState
+            states[elementIdentifier] = newState
             state = newState
         }
     }

@@ -53,6 +53,12 @@ class AccessibilityNotificationsManager: ObservableObject {
 
     private var timedOutPIDs: Set<pid_t> = []  // Track PIDs that have timed out
 
+    #if DEBUG
+    private let ignoredAppNames = ["Xcode"]
+    #else
+    private let ignoredAppNames = []
+    #endif
+
     // MARK: - Initializers
 
     private init() {}
@@ -114,9 +120,10 @@ class AccessibilityNotificationsManager: ObservableObject {
             }
             return
         }
-        // Skip if the PID is our own process
-        if pid == getpid() {
-            print("Not setting up observer for our own process.")
+        
+        // Skip if the PID is our own process or an ignored app
+        if pid == getpid() || ignoredAppNames.contains(pid.getAppName() ?? "") {
+            print("Not setting up observer for our own process or ignored app: \(pid.getAppName() ?? "Unknown")")
             return
         }
 
@@ -186,9 +193,12 @@ class AccessibilityNotificationsManager: ObservableObject {
                 // TODO: KNA - Investigate on this
                 // Skip if the activated app is our own app
                 // There's an edge case where the panel somehow has a different processId.
+                // I'm also added ignore logic for Xcode because it makes it hard to debug if the process changes everytime a breakpoint is hit. 
                 let appName = Bundle.main.object(forInfoDictionaryKey: "CFBundleName") as? String
-                if app.processIdentifier == getpid() || app.localizedName == appName {
-                    print("Ignoring activation of our own app.")
+                if app.processIdentifier == getpid() || 
+                   app.localizedName == appName || 
+                   ignoredAppNames.contains(app.localizedName ?? "") {
+                    print("Ignoring activation of our own app or ignored app: \(app.localizedName ?? "Unknown")")
                     return
                 }
 
@@ -298,12 +308,25 @@ class AccessibilityNotificationsManager: ObservableObject {
     
     private func handleWindowBounds(for element: AXUIElement) {
         handleExternalElement(element) { [weak self] elementPid in
-            if let window = element.getWindows().first {
+            // We need to make sure we're in the root element first.
+            let rootAXElement = elementPid.getAXUIElement()
+            var focusedWindow: CFTypeRef?
+            if AXUIElementCopyAttributeValue(rootAXElement, kAXFocusedWindowAttribute as CFString, &focusedWindow) == .success {
+                let window = focusedWindow as! AXUIElement
+                if let title = window.title() {
+                    print("FOCUSED WINDOW: \(title)")
+                }
+                self?.activeWindowElement = window
+            } else {
+                print("Failed to get Focused Window attribute, falling back to other options.")
+            }
+
+            if let window = rootAXElement.getWindows().first {
                 self?.activeWindowElement = window
             }
         }
     }
-
+    
     // MARK: Parsing
 
     private func parseAccessibility(for pid: pid_t) {
