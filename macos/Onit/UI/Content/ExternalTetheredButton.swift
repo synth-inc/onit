@@ -19,14 +19,15 @@ struct ExternalTetheredButton: View {
     
     static let width: CGFloat = 16
     static let height: CGFloat = 42
-    static let borderWidth: CGFloat = 1
+    static let containerWidth: CGFloat = width * 2
+    static let containerHeight: CGFloat = height * 2
+    static let borderWidth: CGFloat = 1.5
     
     var onDrag: ((CGFloat) -> Void)?
     
     @State private var hovering = false
     @State private var isDragging = false
     @State private var dragStartTime: Date?
-    @State private var gradientRotation: Double = 0
     
     private var isAccessibilityFlagsEnabled: Bool {
         featureFlagsManager.accessibility && featureFlagsManager.accessibilityAutoContext
@@ -50,35 +51,17 @@ struct ExternalTetheredButton: View {
         return "Fit to active window"
     }
     
-    private var containsInput: Bool {
-        return windowState.pendingInput != nil
-    }
+//    private var containsInput: Bool {
+//        return windowState.pendingInput != nil
+//    }
     
-    private var buttonWidth: CGFloat {
-        var width = Self.width
-        
-        if hovering {
-            width *= 1.3
+    private var containsInput: Binding<Bool> {
+        Binding {
+            windowState.pendingInput != nil
+        } set: { _ in
+            
         }
-        
-        if containsInput {
-            width += Self.borderWidth * 2
-        }
-        
-        return width
-    }
-    private var buttonHeight: CGFloat {
-        var height = Self.height
-        
-        if hovering {
-            height *= 1.3
-        }
-        
-        if containsInput {
-            height += Self.borderWidth * 2
-        }
-        
-        return height
+
     }
     
     var body: some View {
@@ -110,13 +93,11 @@ struct ExternalTetheredButton: View {
                             }
                         )
                 }
-                //.frame(width: buttonWidth, height: buttonHeight)
                 .buttonStyle(
                     ExternalTetheredButtonStyle(
-                        gradientRotation: $gradientRotation,
                         hovering: $hovering,
-                        tooltipText: fitActiveWindowPrompt,
-                        containsInput: containsInput
+                        containsInput: containsInput,
+                        tooltipText: fitActiveWindowPrompt
                     )
                 )
                 .simultaneousGesture(dragGesture)
@@ -124,11 +105,8 @@ struct ExternalTetheredButton: View {
             
             Spacer()
         }
-        .onAppear {
-            withAnimation(.linear(duration: 5).repeatForever(autoreverses: false)) {
-                gradientRotation = 360
-            }
-        }
+        .frame(width: Self.containerWidth, height: Self.containerHeight, alignment: .trailing)
+        .offset(x: 1)
     }
     
     private var dragGesture: some Gesture {

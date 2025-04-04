@@ -22,7 +22,7 @@ class TetherAppsManager: ObservableObject {
     private var otherCancellables = Set<AnyCancellable>()
     
     private let minOnitWidth: CGFloat = ContentView.idealWidth
-    private let spaceBetweenWindows: CGFloat = -(ExternalTetheredButton.width / 2)
+    private let spaceBetweenWindows: CGFloat = -(TetheredButton.width / 2)
     
     var targetInitialFrames: [pid_t: CGRect] = [:]
     
@@ -43,7 +43,7 @@ class TetherAppsManager: ObservableObject {
     // MARK: - Private initializer
     private init() {
         let window = NSWindow(
-            contentRect: NSRect(x: 0, y: 0, width: ExternalTetheredButton.width, height: ExternalTetheredButton.height),
+            contentRect: NSRect(x: 0, y: 0, width: ExternalTetheredButton.containerWidth, height: ExternalTetheredButton.containerHeight),
             styleMask: [.borderless, .titled],
             backing: .buffered,
             defer: false
@@ -290,10 +290,10 @@ class TetherAppsManager: ObservableObject {
                 let screenFrame = mouseScreen.frame
                 
                 let frame = NSRect(
-                    x: screenFrame.maxX - ExternalTetheredButton.width,
-                    y: screenFrame.maxY - ExternalTetheredButton.height,
-                    width: ExternalTetheredButton.width,
-                    height: ExternalTetheredButton.height
+                    x: screenFrame.maxX - ExternalTetheredButton.containerWidth,
+                    y: screenFrame.maxY - ExternalTetheredButton.containerHeight,
+                    width: ExternalTetheredButton.containerWidth,
+                    height: ExternalTetheredButton.containerHeight
                 )
                 tetherWindow.setFrame(frame, display: true)
             }
@@ -317,17 +317,17 @@ class TetherAppsManager: ObservableObject {
         }
         
         if lastYComputed == nil {
-            lastYComputed = (size.height / 2) - (ExternalTetheredButton.height / 2)
+            lastYComputed = (size.height / 2) - (ExternalTetheredButton.containerHeight / 2)
         } else {
             lastYComputed = computeTetheredWindowY(activeWindow: activeWindow, offset: nil)
         }
         guard let lastYComputed = lastYComputed else { return }
         
         let frame = NSRect(
-            x: position.x + size.width - ExternalTetheredButton.width,
+            x: position.x + size.width - ExternalTetheredButton.containerWidth,
             y: lastYComputed,
-            width: ExternalTetheredButton.width,
-            height: ExternalTetheredButton.height
+            width: ExternalTetheredButton.containerWidth,
+            height: ExternalTetheredButton.containerHeight
         )
         
         tetherWindow.setFrame(frame, display: true)
@@ -348,9 +348,9 @@ class TetherAppsManager: ObservableObject {
               let screenFrame = NSScreen.main?.visibleFrame else { return nil }
         
         let maxY = (screenFrame.maxY - screenFrame.minY) - position.y
-        let minY = maxY - size.height + ExternalTetheredButton.height
+        let minY = maxY - size.height + ExternalTetheredButton.containerHeight
         
-        var lastYComputed = self.lastYComputed ?? ((size.height / 2) - (ExternalTetheredButton.height / 2))
+        var lastYComputed = self.lastYComputed ?? ((size.height / 2) - (ExternalTetheredButton.containerHeight / 2))
         
         if let offset = offset {
             lastYComputed -= offset

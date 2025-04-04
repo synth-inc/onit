@@ -8,11 +8,11 @@
 import SwiftUI
 
 struct ExternalTetheredButtonStyle: ButtonStyle {
-    @Binding var gradientRotation: Double
     @Binding var hovering: Bool
+    @Binding var containsInput: Bool
 
+    @State var gradientRotation: Double = 0
     var tooltipText: String
-    var containsInput: Bool
 
     func makeBody(configuration: Configuration) -> some View {
         ZStack {
@@ -54,7 +54,6 @@ struct ExternalTetheredButtonStyle: ButtonStyle {
                 )
                 .frame(width: ExternalTetheredButton.height, height: ExternalTetheredButton.height)
                 .rotationEffect(.degrees(gradientRotation))
-                //.offset(x: -((ExternalTetheredButton.height - ExternalTetheredButton.width) / 2))
         }
         .mask {
             RoundedLeftCorners(radius: ExternalTetheredButton.width / 2)
@@ -63,6 +62,11 @@ struct ExternalTetheredButtonStyle: ButtonStyle {
         }
         .blur(radius: 2)
         .frame(width: ExternalTetheredButton.width + (ExternalTetheredButton.borderWidth * 2))
+        .onAppear {
+            withAnimation(.linear(duration: 5).repeatForever(autoreverses: false)) {
+                gradientRotation = 360
+            }
+        }
     }
     
     @ViewBuilder
