@@ -13,6 +13,7 @@ struct CustomModelFormView: View {
     @Environment(\.model) var model
     
     @Default(.availableRemoteModels) var availableRemoteModels
+    @Default(.userAddedCustomRemoteModels) var userAddedCustomRemoteModels
     @Default(.visibleModelIds) var visibleModelIds
     
     let provider: AIModel.ModelProvider
@@ -218,7 +219,8 @@ struct CustomModelFormView: View {
             supportsSystemPrompts: supportsSystemPrompts
         )
         
-        availableRemoteModels.append(newModel)
+        if !availableRemoteModels.contains(newModel) { availableRemoteModels.append(newModel) }
+        if !userAddedCustomRemoteModels.contains(newModel) { userAddedCustomRemoteModels.append(newModel) }
         
         visibleModelIds.insert(newModel.uniqueId)
     }

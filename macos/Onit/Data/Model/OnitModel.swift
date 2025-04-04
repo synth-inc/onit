@@ -139,6 +139,13 @@ import SwiftUI
     func fetchRemoteModels() async {
         do {
             var models = try await AIModel.fetchModels()
+            
+            let deletedRemoteModels = Defaults[.deletedRemoteModels]
+            let deletedRemoteModelsIds = Set(deletedRemoteModels.map { $0.id })
+            
+            models = models.filter { model in
+                !deletedRemoteModelsIds.contains(model.id)
+            }
 
             // This means we've never successfully fetched before
             if Defaults[.availableRemoteModels].isEmpty {
@@ -165,7 +172,8 @@ import SwiftUI
                 }
 
                 // Update the availableRemoteModels with the newly fetched models
-                let newModelIds = Set(models.map { $0.id })
+                let userAddedCustomRemoteModels = Defaults[.userAddedCustomRemoteModels]
+                let newModelIds = Set(models.map { $0.id }).union(Set(userAddedCustomRemoteModels.map { $0.id }))
                 let existingModelIds = Set(Defaults[.availableRemoteModels].map { $0.id })
 
                 let newModels = models.filter { !existingModelIds.contains($0.id) }
@@ -185,9 +193,9 @@ import SwiftUI
                 let visibleDeprecatedModels = deprecatedModels.filter {
                     visibleModelIds.contains($0.uniqueId)
                 }
-
+                
                 remoteFetchFailed = false
-                Defaults[.availableRemoteModels] = models + visibleDeprecatedModels
+                Defaults[.availableRemoteModels] = models + visibleDeprecatedModels + userAddedCustomRemoteModels
                 if visibleModelIds.isEmpty {
                     Defaults[.visibleModelIds] = Set(
                         (models + visibleDeprecatedModels).filter { $0.defaultOn }.map {

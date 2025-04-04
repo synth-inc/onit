@@ -13,6 +13,8 @@ struct DeleteModelsView: View {
     @Environment(\.model) var model
     
     @Default(.availableRemoteModels) var availableRemoteModels
+    @Default(.deletedRemoteModels) var deletedRemoteModels
+    @Default(.userAddedCustomRemoteModels) var userAddedCustomRemoteModels
     @Default(.visibleModelIds) var visibleModelIds
     @Default(.remoteModel) var remoteModel
     
@@ -149,10 +151,20 @@ struct DeleteModelsView: View {
             selectedModels.count > 1 ? "Are you sure you want to delete the selected models?" : "Are you sure you want to delete the selected model?",
             isPresented: $showDeleteConfirmation
         ) {
-            Button("Delete", role: .destructive) {
-                availableRemoteModels.removeAll { model in
+            Button("Delete", role: .destructive) {                
+                let shouldRemoveModel: (AIModel) -> Bool = { model in
                     selectedModels.contains(model.uniqueId)
                 }
+                
+                availableRemoteModels.filter(shouldRemoveModel).forEach { model in
+                    if !deletedRemoteModels.contains(model) {
+                        deletedRemoteModels.append(model)
+                    }
+                }
+                
+                availableRemoteModels.removeAll(where: shouldRemoveModel)
+                userAddedCustomRemoteModels.removeAll(where: shouldRemoveModel)
+                
                 visibleModelIds.subtract(selectedModels)
                 
                 // If the currently-selected model was a member of the models that were just deleted,
