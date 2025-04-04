@@ -9,73 +9,32 @@ import ApplicationServices
 import SwiftUI
 
 extension TetherAppsManager {
-    private func easeInOutCubic(_ t: Double) -> Double {
-        return t < 0.5 ? 4 * t * t * t : 1 - pow(-2 * t + 2, 3) / 2
-    }
-    
     func animateEnter(
         activeWindow: AXUIElement,
         fromActive: CGRect?,
         toActive: CGRect?,
         panel: OnitPanel,
         fromPanel: CGRect,
-        toPanel: CGRect,
-        steps: Int = 10,
-        duration: TimeInterval = 0.2
+        toPanel: CGRect
     ) {
-        let activeWindowPid = activeWindow.pid()
-        let stepDuration = duration / TimeInterval(steps)
+        guard !panel.isAnimating, panel.frame != toPanel else { return }
         
-        if let pid = activeWindowPid {
-            animationTasks[pid]?.cancel()
-        }
+        panel.isAnimating = true
+        panel.setFrame(fromPanel, display: false)
+        panel.alphaValue = 0
         
-        let task = Task { @MainActor in
-            for step in 0...steps {
-                if Task.isCancelled { break }
-                
-                let progress = Double(step) / Double(steps)
-                let easedProgress = easeInOutCubic(progress)
-                
-                if let fromActive = fromActive, let toActive = toActive {
-                    let currentActiveWidth = fromActive.width + (toActive.width - fromActive.width) * easedProgress
-                    let currentActiveHeight = fromActive.height + (toActive.height - fromActive.height) * easedProgress
-                    let currentActiveX = fromActive.origin.x + (toActive.origin.x - fromActive.origin.x) * easedProgress
-                    let currentActiveY = fromActive.origin.y + (toActive.origin.y - fromActive.origin.y) * easedProgress
-                    let currentActiveFrame = CGRect(
-                        x: currentActiveX,
-                        y: currentActiveY,
-                        width: currentActiveWidth,
-                        height: currentActiveHeight
-                    )
-                    
-                    _ = activeWindow.setFrame(currentActiveFrame)
-                }
-                
-                let currentPanelWidth = fromPanel.width + (toPanel.width - fromPanel.width) * easedProgress
-                let currentPanelHeight = fromPanel.height + (toPanel.height - fromPanel.height) * easedProgress
-                let currentPanelX = fromPanel.origin.x + (toPanel.origin.x - fromPanel.origin.x) * easedProgress
-                let currentPanelY = fromPanel.origin.y + (toPanel.origin.y - fromPanel.origin.y) * easedProgress
-                let currentPanelFrame = NSRect(
-                    x: currentPanelX,
-                    y: currentPanelY,
-                    width: currentPanelWidth,
-                    height: currentPanelHeight
-                )
-                
-                panel.setFrame(currentPanelFrame, display: true, animate: false)
-                //panel.alphaValue = easedProgress
-                
-                try? await Task.sleep(nanoseconds: UInt64(stepDuration * 1_000_000_000))
-            }
+        NSAnimationContext.runAnimationGroup { context in
+            context.duration = 0.2
+            context.timingFunction = CAMediaTimingFunction(name: .easeOut)
             
-            if let pid = activeWindowPid {
-                animationTasks.removeValue(forKey: pid)
+            panel.animator().setFrame(toPanel, display: false)
+            panel.animator().alphaValue = 1
+        } completionHandler: {
+            panel.isAnimating = false
+            
+            if let toActive = toActive {
+                _ = activeWindow.setFrame(toActive)
             }
-        }
-        
-        if let pid = activeWindowPid {
-            animationTasks[pid] = task
         }
     }
     
@@ -90,68 +49,36 @@ extension TetherAppsManager {
         steps: Int = 10,
         duration: TimeInterval = 0.2
     ) {
-        let activeWindowPid = activeWindow.pid()
-        let stepDuration = duration / TimeInterval(steps)
+        _ = activeWindow.setFrame(toActive)
         
-        if let pid = activeWindowPid {
-            animationTasks[pid]?.cancel()
-        }
-        
-        let task = Task { @MainActor in
-            for step in 0...steps {
-                if Task.isCancelled { break }
+        if let panel = panel, let fromPanel = fromPanel, let toPanel = toPanel {
+            guard !panel.isAnimating, panel.frame != toPanel else { return }
+            
+            panel.isAnimating = true
+            panel.setFrame(fromPanel, display: false)
+            panel.alphaValue = 1
+            
+            NSAnimationContext.runAnimationGroup { context in
+                context.duration = 0.15
+                context.timingFunction = CAMediaTimingFunction(name: .easeIn)
                 
-                let progress = Double(step) / Double(steps)
-                let easedProgress = easeInOutCubic(progress)
+                panel.animator().setFrame(toPanel, display: false)
+                panel.animator().alphaValue = 0
+            } completionHandler: {
+                panel.hide()
+                panel.isAnimating = false
                 
-                let currentActiveWidth = fromActive.width + (toActive.width - fromActive.width) * easedProgress
-                let currentActiveHeight = fromActive.height + (toActive.height - fromActive.height) * easedProgress
-                let currentActiveX = fromActive.origin.x + (toActive.origin.x - fromActive.origin.x) * easedProgress
-                let currentActiveY = fromActive.origin.y + (toActive.origin.y - fromActive.origin.y) * easedProgress
-                let currentActiveFrame = CGRect(
-                    x: currentActiveX,
-                    y: currentActiveY,
-                    width: currentActiveWidth,
-                    height: currentActiveHeight
-                )
-                
-                _ = activeWindow.setFrame(currentActiveFrame)
-                
-                if let panel = panel, let fromPanel = fromPanel, let toPanel = toPanel {
-                    let currentPanelWidth = fromPanel.width + (toPanel.width - fromPanel.width) * easedProgress
-                    let currentPanelHeight = fromPanel.height + (toPanel.height - fromPanel.height) * easedProgress
-                    let currentPanelX = fromPanel.origin.x + (toPanel.origin.x - fromPanel.origin.x) * easedProgress
-                    let currentPanelY = fromPanel.origin.y + (toPanel.origin.y - fromPanel.origin.y) * easedProgress
-                    let currentPanelFrame = NSRect(
-                        x: currentPanelX,
-                        y: currentPanelY,
-                        width: currentPanelWidth,
-                        height: currentPanelHeight
-                    )
-                    
-                    panel.setFrame(currentPanelFrame, display: true, animate: false)
-                    panel.alphaValue = 1 - easedProgress
+                if let windowState = windowState {
+                    self.showTetherWindow(windowState: windowState, activeWindow: activeWindow)
+                    windowState.state.panel = nil
                 }
                 
-                try? await Task.sleep(nanoseconds: UInt64(stepDuration * 1_000_000_000))
-                updateTetherWindowPosition(for: activeWindow)
+                if let pid = activeWindow.pid() {
+                    self.targetInitialFrames.removeValue(forKey: pid)
+                }
+                
+                OnitPanelManager.shared.updateLevelState(pid: nil)
             }
-            
-            panel?.hide()
-            
-            if let windowState = windowState {
-                showTetherWindow(windowState: windowState, activeWindow: activeWindow)
-                windowState.state.panel = nil
-            }
-            
-            if let pid = activeWindowPid {
-                animationTasks.removeValue(forKey: pid)
-                targetInitialFrames.removeValue(forKey: pid)
-            }
-        }
-        
-        if let pid = activeWindowPid {
-            animationTasks[pid] = task
         }
     }
 }

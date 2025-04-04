@@ -16,6 +16,7 @@ class OnitAccessoryPanel: NSPanel {
     }
     
     private let width = ContentView.idealWidth
+    var isAnimating: Bool = false
     
     init(state: OnitPanelState) {
         var windowWidth = width

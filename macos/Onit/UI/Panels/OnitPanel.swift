@@ -24,6 +24,8 @@ protocol OnitPanel: NSPanel {
     
     @MainActor
     func hide()
+    
+    var isAnimating: Bool { get set }
 }
 
 extension OnitPanel {

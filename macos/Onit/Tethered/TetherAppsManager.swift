@@ -25,7 +25,6 @@ class TetherAppsManager: ObservableObject {
     private let spaceBetweenWindows: CGFloat = -(ExternalTetheredButton.width / 2)
     
     var targetInitialFrames: [pid_t: CGRect] = [:]
-    var animationTasks: [pid_t: Task<Void, Never>] = [:]
     
     private let tetherWindow: NSWindow
     private var lastYComputed: CGFloat?
@@ -161,18 +160,17 @@ class TetherAppsManager: ObservableObject {
         if let initialFrame = targetInitialFrames[windowPid] {
             if let panel = windowState.state.panel, let position = window.position(), let size = window.size() {
                 let fromActive = NSRect(origin: position, size: size)
-                let toPanelX = initialFrame.minX + initialFrame.maxX - ExternalTetheredButton.width
+                let toPanelX = initialFrame.minX + initialFrame.maxX - (panel.frame.width / 2)
+                let fromPanel = panel.frame
                 let toPanel = NSRect(origin: NSPoint(x: toPanelX, y: panel.frame.minY), size: panel.frame.size)
                 
                 self.animateExit(windowState: windowState, activeWindow: window, fromActive: fromActive, toActive: initialFrame,
-                                 panel: windowState.state.panel, fromPanel: windowState.state.panel?.frame, toPanel: toPanel)
+                                 panel: panel, fromPanel: fromPanel, toPanel: toPanel)
             }
         } else {
             showTetherWindow(windowState: windowState, activeWindow: window)
-            windowState.state.panel?.hide()
+            //windowState.state.panel?.hide()
         }
-        
-        OnitPanelManager.shared.updateLevelState(pid: nil)
     }
     
     private func panelMinimized(windowState: ActiveWindowState, window: AXUIElement, windowPid: pid_t) {
@@ -189,8 +187,6 @@ class TetherAppsManager: ObservableObject {
         }
         
         showTetherWindow(windowState: windowState, activeWindow: window)
-        
-        OnitPanelManager.shared.updateLevelState(pid: nil)
     }
     
     private func repositionWindow(window: AXUIElement, state: OnitPanelState) {

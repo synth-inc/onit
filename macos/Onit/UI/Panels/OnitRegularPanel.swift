@@ -18,6 +18,7 @@ class OnitRegularPanel: NSPanel {
     
     private let activeWindow: AXUIElement?
     private let width = ContentView.idealWidth
+    var isAnimating: Bool = false
     
     init(state: OnitPanelState) {
         if let activeWindow = state.activeWindow {
@@ -41,6 +42,7 @@ class OnitRegularPanel: NSPanel {
         isMovableByWindowBackground = true
         delegate = state
         isFloatingPanel = false
+        animationBehavior = .none
         collectionBehavior = [.moveToActiveSpace]
         
         let contentView = ContentView()
@@ -86,7 +88,7 @@ class OnitRegularPanel: NSPanel {
         let screenFrame = screen.frame
         let onitWidth = ContentView.idealWidth
         let onitHeight = min(size.height, screenFrame.height - ContentView.bottomPadding)
-        let onitX = position.x + size.width - (TetheredButton.width / 2)
+        let onitX = position.x + size.width - (onitWidth / 2)
         let onitY = screenFrame.maxY - (position.y + onitHeight)
         let newFrame = NSRect(
             x: onitX,
