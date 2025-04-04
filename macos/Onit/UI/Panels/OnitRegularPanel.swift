@@ -41,7 +41,7 @@ class OnitRegularPanel: NSPanel {
         isMovableByWindowBackground = true
         delegate = state
         isFloatingPanel = false
-        collectionBehavior = [.moveToActiveSpace, .fullScreenPrimary]
+        collectionBehavior = [.moveToActiveSpace]
         
         let contentView = ContentView()
             .modelContainer(state.container)

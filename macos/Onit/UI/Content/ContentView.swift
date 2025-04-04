@@ -51,13 +51,6 @@ struct ContentView: View {
                     PromptDivider()
                     ChatView()
                 }
-                .opacity(state.showHistory ? 0 : 1)
-                .overlay {
-                    if state.showHistory {
-                        HistoryView()
-                            .padding(.leading, isRegularApp ? 54: 0)
-                    }
-                }
             }
             .trackScreenHeight($screenHeight)
             .frame(minWidth: 325, idealWidth: ContentView.idealWidth, maxHeight: maxHeight)
@@ -74,7 +67,6 @@ struct ContentView: View {
             ToolbarItem(placement: .navigation) {
                 if isRegularApp {
                     ToolbarAddButton()
-                        .opacity(state.showHistory ? 0 : 1)
                 } else {
                     EmptyView()
                 }
@@ -85,7 +77,6 @@ struct ContentView: View {
             ToolbarItem(placement: .primaryAction) {
                 if isRegularApp {
                     Toolbar()
-                        .opacity(state.showHistory ? 0 : 1)
                 } else {
                     EmptyView()
                 }
