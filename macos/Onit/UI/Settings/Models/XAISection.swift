@@ -9,8 +9,6 @@ import Defaults
 import SwiftUI
 
 struct XAISection: View {
-    @Environment(\.model) var model
-
     @State private var xAIKey: String = ""
     @State private var showXAIKey: Bool = false
 
@@ -18,6 +16,8 @@ struct XAISection: View {
     @Default(.visibleModelIds) var visibleModelIds
     @Default(.isXAITokenValidated) var isXAITokenValidated
     @Default(.xAIToken) var xAIToken
+    
+    private let tokenManager = TokenValidationManager.shared
 
     var visibleModelsList: [AIModel] {
         availableRemoteModels
@@ -46,11 +46,11 @@ struct XAISection: View {
                     Button(action: {
                         guard !xAIKey.isEmpty else { return }
                         Task {
-                            await model.validateToken(
+                            await tokenManager.validateToken(
                                 provider: AIModel.ModelProvider.xAI, token: xAIKey)
                         }
                     }) {
-                        switch model.tokenValidation.state(for: AIModel.ModelProvider.xAI) {
+                        switch tokenManager.tokenValidation.state(for: AIModel.ModelProvider.xAI) {
                         case .notValidated:
                             Text("Validate")
                         case .validating:
@@ -66,11 +66,11 @@ struct XAISection: View {
                     }
                     .disabled(
                         xAIKey.isEmpty
-                            || model.tokenValidation.state(for: AIModel.ModelProvider.xAI)
+                            || tokenManager.tokenValidation.state(for: AIModel.ModelProvider.xAI)
                                 .isValidating
                     )
                 }
-                if case .invalid(let error) = model.tokenValidation.state(for: .xAI) {
+                if case .invalid(let error) = tokenManager.tokenValidation.state(for: .xAI) {
                     Text(error.localizedDescription)
                         .font(.caption)
                         .foregroundStyle(.red)

@@ -38,8 +38,6 @@ struct AccessibilityTab: View {
         //        HighlightHintModeUI.from(mode: .textfield)
     ]
 
-    @Environment(\.model) var model
-
     @State private var selectedMode: HighlightHintModeUI = HighlightHintModeUI.from(
         mode: FeatureFlagManager.shared.highlightHintMode)
 

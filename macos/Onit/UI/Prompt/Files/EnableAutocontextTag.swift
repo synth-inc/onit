@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct EnableAutocontextTag: View {
-    @Environment(\.model) var model
+    @Environment(\.appState) var appState
     @Environment(\.openSettings) var openSettings
     @AppStorage("closedAutocontext") private var closedAutocontext = false
 
@@ -9,7 +9,7 @@ struct EnableAutocontextTag: View {
         HStack(spacing: 4) {
             Button {
                 closedAutocontext = true
-                model.settingsTab = .accessibility
+                appState.settingsTab = .accessibility
                 openSettings()
             } label: {
                 Image(.stars)
@@ -38,8 +38,6 @@ struct EnableAutocontextTag: View {
 
 #if DEBUG
     #Preview {
-        ModelContainerPreview {
-            EnableAutocontextTag()
-        }
+        EnableAutocontextTag()
     }
 #endif

@@ -18,14 +18,15 @@ class SystemPromptSuggestionService {
     private(set) var suggestedPrompts: [SystemPrompt] = []
     private var lastPromptUsed: SystemPrompt = .outputOnly
     
-    init(model: OnitModel) {
-        self.container = model.container
+    init(state: OnitPanelState) {
+        self.container = state.container
 
-        let instructionPublisher = model.pendingInstructionSubject
+        let instructionPublisher = state.pendingInstructionSubject
             .map { $0.lowercased() }
-        let inputTextPublisher = model.pendingInputSubject
+        let inputTextPublisher = state.pendingInputSubject
             .map { $0?.selectedText.lowercased() ?? "" }
-        let contextListTextPublisher = model.pendingContextListSubject
+        
+        let contextListTextPublisher = state.pendingContextListSubject
             .map { contexts in
                 var temp = ""
                 
@@ -42,9 +43,9 @@ class SystemPromptSuggestionService {
                 return temp
             }
         
-        let inputAppPublisher = model.pendingInputSubject
+        let inputAppPublisher = state.pendingInputSubject
             .map { $0?.application?.lowercased() ?? "" }
-        let contextListAppPublisher = model.pendingContextListSubject
+        let contextListAppPublisher = state.pendingContextListSubject
             .map { contexts in
                 var temp = ""
                 
@@ -78,7 +79,7 @@ class SystemPromptSuggestionService {
                 apps: app
             )
             
-            guard model.currentChat?.systemPrompt == nil && 
+            guard state.currentChat?.systemPrompt == nil &&
                   !SystemPromptState.shared.userSelectedPrompt else { return }
             
             if let firstPrompt = self.suggestedPrompts.first {

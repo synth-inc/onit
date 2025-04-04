@@ -9,7 +9,6 @@ import Defaults
 import SwiftUI
 
 struct RemoteModelSection: View {
-    @Environment(\.model) var model
     @Environment(\.remoteModels) var remoteModels
 
     @State private var use = false
@@ -40,12 +39,13 @@ struct RemoteModelSection: View {
     @Default(.isDeepSeekTokenValidated) var isDeepSeekTokenValidated
     @Default(.isPerplexityTokenValidated) var isPerplexityTokenValidated
     @Default(.streamResponse) var streamResponse
-    
+
+    private let tokenManager = TokenValidationManager.shared
 
     var provider: AIModel.ModelProvider
 
     var state: TokenValidationState.ValidationState {
-        model.tokenValidation.state(for: provider)
+        tokenManager.tokenValidation.state(for: provider)
     }
 
     var models: [AIModel] {
@@ -103,8 +103,6 @@ struct RemoteModelSection: View {
                     remoteModel = remoteModels.listedModels.first
                 }
             }
-            // This will collapse SetupDialogs if they're no longer needed
-            model.shrinkContent()
         }
     }
 
@@ -127,8 +125,8 @@ struct RemoteModelSection: View {
                 Task {
                     loading = true
                     save(key: key)
-                    model.tokenValidation.setNotValidated(provider: provider)
-                    model.setTokenIsValid(false, provider: provider)
+                    tokenManager.tokenValidation.setNotValidated(provider: provider)
+                    TokenValidationManager.setTokenIsValid(false, provider: provider)
                     await validate()
                     loading = false
                 }
@@ -227,7 +225,7 @@ struct RemoteModelSection: View {
     // MARK: - Functions
 
     func validate() async {
-        await model.validateToken(provider: provider, token: key)
+        await tokenManager.validateToken(provider: provider, token: key)
     }
 
     func save(key: String) {
@@ -245,7 +243,7 @@ struct RemoteModelSection: View {
         case .perplexity:
             perplexityToken = key.isEmpty ? nil : key
         case .custom:
-            break  // TODO: KNA -
+            break
         }
     }
 
@@ -264,7 +262,7 @@ struct RemoteModelSection: View {
         case .perplexity:
             key = perplexityToken ?? ""
         case .custom:
-            break  // TODO: KNA -
+            break
         }
     }
 
@@ -283,7 +281,7 @@ struct RemoteModelSection: View {
         case .perplexity:
             use = usePerplexity
         case .custom:
-            break  // TODO: KNA -
+            break
         }
     }
 
@@ -302,7 +300,7 @@ struct RemoteModelSection: View {
         case .perplexity:
             validated = isPerplexityTokenValidated
         case .custom:
-            break  // TODO: KNA -
+            break
         }
     }
 
@@ -321,7 +319,7 @@ struct RemoteModelSection: View {
         case .perplexity:
             usePerplexity = use
         case .custom:
-            break  // TODO: KNA -
+            break
         }
     }
 
@@ -340,7 +338,7 @@ struct RemoteModelSection: View {
         case .perplexity:
             isPerplexityTokenValidated = validated
         case .custom:
-            break  // TODO: KNA -
+            break
         }
     }
 

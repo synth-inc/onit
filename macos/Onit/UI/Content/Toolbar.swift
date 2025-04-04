@@ -10,54 +10,24 @@ import KeyboardShortcuts
 import SwiftUI
 
 struct Toolbar: View {
-    @Environment(\.model) var model
+    @Environment(\.appState) private var appState
     @Environment(\.openSettings) var openSettings
-    
-    @ObservedObject private var featureFlagsManager = FeatureFlagManager.shared
+    @Environment(\.windowState) private var state
     
     @Default(.mode) var mode
     @Default(.remoteModel) var remoteModel
     @Default(.localModel) var localModel
     @Default(.isRegularApp) var isRegularApp
-    @Default(.fitActiveWindow) var fitActiveWindow
-    
-    private var isAccessibilityFlagsEnabled: Bool {
-        featureFlagsManager.accessibility && featureFlagsManager.accessibilityAutoContext
-    }
-    
-    private var isAccessibilityAuthorized: Bool {
-        model.accessibilityPermissionStatus == .granted
-    }
-    
-    private var fitActiveWindowPrompt: String {
-        guard featureFlagsManager.accessibility else {
-            return "⚠ Enable Auto-Context in Settings"
-        }
-        guard featureFlagsManager.accessibilityAutoContext else {
-            return "⚠ Enable Current Window in Settings"
-        }
-        guard isAccessibilityAuthorized else {
-            return "⚠ Allow Onit application in \"Privacy & Security/Accessibility\""
-        }
-        
-        return fitActiveWindow ? "Detach from active window" : "Fit to active window"
-    }
 
     var body: some View {
-        HStack(spacing: 4) {
-            if isRegularApp {
-                Spacer()
-                    .frame(width: 60)
-            } else {
+        HStack(alignment: .center, spacing: 4) {
+            if !isRegularApp {
                 esc
+                ToolbarAddButton()
+                Spacer()
             }
             
-            add
-            Spacer()
             languageModel
-            if isRegularApp {
-                fitActiveWindowButton
-            }
             localMode
             history
             settings
@@ -66,9 +36,10 @@ struct Toolbar: View {
                 resize
             }
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
         .foregroundStyle(.gray200)
-        .padding(.horizontal, 14)
-        .padding(.vertical, 2)
+        .padding(.horizontal, isRegularApp ? 0 : 14)
+        .padding(.vertical, isRegularApp ? 0 : 2)
         .background {
             escListener
         }
@@ -79,7 +50,7 @@ struct Toolbar: View {
 
     var esc: some View {
         Button {
-            model.closePanel()
+            state.closePanel()
         } label: {
             Text("ESC")
                 .appFont(.medium13)
@@ -92,50 +63,10 @@ struct Toolbar: View {
     var escListener: some View {
         EmptyView()
     }
-    
-    var fitActiveWindowButton: some View {
-        Button {
-            guard isAccessibilityFlagsEnabled else {
-                model.setSettingsTab(tab: .accessibility)
-                openSettings()
-                return
-            }
-            guard isAccessibilityAuthorized else {
-                AccessibilityPermissionManager.shared.requestPermission()
-                return
-            }
-            
-            fitActiveWindow.toggle()
-        } label: {
-            let image: ImageResource = fitActiveWindow ? .windowFit : .windowUnfit
-            
-            Image(image)
-                .renderingMode(.template)
-                .foregroundStyle(.gray200)
-                .overlay(
-                    Group {
-                        if !isAccessibilityFlagsEnabled || !isAccessibilityAuthorized {
-                            Rectangle()
-                                .fill(.black)
-                                .frame(width: 24, height: 4)
-                                .rotationEffect(.degrees(45))
-                                .offset(y: 0)
-                            
-                            Rectangle()
-                                .fill(.gray200)
-                                .frame(height: 2)
-                                .rotationEffect(.degrees(45))
-                                .offset(y: 0)
-                        }
-                    }
-                )
-        }
-        .tooltip(prompt: fitActiveWindowPrompt)
-    }
 
     var resize: some View {
         Button {
-            model.togglePanelSize()
+            state.panel?.toggleFullscreen()
         } label: {
             Image(.resize)
                 .renderingMode(.template)
@@ -173,13 +104,17 @@ struct Toolbar: View {
 
     @ViewBuilder
     var languageModel: some View {
-        @Bindable var model = model
-
         Button {
             OverlayManager.shared.captureClickPosition()
-            OverlayManager.shared.showOverlay(model: model, content: ModelSelectionView())
+            
+            let view = ModelSelectionView()
+                .environment(\.appState, appState)
+                .environment(\.windowState, state)
+            
+            OverlayManager.shared.showOverlay(content: view)
         } label: {
             HStack(spacing: 0) {
+                Spacer()
                 Text(
                     mode == .local
                         ? (localModel?.split(separator: ":").first.map(String.init)
@@ -201,36 +136,6 @@ struct Toolbar: View {
         .tooltip(prompt: "Change model")
     }
 
-    var add: some View {
-        HStack(spacing: 0) {
-            Button {
-                model.newChat()
-            } label: {
-                Image(.circlePlus)
-                    .renderingMode(.template)
-                    .padding(2)
-            }
-            .tooltip(prompt: "New Chat", shortcut: .keyboardShortcuts(.newChat))
-            
-            Button {
-                model.newChat()
-                
-                SystemPromptState.shared.shouldShowSelection = true
-                SystemPromptState.shared.shouldShowSystemPrompt = true
-            } label: {
-                Image(.smallChevDown)
-                    .renderingMode(.template)
-                    .padding(2)
-            }
-            .onHover(perform: { isHovered in
-                if isHovered && model.currentChat?.systemPrompt == nil && !SystemPromptState.shared.shouldShowSystemPrompt {
-                    SystemPromptState.shared.shouldShowSystemPrompt = true
-                }
-            })
-            .tooltip(prompt: "Start new Chat with system prompt")
-        }
-    }
-
     var localMode: some View {
         Button {
             mode = mode == .local ? .remote : .local
@@ -245,14 +150,14 @@ struct Toolbar: View {
 
     var showHistoryBinding: Binding<Bool> {
         Binding(
-            get: { self.model.showHistory },
-            set: { self.model.showHistory = $0 }
+            get: { self.state.showHistory },
+            set: { self.state.showHistory = $0 }
         )
     }
     
     var history: some View {
         Button {
-            model.showHistory.toggle()
+            state.showHistory.toggle()
         } label: {
             Image(.history)
                 .renderingMode(.template)
@@ -271,7 +176,7 @@ struct Toolbar: View {
         Button {
             NSApp.activate()
             if NSApp.isActive {
-                model.setSettingsTab(tab: .general)
+                appState.setSettingsTab(tab: .general)
                 openSettings()
             }
         } label: {
@@ -286,10 +191,10 @@ struct Toolbar: View {
         GeometryReader { proxy in
             Color.clear
                 .onAppear {
-                    model.headerHeight = proxy.size.height
+                    state.headerHeight = proxy.size.height
                 }
                 .onChange(of: proxy.size.height) { _, new in
-                    model.headerHeight = new
+                    state.headerHeight = new
                 }
         }
     }

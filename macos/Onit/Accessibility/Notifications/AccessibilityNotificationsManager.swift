@@ -38,8 +38,6 @@ class AccessibilityNotificationsManager: ObservableObject {
 
     // MARK: - Properties
 
-    private var model: OnitModel?
-
     private var currentSource: String?
 
     private var observers: [pid_t: AXObserver] = [:]
@@ -55,15 +53,17 @@ class AccessibilityNotificationsManager: ObservableObject {
 
     private var timedOutPIDs: Set<pid_t> = []  // Track PIDs that have timed out
 
+    #if DEBUG
+    private let ignoredAppNames = ["Xcode"]
+    #else
+    private let ignoredAppNames = []
+    #endif
+
     // MARK: - Initializers
 
     private init() {}
 
     // MARK: - Functions
-
-    func setModel(_ model: OnitModel) {
-        self.model = model
-    }
 
     // MARK: Start / Stop
 
@@ -120,9 +120,10 @@ class AccessibilityNotificationsManager: ObservableObject {
             }
             return
         }
-        // Skip if the PID is our own process
-        if pid == getpid() {
-            print("Not setting up observer for our own process.")
+        
+        // Skip if the PID is our own process or an ignored app
+        if pid == getpid() || ignoredAppNames.contains(pid.getAppName() ?? "") {
+            print("Not setting up observer for our own process or ignored app: \(pid.getAppName() ?? "Unknown")")
             return
         }
 
@@ -192,9 +193,12 @@ class AccessibilityNotificationsManager: ObservableObject {
                 // TODO: KNA - Investigate on this
                 // Skip if the activated app is our own app
                 // There's an edge case where the panel somehow has a different processId.
+                // I'm also added ignore logic for Xcode because it makes it hard to debug if the process changes everytime a breakpoint is hit. 
                 let appName = Bundle.main.object(forInfoDictionaryKey: "CFBundleName") as? String
-                if app.processIdentifier == getpid() || app.localizedName == appName {
-                    print("Ignoring activation of our own app.")
+                if app.processIdentifier == getpid() || 
+                   app.localizedName == appName || 
+                   ignoredAppNames.contains(app.localizedName ?? "") {
+                    print("Ignoring activation of our own app or ignored app: \(app.localizedName ?? "Unknown")")
                     return
                 }
 
@@ -227,8 +231,8 @@ class AccessibilityNotificationsManager: ObservableObject {
         print("\nApplication activated: \(appName ?? "Unknown") \(processID)")
 
         currentSource = appName
-        processSelectedText(selectedText, for: selectedElement)
         handleWindowBounds(for: processID.getAXUIElement())
+        processSelectedText(selectedText, for: selectedElement)
         parseAccessibility(for: processID)
     }
 
@@ -264,8 +268,8 @@ class AccessibilityNotificationsManager: ObservableObject {
         handleExternalElement(element) { [weak self] elementPid in
             print("Focus change from pid: \(elementPid)")
 
-            self?.parseAccessibility(for: elementPid)
             self?.handleWindowBounds(for: element)
+            self?.parseAccessibility(for: elementPid)
         }
     }
 
@@ -304,12 +308,25 @@ class AccessibilityNotificationsManager: ObservableObject {
     
     private func handleWindowBounds(for element: AXUIElement) {
         handleExternalElement(element) { [weak self] elementPid in
-            if let window = element.findWindow() {
+            // We need to make sure we're in the root element first.
+            let rootAXElement = elementPid.getAXUIElement()
+            var focusedWindow: CFTypeRef?
+            if AXUIElementCopyAttributeValue(rootAXElement, kAXFocusedWindowAttribute as CFString, &focusedWindow) == .success {
+                let window = focusedWindow as! AXUIElement
+                if let title = window.title() {
+                    print("FOCUSED WINDOW: \(title)")
+                }
+                self?.activeWindowElement = window
+            } else {
+                print("Failed to get Focused Window attribute, falling back to other options.")
+            }
+
+            if let window = rootAXElement.getWindows().first {
                 self?.activeWindowElement = window
             }
         }
     }
-
+    
     // MARK: Parsing
 
     private func parseAccessibility(for pid: pid_t) {
@@ -423,7 +440,7 @@ class AccessibilityNotificationsManager: ObservableObject {
         else {
 
             selectedSource = nil
-            model?.pendingInput = nil
+            OnitPanelManager.shared.state.pendingInput = nil
             HighlightHintWindowController.shared.hide()
 
             return
@@ -435,7 +452,7 @@ class AccessibilityNotificationsManager: ObservableObject {
         let bound = selectedElement.selectedTextBound()
         HighlightHintWindowController.shared.show(bound)
 
-        model?.pendingInput = Input(selectedText: selectedText, application: currentSource ?? "")
+        OnitPanelManager.shared.state.pendingInput = Input(selectedText: selectedText, application: currentSource ?? "")
     }
 
     private func extractSelectedText(from element: AXUIElement) -> String? {
@@ -527,9 +544,7 @@ class AccessibilityNotificationsManager: ObservableObject {
             debugText += "\nNo additional data available.\n"
         }
 
-        if let model = self.model {
-            model.debugText = debugText
-        }
+        DebugManager.shared.debugText = debugText
     }
 }
 

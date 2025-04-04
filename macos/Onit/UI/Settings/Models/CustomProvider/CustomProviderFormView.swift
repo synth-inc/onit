@@ -75,7 +75,7 @@ struct CustomProviderFormView: View {
                     return
                 }
 
-                var provider = CustomProvider(
+                let provider = CustomProvider(
                     name: name,
                     baseURL: baseURL,
                     token: token,

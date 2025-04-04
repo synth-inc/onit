@@ -9,7 +9,7 @@ import SwiftUI
 import SwiftSoup
 
 struct WebContextItem: View {
-    @Environment(\.model) var model
+    @Environment(\.windowState) var windowState
     
     private let item: Context
     private let websiteUrl: URL
@@ -28,10 +28,10 @@ struct WebContextItem: View {
     }
     
     var body: some View {
-        let beingScraped = model.websiteUrlsScrapeQueue.keys.contains(websiteUrl.absoluteString)
+        let beingScraped = windowState.websiteUrlsScrapeQueue.keys.contains(websiteUrl.absoluteString)
         
         Button {
-            model.showContextWindow(context: item)
+            ContextWindowsManager.shared.showContextWindow(windowState: windowState, context: item)
         } label: {
             HStack(spacing: 0) {
                 if beingScraped {
@@ -76,7 +76,7 @@ struct WebContextItem: View {
     }
     
     private func getCurrentWebsiteTitle() -> String {
-        let pendingContextList = model.getPendingContextList()
+        let pendingContextList = windowState.getPendingContextList()
 
         if let updatedWebContext = pendingContextList.first(where: { context in
             if case .web(let contextWebsiteUrl, _, _) = context,

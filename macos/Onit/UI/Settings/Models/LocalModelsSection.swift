@@ -9,7 +9,7 @@ import Defaults
 import SwiftUI
 
 struct LocalModelsSection: View {
-    @Environment(\.model) var model
+    @Environment(\.appState) var appState
 
     @State private var isOn: Bool = false
     @State private var fetching: Bool = false
@@ -99,9 +99,9 @@ struct LocalModelsSection: View {
                         if let localEndpointURL = URL(string: localEndpointString) {
                             self.localEndpointURL = localEndpointURL
 
-                            await model.fetchLocalModels()
+                            await appState.fetchLocalModels()
 
-                            if model.localFetchFailed {
+                            if appState.localFetchFailed {
                                 message = "Couldn't find any models at the provided URL."
                             } else {
                                 message = "Models loaded successfully!"
@@ -395,7 +395,7 @@ struct LocalModelsSection: View {
         Button(action: {
             fetching = true
             Task {
-                await model.fetchLocalModels()
+                await appState.fetchLocalModels()
                 fetching = false
             }
         }) {

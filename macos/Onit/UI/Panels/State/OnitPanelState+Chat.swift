@@ -1,5 +1,5 @@
 //
-//  Model+Chat.swift
+//  OnitPanelState+Chat.swift
 //  Onit
 //
 //  Created by Benjamin Sage on 10/4/24.
@@ -11,7 +11,8 @@ import PostHog
 import EventSource
 import SwiftData
 
-extension OnitModel {
+extension OnitPanelState {
+    
     func createAndSavePrompt() {
         let prompt = Prompt(
             instruction: pendingInstruction,
@@ -31,7 +32,8 @@ extension OnitModel {
                 }
                 
                 let systemPromptCopy = systemPrompt
-                currentChat = Chat(systemPrompt: systemPromptCopy, prompts: [], timestamp: .now)
+                let windowPid = AccessibilityNotificationsManager.shared.activeWindowElement?.pid()
+                currentChat = Chat(systemPrompt: systemPromptCopy, prompts: [], timestamp: .now, windowPid: windowPid)
                 currentPrompts = []
                 SystemPromptState.shared.shouldShowSystemPrompt = false
                 let modelContext = container.mainContext
@@ -159,7 +161,7 @@ extension OnitModel {
                     guard let model = Defaults[.remoteModel] else {
                         throw FetchingError.invalidRequest(message: "Model is required")
                     }
-                    let apiToken = getTokenForModel(model)
+                    let apiToken = TokenValidationManager.getTokenForModel(model)
                     
                     if shouldUseStream(model) {
                         prompt.generationState = .streaming
@@ -229,14 +231,14 @@ extension OnitModel {
                 
                 let response = Response(text: String(streamedResponse), instruction: curInstruction, type: .success, model: currentModelName)
                 replacePartialResponse(prompt: prompt, response: response)
-                setTokenIsValid(true)
+                TokenValidationManager.setTokenIsValid(true)
             } catch let error as FetchingError {
                 print("Fetching Error: \(error.localizedDescription)")
                 if case .forbidden = error {
-                    setTokenIsValid(false)
+                    TokenValidationManager.setTokenIsValid(false)
                 }
                 if case .unauthorized = error {
-                    setTokenIsValid(false)
+                    TokenValidationManager.setTokenIsValid(false)
                 }
                 let response = Response(text: error.localizedDescription, instruction: curInstruction, type: .error, model: currentModelName)
                 replacePartialResponse(prompt: prompt, response: response)
@@ -283,55 +285,6 @@ extension OnitModel {
         if let curPrompt = generatingPrompt, let priorState = generatingPromptPriorState {
             curPrompt.generationState = priorState
         }
-    }
-
-    func setTokenIsValid(_ isValid: Bool) {
-        if let provider = Defaults[.remoteModel]?.provider {
-            setTokenIsValid(isValid, provider: provider)
-        }
-    }
-
-    func setTokenIsValid(_ isValid: Bool, provider: AIModel.ModelProvider) {
-        if Defaults[.mode] == .local { return }
-        switch provider {
-        case .openAI:
-            Defaults[.isOpenAITokenValidated] = isValid
-        case .anthropic:
-            Defaults[.isAnthropicTokenValidated] = isValid
-        case .xAI:
-            Defaults[.isXAITokenValidated] = isValid
-        case .googleAI:
-            Defaults[.isGoogleAITokenValidated] = isValid
-        case .deepSeek:
-            Defaults[.isDeepSeekTokenValidated] = isValid
-        case .perplexity:
-            Defaults[.isPerplexityTokenValidated] = isValid
-        case .custom:
-            break  // TODO: KNA -
-        }
-    }
-
-    func getTokenForModel(_ model: AIModel?) -> String? {
-        if let provider = model?.provider {
-            switch provider {
-            case .openAI:
-                return Defaults[.openAIToken]
-            case .anthropic:
-                return Defaults[.anthropicToken]
-            case .xAI:
-                return Defaults[.xAIToken]
-            case .googleAI:
-                return Defaults[.googleAIToken]
-            case .deepSeek:
-                return Defaults[.deepSeekToken]
-            case .perplexity:
-                return Defaults[.perplexityToken]
-            case .custom:
-                return nil  // TODO: KNA -
-            }
-            
-        }
-        return nil
     }
     
     func shouldUseStream(_ aiModel: AIModel) -> Bool {

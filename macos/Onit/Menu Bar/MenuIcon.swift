@@ -9,12 +9,12 @@ import Combine
 import SwiftUI
 
 struct MenuIcon: View {
-    @Environment(\.model) var model
+    @ObservedObject private var accessibilityPermissionManager = AccessibilityPermissionManager.shared
     @ObservedObject private var featureFlagsManager = FeatureFlagManager.shared
 
     var body: some View {
         if featureFlagsManager.accessibility {
-            let statusGranted = model.accessibilityPermissionStatus == .granted
+            let statusGranted = accessibilityPermissionManager.accessibilityPermissionStatus == .granted
             Image(statusGranted ? .smirk : .untrusted)
                 .renderingMode(statusGranted ? .template : .original)
                 .animation(.default, value: statusGranted)
@@ -28,8 +28,6 @@ struct MenuIcon: View {
 
 #if DEBUG
     #Preview {
-        ModelContainerPreview {
-            MenuIcon()
-        }
+        MenuIcon()
     }
 #endif

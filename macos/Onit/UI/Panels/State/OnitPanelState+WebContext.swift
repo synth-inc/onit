@@ -1,5 +1,5 @@
 //
-//  Model+WebContext.swift
+//  OnitPanelState+WebContext.swift
 //  Onit
 //
 //  Created by Loyd Kim on 4/1/25.
@@ -7,7 +7,8 @@
 
 import Foundation
 
-extension OnitModel {
+extension OnitPanelState {
+    
     func addWebsiteUrlScrapeTask(websiteUrl: URL, scrapeTask: WebsiteUrlScrapeTask) {
         websiteUrlsScrapeQueue[websiteUrl.absoluteString] = scrapeTask
     }

@@ -1,7 +1,8 @@
 import Foundation
 import Defaults
 
-extension OnitModel {
+extension OnitPanelState {
+    
     @MainActor
     func performWebSearch(query: String) async -> [WebSearchResult] {
         @Default(.tavilyAPIToken) var tavilyAPIToken

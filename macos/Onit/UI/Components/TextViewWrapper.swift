@@ -14,7 +14,7 @@ import SwiftUI
 /// - Manage a placeholder
 /// - Can show a waveform indicator at the end of text when recording
 struct TextViewWrapper: NSViewRepresentable {
-    @Environment(\.model) var model
+    @Environment(\.windowState) var windowState
     
     @Binding var text: String
     @Binding var cursorPosition: Int
@@ -153,7 +153,7 @@ struct TextViewWrapper: NSViewRepresentable {
                     var textWithoutWebsiteUrls = text
                     
                     for url in urls {
-                        let pendingContextList = parent.model.getPendingContextList()
+                        let pendingContextList = parent.windowState.getPendingContextList()
                         
                         let urlExists = pendingContextList.contains { context in
                             if case .web(let existingWebsiteUrl, _, _) = context {
@@ -163,7 +163,7 @@ struct TextViewWrapper: NSViewRepresentable {
                         }
                         
                         if !urlExists {
-                            parent.model.addContext(urls: [url])
+                            parent.windowState.addContext(urls: [url])
                             
                             textWithoutWebsiteUrls = removeWebsiteUrlFromText(
                                 text: textWithoutWebsiteUrls,

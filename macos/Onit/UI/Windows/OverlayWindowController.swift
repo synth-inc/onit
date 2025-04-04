@@ -12,15 +12,13 @@ import Defaults
 @MainActor
 class OverlayWindowController<Content: View>: NSObject, NSWindowDelegate {
     var overlayWindow: NSWindow?
-    weak var model: OnitModel?
     var eventMonitor: Any?
     var localEventMonitor: Any?
     var clickPosition: NSPoint?
     
     private let contentView: Content
 
-    init(model: OnitModel, content: Content, clickPosition: NSPoint?) {
-        self.model = model
+    init(content: Content, clickPosition: NSPoint?) {
         contentView = content
         self.clickPosition = clickPosition
         super.init()
@@ -29,10 +27,7 @@ class OverlayWindowController<Content: View>: NSObject, NSWindowDelegate {
     }
 
     func createOverlayWindow() {
-        let contentView =
-            contentView
-            .environment(\.model, model!)
-            .fixedSize()
+        let contentView = contentView.fixedSize()
         let hostingController = NSHostingController(rootView: contentView)
 
         let window = NSWindow(contentViewController: hostingController)

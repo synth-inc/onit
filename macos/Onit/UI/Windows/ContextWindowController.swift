@@ -13,7 +13,6 @@ class ContextWindowController: NSObject, NSWindowDelegate {
 
     // MARK: - Properties
 
-    private weak var model: OnitModel?
     private let context: Context
     private let contentView: ContextView?
     private var window: NSWindow?
@@ -21,7 +20,7 @@ class ContextWindowController: NSObject, NSWindowDelegate {
 
     // MARK: - Initializers
 
-    init?(model: OnitModel, context: Context) {
+    init?(windowState: OnitPanelState, context: Context) {
         var title: String
         
         switch context {
@@ -34,7 +33,7 @@ class ContextWindowController: NSObject, NSWindowDelegate {
             self.webFileContents = "Contents for \(websiteUrlDomain) are still loading."
             
             let websiteContentsUnavailableText = "Website contents not available."
-            let pendingContextList = model.getPendingContextList()
+            let pendingContextList = windowState.getPendingContextList()
             
             let webContextItemIndex = getWebContextItemIndex(
                 pendingContextList: pendingContextList,
@@ -68,17 +67,13 @@ class ContextWindowController: NSObject, NSWindowDelegate {
             return nil
         }
 
-        self.model = model
         self.context = context
 
         self.contentView = ContextView(context: context, webFileContents: self.webFileContents)
 
         super.init()
 
-        let contentView =
-            contentView
-            .environment(\.model, model)
-            .fixedSize()
+        let contentView = contentView.fixedSize()
         let hostingController = NSHostingController(rootView: contentView)
 
         let window = NSWindow(contentViewController: hostingController)
@@ -200,7 +195,7 @@ class ContextWindowController: NSObject, NSWindowDelegate {
     // MARK: - NSWindowDelegate
 
     func windowWillClose(_ notification: Notification) {
-        model?.contextWindowControllers.removeValue(forKey: context)
+        ContextWindowsManager.shared.contextWindowControllers.removeValue(forKey: context)
     }
 
 }

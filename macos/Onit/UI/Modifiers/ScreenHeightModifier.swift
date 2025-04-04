@@ -8,7 +8,8 @@
 import SwiftUI
 
 struct ScreenHeightModifier: ViewModifier {
-    @Environment(\.model) var model
+    @Environment(\.windowState) private var state
+    
     @Binding var screenHeight: CGFloat
     
     func body(content: Content) -> some View {
@@ -17,7 +18,7 @@ struct ScreenHeightModifier: ViewModifier {
                 WindowAccessor { window in
                     if let screen = window.screen, screenHeight != screen.frame.height {
                         screenHeight = screen.frame.height
-                        model.adjustPanelSize()
+                        state.panel?.adjustSize()
                     }
                 }
             )

@@ -2,14 +2,14 @@ import Defaults
 import SwiftUI
 
 struct ChatView: View {
-    @Environment(\.model) var model
+    @Environment(\.windowState) private var state
 
     @Default(.availableLocalModels) var availableLocalModels
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             SetUpDialogs()
-            if let systemPrompt = model.currentChat?.systemPrompt {
+            if let systemPrompt = state.currentChat?.systemPrompt {
                 ChatSystemPromptView(systemPrompt: systemPrompt)
             }
             ChatsView()

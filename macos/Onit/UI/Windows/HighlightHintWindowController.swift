@@ -60,7 +60,7 @@ class HighlightHintWindowController {
     func show(_ bound: CGRect?) {
         uiElementBound = bound
 
-        guard mode != .none else { return }
+        guard mode != .none, !Defaults[.isRegularApp] else { return }
 
         if mode == .topRight && window.isVisible {
             return
