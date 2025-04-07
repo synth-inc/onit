@@ -15,7 +15,7 @@ struct TrackedWindow: Hashable {
     let title: String
     
     static func == (lhs: TrackedWindow, rhs: TrackedWindow) -> Bool {
-        return lhs.pid == rhs.pid && lhs.hash == rhs.hash && lhs.title == rhs.title
+        return lhs.pid == rhs.pid && lhs.hash == rhs.hash
     }
 }
 
