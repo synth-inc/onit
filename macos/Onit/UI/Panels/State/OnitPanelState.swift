@@ -24,8 +24,7 @@ class OnitPanelState: NSObject {
     /// Services
     var promptSuggestionService: SystemPromptSuggestionService?
     
-    var activeWindow: AXUIElement?
-    var activeWindowPid: pid_t?
+    var trackedWindow: TrackedWindow?
     var panel: OnitPanel? {
         didSet {
             isPanelOpened.send(panel != nil)
@@ -87,9 +86,8 @@ class OnitPanelState: NSObject {
 
     var deleteChatFailed: Bool = false
     
-    init(activeWindow: AXUIElement?) {
-        self.activeWindow = activeWindow
-        self.activeWindowPid = activeWindow?.pid()
+    init(trackedWindow: TrackedWindow?) {
+        self.trackedWindow = trackedWindow
         super.init()
         
         self.promptSuggestionService = SystemPromptSuggestionService(state: self)

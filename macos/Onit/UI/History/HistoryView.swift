@@ -15,7 +15,9 @@ struct HistoryView: View {
     @State private var searchQuery: String = ""
 
     var filteredChats: [Chat] {
-        let filteredChatByPid = chats.filter { $0.windowPid == windowState.activeWindowPid }
+        let filteredChatByPid = chats.filter {
+            $0.windowPid == windowState.trackedWindow?.pid
+        }
         
         if searchQuery.isEmpty {
             return filteredChatByPid

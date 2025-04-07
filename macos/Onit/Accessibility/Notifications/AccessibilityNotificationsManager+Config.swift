@@ -20,7 +20,9 @@ extension AccessibilityNotificationsManager {
             kAXSelectedColumnsChangedNotification,
             kAXSelectedRowsChangedNotification,
             kAXWindowMovedNotification,
-            kAXWindowResizedNotification
+            kAXWindowResizedNotification,
+            kAXWindowCreatedNotification,
+            kAXUIElementDestroyedNotification
 
             //            kAXAnnouncementRequestedNotification,
             //            kAXApplicationActivatedNotification,

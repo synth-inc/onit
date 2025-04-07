@@ -33,6 +33,34 @@ extension AXUIElement {
             return nil
         }
     }
+    
+    func findWindow() -> AXUIElement? {
+        var currentElement = self
+
+        while true {
+            var roleValue: CFTypeRef?
+            if AXUIElementCopyAttributeValue(currentElement, kAXRoleAttribute as CFString, &roleValue) != .success {
+                break
+            }
+
+            if let role = roleValue as? String, role == kAXWindowRole as String {
+                return currentElement
+            }
+
+            var parent: CFTypeRef?
+            if AXUIElementCopyAttributeValue(currentElement, kAXParentAttribute as CFString, &parent) != .success {
+                break
+            }
+
+            if let parentElement = parent {
+                currentElement = parentElement as! AXUIElement
+            } else {
+                break
+            }
+        }
+
+        return nil
+    }
 
     func getWindows() -> [AXUIElement] {
         var elementPid: pid_t = 0
@@ -233,23 +261,31 @@ extension AXUIElement {
         return nil
     }
 
-    func identifier() -> AXUIElementIdentifier? {
-        return AXUIElementIdentifier(element: self)
-    }
+//    func identifier() -> AXUIElementIdentifier? {
+//        return AXUIElementIdentifier(element: self)
+//    }
 }
 
 struct AXUIElementIdentifier: Hashable {
+    let window: AXUIElement
     let pid: pid_t
-    let identifier: String
     
-    init?(element: AXUIElement?) {
-        guard let element = element,
-              let pid = element.pid() else {
-            return nil
-        }
-        
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(CFHash(window))
+        hasher.combine(pid)
+    }
+    
+    static func == (lhs: AXUIElementIdentifier, rhs: AXUIElementIdentifier) -> Bool {
+        return CFHash(lhs.window) == CFHash(rhs.window) && lhs.pid == rhs.pid
+    }
+    
+    init(window: AXUIElement, pid: pid_t) {
+        self.window = window
         self.pid = pid
-        self.identifier = "\(Unmanaged.passUnretained(element as AnyObject).toOpaque())"
+    }
+    
+    var description: String {
+        "hash:\(CFHash(window)) pid:\(pid)"
     }
 }
 

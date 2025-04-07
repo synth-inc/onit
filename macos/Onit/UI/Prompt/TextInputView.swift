@@ -19,7 +19,9 @@ struct TextInputView: View {
     @Query(sort: \Chat.timestamp, order: .reverse) private var allChats: [Chat]
     
     private var chats: [Chat] {
-        return allChats.filter { $0.windowPid == state.activeWindow?.pid() }
+        return allChats.filter {
+            $0.windowPid == state.trackedWindow?.pid
+        }
     }
 
     @Default(.mode) var mode

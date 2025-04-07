@@ -32,8 +32,13 @@ extension OnitPanelState {
                 }
                 
                 let systemPromptCopy = systemPrompt
-                let windowPid = AccessibilityNotificationsManager.shared.activeWindowElement?.pid()
-                currentChat = Chat(systemPrompt: systemPromptCopy, prompts: [], timestamp: .now, windowPid: windowPid)
+                let windowIdentifier = AccessibilityNotificationsManager.shared.windowsManager.activeTrackedWindow
+                currentChat = Chat(
+                    systemPrompt: systemPromptCopy,
+                    prompts: [],
+                    timestamp: .now,
+                    windowPid: windowIdentifier?.pid
+                )
                 currentPrompts = []
                 SystemPromptState.shared.shouldShowSystemPrompt = false
                 let modelContext = container.mainContext

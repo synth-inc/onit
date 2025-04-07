@@ -79,7 +79,7 @@ class TetherAppsManager: ObservableObject {
                 } else {
                     self?.targetInitialFrames.forEach { element, initialFrame in
                         guard let self = self,
-                              let window = element.getWindows().first,
+                              let window = element.findWindow(),
                               let position = window.position(),
                               let size = window.size() else {
                             return
@@ -115,8 +115,12 @@ class TetherAppsManager: ObservableObject {
                         )
                     }
             }
-            .throttle(for: .milliseconds(500), scheduler: RunLoop.main, latest: true)
+            .debounce(for: .milliseconds(300), scheduler: RunLoop.main)
             .sink(receiveValue: windowPositioningObserver)
+            .store(in: &otherCancellables)
+        
+        AccessibilityNotificationsManager.shared.$destroyedTrackedWindow
+            .sink(receiveValue: windowDestroyedObserver)
             .store(in: &otherCancellables)
     }
     
@@ -126,9 +130,17 @@ class TetherAppsManager: ObservableObject {
     }
     
     // MARK: - Observers
+    private func windowDestroyedObserver(trackedWindow: TrackedWindow?) {
+        guard let trackedWindow = trackedWindow else { return }
+        
+        print("TetherAppsManager - Destroyed window from : \(trackedWindow)")
+        
+        hideTetherWindow()
+    }
+    
     private func windowPositioningObserver(windowState: ActiveWindowState) {
-        print("TetherAppsManager - windowPositioningObserver pid:\(windowState.state.activeWindowPid ?? -1) isOpen:\(windowState.isPanelOpened) isMinimized:\(windowState.isPanelMiniaturized)")
-        guard let window = windowState.state.activeWindow, let windowPid = windowState.state.activeWindowPid else {
+        //print("TetherAppsManager - windowPositioningObserver pid:\(windowState.state.trackedWindow?.pid ?? -1) isOpen:\(windowState.isPanelOpened) isMinimized:\(windowState.isPanelMiniaturized)")
+        guard let window = windowState.state.trackedWindow?.element, let windowPid = windowState.state.trackedWindow?.pid else {
             return
         }
         
@@ -142,6 +154,7 @@ class TetherAppsManager: ObservableObject {
     }
     
     private func panelOpened(windowState: ActiveWindowState, window: AXUIElement, windowPid: pid_t) {
+        print("TetherAppsManager panelOpened \(CFHash(window))")
         hideTetherWindow()
         
         if targetInitialFrames[window] == nil, let position = window.position(), let size = window.size() {
@@ -152,11 +165,12 @@ class TetherAppsManager: ObservableObject {
         }
         
         repositionWindow(window: window, state: windowState.state)
-        
-        OnitPanelManager.shared.updateLevelState(elementIdentifier: window.identifier())
+        // TODO: KNA - Tethered
+        //OnitPanelManager.shared.updateLevelState(elementIdentifier: AXUIElementIdentifier(window: window, pid: windowPid))
     }
     
     private func panelClosed(windowState: ActiveWindowState, window: AXUIElement, windowPid: pid_t) {
+        print("TetherAppsManager panelClosed \(CFHash(window))")
         if let initialFrame = targetInitialFrames[window] {
             if let panel = windowState.state.panel, let position = window.position(), let size = window.size() {
                 let fromActive = NSRect(origin: position, size: size)
@@ -195,6 +209,7 @@ class TetherAppsManager: ObservableObject {
               let size = window.size() else {
             return
         }
+        //print("repositionWindow position:\(position), size:\(size)")
         
         // Special case for Finder (desktop)
         if isFinderShowingDesktopOnly(activeWindow: window) {
@@ -336,12 +351,12 @@ class TetherAppsManager: ObservableObject {
     }
     
     func tetheredWindowMoved(y: CGFloat) {
-        guard let activeWindow = AccessibilityNotificationsManager.shared.activeWindowElement else {
+        guard let trackedWindow = AccessibilityNotificationsManager.shared.windowsManager.activeTrackedWindow else {
             return
         }
         
-        self.lastYComputed = computeTetheredWindowY(activeWindow: activeWindow, offset: y)
-        self.updateTetherWindowPosition(for: activeWindow)
+        self.lastYComputed = computeTetheredWindowY(activeWindow: trackedWindow.element, offset: y)
+        self.updateTetherWindowPosition(for: trackedWindow.element)
     }
     
     private func computeTetheredWindowY(activeWindow: AXUIElement, offset: CGFloat?) -> CGFloat? {

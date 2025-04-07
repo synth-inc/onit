@@ -74,7 +74,8 @@ extension TetherAppsManager {
                 }
                 
                 self.targetInitialFrames.removeValue(forKey: activeWindow)
-                OnitPanelManager.shared.updateLevelState(elementIdentifier: activeWindow.identifier())
+                // TODO: KNA - Tethered
+                // OnitPanelManager.shared.updateLevelState(elementIdentifier: AXUIElementIdentifier(window: activeWindow, pid: activeWindow.pid()!))
             }
         }
     }

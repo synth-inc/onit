@@ -11,7 +11,7 @@ private struct OnitPanelStateKey: @preconcurrency EnvironmentKey {
     
     @MainActor
     static let defaultValue: OnitPanelState = OnitPanelState(
-        activeWindow: nil
+        trackedWindow: nil
     )
 }
 

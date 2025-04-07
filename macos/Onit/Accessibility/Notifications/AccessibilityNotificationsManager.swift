@@ -17,10 +17,12 @@ class AccessibilityNotificationsManager: ObservableObject {
 
     static let shared = AccessibilityNotificationsManager()
 
+    let windowsManager = AccessibilityWindowsManager()
+    
     // MARK: - ScreenResult
 
     @Published private(set) var screenResult: ScreenResult = .init()
-    @Published private(set) var activeWindowElement: AXUIElement?
+    @Published private(set) var destroyedTrackedWindow: TrackedWindow?
 
     struct ScreenResult {
         struct UserInteractions {
@@ -258,8 +260,39 @@ class AccessibilityNotificationsManager: ObservableObject {
                 self?.handleFocusChange(for: element)
             case kAXWindowMovedNotification, kAXWindowResizedNotification:
                 self?.handleWindowBounds(for: element)
+            case kAXWindowCreatedNotification:
+                self?.handleCreatedWindowElement(for: element)
+            case kAXUIElementDestroyedNotification:
+                self?.handleDetroyedElement(for: element)
             default:
                 break
+            }
+        }
+    }
+    
+    private func handleWindowBounds(for element: AXUIElement) {
+        handleExternalElement(element) { [weak self] elementPid in
+            self?.windowsManager.append(element, pid: elementPid)
+        }
+    }
+    
+    func handleCreatedWindowElement(for element: AXUIElement) {
+        handleExternalElement(element) { [weak self] elementPid in
+            self?.windowsManager.append(element, pid: elementPid)
+        }
+    }
+    
+    func handleDetroyedElement(for element: AXUIElement) {
+        handleExternalElement(element) { [weak self] elementPid in
+            
+            if let foundWindows = self?.windowsManager.trackedWindows(for: element) {
+                for foundWindow in foundWindows {
+                    if foundWindow.element.role() == nil {
+                        self?.windowsManager.remove(foundWindow)
+                        
+                        self?.destroyedTrackedWindow = foundWindow
+                    }
+                }
             }
         }
     }
@@ -303,96 +336,6 @@ class AccessibilityNotificationsManager: ObservableObject {
         DispatchQueue.main.asyncAfter(deadline: .now() + Config.debounceInterval, execute: workItem)
     }
     
-    // MARK: - Window resize / move
-    
-    private func handleWindowBounds(for element: AXUIElement) {
-        handleExternalElement(element) { [weak self] elementPid in
-            // We need to make sure we're in the root element first.
-            let rootAXElement = elementPid.getAXUIElement()
-            self?.setActiveWindowElement(from: rootAXElement)
-        }
-    }
-    
-    private func setActiveWindowElement(from rootAXElement: AXUIElement) {
-        let windows = rootAXElement.getWindowsByRole()        
-        if let focusedWindow = rootAXElement.focusedWindow(), let focusedWindowFrame = focusedWindow.frame() {
-            var lookForBetterWindow = false
-
-            // This doesn't work - it's an optional field and not implemented by most apps.
-            // if let isMain = focusedWindow.isMain() {
-            //     if !isMain {
-            //         print("lookForBetterWindow: Focused window is not the main window.")
-            //         lookForBetterWindow = true
-            //     }
-            // }
-
-            // This works okay, but might create some strange behavior on large monitors.
-             if let screen = focusedWindowFrame.findScreen() {
-                 let screenWidth = screen.frame.width
-                 let screenHeight = screen.frame.height
-                 if focusedWindowFrame.width < screenWidth / 5 || focusedWindowFrame.height < screenHeight / 5 {
-                     print("lookForBetterWindow: Focused window is small relative to the screen size.")
-                     lookForBetterWindow = true
-                 }
-             }
-            
-            // This works well.
-            if focusedWindow.closeButton() == nil || focusedWindow.minimizeButton() == nil || focusedWindow.zoomButton() == nil {
-                print("lookForBetterWindow: Focused window doesn't have close/minimize/zoom.")
-                lookForBetterWindow = true
-            }
-            
-            // This doesn't work too well - it's an optional field and implementedly randomly in some apps and not in others.
-            if let isModal = focusedWindow.isModal() {
-                if isModal {
-                    print("lookForBetterWindow: Focused window is a modal.")
-                    lookForBetterWindow = true
-                }
-            }
-
-            if lookForBetterWindow {
-                var mainWindows: [AXUIElement] = []
-                var containingWindows: [AXUIElement] = []
-                
-                for window in windows {
-                    if window.closeButton() != nil && window.minimizeButton() != nil && window.zoomButton() != nil {
-                        mainWindows.append(window)
-                        if let windowFrame = window.frame() {
-                            if !windowFrame.equalTo(focusedWindowFrame) && windowFrame.contains(focusedWindowFrame) {
-                                containingWindows.append(window)
-                            }
-                        }
-                    }
-                }
-
-                print("Found \(mainWindows.count) main windows, \(containingWindows.count) windows containing the current window.")
-                
-                if mainWindows.count > 1 {
-                    if containingWindows.count > 1 {
-                        // TODO, implement a queue to select the most recently active.
-                        self.activeWindowElement = containingWindows.first
-                        return
-                    } else if containingWindows.count == 1 {
-                        self.activeWindowElement = containingWindows.first
-                        return
-                    } else {
-                        // Don't select any if none contain the current window.
-                        return
-                    }
-                } else if mainWindows.count == 1 {
-                    self.activeWindowElement = mainWindows.first
-                    return
-                } else {
-                    // Don't select a window if none are have the close/minimize/zoom buttons
-                    return
-                }
-            } else {
-                self.activeWindowElement = focusedWindow
-                return
-            }
-        }
-    }
-
     // MARK: Parsing
 
     private func parseAccessibility(for pid: pid_t) {

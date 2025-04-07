@@ -21,8 +21,8 @@ class OnitRegularPanel: NSPanel {
     var isAnimating: Bool = false
     
     init(state: OnitPanelState) {
-        if let activeWindow = state.activeWindow {
-            self.activeWindow = activeWindow
+        if let trackedWindow = state.trackedWindow {
+            self.activeWindow = trackedWindow.element
         } else {
             self.activeWindow = nil
         }
