@@ -35,7 +35,8 @@ extension OnitModel {
                 currentPrompts = []
                 SystemPromptState.shared.shouldShowSystemPrompt = false
                 let modelContext = container.mainContext
-                modelContext.insert(currentChat!)
+                
+                if !Defaults[.incognitoModeEnabled] { modelContext.insert(currentChat!) }
                 
                 finishPromptCreation(prompt)
             }

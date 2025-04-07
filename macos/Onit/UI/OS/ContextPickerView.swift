@@ -5,6 +5,7 @@
 //  Created by Kévin Naudin on 25/01/2025.
 //
 
+import Defaults
 import SwiftUI
 
 struct ContextPickerView: View {
@@ -23,15 +24,22 @@ struct ContextPickerView: View {
             .buttonStyle(.plain)
 
             Button(action: {
-                OverlayManager.shared.dismissOverlay()
-                model.addAutoContext()
+                if !Defaults[.incognitoModeEnabled] {
+                    OverlayManager.shared.dismissOverlay()
+                    model.addAutoContext()
+                }
             }) {
                 ContextPickerItemView(
-                    imageRes: .stars, title: "Auto-context", subtitle: "Current window activity")
+                    imageRes: .stars,
+                    title: "Auto-context",
+                    subtitle: Defaults[.incognitoModeEnabled] ? "Disabled in incognito mode" : "Current window activity"
+                )
             }
             .buttonStyle(.plain)
             .foregroundColor(.gray200)
             .padding(.bottom, 6)
+            .opacity(Defaults[.incognitoModeEnabled] ? 0.5 : 1)
+            .disabled(Defaults[.incognitoModeEnabled])
         }
         .background(Color(.gray600))
         .cornerRadius(12)

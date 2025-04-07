@@ -5,10 +5,13 @@
 //  Created by Benjamin Sage on 10/23/24.
 //
 
+import Defaults
 import KeyboardShortcuts
 import SwiftUI
 
 struct PaperclipButton: View {
+    @Default(.incognitoModeEnabled) var incognitoModeEnabled
+    
     @Environment(\.model) var model
     @ObservedObject var featureFlagsManager = FeatureFlagManager.shared
     @ObservedObject var notificationsManager = AccessibilityNotificationsManager.shared
@@ -31,7 +34,7 @@ struct PaperclipButton: View {
             .tooltip(prompt: accessibilityAutoContextEnabled ? "Add context" : "Upload file")
 
             if model.pendingContextList.isEmpty {
-                if !accessibilityAutoContextEnabled && !closedAutocontext {
+                if !accessibilityAutoContextEnabled && !closedAutocontext && !incognitoModeEnabled {
                     EnableAutocontextTag()
                 } else if accessibilityAutoContextEnabled {
                     Button {

@@ -6,6 +6,7 @@
 //
 
 import ApplicationServices
+import Defaults
 import Foundation
 import PostHog
 import SwiftUI
@@ -319,7 +320,9 @@ class AccessibilityNotificationsManager: ObservableObject {
             return
         }
 
-        guard FeatureFlagManager.shared.accessibilityAutoContext else {
+        guard FeatureFlagManager.shared.accessibilityAutoContext,
+              !Defaults[.incognitoModeEnabled]
+        else {
             self.screenResult = .init()
             return
         }
@@ -419,13 +422,13 @@ class AccessibilityNotificationsManager: ObservableObject {
         guard FeatureFlagManager.shared.accessibilityInput,
             let selectedText = text,
             let selectedElement = element,
-            !selectedText.isEmpty
+              !selectedText.isEmpty,
+              !Defaults[.incognitoModeEnabled]
         else {
-
             selectedSource = nil
             model?.pendingInput = nil
             HighlightHintWindowController.shared.hide()
-
+            
             return
         }
         screenResult.userInteraction.selectedText = selectedText

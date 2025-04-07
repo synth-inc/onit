@@ -8,6 +8,7 @@ struct ChatView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
+            IncognitoDismissable()
             SetUpDialogs()
             if let systemPrompt = model.currentChat?.systemPrompt {
                 ChatSystemPromptView(systemPrompt: systemPrompt)

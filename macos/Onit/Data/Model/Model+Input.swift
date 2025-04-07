@@ -6,11 +6,13 @@
 //
 
 import AppKit
+import Defaults
 
 extension OnitModel {
     func addAutoContext() {
         guard FeatureFlagManager.shared.accessibility,
-            FeatureFlagManager.shared.accessibilityAutoContext
+            FeatureFlagManager.shared.accessibilityAutoContext,
+                !Defaults[.incognitoModeEnabled]
         else {
             return
         }
@@ -42,6 +44,22 @@ extension OnitModel {
 
         let autoContext = Context(appName: appName, appContent: appContent)
         pendingContextList.insert(autoContext, at: 0)
+    }
+    
+    func clearAutoContext() {
+        pendingInput = nil
+        HighlightHintWindowController.shared.hide()
+        
+        pendingContextList.removeAll { contextItem in
+            if case .auto = contextItem { return true }
+            else { return false }
+        }
+        
+        for contextItem in contextWindowControllers.keys {
+            if case .auto = contextItem {
+                closeContextWindow(context: contextItem)
+            }
+        }
     }
     
     func getPendingContextList() -> [Context] {
