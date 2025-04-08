@@ -11,7 +11,7 @@ import SwiftUI
 struct StaticPromptView: View {
     
     private var state: OnitPanelState {
-        OnitPanelManager.shared.state
+        TetherAppsManager.shared.state
     }
 
     var shortcut: KeyboardShortcut? {

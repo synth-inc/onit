@@ -10,6 +10,10 @@ import Combine
 import SwiftData
 import SwiftUI
 
+@MainActor protocol OnitPanelStateDelegate: AnyObject {
+    func panelStateDidChange(state: OnitPanelState, isOpened: Bool, isMiniaturized: Bool)
+}
+
 @MainActor
 @Observable
 class OnitPanelState: NSObject {
@@ -25,9 +29,41 @@ class OnitPanelState: NSObject {
     var promptSuggestionService: SystemPromptSuggestionService?
     
     var trackedWindow: TrackedWindow?
+    
+    private var delegates = NSHashTable<AnyObject>.weakObjects()
+    
+    var _panelOpened: Bool = false {
+        didSet {
+            notifyDelegates()
+        }
+    }
+    private var _panelMiniaturized: Bool = false {
+        didSet {
+            notifyDelegates()
+        }
+    }
+    
+    var isOpened: Bool {
+        get { return _panelOpened }
+    }
+    
+    var isMiniaturized: Bool {
+        get { return _panelMiniaturized }
+    }
+    
     var panel: OnitPanel? {
         didSet {
-            isPanelOpened.send(panel != nil)
+            let opened = panel != nil
+            
+            if _panelOpened != opened {
+                _panelOpened = opened
+            }
+        }
+    }
+    
+    func setPanelMiniaturized(_ value: Bool) {
+        if _panelMiniaturized != value {
+            _panelMiniaturized = value
         }
     }
     
@@ -54,8 +90,6 @@ class OnitPanelState: NSObject {
     var pendingInstructionSubject = CurrentValueSubject<String, Never>("")
     var pendingContextListSubject = CurrentValueSubject<[Context], Never>([])
     var pendingInputSubject = CurrentValueSubject<Input?, Never>(nil)
-    var isPanelOpened = CurrentValueSubject<Bool, Never>(false)
-    var isPanelMiniaturized = CurrentValueSubject<Bool, Never>(false)
     
     var imageUploads: [URL: UploadProgress] = [:]
     var uploadTasks: [URL: Task<URL?, Never>] = [:]
@@ -91,5 +125,21 @@ class OnitPanelState: NSObject {
         super.init()
         
         self.promptSuggestionService = SystemPromptSuggestionService(state: self)
+    }
+    
+    // MARK: - Delegates
+    
+    func addDelegate(_ delegate: OnitPanelStateDelegate) {
+        delegates.add(delegate)
+    }
+    
+    func removeDelegate(_ delegate: OnitPanelStateDelegate) {
+        delegates.remove(delegate)
+    }
+    
+    private func notifyDelegates() {
+        for case let delegate as OnitPanelStateDelegate in delegates.allObjects {
+            delegate.panelStateDidChange(state: self, isOpened: _panelOpened, isMiniaturized: _panelMiniaturized)
+        }
     }
 }

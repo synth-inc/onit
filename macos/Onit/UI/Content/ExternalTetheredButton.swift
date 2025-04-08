@@ -144,7 +144,7 @@ struct ExternalTetheredButton: View {
             return
         }
         
-        OnitPanelManager.shared.state.launchPanel()
+        TetherAppsManager.shared.state.launchPanel()
     }
 }
 

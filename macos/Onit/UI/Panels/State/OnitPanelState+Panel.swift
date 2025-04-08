@@ -17,7 +17,6 @@ extension OnitPanelState: NSWindowDelegate {
                 existingPanel.orderFrontRegardless()
                 // Focus the text input when we're activating the panel
                 textFocusTrigger.toggle()
-                isPanelOpened.send(true)
                 
                 return
             }
@@ -33,7 +32,10 @@ extension OnitPanelState: NSWindowDelegate {
                 OnitAccessoryPanel(state: self)
             
             panel = newPanel
-            isPanelOpened.send(true)
+
+            if Defaults[.isRegularApp] && trackedWindow != nil {
+                repositionPanel()
+            }
 
             KeyboardShortcutsManager.enable(modelContainer: container)
 
@@ -47,12 +49,12 @@ extension OnitPanelState: NSWindowDelegate {
             SystemPromptState.shared.shouldShowSelection = false
             SystemPromptState.shared.shouldShowSystemPrompt = false
 
-            if !Defaults[.isRegularApp] {
+            if Defaults[.isRegularApp] && trackedWindow != nil {
+                restoreWindowPosition()
+            } else {
                 panel.hide()
                 self.panel = nil
             }
-            
-            isPanelOpened.send(false)
             
             HighlightHintWindowController.shared.adjustWindow()
             KeyboardShortcutsManager.disable(modelContainer: container)
@@ -69,7 +71,6 @@ extension OnitPanelState: NSWindowDelegate {
                 closePanel()
             } else {
                 panel.show()
-                isPanelOpened.send(true)
                 textFocusTrigger.toggle()
             }
         }
@@ -91,11 +92,11 @@ extension OnitPanelState: NSWindowDelegate {
         }
         
         func windowWillMiniaturize(_ notification: Notification) {
-            isPanelMiniaturized.send(true)
+            setPanelMiniaturized(true)
         }
         
         func windowDidDeminiaturize(_ notification: Notification) {
-            isPanelMiniaturized.send(false)
+            setPanelMiniaturized(false)
         }
         
         func windowShouldClose(_ sender: NSWindow) -> Bool {

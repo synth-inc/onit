@@ -55,7 +55,7 @@ struct TetheredButton: View {
                     return
                 }
                 
-                OnitPanelManager.shared.state.closePanel()
+                TetherAppsManager.shared.state.closePanel()
             }) {
                 Image(.smallChevRight)
                     .renderingMode(.template)

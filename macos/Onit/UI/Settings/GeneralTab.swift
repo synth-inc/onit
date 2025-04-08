@@ -184,10 +184,6 @@ struct GeneralTab: View {
                     .toggleStyle(.switch)
                     .controlSize(.small)
                 }
-                // Re-draw the panel on change
-                .onChange(of: isRegularApp, initial: false) {
-                    OnitPanelManager.shared.setAppAsRegular(isRegularApp)
-                }
 
                 HStack {
                     Text("Use launch shortcut as a toggle")

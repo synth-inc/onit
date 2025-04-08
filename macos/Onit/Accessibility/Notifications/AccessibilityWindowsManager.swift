@@ -19,21 +19,19 @@ struct TrackedWindow: Hashable {
     }
 }
 
+@MainActor protocol AccessibilityWindowsManagerDelegate: AnyObject {
+    func windowsManager(_ manager: AccessibilityWindowsManager, didActivateWindow window: TrackedWindow)
+    func windowsManager(_ manager: AccessibilityWindowsManager, didDestroyWindow window: TrackedWindow)
+}
+
+@MainActor
 class AccessibilityWindowsManager {
     
-    @Published private(set) var activeTrackedWindow: TrackedWindow?
-    private var trackedWindows: [TrackedWindow] = []
+    weak var delegate: AccessibilityWindowsManagerDelegate?
     
-    init() {
-        print("WindowsManager: init")
-        // TODO: KNA - Do it in a task
-        for app in NSWorkspace.shared.runningApplications {
-            let windows = Self.getWindows(for: app.processIdentifier)
-            
-            trackedWindows.append(contentsOf: windows)
-        }
-        print("WindowsManager: end init. Total: \(trackedWindows.count)")
-    }
+    var activeTrackedWindow: TrackedWindow?
+    private var destroyedTrackedWindow: TrackedWindow?
+    private var trackedWindows: [TrackedWindow] = []
     
     func append(_ element: AXUIElement, pid: pid_t) {
         if let window = element.findWindow(), window.subrole() == "AXStandardWindow" {
@@ -42,16 +40,20 @@ class AccessibilityWindowsManager {
             
             if !trackedWindows.contains(trackedWindow) {
                 trackedWindows.append(trackedWindow)
-                print("WindowsManager: Window added \(trackedWindow.hash). Total: \(trackedWindows.count)")
             }
             activeTrackedWindow = trackedWindow
+                
+            delegate?.windowsManager(self, didActivateWindow: trackedWindow)
         }
     }
     
     func remove(_ trackedWindow: TrackedWindow) {
         if let index = trackedWindows.firstIndex(of: trackedWindow) {
             trackedWindows.remove(at: index)
-            print("WindowsManager: Window removed \(trackedWindow.hash). Total: \(trackedWindows.count)")
+            
+            destroyedTrackedWindow = trackedWindow
+
+            delegate?.windowsManager(self, didDestroyWindow: trackedWindow)
         }
     }
     

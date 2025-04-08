@@ -74,7 +74,7 @@ struct KeyboardShortcutsManager {
         
         KeyboardShortcuts.Name.allCases.forEach { name in
             KeyboardShortcuts.onKeyUp(for: name) {
-                let state = OnitPanelManager.shared.state
+                let state = TetherAppsManager.shared.state
                 
                 switch name {
                 case .launch:

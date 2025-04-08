@@ -14,31 +14,27 @@ import SwiftUI
 class TetherAppsManager: ObservableObject {
     
     // MARK: - Singleton instance
+    
     static let shared = TetherAppsManager()
     
     // MARK: - Properties
     
-    private var regularAppCancellable: AnyCancellable?
-    private var otherCancellables = Set<AnyCancellable>()
+    @Published var state: OnitPanelState
+    var states: [TrackedWindow: OnitPanelState] = [:]
     
-    private let minOnitWidth: CGFloat = ContentView.idealWidth
-    private let spaceBetweenWindows: CGFloat = -(TetheredButton.width / 2)
+    private let defaultState = OnitPanelState(trackedWindow: nil)
+    
+    private var regularAppCancellable: AnyCancellable?
+    private var skipFirstRegularAppUpdate: Bool = true
+    
+    static let minOnitWidth: CGFloat = ContentView.idealWidth
+    static let spaceBetweenWindows: CGFloat = -(TetheredButton.width / 2)
     
     var targetInitialFrames: [AXUIElement: CGRect] = [:]
     
     private let tetherWindow: NSWindow
     private var lastYComputed: CGFloat?
     private var dragDebounce: AnyCancellable?
-    
-    struct ActiveWindowState {
-        let state: OnitPanelState
-        let isPanelOpened: Bool
-        let isPanelMiniaturized: Bool
-        
-        var isPanelOpenedAndNotMinimized: Bool {
-            isPanelOpened && !isPanelMiniaturized
-        }
-    }
     
     // MARK: - Private initializer
     private init() {
@@ -62,37 +58,43 @@ class TetherAppsManager: ObservableObject {
         window.standardWindowButton(.zoomButton)?.isHidden = true
         
         tetherWindow = window
+        state = defaultState
     }
     
     // MARK: - Functions
     
     func startObserving() {
         stopObserving()
-
-        let isRegularAppPublisher = Defaults.publisher(.isRegularApp)
-            .map(\.newValue)
         
-        regularAppCancellable = isRegularAppPublisher
+        regularAppCancellable = Defaults.publisher(.isRegularApp)
+            .map(\.newValue)
             .sink { [weak self] isRegularApp in
+                guard let self = self else { return }
+                
                 if isRegularApp {
-                    self?.startAllObservers()
+                    self.startAllObservers()
                 } else {
-                    self?.targetInitialFrames.forEach { element, initialFrame in
-                        guard let self = self,
-                              let window = element.findWindow(),
-                              let position = window.position(),
-                              let size = window.size() else {
-                            return
-                        }
-                        
-                        let fromActive = NSRect(origin: position, size: size)
-                        
-                        self.animateExit(windowState: nil, activeWindow: window, fromActive: fromActive, toActive: initialFrame)
-                    }
-                    self?.targetInitialFrames.removeAll()
-                    self?.stopAllObservers()
+                    self.stopAllObservers()
+                    self.resetFramesOnAppChange()
+                }
+                
+                if self.skipFirstRegularAppUpdate {
+                    self.skipFirstRegularAppUpdate = false
+                } else {
+                    self.setAppAsRegular(isRegularApp)
                 }
             }
+    }
+    
+    private func resetFramesOnAppChange() {
+        targetInitialFrames.forEach { element, initialFrame in
+            guard let window = element.findWindow() else {
+                return
+            }
+            
+            _ = window.setFrame(initialFrame)
+        }
+        targetInitialFrames.removeAll()
     }
     
     func stopObserving() {
@@ -104,198 +106,61 @@ class TetherAppsManager: ObservableObject {
     // MARK: - Private functions
     
     private func startAllObservers() {
-        OnitPanelManager.shared.$state
-            .flatMap { state in
-                return Publishers.CombineLatest(state.isPanelOpened, state.isPanelMiniaturized)
-                    .map {
-                        ActiveWindowState(
-                            state: state,
-                            isPanelOpened: $0,
-                            isPanelMiniaturized: $1
-                        )
-                    }
-            }
-            .debounce(for: .milliseconds(300), scheduler: RunLoop.main)
-            .sink(receiveValue: windowPositioningObserver)
-            .store(in: &otherCancellables)
-        
-        AccessibilityNotificationsManager.shared.$destroyedTrackedWindow
-            .sink(receiveValue: windowDestroyedObserver)
-            .store(in: &otherCancellables)
+        AccessibilityNotificationsManager.shared.addDelegate(self)
     }
     
     private func stopAllObservers() {
-        otherCancellables.removeAll()
+        AccessibilityNotificationsManager.shared.removeDelegate(self)
         hideTetherWindow()
     }
     
-    // MARK: - Observers
-    private func windowDestroyedObserver(trackedWindow: TrackedWindow?) {
-        guard let trackedWindow = trackedWindow else { return }
-        
-        print("TetherAppsManager - Destroyed window from : \(trackedWindow)")
-        
-        hideTetherWindow()
-    }
+    // MARK: - Handling panel state changes
     
-    private func windowPositioningObserver(windowState: ActiveWindowState) {
-        //print("TetherAppsManager - windowPositioningObserver pid:\(windowState.state.trackedWindow?.pid ?? -1) isOpen:\(windowState.isPanelOpened) isMinimized:\(windowState.isPanelMiniaturized)")
-        guard let window = windowState.state.trackedWindow?.element, let windowPid = windowState.state.trackedWindow?.pid else {
+    private func handlePanelStateChange(state: OnitPanelState, isOpened: Bool, isMiniaturized: Bool) {
+        guard let window = state.trackedWindow?.element else {
             return
         }
         
-        if windowState.isPanelOpenedAndNotMinimized {
-            panelOpened(windowState: windowState, window: window, windowPid: windowPid)
-        } else if !windowState.isPanelOpened {
-            panelClosed(windowState: windowState, window: window, windowPid: windowPid)
-        } else {
-            panelMinimized(windowState: windowState, window: window, windowPid: windowPid)
-        }
-    }
-    
-    private func panelOpened(windowState: ActiveWindowState, window: AXUIElement, windowPid: pid_t) {
-        print("TetherAppsManager panelOpened \(CFHash(window))")
-        hideTetherWindow()
-        
-        if targetInitialFrames[window] == nil, let position = window.position(), let size = window.size() {
-            targetInitialFrames[window] = CGRect(x: position.x,
-                                                    y: position.y,
-                                                    width: size.width,
-                                                    height: size.height)
-        }
-        
-        repositionWindow(window: window, state: windowState.state)
-        // TODO: KNA - Tethered
-        //OnitPanelManager.shared.updateLevelState(elementIdentifier: AXUIElementIdentifier(window: window, pid: windowPid))
-    }
-    
-    private func panelClosed(windowState: ActiveWindowState, window: AXUIElement, windowPid: pid_t) {
-        print("TetherAppsManager panelClosed \(CFHash(window))")
-        if let initialFrame = targetInitialFrames[window] {
-            if let panel = windowState.state.panel, let position = window.position(), let size = window.size() {
-                let fromActive = NSRect(origin: position, size: size)
-                let toPanelX = initialFrame.minX + initialFrame.maxX - (panel.frame.width / 2)
-                let fromPanel = panel.frame
-                let toPanel = NSRect(origin: NSPoint(x: toPanelX, y: panel.frame.minY), size: panel.frame.size)
-                
-                self.animateExit(windowState: windowState, activeWindow: window, fromActive: fromActive, toActive: initialFrame,
-                                 panel: panel, fromPanel: fromPanel, toPanel: toPanel)
-            }
-        } else {
-            showTetherWindow(windowState: windowState, activeWindow: window)
-            //windowState.state.panel?.hide()
-        }
-    }
-    
-    private func panelMinimized(windowState: ActiveWindowState, window: AXUIElement, windowPid: pid_t) {
-        if let initialFrame = targetInitialFrames[window] {
-            if let position = window.position(), let size = window.size() {
-                let fromActive = NSRect(origin: position, size: size)
-                
-                self.animateExit(windowState: nil, activeWindow: window, fromActive: fromActive, toActive: initialFrame)
-            } else {
-                _ = window.setFrame(initialFrame)
-            }
+        if isOpened && !isMiniaturized {
+            // Panel opened
+            saveInitialFrameIfNeeded(for: window)
+            hideTetherWindow()
+
+            state.repositionPanel()
             
-            targetInitialFrames.removeValue(forKey: window)
+            if let trackedWindow = state.trackedWindow {
+                updateLevelState(trackedWindow: trackedWindow)
+            }
+        } else if !isOpened {
+            // Panel closed
+            showTetherWindow(state: state, activeWindow: window)
+        } else {
+            // Panel minified
+            showTetherWindow(state: state, activeWindow: window)
         }
-        
-        showTetherWindow(windowState: windowState, activeWindow: window)
     }
     
-    private func repositionWindow(window: AXUIElement, state: OnitPanelState) {
-        guard let panel = state.panel,
-              let position = window.position(),
-              let size = window.size() else {
-            return
-        }
-        //print("repositionWindow position:\(position), size:\(size)")
-        
-        // Special case for Finder (desktop)
-        if isFinderShowingDesktopOnly(activeWindow: window) {
-            if let mouseScreen = NSRect(origin: NSEvent.mouseLocation, size: NSSize(width: 1, height: 1)).findScreen() {
-                let screenFrame = mouseScreen.frame
-                let onitWidth = minOnitWidth
-                let onitHeight = screenFrame.height - ContentView.bottomPadding
-                let onitY = screenFrame.maxY - onitHeight
-                let onitX = screenFrame.maxX - onitWidth
-                
-                panel.setFrame(NSRect(
-                    x: onitX,
-                    y: onitY,
-                    width: onitWidth,
-                    height: onitHeight
-                ), display: true, animate: true)
-            }
-            return
-        }
-        
-        guard let screen = NSRect(origin: position, size: size).findScreen() else { return }
-        
-        let screenFrame = screen.frame
-        let onitWidth = minOnitWidth
-        let onitHeight = min(size.height, screenFrame.height - ContentView.bottomPadding)
-        let onitY = screenFrame.maxY - (position.y + onitHeight)
-        
-        let spaceOnRight = screenFrame.maxX - (position.x + size.width)
-        let hasEnoughSpace = spaceOnRight >= onitWidth + spaceBetweenWindows
-        
-        if hasEnoughSpace {
-            let toPanel = NSRect(
-                x: position.x + size.width + spaceBetweenWindows,
-                y: onitY,
-                width: onitWidth,
-                height: onitHeight
-            )
-            
-            animateEnter(activeWindow: window,
-                         fromActive: nil,
-                         toActive: nil,
-                         panel: panel,
-                         fromPanel: toPanel,
-                         toPanel: toPanel
-            )
-        } else {
-            let maxActiveAppWidth = screenFrame.width - onitWidth - spaceBetweenWindows
-            let activeAppWidth = min(size.width, maxActiveAppWidth)
-            
-            let activeWindowSourceRect = CGRect(
+    private func saveInitialFrameIfNeeded(for window: AXUIElement) {
+        if targetInitialFrames[window] == nil, 
+           let position = window.position(), 
+           let size = window.size() {
+            targetInitialFrames[window] = CGRect(
                 x: position.x,
                 y: position.y,
                 width: size.width,
                 height: size.height
             )
-            let activeWindowTargetRect = CGRect(
-                x: position.x,
-                y: position.y,
-                width: activeAppWidth,
-                height: size.height
-            )
-            let panelSourceRect: CGRect = panel.frame
-            let panelTargetRect = NSRect(
-                x: position.x + activeAppWidth + spaceBetweenWindows,
-                y: onitY,
-                width: onitWidth,
-                height: onitHeight
-            )
-
-            animateEnter(
-                activeWindow: window,
-                fromActive: activeWindowSourceRect,
-                toActive: activeWindowTargetRect,
-                panel: panel,
-                fromPanel: panelSourceRect,
-                toPanel: panelTargetRect
-            )
         }
     }
 
-    func showTetherWindow(windowState: ActiveWindowState, activeWindow: AXUIElement?) {
+    // MARK: - Tether window management
+    
+    func showTetherWindow(state: OnitPanelState, activeWindow: AXUIElement?) {
         let tetherView = ExternalTetheredButton(
             onDrag: { [weak self] translation in
                 self?.tetheredWindowMoved(y: translation)
             }
-        ).environment(\.windowState, windowState.state)
+        ).environment(\.windowState, state)
         
         let buttonView = NSHostingView(rootView: tetherView)
         tetherWindow.contentView = buttonView
@@ -441,5 +306,81 @@ class TetherAppsManager: ObservableObject {
         }
         
         return activeWindow.getWindows().first?.role() == "AXScrollArea"
+    }
+    
+    func updateLevelState(trackedWindow: TrackedWindow?) {
+        if let trackedWindow = trackedWindow {
+            for (key, value) in states {
+                if key == trackedWindow {
+                    value.panel?.level = .floating
+                } else if value.panel?.level == .floating {
+                    value.panel?.level = .normal
+                    value.panel?.orderBack(nil)
+                }
+            }
+        }
+    }
+    
+    private func setAppAsRegular(_ value: Bool) {
+        closeAllPanels()
+        
+        if value {
+            state.launchPanel()
+        } else {
+            state = defaultState
+            state.launchPanel()
+        }
+    }
+    
+    private func closeAllPanels() {
+        defaultState.closePanel()
+        
+        for (_, state) in states {
+            state.closePanel()
+        }
+    }
+}
+
+// MARK: - AccessibilityNotificationsDelegate
+
+extension TetherAppsManager: AccessibilityNotificationsDelegate {
+    
+    func accessibilityManager(_ manager: AccessibilityNotificationsManager, didActivateWindow window: TrackedWindow) {
+        let panelState: OnitPanelState
+        
+        if let (key, activeState) = states.first(where: { (key: TrackedWindow, value: OnitPanelState) in
+            key == window
+        }) {
+            panelState = activeState
+        } else {
+            panelState = OnitPanelState(trackedWindow: window)
+            
+            states[window] = panelState
+        }
+        
+        panelState.addDelegate(self)
+        state = panelState
+        handlePanelStateChange(state: panelState, isOpened: panelState.isOpened, isMiniaturized: panelState.isMiniaturized)
+    }
+    
+    func accessibilityManager(_ manager: AccessibilityNotificationsManager, didDestroyWindow window: TrackedWindow) {
+        if let (key, state) = states.first(where: { (key: TrackedWindow, value: OnitPanelState) in
+            key == window
+        }) {
+            state.closePanel()
+            state.removeDelegate(self)
+            states.removeValue(forKey: window)
+        }
+        
+        hideTetherWindow()
+    }
+}
+
+// MARK: - OnitPanelStateDelegate
+
+extension TetherAppsManager: OnitPanelStateDelegate {
+    
+    func panelStateDidChange(state: OnitPanelState, isOpened: Bool, isMiniaturized: Bool) {
+        handlePanelStateChange(state: state, isOpened: isOpened, isMiniaturized: isMiniaturized)
     }
 }

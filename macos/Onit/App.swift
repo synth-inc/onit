@@ -38,7 +38,7 @@ struct App: SwiftUI.App {
         // clearTokens()
         
         if !isRegularApp {
-            OnitPanelManager.shared.state.launchPanel()
+            TetherAppsManager.shared.state.launchPanel()
         }
     }
 
@@ -60,12 +60,10 @@ struct App: SwiftUI.App {
                     switch newValue {
                     case .granted:
                         AccessibilityNotificationsManager.shared.start(pid: frontmostApplicationOnLaunch?.processIdentifier)
-                        OnitPanelManager.shared.startObserving()
                         TetherAppsManager.shared.startObserving()
                         TapListener.shared.start()
                     case .denied:
                         AccessibilityNotificationsManager.shared.stop()
-                        OnitPanelManager.shared.stopObserving()
                         TetherAppsManager.shared.stopObserving()
                         TapListener.shared.stop()
                     default:

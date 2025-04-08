@@ -16,7 +16,7 @@ struct MenuOpenOnitButton: View {
 
     var body: some View {
         MenuBarRow {
-            OnitPanelManager.shared.state.launchPanel()
+            TetherAppsManager.shared.state.launchPanel()
         } leading: {
             HStack(spacing: 4) {
                 Image(.smirk)

@@ -19,10 +19,11 @@ class AccessibilityNotificationsManager: ObservableObject {
 
     let windowsManager = AccessibilityWindowsManager()
     
+    private var delegates = NSHashTable<AnyObject>.weakObjects()
+    
     // MARK: - ScreenResult
 
     @Published private(set) var screenResult: ScreenResult = .init()
-    @Published private(set) var destroyedTrackedWindow: TrackedWindow?
 
     struct ScreenResult {
         struct UserInteractions {
@@ -63,7 +64,25 @@ class AccessibilityNotificationsManager: ObservableObject {
 
     // MARK: - Initializers
 
-    private init() {}
+    private init() {
+        windowsManager.delegate = self
+    }
+    
+    // MARK: - Delegates
+    
+    func addDelegate(_ delegate: AccessibilityNotificationsDelegate) {
+        delegates.add(delegate)
+    }
+    
+    func removeDelegate(_ delegate: AccessibilityNotificationsDelegate) {
+        delegates.remove(delegate)
+    }
+    
+    private func notifyDelegates(_ notification: (AccessibilityNotificationsDelegate) -> Void) {
+        for case let delegate as AccessibilityNotificationsDelegate in delegates.allObjects {
+            notification(delegate)
+        }
+    }
 
     // MARK: - Functions
 
@@ -284,14 +303,13 @@ class AccessibilityNotificationsManager: ObservableObject {
     
     func handleDetroyedElement(for element: AXUIElement) {
         handleExternalElement(element) { [weak self] elementPid in
+            guard let self = self else { return }
             
-            if let foundWindows = self?.windowsManager.trackedWindows(for: element) {
-                for foundWindow in foundWindows {
-                    if foundWindow.element.role() == nil {
-                        self?.windowsManager.remove(foundWindow)
-                        
-                        self?.destroyedTrackedWindow = foundWindow
-                    }
+            let foundWindows = self.windowsManager.trackedWindows(for: element)
+            
+            for foundWindow in foundWindows {
+                if foundWindow.element.role() == nil {
+                    self.windowsManager.remove(foundWindow)
                 }
             }
         }
@@ -449,7 +467,7 @@ class AccessibilityNotificationsManager: ObservableObject {
         else {
 
             selectedSource = nil
-            OnitPanelManager.shared.state.pendingInput = nil
+            TetherAppsManager.shared.state.pendingInput = nil
             HighlightHintWindowController.shared.hide()
 
             return
@@ -461,7 +479,7 @@ class AccessibilityNotificationsManager: ObservableObject {
         let bound = selectedElement.selectedTextBound()
         HighlightHintWindowController.shared.show(bound)
 
-        OnitPanelManager.shared.state.pendingInput = Input(selectedText: selectedText, application: currentSource ?? "")
+        TetherAppsManager.shared.state.pendingInput = Input(selectedText: selectedText, application: currentSource ?? "")
     }
 
     private func extractSelectedText(from element: AXUIElement) -> String? {
@@ -557,3 +575,16 @@ class AccessibilityNotificationsManager: ObservableObject {
     }
 }
 
+extension AccessibilityNotificationsManager: AccessibilityWindowsManagerDelegate {
+    func windowsManager(_ manager: AccessibilityWindowsManager, didActivateWindow window: TrackedWindow) {
+        notifyDelegates { delegate in
+            delegate.accessibilityManager(self, didActivateWindow: window)
+        }
+    }
+    
+    func windowsManager(_ manager: AccessibilityWindowsManager, didDestroyWindow window: TrackedWindow) {
+        notifyDelegates { delegate in
+            delegate.accessibilityManager(self, didDestroyWindow: window)
+        }
+    }
+}
