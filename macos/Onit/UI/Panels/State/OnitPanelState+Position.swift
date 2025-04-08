@@ -119,8 +119,7 @@ extension OnitPanelState {
         }
         
         if let panel = self.panel {
-            let screenFrame = panel.screen?.frame ?? NSScreen.screens.first?.frame ?? .zero
-            let toPanelX = screenFrame.minX + screenFrame.maxX - (panel.frame.width / 2)
+            let toPanelX = panel.frame.minX + (panel.frame.width / 2)
             let toPanel = NSRect(origin: NSPoint(x: toPanelX, y: panel.frame.minY), size: panel.frame.size)
             
             animateExit(
