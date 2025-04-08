@@ -182,21 +182,7 @@ class TetherAppsManager: ObservableObject {
         tetherWindow.contentView = buttonView
         lastYComputed = nil
         
-        if isFinderShowingDesktopOnly(activeWindow: activeWindow) {
-            if let mouseScreen = NSRect(origin: NSEvent.mouseLocation, size: NSSize(width: 1, height: 1)).findScreen() {
-                let screenFrame = mouseScreen.frame
-                
-                let frame = NSRect(
-                    x: screenFrame.maxX - ExternalTetheredButton.containerWidth,
-                    y: screenFrame.maxY - ExternalTetheredButton.containerHeight,
-                    width: ExternalTetheredButton.containerWidth,
-                    height: ExternalTetheredButton.containerHeight
-                )
-                tetherWindow.setFrame(frame, display: true)
-            }
-        } else {
-            updateTetherWindowPosition(for: activeWindow)
-        }
+        updateTetherWindowPosition(for: activeWindow, lastYComputed: lastYComputed)
         
         tetherWindow.orderFront(nil)
     }
@@ -210,26 +196,32 @@ class TetherAppsManager: ObservableObject {
         lastYComputed = nil
     }
     
-    func updateTetherWindowPosition(for window: AXUIElement?) {
+    func updateTetherWindowPosition(for window: AXUIElement?, lastYComputed: CGFloat? = nil) {
         guard let activeWindow = window,
+              var windowFrame = activeWindow.frame(),
               let size = activeWindow.size(),
               let position = activeWindow.position() else {
             return
         }
+        var positionX = position.x + size.width - ExternalTetheredButton.containerWidth
         
-        if lastYComputed == nil {
-            lastYComputed = getCenterPositionY(for:activeWindow) ?? 0 // Will this ever fail?
-        } else {
-            lastYComputed = computeTetheredWindowY(activeWindow: activeWindow, offset: nil)
+        if Self.isFinderShowingDesktopOnly(activeWindow: activeWindow) {
+            if let mouseScreen = NSRect(origin: NSEvent.mouseLocation, size: NSSize(width: 1, height: 1)).findScreen() {
+                let screenFrame = mouseScreen.visibleFrame
+                
+                windowFrame = screenFrame
+                positionX = screenFrame.maxX - ExternalTetheredButton.containerWidth
+            }
         }
-        guard let lastYComputed = lastYComputed else { return }
+        
+        let lastYComputed = lastYComputed ?? getCenterPositionY(for: windowFrame) ?? 0
         
         if let screenFrame = NSRect(origin: position, size: size).findScreen()?.frame {
             state.tetheredButtonYPosition = screenFrame.height - position.y - (ExternalTetheredButton.height * 1.5) - lastYComputed
         }
         
         let frame = NSRect(
-            x: position.x + size.width - ExternalTetheredButton.containerWidth,
+            x: positionX,
             y: lastYComputed,
             width: ExternalTetheredButton.containerWidth,
             height: ExternalTetheredButton.containerHeight
@@ -243,15 +235,21 @@ class TetherAppsManager: ObservableObject {
             return
         }
         
-        self.lastYComputed = computeTetheredWindowY(activeWindow: trackedWindow.element, offset: y)
-        self.updateTetherWindowPosition(for: trackedWindow.element)
+        guard var windowFrame = trackedWindow.element.frame() else { return }
+        
+        if Self.isFinderShowingDesktopOnly(activeWindow: trackedWindow.element) {
+            windowFrame = windowFrame.findScreen()?.visibleFrame ?? windowFrame
+        }
+        
+        lastYComputed = computeTetheredWindowY(windowFrame: windowFrame, offset: y)
+        updateTetherWindowPosition(for: trackedWindow.element, lastYComputed: lastYComputed)
     }
     
-    private func computeTetheredWindowY(activeWindow: AXUIElement, offset: CGFloat?) -> CGFloat? {
-        guard let maxY = getMaxY(for: activeWindow),
-              var minY = getMinY(for: activeWindow) else { return nil }
+    private func computeTetheredWindowY(windowFrame: NSRect, offset: CGFloat?) -> CGFloat? {
+        guard let maxY = getMaxY(for: windowFrame),
+              var minY = getMinY(for: windowFrame) else { return nil }
         
-        var lastYComputed = self.lastYComputed ?? (getCenterPositionY(for: activeWindow) ?? 0)
+        var lastYComputed = self.lastYComputed ?? (getCenterPositionY(for: windowFrame) ?? 0)
         
         if minY < ContentView.bottomPadding {
             minY = ContentView.bottomPadding
@@ -274,29 +272,26 @@ class TetherAppsManager: ObservableObject {
         return finalOffset
     }
     
-    private func getMaxY(for activeWindow: AXUIElement) -> CGFloat? {
-        guard let distanceFromBottom = calculateWindowDistanceFromBottom(for: activeWindow),
-              let windowFrame = activeWindow.frame() else {
+    private func getMaxY(for windowFrame: NSRect) -> CGFloat? {
+        guard let distanceFromBottom = calculateWindowDistanceFromBottom(for: windowFrame) else {
             return nil
         }
         return distanceFromBottom + windowFrame.height - ExternalTetheredButton.containerHeight
     }
 
-    private func getMinY(for activeWindow: AXUIElement) -> CGFloat? {
-        return calculateWindowDistanceFromBottom(for: activeWindow) ?? nil
+    private func getMinY(for windowFrame: NSRect) -> CGFloat? {
+        return calculateWindowDistanceFromBottom(for: windowFrame) ?? nil
     }
 
-    private func getCenterPositionY(for activeWindow: AXUIElement) -> CGFloat? {
-        guard let distanceFromBottom = calculateWindowDistanceFromBottom(for: activeWindow),
-              let windowFrame = activeWindow.frame() else {
+    private func getCenterPositionY(for windowFrame: NSRect) -> CGFloat? {
+        guard let distanceFromBottom = calculateWindowDistanceFromBottom(for: windowFrame) else {
             return nil
         }
         return distanceFromBottom + (windowFrame.height / 2.0) - (ExternalTetheredButton.containerHeight / 2.0)
     }
     
-    private func calculateWindowDistanceFromBottom(for activeWindow: AXUIElement) -> CGFloat? {
-        guard let windowFrame = activeWindow.frame(),
-              let activeScreen = windowFrame.findScreen() else { return nil }
+    private func calculateWindowDistanceFromBottom(for windowFrame: NSRect) -> CGFloat? {
+        guard let activeScreen = windowFrame.findScreen() else { return nil }
         
         // Find the primary screen (the one with origin at 0,0)
         let screens = NSScreen.screens
@@ -319,9 +314,8 @@ class TetherAppsManager: ObservableObject {
         let windowDistanceFromTop = windowFrame.minY - fullTop
         return activeScreenVisibileFrame.minY + (activeScreenVisibileFrame.height - windowFrame.height) - windowDistanceFromTop
     }
-
     
-    private func isFinderShowingDesktopOnly(activeWindow: AXUIElement?) -> Bool {
+    static func isFinderShowingDesktopOnly(activeWindow: AXUIElement?) -> Bool {
         let runningApps = NSWorkspace.shared.runningApplications
         
         guard let finderAppPid = runningApps.first(where: { $0.bundleIdentifier == "com.apple.finder" })?.processIdentifier,
