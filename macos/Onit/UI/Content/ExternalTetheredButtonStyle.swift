@@ -50,9 +50,13 @@ struct ExternalTetheredButtonStyle: ButtonStyle {
                     clickBackground(configuration.isPressed)
                 }
                 .background {
-                    RoundedLeftCorners(radius: ExternalTetheredButton.width / 2)
-                        .fill(.black)
+                    RoundedLeftCorners(radius: ExternalTetheredButton.width * 0.66)
+                        .fill(hovering ? .gray800 : .black)
                         .padding([.leading, .top, .bottom], containsInput ? ExternalTetheredButton.borderWidth : 0)
+                }
+                .overlay {
+                    RoundedLeftCorners(radius: (ExternalTetheredButton.width + 2) * 0.66)
+                        .stroke(Color.gray500, lineWidth: 1)
                 }
         }
         .onHover { hovering in

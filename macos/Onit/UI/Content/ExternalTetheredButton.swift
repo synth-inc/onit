@@ -17,8 +17,8 @@ struct ExternalTetheredButton: View {
     @ObservedObject private var accessibilityPermissionManager = AccessibilityPermissionManager.shared
     @ObservedObject private var featureFlagsManager = FeatureFlagManager.shared
     
-    static let width: CGFloat = 16
-    static let height: CGFloat = 42
+    static let width: CGFloat = 19
+    static let height: CGFloat = 53
     static let containerWidth: CGFloat = width * 2
     static let containerHeight: CGFloat = height * 2
     static let borderWidth: CGFloat = 1.5
@@ -70,11 +70,11 @@ struct ExternalTetheredButton: View {
             
             HStack {
                 Button(action: tetherAction) {
-                    Image(.smallChevRight)
+                    Image(.dots)
                         .renderingMode(.template)
                         .foregroundColor(.white)
                         .rotationEffect(.degrees(180))
-                        .frame(width: Self.width, height: Self.height, alignment: .leading)
+                        .frame(width: Self.width, height: Self.height, alignment: .center)
                         .overlay(
                             Group {
                                 if !isAccessibilityFlagsEnabled || !isAccessibilityAuthorized {
