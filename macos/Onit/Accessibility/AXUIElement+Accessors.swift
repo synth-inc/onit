@@ -36,24 +36,22 @@ extension AXUIElement {
     
     func findWindow() -> AXUIElement? {
         var currentElement = self
-
-        while true {
-            var roleValue: CFTypeRef?
-            if AXUIElementCopyAttributeValue(currentElement, kAXRoleAttribute as CFString, &roleValue) != .success {
-                break
+        
+        if let role = role() {
+            if role == kAXApplicationRole {
+                return children()?.first
+            } else if role == kAXWindowRole {
+                return currentElement
             }
-
-            if let role = roleValue as? String, role == kAXWindowRole as String {
+        }
+        
+        while true {
+            if let role = currentElement.role(), role == kAXWindowRole as String {
                 return currentElement
             }
 
-            var parent: CFTypeRef?
-            if AXUIElementCopyAttributeValue(currentElement, kAXParentAttribute as CFString, &parent) != .success {
-                break
-            }
-
-            if let parentElement = parent {
-                currentElement = parentElement as! AXUIElement
+            if let parentElement = currentElement.parent() {
+                currentElement = parentElement
             } else {
                 break
             }
