@@ -54,7 +54,7 @@ class AccessibilityNotificationsManager: ObservableObject {
     private var timedOutPIDs: Set<pid_t> = []  // Track PIDs that have timed out
 
     #if DEBUG
-    private let ignoredAppNames = ["Xcode"]
+    private let ignoredAppNames : [String] = ["Xcode"]
     #else
     private let ignoredAppNames = []
     #endif
@@ -126,7 +126,7 @@ class AccessibilityNotificationsManager: ObservableObject {
             print("Not setting up observer for our own process or ignored app: \(pid.getAppName() ?? "Unknown")")
             return
         }
-
+        
         print("Start accessibility observers for PID: \(pid)")
         var observer: AXObserver?
 
@@ -267,7 +267,6 @@ class AccessibilityNotificationsManager: ObservableObject {
     func handleFocusChange(for element: AXUIElement) {
         handleExternalElement(element) { [weak self] elementPid in
             print("Focus change from pid: \(elementPid)")
-
             self?.handleWindowBounds(for: element)
             self?.parseAccessibility(for: elementPid)
         }
@@ -310,23 +309,87 @@ class AccessibilityNotificationsManager: ObservableObject {
         handleExternalElement(element) { [weak self] elementPid in
             // We need to make sure we're in the root element first.
             let rootAXElement = elementPid.getAXUIElement()
-            var focusedWindow: CFTypeRef?
-            if AXUIElementCopyAttributeValue(rootAXElement, kAXFocusedWindowAttribute as CFString, &focusedWindow) == .success {
-                let window = focusedWindow as! AXUIElement
-                if let title = window.title() {
-                    print("FOCUSED WINDOW: \(title)")
-                }
-                self?.activeWindowElement = window
-            } else {
-                print("Failed to get Focused Window attribute, falling back to other options.")
-            }
-
-            if let window = rootAXElement.getWindows().first {
-                self?.activeWindowElement = window
-            }
+            self?.setActiveWindowElement(from: rootAXElement)
         }
     }
     
+    private func setActiveWindowElement(from rootAXElement: AXUIElement) {
+        let windows = rootAXElement.getWindowsByRole()        
+        if let focusedWindow = rootAXElement.focusedWindow(), let focusedWindowFrame = focusedWindow.frame() {
+            var lookForBetterWindow = false
+
+            // This doesn't work - it's an optional field and not implemented by most apps.
+            // if let isMain = focusedWindow.isMain() {
+            //     if !isMain {
+            //         print("lookForBetterWindow: Focused window is not the main window.")
+            //         lookForBetterWindow = true
+            //     }
+            // }
+
+            // This works okay, but isn't consistent enough on large monitors.
+            // if let screen = focusedWindowFrame.findScreen() {
+            //     let screenWidth = screen.frame.width
+            //     let screenHeight = screen.frame.height
+            //     if focusedWindowFrame.width < screenWidth / 5 || focusedWindowFrame.height < screenHeight / 5 {
+            //         print("lookForBetterWindow: Focused window is small relative to the screen size.")
+            //         lookForBetterWindow = true
+            //     }
+            // }
+
+            // This works well.
+            if focusedWindow.closeButton() == nil || focusedWindow.minimizeButton() == nil || focusedWindow.zoomButton() == nil {
+                lookForBetterWindow = true
+            }
+            
+            // This doesn't work - it's an optional field and implementedly randomly in some apps and not in others.
+            // if let isModal = focusedWindow.isModal() {
+            //     if isModal {
+            //         print("lookForBetterWindow: Focused window is a modal.")
+            //         lookForBetterWindow = true
+            //     }
+            // }
+
+            if lookForBetterWindow {
+                var mainWindows: [AXUIElement] = []
+                var containingWindows: [AXUIElement] = []
+                
+                for window in windows {
+                    if window.closeButton() != nil && window.minimizeButton() != nil && window.zoomButton() != nil {
+                        mainWindows.append(window)
+                        if let windowFrame = window.frame() {
+                            if !windowFrame.equalTo(focusedWindowFrame) && windowFrame.contains(focusedWindowFrame) {
+                                containingWindows.append(window)
+                            }
+                        }
+                    }
+                }
+
+                if mainWindows.count > 1 {
+                    if containingWindows.count > 1 {
+                        // TODO, implement a queue to select the most recently active.
+                        self.activeWindowElement = containingWindows.first
+                        return
+                    } else if containingWindows.count == 1 {
+                        self.activeWindowElement = containingWindows.first
+                        return
+                    } else {
+                        // Don't select any if none contain the current window.
+                        return
+                    }
+                } else if mainWindows.count == 1 {
+                    self.activeWindowElement = mainWindows.first
+                    return
+                } else {
+                    // Don't select a window if none are have the close/minimize/zoom buttons
+                    return
+                }
+            } else {
+                self.activeWindowElement = focusedWindow
+                return
+            }
+        }
+    }
+
     // MARK: Parsing
 
     private func parseAccessibility(for pid: pid_t) {
@@ -502,7 +565,7 @@ class AccessibilityNotificationsManager: ObservableObject {
         guard AXUIElementGetPid(element, &elementPid) == .success, elementPid != getpid() else {
             return
         }
-
+        
         callback(elementPid)
     }
 
