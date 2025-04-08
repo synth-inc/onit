@@ -205,6 +205,10 @@ class TetherAppsManager: ObservableObject {
         }
         guard let lastYComputed = lastYComputed else { return }
         
+        if let screenFrame = NSRect(origin: position, size: size).findScreen()?.frame {
+            state.tetheredButtonYPosition = screenFrame.height - position.y - (ExternalTetheredButton.height * 1.5) - lastYComputed
+        }
+        
         let frame = NSRect(
             x: position.x + size.width - ExternalTetheredButton.containerWidth,
             y: lastYComputed,
@@ -225,11 +229,14 @@ class TetherAppsManager: ObservableObject {
     }
     
     private func computeTetheredWindowY(activeWindow: AXUIElement, offset: CGFloat?) -> CGFloat? {
-        guard let windowFrame = activeWindow.frame(),
-              let maxY = getMaxY(for: activeWindow),
-              let minY = getMinY(for: activeWindow) else { return nil }
+        guard let maxY = getMaxY(for: activeWindow),
+              var minY = getMinY(for: activeWindow) else { return nil }
         
         var lastYComputed = self.lastYComputed ?? (getCenterPositionY(for: activeWindow) ?? 0)
+        
+        if minY < ContentView.bottomPadding {
+            minY = ContentView.bottomPadding
+        }
         
         if let offset = offset {
             lastYComputed -= offset
@@ -247,7 +254,7 @@ class TetherAppsManager: ObservableObject {
         
         return finalOffset
     }
-      
+    
     private func getMaxY(for activeWindow: AXUIElement) -> CGFloat? {
         guard let distanceFromBottom = calculateWindowDistanceFromBottom(for: activeWindow),
               let windowFrame = activeWindow.frame() else {
@@ -348,7 +355,7 @@ extension TetherAppsManager: AccessibilityNotificationsDelegate {
     func accessibilityManager(_ manager: AccessibilityNotificationsManager, didActivateWindow window: TrackedWindow) {
         let panelState: OnitPanelState
         
-        if let (key, activeState) = states.first(where: { (key: TrackedWindow, value: OnitPanelState) in
+        if let (_, activeState) = states.first(where: { (key: TrackedWindow, value: OnitPanelState) in
             key == window
         }) {
             panelState = activeState
@@ -364,7 +371,7 @@ extension TetherAppsManager: AccessibilityNotificationsDelegate {
     }
     
     func accessibilityManager(_ manager: AccessibilityNotificationsManager, didDestroyWindow window: TrackedWindow) {
-        if let (key, state) = states.first(where: { (key: TrackedWindow, value: OnitPanelState) in
+        if let (_, state) = states.first(where: { (key: TrackedWindow, value: OnitPanelState) in
             key == window
         }) {
             state.closePanel()

@@ -43,6 +43,8 @@ class OnitPanelState: NSObject {
         }
     }
     
+    var tetheredButtonYPosition: CGFloat?
+    
     var isOpened: Bool {
         get { return _panelOpened }
     }

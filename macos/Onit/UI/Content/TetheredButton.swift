@@ -11,6 +11,7 @@ import SwiftUI
 struct TetheredButton: View {
     @Environment(\.appState) var appState
     @Environment(\.openSettings) var openSettings
+    @Environment(\.windowState) private var state
     
     @ObservedObject private var accessibilityPermissionManager = AccessibilityPermissionManager.shared
     @ObservedObject private var featureFlagsManager = FeatureFlagManager.shared
@@ -40,9 +41,14 @@ struct TetheredButton: View {
         return "Detach from active window"
     }
     
+    private var spacerHeight: CGFloat? {
+        state.tetheredButtonYPosition ?? nil
+    }
+    
     var body: some View {
         VStack {
             Spacer()
+                .frame(height: spacerHeight)
             
             Button(action: {
                 guard isAccessibilityFlagsEnabled else {

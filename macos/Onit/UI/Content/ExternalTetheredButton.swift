@@ -149,5 +149,5 @@ struct ExternalTetheredButton: View {
 }
 
 #Preview {
-    TetheredButton()
+    ExternalTetheredButton()
 }
