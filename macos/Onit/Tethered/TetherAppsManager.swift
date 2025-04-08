@@ -5,7 +5,7 @@
 //  Created by Kévin Naudin on 12/03/2025.
 //
 
-import AppKit
+@preconcurrency import AppKit
 import Combine
 import Defaults
 import SwiftUI
@@ -34,7 +34,9 @@ class TetherAppsManager: ObservableObject {
     
     private let tetherWindow: NSWindow
     private var lastYComputed: CGFloat?
-    private var dragDebounce: AnyCancellable?
+    
+    private var showTetherDebounceTimer: Timer?
+    private let showTetherDebounceDelay: TimeInterval = 0.3
     
     // MARK: - Private initializer
     private init() {
@@ -133,10 +135,10 @@ class TetherAppsManager: ObservableObject {
             }
         } else if !isOpened {
             // Panel closed
-            showTetherWindow(state: state, activeWindow: window)
+            debouncedShowTetherWindow(state: state, activeWindow: window)
         } else {
             // Panel minified
-            showTetherWindow(state: state, activeWindow: window)
+            debouncedShowTetherWindow(state: state, activeWindow: window)
         }
     }
     
@@ -154,6 +156,20 @@ class TetherAppsManager: ObservableObject {
     }
 
     // MARK: - Tether window management
+    
+    private func debouncedShowTetherWindow(state: OnitPanelState, activeWindow: AXUIElement) {
+        hideTetherWindow()
+        let pendingTetherWindow = (state, activeWindow)
+
+        showTetherDebounceTimer?.invalidate()
+        showTetherDebounceTimer = Timer.scheduledTimer(withTimeInterval: showTetherDebounceDelay, repeats: false) { [weak self] _ in
+            guard let self = self else { return }
+            
+            DispatchQueue.main.async {
+                self.showTetherWindow(state: pendingTetherWindow.0, activeWindow: pendingTetherWindow.1)
+            }
+        }
+    }
     
     func showTetherWindow(state: OnitPanelState, activeWindow: AXUIElement?) {
         let tetherView = ExternalTetheredButton(
@@ -186,6 +202,9 @@ class TetherAppsManager: ObservableObject {
     }
     
     private func hideTetherWindow() {
+        showTetherDebounceTimer?.invalidate()
+        showTetherDebounceTimer = nil
+        
         tetherWindow.orderOut(nil)
         tetherWindow.contentView = nil
         lastYComputed = nil
