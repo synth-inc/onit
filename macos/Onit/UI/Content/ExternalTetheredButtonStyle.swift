@@ -14,10 +14,18 @@ struct ExternalTetheredButtonStyle: ButtonStyle {
     @State var gradientRotation: Double = 0
     var tooltipText: String
 
+    @Namespace private var animation
+    
     func makeBody(configuration: Configuration) -> some View {
+        
         ZStack {
             if containsInput {
                 backgroundForInput
+                    .matchedGeometryEffect(id: "background", in: animation)
+                    .transition(.asymmetric(
+                        insertion: .opacity.animation(.easeIn(duration: 0.6)),
+                        removal: .opacity.animation(.none)
+                    ))
             }
             
             configuration.label
