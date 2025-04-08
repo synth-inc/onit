@@ -7,11 +7,28 @@
 
 import SwiftUI
 
+@MainActor
+final class GradientRotationState: ObservableObject {
+    static let shared = GradientRotationState()
+    
+    private var animationStarted = false
+    @Published var rotation: Double = 0
+    
+    private init() {}
+    
+    func ensureAnimationStarted() {
+        if !animationStarted {
+            animationStarted = true
+            rotation = rotation
+        }
+    }
+}
+
 struct ExternalTetheredButtonStyle: ButtonStyle {
     @Binding var hovering: Bool
     @Binding var containsInput: Bool
 
-    @State var gradientRotation: Double = 0
+    @ObservedObject private var rotationState = GradientRotationState.shared
     var tooltipText: String
 
     @Namespace private var animation
@@ -61,7 +78,7 @@ struct ExternalTetheredButtonStyle: ButtonStyle {
                     ]), center: .center)
                 )
                 .frame(width: ExternalTetheredButton.height, height: ExternalTetheredButton.height)
-                .rotationEffect(.degrees(gradientRotation))
+                .rotationEffect(.degrees(rotationState.rotation))
         }
         .mask {
             RoundedLeftCorners(radius: ExternalTetheredButton.width / 2)
@@ -71,8 +88,10 @@ struct ExternalTetheredButtonStyle: ButtonStyle {
         .blur(radius: 2)
         .frame(width: ExternalTetheredButton.width + (ExternalTetheredButton.borderWidth * 2))
         .onAppear {
+            rotationState.ensureAnimationStarted()
+            
             withAnimation(.linear(duration: 5).repeatForever(autoreverses: false)) {
-                gradientRotation = 360
+                rotationState.rotation += 360
             }
         }
     }
