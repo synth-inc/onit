@@ -21,13 +21,13 @@ class OverlayManager {
     }
     
     /// Presents a new overlay by dismissing any existing one.
-    func showOverlay<Content: View>(model: OnitModel, content: Content) {
+    func showOverlay<Content: View>(content: Content) {
         // Dismiss the current overlay (if any)
         currentOverlay?.closeOverlay()
         currentOverlay = nil
         
         // Create and store the new overlay
-        let overlay = OverlayWindowController(model: model, content: AnyView(content), clickPosition: clickPosition)
+        let overlay = OverlayWindowController(content: AnyView(content), clickPosition: clickPosition)
         currentOverlay = overlay
         
         // Reset click position after use

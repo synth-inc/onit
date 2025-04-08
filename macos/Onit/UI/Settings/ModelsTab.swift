@@ -8,8 +8,7 @@
 import SwiftUI
 
 struct ModelsTab: View {
-    @Environment(\.model) var model
-
+    
     var body: some View {
         ScrollView {
             VStack(spacing: 25) {

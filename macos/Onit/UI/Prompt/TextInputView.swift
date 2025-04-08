@@ -12,11 +12,15 @@ import SwiftUI
 import Combine
 
 struct TextInputView: View {
-    @Environment(\.model) var model
+    @Environment(\.windowState) private var state
 
     @FocusState var focused: Bool
 
-    @Query(sort: \Chat.timestamp, order: .reverse) private var chats: [Chat]
+    @Query(sort: \Chat.timestamp, order: .reverse) private var allChats: [Chat]
+    
+    private var chats: [Chat] {
+        return allChats.filter { $0.windowPid == state.activeWindow?.pid() }
+    }
 
     @Default(.mode) var mode
     
@@ -55,7 +59,7 @@ struct TextInputView: View {
             downListener
             newListener
         }
-        .opacity(model.websiteUrlsScrapeQueue.isEmpty ? 1 : 0.5)
+        .opacity(state.websiteUrlsScrapeQueue.isEmpty ? 1 : 0.5)
         .onDisappear {
             if audioRecorder.isRecording {
                 cancelRecording()
@@ -185,8 +189,13 @@ struct TextInputView: View {
                 if !Task.isCancelled {
                     DispatchQueue.main.async {
                         removeSpacesAtCursor()
-                        let cursorPosition = model.pendingInstructionCursorPosition
-                        model.pendingInstruction.insert(contentsOf: transcription, at: model.pendingInstruction.index(model.pendingInstruction.startIndex, offsetBy: cursorPosition))
+                        
+                        let cursorPosition = state.pendingInstructionCursorPosition
+                        state.pendingInstruction.insert(
+                            contentsOf: transcription,
+                            at: state.pendingInstruction.index(state.pendingInstruction.startIndex, offsetBy: cursorPosition)
+                        )
+                        
                         audioRecorder.isTranscribing = false
                     }
                 }
@@ -205,13 +214,17 @@ struct TextInputView: View {
 
      private func addSpacesAtCursor() {
          guard !addedRecordingSpaces else { return }
-        
-         let cursorPosition = model.pendingInstructionCursorPosition
+         
+         let cursorPosition = state.pendingInstructionCursorPosition
          let spaces = String(repeating: " ", count: recordingSpacesCount)
         
-         model.pendingInstruction.insert(contentsOf: spaces, at:
-             model.pendingInstruction.index(model.pendingInstruction.startIndex,
-                                           offsetBy: cursorPosition))
+         state.pendingInstruction.insert(
+            contentsOf: spaces,
+            at: state.pendingInstruction.index(
+                state.pendingInstruction.startIndex,
+                offsetBy: cursorPosition
+            )
+         )
         
          addedRecordingSpaces = true
      }
@@ -219,25 +232,26 @@ struct TextInputView: View {
      private func removeSpacesAtCursor() {
          guard addedRecordingSpaces else { return }
         
-         let cursorPosition = model.pendingInstructionCursorPosition
+         let cursorPosition = state.pendingInstructionCursorPosition
          let startPosition = cursorPosition
          let endPosition = max(0, startPosition + recordingSpacesCount)
-         let startIndex = model.pendingInstruction.index(model.pendingInstruction.startIndex,
+         let startIndex = state.pendingInstruction.index(state.pendingInstruction.startIndex,
                                                          offsetBy: startPosition)
-         let endIndex = model.pendingInstruction.index(model.pendingInstruction.startIndex,
+         let endIndex = state.pendingInstruction.index(state.pendingInstruction.startIndex,
                                                        offsetBy: endPosition)
-
-         model.pendingInstruction.removeSubrange(startIndex..<endIndex)
+         
+         state.pendingInstruction.removeSubrange(startIndex..<endIndex)
+         
          addedRecordingSpaces = false
      }
 
     @ViewBuilder
     var textField: some View {
-        @Bindable var model = model
-
+        @Bindable var state = state
+        
         TextViewWrapper(
-            text: $model.pendingInstruction,
-            cursorPosition: $model.pendingInstructionCursorPosition,
+            text: $state.pendingInstruction,
+            cursorPosition: $state.pendingInstructionCursorPosition,
             dynamicHeight: $textHeight,
             onSubmit: sendAction,
             maxHeight: maxHeightLimit,
@@ -248,13 +262,13 @@ struct TextInputView: View {
         .focused($focused)
         .frame(height: min(textHeight, maxHeightLimit))
         .onAppear { focused = true }
-        .onChange(of: model.textFocusTrigger) { focused = true }
+        .onChange(of: state.textFocusTrigger) { focused = true }
         .appFont(.medium16)
         .foregroundStyle(.white)
     }
 
     var placeholderText: String {
-        if let currentChat = model.currentChat {
+        if let currentChat = state.currentChat {
             if !currentChat.isEmpty {
 
                 if let keyboardShortcutString = KeyboardShortcuts.getShortcut(for: .newChat)?
@@ -274,10 +288,10 @@ struct TextInputView: View {
     }
 
     func sendAction() {
-        if model.websiteUrlsScrapeQueue.isEmpty {
-            let inputText = (model.pendingInstruction ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+        if state.websiteUrlsScrapeQueue.isEmpty {
+            let inputText = state.pendingInstruction.trimmingCharacters(in: .whitespacesAndNewlines)
             guard !inputText.isEmpty else { return }   
-            model.createAndSavePrompt()
+            state.createAndSavePrompt()
         }
     }
 
@@ -287,24 +301,24 @@ struct TextInputView: View {
                 .resizable()
                 .renderingMode(.template)
                 .foregroundStyle(
-                    (model.pendingInstruction.isEmpty)
+                    state.pendingInstruction.isEmpty
                         ? Color.gray700 : (mode == .local ? .limeGreen : Color.blue400)
                 )
                 .frame(width: 22, height: 22, alignment: .center)
         }
         .buttonStyle(.plain)
-        .disabled(model.pendingInstruction.isEmpty)
+        .disabled(state.pendingInstruction.isEmpty)
         .keyboardShortcut(.return, modifiers: [])
     }
 
     var upListener: some View {
         Button {
             guard !chats.isEmpty else { return }
-
-            if model.historyIndex + 1 < chats.count {
-                model.historyIndex += 1
-                model.currentChat = chats[model.historyIndex]
-                model.currentPrompts = chats[model.historyIndex].prompts
+            
+            if state.historyIndex + 1 < chats.count {
+                state.historyIndex += 1
+                state.currentChat = chats[state.historyIndex]
+                state.currentPrompts = chats[state.historyIndex].prompts
             }
         } label: {
             EmptyView()
@@ -314,14 +328,14 @@ struct TextInputView: View {
 
     var downListener: some View {
         Button {
-            if model.historyIndex > 0 {
-                model.historyIndex -= 1
-                model.currentChat = chats[model.historyIndex]
-                model.currentPrompts = chats[model.historyIndex].prompts
-            } else if model.historyIndex == 0 {
-                model.historyIndex = -1
-                model.currentChat = nil
-                model.currentPrompts = nil
+            if state.historyIndex > 0 {
+                state.historyIndex -= 1
+                state.currentChat = chats[state.historyIndex]
+                state.currentPrompts = chats[state.historyIndex].prompts
+            } else if state.historyIndex == 0 {
+                state.historyIndex = -1
+                state.currentChat = nil
+                state.currentPrompts = nil
                 focused = true
             }
         } label: {
@@ -332,7 +346,7 @@ struct TextInputView: View {
 
     var newListener: some View {
         Button {
-            model.newChat()
+            state.newChat()
         } label: {
             EmptyView()
         }

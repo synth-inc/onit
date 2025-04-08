@@ -9,7 +9,6 @@ import Defaults
 import SwiftUI
 
 struct ModelToggle: View {
-    @Environment(\.model) var model
     @Default(.availableRemoteModels) var availableRemoteModels
     @Default(.visibleModelIds) var visibleModelIds
 

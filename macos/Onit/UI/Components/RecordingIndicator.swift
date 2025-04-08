@@ -20,7 +20,7 @@ struct RecordingIndicator: View {
                 }
             }
         }
-        .onChange(of: audioRecorder.isTranscribing) { _ in
+        .onChange(of: audioRecorder.isTranscribing) {
             // Redraw the view when isTranscribing changes
         }
     }

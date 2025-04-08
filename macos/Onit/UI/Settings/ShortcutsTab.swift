@@ -10,8 +10,6 @@ import SwiftUI
 import Defaults
 
 struct ShortcutsTab: View {
-    @Environment(\.model) var model
-
     @Default(.escapeShortcutDisabled) var escapeShortcutDisabled
 
     @ObservedObject private var featureFlagsManager = FeatureFlagManager.shared
@@ -56,14 +54,12 @@ struct ShortcutsTab: View {
                 .padding()
             }
         }
-        .onChange(of: escapeShortcutDisabled) { newValue in
+        .onChange(of: escapeShortcutDisabled) { _, newValue in
             if newValue {
                 // True is disabled. 
                 KeyboardShortcuts.disable(.escape)
             } else {
                 KeyboardShortcuts.enable(.escape)
-                
-            KeyboardShortcuts.enable(.escape)
             }
         }
         .padding()

@@ -53,8 +53,6 @@ struct ContextList: View {
 
 #if DEBUG
     #Preview {
-        ModelContainerPreview {
-            ContextList(contextList: [])
-        }
+        ContextList(contextList: [])
     }
 #endif

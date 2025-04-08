@@ -38,8 +38,6 @@ class AccessibilityNotificationsManager: ObservableObject {
 
     // MARK: - Properties
 
-    private var model: OnitModel?
-
     private var currentSource: String?
 
     private var observers: [pid_t: AXObserver] = [:]
@@ -55,15 +53,17 @@ class AccessibilityNotificationsManager: ObservableObject {
 
     private var timedOutPIDs: Set<pid_t> = []  // Track PIDs that have timed out
 
+    #if DEBUG
+    private let ignoredAppNames : [String] = ["Xcode"]
+    #else
+    private let ignoredAppNames = []
+    #endif
+
     // MARK: - Initializers
 
     private init() {}
 
     // MARK: - Functions
-
-    func setModel(_ model: OnitModel) {
-        self.model = model
-    }
 
     // MARK: Start / Stop
 
@@ -120,12 +120,13 @@ class AccessibilityNotificationsManager: ObservableObject {
             }
             return
         }
-        // Skip if the PID is our own process
-        if pid == getpid() {
-            print("Not setting up observer for our own process.")
+        
+        // Skip if the PID is our own process or an ignored app
+        if pid == getpid() || ignoredAppNames.contains(pid.getAppName() ?? "") {
+            print("Not setting up observer for our own process or ignored app: \(pid.getAppName() ?? "Unknown")")
             return
         }
-
+        
         print("Start accessibility observers for PID: \(pid)")
         var observer: AXObserver?
 
@@ -192,9 +193,12 @@ class AccessibilityNotificationsManager: ObservableObject {
                 // TODO: KNA - Investigate on this
                 // Skip if the activated app is our own app
                 // There's an edge case where the panel somehow has a different processId.
+                // I'm also added ignore logic for Xcode because it makes it hard to debug if the process changes everytime a breakpoint is hit. 
                 let appName = Bundle.main.object(forInfoDictionaryKey: "CFBundleName") as? String
-                if app.processIdentifier == getpid() || app.localizedName == appName {
-                    print("Ignoring activation of our own app.")
+                if app.processIdentifier == getpid() || 
+                   app.localizedName == appName || 
+                   ignoredAppNames.contains(app.localizedName ?? "") {
+                    print("Ignoring activation of our own app or ignored app: \(app.localizedName ?? "Unknown")")
                     return
                 }
 
@@ -227,8 +231,8 @@ class AccessibilityNotificationsManager: ObservableObject {
         print("\nApplication activated: \(appName ?? "Unknown") \(processID)")
 
         currentSource = appName
-        processSelectedText(selectedText, for: selectedElement)
         handleWindowBounds(for: processID.getAXUIElement())
+        processSelectedText(selectedText, for: selectedElement)
         parseAccessibility(for: processID)
     }
 
@@ -263,9 +267,8 @@ class AccessibilityNotificationsManager: ObservableObject {
     func handleFocusChange(for element: AXUIElement) {
         handleExternalElement(element) { [weak self] elementPid in
             print("Focus change from pid: \(elementPid)")
-
-            self?.parseAccessibility(for: elementPid)
             self?.handleWindowBounds(for: element)
+            self?.parseAccessibility(for: elementPid)
         }
     }
 
@@ -304,8 +307,88 @@ class AccessibilityNotificationsManager: ObservableObject {
     
     private func handleWindowBounds(for element: AXUIElement) {
         handleExternalElement(element) { [weak self] elementPid in
-            if let window = element.findWindow() {
-                self?.activeWindowElement = window
+            // We need to make sure we're in the root element first.
+            let rootAXElement = elementPid.getAXUIElement()
+            self?.setActiveWindowElement(from: rootAXElement)
+        }
+    }
+    
+    private func setActiveWindowElement(from rootAXElement: AXUIElement) {
+        let windows = rootAXElement.getWindowsByRole()        
+        if let focusedWindow = rootAXElement.focusedWindow(), let focusedWindowFrame = focusedWindow.frame() {
+            var lookForBetterWindow = false
+
+            // This doesn't work - it's an optional field and not implemented by most apps.
+            // if let isMain = focusedWindow.isMain() {
+            //     if !isMain {
+            //         print("lookForBetterWindow: Focused window is not the main window.")
+            //         lookForBetterWindow = true
+            //     }
+            // }
+
+            // This works okay, but might create some strange behavior on large monitors.
+             if let screen = focusedWindowFrame.findScreen() {
+                 let screenWidth = screen.frame.width
+                 let screenHeight = screen.frame.height
+                 if focusedWindowFrame.width < screenWidth / 5 || focusedWindowFrame.height < screenHeight / 5 {
+                     print("lookForBetterWindow: Focused window is small relative to the screen size.")
+                     lookForBetterWindow = true
+                 }
+             }
+            
+            // This works well.
+            if focusedWindow.closeButton() == nil || focusedWindow.minimizeButton() == nil || focusedWindow.zoomButton() == nil {
+                print("lookForBetterWindow: Focused window doesn't have close/minimize/zoom.")
+                lookForBetterWindow = true
+            }
+            
+            // This doesn't work too well - it's an optional field and implementedly randomly in some apps and not in others.
+            if let isModal = focusedWindow.isModal() {
+                if isModal {
+                    print("lookForBetterWindow: Focused window is a modal.")
+                    lookForBetterWindow = true
+                }
+            }
+
+            if lookForBetterWindow {
+                var mainWindows: [AXUIElement] = []
+                var containingWindows: [AXUIElement] = []
+                
+                for window in windows {
+                    if window.closeButton() != nil && window.minimizeButton() != nil && window.zoomButton() != nil {
+                        mainWindows.append(window)
+                        if let windowFrame = window.frame() {
+                            if !windowFrame.equalTo(focusedWindowFrame) && windowFrame.contains(focusedWindowFrame) {
+                                containingWindows.append(window)
+                            }
+                        }
+                    }
+                }
+
+                print("Found \(mainWindows.count) main windows, \(containingWindows.count) windows containing the current window.")
+                
+                if mainWindows.count > 1 {
+                    if containingWindows.count > 1 {
+                        // TODO, implement a queue to select the most recently active.
+                        self.activeWindowElement = containingWindows.first
+                        return
+                    } else if containingWindows.count == 1 {
+                        self.activeWindowElement = containingWindows.first
+                        return
+                    } else {
+                        // Don't select any if none contain the current window.
+                        return
+                    }
+                } else if mainWindows.count == 1 {
+                    self.activeWindowElement = mainWindows.first
+                    return
+                } else {
+                    // Don't select a window if none are have the close/minimize/zoom buttons
+                    return
+                }
+            } else {
+                self.activeWindowElement = focusedWindow
+                return
             }
         }
     }
@@ -423,7 +506,7 @@ class AccessibilityNotificationsManager: ObservableObject {
         else {
 
             selectedSource = nil
-            model?.pendingInput = nil
+            OnitPanelManager.shared.state.pendingInput = nil
             HighlightHintWindowController.shared.hide()
 
             return
@@ -435,7 +518,7 @@ class AccessibilityNotificationsManager: ObservableObject {
         let bound = selectedElement.selectedTextBound()
         HighlightHintWindowController.shared.show(bound)
 
-        model?.pendingInput = Input(selectedText: selectedText, application: currentSource ?? "")
+        OnitPanelManager.shared.state.pendingInput = Input(selectedText: selectedText, application: currentSource ?? "")
     }
 
     private func extractSelectedText(from element: AXUIElement) -> String? {
@@ -485,7 +568,7 @@ class AccessibilityNotificationsManager: ObservableObject {
         guard AXUIElementGetPid(element, &elementPid) == .success, elementPid != getpid() else {
             return
         }
-
+        
         callback(elementPid)
     }
 
@@ -527,9 +610,7 @@ class AccessibilityNotificationsManager: ObservableObject {
             debugText += "\nNo additional data available.\n"
         }
 
-        if let model = self.model {
-            model.debugText = debugText
-        }
+        DebugManager.shared.debugText = debugText
     }
 }
 

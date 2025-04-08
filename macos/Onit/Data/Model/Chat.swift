@@ -6,11 +6,13 @@ final class Chat {
     var systemPrompt: SystemPrompt?
     var prompts: [Prompt]
     var timestamp: Date
+    var windowPid: pid_t?
 
-    init(systemPrompt: SystemPrompt, prompts: [Prompt] = [], timestamp: Date = Date()) {
+    init(systemPrompt: SystemPrompt, prompts: [Prompt] = [], timestamp: Date = Date(), windowPid: pid_t? = nil) {
         self.systemPrompt = systemPrompt
         self.prompts = prompts
         self.timestamp = timestamp
+        self.windowPid = windowPid
     }
 
     var isEmpty: Bool {

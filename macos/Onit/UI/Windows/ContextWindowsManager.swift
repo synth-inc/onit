@@ -1,25 +1,32 @@
 //
-//  Model+Context.swift
+//  ContextWindowsManager.swift
 //  Onit
 //
-//  Created by Kévin Naudin on 27/01/2025.
+//  Created by Kévin Naudin on 02/04/2025.
 //
 
-import AppKit
-import Foundation
 import SwiftUI
 
-extension OnitModel {
-
+@MainActor
+class ContextWindowsManager {
+    
+    static let shared = ContextWindowsManager()
+    
+    // MARK: - Properties
+    
+    var contextWindowControllers: [Context: ContextWindowController] = [:]
+    
+    // MARK: - Functions
+    
     /**
      * Display the AutoContext's window
      * - parameter context: `Context` with `.auto` type
      */
-    func showContextWindow(context: Context) {
+    func showContextWindow(windowState: OnitPanelState, context: Context) {
         if let controller = contextWindowControllers[context] {
             controller.bringToFront()
         } else {
-            guard let controller = ContextWindowController(model: self, context: context) else {
+            guard let controller = ContextWindowController(windowState: windowState, context: context) else {
                 /** Skip when context isn't `.auto` */
                 return
             }

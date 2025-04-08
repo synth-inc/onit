@@ -1,79 +1,25 @@
 //
-//  Model+TokenValidation.swift
+//  TokenValidationManager.swift
 //  Onit
+//
+//  Created by Kévin Naudin on 02/04/2025.
 //
 
 import Defaults
 import Foundation
 
-struct TokenValidationState {
-    private var states: [AIModel.ModelProvider: ValidationState] = [:]
-
-    enum ValidationState: Equatable {
-        case notValidated
-        case validating
-        case valid
-        case invalid(Error)
-
-        var isValidating: Bool {
-            if case .validating = self { return true }
-            return false
-        }
-
-        var isValid: Bool {
-            if case .valid = self { return true }
-            return false
-        }
-
-        var error: Error? {
-            if case .invalid(let error) = self { return error }
-            return nil
-        }
-
-        static func == (lhs: Self, rhs: Self) -> Bool {
-            switch (lhs, rhs) {
-            case (.notValidated, .notValidated): return true
-            case (.validating, .validating): return true
-            case (.valid, .valid): return true
-            case (.invalid, .invalid): return true
-            default: return false
-            }
-        }
-    }
-
-    mutating func setNotValidated(provider: AIModel.ModelProvider) {
-        states[provider] = .notValidated
-    }
-
-    mutating func setValidating(provider: AIModel.ModelProvider) {
-        states[provider] = .validating
-    }
-
-    mutating func setValid(provider: AIModel.ModelProvider) {
-        states[provider] = .valid
-    }
-
-    mutating func setInvalid(provider: AIModel.ModelProvider, error: Error) {
-        states[provider] = .invalid(error)
-    }
-
-    func state(for provider: AIModel.ModelProvider) -> ValidationState {
-        states[provider] ?? .notValidated
-    }
-}
-
-extension OnitModel {
-    var tokenValidation: TokenValidationState {
-        get {
-            access(keyPath: \.tokenValidation)
-            return _tokenValidation
-        }
-        set {
-            withMutation(keyPath: \.tokenValidation) {
-                _tokenValidation = newValue
-            }
-        }
-    }
+@MainActor
+class TokenValidationManager {
+    
+    // MARK: - Singleton
+    
+    static let shared = TokenValidationManager()
+    
+    // MARK: - Properties
+    
+    var tokenValidation = TokenValidationState()
+    
+    // MARK: - Functions
 
     @MainActor
     func validateToken(provider: AIModel.ModelProvider, token: String) async {
@@ -127,14 +73,8 @@ extension OnitModel {
                 } else {
                     throw FetchingError.invalidURL
                 }
-
-            case .perplexity:
-                let endpoint = PerplexityValidationEndpoint(apiKey: token)
-                _ = try await FetchingClient().execute(endpoint)
-                state.setValid(provider: provider)
-
             }
-            setTokenIsValid(true)
+            Self.setTokenIsValid(true)
         } catch let error as FetchingError {
             print("Error: \(error.localizedDescription)")
             state.setInvalid(provider: provider, error: error)
@@ -143,5 +83,54 @@ extension OnitModel {
         }
 
         tokenValidation = state
+    }
+    
+    static func setTokenIsValid(_ isValid: Bool) {
+        if let provider = Defaults[.remoteModel]?.provider {
+            setTokenIsValid(isValid, provider: provider)
+        }
+    }
+
+    static func setTokenIsValid(_ isValid: Bool, provider: AIModel.ModelProvider) {
+        if Defaults[.mode] == .local { return }
+        switch provider {
+        case .openAI:
+            Defaults[.isOpenAITokenValidated] = isValid
+        case .anthropic:
+            Defaults[.isAnthropicTokenValidated] = isValid
+        case .xAI:
+            Defaults[.isXAITokenValidated] = isValid
+        case .googleAI:
+            Defaults[.isGoogleAITokenValidated] = isValid
+        case .deepSeek:
+            Defaults[.isDeepSeekTokenValidated] = isValid
+        case .perplexity:
+            Defaults[.isPerplexityTokenValidated] = isValid
+        case .custom:
+            break
+        }
+    }
+
+    static func getTokenForModel(_ model: AIModel?) -> String? {
+        if let provider = model?.provider {
+            switch provider {
+            case .openAI:
+                return Defaults[.openAIToken]
+            case .anthropic:
+                return Defaults[.anthropicToken]
+            case .xAI:
+                return Defaults[.xAIToken]
+            case .googleAI:
+                return Defaults[.googleAIToken]
+            case .deepSeek:
+                return Defaults[.deepSeekToken]
+            case .perplexity:
+                return Defaults[.perplexityToken]
+            case .custom:
+                return nil
+            }
+            
+        }
+        return nil
     }
 }

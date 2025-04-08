@@ -9,7 +9,6 @@ import HighlightSwift
 import SwiftUI
 
 struct InputBody: View {
-    @Environment(\.model) var model
     @Binding var inputExpanded: Bool
     @State var text: String?
     @State var textHeight: CGFloat = 0
@@ -73,8 +72,6 @@ struct InputBody: View {
 
 #if DEBUG
     #Preview {
-        ModelContainerPreview {
-            InputBody(inputExpanded: .constant(true), input: .sample)
-        }
+        InputBody(inputExpanded: .constant(true), input: .sample)
     }
 #endif

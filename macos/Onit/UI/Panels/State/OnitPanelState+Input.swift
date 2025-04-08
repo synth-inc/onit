@@ -1,5 +1,5 @@
 //
-//  Model+Input.swift
+//  OnitPanelState+Input.swift
 //  Onit
 //
 //  Created by Benjamin Sage on 10/3/24.
@@ -7,7 +7,7 @@
 
 import AppKit
 
-extension OnitModel {
+extension OnitPanelState {
     func addAutoContext() {
         guard FeatureFlagManager.shared.accessibility,
             FeatureFlagManager.shared.accessibilityAutoContext
@@ -101,21 +101,11 @@ extension OnitModel {
             pendingInput = nil
         }
         focusText()
-        shrinkContent()
         
         SystemPromptState.shared.shouldShowSelection = false
         SystemPromptState.shared.userSelectedPrompt = false
         let suggestedPrompts = promptSuggestionService?.suggestedPrompts ?? []
         SystemPromptState.shared.shouldShowSystemPrompt = shouldSystemPrompt || !suggestedPrompts.isEmpty
-    }
-
-    func shrinkContent() {
-        contentHeight = 0
-        resizing = true
-        Task {
-            try? await Task.sleep(for: .seconds(0.01))
-            resizing = false
-        }
     }
 
     func removeContext(context: Context) {

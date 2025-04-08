@@ -34,11 +34,11 @@ extension AXUIElement {
         }
     }
 
-    func findWindow() -> AXUIElement? {
+    func getWindows() -> [AXUIElement] {
         var elementPid: pid_t = 0
 
         guard AXUIElementGetPid(self, &elementPid) == .success, elementPid != getpid() else {
-            return nil
+            return []
         }
         
         let appElement = AXUIElementCreateApplication(elementPid)
@@ -47,14 +47,35 @@ extension AXUIElement {
         let result = AXUIElementCopyAttributeValues(appElement, kAXWindowsAttribute as CFString, 0, 1, &windowList)
         
         guard result == .success,
-              let windows = windowList as? [AXUIElement],
-              let firstWindow = windows.first else {
-            return nil
+              let windows = windowList as? [AXUIElement] else {
+            return [appElement]
         }
         
-        return firstWindow
+        return windows
     }
 
+    // 'getWindows' doesn't always work since the kAXWindowsAttribute is optional and many apps have not implemented it.
+    // Instead, we can search for 'window' in the role (which is required), which gives more consistent results. 
+    func getWindowsByRole() -> [AXUIElement] {
+        var elementPid: pid_t = 0
+
+        guard AXUIElementGetPid(self, &elementPid) == .success, elementPid != getpid() else {
+            return []
+        }
+        
+        let appElement = AXUIElementCreateApplication(elementPid)
+        var windows : [AXUIElement] = []
+        if let rootChildren = appElement.children() {
+            for rootChild in rootChildren {
+                if let role = rootChild.role(), role.lowercased().contains("window") {
+                    windows.append(rootChild)
+                }
+            }
+        }
+        
+        return windows
+    }
+    
     func size() -> CGSize? {
         let size = self.attribute(forAttribute: kAXSizeAttribute as CFString)
         if let size = size {
@@ -106,6 +127,43 @@ extension AXUIElement {
             as? [AXUIElement]
     }
 
+    public func closeButton() -> AXUIElement? {
+        if let value = self.attribute(forAttribute: kAXCloseButtonAttribute as CFString) {
+            return value as! AXUIElement
+        }
+        return nil
+    }
+    
+    public func minimizeButton() -> AXUIElement? {
+        if let value = self.attribute(forAttribute: kAXMinimizeButtonAttribute as CFString) {
+            return value as! AXUIElement
+        }
+        return nil
+    }
+
+    public func zoomButton() -> AXUIElement? {
+        
+        if let value = self.attribute(forAttribute: kAXZoomButtonAttribute as CFString) {
+            return value as! AXUIElement
+        }
+        return nil
+    }
+
+    public func focusedWindow() -> AXUIElement? {
+        if let value = self.attribute(forAttribute: kAXFocusedWindowAttribute as CFString) {
+            return value as! AXUIElement
+        }
+        return nil
+    }
+    
+    public func isModal() -> Bool? {
+        return self.attribute(forAttribute: kAXModalAttribute as CFString) as? Bool
+    }
+
+    public func isMain() -> Bool? {
+        return self.attribute(forAttribute: kAXMainAttribute as CFString) as? Bool
+    }
+    
     func selectedTextBound() -> CGRect? {
         var rangeValue: CFTypeRef?
         guard
@@ -163,6 +221,35 @@ extension AXUIElement {
 
     func setFrame(_ frame: CGRect) -> Bool {
         return setPosition(frame.origin) && setSize(frame.size)
+    }
+    
+    func pid() -> pid_t? {
+        var pid: pid_t = 0
+        
+        if AXUIElementGetPid(self, &pid) == .success {
+            return pid
+        }
+        
+        return nil
+    }
+
+    func identifier() -> AXUIElementIdentifier? {
+        return AXUIElementIdentifier(element: self)
+    }
+}
+
+struct AXUIElementIdentifier: Hashable {
+    let pid: pid_t
+    let identifier: String
+    
+    init?(element: AXUIElement?) {
+        guard let element = element,
+              let pid = element.pid() else {
+            return nil
+        }
+        
+        self.pid = pid
+        self.identifier = "\(Unmanaged.passUnretained(element as AnyObject).toOpaque())"
     }
 }
 

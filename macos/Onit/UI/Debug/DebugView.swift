@@ -1,11 +1,11 @@
 import SwiftUI
 
 struct DebugView: View {
-    @Environment(\.model) var model
+    @ObservedObject private var debugManager = DebugManager.shared
 
     var body: some View {
         ScrollView {
-            TextEditor(text: Binding(get: { model.debugText ?? "" }, set: { model.debugText = $0 }))
+            TextEditor(text: $debugManager.debugText)
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .padding(12)
         }

@@ -8,12 +8,12 @@
 import SwiftUI
 
 struct ImageProgressModifier: ViewModifier {
-    @Environment(\.model) var model
+    @Environment(\.windowState) private var state
 
     var url: URL
 
     var progress: Int? {
-        if let progress = model.imageUploads[url] {
+        if let progress = state.imageUploads[url] {
             switch progress {
             case .completed:
                 return 100
@@ -26,7 +26,7 @@ struct ImageProgressModifier: ViewModifier {
     }
 
     var done: Bool {
-        if let progress = model.imageUploads[url] {
+        if let progress = state.imageUploads[url] {
             switch progress {
             case .completed:
                 return true
@@ -56,10 +56,7 @@ extension View {
 
 #if DEBUG
     #Preview {
-        ModelContainerPreview {
-            Color.red
-                .modifier(ImageProgressModifier(url: .applicationDirectory))
-
-        }
+        Color.red
+            .modifier(ImageProgressModifier(url: .applicationDirectory))
     }
 #endif
