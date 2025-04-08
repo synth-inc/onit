@@ -326,28 +326,29 @@ class AccessibilityNotificationsManager: ObservableObject {
             //     }
             // }
 
-            // This works okay, but isn't consistent enough on large monitors.
-            // if let screen = focusedWindowFrame.findScreen() {
-            //     let screenWidth = screen.frame.width
-            //     let screenHeight = screen.frame.height
-            //     if focusedWindowFrame.width < screenWidth / 5 || focusedWindowFrame.height < screenHeight / 5 {
-            //         print("lookForBetterWindow: Focused window is small relative to the screen size.")
-            //         lookForBetterWindow = true
-            //     }
-            // }
-
+            // This works okay, but might create some strange behavior on large monitors.
+             if let screen = focusedWindowFrame.findScreen() {
+                 let screenWidth = screen.frame.width
+                 let screenHeight = screen.frame.height
+                 if focusedWindowFrame.width < screenWidth / 5 || focusedWindowFrame.height < screenHeight / 5 {
+                     print("lookForBetterWindow: Focused window is small relative to the screen size.")
+                     lookForBetterWindow = true
+                 }
+             }
+            
             // This works well.
             if focusedWindow.closeButton() == nil || focusedWindow.minimizeButton() == nil || focusedWindow.zoomButton() == nil {
+                print("lookForBetterWindow: Focused window doesn't have close/minimize/zoom.")
                 lookForBetterWindow = true
             }
             
-            // This doesn't work - it's an optional field and implementedly randomly in some apps and not in others.
-            // if let isModal = focusedWindow.isModal() {
-            //     if isModal {
-            //         print("lookForBetterWindow: Focused window is a modal.")
-            //         lookForBetterWindow = true
-            //     }
-            // }
+            // This doesn't work too well - it's an optional field and implementedly randomly in some apps and not in others.
+            if let isModal = focusedWindow.isModal() {
+                if isModal {
+                    print("lookForBetterWindow: Focused window is a modal.")
+                    lookForBetterWindow = true
+                }
+            }
 
             if lookForBetterWindow {
                 var mainWindows: [AXUIElement] = []
@@ -364,6 +365,8 @@ class AccessibilityNotificationsManager: ObservableObject {
                     }
                 }
 
+                print("Found \(mainWindows.count) main windows, \(containingWindows.count) windows containing the current window.")
+                
                 if mainWindows.count > 1 {
                     if containingWindows.count > 1 {
                         // TODO, implement a queue to select the most recently active.
