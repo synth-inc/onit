@@ -29,7 +29,7 @@ class OnitRegularPanel: NSPanel {
         
         super.init(
             contentRect: NSRect(x: 0, y: 0, width: width, height: 0),
-            styleMask: [.titled, .closable, .miniaturizable, .nonactivatingPanel, .fullSizeContentView],
+            styleMask: [.titled, .nonactivatingPanel, .fullSizeContentView],
             backing: .buffered,
             defer: false
         )
@@ -44,6 +44,10 @@ class OnitRegularPanel: NSPanel {
         isFloatingPanel = false
         animationBehavior = .none
         collectionBehavior = [.moveToActiveSpace]
+        
+        standardWindowButton(.closeButton)?.isHidden = true
+        standardWindowButton(.miniaturizeButton)?.isHidden = true
+        standardWindowButton(.zoomButton)?.isHidden = true
         
         let contentView = ContentView()
             .modelContainer(state.container)
