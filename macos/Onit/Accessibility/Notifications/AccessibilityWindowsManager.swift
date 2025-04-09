@@ -43,7 +43,7 @@ class AccessibilityWindowsManager {
             activeTrackedWindow = trackedWindow
                 
             delegate?.windowsManager(self, didActivateWindow: trackedWindow)
-        } else if let window = element.findWindow(), window.subrole() == "AXStandardWindow" {
+        } else if let window = element.findWindow(), isValidWindow(window) {
             let title = window.title() ?? "NA"
             let trackedWindow = TrackedWindow(element: window, pid: pid, hash: CFHash(window), title: title)
             
@@ -70,23 +70,13 @@ class AccessibilityWindowsManager {
         return trackedWindows.filter { $0.hash == CFHash(element) }
     }
     
-    static func getWindows(for pid: pid_t) -> [TrackedWindow] {
-        let appElement = AXUIElementCreateApplication(pid)
-        var result: [TrackedWindow] = []
-        
-        var windows: CFTypeRef?
-        if AXUIElementCopyAttributeValue(appElement, kAXWindowsAttribute as CFString, &windows) == .success,
-           let array = windows as? [AXUIElement] {
-            
-            for window in array {
-                let subrole = window.subrole()
-                if subrole == "AXStandardWindow" {
-                    let title = window.title() ?? "NA"
-                    result.append(TrackedWindow(element: window, pid: pid, hash: CFHash(window), title: title))
-                }
-            }
+    // MARK: - Private functions
+    
+    private func isValidWindow(_ window: AXUIElement) -> Bool {
+        guard window.subrole() == "AXStandardWindow" else {
+            return false
         }
-
-        return result
+        
+        return window.closeButton() != nil && window.minimizeButton() != nil && window.zoomButton() != nil
     }
 }

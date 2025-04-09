@@ -199,6 +199,43 @@ extension AXUIElement {
         
         return nil
     }
+    
+    public func closeButton() -> AXUIElement? {
+        if let value = self.attribute(forAttribute: kAXCloseButtonAttribute as CFString) {
+            return (value as! AXUIElement)
+        }
+        return nil
+    }
+    
+    public func minimizeButton() -> AXUIElement? {
+        if let value = self.attribute(forAttribute: kAXMinimizeButtonAttribute as CFString) {
+            return (value as! AXUIElement)
+        }
+        return nil
+    }
+
+    public func zoomButton() -> AXUIElement? {
+        
+        if let value = self.attribute(forAttribute: kAXZoomButtonAttribute as CFString) {
+            return (value as! AXUIElement)
+        }
+        return nil
+    }
+
+    public func focusedWindow() -> AXUIElement? {
+        if let value = self.attribute(forAttribute: kAXFocusedWindowAttribute as CFString) {
+            return (value as! AXUIElement)
+        }
+        return nil
+    }
+    
+    public func isModal() -> Bool? {
+        return self.attribute(forAttribute: kAXModalAttribute as CFString) as? Bool
+    }
+
+    public func isMain() -> Bool? {
+        return self.attribute(forAttribute: kAXMainAttribute as CFString) as? Bool
+    }
 }
 
 //

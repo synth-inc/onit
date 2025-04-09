@@ -22,7 +22,7 @@ extension OnitPanelState {
         }
         
         // Special case for Finder (desktop only)
-        if isFinderShowingDesktopOnly(activeWindow: window) {
+        if TetherAppsManager.isFinderShowingDesktopOnly(activeWindow: window) {
             if let mouseScreen = NSRect(origin: NSEvent.mouseLocation, size: NSSize(width: 1, height: 1)).findScreen() {
                 let screenFrame = mouseScreen.frame
                 let onitWidth = TetherAppsManager.minOnitWidth
@@ -276,19 +276,5 @@ extension OnitPanelState {
             panel.isAnimating = false
             self.panel = nil
         }
-    }
-    
-    // MARK: - Helper
-    
-    private func isFinderShowingDesktopOnly(activeWindow: AXUIElement?) -> Bool {
-        let runningApps = NSWorkspace.shared.runningApplications
-        
-        guard let finderAppPid = runningApps.first(where: { $0.bundleIdentifier == "com.apple.finder" })?.processIdentifier,
-              let activeWindow = activeWindow,
-              activeWindow.pid() == finderAppPid else {
-            return false
-        }
-        
-        return activeWindow.getWindows().first?.role() == "AXScrollArea"
     }
 } 
