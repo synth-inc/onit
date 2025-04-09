@@ -37,21 +37,10 @@ import SwiftUI
     var currentPrompts: [Prompt]?
     
     /// Chat deletion state START
-    typealias DeleteChatId = PersistentIdentifier
-    typealias DeleteChatTask = Task<Void, Error>
-    
-    struct DeleteChatQueueItem {
-        var name: String
-        var chatId: DeleteChatId
-        var startTime: Date
-        var deleteChatTask: DeleteChatTask
-    }
-    var deleteChatQueue: [DeleteChatQueueItem] = []
-    
-    typealias DeleteChatFailedQueueItem = [DeleteChatId: DeleteChatTask]
-    var deleteChatFailedQueue: DeleteChatFailedQueueItem = [:]
-    
-    var deleteChatDurationSeconds: TimeInterval = 3
+    var chatQueuedForDeletion: Chat? = nil
+    var chatDeletionTimePassed: Int = 0
+    var chatDeletionFailed: Bool = false
+    var historyDeleteToastDismissed: Bool = false
     /// Chat deletion state END
 
     // User inputs that have not yet been submitted

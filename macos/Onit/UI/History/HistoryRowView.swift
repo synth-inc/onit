@@ -10,7 +10,8 @@ import SwiftUI
 struct HistoryRowView: View {
     @Environment(\.model) var model
     
-    @State private var showDelete: Bool = false
+    @State private var showDeleteButton: Bool = false
+    @State private var deleteButtonHovered: Bool = false
 
     var chat: Chat
     var index: Int
@@ -29,7 +30,7 @@ struct HistoryRowView: View {
                 Spacer()
                 
                 Group {
-                    if showDelete { deleteButton }
+                    if showDeleteButton { deleteButton }
                     else { chatResponseCount }
                 }
             }
@@ -37,7 +38,7 @@ struct HistoryRowView: View {
         }
         .frame(height: 36)
         .buttonStyle(HoverableButtonStyle(background: true))
-        .onHover { hovering in showDelete = hovering }
+        .onHover { hovering in showDeleteButton = hovering }
     }
     
     var chatResponseCount: some View {
@@ -49,22 +50,25 @@ struct HistoryRowView: View {
     }
     
     var deleteButton: some View {
-        let deletionFailed = model.deleteChatFailedQueue.keys.contains(chat.id)
-        
-        return HStack(alignment: .center) {
-            Text(deletionFailed ? "Delete failed" : "")
-                .foregroundColor(Color.red)
+        Button {
+            if let pendingDeletedHistoryItem = model.chatQueuedForDeletion {
+                model.deleteChat(chat: pendingDeletedHistoryItem)
+            }
             
+            if !model.chatDeletionFailed { model.chatQueuedForDeletion = chat }
+            
+            model.historyDeleteToastDismissed = false
+            model.chatDeletionTimePassed = 0
+        } label: {
             Image(systemName: "trash")
+                .resizable()
                 .frame(width: 14, height: 14)
-                .padding(.trailing, 10)
-                .opacity(deletionFailed ? 0.5 : 1)
+                .padding(.horizontal, 10)
+                .foregroundColor(deleteButtonHovered ? .gray100 : .gray200)
         }
-        .frame(height: 34)
-        .contentShape(Rectangle())
-        .onTapGesture {
-            if !deletionFailed { model.addChatToDeleteQueue(chat: chat) }
-        }
+        .buttonStyle(PlainButtonStyle())
+        .frame(maxHeight: .infinity)
+        .onHover { hovering in deleteButtonHovered = hovering }
     }
     
     static func getPromptText(chat: Chat) -> String {

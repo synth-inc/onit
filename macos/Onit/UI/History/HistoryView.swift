@@ -18,7 +18,7 @@ struct HistoryView: View {
 
     var filteredChats: [Chat] {
         let chatsNotQueuedForDeletion = chats.filter { chat in
-            !model.deleteChatQueue.contains(where: { $0.chatId == chat.id })
+            chat.id != model.chatQueuedForDeletion?.id
         }
         
         if searchQuery.isEmpty {
@@ -63,7 +63,7 @@ struct HistoryView: View {
             .frame(width: 350)
             .background(.BG)
             
-            historyDeleteNotifications
+            historyDeleteToast
         }
     }
     
@@ -99,31 +99,33 @@ struct HistoryView: View {
     }
     
     @ViewBuilder
-    var historyDeleteNotifications: some View {
-        if !model.deleteChatQueue.isEmpty {
+    var historyDeleteToast: some View {
+        if let chat = model.chatQueuedForDeletion {
             ZStack {
-                ForEach(model.deleteChatQueue, id: \.chatId) { deleteItem in
-                    let notDismissed = !dismissedDeleteNotifications.contains(deleteItem.chatId)
-                    
-                    if notDismissed {
-                        HistoryDeleteNotification(
-                            chatName: deleteItem.name,
-                            chatId: deleteItem.chatId,
-                            startTime: deleteItem.startTime,
-                            dismiss: {
-                                dismissedDeleteNotifications.insert(deleteItem.chatId)
-                            }
-                        )
-                        .transition(.move(edge: .leading).combined(with: .opacity))
-                    }
-                }
-            }
-            .frame(maxWidth: .infinity)
-            .padding(.top, 12)
-            .padding(.horizontal, 12)
+                HistoryDeleteToast(
+                    text: "Item deleted",
+                    chat: chat
+                )
+            }.attachHistoryDeleteToastStyles()
+        } else if model.chatDeletionFailed {
+            ZStack {
+                HistoryDeleteToast(
+                    text: "Failed to delete. Please retry",
+                    chat: nil
+                )
+            }.attachHistoryDeleteToastStyles()
         }
     }
 
+}
+
+extension View {
+    func attachHistoryDeleteToastStyles() -> some View {
+        self
+            .frame(maxWidth: .infinity)
+            .padding(.top, 12)
+            .padding(.horizontal, 12)
+    }
 }
 
 #Preview {
