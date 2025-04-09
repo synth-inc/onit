@@ -5,9 +5,12 @@
 //  Created by Benjamin Sage on 11/4/24.
 //
 
+import Defaults
 import SwiftUI
 
 struct HistoryRowView: View {
+    @Default(.incognitoModeEnabled) var incognitoModeEnabled
+    
     @Environment(\.model) var model
     
     @State private var showDelete: Bool = false
@@ -17,6 +20,7 @@ struct HistoryRowView: View {
 
     var body: some View {
         Button {
+            incognitoModeEnabled = false
             model.setChat(chat: chat, index: index)
         } label: {
             HStack {

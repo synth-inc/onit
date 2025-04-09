@@ -421,11 +421,9 @@ class AccessibilityNotificationsManager: ObservableObject {
             let selectedElement = element,
             !selectedText.isEmpty
         else {
-
             selectedSource = nil
             model?.pendingInput = nil
             HighlightHintWindowController.shared.hide()
-
             return
         }
         screenResult.userInteraction.selectedText = selectedText

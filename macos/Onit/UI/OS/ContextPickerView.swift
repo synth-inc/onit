@@ -27,7 +27,10 @@ struct ContextPickerView: View {
                 model.addAutoContext()
             }) {
                 ContextPickerItemView(
-                    imageRes: .stars, title: "Auto-context", subtitle: "Current window activity")
+                    imageRes: .stars,
+                    title: "Auto-context",
+                    subtitle: "Current window activity"
+                )
             }
             .buttonStyle(.plain)
             .foregroundColor(.gray200)

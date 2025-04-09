@@ -20,6 +20,7 @@ struct Toolbar: View {
     @Default(.localModel) var localModel
     @Default(.isRegularApp) var isRegularApp
     @Default(.fitActiveWindow) var fitActiveWindow
+    @Default(.incognitoModeEnabled) var incognitoModeEnabled
     
     private var isAccessibilityFlagsEnabled: Bool {
         featureFlagsManager.accessibility && featureFlagsManager.accessibilityAutoContext
@@ -59,6 +60,7 @@ struct Toolbar: View {
                 fitActiveWindowButton
             }
             localMode
+            incognitoMode
             history
             settings
             
@@ -241,6 +243,19 @@ struct Toolbar: View {
                 .foregroundColor(mode == .local ? .limeGreen : .gray200)
         }
         .tooltip(prompt: "Local Mode", shortcut: .keyboardShortcuts(.toggleLocalMode))
+    }
+    
+    var incognitoMode: some View {
+        Button {
+            incognitoModeEnabled.toggle()
+            model.newChat()
+        } label: {
+            Image(incognitoModeEnabled ? .incogOn : .incogOff)
+                .renderingMode(.template)
+                .padding(4)
+                .foregroundColor(incognitoModeEnabled ? .blue400 : .gray200)
+        }
+        .tooltip(prompt: "Incognito mode (auto-context off)")
     }
 
     var showHistoryBinding: Binding<Bool> {
