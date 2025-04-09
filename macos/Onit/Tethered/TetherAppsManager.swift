@@ -125,9 +125,10 @@ class TetherAppsManager: ObservableObject {
         
         if isOpened && !isMiniaturized {
             // Panel opened
-            saveInitialFrameIfNeeded(for: window)
+            saveInitialFrameIfNeeded(for: window, state: state)
             hideTetherWindow()
 
+            // TODO: KNA - Tethered - We should just move the panel without any animation
             state.repositionPanel()
         } else if !isOpened {
             // Panel closed
@@ -142,11 +143,12 @@ class TetherAppsManager: ObservableObject {
         }
     }
     
-    private func saveInitialFrameIfNeeded(for window: AXUIElement) {
-        // TODO: KNA - Tether - We should save the frame only if there is not enough space to display Onit.
-        if targetInitialFrames[window] == nil,
-           let position = window.position(), 
-           let size = window.size() {
+    private func saveInitialFrameIfNeeded(for window: AXUIElement, state: OnitPanelState) {
+        if state.panel?.wasAnimated == true {
+            targetInitialFrames[window] = nil
+        } else if targetInitialFrames[window] == nil,
+                  let position = window.position(),
+                  let size = window.size() {
             targetInitialFrames[window] = CGRect(
                 x: position.x,
                 y: position.y,

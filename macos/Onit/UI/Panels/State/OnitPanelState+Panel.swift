@@ -33,8 +33,12 @@ extension OnitPanelState: NSWindowDelegate {
             
             panel = newPanel
 
-            if Defaults[.isRegularApp] && trackedWindow != nil {
-                repositionPanel()
+            if Defaults[.isRegularApp] {
+                if trackedWindow != nil {
+                    repositionPanel()
+                } else {
+                    print("Something went wrong while trying to reposition the panel.")
+                }
             }
 
             KeyboardShortcutsManager.enable(modelContainer: container)
