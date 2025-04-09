@@ -51,61 +51,18 @@ extension OnitPanelState {
         let hasEnoughSpace = spaceOnRight >= onitWidth + TetherAppsManager.spaceBetweenWindows
         
         if hasEnoughSpace {
-            let newFrame = NSRect(
-                x: position.x + size.width + TetherAppsManager.spaceBetweenWindows,
-                y: onitY,
-                width: onitWidth,
-                height: onitHeight
-            )
-            
-            if panel.isVisible {
-                panel.setFrame(newFrame, display: true, animate: true)
-            } else {
-                animateEnter(activeWindow: window,
-                            fromActive: nil,
-                            toActive: nil,
-                            panel: panel,
-                            fromPanel: newFrame,
-                            toPanel: newFrame
-                )
-            }
+            movePanel(onitWidth: onitWidth, onitHeight: onitHeight, onitY: onitY)
         } else {
-            let maxActiveAppWidth = screenFrame.width - onitWidth - TetherAppsManager.spaceBetweenWindows
-            let activeAppWidth = min(size.width, maxActiveAppWidth)
+            let screenFrame = screen.frame
+            let onitWidth = TetherAppsManager.minOnitWidth
+            let minAppWidth = screenFrame.width / 3
             
-            let activeWindowTargetRect = CGRect(
-                x: position.x,
-                y: position.y,
-                width: activeAppWidth,
-                height: size.height
-            )
-            let newFrame = NSRect(
-                x: position.x + activeAppWidth + TetherAppsManager.spaceBetweenWindows,
-                y: onitY,
-                width: onitWidth,
-                height: onitHeight
-            )
-
-            if panel.isVisible {
-                panel.setFrame(newFrame, display: true, animate: true)
-                _ = window.setFrame(activeWindowTargetRect)
+            let maxAvailableWidth = screenFrame.maxX - position.x - onitWidth - TetherAppsManager.spaceBetweenWindows
+            
+            if maxAvailableWidth >= minAppWidth {
+                resizeWindowAndMovePanel(onitWidth: onitWidth, onitHeight: onitHeight, onitY: onitY, maxAvailableWidth: maxAvailableWidth)
             } else {
-                let activeWindowSourceRect = CGRect(
-                    x: position.x,
-                    y: position.y,
-                    width: size.width,
-                    height: size.height
-                )
-                let panelSourceRect: CGRect = panel.frame
-                
-                animateEnter(
-                    activeWindow: window,
-                    fromActive: activeWindowSourceRect,
-                    toActive: activeWindowTargetRect,
-                    panel: panel,
-                    fromPanel: panelSourceRect,
-                    toPanel: newFrame
-                )
+                moveWindowAndPanel(screenFrame: screenFrame, onitWidth: onitWidth, onitHeight: onitHeight, onitY: onitY)
             }
         }
     }
@@ -129,10 +86,131 @@ extension OnitPanelState {
         }
     }
     
-    // MARK: - Animation methods
+    // MARK: - Layout
+    
+    private func movePanel(onitWidth: CGFloat, onitHeight: CGFloat, onitY: CGFloat) {
+        guard let window = trackedWindow?.element,
+              let panel = panel,
+              let position = window.position(),
+              let size = window.size() else {
+            return
+        }
+        
+        let newFrame = NSRect(
+            x: position.x + size.width + TetherAppsManager.spaceBetweenWindows,
+            y: onitY,
+            width: onitWidth,
+            height: onitHeight
+        )
+        
+        if panel.isVisible {
+            panel.setFrame(newFrame, display: true, animate: true)
+        } else {
+            animateEnter(activeWindow: nil,
+                        fromActive: nil,
+                        toActive: nil,
+                        panel: panel,
+                        fromPanel: newFrame,
+                        toPanel: newFrame
+            )
+        }
+    }
+    
+    private func moveWindowAndPanel(screenFrame: CGRect, onitWidth: CGFloat, onitHeight: CGFloat, onitY: CGFloat) {
+        guard let window = trackedWindow?.element,
+              let panel = panel,
+              let position = window.position(),
+              let size = window.size() else {
+            return
+        }
+        
+        let newAppX = screenFrame.maxX - size.width - onitWidth - TetherAppsManager.spaceBetweenWindows
+        let activeWindowTargetRect = CGRect(
+            x: newAppX,
+            y: position.y,
+            width: size.width,
+            height: size.height
+        )
+        
+        let newFrame = NSRect(
+            x: newAppX + size.width + TetherAppsManager.spaceBetweenWindows,
+            y: onitY,
+            width: onitWidth,
+            height: onitHeight
+        )
+        
+        if panel.isVisible {
+            panel.setFrame(newFrame, display: true, animate: true)
+            _ = window.setFrame(activeWindowTargetRect)
+        } else {
+            let activeWindowSourceRect = CGRect(
+                x: position.x,
+                y: position.y,
+                width: size.width,
+                height: size.height
+            )
+            let panelSourceRect: CGRect = panel.frame
+            
+            animateEnter(
+                activeWindow: window,
+                fromActive: activeWindowSourceRect,
+                toActive: activeWindowTargetRect,
+                panel: panel,
+                fromPanel: panelSourceRect,
+                toPanel: newFrame
+            )
+        }
+    }
+    
+    private func resizeWindowAndMovePanel(onitWidth: CGFloat, onitHeight: CGFloat, onitY: CGFloat, maxAvailableWidth: CGFloat) {
+        guard let window = trackedWindow?.element,
+              let panel = panel,
+              let position = window.position(),
+              let size = window.size() else {
+            return
+        }
+        
+        let activeWindowTargetRect = CGRect(
+            x: position.x,
+            y: position.y,
+            width: maxAvailableWidth,
+            height: size.height
+        )
+        
+        let newFrame = NSRect(
+            x: position.x + maxAvailableWidth + TetherAppsManager.spaceBetweenWindows,
+            y: onitY,
+            width: onitWidth,
+            height: onitHeight
+        )
+        
+        if panel.isVisible {
+            panel.setFrame(newFrame, display: true, animate: true)
+            _ = window.setFrame(activeWindowTargetRect)
+        } else {
+            let activeWindowSourceRect = CGRect(
+                x: position.x,
+                y: position.y,
+                width: size.width,
+                height: size.height
+            )
+            let panelSourceRect: CGRect = panel.frame
+            
+            animateEnter(
+                activeWindow: window,
+                fromActive: activeWindowSourceRect,
+                toActive: activeWindowTargetRect,
+                panel: panel,
+                fromPanel: panelSourceRect,
+                toPanel: newFrame
+            )
+        }
+    }
+    
+    // MARK: - Animations
     
     private func animateEnter(
-        activeWindow: AXUIElement,
+        activeWindow: AXUIElement?,
         fromActive: CGRect?,
         toActive: CGRect?,
         panel: OnitPanel,
@@ -154,7 +232,7 @@ extension OnitPanelState {
         } completionHandler: {
             panel.isAnimating = false
             
-            if let toActive = toActive {
+            if let activeWindow = activeWindow, let toActive = toActive {
                 _ = activeWindow.setFrame(toActive)
             }
         }
@@ -184,7 +262,7 @@ extension OnitPanelState {
         }
     }
     
-    // MARK: - Helper methods
+    // MARK: - Helper
     
     private func isFinderShowingDesktopOnly(activeWindow: AXUIElement?) -> Bool {
         let runningApps = NSWorkspace.shared.runningApplications
