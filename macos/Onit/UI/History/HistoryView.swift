@@ -9,15 +9,22 @@ import SwiftData
 import SwiftUI
 
 struct HistoryView: View {
+    @Environment(\.model) var model
+    
     @Query(sort: \Chat.timestamp, order: .reverse) private var chats: [Chat]
 
     @State private var searchQuery: String = ""
+    @State private var dismissedDeleteNotifications: Set<PersistentIdentifier> = []
 
     var filteredChats: [Chat] {
+        let chatsNotQueuedForDeletion = chats.filter { chat in
+            chat.id != model.chatQueuedForDeletion?.id
+        }
+        
         if searchQuery.isEmpty {
-            return chats
+            return chatsNotQueuedForDeletion
         } else {
-            return chats.filter {
+            return chatsNotQueuedForDeletion.filter {
                 $0.fullText.localizedCaseInsensitiveContains(searchQuery)
             }
         }
@@ -43,21 +50,25 @@ struct HistoryView: View {
     var sortedChats: [(key: String, value: [Chat])] {
         groupedChats.sorted(by: { $0.key > $1.key })
     }
-
+    
     var body: some View {
-        VStack(spacing: 0) {
-            HistoryTitle()
-            HistorySearchView(text: $searchQuery)
+        ZStack(alignment: .topLeading) {
+            VStack(spacing: 0) {
+                HistoryTitle()
+                HistorySearchView(text: $searchQuery)
+                
+                if sortedChats.isEmpty { emptyText }
+                else { historyRows }
+            }
+            .frame(width: 350)
+            .background(.BG)
             
-            if sortedChats.isEmpty { emptyText }
-            else { historyRows }
+            historyDeleteToast
         }
-        .frame(width: 350)
-        .background(.BG)
     }
     
     var emptyText: some View {
-        Text("No prompts found")
+        Text("No chats")
             .foregroundStyle(.gray200)
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(.vertical, 16)
@@ -86,7 +97,35 @@ struct HistoryView: View {
             .padding(.bottom, 10)
         }
     }
+    
+    @ViewBuilder
+    var historyDeleteToast: some View {
+        if let chat = model.chatQueuedForDeletion {
+            ZStack {
+                HistoryDeleteToast(
+                    text: "Item deleted",
+                    chat: chat
+                )
+            }.attachHistoryDeleteToastStyles()
+        } else if model.chatDeletionFailed {
+            ZStack {
+                HistoryDeleteToast(
+                    text: "Failed to delete. Please retry",
+                    chat: nil
+                )
+            }.attachHistoryDeleteToastStyles()
+        }
+    }
 
+}
+
+extension View {
+    func attachHistoryDeleteToastStyles() -> some View {
+        self
+            .frame(maxWidth: .infinity)
+            .padding(.top, 12)
+            .padding(.horizontal, 12)
+    }
 }
 
 #Preview {

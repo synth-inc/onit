@@ -5,6 +5,8 @@
 //  Created by Loyd Kim on 3/31/25.
 //
 
+import Foundation
+
 extension OnitModel {
     func setChat(chat: Chat, index: Int) {
         currentChat = chat
@@ -15,15 +17,14 @@ extension OnitModel {
     
     func deleteChat(chat: Chat) {
         do {
-            deleteChatFailed = false
+            chatDeletionFailed = false
             container.mainContext.delete(chat)
             try container.mainContext.save()
         } catch {
-            deleteChatFailed = true
-            
-            #if DEBUG
-            print("Chat delete error: \(error)")
-            #endif
+            chatDeletionFailed = true
+            chatDeletionTimePassed = 0
         }
+        
+        chatQueuedForDeletion = nil
     }
 }

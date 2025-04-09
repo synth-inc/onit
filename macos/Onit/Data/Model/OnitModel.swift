@@ -36,7 +36,12 @@ import SwiftUI
     var currentChat: Chat?
     var currentPrompts: [Prompt]?
     
-    var deleteChatFailed: Bool = false
+    /// Chat deletion state START
+    var chatQueuedForDeletion: Chat? = nil
+    var chatDeletionTimePassed: Int = 0
+    var chatDeletionFailed: Bool = false
+    var historyDeleteToastDismissed: Bool = false
+    /// Chat deletion state END
 
     // User inputs that have not yet been submitted
     var pendingInstruction = "" {
