@@ -129,10 +129,6 @@ class TetherAppsManager: ObservableObject {
             hideTetherWindow()
 
             state.repositionPanel()
-            
-            if let trackedWindow = state.trackedWindow {
-                updateLevelState(trackedWindow: trackedWindow)
-            }
         } else if !isOpened {
             // Panel closed
             debouncedShowTetherWindow(state: state, activeWindow: window)
@@ -140,10 +136,15 @@ class TetherAppsManager: ObservableObject {
             // Panel minified
             debouncedShowTetherWindow(state: state, activeWindow: window)
         }
+        
+        if let trackedWindow = state.trackedWindow {
+            updateLevelState(trackedWindow: trackedWindow)
+        }
     }
     
     private func saveInitialFrameIfNeeded(for window: AXUIElement) {
-        if targetInitialFrames[window] == nil, 
+        // TODO: KNA - Tether - We should save the frame only if there is not enough space to display Onit.
+        if targetInitialFrames[window] == nil,
            let position = window.position(), 
            let size = window.size() {
             targetInitialFrames[window] = CGRect(
