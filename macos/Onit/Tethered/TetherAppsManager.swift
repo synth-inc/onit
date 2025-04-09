@@ -330,14 +330,12 @@ class TetherAppsManager: ObservableObject {
     }
     
     func updateLevelState(trackedWindow: TrackedWindow?) {
-        if let trackedWindow = trackedWindow {
-            for (key, value) in states {
-                if key == trackedWindow {
-                    value.panel?.level = .floating
-                } else if value.panel?.level == .floating {
-                    value.panel?.level = .normal
-                    value.panel?.orderBack(nil)
-                }
+        for (key, value) in states {
+            if key == trackedWindow {
+                value.panel?.level = .floating
+            } else if value.panel?.level == .floating {
+                value.panel?.level = .normal
+                value.panel?.orderBack(nil)
             }
         }
     }
@@ -382,6 +380,11 @@ extension TetherAppsManager: AccessibilityNotificationsDelegate {
         panelState.addDelegate(self)
         state = panelState
         handlePanelStateChange(state: panelState, isOpened: panelState.isOpened, isMiniaturized: panelState.isMiniaturized)
+    }
+    
+    func accessibilityManager(_ manager: AccessibilityNotificationsManager, didActivateIgnoredWindow window: TrackedWindow?) {
+        hideTetherWindow()
+        updateLevelState(trackedWindow: window)
     }
     
     func accessibilityManager(_ manager: AccessibilityNotificationsManager, didDestroyWindow window: TrackedWindow) {

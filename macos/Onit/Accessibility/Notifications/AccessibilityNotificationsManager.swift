@@ -143,8 +143,13 @@ class AccessibilityNotificationsManager: ObservableObject {
         }
         
         // Skip if the PID is our own process or an ignored app
-        if pid == getpid() || ignoredAppNames.contains(pid.getAppName() ?? "") {
-            print("Not setting up observer for our own process or ignored app: \(pid.getAppName() ?? "Unknown")")
+        if pid == getpid() {
+            print("Not setting up observer for our own process")
+        } else if ignoredAppNames.contains(pid.getAppName() ?? "") {
+            print("Not setting up observer for ignored app: \(pid.getAppName() ?? "Unknown")")
+            notifyDelegates { delegate in
+                delegate.accessibilityManager(self, didActivateIgnoredWindow: nil)
+            }
             return
         }
         
@@ -217,9 +222,14 @@ class AccessibilityNotificationsManager: ObservableObject {
                 // I'm also added ignore logic for Xcode because it makes it hard to debug if the process changes everytime a breakpoint is hit. 
                 let appName = Bundle.main.object(forInfoDictionaryKey: "CFBundleName") as? String
                 if app.processIdentifier == getpid() || 
-                   app.localizedName == appName || 
-                   ignoredAppNames.contains(app.localizedName ?? "") {
-                    print("Ignoring activation of our own app or ignored app: \(app.localizedName ?? "Unknown")")
+                    app.localizedName == appName {
+                    print("Ignoring activation of our own app")
+                    return
+                } else if ignoredAppNames.contains(app.localizedName ?? "") {
+                    print("Ignoring activation of ignored app: \(app.localizedName ?? "Unknown")")
+                    notifyDelegates { delegate in
+                        delegate.accessibilityManager(self, didActivateIgnoredWindow: nil)
+                    }
                     return
                 }
 
