@@ -39,10 +39,7 @@ struct ExternalTetheredButtonStyle: ButtonStyle {
             if containsInput {
                 backgroundForInput
                     .matchedGeometryEffect(id: "background", in: animation)
-                    .transition(.asymmetric(
-                        insertion: .opacity.animation(.easeIn(duration: 0.6)),
-                        removal: .opacity.animation(.none)
-                    ))
+                    .transition(.opacity.animation(.easeInOut(duration: 0.3)))
             }
             
             configuration.label

@@ -51,13 +51,13 @@ struct ExternalTetheredButton: View {
         return "Fit to active window"
     }
     
-//    private var containsInput: Bool {
-//        return windowState.pendingInput != nil
-//    }
+    private var containsInput: Bool {
+        return windowState.pendingInput != nil
+    }
     
-    private var containsInput: Binding<Bool> {
+    private var containsInputBinding: Binding<Bool> {
         Binding {
-            windowState.pendingInput != nil
+            containsInput
         } set: { _ in
             
         }
@@ -96,10 +96,11 @@ struct ExternalTetheredButton: View {
                 .buttonStyle(
                     ExternalTetheredButtonStyle(
                         hovering: $hovering,
-                        containsInput: containsInput,
+                        containsInput: containsInputBinding,
                         tooltipText: fitActiveWindowPrompt
                     )
                 )
+                .offset(x: containsInput ? Self.borderWidth : 0)
                 .simultaneousGesture(dragGesture)
             }
             
