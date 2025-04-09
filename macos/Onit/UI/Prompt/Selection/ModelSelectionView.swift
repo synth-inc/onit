@@ -143,6 +143,10 @@ struct ModelSelectionView: View {
                             .appFont(.medium14)
                             .tag(SelectedModel.remote(model))
                             .padding(.vertical, 4)
+                            .frame(maxWidth: .infinity, alignment: .leading )
+                            .frame(height: 24)
+                            .lineLimit(1)
+                            .truncationMode(.tail)
                     }
                 }
                 .pickerStyle(.inline)
@@ -153,7 +157,7 @@ struct ModelSelectionView: View {
                 .tint(.blue600)
             }
         }
-        .frame(maxHeight: 300)
+        .frame(maxHeight: 128)
     }
 
     var divider: some View {
@@ -195,20 +199,26 @@ struct ModelSelectionView: View {
     }
 
     var localModelsView: some View {
-        Picker("", selection: selectedModel) {
-            ForEach(availableLocalModels, id: \.self) { localModelName in
-                Text(localModelName)
-                    .appFont(.medium14)
-                    .tag(SelectedModel.local(localModelName))
-                    .padding(.vertical, 4)
+        ScrollView {
+            Picker("", selection: selectedModel) {
+                ForEach(availableLocalModels, id: \.self) { localModelName in
+                    Text(localModelName)
+                        .appFont(.medium14)
+                        .tag(SelectedModel.local(localModelName))
+                        .padding(.vertical, 4)
+                        .frame(maxWidth: .infinity, alignment: .leading )
+                        .frame(height: 24)
+                        .lineLimit(1)
+                        .truncationMode(.tail)
+                }
             }
+            .pickerStyle(.inline)
+            .padding(.vertical, 4)
+            .padding(.bottom, 5)
+            .padding(.leading, 5)
+            .tint(.blue600)
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .pickerStyle(.inline)
-        .padding(.vertical, 4)
-        .padding(.bottom, 5)
-        .padding(.leading, 5)
-        .tint(.blue600)
+        .frame(maxHeight: 128)
     }
 
     var add: some View {

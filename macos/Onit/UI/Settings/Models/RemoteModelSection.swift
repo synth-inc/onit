@@ -16,7 +16,10 @@ struct RemoteModelSection: View {
     @State private var key = ""
     @State private var validated = false
     @State private var loading = false
-    @State private var showAdvanced: Bool = false  
+    @State private var showAdvanced: Bool = false
+    @State private var customModelFormViewOpen = false
+    @State private var showDeleteConfirmation = false
+    @State private var showDeleteModelsView = false
 
     @Default(.mode) var mode
     @Default(.remoteModel) var remoteModel
@@ -40,7 +43,7 @@ struct RemoteModelSection: View {
     @Default(.isDeepSeekTokenValidated) var isDeepSeekTokenValidated
     @Default(.isPerplexityTokenValidated) var isPerplexityTokenValidated
     @Default(.streamResponse) var streamResponse
-    
+    @Default(.visibleModelIds) var visibleModelIds
 
     var provider: AIModel.ModelProvider
 
@@ -73,7 +76,6 @@ struct RemoteModelSection: View {
 
     // MARK: - Body
 
-    
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
             titleView
@@ -212,14 +214,78 @@ struct RemoteModelSection: View {
         if use {
             GroupBox {
                 VStack(alignment: .leading, spacing: 0) {
-                    ForEach(models) { model in
-                        ModelToggle(aiModel: model)
-                            .frame(height: 36)
+                    VStack(alignment: .leading, spacing: 0) {
+                        if models.isEmpty {
+                            Text("No models added.")
+                                .font(.system(size: 13))
+                                .foregroundColor(.secondary)
+                                .padding(.vertical, 8)
+                                .padding(.horizontal, 4)
+                        } else {
+                            ForEach(models) { model in
+                                ModelToggle(aiModel: model).frame(height: 36)
+                            }
+                        }
                     }
+                    .padding(.horizontal, 4)
+                    .padding(.bottom, 5)
+                    
+                    // Divider
+                    Rectangle()
+                        .frame(height:1)
+                        .foregroundColor(.gray.opacity(0.2))
+                    
+                    HStack(alignment: .center, spacing: 0) {
+                        Button {
+                            customModelFormViewOpen = true
+                        } label: {
+                            HStack {
+                                Image(systemName: "plus")
+                                    .frame(width: 30, height: 30)
+                                    .contentShape(Rectangle())  // Make entire area clickable
+                            }
+                        }
+                        .buttonStyle(.plain)
+                        .opacity(0.7)
+                        
+                        // Divider
+                        Rectangle()
+                            .frame(width: 1, height: 24)
+                            .foregroundColor(.gray.opacity(0.2))
+                        
+                        // Deletes selected remote models
+                        Button {
+                            showDeleteModelsView = true
+                        } label: {
+                            HStack {
+                                Image(systemName: "minus")
+                                    .frame(width: 30, height: 30)
+                                    .contentShape(Rectangle())  // Make entire area clickable
+                                    .opacity(0.5)
+                            }
+                        }
+                        .buttonStyle(.plain)
+                        .opacity(0.7)
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.top, 2)
                 }
-                .padding(.vertical, -4)
-                .padding(.horizontal, 4)
                 .frame(maxWidth: .infinity, alignment: .leading)
+            }
+            .sheet(isPresented: $customModelFormViewOpen) {
+                CustomModelFormView(
+                    provider: provider,
+                    token: getModelToken(provider: provider)
+                )
+            }
+            .onChange(of: model.isCustomModelSubmitted) { oldValue, newValue in
+                if !oldValue && newValue {
+                    model.isCustomModelSubmitted = false
+                    model.shrinkContent()
+                }
+            }
+            .sheet(isPresented: $showDeleteModelsView) {
+                DeleteModelsView()
             }
         }
     }

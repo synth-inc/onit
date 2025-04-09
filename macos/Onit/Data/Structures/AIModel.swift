@@ -18,6 +18,25 @@ struct AIModel: Codable, Identifiable, Hashable, Defaults.Serializable {
     var isNew: Bool = false
     var isDeprecated: Bool = false
     var customProviderName: String?
+    
+    init(
+        id: String,
+        displayName: String,
+        provider: ModelProvider,
+        defaultOn: Bool,
+        supportsVision: Bool,
+        supportsSystemPrompts: Bool
+    ) {
+        self.id = id
+        self.displayName = displayName
+        self.provider = provider
+        self.defaultOn = defaultOn
+        self.supportsVision = supportsVision
+        self.supportsSystemPrompts = supportsSystemPrompts
+        self.isNew = false
+        self.isDeprecated = false
+        self.customProviderName = nil
+    }
 
     var uniqueId: String {
         if provider == .custom, let providerName = customProviderName {
