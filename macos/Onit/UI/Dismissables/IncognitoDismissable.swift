@@ -60,7 +60,7 @@ extension IncognitoDismissable {
     }
     
     var text: some View {
-        Text("When on, Onit won't suggest or store auto-context based on your current window activity.")
+        Text("When on, Onit won’t store your chats in history.")
             .foregroundColor(.gray100)
             .font(.system(size: 13, weight: .medium))
     }

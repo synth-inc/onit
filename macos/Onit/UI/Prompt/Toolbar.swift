@@ -248,7 +248,6 @@ struct Toolbar: View {
     var incognitoMode: some View {
         Button {
             incognitoModeEnabled.toggle()
-            if incognitoModeEnabled { model.clearAutoContext() }
             model.newChat()
         } label: {
             Image(incognitoModeEnabled ? .incogOn : .incogOff)

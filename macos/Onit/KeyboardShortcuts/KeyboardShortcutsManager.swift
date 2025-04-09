@@ -86,16 +86,11 @@ struct KeyboardShortcutsManager {
                     model.launchShortcutAction()
                 case .launchWithAutoContext:
                     let eventProperties: [String: Any] = [
-                        "app_hidden": model.panel == nil,
-                        "incognito_mode_enabled": Defaults[.incognitoModeEnabled]
+                        "app_hidden": model.panel == nil
                     ]
-                    
                     PostHogSDK.shared.capture(
                         "shortcut_launch_with_auto_context", properties: eventProperties)
-                    
-                    if !Defaults[.incognitoModeEnabled] {
-                        model.addAutoContext()
-                    }
+                    model.addAutoContext()
                     
                     if (model.panel == nil) {
                         model.launchPanel()
