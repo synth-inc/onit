@@ -37,6 +37,14 @@ import SwiftUI
     var currentPrompts: [Prompt]?
     
     var deleteChatFailed: Bool = false
+    
+    /// Custom Model State START
+    var verifyingCustomModel: Bool = false
+    var verifyingCustomModelErrorMessage: String? = nil
+    var isCustomModelSubmitted: Bool = false
+    
+    var modelIdsSelectedForDeletion = Set<String>()
+    /// /// Custom Model State END
 
     // User inputs that have not yet been submitted
     var pendingInstruction = "" {
@@ -140,8 +148,8 @@ import SwiftUI
         do {
             var models = try await AIModel.fetchModels()
             
-            let deletedRemoteModels = Defaults[.deletedRemoteModels]
-            let deletedRemoteModelsIds = Set(deletedRemoteModels.map { $0.id })
+            let userDeletedRemoteModels = Defaults[.userDeletedRemoteModels]
+            let deletedRemoteModelsIds = Set(userDeletedRemoteModels.map { $0.id })
             
             models = models.filter { model in
                 !deletedRemoteModelsIds.contains(model.id)

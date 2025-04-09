@@ -17,8 +17,7 @@ struct RemoteModelSection: View {
     @State private var validated = false
     @State private var loading = false
     @State private var showAdvanced: Bool = false
-    @State private var showCustomModelForm = false
-    @State private var isCustomModelSubmitted = false
+    @State private var customModelFormViewOpen = false
     @State private var showDeleteConfirmation = false
     @State private var showDeleteModelsView = false
 
@@ -224,12 +223,10 @@ struct RemoteModelSection: View {
                                 .padding(.horizontal, 4)
                         } else {
                             ForEach(models) { model in
-                                ModelToggle(aiModel: model)
-                                    .frame(height: 36)
+                                ModelToggle(aiModel: model).frame(height: 36)
                             }
                         }
                     }
-                    .padding(.vertical, -4)
                     .padding(.horizontal, 4)
                     .padding(.bottom, 5)
                     
@@ -239,9 +236,8 @@ struct RemoteModelSection: View {
                         .foregroundColor(.gray.opacity(0.2))
                     
                     HStack(alignment: .center, spacing: 0) {
-                        // Opens CustomModelFormView
                         Button {
-                            showCustomModelForm = true
+                            customModelFormViewOpen = true
                         } label: {
                             HStack {
                                 Image(systemName: "plus")
@@ -276,16 +272,15 @@ struct RemoteModelSection: View {
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
             }
-            .sheet(isPresented: $showCustomModelForm) {
+            .sheet(isPresented: $customModelFormViewOpen) {
                 CustomModelFormView(
                     provider: provider,
-                    token: getModelToken(provider: provider),
-                    isSubmitted: $isCustomModelSubmitted
+                    token: getModelToken(provider: provider)
                 )
             }
-            .onChange(of: isCustomModelSubmitted) { oldValue, newValue in
+            .onChange(of: model.isCustomModelSubmitted) { oldValue, newValue in
                 if !oldValue && newValue {
-                    isCustomModelSubmitted = false
+                    model.isCustomModelSubmitted = false
                     model.shrinkContent()
                 }
             }

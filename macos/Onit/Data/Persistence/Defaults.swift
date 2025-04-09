@@ -66,7 +66,7 @@ extension Defaults.Keys {
     static let availableCustomProviders = Key<[CustomProvider]>(
         "availableCustomProvider", default: [])
     static let userAddedCustomRemoteModels = Key<[AIModel]>("userAddedCustomRemoteModels", default: [])
-    static let deletedRemoteModels = Key<[AIModel]>("deletedRemoteModels", default: [])
+    static let userDeletedRemoteModels = Key<[AIModel]>("userDeletedRemoteModels", default: [])
 
     // Stores unique model identifiers in the format "provider-id" or "customProviderName-id" for custom providers
     static let visibleModelIds = Key<Set<String>>("visibleModelIds", default: Set([]))

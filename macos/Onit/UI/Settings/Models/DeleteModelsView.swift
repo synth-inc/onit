@@ -11,108 +11,26 @@ import Defaults
 struct DeleteModelsView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.model) var model
-    
-    @Default(.availableRemoteModels) var availableRemoteModels
-    @Default(.deletedRemoteModels) var deletedRemoteModels
-    @Default(.userAddedCustomRemoteModels) var userAddedCustomRemoteModels
-    @Default(.visibleModelIds) var visibleModelIds
-    @Default(.remoteModel) var remoteModel
-    
-    @Default(.openAIToken) var openAIToken
-    @Default(.anthropicToken) var anthropicToken
-    @Default(.xAIToken) var xAIToken
-    @Default(.googleAIToken) var googleAIToken
-    @Default(.deepSeekToken) var deepSeekToken
-    @Default(.perplexityToken) var perplexityToken
 
-    @State private var selectedModels = Set<String>()
     @State private var showDeleteConfirmation = false
-    
-    // Sorting providers based on the same order found in the Settings -> Models tab.
-    var modelsByProvider: [(AIModel.ModelProvider, [AIModel])] {
-        let filteredModels = availableRemoteModels.filter { model in
-            switch model.provider {
-            case .openAI:
-                return openAIToken != nil
-            case .anthropic:
-                return anthropicToken != nil
-            case .xAI:
-                return xAIToken != nil
-            case .googleAI:
-                return googleAIToken != nil
-            case .deepSeek:
-                return deepSeekToken != nil
-            case .perplexity:
-                return perplexityToken != nil
-            case .custom: // Not including custom provider models.
-                return false
-            }
-        }
-        
-        let groupedByProvider = Dictionary(grouping: filteredModels) { $0.provider }
-        
-        let providerOrder: [AIModel.ModelProvider] = [
-            .openAI,
-            .anthropic,
-            .xAI,
-            .googleAI,
-            .deepSeek,
-            .perplexity
-        ]
-        
-        return providerOrder.compactMap { provider in
-            if let models = groupedByProvider[provider] {
-                return (provider, models)
-            }
-            return nil
-        }
-    }
     
     var body: some View {
         VStack(spacing: 0) {
-            VStack(spacing: 0) {
-                Text("Delete Models")
-                    .font(.system(size:16))
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(.vertical, 12)
-                    .padding(.horizontal, 16)
-                
-                // Divider
-                Rectangle()
-                    .frame(height:1)
-                    .foregroundColor(.gray.opacity(0.2))
-            }
-            .frame(alignment: .center)
+            title
             
             ScrollView {
                 VStack(alignment: .leading, spacing: 32) {
-                    ForEach(modelsByProvider, id: \.0) { provider, models in
+                    ForEach(model.modelsByProvider, id: \.0) { provider, models in
                         if !models.isEmpty {
                             VStack(alignment: .leading, spacing: 6) {
-                                Text(provider.title)
-                                    .font(.system(size: 14, weight: .bold))
+                                Text(provider.title).font(.system(size: 14, weight: .bold))
                                 
                                 ForEach(models) { model in
-                                    HStack (spacing: 0) {
-                                        Toggle("", isOn: .init(
-                                            get: { selectedModels.contains(model.uniqueId) },
-                                            set: { isSelected in
-                                                if isSelected {
-                                                    selectedModels.insert(model.uniqueId)
-                                                } else {
-                                                    selectedModels.remove(model.uniqueId)
-                                                }
-                                            }
-                                        ))
-                                        .toggleStyle(.checkbox)
-                                        
-                                        Text(model.displayName)
-                                            .font(.system(size: 13))
-                                    }
+                                    DeleteModelsViewSelectionRow(aiModel: model)
                                 }
                             }
                             .frame(maxWidth: .infinity, alignment: .leading)
-                        }
+                        } 
                     }
                 }
                 .frame(maxWidth: .infinity)
@@ -121,25 +39,11 @@ struct DeleteModelsView: View {
             }
 
             VStack(spacing: 0) {
-                // Divider
-                Rectangle()
-                    .frame(height:1)
-                    .foregroundColor(.gray.opacity(0.2))
+                divider
                 
                 HStack {
-                    Button("Cancel") {
-                        dismiss()
-                    }
-                    .buttonStyle(.borderedProminent)
-                    .tint(.secondary)
-                    .controlSize(.small)
-                    
-                    Button("Delete") {
-                        showDeleteConfirmation = true
-                    }
-                    .buttonStyle(.borderedProminent)
-                    .controlSize(.small)
-                    .disabled(selectedModels.isEmpty)
+                    cancelButton
+                    deleteButton
                 }
                 .frame(maxWidth: .infinity, alignment: .trailing)
                 .padding(.vertical, 12)
@@ -148,49 +52,64 @@ struct DeleteModelsView: View {
         }
         .frame(width: 330, height: 400)
         .confirmationDialog(
-            selectedModels.count > 1 ? "Are you sure you want to delete the selected models?" : "Are you sure you want to delete the selected model?",
+            model.modelIdsSelectedForDeletion.count > 1 ?
+                "Are you sure you want to delete the selected models?" :
+                "Are you sure you want to delete the selected model?",
             isPresented: $showDeleteConfirmation
         ) {
-            Button("Delete", role: .destructive) {                
-                let shouldRemoveModel: (AIModel) -> Bool = { model in
-                    selectedModels.contains(model.uniqueId)
-                }
-                
-                availableRemoteModels.filter(shouldRemoveModel).forEach { model in
-                    if !deletedRemoteModels.contains(model) {
-                        deletedRemoteModels.append(model)
-                    }
-                }
-                
-                availableRemoteModels.removeAll(where: shouldRemoveModel)
-                userAddedCustomRemoteModels.removeAll(where: shouldRemoveModel)
-                
-                visibleModelIds.subtract(selectedModels)
-                
-                // If the currently-selected model was a member of the models that were just deleted,
-                // set the first model in the list of available models are the new currently-selected model.
-                if let currentRemoteModel = remoteModel {
-                    if !availableRemoteModels.contains(where: { $0.uniqueId == currentRemoteModel.uniqueId }) {
-                        if !modelsByProvider.isEmpty {
-                            let firstProvider = modelsByProvider[0].1
-                            if !firstProvider.isEmpty { remoteModel = firstProvider[0] }
-                            else { remoteModel = nil }
-                        } else {
-                            remoteModel = nil
-                        }
-                    }
-                } else {
-                    if !modelsByProvider.isEmpty {
-                        let firstProvider = modelsByProvider[0].1
-                        if !firstProvider.isEmpty { remoteModel = firstProvider[0] }
-                    }
-                }
-                
-                selectedModels.removeAll()
-                model.shrinkContent()
-                dismiss()
-            }
-            Button("Cancel", role: .cancel) {}
+            confirmDeleteButton
+            confirmCancelButton
         }
+    }
+}
+
+extension DeleteModelsView {
+    var divider: some View {
+        Rectangle()
+            .frame(height:1)
+            .foregroundColor(.gray.opacity(0.2))
+    }
+    
+    var title: some View {
+        VStack(spacing: 0) {
+            Text("Delete Models")
+                .font(.system(size:16))
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.vertical, 12)
+                .padding(.horizontal, 16)
+            
+            divider
+        }
+        .frame(alignment: .center)
+    }
+    
+    var cancelButton: some View {
+        Button("Cancel") {
+            dismiss()
+        }
+        .buttonStyle(.borderedProminent)
+        .tint(.secondary)
+        .controlSize(.small)
+    }
+    
+    var deleteButton: some View {
+        Button("Delete") {
+            showDeleteConfirmation = true
+        }
+        .buttonStyle(.borderedProminent)
+        .controlSize(.small)
+        .disabled(model.modelIdsSelectedForDeletion.isEmpty)
+    }
+    
+    var confirmDeleteButton: some View {
+        Button("Delete", role: .destructive) {
+            model.deleteSelectedModels(
+                dismiss: { dismiss() }
+            )
+        }
+    }
+    
+    var confirmCancelButton: some View {
+        Button("Cancel", role: .cancel) {}
     }
 }
