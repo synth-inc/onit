@@ -25,6 +25,8 @@ protocol OnitPanel: NSPanel {
     @MainActor
     func hide()
     
+    var wasAnimated: Bool { get set }
+    var animationOnWidth: Bool { get set }
     var isAnimating: Bool { get set }
 }
 

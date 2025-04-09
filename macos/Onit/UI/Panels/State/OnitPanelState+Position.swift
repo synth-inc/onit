@@ -76,8 +76,13 @@ extension OnitPanelState {
         }
         
         if let panel = self.panel {
-            let toPanelX = panel.frame.minX + (panel.frame.width / 2)
-            let toPanel = NSRect(origin: NSPoint(x: toPanelX, y: panel.frame.minY), size: panel.frame.size)
+            let toPanel: NSRect
+            if panel.animationOnWidth {
+                toPanel = NSRect(origin: panel.frame.origin, size: NSSize(width: 0, height: panel.frame.height))
+            } else {
+                let toPanelX = panel.frame.minX + (panel.frame.width / 2)
+                toPanel = NSRect(origin: NSPoint(x: toPanelX, y: panel.frame.minY), size: panel.frame.size)
+            }
             
             animateExit(
                 panel: panel,
@@ -96,6 +101,12 @@ extension OnitPanelState {
             return
         }
         
+        let fromFrame = NSRect(
+            x: position.x + size.width + TetherAppsManager.spaceBetweenWindows,
+            y: onitY,
+            width: 0,
+            height: onitHeight
+        )
         let newFrame = NSRect(
             x: position.x + size.width + TetherAppsManager.spaceBetweenWindows,
             y: onitY,
@@ -103,14 +114,14 @@ extension OnitPanelState {
             height: onitHeight
         )
         
-        if panel.isVisible {
-            panel.setFrame(newFrame, display: true, animate: true)
+        if panel.wasAnimated {
+            panel.setFrame(newFrame, display: false)
         } else {
             animateEnter(activeWindow: nil,
                         fromActive: nil,
                         toActive: nil,
                         panel: panel,
-                        fromPanel: newFrame,
+                        fromPanel: fromFrame,
                         toPanel: newFrame
             )
         }
@@ -139,8 +150,8 @@ extension OnitPanelState {
             height: onitHeight
         )
         
-        if panel.isVisible {
-            panel.setFrame(newFrame, display: true, animate: true)
+        if panel.wasAnimated {
+            panel.setFrame(newFrame, display: false)
             _ = window.setFrame(activeWindowTargetRect)
         } else {
             let activeWindowSourceRect = CGRect(
@@ -184,8 +195,8 @@ extension OnitPanelState {
             height: onitHeight
         )
         
-        if panel.isVisible {
-            panel.setFrame(newFrame, display: true, animate: true)
+        if panel.wasAnimated {
+            panel.setFrame(newFrame, display: false)
             _ = window.setFrame(activeWindowTargetRect)
         } else {
             let activeWindowSourceRect = CGRect(
@@ -231,6 +242,11 @@ extension OnitPanelState {
             panel.animator().alphaValue = 1
         } completionHandler: {
             panel.isAnimating = false
+            panel.wasAnimated = true
+            
+            if fromPanel.width == 0 {
+                panel.animationOnWidth = true
+            }
             
             if let activeWindow = activeWindow, let toActive = toActive {
                 _ = activeWindow.setFrame(toActive)

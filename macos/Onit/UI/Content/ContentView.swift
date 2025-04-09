@@ -53,7 +53,7 @@ struct ContentView: View {
                 }
             }
             .trackScreenHeight($screenHeight)
-            .frame(minWidth: 325, idealWidth: ContentView.idealWidth, maxHeight: maxHeight)
+            .frame(minWidth: isRegularApp ? 0 : 325, idealWidth: ContentView.idealWidth, maxHeight: maxHeight)
             .background(Color.black)
             .overlay {
                 RoundedRectangle(cornerRadius: 14)

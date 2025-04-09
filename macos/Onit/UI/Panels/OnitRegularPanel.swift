@@ -19,6 +19,8 @@ class OnitRegularPanel: NSPanel {
     private let activeWindow: AXUIElement?
     private let width = ContentView.idealWidth
     var isAnimating: Bool = false
+    var wasAnimated: Bool = false
+    var animationOnWidth: Bool = false
     
     init(state: OnitPanelState) {
         if let trackedWindow = state.trackedWindow {
@@ -90,14 +92,13 @@ class OnitRegularPanel: NSPanel {
         guard let screen = NSRect(origin: position, size: size).findScreen() else { return }
         
         let screenFrame = screen.frame
-        let onitWidth = ContentView.idealWidth
         let onitHeight = min(size.height, screenFrame.height - ContentView.bottomPadding)
-        let onitX = position.x + size.width - (onitWidth / 2)
+        let onitX = position.x + size.width - (width / 2)
         let onitY = screenFrame.maxY - (position.y + onitHeight)
         let newFrame = NSRect(
             x: onitX,
             y: onitY,
-            width: onitWidth,
+            width: width,
             height: onitHeight
         )
         
