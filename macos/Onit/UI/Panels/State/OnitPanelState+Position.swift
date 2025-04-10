@@ -83,14 +83,40 @@ extension OnitPanelState {
     }
     
     func restoreWindowPosition() {
-        if let window = trackedWindow?.element,
-           let initialFrame = TetherAppsManager.shared.targetInitialFrames[window] {
-            
-            _ = window.setFrame(initialFrame)
-            TetherAppsManager.shared.targetInitialFrames.removeValue(forKey: window)
-        }
-        
+        var fromActive : NSRect? = nil
+        var toActive: NSRect? = nil
         if let panel = self.panel {
+            
+            if let window = trackedWindow?.element,
+                let initialFrame = TetherAppsManager.shared.targetInitialFrames[window],
+                let curFrame = window.frame() {
+
+                // We only try to restore the window if it was resized
+                if panel.resizedApplication {
+                    print("Frames found, trying to set them back ")
+                    fromActive = curFrame
+                    
+                    var newWidth = initialFrame.width
+
+                    // We want to make sure that we don't expand the window beyond the screen width
+                    if let screenFrame = NSScreen.main?.frame {
+                        newWidth = min(screenFrame.maxX - curFrame.origin.x, newWidth)
+                    }
+                        
+                    // We also shouldn't grow it more than the panel width, in case they dragged it left.
+                    newWidth = min(newWidth, curFrame.width + panel.frame.width)
+                    
+                    toActive = NSRect(
+                        x: curFrame.origin.x,
+                        y: curFrame.origin.y,
+                        width: newWidth,
+                        height: curFrame.height
+                    )
+                    TetherAppsManager.shared.targetInitialFrames.removeValue(forKey: window)
+                }
+            }
+        
+
             let toPanel: NSRect
             if panel.animatedFromLeft {
                 toPanel = NSRect(origin: panel.frame.origin, size: NSSize(width: 1, height: panel.frame.height))
@@ -100,6 +126,9 @@ extension OnitPanelState {
             }
             
             animateExit(
+                activeWindow: trackedWindow?.element,
+                fromActive: fromActive,
+                toActive: toActive,
                 panel: panel,
                 toPanel: toPanel
             )
@@ -132,6 +161,7 @@ extension OnitPanelState {
         if panel.wasAnimated {
             panel.setFrame(newFrame, display: false)
         } else {
+            panel.resizedApplication = false
             animateEnter(activeWindow: nil,
                         fromActive: nil,
                         toActive: nil,
@@ -169,6 +199,7 @@ extension OnitPanelState {
             panel.setFrame(newFrame, display: false)
             _ = window.setFrame(activeWindowTargetRect)
         } else {
+            panel.resizedApplication = true
             let activeWindowSourceRect = CGRect(
                 x: position.x,
                 y: position.y,
@@ -220,6 +251,7 @@ extension OnitPanelState {
             panel.setFrame(newFrame, display: false)
             _ = window.setFrame(activeWindowTargetRect)
         } else {
+            panel.resizedApplication = true
             let activeWindowSourceRect = CGRect(
                 x: position.x,
                 y: position.y,
@@ -278,6 +310,9 @@ extension OnitPanelState {
     }
     
     private func animateExit(
+        activeWindow: AXUIElement?,
+        fromActive: CGRect?,
+        toActive: CGRect?,
         panel: OnitPanel,
         toPanel: CGRect,
         steps: Int = 10,
@@ -298,6 +333,10 @@ extension OnitPanelState {
             panel.hide()
             panel.isAnimating = false
             self.panel = nil
+            
+            if let activeWindow = activeWindow, let toActive = toActive {
+                _ = activeWindow.setFrame(toActive)
+            }
         }
     }
 } 

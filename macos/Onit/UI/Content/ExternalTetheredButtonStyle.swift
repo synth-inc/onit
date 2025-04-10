@@ -99,7 +99,7 @@ struct ExternalTetheredButtonStyle: ButtonStyle {
     
     @ViewBuilder
     private func clickBackground(_ clicked: Bool) -> some View {
-        RoundedLeftCorners(radius: ExternalTetheredButton.width / 2)
+        RoundedLeftCorners(radius: (ExternalTetheredButton.width * 1.3) * 0.66)
             .fill(.gray900)
             .opacity(clicked ? 1 : 0)
     }

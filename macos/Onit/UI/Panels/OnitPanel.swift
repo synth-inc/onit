@@ -27,6 +27,7 @@ protocol OnitPanel: NSPanel {
     
     var wasAnimated: Bool { get set }
     var animatedFromLeft: Bool { get set }
+    var resizedApplication: Bool { get set }
     var isAnimating: Bool { get set }
 }
 

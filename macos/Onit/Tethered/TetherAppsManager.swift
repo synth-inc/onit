@@ -156,9 +156,7 @@ class TetherAppsManager: ObservableObject {
     }
     
     private func saveInitialFrameIfNeeded(for window: AXUIElement, state: OnitPanelState) {
-        if state.panel?.wasAnimated == true {
-            targetInitialFrames[window] = nil
-        } else if targetInitialFrames[window] == nil,
+        if targetInitialFrames[window] == nil,
                   let position = window.position(),
                   let size = window.size() {
             targetInitialFrames[window] = CGRect(
@@ -356,7 +354,7 @@ class TetherAppsManager: ObservableObject {
            let currentWindowPosition = currentWindow.position(),
            let currentWindowSize = currentWindow.size() {
             let currentWindowFrame = NSRect(origin: currentWindowPosition, size: currentWindowSize)
-            
+                        
             if let currentWindowScreen = currentWindowFrame.dominantScreen() {
                 for (key, value) in states {
                     if let position = key.element.position(), let size = key.element.size() {

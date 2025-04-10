@@ -48,7 +48,7 @@ struct ExternalTetheredButton: View {
             return "⚠ Allow Onit application in \"Privacy & Security/Accessibility\""
         }
         
-        return "Fit to active window"
+        return "Launch Onit"
     }
     
     private var containsInput: Bool {

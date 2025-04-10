@@ -21,6 +21,7 @@ class OnitRegularPanel: NSPanel {
     var isAnimating: Bool = false
     var wasAnimated: Bool = false
     var animatedFromLeft: Bool = false
+    var resizedApplication: Bool = false
     
     init(state: OnitPanelState) {
         if let trackedWindow = state.trackedWindow {
