@@ -47,6 +47,11 @@ struct ContentView: View {
                     } else {
                         Spacer()
                             .frame(height: 38)
+                        #if DEBUG
+                        TetheredToAppView()
+                            .padding(.horizontal, 16)
+                            .padding(.bottom, 2)
+                        #endif
                     }
                     PromptDivider()
                     ChatView()

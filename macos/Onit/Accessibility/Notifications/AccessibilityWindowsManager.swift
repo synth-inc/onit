@@ -12,7 +12,7 @@ struct TrackedWindow: Hashable {
     let element: AXUIElement
     let pid: pid_t
     let hash: UInt
-    let title: String
+    var title: String
     
     static func == (lhs: TrackedWindow, rhs: TrackedWindow) -> Bool {
         return lhs.pid == rhs.pid && lhs.hash == rhs.hash
