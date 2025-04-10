@@ -17,7 +17,7 @@ struct ContentView: View {
     @Default(.isRegularApp) var isRegularApp
     
     static let idealWidth: CGFloat = 400
-    static let bottomPadding: CGFloat = 100
+    static let bottomPadding: CGFloat = 0
     
     @State var screenHeight: CGFloat = NSScreen.main?.visibleFrame.height ?? 0
 

@@ -219,8 +219,8 @@ class TetherAppsManager: ObservableObject {
         
         let lastYComputed = lastYComputed ?? getCenterPositionY(for: windowFrame) ?? 0
         
-        if let screenFrame = NSRect(origin: position, size: size).findScreen()?.frame {
-            state.tetheredButtonYPosition = screenFrame.height - position.y - (ExternalTetheredButton.height * 1.5) - lastYComputed
+        if let distanceFromBottom = calculateWindowDistanceFromBottom(for: windowFrame) {
+            state.tetheredButtonYPosition = distanceFromBottom + windowFrame.height - lastYComputed - ExternalTetheredButton.containerHeight
         }
         
         let frame = NSRect(

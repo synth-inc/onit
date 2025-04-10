@@ -15,6 +15,7 @@ extension OnitPanelState {
     
     func repositionPanel() {
         guard let window = trackedWindow?.element,
+              let windowFrame = window.frame(),
               let panel = self.panel,
               let position = window.position(),
               let size = window.size() else {
@@ -43,9 +44,23 @@ extension OnitPanelState {
         guard let screen = NSRect(origin: position, size: size).findScreen() else { return }
         
         let screenFrame = screen.frame
+        let visibleFrame = screen.visibleFrame
+        
+        // Find the primary screen (the one with origin at 0,0)
+        let screens = NSScreen.screens
+        let primaryScreen = screens.first { screen in
+            screen.frame.origin.x == 0 && screen.frame.origin.y == 0
+        } ?? NSScreen.main ?? screens.first!
+        let primaryScreenFrame = primaryScreen.frame
+        
+        // This is the height of the dock and/or toolbar.
+        let activeScreenInset = screenFrame.height - visibleFrame.height
+        let fullTop = primaryScreenFrame.height - screenFrame.height - visibleFrame.minY + activeScreenInset
+        let windowDistanceFromTop = windowFrame.minY - fullTop
+        
         let onitWidth = TetherAppsManager.minOnitWidth
         let onitHeight = min(size.height, screenFrame.height - ContentView.bottomPadding)
-        let onitY = screenFrame.maxY - (position.y + onitHeight)
+        let onitY = visibleFrame.minY + (visibleFrame.height - windowFrame.height) - windowDistanceFromTop
         
         let spaceOnRight = screenFrame.maxX - (position.x + size.width)
         let hasEnoughSpace = spaceOnRight >= onitWidth + TetherAppsManager.spaceBetweenWindows
@@ -160,14 +175,19 @@ extension OnitPanelState {
                 width: size.width,
                 height: size.height
             )
-            let panelSourceRect: CGRect = panel.frame
+            let fromFrame = NSRect(
+                x: position.x + size.width, 
+                y: onitY,
+                width: 0,
+                height: onitHeight
+            )
             
             animateEnter(
                 activeWindow: window,
                 fromActive: activeWindowSourceRect,
                 toActive: activeWindowTargetRect,
                 panel: panel,
-                fromPanel: panelSourceRect,
+                fromPanel: fromFrame,
                 toPanel: newFrame
             )
         }
@@ -205,14 +225,19 @@ extension OnitPanelState {
                 width: size.width,
                 height: size.height
             )
-            let panelSourceRect: CGRect = panel.frame
+            let fromFrame = NSRect(
+                x: newFrame.minX + onitWidth,
+                y: onitY,
+                width: 0,
+                height: onitHeight
+            )
             
             animateEnter(
                 activeWindow: window,
                 fromActive: activeWindowSourceRect,
                 toActive: activeWindowTargetRect,
                 panel: panel,
-                fromPanel: panelSourceRect,
+                fromPanel: fromFrame,
                 toPanel: newFrame
             )
         }
