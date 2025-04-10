@@ -61,7 +61,7 @@ struct TetheredButton: View {
                     return
                 }
                 
-                TetherAppsManager.shared.state.closePanel()
+                state.closePanel()
             }) {
                 Image(.smallChevRight)
                     .renderingMode(.template)
