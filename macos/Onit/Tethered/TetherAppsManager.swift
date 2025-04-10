@@ -70,33 +70,7 @@ class TetherAppsManager: ObservableObject {
         
         regularAppCancellable = Defaults.publisher(.isRegularApp)
             .map(\.newValue)
-            .sink { [weak self] isRegularApp in
-                guard let self = self else { return }
-                
-                if isRegularApp {
-                    self.startAllObservers()
-                } else {
-                    self.stopAllObservers()
-                    self.resetFramesOnAppChange()
-                }
-                
-                if self.skipFirstRegularAppUpdate {
-                    self.skipFirstRegularAppUpdate = false
-                } else {
-                    self.setAppAsRegular(isRegularApp)
-                }
-            }
-    }
-    
-    private func resetFramesOnAppChange() {
-        targetInitialFrames.forEach { element, initialFrame in
-            guard let window = element.findWindow() else {
-                return
-            }
-            
-            _ = window.setFrame(initialFrame)
-        }
-        targetInitialFrames.removeAll()
+            .sink(receiveValue: onChange(isRegularApp:))
     }
     
     func stopObserving() {
@@ -114,6 +88,44 @@ class TetherAppsManager: ObservableObject {
     private func stopAllObservers() {
         AccessibilityNotificationsManager.shared.removeDelegate(self)
         hideTetherWindow()
+    }
+    
+    private func onChange(isRegularApp: Bool) {
+        if isRegularApp {
+            startAllObservers()
+        } else {
+            stopAllObservers()
+            resetFramesOnAppChange()
+        }
+        guard !skipFirstRegularAppUpdate else {
+            skipFirstRegularAppUpdate = false
+            return
+        }
+        
+        // Close all panels without animations
+        defaultState.panel?.hide()
+        defaultState.panel = nil
+        
+        for (_, state) in states {
+            state.panel?.hide()
+            state.panel = nil
+        }
+        
+        if !isRegularApp {
+            hideTetherWindow()
+            defaultState.launchPanel()
+        }
+    }
+    
+    private func resetFramesOnAppChange() {
+        targetInitialFrames.forEach { element, initialFrame in
+            guard let window = element.findWindow() else {
+                return
+            }
+            
+            _ = window.setFrame(initialFrame)
+        }
+        targetInitialFrames.removeAll()
     }
     
     // MARK: - Handling panel state changes
@@ -362,25 +374,6 @@ class TetherAppsManager: ObservableObject {
                 value.panel?.level = .normal
                 value.panel?.orderBack(nil)
             }
-        }
-    }
-    
-    private func setAppAsRegular(_ value: Bool) {
-        closeAllPanels()
-        
-        if value {
-            state.launchPanel()
-        } else {
-            state = defaultState
-            state.launchPanel()
-        }
-    }
-    
-    private func closeAllPanels() {
-        defaultState.closePanel()
-        
-        for (_, state) in states {
-            state.closePanel()
         }
     }
 }
