@@ -332,10 +332,33 @@ class TetherAppsManager: ObservableObject {
     }
     
     func updateLevelState(trackedWindow: TrackedWindow?) {
-        for (key, value) in states {
-            if key == trackedWindow {
-                value.panel?.level = .floating
-            } else if value.panel?.level == .floating {
+        if let currentWindow = trackedWindow?.element,
+           let currentWindowPosition = currentWindow.position(),
+           let currentWindowSize = currentWindow.size() {
+            let currentWindowFrame = NSRect(origin: currentWindowPosition, size: currentWindowSize)
+            
+            if let currentWindowScreen = currentWindowFrame.dominantScreen() {
+                for (key, value) in states {
+                    if let position = key.element.position(), let size = key.element.size() {
+                        let frame = NSRect(origin: position, size: size)
+                        
+                        if currentWindowScreen.frame.intersects(frame) {
+                            /// Same screen
+                            if key == trackedWindow {
+                                value.panel?.level = .floating
+                            } else if value.panel?.level == .floating {
+                                value.panel?.level = .normal
+                                value.panel?.orderBack(nil)
+                            } else {
+                                value.panel?.orderBack(nil)
+                            }
+                        } else { /** Window is not on same screen */ }
+                    } else { /** Can't find window's frame */ }
+                }
+            } else { /** Can't find current window's screen */ }
+        } else {
+            /** Can't find current window - ignored apps */
+            for (_, value) in states {
                 value.panel?.level = .normal
                 value.panel?.orderBack(nil)
             }

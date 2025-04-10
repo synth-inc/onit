@@ -9,6 +9,23 @@ import AppKit
 
 extension NSRect {
     
+    func dominantScreen() -> NSScreen? {
+        var maxIntersectionArea: CGFloat = 0
+        var bestScreen: NSScreen?
+
+        for screen in NSScreen.screens {
+            let intersection = screen.frame.intersection(self)
+            let area = intersection.width * intersection.height
+
+            if area > maxIntersectionArea {
+                maxIntersectionArea = area
+                bestScreen = screen
+            }
+        }
+
+        return bestScreen
+    }
+    
     func findScreen() -> NSScreen? {
         guard let mainScreen = NSScreen.main else {
             return nil
