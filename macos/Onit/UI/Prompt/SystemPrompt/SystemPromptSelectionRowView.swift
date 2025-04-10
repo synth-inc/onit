@@ -10,15 +10,15 @@ import KeyboardShortcuts
 import SwiftUI
 
 struct SystemPromptSelectionRowView: View {
-    @Default(.systemPromptId) var systemPromptId
+    @Environment(\.windowState) var windowState
     
     var prompt: SystemPrompt
     
     var body: some View {
         Button(action: {
-            systemPromptId = prompt.id
             prompt.lastUsed = Date()
-            SystemPromptState.shared.userSelectedPrompt = true
+            windowState.systemPromptId = prompt.id
+            windowState.systemPromptState.userSelectedPrompt = true
         }) {
             HStack {
                 Text(prompt.name)
@@ -33,7 +33,7 @@ struct SystemPromptSelectionRowView: View {
             }
             .padding(8)
         // Use .black and not .clear because only text will be clickable
-            .background(systemPromptId == prompt.id ? .gray700 : Color.black)
+            .background(windowState.systemPromptId == prompt.id ? .gray700 : Color.black)
             .clipShape(RoundedRectangle(cornerRadius: 8))
         }
         .buttonStyle(.plain)

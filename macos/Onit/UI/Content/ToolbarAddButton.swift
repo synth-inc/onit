@@ -24,16 +24,16 @@ struct ToolbarAddButton: View {
             Button {
                 state.newChat()
                 
-                SystemPromptState.shared.shouldShowSelection = true
-                SystemPromptState.shared.shouldShowSystemPrompt = true
+                state.systemPromptState.shouldShowSelection = true
+                state.systemPromptState.shouldShowSystemPrompt = true
             } label: {
                 Image(.smallChevDown)
                     .renderingMode(.template)
                     .padding(2)
             }
             .onHover(perform: { isHovered in
-                if isHovered && state.currentChat?.systemPrompt == nil && !SystemPromptState.shared.shouldShowSystemPrompt {
-                    SystemPromptState.shared.shouldShowSystemPrompt = true
+                if isHovered && state.currentChat?.systemPrompt == nil && !state.systemPromptState.shouldShowSystemPrompt {
+                    state.systemPromptState.shouldShowSystemPrompt = true
                 }
             })
             .tooltip(prompt: "Start new Chat with system prompt")

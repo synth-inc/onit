@@ -6,97 +6,79 @@
 //
 
 import Combine
-import Defaults
 import SwiftData
 import SwiftUI
 
 @Observable @MainActor
 class SystemPromptSuggestionService {
-    private let container: ModelContainer
+    private let state: OnitPanelState
     private var cancellables = Set<AnyCancellable>()
     
     private(set) var suggestedPrompts: [SystemPrompt] = []
     private var lastPromptUsed: SystemPrompt = .outputOnly
     
+    private var instruction: String = ""
+    private var contexts: [Context] = []
+    private var input: Input?
+    private var frontmostApplication: NSRunningApplication?
+    
     init(state: OnitPanelState) {
-        self.container = state.container
-
-        let instructionPublisher = state.pendingInstructionSubject
-            .map { $0.lowercased() }
-        let inputTextPublisher = state.pendingInputSubject
-            .map { $0?.selectedText.lowercased() ?? "" }
+        self.state = state
+        state.addDelegate(self)
         
-        let contextListTextPublisher = state.pendingContextListSubject
-            .map { contexts in
-                var temp = ""
+        NSWorkspace.shared.publisher(for: \.frontmostApplication)
+            .sink { [weak self] frontmostApplication in
+                guard let self = self else { return }
                 
-                for context in contexts {
-                    if case .auto(_, let content) = context {
-                        temp += content.values.joined(separator: " ").lowercased() + " "
-                    } else if case .file(let url) = context {
-                        if let contentFile = try? String(contentsOf: url).lowercased() {
-                            temp += contentFile + " "
-                        }
-                    }
-                }
-                
-                return temp
+                self.frontmostApplication = frontmostApplication
+                self.process()
             }
-        
-        let inputAppPublisher = state.pendingInputSubject
-            .map { $0?.application?.lowercased() ?? "" }
-        let contextListAppPublisher = state.pendingContextListSubject
-            .map { contexts in
-                var temp = ""
-                
-                for context in contexts {
-                    if case .auto(let appName, _) = context {
-                        temp += appName.lowercased() + " "
-                    }
-                }
-                
-                return temp
-            }
-        
-        let frontMostAppPublisher = NSWorkspace.shared.publisher(for: \.frontmostApplication)
-            .map { $0?.localizedName?.lowercased() ?? "" }
-            .prepend(NSWorkspace.shared.frontmostApplication?.localizedName?.lowercased() ?? "")
-        
-        let textPublisher = Publishers.CombineLatest3(instructionPublisher, inputTextPublisher, contextListTextPublisher)
-            .map { $0 + " " + $1 + " " + $2 }
-        let appPublisher = Publishers.CombineLatest3(frontMostAppPublisher, inputAppPublisher, contextListAppPublisher)
-            .map { $0 + " " + $1 + " " + $2 }
-        
-        Publishers.CombineLatest(
-            textPublisher,
-            appPublisher
-        )
-        .receive(on: DispatchQueue.main)
-        .sink { [weak self] (text, app) in
-            guard let self = self else { return }
-            self.updateSuggestions(
-                text: text,
-                apps: app
-            )
-            
-            guard state.currentChat?.systemPrompt == nil &&
-                  !SystemPromptState.shared.userSelectedPrompt else { return }
-            
-            if let firstPrompt = self.suggestedPrompts.first {
-                Defaults[.systemPromptId] = firstPrompt.id
-                SystemPromptState.shared.shouldShowSystemPrompt = true
-            } else {
-                Defaults[.systemPromptId] = lastPromptUsed.id
-            }
-        }
-        .store(in: &cancellables)
+            .store(in: &cancellables)
     }
     
-    private func updateSuggestions(
-        text: String,
-        apps: String
-    ) {
-        let context = ModelContext(self.container)
+    private func process() {
+        let instruction = instruction.lowercased()
+        let inputText = input?.selectedText.lowercased() ?? ""
+        
+        var contextListText = ""
+        for context in contexts {
+            if case .auto(_, let content) = context {
+                contextListText += content.values.joined(separator: " ").lowercased() + " "
+            } else if case .file(let url) = context {
+                if let contentFile = try? String(contentsOf: url).lowercased() {
+                    contextListText += contentFile + " "
+                }
+            }
+        }
+        
+        let inputApp = input?.application?.lowercased() ?? ""
+        var contextListApp = ""
+        for context in contexts {
+            if case .auto(let appName, _) = context {
+                contextListApp += appName.lowercased() + " "
+            }
+        }
+        
+        let frontMostApp = frontmostApplication?.localizedName?.lowercased() ?? ""
+        
+        let text = instruction + " " + inputText + " " + contextListText
+        let apps = frontMostApp + " " + inputApp + " " + contextListApp
+        
+        updateSuggestions(text: text, apps: apps)
+        
+        guard state.currentChat?.systemPrompt == nil &&
+                !state.systemPromptState.userSelectedPrompt else { return }
+
+        if let firstPrompt = self.suggestedPrompts.first {
+            state.systemPromptId = firstPrompt.id
+            state.systemPromptState.shouldShowSystemPrompt = true
+        } else {
+            state.systemPromptId = lastPromptUsed.id
+        }
+    }
+    
+    private func updateSuggestions(text: String, apps: String) {
+        let context = ModelContext(state.container)
         let fetchDescriptor = FetchDescriptor<SystemPrompt>(
             sortBy: [SortDescriptor(\.lastUsed, order: .reverse)]
         )
@@ -147,4 +129,16 @@ class SystemPromptSuggestionService {
             }
             .map { $0.0 }
     }
-} 
+}
+
+extension SystemPromptSuggestionService: OnitPanelStateDelegate {
+    func panelStateDidChange(state: OnitPanelState) { }
+    
+    func userInputsDidChange(instruction: String, contexts: [Context], input: Input?) {
+        self.instruction = instruction
+        self.contexts = contexts
+        self.input = input
+        
+        process()
+    }
+}

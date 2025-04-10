@@ -50,8 +50,8 @@ extension OnitPanelState: NSWindowDelegate {
     func closePanel() {
         guard let panel = panel else { return }
         
-        SystemPromptState.shared.shouldShowSelection = false
-        SystemPromptState.shared.shouldShowSystemPrompt = false
+        systemPromptState.shouldShowSelection = false
+        systemPromptState.shouldShowSystemPrompt = false
 
         if Defaults[.isRegularApp] {
             if trackedWindow != nil {
@@ -94,13 +94,18 @@ extension OnitPanelState: NSWindowDelegate {
     }
     
     func handlePanelClicked() {
+        textFocusTrigger.toggle()
+        
         guard let panel = panel,
               panel.level != .floating,
               let window = trackedWindow?.element
         else { return }
         
         window.bringToFront()
-        notifyDelegates()
+        
+        notifyDelegates { delegate in
+            delegate.panelStateDidChange(state: self)
+        }
     }
         
     // MARK: - NSWindowDelegate
@@ -110,11 +115,15 @@ extension OnitPanelState: NSWindowDelegate {
     }
 
     func windowWillMiniaturize(_ notification: Notification) {
-        setPanelMiniaturized(true)
+        if !panelMiniaturized {
+            panelMiniaturized = true
+        }
     }
     
     func windowDidDeminiaturize(_ notification: Notification) {
-        setPanelMiniaturized(false)
+        if panelMiniaturized {
+            panelMiniaturized = false
+        }
     }
     
     func windowShouldClose(_ sender: NSWindow) -> Bool {

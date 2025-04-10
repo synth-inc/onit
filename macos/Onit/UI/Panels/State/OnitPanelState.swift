@@ -11,7 +11,8 @@ import SwiftData
 import SwiftUI
 
 @MainActor protocol OnitPanelStateDelegate: AnyObject {
-    func panelStateDidChange(state: OnitPanelState, isOpened: Bool, isMiniaturized: Bool)
+    func panelStateDidChange(state: OnitPanelState)
+    func userInputsDidChange(instruction: String, contexts: [Context], input: Input?)
 }
 
 @MainActor
@@ -25,33 +26,15 @@ class OnitPanelState: NSObject {
     /// Container
     let container: ModelContainer = SwiftDataContainer.appContainer
     
+    /// States
+    let systemPromptState: SystemPromptState = .init()
+    
     /// Services
     var promptSuggestionService: SystemPromptSuggestionService?
     
     var trackedWindow: TrackedWindow?
     
     private var delegates = NSHashTable<AnyObject>.weakObjects()
-    
-    var _panelOpened: Bool = false {
-        didSet {
-            notifyDelegates()
-        }
-    }
-    private var _panelMiniaturized: Bool = false {
-        didSet {
-            notifyDelegates()
-        }
-    }
-    
-    var tetheredButtonYPosition: CGFloat?
-    
-    var isOpened: Bool {
-        get { return _panelOpened }
-    }
-    
-    var isMiniaturized: Bool {
-        get { return _panelMiniaturized }
-    }
     
     var panel: OnitPanel? {
         didSet {
@@ -62,36 +45,44 @@ class OnitPanelState: NSObject {
             }
         }
     }
-    
-    func setPanelMiniaturized(_ value: Bool) {
-        if _panelMiniaturized != value {
-            _panelMiniaturized = value
+    var panelOpened: Bool = false {
+        didSet {
+            notifyDelegates { delegate in
+                delegate.panelStateDidChange(state: self)
+            }
         }
     }
+    var panelMiniaturized: Bool = false {
+        didSet {
+            notifyDelegates { delegate in
+                delegate.panelStateDidChange(state: self)
+            }
+        }
+    }
+    
+    var tetheredButtonYPosition: CGFloat?
     
     var currentChat: Chat?
     var currentPrompts: [Prompt]?
     
     var pendingInstruction = "" {
         didSet {
-            pendingInstructionSubject.send(pendingInstruction)
+            notifyDelegateInputsChange()
         }
     }
     var pendingInstructionCursorPosition: Int = 0
     var pendingContextList: [Context] = [] {
         didSet {
-            pendingContextListSubject.send(pendingContextList)
+            notifyDelegateInputsChange()
         }
     }
     var pendingInput: Input? = nil {
         didSet {
-            pendingInputSubject.send(pendingInput)
+            notifyDelegateInputsChange()
         }
     }
     
-    var pendingInstructionSubject = CurrentValueSubject<String, Never>("")
-    var pendingContextListSubject = CurrentValueSubject<[Context], Never>([])
-    var pendingInputSubject = CurrentValueSubject<Input?, Never>(nil)
+    var systemPromptId: String = SystemPrompt.outputOnly.id
     
     var imageUploads: [URL: UploadProgress] = [:]
     var uploadTasks: [URL: Task<URL?, Never>] = [:]
@@ -139,9 +130,19 @@ class OnitPanelState: NSObject {
         delegates.remove(delegate)
     }
     
-    func notifyDelegates() {
+    func notifyDelegates(_ notification: (OnitPanelStateDelegate) -> Void) {
         for case let delegate as OnitPanelStateDelegate in delegates.allObjects {
-            delegate.panelStateDidChange(state: self, isOpened: _panelOpened, isMiniaturized: _panelMiniaturized)
+            notification(delegate)
+        }
+    }
+    
+    private func notifyDelegateInputsChange() {
+        notifyDelegates { delegate in
+            delegate.userInputsDidChange(
+                instruction: pendingInstruction,
+                contexts: pendingContextList,
+                input: pendingInput
+            )
         }
     }
 }

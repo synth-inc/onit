@@ -134,7 +134,7 @@ struct KeyboardShortcutsManager {
         let name = KeyboardShortcuts.Name(systemPrompt.id)
         
         KeyboardShortcuts.onKeyUp(for: name) {
-            Defaults[.systemPromptId] = systemPrompt.id
+            TetherAppsManager.shared.state.systemPromptId = systemPrompt.id
         }
     }
 }

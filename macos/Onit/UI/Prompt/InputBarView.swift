@@ -11,7 +11,7 @@ struct InputBarView: View {
     @Environment(\.windowState) private var state
     
     private var shouldShowSystemPrompt: Bool {
-        state.currentChat?.systemPrompt == nil && SystemPromptState.shared.shouldShowSystemPrompt
+        state.currentChat?.systemPrompt == nil && state.systemPromptState.shouldShowSystemPrompt
     }
 
     var body: some View {

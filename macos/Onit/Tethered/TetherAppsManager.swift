@@ -130,19 +130,19 @@ class TetherAppsManager: ObservableObject {
     
     // MARK: - Handling panel state changes
     
-    private func handlePanelStateChange(state: OnitPanelState, isOpened: Bool, isMiniaturized: Bool) {
+    private func handlePanelStateChange(state: OnitPanelState) {
         guard let window = state.trackedWindow?.element else {
             return
         }
         
-        if isOpened && !isMiniaturized {
+        if state.panelOpened && !state.panelMiniaturized {
             // Panel opened
             saveInitialFrameIfNeeded(for: window, state: state)
             hideTetherWindow()
 
             // TODO: KNA - Tethered - We should just move the panel without any animation
             state.repositionPanel()
-        } else if !isOpened {
+        } else if !state.panelOpened {
             // Panel closed
             debouncedShowTetherWindow(state: state, activeWindow: window)
         } else {
@@ -398,7 +398,7 @@ extension TetherAppsManager: AccessibilityNotificationsDelegate {
         
         panelState.addDelegate(self)
         state = panelState
-        handlePanelStateChange(state: panelState, isOpened: panelState.isOpened, isMiniaturized: panelState.isMiniaturized)
+        handlePanelStateChange(state: panelState)
     }
     
     func accessibilityManager(_ manager: AccessibilityNotificationsManager, didActivateIgnoredWindow window: TrackedWindow?) {
@@ -422,8 +422,9 @@ extension TetherAppsManager: AccessibilityNotificationsDelegate {
 // MARK: - OnitPanelStateDelegate
 
 extension TetherAppsManager: OnitPanelStateDelegate {
-    
-    func panelStateDidChange(state: OnitPanelState, isOpened: Bool, isMiniaturized: Bool) {
-        handlePanelStateChange(state: state, isOpened: isOpened, isMiniaturized: isMiniaturized)
+    func panelStateDidChange(state: OnitPanelState) {
+        handlePanelStateChange(state: state)
     }
+    
+    func userInputsDidChange(instruction: String, contexts: [Context], input: Input?) { }
 }

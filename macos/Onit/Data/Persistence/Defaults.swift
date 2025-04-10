@@ -113,9 +113,6 @@ extension Defaults.Keys {
     static let createNewChatOnPanelOpen = Key<Bool>("createNewChatOnPanelOpen", default: false)
     static let escapeShortcutDisabled = Key<Bool>("escapeShortcutDisabled", default: true)
     static let openOnMouseMonitor = Key<Bool>("openOnMouseMonitor", default: false)
-
-    // System prompts
-    static let systemPromptId = Key<String>("systemPromptId", default: SystemPrompt.outputOnly.id)
 }
 
 extension NSRect: Defaults.Serializable {

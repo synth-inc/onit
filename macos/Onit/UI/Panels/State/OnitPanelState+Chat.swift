@@ -26,7 +26,7 @@ extension OnitPanelState {
                 let systemPrompt: SystemPrompt
                 do {
                     systemPrompt = try container.mainContext.fetch(FetchDescriptor<SystemPrompt>())
-                            .first(where: { $0.id == Defaults[.systemPromptId] }) ?? SystemPrompt.outputOnly
+                            .first(where: { $0.id == systemPromptId }) ?? SystemPrompt.outputOnly
                 } catch {
                     systemPrompt = SystemPrompt.outputOnly
                 }
@@ -40,7 +40,7 @@ extension OnitPanelState {
                     windowPid: windowIdentifier?.pid
                 )
                 currentPrompts = []
-                SystemPromptState.shared.shouldShowSystemPrompt = false
+                systemPromptState.shouldShowSystemPrompt = false
                 let modelContext = container.mainContext
                 modelContext.insert(currentChat!)
                 

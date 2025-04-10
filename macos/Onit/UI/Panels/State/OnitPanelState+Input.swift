@@ -102,10 +102,10 @@ extension OnitPanelState {
         }
         focusText()
         
-        SystemPromptState.shared.shouldShowSelection = false
-        SystemPromptState.shared.userSelectedPrompt = false
+        systemPromptState.shouldShowSelection = false
+        systemPromptState.userSelectedPrompt = false
         let suggestedPrompts = promptSuggestionService?.suggestedPrompts ?? []
-        SystemPromptState.shared.shouldShowSystemPrompt = shouldSystemPrompt || !suggestedPrompts.isEmpty
+        systemPromptState.shouldShowSystemPrompt = shouldSystemPrompt || !suggestedPrompts.isEmpty
     }
 
     func removeContext(context: Context) {
