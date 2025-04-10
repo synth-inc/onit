@@ -47,11 +47,6 @@ struct ContentView: View {
                     } else {
                         Spacer()
                             .frame(height: 38)
-                        #if DEBUG
-                        TetheredToAppView()
-                            .padding(.horizontal, 16)
-                            .padding(.bottom, 2)
-                        #endif
                     }
                     PromptDivider()
                     ChatView()
@@ -76,7 +71,12 @@ struct ContentView: View {
                     EmptyView()
                 }
             }
+            #if DEBUG
             ToolbarItem(placement: .automatic) {
+                TetheredToAppView()
+            }
+            #endif
+            ToolbarItem(placement: .automatic) {   
                 Spacer()
             }
             ToolbarItem(placement: .primaryAction) {

@@ -92,11 +92,11 @@ extension OnitPanelState {
         
         if let panel = self.panel {
             let toPanel: NSRect
-            if panel.animationOnWidth {
-                toPanel = NSRect(origin: panel.frame.origin, size: NSSize(width: 0, height: panel.frame.height))
+            if panel.animatedFromLeft {
+                toPanel = NSRect(origin: panel.frame.origin, size: NSSize(width: 1, height: panel.frame.height))
             } else {
-                let toPanelX = panel.frame.minX + (panel.frame.width / 2)
-                toPanel = NSRect(origin: NSPoint(x: toPanelX, y: panel.frame.minY), size: panel.frame.size)
+                let toPanelX = panel.frame.maxX - 2
+                toPanel = NSRect(origin: NSPoint(x: toPanelX, y: panel.frame.minY), size: NSSize(width: 1, height: panel.frame.height))
             }
             
             animateExit(
@@ -196,6 +196,7 @@ extension OnitPanelState {
     private func resizeWindowAndMovePanel(onitWidth: CGFloat, onitHeight: CGFloat, onitY: CGFloat, maxAvailableWidth: CGFloat) {
         guard let window = trackedWindow?.element,
               let panel = panel,
+              let windowFrame = window.frame(),
               let position = window.position(),
               let size = window.size() else {
             return
@@ -226,7 +227,7 @@ extension OnitPanelState {
                 height: size.height
             )
             let fromFrame = NSRect(
-                x: newFrame.minX + onitWidth,
+                x: windowFrame.maxX - 1, // 1px padding prevents animation lag when window is on edge of external monitors.
                 y: onitY,
                 width: 0,
                 height: onitHeight
@@ -268,10 +269,7 @@ extension OnitPanelState {
         } completionHandler: {
             panel.isAnimating = false
             panel.wasAnimated = true
-            
-            if fromPanel.width == 0 {
-                panel.animationOnWidth = true
-            }
+            panel.animatedFromLeft = abs(fromPanel.maxX - toPanel.minX) <= abs(fromPanel.maxX - toPanel.maxX)
             
             if let activeWindow = activeWindow, let toActive = toActive {
                 _ = activeWindow.setFrame(toActive)

@@ -20,7 +20,7 @@ class OnitRegularPanel: NSPanel {
     private let width = ContentView.idealWidth
     var isAnimating: Bool = false
     var wasAnimated: Bool = false
-    var animationOnWidth: Bool = false
+    var animatedFromLeft: Bool = false
     
     init(state: OnitPanelState) {
         if let trackedWindow = state.trackedWindow {

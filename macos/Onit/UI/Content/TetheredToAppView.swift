@@ -34,12 +34,16 @@ struct TetheredToAppView: View {
             }
             
             if let appTitle = appTitle {
-                Text(appTitle)
-                    .lineLimit(1)
-                    .appFont(.medium13)
-                    .foregroundColor(.gray200)
+                ScrollView(.horizontal, showsIndicators: false) {
+                    Text(appTitle)
+                        .lineLimit(1)
+                        .appFont(.medium13)
+                        .foregroundColor(.gray200)
+                }
+                .frame(maxWidth: 100)
             }
         }
+        .frame(maxWidth: 130) // Set max width to 100 px
     }
 }
 

@@ -26,7 +26,7 @@ protocol OnitPanel: NSPanel {
     func hide()
     
     var wasAnimated: Bool { get set }
-    var animationOnWidth: Bool { get set }
+    var animatedFromLeft: Bool { get set }
     var isAnimating: Bool { get set }
 }
 
