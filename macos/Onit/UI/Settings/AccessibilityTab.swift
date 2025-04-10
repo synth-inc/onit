@@ -1,3 +1,4 @@
+import Defaults
 import KeyboardShortcuts
 import PostHog
 import SwiftUI
@@ -38,6 +39,7 @@ struct AccessibilityTab: View {
         //        HighlightHintModeUI.from(mode: .textfield)
     ]
 
+    @Default(.automaticallyAddAutoContext) var automaticallyAddAutoContext
     @State private var selectedMode: HighlightHintModeUI = HighlightHintModeUI.from(
         mode: FeatureFlagManager.shared.highlightHintMode)
 
@@ -171,9 +173,25 @@ struct AccessibilityTab: View {
                             .font(.system(size: 12))
                             .foregroundStyle(.gray200)
                     }
-                    KeyboardShortcuts.Recorder(
-                        "Shortcut", name: .launchWithAutoContext
-                    )
+                    HStack {
+                        Text("Automatically pull context")
+                            .font(.system(size: 13))
+                        Spacer()
+                        Toggle(
+                            "",
+                            isOn: Binding(
+                                get: { automaticallyAddAutoContext },
+                                set: { automaticallyAddAutoContext = $0 }
+                            )
+                        )
+                        .toggleStyle(.switch)
+                        .controlSize(.small)
+                    }
+                    if !automaticallyAddAutoContext {
+                        KeyboardShortcuts.Recorder(
+                            "Shortcut", name: .launchWithAutoContext
+                        )
+                    }
                 }
             }
         }

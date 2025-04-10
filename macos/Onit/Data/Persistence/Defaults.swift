@@ -84,6 +84,8 @@ extension Defaults.Keys {
     static let accessibilityAutoContextEnabled = Key<Bool?>(
         "accessibilityAutoContextEnabled", default: nil)
     static let highlightHintMode = Key<HighlightHintMode?>("highlightHintMode", default: nil)
+    
+    static let automaticallyAddAutoContext = Key<Bool>("automaticallyAddAutoContext", default: false)
 
     // Web search
     static let webSearchEnabled = Key<Bool>("webSearchEnabled", default: false)

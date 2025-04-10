@@ -6,6 +6,7 @@
 //
 
 import ApplicationServices
+import Defaults
 import Foundation
 import PostHog
 import SwiftUI
@@ -380,6 +381,8 @@ class AccessibilityNotificationsManager: ObservableObject {
         
         parseDebounceWorkItem?.cancel()
         
+        let state = TetherAppsManager.shared.state
+        
         let workItem = DispatchWorkItem { [weak self] in
             guard let self = self else { return }
             
@@ -414,6 +417,10 @@ class AccessibilityNotificationsManager: ObservableObject {
                         self.screenResult.others = results
                         self.screenResult.errorMessage = nil
                         self.showDebug()
+                        
+                        if Defaults[.automaticallyAddAutoContext] {
+                            state.addAutoContext()
+                        }
                     }
                 } catch {
                     let appName = pid.getAppName() ?? "Unknown"
