@@ -11,101 +11,115 @@ import SwiftUI
 extension OnitPanelState: NSWindowDelegate {
     
     @MainActor
-        func showPanel() {
-            if let existingPanel = panel, existingPanel.isVisible {
-                existingPanel.makeKeyAndOrderFront(nil)
-                existingPanel.orderFrontRegardless()
-                // Focus the text input when we're activating the panel
-                textFocusTrigger.toggle()
-                
-                return
-            }
-
-            // Create a new chat when creating a new panel if the setting is enabled
-            // But we don't want to clear out the context, so that autocontext still works.
-            if Defaults[.createNewChatOnPanelOpen] {
-                newChat(clearContext: false)
-            }
-
-            let newPanel: OnitPanel = Defaults[.isRegularApp] ?
-                OnitRegularPanel(state: self) :
-                OnitAccessoryPanel(state: self)
-            
-            panel = newPanel
-
-            if Defaults[.isRegularApp] {
-                if trackedWindow != nil {
-                    repositionPanel()
-                } else {
-                    print("Something went wrong while trying to reposition the panel.")
-                }
-            }
-
-            KeyboardShortcutsManager.enable(modelContainer: container)
-
+    func showPanel() {
+        if let existingPanel = panel, existingPanel.isVisible {
+            existingPanel.makeKeyAndOrderFront(nil)
+            existingPanel.orderFrontRegardless()
             // Focus the text input when we're activating the panel
             textFocusTrigger.toggle()
+            
+            return
         }
 
-        func closePanel() {
-            guard let panel = panel else { return }
-            
-            SystemPromptState.shared.shouldShowSelection = false
-            SystemPromptState.shared.shouldShowSystemPrompt = false
+        // Create a new chat when creating a new panel if the setting is enabled
+        // But we don't want to clear out the context, so that autocontext still works.
+        if Defaults[.createNewChatOnPanelOpen] {
+            newChat(clearContext: false)
+        }
 
-            if Defaults[.isRegularApp] && trackedWindow != nil {
+        let newPanel: OnitPanel = Defaults[.isRegularApp] ?
+            OnitRegularPanel(state: self) :
+            OnitAccessoryPanel(state: self)
+        
+        panel = newPanel
+
+        if Defaults[.isRegularApp] {
+            if trackedWindow != nil {
+                repositionPanel()
+            } else {
+                print("Something went wrong while trying to reposition the panel.")
+            }
+        }
+
+        KeyboardShortcutsManager.enable(modelContainer: container)
+
+        // Focus the text input when we're activating the panel
+        textFocusTrigger.toggle()
+    }
+
+    func closePanel() {
+        guard let panel = panel else { return }
+        
+        SystemPromptState.shared.shouldShowSelection = false
+        SystemPromptState.shared.shouldShowSystemPrompt = false
+
+        if Defaults[.isRegularApp] {
+            if trackedWindow != nil {
                 restoreWindowPosition()
             } else {
-                panel.hide()
-                self.panel = nil
+                // What to do
             }
-            
-            HighlightHintWindowController.shared.adjustWindow()
-            KeyboardShortcutsManager.disable(modelContainer: container)
+        } else {
+            panel.hide()
+            self.panel = nil
         }
         
-        func launchPanel() {
-            guard let panel = panel else {
-                showPanel()
-                return
-            }
-
-            // If we're using the shortcut as a Toggle, dismiss the panel.
-            if Defaults[.launchShortcutToggleEnabled] {
-                closePanel()
-            } else {
-                panel.show()
-                textFocusTrigger.toggle()
-            }
+        HighlightHintWindowController.shared.adjustWindow()
+        KeyboardShortcutsManager.disable(modelContainer: container)
+    }
+    
+    func launchPanel() {
+        guard let panel = panel else {
+            showPanel()
+            return
         }
 
-        func escapeAction() {
-            if panel != nil {
-                if pendingInput != nil {
-                    pendingInput = nil
-                } else {
-                    closePanel()
-                }
-            }
-        }
-        
-        // MARK: - NSWindowDelegate
-
-        func windowDidResignKey(_ notification: Notification) {
-            //        closePanel()
-        }
-        
-        func windowWillMiniaturize(_ notification: Notification) {
-            setPanelMiniaturized(true)
-        }
-        
-        func windowDidDeminiaturize(_ notification: Notification) {
-            setPanelMiniaturized(false)
-        }
-        
-        func windowShouldClose(_ sender: NSWindow) -> Bool {
+        // If we're using the shortcut as a Toggle, dismiss the panel.
+        if Defaults[.launchShortcutToggleEnabled] {
             closePanel()
-            
-            return !Defaults[.isRegularApp]
+        } else {
+            panel.show()
+            textFocusTrigger.toggle()
         }
+    }
+
+    func escapeAction() {
+        if panel != nil {
+            if pendingInput != nil {
+                pendingInput = nil
+            } else {
+                closePanel()
+            }
+        }
+    }
+    
+    func handlePanelClicked() {
+        guard let panel = panel,
+              panel.level != .floating,
+              let window = trackedWindow?.element
+        else { return }
+        
+        window.bringToFront()
+        notifyDelegates()
+    }
+        
+    // MARK: - NSWindowDelegate
+
+    func windowDidResignKey(_ notification: Notification) {
+        //        closePanel()
+    }
+
+    func windowWillMiniaturize(_ notification: Notification) {
+        setPanelMiniaturized(true)
+    }
+    
+    func windowDidDeminiaturize(_ notification: Notification) {
+        setPanelMiniaturized(false)
+    }
+    
+    func windowShouldClose(_ sender: NSWindow) -> Bool {
+        closePanel()
+        
+        return !Defaults[.isRegularApp]
+    }
 }

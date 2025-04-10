@@ -13,7 +13,7 @@ import SwiftUI
 class OnitRegularPanel: NSPanel {
     
     override var canBecomeKey: Bool {
-        return true
+        return false
     }
     
     private let activeWindow: AXUIElement?

@@ -139,7 +139,7 @@ class OnitPanelState: NSObject {
         delegates.remove(delegate)
     }
     
-    private func notifyDelegates() {
+    func notifyDelegates() {
         for case let delegate as OnitPanelStateDelegate in delegates.allObjects {
             delegate.panelStateDidChange(state: self, isOpened: _panelOpened, isMiniaturized: _panelMiniaturized)
         }

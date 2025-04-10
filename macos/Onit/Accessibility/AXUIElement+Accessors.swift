@@ -236,6 +236,16 @@ extension AXUIElement {
     public func isMain() -> Bool? {
         return self.attribute(forAttribute: kAXMainAttribute as CFString) as? Bool
     }
+    
+    func bringToFront() {
+        guard let pid = pid() else { return }
+        
+        if let app = NSRunningApplication(processIdentifier: pid) {
+            app.activate(options: [.activateAllWindows])
+            
+            AXUIElementPerformAction(self, kAXRaiseAction as CFString)
+        }
+    }
 }
 
 //

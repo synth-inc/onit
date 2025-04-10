@@ -82,6 +82,12 @@ struct ContentView: View {
                 }
             }
         }
+        .simultaneousGesture(
+            TapGesture(count: 1)
+                .onEnded({
+                    state.handlePanelClicked()
+                })
+        )
         .gesture(
             DragGesture(minimumDistance: 1)
                 .onEnded { value in
