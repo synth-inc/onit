@@ -71,12 +71,24 @@ class TetherAppsManager: ObservableObject {
         regularAppCancellable = Defaults.publisher(.isRegularApp)
             .map(\.newValue)
             .sink(receiveValue: onChange(isRegularApp:))
+            
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(applicationWillTerminate),
+            name: NSApplication.willTerminateNotification,
+            object: nil
+        )
     }
     
     func stopObserving() {
         regularAppCancellable?.cancel()
         regularAppCancellable = nil
         stopAllObservers()
+        NotificationCenter.default.removeObserver(self)
+    }
+    
+    @objc private func applicationWillTerminate() {
+        resetFramesOnAppChange()
     }
     
     // MARK: - Private functions
