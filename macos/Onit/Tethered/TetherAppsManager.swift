@@ -363,9 +363,9 @@ class TetherAppsManager: ObservableObject {
                         if currentWindowScreen.frame.intersects(frame) {
                             /// Same screen
                             if key == trackedWindow {
-                                value.panel?.level = .floating
+                                value.panel?.setLevel(.floating)
                             } else if value.panel?.level == .floating {
-                                value.panel?.level = .normal
+                                value.panel?.setLevel(.normal)
                                 value.panel?.orderBack(nil)
                             } else {
                                 value.panel?.orderBack(nil)

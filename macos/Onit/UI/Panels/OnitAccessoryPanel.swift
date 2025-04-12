@@ -98,6 +98,10 @@ class OnitAccessoryPanel: NSPanel {
 
 extension OnitAccessoryPanel: OnitPanel {
     
+    func setLevel(_ level: NSWindow.Level) {
+        self.level = level
+    }
+    
     func adjustSize() {
         guard let contentView = contentView else { return }
         

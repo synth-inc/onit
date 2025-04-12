@@ -12,8 +12,14 @@ import SwiftUI
 @MainActor
 class OnitRegularPanel: NSPanel {
     
+    var _level: NSWindow.Level = .floating {
+        didSet {
+            level = _level
+        }
+    }
+    
     override var canBecomeKey: Bool {
-        return level == .floating
+        return _level == .floating
     }
     
     private let activeWindow: AXUIElement?
@@ -108,6 +114,10 @@ class OnitRegularPanel: NSPanel {
 }
 
 extension OnitRegularPanel: OnitPanel {
+    
+    func setLevel(_ level: NSWindow.Level) {
+        self._level = level
+    }
     
     func adjustSize() { }
     

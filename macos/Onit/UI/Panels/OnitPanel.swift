@@ -10,6 +10,8 @@ import SwiftUI
 
 protocol OnitPanel: NSPanel {
     
+    func setLevel(_ level: NSWindow.Level)
+    
     @MainActor
     func adjustSize()
     
