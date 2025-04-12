@@ -55,7 +55,7 @@ class AccessibilityNotificationsManager: ObservableObject {
     private var selectionDebounceWorkItem: DispatchWorkItem?
     private var parseDebounceWorkItem: DispatchWorkItem?
 
-    private var timedOutPIDs: Set<pid_t> = []  // Track PIDs that have timed out
+    private var timedOutWindowHash: Set<UInt> = []  // Track window's hash that have timed out
 
     #if DEBUG
     private let ignoredAppNames : [String] = ["Xcode"]
@@ -265,7 +265,7 @@ class AccessibilityNotificationsManager: ObservableObject {
         currentSource = appName
         handleWindowBounds(for: processID.getAXUIElement())
         processSelectedText(selectedText, for: selectedElement)
-        parseAccessibility(for: processID)
+        retrieveWindowContent(for: processID)
     }
 
     private func handleAccessibilityNotifications(
@@ -330,7 +330,7 @@ class AccessibilityNotificationsManager: ObservableObject {
         handleExternalElement(element) { [weak self] elementPid in
             print("Focus change from pid: \(elementPid)")
             self?.handleWindowBounds(for: element)
-            self?.parseAccessibility(for: elementPid)
+            self?.retrieveWindowContent(for: elementPid)
         }
     }
 
@@ -366,11 +366,108 @@ class AccessibilityNotificationsManager: ObservableObject {
     }
     
     // MARK: Parsing
+    
+    private func retrieveWindowContent(for pid: pid_t) {
+        guard let focusedWindow = pid.getFocusedWindow() else { return }
+        
+        if let (_, state) = TetherAppsManager.shared.states.first(where: { $0.key.hash == CFHash(focusedWindow) }) {
+            Task { @MainActor in
+                if let documentInfo = findDocument(in: focusedWindow) {
+                    handleWindowContent(documentInfo, for: state)
+                    // TODO: KNA - uncomment this to use WebContentFetchService with AXURL
+                } /* else if let urlInfo = await findUrl(in: focusedWindow) {
+                    handleWindowContent(urlInfo, for: state)
+                } */ else {
+                    parseAccessibility(for: pid, in: focusedWindow, state: state)
+                }
+            }
+        }
+    }
+    
+    private func findDocument(in focusedWindow: AXUIElement) -> [String: String]? {
+        let startTime = CFAbsoluteTimeGetCurrent()
+        var documentValue: CFTypeRef?
+        
+        let hasDocument = AXUIElementCopyAttributeValue(focusedWindow, kAXDocumentAttribute as CFString, &documentValue) == .success
+        
+        if hasDocument, let document = documentValue as? String,
+            document.hasPrefix("file:///"), let fileURL = URL(string: document) {
+            do {
+                let appName = focusedWindow.parent()?.title() ?? ""
+                let appTitle = focusedWindow.title() ?? ""
+                let content = try String(contentsOf: fileURL, encoding: .utf8)
+                
+                return [
+                    AccessibilityParsedElements.applicationName: appName,
+                    AccessibilityParsedElements.applicationTitle: appTitle,
+                    AccessibilityParsedElements.elapsedTime: "\(CFAbsoluteTimeGetCurrent() - startTime)",
+                    "document": content
+                ]
+            } catch {
+                return nil
+            }
+        }
+        
+        return nil
+    }
+    
+    private func findUrl(in focusedWindow: AXUIElement) async -> [String: String]? {
+        func findURLInChildren(element: AXUIElement, depth: Int = 0) -> URL? {
+            if depth >= maxDepth {
+                return nil
+            }
+            
+            if let children = element.children() {
+                for child in children {
+                    if child.role() == "AXWebArea", let url = child.url() {
+                        return url
+                    }
+                    
+                    if let url = findURLInChildren(element: child, depth: depth + 1) {
+                        return url
+                    }
+                }
+            }
+            
+            return nil
+        }
+        
+        func processUrl(_ url: URL, from element: AXUIElement) async -> [String: String]? {
+            do {
+                let appName = element.parent()?.title() ?? ""
+                let appTitle = element.title() ?? ""
+                
+                let (_, content) = try await WebContentFetchService.fetchWebpageContent(websiteUrl: url)
+                
+                return [
+                    AccessibilityParsedElements.applicationName: appName,
+                    AccessibilityParsedElements.applicationTitle: appTitle,
+                    AccessibilityParsedElements.elapsedTime: "\(CFAbsoluteTimeGetCurrent() - startTime)",
+                    "url": url.absoluteString,
+                    "content": content
+                ]
+            } catch {
+                print("Error fetching webpage content: \(error)")
+                return nil
+            }
+        }
+        
+        let maxDepth = 5
+        let startTime = CFAbsoluteTimeGetCurrent()
+        
+        if let url = findURLInChildren(element: focusedWindow) {
+            return await processUrl(url, from: focusedWindow)
+        }
+        
+        return nil
+    }
 
-    private func parseAccessibility(for pid: pid_t) {
-        // Check if the PID has previously timed out
-        if timedOutPIDs.contains(pid) {
-            print("Skipping parsing for PID \(pid) due to previous timeout.")
+    private func parseAccessibility(for pid: pid_t, in window: AXUIElement, state: OnitPanelState) {
+        let windowHash = CFHash(window)
+        let appName = window.parent()?.title() ?? "Unknown"
+        
+        if timedOutWindowHash.contains(windowHash) {
+            print("Skipping parsing for window's hash \(windowHash) due to previous timeout.")
             return
         }
 
@@ -381,17 +478,18 @@ class AccessibilityNotificationsManager: ObservableObject {
         
         parseDebounceWorkItem?.cancel()
         
-        let state = TetherAppsManager.shared.state
-        
         let workItem = DispatchWorkItem { [weak self] in
             guard let self = self else { return }
             
-            Task.detached(priority: .background) { [pid, weak self] in
+            Task.detached(priority: .background) { [weak self] in
                 guard let self = self else { return }
+                
                 do {
-                    var results = try await withThrowingTaskGroup(of: [String: String]?.self) { group -> [String: String]? in
+                    let results = try await withThrowingTaskGroup(of: [String: String]?.self) { group -> [String: String]? in
                         group.addTask {
-                            return await AccessibilityParser.shared.getAllTextInElement(appElement: pid.getAXUIElement())
+                            guard let focusedWindow = pid.getFocusedWindow() else { return nil }
+                            
+                            return await AccessibilityParser.shared.getAllTextInElement(windowElement: focusedWindow)
                         }
                         group.addTask {
                             try await Task.sleep(nanoseconds: 10_000_000_000) // 10 second timeout
@@ -402,31 +500,13 @@ class AccessibilityNotificationsManager: ObservableObject {
                         return firstCompleted
                     }
                     
-                    let elapsedTime = results?[AccessibilityParsedElements.elapsedTime]
-                    let appName = results?[AccessibilityParsedElements.applicationName]
-                    let appTitle = results?[AccessibilityParsedElements.applicationTitle]
-                    
-                    results?.removeValue(forKey: AccessibilityParsedElements.elapsedTime)
-                    results?.removeValue(forKey: AccessibilityParsedElements.applicationName)
-                    results?.removeValue(forKey: AccessibilityParsedElements.applicationTitle)
-                    
                     await MainActor.run {
-                        self.screenResult.elapsedTime = elapsedTime
-                        self.screenResult.applicationName = appName
-                        self.screenResult.applicationTitle = appTitle
-                        self.screenResult.others = results
-                        self.screenResult.errorMessage = nil
-                        self.showDebug()
-                        
-                        if Defaults[.automaticallyAddAutoContext] {
-                            state.addAutoContext()
-                        }
+                        self.handleWindowContent(results, for: state)
                     }
                 } catch {
-                    let appName = pid.getAppName() ?? "Unknown"
                     await MainActor.run {
                         print("Accessibility timeout")
-                        self.timedOutPIDs.insert(pid)
+                        self.timedOutWindowHash.insert(windowHash)
                         PostHogSDK.shared.capture("accessibilityParseTimedOut", properties: ["applicationName": appName])
                         self.screenResult = .init()
                         self.screenResult.errorMessage = "Timeout occurred, could not read application in reasonable amount of time."
@@ -439,6 +519,28 @@ class AccessibilityNotificationsManager: ObservableObject {
         parseDebounceWorkItem = workItem
         
         DispatchQueue.main.asyncAfter(deadline: .now() + Config.debounceInterval, execute: workItem)
+    }
+    
+    private func handleWindowContent(_ results: [String: String]?, for state: OnitPanelState) {
+        let elapsedTime = results?[AccessibilityParsedElements.elapsedTime]
+        let appName = results?[AccessibilityParsedElements.applicationName]
+        let appTitle = results?[AccessibilityParsedElements.applicationTitle]
+        var results = results
+        
+        results?.removeValue(forKey: AccessibilityParsedElements.elapsedTime)
+        results?.removeValue(forKey: AccessibilityParsedElements.applicationName)
+        results?.removeValue(forKey: AccessibilityParsedElements.applicationTitle)
+        
+        self.screenResult.elapsedTime = elapsedTime
+        self.screenResult.applicationName = appName
+        self.screenResult.applicationTitle = appTitle
+        self.screenResult.others = results
+        self.screenResult.errorMessage = nil
+        self.showDebug()
+        
+        if Defaults[.automaticallyAddAutoContext] && results != nil {
+            state.addAutoContext()
+        }
     }
 
     // MARK: Value Changed

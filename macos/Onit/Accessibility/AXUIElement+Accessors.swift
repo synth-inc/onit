@@ -115,6 +115,10 @@ extension AXUIElement {
         return self.attribute(forAttribute: kAXTitleAttribute as CFString) as? String
     }
     
+    func url() -> URL? {
+        return self.attribute(forAttribute: kAXURLAttribute as CFString) as? URL
+    }
+    
     func parent() -> AXUIElement? {
         if let value = self.attribute(forAttribute: kAXParentAttribute as CFString) {
             return value as! AXUIElement

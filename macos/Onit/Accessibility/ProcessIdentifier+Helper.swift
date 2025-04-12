@@ -13,6 +13,10 @@ extension pid_t {
     func getAXUIElement() -> AXUIElement {
         return AXUIElementCreateApplication(self)
     }
+    
+    func getFocusedWindow() -> AXUIElement? {
+        return getAXUIElement().focusedWindow()
+    }
 
     func getAppName() -> String? {
         guard let app = NSRunningApplication(processIdentifier: self) else { return nil }
