@@ -58,7 +58,7 @@ class AccessibilityNotificationsManager: ObservableObject {
     private var timedOutPIDs: Set<pid_t> = []  // Track PIDs that have timed out
 
     #if DEBUG
-    private let ignoredAppNames : [String] = ["Xcode"]
+    private let ignoredAppNames : [String] = [] // "Xcode"]
     #else
     private let ignoredAppNames = []
     #endif
@@ -262,8 +262,15 @@ class AccessibilityNotificationsManager: ObservableObject {
 
         print("\nApplication activated: \(appName ?? "Unknown") \(processID)")
 
+        // TODO we should be calling handleWindowBounds on all trackedWindows for this processID
+        let windowsForProcessID : [TrackedWindow] = windowsManager.trackedWindows(for: processID)
+        windowsManager.delegate?.windowsManager(windowsManager, didActiveWindowsProcess: windowsForProcessID)
+//        for (index, window) in windowsForProcessID.enumerated() {
+//            windowsManager.delegate?.windowsManager(windowsManager, didActiveWindowsProcess: windowsForProcessID)
+//        }
+        
         currentSource = appName
-        handleWindowBounds(for: processID.getAXUIElement())
+        handleWindowBounds(for: processID.getAXUIElement()) // This seems like a bug... we should be
         processSelectedText(selectedText, for: selectedElement)
         parseAccessibility(for: processID)
     }
@@ -276,21 +283,32 @@ class AccessibilityNotificationsManager: ObservableObject {
         handleExternalElement(element) { [weak self] elementPid in
             switch notification {
             case kAXFocusedUIElementChangedNotification:
+                print("AXNotif - Focus Changed Notification \(CFHash(element))")
+                print("Element role: \(element.role() ?? "") title: \(element.title() ?? "")")
                 self?.handleFocusChange(for: element)
             case kAXSelectedTextChangedNotification:
                 self?.handleSelectionChange(for: element)
             case kAXValueChangedNotification:
+                
                 self?.handleValueChanged(for: element)
             case kAXSelectedColumnsChangedNotification:
                 print("Selected Columns Changed Notification!")
                 // These handle tabbed interfaces
                 self?.handleFocusChange(for: element)
-            case kAXSelectedRowsChangedNotification:
-                print("Selected Rows Changed Notification!")
-                self?.handleFocusChange(for: element)
+//            case kAXSelectedRowsChangedNotification:
+//                print("Selected Rows Changed Notification!")
+//                self?.handleFocusChange(for: element)
             case kAXWindowMovedNotification, kAXWindowResizedNotification:
+                print("AXNotif - Window Moved/Resized Notification \(CFHash(element))")
+                print("Element role: \(element.role() ?? "") title: \(element.title() ?? "")")
                 self?.handleWindowBounds(for: element)
+            case kAXFocusedWindowChangedNotification:
+                print("AXNotif - Focused Window Changed Notification \(CFHash(element))")
+                print("Element role: \(element.role() ?? "") title: \(element.title() ?? "")")
+                self?.handleFocusedWindowChange(for: element)
             case kAXWindowCreatedNotification:
+                print("AXNotif - Window Created Notification \(CFHash(element))")
+                print("Element role: \(element.role() ?? "") title: \(element.title() ?? "")")
                 self?.handleCreatedWindowElement(for: element)
             case kAXUIElementDestroyedNotification:
                 self?.handleDetroyedElement(for: element)
@@ -327,8 +345,16 @@ class AccessibilityNotificationsManager: ObservableObject {
     }
 
     func handleFocusChange(for element: AXUIElement) {
+//        handleExternalElement(element) { [weak self] elementPid in
+//            print("Focus change from pid: \(elementPid)")
+//            self?.handleWindowBounds(for: element)
+//            self?.parseAccessibility(for: elementPid)
+//        }
+    }
+
+    func handleFocusedWindowChange(for element: AXUIElement) {
         handleExternalElement(element) { [weak self] elementPid in
-            print("Focus change from pid: \(elementPid)")
+            print("Focused window change from pid: \(elementPid)")
             self?.handleWindowBounds(for: element)
             self?.parseAccessibility(for: elementPid)
         }
@@ -596,6 +622,12 @@ extension AccessibilityNotificationsManager: AccessibilityWindowsManagerDelegate
     func windowsManager(_ manager: AccessibilityWindowsManager, didActivateWindow window: TrackedWindow) {
         notifyDelegates { delegate in
             delegate.accessibilityManager(self, didActivateWindow: window)
+        }
+    }
+    
+    func windowsManager(_ manager: AccessibilityWindowsManager, didActiveWindowsProcess windows: [TrackedWindow]) {
+        notifyDelegates { delegate in
+            delegate.accessibilityManager(self, didActiveWindowsProcess: windows)
         }
     }
     

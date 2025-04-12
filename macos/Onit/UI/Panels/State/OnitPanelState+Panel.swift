@@ -5,6 +5,7 @@
 //  Created by Kévin Naudin on 01/04/2025.
 //
 
+import ApplicationServices
 import Defaults
 import SwiftUI
 
@@ -97,14 +98,24 @@ extension OnitPanelState: NSWindowDelegate {
         textFocusTrigger.toggle()
         
         guard let panel = panel,
-              panel.level != .floating,
+//              panel.level != .floating,
               let window = trackedWindow?.element
         else { return }
         
-        window.bringToFront()
+        bringTrackedWindowToFront(trackedWindow: trackedWindow!)
+        // window.bringToFront()
         
         notifyDelegates { delegate in
             delegate.panelStateDidChange(state: self)
+        }
+
+    }
+
+    func bringTrackedWindowToFront(trackedWindow: TrackedWindow) {
+        print("Bring window to front")
+        let result = AXUIElementPerformAction(trackedWindow.element, kAXRaiseAction as CFString)
+        if result != .success {
+            print("Failed to bring window to front. Error: \(result.rawValue)")
         }
     }
         

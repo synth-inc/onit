@@ -131,28 +131,37 @@ class TetherAppsManager: ObservableObject {
     // MARK: - Handling panel state changes
     
     private func handlePanelStateChange(state: OnitPanelState) {
+        print("HandlePanelStateChange")
         guard let window = state.trackedWindow?.element else {
             return
         }
         
         if state.panelOpened && !state.panelMiniaturized {
             // Panel opened
+            print("Panel opened and not miniaturized.")
             saveInitialFrameIfNeeded(for: window, state: state)
             hideTetherWindow()
 
             // TODO: KNA - Tethered - We should just move the panel without any animation
+//            state.panel?.orderFront(nil)
+            state.bringTrackedWindowToFront(trackedWindow: state.trackedWindow!)
+            state.showPanel()
+            
             state.repositionPanel()
         } else if !state.panelOpened {
             // Panel closed
+            print("Panel closed.")
             debouncedShowTetherWindow(state: state, activeWindow: window)
         } else {
             // Panel minified
+            print("Panel miniaturized.")
             debouncedShowTetherWindow(state: state, activeWindow: window)
         }
         
-        if let trackedWindow = state.trackedWindow {
-            updateLevelState(trackedWindow: trackedWindow)
-        }
+//        if let trackedWindow = state.trackedWindow {
+//            print("Updating level state for tracked window.")
+//            updateLevelState(trackedWindow: trackedWindow)
+//        }
     }
     
     private func saveInitialFrameIfNeeded(for window: AXUIElement, state: OnitPanelState) {
@@ -350,37 +359,37 @@ class TetherAppsManager: ObservableObject {
     }
     
     func updateLevelState(trackedWindow: TrackedWindow?) {
-        if let currentWindow = trackedWindow?.element,
-           let currentWindowPosition = currentWindow.position(),
-           let currentWindowSize = currentWindow.size() {
-            let currentWindowFrame = NSRect(origin: currentWindowPosition, size: currentWindowSize)
-                        
-            if let currentWindowScreen = currentWindowFrame.dominantScreen() {
-                for (key, value) in states {
-                    if let position = key.element.position(), let size = key.element.size() {
-                        let frame = NSRect(origin: position, size: size)
-                        
-                        if currentWindowScreen.frame.intersects(frame) {
-                            /// Same screen
-                            if key == trackedWindow {
-                                value.panel?.level = .floating
-                            } else if value.panel?.level == .floating {
-                                value.panel?.level = .normal
-                                value.panel?.orderBack(nil)
-                            } else {
-                                value.panel?.orderBack(nil)
-                            }
-                        } else { /** Window is not on same screen */ }
-                    } else { /** Can't find window's frame */ }
-                }
-            } else { /** Can't find current window's screen */ }
-        } else {
-            /** Can't find current window - ignored apps */
-            for (_, value) in states {
-                value.panel?.level = .normal
-                value.panel?.orderBack(nil)
-            }
-        }
+//        if let currentWindow = trackedWindow?.element,
+//           let currentWindowPosition = currentWindow.position(),
+//           let currentWindowSize = currentWindow.size() {
+//            let currentWindowFrame = NSRect(origin: currentWindowPosition, size: currentWindowSize)
+//                        
+//            if let currentWindowScreen = currentWindowFrame.dominantScreen() {
+//                for (key, value) in states {
+//                    if let position = key.element.position(), let size = key.element.size() {
+//                        let frame = NSRect(origin: position, size: size)
+//                        
+//                        if currentWindowScreen.frame.intersects(frame) {
+//                            /// Same screen
+//                            if key == trackedWindow {
+//                                value.panel?.level = .floating
+//                            } else if value.panel?.level == .floating {
+//                                value.panel?.level = .normal
+//                                value.panel?.orderBack(nil)
+//                            } else {
+//                                value.panel?.orderBack(nil)
+//                            }
+//                        } else { /** Window is not on same screen */ }
+//                    } else { /** Can't find window's frame */ }
+//                }
+//            } else { /** Can't find current window's screen */ }
+//        } else {
+//            /** Can't find current window - ignored apps */
+//            for (_, value) in states {
+//                value.panel?.level = .normal
+//                value.panel?.orderBack(nil)
+//            }
+//        }
     }
 }
 
@@ -389,6 +398,7 @@ class TetherAppsManager: ObservableObject {
 extension TetherAppsManager: AccessibilityNotificationsDelegate {
     
     func accessibilityManager(_ manager: AccessibilityNotificationsManager, didActivateWindow window: TrackedWindow) {
+        print("didActivateWindow")
         let panelState: OnitPanelState
         
         if let (_, activeState) = states.first(where: { (key: TrackedWindow, value: OnitPanelState) in
@@ -406,6 +416,20 @@ extension TetherAppsManager: AccessibilityNotificationsDelegate {
         state = panelState
         handlePanelStateChange(state: panelState)
     }
+    
+    func accessibilityManager(_ manager: AccessibilityNotificationsManager, didActiveWindowsProcess windows: [TrackedWindow]) {
+        for window in windows {
+            if let (_, state) = states.first(where: { (key: TrackedWindow, value: OnitPanelState) in
+                key == window
+            }) {
+                if state.panelOpened && !state.panelMiniaturized {
+                    state.bringTrackedWindowToFront(trackedWindow: window)
+                    state.showPanel()
+                }
+            }
+        }
+    }
+    
     
     func accessibilityManager(_ manager: AccessibilityNotificationsManager, didActivateIgnoredWindow window: TrackedWindow?) {
         hideTetherWindow()

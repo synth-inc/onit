@@ -21,6 +21,7 @@ struct TrackedWindow: Hashable {
 
 @MainActor protocol AccessibilityWindowsManagerDelegate: AnyObject {
     func windowsManager(_ manager: AccessibilityWindowsManager, didActivateWindow window: TrackedWindow)
+    func windowsManager(_ manager: AccessibilityWindowsManager, didActiveWindowsProcess windows: [TrackedWindow])
     func windowsManager(_ manager: AccessibilityWindowsManager, didDestroyWindow window: TrackedWindow)
 }
 
@@ -68,6 +69,10 @@ class AccessibilityWindowsManager {
     
     func trackedWindows(for element: AXUIElement) -> [TrackedWindow] {
         return trackedWindows.filter { $0.hash == CFHash(element) }
+    }
+    
+    func trackedWindows(for pid: pid_t) -> [TrackedWindow] {
+        return trackedWindows.filter { $0.pid == pid }
     }
     
     // MARK: - Private functions

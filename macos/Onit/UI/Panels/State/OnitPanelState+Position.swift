@@ -62,10 +62,11 @@ extension OnitPanelState {
         let onitHeight = min(size.height, screenFrame.height - ContentView.bottomPadding)
         let onitY = visibleFrame.minY + (visibleFrame.height - windowFrame.height) - windowDistanceFromTop
         
+        // If the panel.wasAnimated is true, we only want to check this against the maximum X of a
         let spaceOnRight = screenFrame.maxX - (position.x + size.width)
         let hasEnoughSpace = spaceOnRight >= onitWidth + TetherAppsManager.spaceBetweenWindows
         
-        if hasEnoughSpace {
+        if hasEnoughSpace || panel.wasAnimated {
             movePanel(onitWidth: onitWidth, onitHeight: onitHeight, onitY: onitY)
         } else {
             let screenFrame = screen.frame
@@ -138,6 +139,7 @@ extension OnitPanelState {
     // MARK: - Layout
     
     private func movePanel(onitWidth: CGFloat, onitHeight: CGFloat, onitY: CGFloat) {
+        print("movePanel")
         guard let window = trackedWindow?.element,
               let panel = panel,
               let position = window.position(),
@@ -173,6 +175,7 @@ extension OnitPanelState {
     }
     
     private func moveWindowAndPanel(screenFrame: CGRect, onitWidth: CGFloat, onitHeight: CGFloat, onitY: CGFloat) {
+        print("moveWindowAndPanel")
         guard let window = trackedWindow?.element,
               let panel = panel,
               let position = window.position(),
@@ -225,6 +228,7 @@ extension OnitPanelState {
     }
     
     private func resizeWindowAndMovePanel(onitWidth: CGFloat, onitHeight: CGFloat, onitY: CGFloat, maxAvailableWidth: CGFloat) {
+        print("resizeWindowAndMovePanel")
         guard let window = trackedWindow?.element,
               let panel = panel,
               let windowFrame = window.frame(),
