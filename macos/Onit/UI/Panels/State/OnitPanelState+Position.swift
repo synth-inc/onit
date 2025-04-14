@@ -300,14 +300,13 @@ extension OnitPanelState {
         
         panel.isAnimating = true
         panel.setFrame(fromPanel, display: false)
-        panel.alphaValue = 0
+        panel.alphaValue = 1
         
         NSAnimationContext.runAnimationGroup { context in
             context.duration = animationDuration
             context.timingFunction = CAMediaTimingFunction(name: .easeOut)
             
             panel.animator().setFrame(toPanel, display: false)
-            panel.animator().alphaValue = 1
 
             if let activeWindow = activeWindow, let fromActive = fromActive, let toActive = toActive {
                 DispatchQueue.main.asyncAfter(deadline: .now() + (animationDuration / 2)) {
@@ -332,7 +331,6 @@ extension OnitPanelState {
         guard !panel.isAnimating, panel.frame != toPanel else { return }
         
         panel.isAnimating = true
-        panel.alphaValue = 1
         
         if let activeWindow = activeWindow, let fromActive = fromActive, let toActive = toActive {
             self.animation(for: activeWindow, from: fromActive, to: toActive)
@@ -344,10 +342,10 @@ extension OnitPanelState {
                 context.timingFunction = CAMediaTimingFunction(name: .easeIn)
                 
                 panel.animator().setFrame(toPanel, display: false)
-                panel.animator().alphaValue = 0
             } completionHandler: {
                 panel.hide()
                 panel.isAnimating = false
+                panel.alphaValue = 0
                 self.panel = nil
             }
         }
