@@ -242,13 +242,7 @@ extension AXUIElement {
     }
     
     func bringToFront() {
-        guard let pid = pid() else { return }
-        
-        if let app = NSRunningApplication(processIdentifier: pid) {
-            app.activate(options: [.activateAllWindows])
-            
-            AXUIElementPerformAction(self, kAXRaiseAction as CFString)
-        }
+        AXUIElementPerformAction(self, kAXRaiseAction as CFString)
     }
 }
 
