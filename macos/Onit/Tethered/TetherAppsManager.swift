@@ -270,7 +270,8 @@ class TetherAppsManager: ObservableObject {
                 // to move the hint to it.
                 if let isMain = activeWindow.isMain(), let isMinimized = activeWindow.isMinimized() {
                     if !isMain || isMinimized {
-                        print("This is a click on the desktop, skipping")
+                        print("This is a click on the desktop, remove tether window")
+                        hideTetherWindow()
                         return
                     }
                 }
