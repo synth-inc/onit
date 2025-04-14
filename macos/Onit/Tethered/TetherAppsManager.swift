@@ -40,7 +40,10 @@ class TetherAppsManager: ObservableObject {
     
     // MARK: - Private initializer
     private init() {
-        let window = NSWindow(
+        class CustomWindow: NSWindow {
+            override var canBecomeKey: Bool { true }
+        }
+        let window = CustomWindow(
             contentRect: NSRect(x: 0, y: 0, width: ExternalTetheredButton.containerWidth, height: ExternalTetheredButton.containerHeight),
             styleMask: [.borderless],
             backing: .buffered,
@@ -396,11 +399,8 @@ class TetherAppsManager: ObservableObject {
                             /// Same screen
                             if key == trackedWindow {
                                 value.panel?.setLevel(.floating)
-                            } else if value.panel?.level == .floating {
-                                value.panel?.setLevel(.normal)
-                                value.panel?.orderBack(nil)
                             } else {
-                                value.panel?.orderBack(nil)
+                                value.panel?.setLevel(.normal)
                             }
                         } else { /** Window is not on same screen */ }
                     } else { /** Can't find window's frame */ }
@@ -410,7 +410,6 @@ class TetherAppsManager: ObservableObject {
             /** Can't find current window - ignored apps */
             for (_, value) in states {
                 value.panel?.level = .normal
-                value.panel?.orderBack(nil)
             }
         }
     }

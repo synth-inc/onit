@@ -95,11 +95,12 @@ extension OnitPanelState: NSWindowDelegate {
     
     func handlePanelClicked() {
         textFocusTrigger.toggle()
-        
-        guard let panel = panel,
-              panel.level != .floating,
-              let window = trackedWindow?.element
-        else { return }
+        foregroundTrackedWindowIfNeeded()
+    }
+    
+    private func foregroundTrackedWindowIfNeeded() {
+        guard let panel = panel, panel.level != .floating,
+              let window = trackedWindow?.element else { return }
         
         window.bringToFront()
         
@@ -109,6 +110,12 @@ extension OnitPanelState: NSWindowDelegate {
     }
         
     // MARK: - NSWindowDelegate
+    
+    func windowDidBecomeKey(_ notification: Notification) {
+        guard let window = notification.object as? NSWindow, panel == window else { return }
+        
+        foregroundTrackedWindowIfNeeded()
+    }
 
     func windowDidResignKey(_ notification: Notification) {
         //        closePanel()
