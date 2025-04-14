@@ -43,7 +43,8 @@ class AccessibilityWindowsManager {
             activeTrackedWindow = trackedWindow
                 
             delegate?.windowsManager(self, didActivateWindow: trackedWindow)
-        } else if let window = element.findWindow(), isValidWindow(window) {
+        } else if let window = element.findFirstTargetWindow() {
+
             let title = window.title() ?? "NA"
             let trackedWindow = TrackedWindow(element: window, pid: pid, hash: CFHash(window), title: title)
             
@@ -68,15 +69,5 @@ class AccessibilityWindowsManager {
     
     func trackedWindows(for element: AXUIElement) -> [TrackedWindow] {
         return trackedWindows.filter { $0.hash == CFHash(element) }
-    }
-    
-    // MARK: - Private functions
-    
-    private func isValidWindow(_ window: AXUIElement) -> Bool {
-        guard window.subrole() == "AXStandardWindow" else {
-            return false
-        }
-        
-        return window.closeButton() != nil && window.minimizeButton() != nil && window.zoomButton() != nil
     }
 }

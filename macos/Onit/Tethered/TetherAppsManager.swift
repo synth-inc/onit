@@ -151,7 +151,7 @@ class TetherAppsManager: ObservableObject {
     
     private func resetFramesOnAppChange() {
         targetInitialFrames.forEach { element, initialFrame in
-            guard let window = element.findWindow() else {
+            guard let window = element.findFirstTargetWindow() else {
                 return
             }
             

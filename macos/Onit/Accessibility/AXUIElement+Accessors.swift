@@ -33,33 +33,10 @@ extension AXUIElement {
             return nil
         }
     }
-    
-    func findWindow() -> AXUIElement? {
-        var currentElement = self
         
-        if let role = role() {
-            if role == kAXApplicationRole {
-                return children()?.first
-            } else if role == kAXWindowRole {
-                return currentElement
-            }
-        }
-        
-        while true {
-            if let role = currentElement.role(), role == kAXWindowRole as String {
-                return currentElement
-            }
-
-            if let parentElement = currentElement.parent() {
-                currentElement = parentElement
-            } else {
-                break
-            }
-        }
-
-        return nil
-    }
-
+    // We should not use this function in most cases.
+    // kAXWindowsAttribute is OPTIONAL and may applications do not implement it, including Apple default apps like Notes
+    // Instead we should use getRootChildren() followed by filtering with isValidWindow().
     func getWindows() -> [AXUIElement] {
         var elementPid: pid_t = 0
 
@@ -79,6 +56,19 @@ extension AXUIElement {
         
         return windows
     }
+    
+    func getRootChildren() -> [AXUIElement] {
+        var elementPid: pid_t = 0
+
+        guard AXUIElementGetPid(self, &elementPid) == .success, elementPid != getpid() else {
+            return []
+        }
+        
+        let appElement = AXUIElementCreateApplication(elementPid)
+        return appElement.children() ?? []
+    }
+    
+    // MARK: - Private functions
     
     func size() -> CGSize? {
         let size = self.attribute(forAttribute: kAXSizeAttribute as CFString)
