@@ -30,6 +30,12 @@ class OnitPanelState: NSObject {
     /// States
     let systemPromptState: SystemPromptState = .init()
     
+    /// ChatView visibility.
+    /// When `showChatView` is true the ChatView is rendered;
+    /// if `animateChatView` is true, the transition is animated.
+    var showChatView: Bool = false
+    var animateChatView: Bool = false
+    
     /// Services
     var promptSuggestionService: SystemPromptSuggestionService?
     

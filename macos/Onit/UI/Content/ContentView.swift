@@ -49,7 +49,12 @@ struct ContentView: View {
                             .frame(height: 38)
                     }
                     PromptDivider()
-                    ChatView()
+                    if state.showChatView {
+                        ChatView()
+                            .transition(.opacity)
+                    } else {
+                        Spacer()
+                    }
                 }
             }
             .trackScreenHeight($screenHeight)
@@ -108,6 +113,8 @@ struct ContentView: View {
         ) { result in
             handleFileImport(result)
         }
+        .animation(state.animateChatView ? .easeInOut(duration: 0.2) : nil,
+                   value: state.showChatView)
     }
 
     private func handleFileImport(_ result: Result<[URL], any Error>) {

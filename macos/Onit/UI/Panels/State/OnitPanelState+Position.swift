@@ -301,6 +301,10 @@ extension OnitPanelState {
         panel.isAnimating = true
         panel.setFrame(fromPanel, display: false)
         panel.alphaValue = 1
+
+        // Hide the existing UI before animating the panel in.
+        self.animateChatView = true
+        self.showChatView = false
         
         NSAnimationContext.runAnimationGroup { context in
             context.duration = animationDuration
@@ -314,6 +318,8 @@ extension OnitPanelState {
                 }
             }
         } completionHandler: {
+            self.animateChatView = true
+            self.showChatView = true
             panel.isAnimating = false
             panel.wasAnimated = true
             panel.animatedFromLeft = abs(fromPanel.maxX - toPanel.minX) <= abs(fromPanel.maxX - toPanel.maxX)
@@ -331,6 +337,8 @@ extension OnitPanelState {
         guard !panel.isAnimating, panel.frame != toPanel else { return }
         
         panel.isAnimating = true
+        self.animateChatView = true
+        self.showChatView = false
         
         if let activeWindow = activeWindow, let fromActive = fromActive, let toActive = toActive {
             self.animation(for: activeWindow, from: fromActive, to: toActive)

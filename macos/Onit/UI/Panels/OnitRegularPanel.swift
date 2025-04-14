@@ -28,6 +28,7 @@ class OnitRegularPanel: NSPanel {
     var wasAnimated: Bool = false
     var animatedFromLeft: Bool = false
     var resizedApplication: Bool = false
+    var onitContentView: ContentView?
     
     init(state: OnitPanelState) {
         if let trackedWindow = state.trackedWindow {
@@ -61,7 +62,7 @@ class OnitRegularPanel: NSPanel {
         let contentView = ContentView()
             .modelContainer(state.container)
             .environment(\.windowState, state)
-
+        
         let hostingView = NSHostingView(rootView: contentView)
         hostingView.wantsLayer = true
         hostingView.layer?.cornerRadius = 14
