@@ -163,12 +163,13 @@ class TetherAppsManager: ObservableObject {
     // MARK: - Handling panel state changes
     
     private func handlePanelStateChange(state: OnitPanelState) {
-        guard let window = state.trackedWindow?.element else {
+        guard Defaults[.isRegularApp], let window = state.trackedWindow?.element else {
             return
         }
         
         if state.panelOpened && !state.panelMiniaturized {
             // Panel opened
+            KeyboardShortcutsManager.enable(modelContainer: SwiftDataContainer.appContainer)
             saveInitialFrameIfNeeded(for: window, state: state)
             hideTetherWindow()
 
@@ -178,9 +179,11 @@ class TetherAppsManager: ObservableObject {
             }
         } else if !state.panelOpened {
             // Panel closed
+            KeyboardShortcutsManager.disable(modelContainer: SwiftDataContainer.appContainer)
             debouncedShowTetherWindow(state: state, activeWindow: window)
         } else {
             // Panel minified
+            KeyboardShortcutsManager.disable(modelContainer: SwiftDataContainer.appContainer)
             debouncedShowTetherWindow(state: state, activeWindow: window)
         }
         
@@ -459,6 +462,9 @@ extension TetherAppsManager: AccessibilityNotificationsDelegate {
 // MARK: - OnitPanelStateDelegate
 
 extension TetherAppsManager: OnitPanelStateDelegate {
+    func panelBecomeKey(state: OnitPanelState) {
+        self.state = state
+    }
     func panelStateDidChange(state: OnitPanelState) {
         handlePanelStateChange(state: state)
     }

@@ -39,9 +39,9 @@ extension OnitPanelState: NSWindowDelegate {
             } else {
                 print("Something went wrong while trying to reposition the panel.")
             }
+        } else {
+            KeyboardShortcutsManager.enable(modelContainer: container)
         }
-
-        KeyboardShortcutsManager.enable(modelContainer: container)
 
         // Focus the text input when we're activating the panel
         textFocusTrigger.toggle()
@@ -62,10 +62,10 @@ extension OnitPanelState: NSWindowDelegate {
         } else {
             panel.hide()
             self.panel = nil
+            KeyboardShortcutsManager.disable(modelContainer: container)
         }
         
         HighlightHintWindowController.shared.adjustWindow()
-        KeyboardShortcutsManager.disable(modelContainer: container)
     }
     
     func launchPanel() {
@@ -112,8 +112,7 @@ extension OnitPanelState: NSWindowDelegate {
     // MARK: - NSWindowDelegate
     
     func windowDidBecomeKey(_ notification: Notification) {
-        guard let window = notification.object as? NSWindow, panel == window else { return }
-        
+        notifyDelegates { $0.panelBecomeKey(state: self) }
         foregroundTrackedWindowIfNeeded()
     }
 

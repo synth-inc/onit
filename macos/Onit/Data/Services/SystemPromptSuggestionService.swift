@@ -132,8 +132,8 @@ class SystemPromptSuggestionService {
 }
 
 extension SystemPromptSuggestionService: OnitPanelStateDelegate {
+    func panelBecomeKey(state: OnitPanelState) { }
     func panelStateDidChange(state: OnitPanelState) { }
-    
     func userInputsDidChange(instruction: String, contexts: [Context], input: Input?) {
         self.instruction = instruction
         self.contexts = contexts
