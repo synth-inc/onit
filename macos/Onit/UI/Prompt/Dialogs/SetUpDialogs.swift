@@ -16,6 +16,7 @@ struct SetUpDialogs: View {
 
     @State private var fetchingRemote = false
     @State private var fetchingLocal = false
+    @State private var debounceTask: DispatchWorkItem?
 
     @Default(.closedRemote) var closedRemote
     @Default(.closedLocal) var closedLocal
@@ -54,29 +55,32 @@ struct SetUpDialogs: View {
     }
 
     var body: some View {
-        content
-            .background {
-                GeometryReader { g in
-                    Color.clear
-                        .onAppear {
-                            state.setUpHeight = g.size.height
-                            state.panel?.adjustSize()
-                        }
-                        .onChange(of: g.size.height) {
-                            state.setUpHeight = g.size.height
-                            state.panel?.adjustSize()
-                        }
-                        .onDisappear {
-                            state.setUpHeight = 0
-                            state.panel?.adjustSize()
-                        }
-                }
+        VStack {
+            content
+        }
+        .onHeightChanged(callback: updateHeight)
+        .onChange(of: availableLocalModels.count) { _, new in
+            if new != 0 {
+                seenLocal = true
             }
-            .onChange(of: availableLocalModels.count) { _, new in
-                if new != 0 {
-                    seenLocal = true
-                }
+        }
+    }
+    
+    private func updateHeight(newHeight: CGFloat) {
+        debounceTask?.cancel()
+        
+        let task = DispatchWorkItem {
+            guard state.panel?.isVisible == true else {
+                state.setUpHeight = 0
+                state.panel?.adjustSize()
+                return
             }
+            
+            state.setUpHeight = newHeight
+            state.panel?.adjustSize()
+        }
+        debounceTask = task
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3, execute: task)
     }
 
     @ViewBuilder

@@ -16,8 +16,8 @@ struct ScreenHeightModifier: ViewModifier {
         content
             .background(
                 WindowAccessor { window in
-                    if let screen = window.screen, screenHeight != screen.frame.height {
-                        screenHeight = screen.frame.height
+                    if let screen = window.screen, screenHeight != screen.visibleFrame.height {
+                        screenHeight = screen.visibleFrame.height
                         state.panel?.adjustSize()
                     }
                 }
