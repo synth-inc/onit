@@ -275,7 +275,7 @@ class TetherAppsManager: ObservableObject {
         // This can happen when the window is between two screens. 
         if let activeScreen = windowFrame.findScreen() {
             let maxX = activeScreen.visibleFrame.maxX
-            if positionX > maxX {
+            if positionX > maxX - ExternalTetheredButton.containerWidth {
                 positionX = maxX - ExternalTetheredButton.containerWidth
             }
         }
