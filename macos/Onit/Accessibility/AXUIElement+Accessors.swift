@@ -241,6 +241,10 @@ extension AXUIElement {
         return self.attribute(forAttribute: kAXMainAttribute as CFString) as? Bool
     }
     
+    public func isMinimized() -> Bool? {
+        return self.attribute(forAttribute: kAXMinimizedAttribute as CFString) as? Bool
+    }
+    
     func bringToFront() {
         AXUIElementPerformAction(self, kAXRaiseAction as CFString)
     }

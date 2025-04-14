@@ -256,12 +256,24 @@ class TetherAppsManager: ObservableObject {
         }
         var positionX = position.x + size.width - ExternalTetheredButton.containerWidth
         
-        if Self.isFinderShowingDesktopOnly(activeWindow: activeWindow) {
-            if let mouseScreen = NSRect(origin: NSEvent.mouseLocation, size: NSSize(width: 1, height: 1)).findScreen() {
-                let screenFrame = mouseScreen.visibleFrame
-                
-                windowFrame = screenFrame
-                positionX = screenFrame.maxX - ExternalTetheredButton.containerWidth
+        if Self.isFinder(activeWindow: activeWindow) {
+            if Self.isFinderShowingDesktopOnly(activeWindow: activeWindow) {
+                if let mouseScreen = NSRect(origin: NSEvent.mouseLocation, size: NSSize(width: 1, height: 1)).findScreen() {
+                    let screenFrame = mouseScreen.visibleFrame
+               
+                    windowFrame = screenFrame
+                    positionX = screenFrame.maxX - ExternalTetheredButton.containerWidth
+                }
+            } else {
+                // These are clicks on the desktop. The appActivation logic gives us the most recent
+                // Finder window, but it could be behind other windows or minimized, so we don't want
+                // to move the hint to it.
+                if let isMain = activeWindow.isMain(), let isMinimized = activeWindow.isMinimized() {
+                    if !isMain || isMinimized {
+                        print("This is a click on the desktop, skipping")
+                        return
+                    }
+                }
             }
         }
         
@@ -372,6 +384,16 @@ class TetherAppsManager: ObservableObject {
         // This is how far down the window is from the max possibile position.
         let windowDistanceFromTop = windowFrame.minY - fullTop
         return activeScreenVisibileFrame.minY + (activeScreenVisibileFrame.height - windowFrame.height) - windowDistanceFromTop
+    }
+    
+    static private func isFinder(activeWindow: AXUIElement?) -> Bool {
+        let runningApps = NSWorkspace.shared.runningApplications
+
+        if let finderAppPid = runningApps.first(where: { $0.bundleIdentifier == "com.apple.finder" })?.processIdentifier,
+            let activeWindow = activeWindow {
+            return activeWindow.pid() == finderAppPid
+        }
+        return false
     }
     
     static func isFinderShowingDesktopOnly(activeWindow: AXUIElement?) -> Bool {
