@@ -71,7 +71,13 @@ class TetherAppsManager: ObservableObject {
         regularAppCancellable = Defaults.publisher(.isRegularApp)
             .map(\.newValue)
             .sink(receiveValue: onChange(isRegularApp:))
-            
+        
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(appDidBecomeActive),
+            name: NSApplication.didBecomeActiveNotification,
+            object: nil
+        )
         NotificationCenter.default.addObserver(
             self,
             selector: #selector(applicationWillTerminate),
@@ -85,6 +91,17 @@ class TetherAppsManager: ObservableObject {
         regularAppCancellable = nil
         stopAllObservers()
         NotificationCenter.default.removeObserver(self)
+    }
+    
+    @objc func appDidBecomeActive(_ notification: Notification) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+            for (_, state) in self.states {
+                if let panel = state.panel, panel.isKeyWindow, let window = state.trackedWindow?.element {
+                    window.bringToFront()
+                    return
+                }
+            }
+        }
     }
     
     @objc private func applicationWillTerminate() {
