@@ -36,6 +36,8 @@ class OnitPanelState: NSObject {
     
     private var delegates = NSHashTable<AnyObject>.weakObjects()
     
+    var currentAnimationTask: Task<Void, Never>?
+    
     var panel: OnitPanel? {
         didSet {
             let opened = panel != nil

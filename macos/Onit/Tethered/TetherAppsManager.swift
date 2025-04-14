@@ -153,7 +153,9 @@ class TetherAppsManager: ObservableObject {
             hideTetherWindow()
 
             // TODO: KNA - Tethered - We should just move the panel without any animation
-            state.repositionPanel()
+            if state.currentAnimationTask == nil {
+                state.repositionPanel()
+            }
         } else if !state.panelOpened {
             // Panel closed
             debouncedShowTetherWindow(state: state, activeWindow: window)
@@ -170,7 +172,8 @@ class TetherAppsManager: ObservableObject {
     private func saveInitialFrameIfNeeded(for window: AXUIElement, state: OnitPanelState) {
         if targetInitialFrames[window] == nil,
                   let position = window.position(),
-                  let size = window.size() {
+                  let size = window.size(),
+                  state.currentAnimationTask == nil {
             targetInitialFrames[window] = CGRect(
                 x: position.x,
                 y: position.y,

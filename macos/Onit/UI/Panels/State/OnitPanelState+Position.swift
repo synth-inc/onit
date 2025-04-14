@@ -5,13 +5,20 @@
 //  Created by Kévin Naudin on 08/04/2025.
 //
 
-import AppKit
+@preconcurrency import AppKit
 import Foundation
 import SwiftUI
 
 extension OnitPanelState {
     
     // MARK: - Panel repositioning
+    
+    private var animationDuration: TimeInterval { 0.2 }
+    
+    @MainActor private func cancelCurrentAnimation() {
+        currentAnimationTask?.cancel()
+        currentAnimationTask = nil
+    }
     
     func repositionPanel() {
         guard let window = trackedWindow?.element,
@@ -86,6 +93,9 @@ extension OnitPanelState {
         var fromActive : NSRect? = nil
         var toActive: NSRect? = nil
         if let panel = self.panel {
+            if currentAnimationTask != nil {
+                cancelCurrentAnimation()
+            }
             
             if let window = trackedWindow?.element,
                 let initialFrame = TetherAppsManager.shared.targetInitialFrames[window],
@@ -293,19 +303,21 @@ extension OnitPanelState {
         panel.alphaValue = 0
         
         NSAnimationContext.runAnimationGroup { context in
-            context.duration = 0.2
+            context.duration = animationDuration
             context.timingFunction = CAMediaTimingFunction(name: .easeOut)
             
             panel.animator().setFrame(toPanel, display: false)
             panel.animator().alphaValue = 1
+
+            if let activeWindow = activeWindow, let fromActive = fromActive, let toActive = toActive {
+                DispatchQueue.main.asyncAfter(deadline: .now() + (animationDuration / 2)) {
+                    self.animation(for: activeWindow, from: fromActive, to: toActive)
+                }
+            }
         } completionHandler: {
             panel.isAnimating = false
             panel.wasAnimated = true
             panel.animatedFromLeft = abs(fromPanel.maxX - toPanel.minX) <= abs(fromPanel.maxX - toPanel.maxX)
-            
-            if let activeWindow = activeWindow, let toActive = toActive {
-                _ = activeWindow.setFrame(toActive)
-            }
         }
     }
     
@@ -315,28 +327,86 @@ extension OnitPanelState {
         toActive: CGRect?,
         panel: OnitPanel,
         toPanel: CGRect,
-        steps: Int = 10,
-        duration: TimeInterval = 0.2
+        steps: Int = 10
     ) {
         guard !panel.isAnimating, panel.frame != toPanel else { return }
         
         panel.isAnimating = true
         panel.alphaValue = 1
         
-        NSAnimationContext.runAnimationGroup { context in
-            context.duration = 0.15
-            context.timingFunction = CAMediaTimingFunction(name: .easeIn)
-            
-            panel.animator().setFrame(toPanel, display: false)
-            panel.animator().alphaValue = 0
-        } completionHandler: {
-            panel.hide()
-            panel.isAnimating = false
-            self.panel = nil
-            
-            if let activeWindow = activeWindow, let toActive = toActive {
-                _ = activeWindow.setFrame(toActive)
+        if let activeWindow = activeWindow, let fromActive = fromActive, let toActive = toActive {
+            self.animation(for: activeWindow, from: fromActive, to: toActive)
+        }
+        
+        DispatchQueue.main.asyncAfter(deadline: .now() + (animationDuration / 2)) {
+            NSAnimationContext.runAnimationGroup { context in
+                context.duration = self.animationDuration
+                context.timingFunction = CAMediaTimingFunction(name: .easeIn)
+                
+                panel.animator().setFrame(toPanel, display: false)
+                panel.animator().alphaValue = 0
+            } completionHandler: {
+                panel.hide()
+                panel.isAnimating = false
+                self.panel = nil
             }
+        }
+    }
+    
+    private func animation(for activeWindow: AXUIElement, from: NSRect, to: NSRect) {
+        cancelCurrentAnimation()
+        let steps = 10
+        let stepDuration = animationDuration / TimeInterval(steps)
+        
+        currentAnimationTask = Task { @MainActor in
+            
+            for step in 0...steps {
+                if Task.isCancelled { break }
+                
+                let progress = Double(step) / Double(steps)
+                let easedProgress = easeOutCubic(progress)
+                
+                let currentActiveWidth = from.width + (to.width - from.width) * easedProgress
+                let currentActiveHeight = from.height + (to.height - from.height) * easedProgress
+                let currentActiveX = from.origin.x + (to.origin.x - from.origin.x) * easedProgress
+                let currentActiveY = from.origin.y + (to.origin.y - from.origin.y) * easedProgress
+                let currentActiveFrame = CGRect(
+                    x: currentActiveX,
+                    y: currentActiveY,
+                    width: currentActiveWidth,
+                    height: currentActiveHeight
+                )
+                
+                _ = activeWindow.setFrame(currentActiveFrame)
+                
+                try? await Task.sleep(nanoseconds: UInt64(stepDuration * 1_000_000_000))
+            }
+            
+            if Task.isCancelled { return }
+            currentAnimationTask = nil
+        }
+        
+        func easeOutCubic(_ t: Double) -> Double {
+            return 1 - pow(1 - t, 3)
+        }
+    }
+    
+    // MARK: - Thread-safe counter
+    
+    @preconcurrency
+    private final class AtomicInt: @unchecked Sendable {
+        private let lock = NSLock()
+        private var value: Int
+        
+        init(_ initialValue: Int) {
+            self.value = initialValue
+        }
+        
+        func increment() -> Int {
+            lock.lock()
+            defer { lock.unlock() }
+            value += 1
+            return value
         }
     }
 } 
