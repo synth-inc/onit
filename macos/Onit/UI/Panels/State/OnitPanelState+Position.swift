@@ -29,6 +29,10 @@ extension OnitPanelState {
             return
         }
         
+        if panel.isAnimating {
+            return
+        }
+        
         // Special case for Finder (desktop only)
         if TetherAppsManager.isFinderShowingDesktopOnly(activeWindow: window) {
             if let mouseScreen = NSRect(origin: NSEvent.mouseLocation, size: NSSize(width: 1, height: 1)).findScreen() {
@@ -93,6 +97,9 @@ extension OnitPanelState {
         var fromActive : NSRect? = nil
         var toActive: NSRect? = nil
         if let panel = self.panel {
+            if panel.isAnimating {
+                return
+            }
             if currentAnimationTask != nil {
                 cancelCurrentAnimation()
             }
