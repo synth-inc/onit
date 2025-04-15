@@ -27,6 +27,8 @@ protocol OnitPanel: NSPanel {
     @MainActor
     func hide()
     
+    var dragDetails: PanelDraggingDetails { get set }
+    var isProgrammaticMove: Bool { get set }
     var wasAnimated: Bool { get set }
     var animatedFromLeft: Bool { get set }
     var resizedApplication: Bool { get set }

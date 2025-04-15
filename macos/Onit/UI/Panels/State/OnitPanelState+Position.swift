@@ -24,6 +24,7 @@ extension OnitPanelState {
         guard let window = trackedWindow?.element,
               let windowFrame = window.frame(),
               let panel = self.panel,
+              !panel.dragDetails.isDragging,
               let position = window.position(),
               let size = window.size() else {
             return

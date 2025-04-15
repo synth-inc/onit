@@ -22,8 +22,11 @@ class OnitRegularPanel: NSPanel {
         return _level == .floating
     }
     
-    private let activeWindow: AXUIElement?
+    private let state: OnitPanelState
     private let width = ContentView.idealWidth
+    
+    var dragDetails: PanelDraggingDetails = .init()
+    var isProgrammaticMove: Bool = false
     var isAnimating: Bool = false
     var wasAnimated: Bool = false
     var animatedFromLeft: Bool = false
@@ -31,11 +34,7 @@ class OnitRegularPanel: NSPanel {
     var onitContentView: ContentView?
     
     init(state: OnitPanelState) {
-        if let trackedWindow = state.trackedWindow {
-            self.activeWindow = trackedWindow.element
-        } else {
-            self.activeWindow = nil
-        }
+        self.state = state
         
         super.init(
             contentRect: NSRect(x: 0, y: 0, width: width, height: 0),
@@ -73,11 +72,59 @@ class OnitRegularPanel: NSPanel {
         self.contentView = hostingView
         self.contentView?.setFrameOrigin(NSPoint(x: 0, y: 0))
         
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(windowDidMove),
+            name: NSWindow.didMoveNotification,
+            object: self
+        )
+        
         show()
     }
     
+    @objc func windowDidMove(_ notification: Notification) {
+        guard let window = notification.object as? NSWindow,
+              let activeWindow = state.trackedWindow?.element,
+              wasAnimated, !isAnimating, !isProgrammaticMove else { return }
+        
+        let currentPosition = window.frame.origin
+
+        if currentPosition != dragDetails.lastPosition {
+            dragDetails.isDragging = true
+            
+            if let activeWindowPosition = activeWindow.position(),
+               let activeWindowSize = activeWindow.size() {
+                
+                let deltaX: CGFloat
+                if dragDetails.lastPosition == .zero {
+                    let expectedX = activeWindowPosition.x + activeWindowSize.width - (TetheredButton.width / 2)
+                    deltaX = currentPosition.x - expectedX
+                } else {
+                    deltaX = currentPosition.x - dragDetails.lastPosition.x
+                }
+                let newX = activeWindowPosition.x + deltaX
+                
+                var menuBarHeight: CGFloat = 40
+                if let screen = screen {
+                    menuBarHeight = screen.frame.height - screen.visibleFrame.height
+                }
+                let newY = -currentPosition.y + menuBarHeight
+                
+                _ = activeWindow.setPosition(NSPoint(x: newX, y: newY))
+            }
+            
+            dragDetails.lastPosition = currentPosition
+            dragDetails.dragEndTimer?.invalidate()
+            dragDetails.dragEndTimer = Timer.scheduledTimer(withTimeInterval: 0.2, repeats: false) { _ in
+                Task { @MainActor in
+                    self.dragDetails = .init()
+                }
+            }
+        }
+    }
+    
     private func setupFrame() {
-        guard let activeWindow = activeWindow,
+        guard let activeWindow = state.trackedWindow?.element,
               let position = activeWindow.position(),
               let size = activeWindow.size() else {
             
@@ -111,6 +158,12 @@ class OnitRegularPanel: NSPanel {
         )
         
         setFrame(newFrame, display: false)
+    }
+    
+    override func setFrame(_ frameRect: NSRect, display flag: Bool) {
+        isProgrammaticMove = true
+        super.setFrame(frameRect, display: flag)
+        isProgrammaticMove = false
     }
 }
 

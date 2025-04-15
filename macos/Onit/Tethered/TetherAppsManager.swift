@@ -451,7 +451,7 @@ extension TetherAppsManager: AccessibilityNotificationsDelegate {
         if let (_, activeState) = states.first(where: { (key: TrackedWindow, value: OnitPanelState) in
             key == window
         }) {
-            activeState.trackedWindow?.title = window.title
+            activeState.trackedWindow = window
             panelState = activeState
         } else {
             panelState = OnitPanelState(trackedWindow: window)
