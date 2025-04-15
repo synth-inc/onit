@@ -24,13 +24,10 @@ extension OnitPanelState {
         guard let window = trackedWindow?.element,
               let windowFrame = window.frame(),
               let panel = self.panel,
+              !panel.isAnimating,
               !panel.dragDetails.isDragging,
               let position = window.position(),
               let size = window.size() else {
-            return
-        }
-        
-        if panel.isAnimating {
             return
         }
         
@@ -97,10 +94,8 @@ extension OnitPanelState {
     func restoreWindowPosition() {
         var fromActive : NSRect? = nil
         var toActive: NSRect? = nil
-        if let panel = self.panel {
-            if panel.isAnimating {
-                return
-            }
+        if let panel = self.panel, !panel.isAnimating {
+            
             if currentAnimationTask != nil {
                 cancelCurrentAnimation()
             }

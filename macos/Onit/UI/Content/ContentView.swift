@@ -49,7 +49,10 @@ struct ContentView: View {
                             .frame(height: 38)
                     }
                     PromptDivider()
-                    if state.showChatView {
+                    
+                    if !isRegularApp {
+                        ChatView()
+                    } else if state.showChatView {
                         ChatView()
                             .transition(.opacity)
                     } else {
