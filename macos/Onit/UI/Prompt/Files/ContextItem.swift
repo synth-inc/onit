@@ -68,8 +68,8 @@ struct ContextItem: View {
 
     var name: String {
         switch item {
-        case .auto(let appName, _):
-            appName
+        case .auto(let autoContext):
+            autoContext.appName
         case .file(let url), .image(let url):
             url.lastPathComponent
         case .error(_, let error):

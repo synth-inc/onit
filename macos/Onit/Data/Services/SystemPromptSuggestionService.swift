@@ -42,8 +42,8 @@ class SystemPromptSuggestionService {
         
         var contextListText = ""
         for context in contexts {
-            if case .auto(_, let content) = context {
-                contextListText += content.values.joined(separator: " ").lowercased() + " "
+            if case .auto(let autoContext) = context {
+                contextListText += autoContext.appContent.values.joined(separator: " ").lowercased() + " "
             } else if case .file(let url) = context {
                 if let contentFile = try? String(contentsOf: url).lowercased() {
                     contextListText += contentFile + " "
@@ -54,8 +54,8 @@ class SystemPromptSuggestionService {
         let inputApp = input?.application?.lowercased() ?? ""
         var contextListApp = ""
         for context in contexts {
-            if case .auto(let appName, _) = context {
-                contextListApp += appName.lowercased() + " "
+            if case .auto(let autoContext) = context {
+                contextListApp += autoContext.appName.lowercased() + " "
             }
         }
         

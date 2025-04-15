@@ -17,30 +17,75 @@ extension OnitPanelState {
 
         let appName = AccessibilityNotificationsManager.shared.screenResult.applicationName ?? "AutoContext"
         if let errorMessage = AccessibilityNotificationsManager.shared.screenResult.errorMessage {
-            let errorContext = Context(appName: "Unable to add \(appName)", appContent: ["error": errorMessage])
+            let errorContext = Context(appName: "Unable to add \(appName)", appHash: 0, appTitle: "", appContent: ["error": errorMessage])
             pendingContextList.insert(errorContext, at: 0)
             return
         }
 
         guard let appContent = AccessibilityNotificationsManager.shared.screenResult.others else {
-            let errorContext = Context(appName: "Unable to add \(appName)", appContent: ["error": "Empty text"])
+            let errorContext = Context(appName: "Unable to add \(appName)", appHash: 0, appTitle: "", appContent: ["error": "Empty text"])
             pendingContextList.insert(errorContext, at: 0)
             return
         }
-
-        /** Prevent duplication */
-        let contextDuplicated = pendingContextList.contains { context in
-            if case .auto(let contextApp, let contextContent) = context {
-                return contextApp == appName && contextContent == appContent
-            }
-            return false
-        }
-        guard !contextDuplicated else {
-            // TODO: KNA - Notify user for duplicated context
+        guard let activeTrackedWindow = AccessibilityNotificationsManager.shared.windowsManager.activeTrackedWindow else {
+            let errorContext = Context(appName: "Unable to add \(appName)", appHash: 0, appTitle: "", appContent: ["error": "Cannot identify context"])
+            pendingContextList.insert(errorContext, at: 0)
             return
         }
+        let appHash = CFHash(activeTrackedWindow.element)
+        let appTitle = activeTrackedWindow.title
+        
+        // TODO: We should find a smarter way to merge content
+        func mergeFragments(_ fragments: [String]) -> String {
+            guard !fragments.isEmpty else { return "" }
 
-        let autoContext = Context(appName: appName, appContent: appContent)
+            var result = fragments[0]
+
+            for fragment in fragments.dropFirst() {
+                let overlap = findMaxOverlap(between: result, and: fragment)
+                result += fragment.dropFirst(overlap)
+            }
+
+            return result
+        }
+
+        func findMaxOverlap(between a: String, and b: String) -> Int {
+            let minLen = min(a.count, b.count)
+            for i in stride(from: minLen, through: 1, by: -1) {
+                let aSuffix = String(a.suffix(i))
+                let bPrefix = String(b.prefix(i))
+                if aSuffix == bPrefix {
+                    return i
+                }
+            }
+            return 0
+        }
+
+        if let existingIndex = pendingContextList.firstIndex(where: { context in
+            if case .auto(let autoContext) = context {
+                return autoContext.appName == appName && autoContext.appHash == appHash && autoContext.appTitle == appTitle
+            }
+            return false
+        }) {
+            /** Merge result for existing autoContext */
+            if case .auto(let autoContext) = pendingContextList[existingIndex] {
+                var existingContent = autoContext.appContent
+                let appContentString = appContent[AccessibilityParsedElements.screen] ?? ""
+                let contentString = existingContent[AccessibilityParsedElements.screen] ?? ""
+                
+                if !appContentString.isEmpty && !contentString.isEmpty {
+                    let mergedContent = mergeFragments([contentString, appContentString])
+                    existingContent[AccessibilityParsedElements.screen] = mergedContent
+                    
+                    let updatedContext = Context(appName: appName, appHash: appHash, appTitle: appTitle, appContent: existingContent)
+                    pendingContextList[existingIndex] = updatedContext
+                    
+                    return
+                }
+            }
+        }
+
+        let autoContext = Context(appName: appName, appHash: appHash, appTitle: appTitle, appContent: appContent)
         pendingContextList.insert(autoContext, at: 0)
     }
     

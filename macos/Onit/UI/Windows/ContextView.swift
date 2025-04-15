@@ -44,7 +44,7 @@ struct ContextView: View {
     
     private func getDialogInfo() -> (String, String) {
         switch context {
-        case .auto(_, _):
+        case .auto(_):
             return ("Auto-context", "Auto-context is collected as plain text from your current window. You can manage your auto-context preferences in settings.")
         case .web(let websiteUrl, _, _):
             return ("Web Context", "Displaying content retrieved from \(websiteUrl.absoluteString).")
@@ -68,8 +68,8 @@ struct ContextView: View {
 
     private var readableTitle: String {
         switch context {
-        case .auto(let appTitle, _):
-            return appTitle
+        case .auto(let autoContext):
+            return autoContext.appTitle
         case .web(let websiteUrl, let websiteTitle, _):
             let websiteUrlDomain = websiteUrl.host() ?? websiteUrl.absoluteString
             return websiteTitle.isEmpty ? websiteUrlDomain : websiteTitle
@@ -80,8 +80,8 @@ struct ContextView: View {
 
     private var readableContent: String {
         switch context {
-        case .auto(_, let appContent):
-            return appContent
+        case .auto(let autoContext):
+            return autoContext.appContent
                 .map(\.value)
                 .joined(separator: "\n\n")
         case .web(_, _, _):
@@ -93,5 +93,5 @@ struct ContextView: View {
 }
 
 #Preview {
-    ContextView(context: .init(appName: "Test", appContent: [:]), webFileContents: "Test")
+    ContextView(context: .init(appName: "Test", appHash: 0, appTitle: "", appContent: [:]), webFileContents: "Test")
 }

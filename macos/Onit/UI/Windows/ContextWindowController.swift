@@ -24,8 +24,8 @@ class ContextWindowController: NSObject, NSWindowDelegate {
         var title: String
         
         switch context {
-        case .auto(let appName, _):
-            title = appName
+        case .auto(let autoContext):
+            title = autoContext.appName
         case .web(let websiteUrl, let websiteTitle, _):
             let websiteUrlDomain = websiteUrl.host() ?? websiteUrl.absoluteString
             title = websiteTitle.isEmpty ? websiteUrlDomain : websiteTitle
