@@ -65,9 +65,7 @@ class AccessibilityNotificationsManager: ObservableObject {
 
     // MARK: - Initializers
 
-    private init() {
-        windowsManager.delegate = self
-    }
+    private init() { }
     
     // MARK: - Delegates
     
@@ -290,12 +288,14 @@ class AccessibilityNotificationsManager: ObservableObject {
             case kAXSelectedRowsChangedNotification:
                 print("Selected Rows Changed Notification!")
                 self.handleFocusChange(for: element)
-            case kAXWindowMovedNotification, kAXWindowResizedNotification:
-                self.handleWindowBounds(for: element)
+            case kAXWindowMovedNotification:
+                self.handleWindowMoved(for: element)
+            case kAXWindowResizedNotification:
+                self.handleWindowResized(for: element)
             case kAXWindowCreatedNotification:
                 self.handleCreatedWindowElement(for: element)
             case kAXWindowMiniaturizedNotification:
-                self.notifyDelegates { $0.accessibilityManager(self, didActivateIgnoredWindow: nil) }
+                self.handleWindowMiniaturized(for: element)
             case kAXUIElementDestroyedNotification:
                 self.handleDetroyedElement(for: element)
             default:
@@ -304,15 +304,47 @@ class AccessibilityNotificationsManager: ObservableObject {
         }
     }
     
+    private func handleWindowMoved(for element: AXUIElement) {
+        handleExternalElement(element) { [weak self] elementPid in
+            guard let self = self,
+                  let trackedWindow = self.windowsManager.append(element, pid: elementPid) else { return }
+            
+            notifyDelegates { $0.accessibilityManager(self, didMoveWindow: trackedWindow) }
+        }
+    }
+    
+    private func handleWindowResized(for element: AXUIElement) {
+        handleExternalElement(element) { [weak self] elementPid in
+            guard let self = self,
+                  let trackedWindow = self.windowsManager.append(element, pid: elementPid) else { return }
+            
+            notifyDelegates { $0.accessibilityManager(self, didResizeWindow: trackedWindow) }
+        }
+    }
+    
     private func handleWindowBounds(for element: AXUIElement) {
         handleExternalElement(element) { [weak self] elementPid in
-            self?.windowsManager.append(element, pid: elementPid)
+            guard let self = self,
+                  let trackedWindow = self.windowsManager.append(element, pid: elementPid) else { return }
+            
+            notifyDelegates { $0.accessibilityManager(self, didActivateWindow: trackedWindow) }
+        }
+    }
+    
+    private func handleWindowMiniaturized(for element: AXUIElement) {
+        handleExternalElement(element) { [weak self] elementPid in
+            guard let self = self else { return }
+         
+            self.notifyDelegates { $0.accessibilityManager(self, didMinimizeWindow: nil) }
         }
     }
     
     func handleCreatedWindowElement(for element: AXUIElement) {
         handleExternalElement(element) { [weak self] elementPid in
-            self?.windowsManager.append(element, pid: elementPid)
+            guard let self = self,
+                  let trackedWindow = self.windowsManager.append(element, pid: elementPid) else { return }
+            
+            self.notifyDelegates { $0.accessibilityManager(self, didActivateWindow: trackedWindow) }
         }
     }
     
@@ -324,7 +356,9 @@ class AccessibilityNotificationsManager: ObservableObject {
             
             for foundWindow in foundWindows {
                 if foundWindow.element.role() == nil {
-                    self.windowsManager.remove(foundWindow)
+                    guard let trackedWindow = self.windowsManager.remove(foundWindow) else { return }
+                    
+                    notifyDelegates { $0.accessibilityManager(self, didDestroyWindow: trackedWindow) }
                 }
             }
         }
@@ -695,19 +729,5 @@ class AccessibilityNotificationsManager: ObservableObject {
         }
 
         DebugManager.shared.debugText = debugText
-    }
-}
-
-extension AccessibilityNotificationsManager: AccessibilityWindowsManagerDelegate {
-    func windowsManager(_ manager: AccessibilityWindowsManager, didActivateWindow window: TrackedWindow) {
-        notifyDelegates { delegate in
-            delegate.accessibilityManager(self, didActivateWindow: window)
-        }
-    }
-    
-    func windowsManager(_ manager: AccessibilityWindowsManager, didDestroyWindow window: TrackedWindow) {
-        notifyDelegates { delegate in
-            delegate.accessibilityManager(self, didDestroyWindow: window)
-        }
     }
 }

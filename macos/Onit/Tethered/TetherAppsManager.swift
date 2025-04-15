@@ -439,6 +439,26 @@ class TetherAppsManager: ObservableObject {
             }
         }
     }
+    
+    private func getState(for trackedWindow: TrackedWindow) -> OnitPanelState {
+        let panelState: OnitPanelState
+        
+        if let (_, activeState) = states.first(where: { (key: TrackedWindow, value: OnitPanelState) in
+            key == trackedWindow
+        }) {
+            activeState.trackedWindow = trackedWindow
+            panelState = activeState
+        } else {
+            panelState = OnitPanelState(trackedWindow: trackedWindow)
+            
+            states[trackedWindow] = panelState
+        }
+        
+        panelState.addDelegate(self)
+        state = panelState
+        
+        return panelState
+    }
 }
 
 // MARK: - AccessibilityNotificationsDelegate
@@ -446,21 +466,8 @@ class TetherAppsManager: ObservableObject {
 extension TetherAppsManager: AccessibilityNotificationsDelegate {
     
     func accessibilityManager(_ manager: AccessibilityNotificationsManager, didActivateWindow window: TrackedWindow) {
-        let panelState: OnitPanelState
+        let panelState = getState(for: window)
         
-        if let (_, activeState) = states.first(where: { (key: TrackedWindow, value: OnitPanelState) in
-            key == window
-        }) {
-            activeState.trackedWindow = window
-            panelState = activeState
-        } else {
-            panelState = OnitPanelState(trackedWindow: window)
-            
-            states[window] = panelState
-        }
-        
-        panelState.addDelegate(self)
-        state = panelState
         handlePanelStateChange(state: panelState)
     }
     
@@ -479,6 +486,23 @@ extension TetherAppsManager: AccessibilityNotificationsDelegate {
         }
         
         hideTetherWindow()
+    }
+    
+    func accessibilityManager(_ manager: AccessibilityNotificationsManager, didMinimizeWindow window: TrackedWindow?) {
+        hideTetherWindow()
+        updateLevelState(trackedWindow: window)
+    }
+    
+    func accessibilityManager(_ manager: AccessibilityNotificationsManager, didMoveWindow window: TrackedWindow) {
+        let panelState = getState(for: window)
+        
+        handlePanelStateChange(state: panelState)
+    }
+    
+    func accessibilityManager(_ manager: AccessibilityNotificationsManager, didResizeWindow window: TrackedWindow) {
+        let panelState = getState(for: window)
+        
+        handlePanelStateChange(state: panelState)
     }
 }
 

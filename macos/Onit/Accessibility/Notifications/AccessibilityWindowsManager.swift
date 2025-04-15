@@ -19,21 +19,14 @@ struct TrackedWindow: Hashable {
     }
 }
 
-@MainActor protocol AccessibilityWindowsManagerDelegate: AnyObject {
-    func windowsManager(_ manager: AccessibilityWindowsManager, didActivateWindow window: TrackedWindow)
-    func windowsManager(_ manager: AccessibilityWindowsManager, didDestroyWindow window: TrackedWindow)
-}
-
 @MainActor
 class AccessibilityWindowsManager {
-    
-    weak var delegate: AccessibilityWindowsManagerDelegate?
-    
     var activeTrackedWindow: TrackedWindow?
+    
     private var destroyedTrackedWindow: TrackedWindow?
     private var trackedWindows: [TrackedWindow] = []
     
-    func append(_ element: AXUIElement, pid: pid_t) {
+    func append(_ element: AXUIElement, pid: pid_t) -> TrackedWindow? {
         if TetherAppsManager.isFinderShowingDesktopOnly(activeWindow: element) {
             let trackedWindow = TrackedWindow(element: element, pid: pid, hash: CFHash(element), title: "")
             
@@ -41,8 +34,8 @@ class AccessibilityWindowsManager {
                 trackedWindows.append(trackedWindow)
             }
             activeTrackedWindow = trackedWindow
-                
-            delegate?.windowsManager(self, didActivateWindow: trackedWindow)
+            
+            return trackedWindow
         } else if let window = element.findFirstTargetWindow() {
 
             let title = window.title() ?? "NA"
@@ -52,19 +45,20 @@ class AccessibilityWindowsManager {
                 trackedWindows.append(trackedWindow)
             }
             activeTrackedWindow = trackedWindow
-                
-            delegate?.windowsManager(self, didActivateWindow: trackedWindow)
+            return trackedWindow
         }
+        
+        return nil
     }
     
-    func remove(_ trackedWindow: TrackedWindow) {
+    func remove(_ trackedWindow: TrackedWindow) -> TrackedWindow? {
         if let index = trackedWindows.firstIndex(of: trackedWindow) {
             trackedWindows.remove(at: index)
             
             destroyedTrackedWindow = trackedWindow
-
-            delegate?.windowsManager(self, didDestroyWindow: trackedWindow)
+            return trackedWindow
         }
+        return nil
     }
     
     func trackedWindows(for element: AXUIElement) -> [TrackedWindow] {
