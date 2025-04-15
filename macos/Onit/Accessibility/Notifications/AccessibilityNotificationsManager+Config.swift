@@ -22,7 +22,8 @@ extension AccessibilityNotificationsManager {
             kAXWindowMovedNotification,
             kAXWindowResizedNotification,
             kAXWindowCreatedNotification,
-            kAXUIElementDestroyedNotification
+            kAXUIElementDestroyedNotification,
+            kAXWindowMiniaturizedNotification
 
             //            kAXAnnouncementRequestedNotification,
             //            kAXApplicationActivatedNotification,

@@ -274,26 +274,30 @@ class AccessibilityNotificationsManager: ObservableObject {
         dispatchPrecondition(condition: .onQueue(.main))
 
         handleExternalElement(element) { [weak self] elementPid in
+            guard let self = self else { return }
+            
             switch notification {
             case kAXFocusedUIElementChangedNotification:
-                self?.handleFocusChange(for: element)
+                self.handleFocusChange(for: element)
             case kAXSelectedTextChangedNotification:
-                self?.handleSelectionChange(for: element)
+                self.handleSelectionChange(for: element)
             case kAXValueChangedNotification:
-                self?.handleValueChanged(for: element)
+                self.handleValueChanged(for: element)
             case kAXSelectedColumnsChangedNotification:
                 print("Selected Columns Changed Notification!")
                 // These handle tabbed interfaces
-                self?.handleFocusChange(for: element)
+                self.handleFocusChange(for: element)
             case kAXSelectedRowsChangedNotification:
                 print("Selected Rows Changed Notification!")
-                self?.handleFocusChange(for: element)
+                self.handleFocusChange(for: element)
             case kAXWindowMovedNotification, kAXWindowResizedNotification:
-                self?.handleWindowBounds(for: element)
+                self.handleWindowBounds(for: element)
             case kAXWindowCreatedNotification:
-                self?.handleCreatedWindowElement(for: element)
+                self.handleCreatedWindowElement(for: element)
+            case kAXWindowMiniaturizedNotification:
+                self.notifyDelegates { $0.accessibilityManager(self, didActivateIgnoredWindow: nil) }
             case kAXUIElementDestroyedNotification:
-                self?.handleDetroyedElement(for: element)
+                self.handleDetroyedElement(for: element)
             default:
                 break
             }
