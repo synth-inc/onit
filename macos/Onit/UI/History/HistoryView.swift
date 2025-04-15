@@ -9,6 +9,7 @@ import SwiftData
 import SwiftUI
 
 struct HistoryView: View {
+    @Environment(\.model) var model
     @Query(sort: \Chat.timestamp, order: .reverse) private var chats: [Chat]
 
     @State private var searchQuery: String = ""
@@ -45,48 +46,50 @@ struct HistoryView: View {
     }
 
     var body: some View {
-        VStack(spacing: 0) {
-            HistoryTitle()
-            HistorySearchView(text: $searchQuery)
-            
-            if sortedChats.isEmpty { emptyText }
-            else { historyRows }
+        MenuList(
+            header: MenuHeader(title: "History") {
+                IconButton(
+                    icon: .smallCross,
+                    action: { model.showHistory = false }
+                )
+            },
+            search: MenuList.Search(query: $searchQuery)
+        ) {
+            MenuSection(maxHeight: 295) {
+                if sortedChats.isEmpty { emptyText }
+                else { historyRows }
+            }
         }
-        .frame(width: 350)
-        .background(.BG)
     }
-    
-    var emptyText: some View {
+}
+
+/// Child Components
+extension HistoryView {
+    private var emptyText: some View {
         Text("No prompts found")
             .foregroundStyle(.gray200)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(.vertical, 16)
-            .padding(.horizontal, 16)
+            .padding(.horizontal, 8)
+            .padding(.bottom, 8)
     }
     
-    var historyRows: some View {
-        ScrollView {
-            LazyVStack(alignment: .leading) {
-                Spacer().frame(height: 12)
-                ForEach(sortedChats, id: \.key) { section, chats in
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text(section)
-                            .appFont(.medium13)
-                            .foregroundStyle(.white.opacity(0.6))
-                            .padding(.top, 4)
-                            .padding(.leading, 4)
+    private var historyRows: some View {
+        LazyVStack(alignment: .leading) {
+            ForEach(sortedChats, id: \.key) { section, chats in
+                VStack(alignment: .leading, spacing: 8) {
+                    Text(section)
+                        .appFont(.medium13)
+                        .foregroundStyle(.white.opacity(0.6))
+                        .padding(.top, 4)
+                        .padding(.leading, 4)
 
-                        ForEach(Array(chats.enumerated()), id: \.element.id) { index, chat in
-                            HistoryRowView(chat: chat, index: index)
-                        }
+                    ForEach(Array(chats.enumerated()), id: \.element.id) { index, chat in
+                        HistoryRowView(chat: chat, index: index)
                     }
                 }
             }
-            .padding(.horizontal, 10)
-            .padding(.bottom, 10)
         }
     }
-
 }
 
 #Preview {

@@ -11,14 +11,14 @@ struct WebSearchButton: View {
     @Default(.webSearchEnabled) var webSearchEnabled
     
     var body: some View {
-        return Button(action: toggleWebSearch) {
-            Image(.web)
-                .resizable()
-                .renderingMode(.template)
-                .foregroundStyle(webSearchEnabled ? Color.blue400 : (isTavilyAPITokenValidated ? Color.gray200 : Color.gray700))
-                .frame(width: 18, height: 18)
-        }
-        .buttonStyle(.plain)
+        IconButton(
+            icon: .web,
+            action: { toggleWebSearch() },
+            inactiveColor:
+                webSearchEnabled ? .blue400 :
+                !isTavilyAPITokenValidated ? .gray700 :
+                nil
+        )
         .help(webSearchButtonHelpText)
         .alert("API Token Required", isPresented: $showingWebSearchAPIKeyAlert) {
             Button("Open Settings") {

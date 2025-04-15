@@ -46,18 +46,18 @@ struct Toolbar: View {
     var body: some View {
         HStack(spacing: 4) {
             if isRegularApp {
-                Spacer()
-                    .frame(width: 60)
+                Spacer().frame(width: 60)
             } else {
                 esc
             }
             
             add
+            
             Spacer()
+            
             languageModel
-            if isRegularApp {
-                fitActiveWindowButton
-            }
+            
+            if isRegularApp { fitActiveWindowButton }
             localMode
             history
             settings
@@ -66,15 +66,13 @@ struct Toolbar: View {
                 resize
             }
         }
+        .frame(height: 32, alignment: .center)
         .foregroundStyle(.gray200)
         .padding(.horizontal, 14)
-        .padding(.vertical, 2)
-        .background {
-            escListener
-        }
-        .background {
-            heightListener
-        }
+        .padding(.top, 4)
+        .padding(.bottom, 2)
+        .background { escListener }
+        .background { heightListener }
     }
 
     var esc: some View {
@@ -93,57 +91,52 @@ struct Toolbar: View {
         EmptyView()
     }
     
-    var fitActiveWindowButton: some View {
-        Button {
-            guard isAccessibilityFlagsEnabled else {
-                model.setSettingsTab(tab: .accessibility)
-                openSettings()
-                return
-            }
-            guard isAccessibilityAuthorized else {
-                AccessibilityPermissionManager.shared.requestPermission()
-                return
-            }
-            
-            fitActiveWindow.toggle()
-        } label: {
-            let image: ImageResource = fitActiveWindow ? .windowFit : .windowUnfit
-            
-            Image(image)
-                .renderingMode(.template)
-                .foregroundStyle(.gray200)
-                .overlay(
-                    Group {
-                        if !isAccessibilityFlagsEnabled || !isAccessibilityAuthorized {
-                            Rectangle()
-                                .fill(.black)
-                                .frame(width: 24, height: 4)
-                                .rotationEffect(.degrees(45))
-                                .offset(y: 0)
-                            
-                            Rectangle()
-                                .fill(.gray200)
-                                .frame(height: 2)
-                                .rotationEffect(.degrees(45))
-                                .offset(y: 0)
-                        }
-                    }
-                )
+    func fitToActiveWindow() {
+        guard isAccessibilityFlagsEnabled else {
+            model.setSettingsTab(tab: .accessibility)
+            openSettings()
+            return
         }
-        .tooltip(prompt: fitActiveWindowPrompt)
+        guard isAccessibilityAuthorized else {
+            AccessibilityPermissionManager.shared.requestPermission()
+            return
+        }
+        
+        fitActiveWindow.toggle()
+    }
+    var fitActiveWindowButton: some View {
+        IconButton(
+            icon: fitActiveWindow ? .windowFit : .windowUnfit,
+            action: { fitToActiveWindow() },
+            isActive: fitActiveWindow,
+            tooltipPrompt: fitActiveWindowPrompt
+        )
+        .overlay(
+            Group {
+                if !isAccessibilityFlagsEnabled || !isAccessibilityAuthorized {
+                    Rectangle()
+                        .fill(.black)
+                        .frame(width: 24, height: 4)
+                        .rotationEffect(.degrees(45))
+                        .offset(y: 0)
+                    
+                    Rectangle()
+                        .fill(.gray200)
+                        .frame(height: 2)
+                        .rotationEffect(.degrees(45))
+                        .offset(y: 0)
+                }
+            }
+        )
     }
 
     var resize: some View {
-        Button {
-            model.togglePanelSize()
-        } label: {
-            Image(.resize)
-                .renderingMode(.template)
-                .padding(3)
-        }
-        .tooltip(
-            prompt: "Resize Window",
-            shortcut: .keyboardShortcuts(.resizeWindow)
+        IconButton(
+            icon: .resize,
+            action: { model.togglePanelSize() },
+            isActive: Defaults[.isPanelExpanded],
+            tooltipPrompt: "Resize Window",
+            tooltipShortcut: .keyboardShortcuts(.resizeWindow)
         )
     }
 
@@ -171,13 +164,16 @@ struct Toolbar: View {
         .pickerStyle(.inline)
     }
 
+    var showModelBinding: Binding<Bool> {
+        Binding(
+            get: { self.model.showModels },
+            set: { self.model.showModels = $0 }
+        )
+    }
     @ViewBuilder
     var languageModel: some View {
-        @Bindable var model = model
-
         Button {
-            OverlayManager.shared.captureClickPosition()
-            OverlayManager.shared.showOverlay(model: model, content: ModelSelectionView())
+            model.showModels.toggle()
         } label: {
             HStack(spacing: 0) {
                 Text(
@@ -190,57 +186,64 @@ struct Toolbar: View {
                 .padding(.leading, 2)
                 Image(.smallChevDown)
                     .renderingMode(.template)
+                    .rotationEffect(.degrees(model.showModels ? 180 : 0))
             }
-            .padding(2)
+            .frame(height: defaultButtonHeight)
+            .padding(.horizontal, 6)
             .contentShape(.rect)
             .background {
-                RoundedRectangle(cornerRadius: 6)
+                RoundedRectangle(cornerRadius: defaultButtonCornerRadius)
                     .fill(Color.clear)
             }
         }
         .tooltip(prompt: "Change model")
+        .popover(
+            isPresented: showModelBinding,
+            arrowEdge: .bottom
+        )  {
+            ModelSelectionView()
+        }
     }
 
     var add: some View {
         HStack(spacing: 0) {
-            Button {
-                model.newChat()
-            } label: {
-                Image(.circlePlus)
-                    .renderingMode(.template)
-                    .padding(2)
-            }
-            .tooltip(prompt: "New Chat", shortcut: .keyboardShortcuts(.newChat))
+            IconButton(
+                icon: .circlePlus,
+                action: { model.newChat() },
+                tooltipPrompt: "New Chat",
+                tooltipShortcut: .keyboardShortcuts(.newChat)
+            )
             
-            Button {
-                model.newChat()
-                
-                SystemPromptState.shared.shouldShowSelection = true
-                SystemPromptState.shared.shouldShowSystemPrompt = true
-            } label: {
-                Image(.smallChevDown)
-                    .renderingMode(.template)
-                    .padding(2)
-            }
+            IconButton(
+                icon: .smallChevDown,
+                action: {
+                    model.newChat()
+                    SystemPromptState.shared.shouldShowSelection = true
+                    SystemPromptState.shared.shouldShowSystemPrompt = true
+                },
+                isActive: SystemPromptState.shared.shouldShowSelection,
+                tooltipPrompt: "Start new Chat with system prompt"
+            )
             .onHover(perform: { isHovered in
                 if isHovered && model.currentChat?.systemPrompt == nil && !SystemPromptState.shared.shouldShowSystemPrompt {
                     SystemPromptState.shared.shouldShowSystemPrompt = true
                 }
             })
-            .tooltip(prompt: "Start new Chat with system prompt")
         }
     }
 
+    func toggleMode() {
+        mode = mode == .local ? .remote : .local
+    }
     var localMode: some View {
-        Button {
-            mode = mode == .local ? .remote : .local
-        } label: {
-            Image(mode == .local ? .localModeActive : .localMode)
-                .renderingMode(.template)
-                .padding(2)
-                .foregroundColor(mode == .local ? .limeGreen : .gray200)
-        }
-        .tooltip(prompt: "Local Mode", shortcut: .keyboardShortcuts(.toggleLocalMode))
+        IconButton(
+            icon: mode == .local ? .localModeActive : .localMode,
+            action: { toggleMode() },
+            isActive: mode == .local,
+            activeColor: .limeGreen,
+            tooltipPrompt: "Local Mode",
+            tooltipShortcut: .keyboardShortcuts(.toggleLocalMode)
+        )
     }
 
     var showHistoryBinding: Binding<Bool> {
@@ -249,16 +252,13 @@ struct Toolbar: View {
             set: { self.model.showHistory = $0 }
         )
     }
-    
     var history: some View {
-        Button {
-            model.showHistory.toggle()
-        } label: {
-            Image(.history)
-                .renderingMode(.template)
-                .padding(2)
-        }
-        .tooltip(prompt: "History")
+        IconButton(
+            icon: .history,
+            action: { model.showHistory.toggle() },
+            isActive: model.showHistory,
+            tooltipPrompt: "History"
+        )
         .popover(
             isPresented: showHistoryBinding,
             arrowEdge: .bottom
@@ -267,19 +267,19 @@ struct Toolbar: View {
         }
     }
 
-    var settings: some View {
-        Button {
-            NSApp.activate()
-            if NSApp.isActive {
-                model.setSettingsTab(tab: .general)
-                openSettings()
-            }
-        } label: {
-            Image(.settingsCog)
-                .renderingMode(.template)
-                .padding(2)
+    func openSettingsWindow() {
+        NSApp.activate()
+        if NSApp.isActive {
+            model.setSettingsTab(tab: .general)
+            openSettings()
         }
-        .tooltip(prompt: "Settings", shortcut: .none)
+    }
+    var settings: some View {
+        IconButton(
+            icon: .settingsCog,
+            action: { openSettingsWindow() },
+            tooltipPrompt: "Settings"
+        )
     }
 
     var heightListener: some View {

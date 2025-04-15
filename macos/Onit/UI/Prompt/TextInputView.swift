@@ -41,11 +41,14 @@ struct TextInputView: View {
     @State private var transcriptionTask: Task<Void, Never>? = nil
 
     var body: some View {
-        HStack(alignment: .bottom) {
+        HStack(alignment: .center) {
             textField
-            WebSearchButton()
-            microphoneButton
-            sendButton
+            
+            HStack(alignment: .center, spacing: 0) {
+                WebSearchButton()
+                microphoneButton
+                sendButton
+            }
         }
         .padding(.top, 4)
         .padding(.bottom, 12)
@@ -97,22 +100,13 @@ struct TextInputView: View {
     }
 
     var microphoneButton: some View {
-        Button(action: handleMicrophonePress) {
-            if audioRecorder.isRecording {
-                Image("recording")
-                    .resizable()
-                    .renderingMode(.template)
-                    .foregroundStyle(Color.red)
-                    .frame(width: 20, height: 20)
-            } else {
-                Image("voice")
-                    .resizable()
-                    .renderingMode(.template)
-                    .foregroundStyle(audioRecorder.permissionGranted ? Color.gray200 : Color.gray700)
-                    .frame(width: 20, height: 20)
-            }
-        }
-        .buttonStyle(.plain)
+        IconButton(
+            icon: audioRecorder.isRecording ? .recording : .voice,
+            action: { handleMicrophonePress() },
+            isActive: audioRecorder.isRecording,
+            activeColor: audioRecorder.isRecording ? Color.red : nil,
+            inactiveColor: !audioRecorder.permissionGranted ? Color.gray700 : nil
+        )
         .disabled(audioRecorder.isTranscribing || !isOpenAITokenValidated)
         .help(microphoneButtonHelpText)
     }
@@ -282,17 +276,15 @@ struct TextInputView: View {
     }
 
     var sendButton: some View {
-        Button(action: sendAction) {
-            Image(mode == .local ? .circleArrowUpDotted : .circleArrowUp)
-                .resizable()
-                .renderingMode(.template)
-                .foregroundStyle(
-                    (model.pendingInstruction.isEmpty)
-                        ? Color.gray700 : (mode == .local ? .limeGreen : Color.blue400)
-                )
-                .frame(width: 22, height: 22, alignment: .center)
-        }
-        .buttonStyle(.plain)
+        IconButton(
+            icon: mode == .local ? .circleArrowUpDotted : .circleArrowUp,
+            iconSize: 22,
+            action: { sendAction() },
+            inactiveColor:
+                model.pendingInstruction.isEmpty ? .gray700 :
+                mode == .local ? .limeGreen :
+                Color.blue400
+        )
         .disabled(model.pendingInstruction.isEmpty)
         .keyboardShortcut(.return, modifiers: [])
     }

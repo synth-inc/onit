@@ -16,25 +16,15 @@ struct HistoryRowView: View {
     var index: Int
 
     var body: some View {
-        Button {
-            model.setChat(chat: chat, index: index)
-        } label: {
-            HStack {
-                Text(getPromptText())
-                    .appFont(.medium16)
-                    .foregroundStyle(.FG)
-                
-                Spacer()
-                
-                Group {
-                    if showDelete { deleteButton }
-                    else { chatResponseCount }
-                }
+        ActionButton(
+            action: { model.setChat(chat: chat, index: index) },
+            text: getPromptText()
+        ) {
+            Group {
+                if showDelete { deleteButton }
+                else { chatResponseCount }
             }
-            .padding(.leading, 10)
         }
-        .frame(height: 36)
-        .buttonStyle(HoverableButtonStyle(background: true))
         .onHover { hovering in showDelete = hovering }
     }
     
@@ -43,7 +33,6 @@ struct HistoryRowView: View {
             .appFont(.medium13)
             .monospacedDigit()
             .foregroundStyle(.gray200)
-            .padding(.trailing, 10)
     }
     
     var deleteButton: some View {
@@ -53,7 +42,6 @@ struct HistoryRowView: View {
             
             Image(systemName: "trash")
                 .frame(width: 14, height: 14)
-                .padding(.trailing, 10)
         }
         .frame(height: 34)
         .contentShape(Rectangle())

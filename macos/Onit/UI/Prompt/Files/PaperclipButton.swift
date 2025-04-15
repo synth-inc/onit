@@ -20,15 +20,11 @@ struct PaperclipButton: View {
 
     var body: some View {
         HStack(spacing: 6) {
-            Button {
-                handleAddContext()
-            } label: {
-                Image(.paperclip)
-                    .resizable()
-                    .frame(width: 16, height: 16)
-                    .padding(3)
-            }
-            .tooltip(prompt: accessibilityAutoContextEnabled ? "Add context" : "Upload file")
+            IconButton(
+                icon: .paperclip,
+                action: { handleAddContext() },
+                tooltipPrompt: accessibilityAutoContextEnabled ? "Add context" : "Upload file"
+            )
 
             if model.pendingContextList.isEmpty {
                 if !accessibilityAutoContextEnabled && !closedAutocontext {
@@ -48,6 +44,7 @@ struct PaperclipButton: View {
                             )
                             .foregroundStyle(.gray200)
                             .appFont(.medium13)
+                            
                             Text(" for Auto-Context)")
                                 .foregroundStyle(.gray200)
                                 .appFont(.medium13)

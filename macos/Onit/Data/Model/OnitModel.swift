@@ -23,6 +23,7 @@ import SwiftUI
     var tooltipHeight: CGFloat = 0
     var showTooltip = false
     var isTooltipActive = false
+    var showModels: Bool = false
     var showHistory: Bool = false
     var showMenuBarExtra: Bool = false
     weak var panel: CustomPanel? = nil {

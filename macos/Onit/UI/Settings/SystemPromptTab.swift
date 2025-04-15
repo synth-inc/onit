@@ -37,11 +37,17 @@ struct SystemPromptTab: View {
         GeometryReader { geometry in
             VStack {
                 HStack {
-                    let config = CustomTextField.Config(strokeColor: .gray300,
-                                                        clear: true,
-                                                        leftIcon: .search)
-                    
-                    CustomTextField("Search name, prompt or tag...", text: $searchText, config: config)
+                    CustomTextField(
+                        text: $searchText,
+                        placeholder: "Search name, prompt or tag...",
+                        config: CustomTextField.Config(
+                            strokeColor: .gray300,
+                            hoverStrokeColor: .gray200,
+                            focusedStrokeColor: .gray100,
+                            clear: true,
+                            leftIcon: .search
+                        )
+                    )
                     
                     Button {
                         showAdd = true
