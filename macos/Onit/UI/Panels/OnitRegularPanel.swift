@@ -103,12 +103,14 @@ class OnitRegularPanel: NSPanel {
                     deltaX = currentPosition.x - dragDetails.lastPosition.x
                 }
                 let newX = activeWindowPosition.x + deltaX
+                var newY = activeWindowPosition.y
                 
-                var menuBarHeight: CGFloat = 40
                 if let screen = screen {
-                    menuBarHeight = screen.frame.height - screen.visibleFrame.height
+                    let menuBarHeight = screen.frame.height - screen.visibleFrame.height
+                    newY = screen.visibleFrame.height - currentPosition.y - window.frame.height + menuBarHeight
+                } else {
+                    print("Couldn't find panel's screen when dragging tethered Onit")
                 }
-                let newY = -currentPosition.y + menuBarHeight
                 
                 _ = activeWindow.setPosition(NSPoint(x: newX, y: newY))
             }
