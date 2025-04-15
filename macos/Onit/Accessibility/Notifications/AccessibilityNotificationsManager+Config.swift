@@ -23,8 +23,7 @@ extension AccessibilityNotificationsManager {
             kAXWindowMovedNotification,
             kAXWindowResizedNotification,
             kAXWindowCreatedNotification,
-            kAXUIElementDestroyedNotification,
-            kAXWindowMiniaturizedNotification
+            kAXUIElementDestroyedNotification
 
             //            kAXAnnouncementRequestedNotification,
             //            kAXApplicationActivatedNotification,
@@ -58,5 +57,11 @@ extension AccessibilityNotificationsManager {
             //            kAXWindowMovedNotification,
             //            kAXWindowResizedNotification
         ]
+
+        static let persistentNotifications = [
+            kAXWindowDeminiaturizedNotification,
+            kAXWindowMiniaturizedNotification,
+        ]
+        
     }
 }

@@ -50,7 +50,7 @@ extension OnitPanelState {
             return
         }
         
-        guard let screen = NSRect(origin: position, size: size).findScreen() else { return }
+        guard let screen = NSRect(origin: NSEvent.mouseLocation, size: NSSize(width: 1, height: 1)).findScreen() else { return }
         
         let screenFrame = screen.frame
         let visibleFrame = screen.visibleFrame
@@ -147,6 +147,22 @@ extension OnitPanelState {
         }
     }
     
+    func tempHidePanel() {
+        guard let panel = panel else { return }        
+        NSAnimationContext.runAnimationGroup { context in
+            context.duration = animationDuration
+            panel.animator().alphaValue = 0.0
+        }
+    }
+
+    func tempShowPanel() {
+        guard let panel = panel else { return }
+        NSAnimationContext.runAnimationGroup { context in
+            context.duration = animationDuration
+            panel.animator().alphaValue = 1.0
+        }
+    }
+    
     // MARK: - Layout
     
     private func movePanel(onitWidth: CGFloat, onitHeight: CGFloat, onitY: CGFloat, action: TrackedWindowAction) {
@@ -169,6 +185,7 @@ extension OnitPanelState {
             width: onitWidth,
             height: onitHeight
         )
+        log.debug("movePanel: \(newFrame)")
         
         if panel.wasAnimated {
             if action == .move {
@@ -228,6 +245,7 @@ extension OnitPanelState {
             width: onitWidth,
             height: onitHeight
         )
+        log.debug("moveWindowAndPanel: \(newFrame)")
         
         if panel.wasAnimated {
             panel.setFrame(newFrame, display: false)
@@ -280,7 +298,7 @@ extension OnitPanelState {
             width: onitWidth,
             height: onitHeight
         )
-        
+        log.debug("resizeWindowAndMovePanel: \(newFrame)")
         if panel.wasAnimated {
             panel.setFrame(newFrame, display: false)
             _ = window.setFrame(activeWindowTargetRect)

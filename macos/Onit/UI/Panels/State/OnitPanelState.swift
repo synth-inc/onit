@@ -61,6 +61,15 @@ class OnitPanelState: NSObject {
             }
         }
     }
+    var hidden: Bool = false {
+        didSet {
+            notifyDelegates { delegate in
+                delegate.panelStateDidChange(state: self)
+            }
+        }
+    }
+    var panelWasHidden: Bool = false
+    
     var panelMiniaturized: Bool = false {
         didSet {
             notifyDelegates { delegate in

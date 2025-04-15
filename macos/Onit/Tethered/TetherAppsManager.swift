@@ -167,25 +167,32 @@ class TetherAppsManager: ObservableObject {
             return
         }
         
-        if state.panelOpened && !state.panelMiniaturized {
-            // Panel opened
-            
-            KeyboardShortcutsManager.enable(modelContainer: SwiftDataContainer.appContainer)
-            saveInitialFrameIfNeeded(for: window, state: state)
-            
-            if state.currentAnimationTask == nil {
-                state.repositionPanel(action: action)
+        // We're now introducing a 3rd state.
+        if !state.hidden {
+            if state.panelOpened {
+                if state.panelWasHidden {
+                    state.tempShowPanel()
+                }
+                // Panel opened
+                KeyboardShortcutsManager.enable(modelContainer: SwiftDataContainer.appContainer)
+                saveInitialFrameIfNeeded(for: window, state: state)
+                hideTetherWindow()
+
+                // TODO: KNA - Tethered - We should just move the panel without any animation
+                if state.currentAnimationTask == nil {
+                    state.repositionPanel(action: action)
+                }
+            } else {
+                // Panel closed
+                KeyboardShortcutsManager.disable(modelContainer: SwiftDataContainer.appContainer)
+                debouncedShowTetherWindow(state: state, activeWindow: window)
             }
-                
-            hideTetherWindow()
-        } else if !state.panelOpened {
-            // Panel closed
-            KeyboardShortcutsManager.disable(modelContainer: SwiftDataContainer.appContainer)
-            debouncedShowTetherWindow(state: state, activeWindow: window)
         } else {
-            // Panel minified
-            KeyboardShortcutsManager.disable(modelContainer: SwiftDataContainer.appContainer)
-            debouncedShowTetherWindow(state: state, activeWindow: window)
+            // If it's hidden, we want to hide the tether window and potentially animate out the panel.
+            if (state.panelOpened && !state.panelWasHidden) {
+                state.tempHidePanel()
+            }
+            hideTetherWindow()
         }
         
         if let trackedWindow = state.trackedWindow {
@@ -457,6 +464,28 @@ extension TetherAppsManager: AccessibilityNotificationsDelegate {
         updateLevelState(trackedWindow: window)
     }
     
+    func accessibilityManager(_ manager: AccessibilityNotificationsManager, didMinimizeWindow window: TrackedWindow) {
+        print("didMinimizeWindow - tetherAppsSManager")
+        if let (_, state) = states.first(where: { (key: TrackedWindow, value: OnitPanelState) in
+            key == window
+        }) {
+            state.hidden = true
+            handlePanelStateChange(state: state, action: .undefined)
+            state.panelWasHidden = true
+        }
+    }
+    
+    func accessibilityManager(_ manager: AccessibilityNotificationsManager, didDeminimizeWindow window: TrackedWindow) {
+        print("didDEminimizeWindow - tetherAppsSManager")
+        if let (_, state) = states.first(where: { (key: TrackedWindow, value: OnitPanelState) in
+            key == window
+        }) {
+            state.hidden = false
+            handlePanelStateChange(state: state, action: .resize)
+            state.panelWasHidden = false
+        }
+    }
+        
     func accessibilityManager(_ manager: AccessibilityNotificationsManager, didDestroyWindow window: TrackedWindow) {
         if let (_, state) = states.first(where: { (key: TrackedWindow, value: OnitPanelState) in
             key == window

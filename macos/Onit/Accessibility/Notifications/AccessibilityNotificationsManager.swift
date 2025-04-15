@@ -44,8 +44,12 @@ class AccessibilityNotificationsManager: ObservableObject {
 
     private var currentSource: String?
 
+    // Transient observers that are started and stopped on app activation/deactivation.
     private var observers: [pid_t: AXObserver] = [:]
-
+    
+    // Persistent observers that are started once per pid and remain until the app quits.
+    private var persistentObservers: [pid_t: AXObserver] = [:]
+    
     private var selectedSource: String?
 
     private var selectedTextByApp: [String: String] = [:]
@@ -99,6 +103,7 @@ class AccessibilityNotificationsManager: ObservableObject {
         } else {
             handleAppActivation(appName: pid.getAppName(), processID: pid)
             startAccessibilityObservers(for: pid)
+            startPersistentAccessibilityObservers(for: pid) // Start persistent observer
         }
     }
 
@@ -111,6 +116,8 @@ class AccessibilityNotificationsManager: ObservableObject {
 
         currentSource = nil
         observers.removeAll()
+        // Note: Persistent observers are kept until app quits. Optionally, uncomment the following if a cleanup is desired.
+        // stopPersistentAccessibilityObservers()
     }
 
     private func startAppActivationObservers() {
@@ -236,6 +243,7 @@ class AccessibilityNotificationsManager: ObservableObject {
                 self.handleAppActivation(
                     appName: app.localizedName, processID: app.processIdentifier)
                 self.startAccessibilityObservers(for: app.processIdentifier)
+                self.startPersistentAccessibilityObservers(for: app.processIdentifier) // Start persistent observer on activation
             }
         }
     }
@@ -356,6 +364,24 @@ class AccessibilityNotificationsManager: ObservableObject {
                     
                     notifyDelegates { $0.accessibilityManager(self, didDestroyWindow: trackedWindow) }
                 }
+            }
+        }
+    }
+    
+    func handleMinimizedElement(for element: AXUIElement) {
+        let trackedWindows = self.windowsManager.trackedWindows(for: element)
+        if let firstTrackedWindow = trackedWindows.first {
+            notifyDelegates { delegate in
+                delegate.accessibilityManager(self, didMinimizeWindow: firstTrackedWindow)
+            }
+        }
+    }
+    
+    func handleDeminimizedElement(for element: AXUIElement) {
+        let trackedWindows = self.windowsManager.trackedWindows(for: element)
+        if let firstTrackedWindow = trackedWindows.first {
+            notifyDelegates { delegate in
+                delegate.accessibilityManager(self, didDeminimizeWindow: firstTrackedWindow)
             }
         }
     }
@@ -724,5 +750,89 @@ class AccessibilityNotificationsManager: ObservableObject {
         }
 
         DebugManager.shared.debugText = debugText
+    }
+
+    // MARK: - Persistent Observer Methods
+
+    /// Starts a persistent AXObserver for the given process identifier that listens for persistentNotifications.
+    private func startPersistentAccessibilityObservers(for pid: pid_t) {
+        guard Thread.isMainThread else {
+            DispatchQueue.main.async {
+                self.startPersistentAccessibilityObservers(for: pid)
+            }
+            return
+        }
+        // Skip if observer already exists.
+        if persistentObservers[pid] != nil {
+            return
+        }
+        if pid == getpid() {
+            print("Not setting up persistent observer for our own process")
+            return
+        }
+        
+        print("Start persistent observer for PID: \(pid)")
+        var observer: AXObserver?
+        let persistentObserverCallback: AXObserverCallbackWithInfo = { observer, element, notification, userInfo, refcon in
+            DispatchQueue.main.async {
+                let instance = Unmanaged<AccessibilityNotificationsManager>.fromOpaque(refcon!).takeUnretainedValue()
+                instance.handlePersistentAccessibilityNotifications(notification as String, info: userInfo as! [String: Any], element: element, observer: observer)
+            }
+        }
+        let result = AXObserverCreateWithInfoCallback(pid, persistentObserverCallback, &observer)
+        if result == .success, let observer = observer {
+            persistentObservers[pid] = observer
+            let refCon = Unmanaged.passUnretained(self).toOpaque()
+            for notification in Config.persistentNotifications {
+                AXObserverAddNotification(
+                    observer,
+                    pid.getAXUIElement(),
+                    notification as CFString,
+                    refCon)
+            }
+            CFRunLoopAddSource(CFRunLoopGetMain(), AXObserverGetRunLoopSource(observer), .defaultMode)
+            print("Persistent observer registered for PID: \(pid)")
+        } else {
+            AccessibilityAnalytics.logObserverError(
+                errorCode: result.rawValue,
+                pid: pid
+            )
+        }
+    }
+    
+    /// Handles the notifications received by the persistent observer.
+    private func handlePersistentAccessibilityNotifications(
+        _ notification: String, info: [String: Any], element: AXUIElement, observer: AXObserver
+    ) {
+        // Handle persistent notifications as needed.
+        // For now, we simply log them. You could also notify a different delegate method if required.
+        handleExternalElement(element) { [weak self] elementPid in
+            guard let self = self else { return }
+            print("Received Persistent notification: \(notification)")
+            switch notification {
+            case kAXWindowMiniaturizedNotification:
+                handleMinimizedElement(for: element)
+            case kAXWindowDeminiaturizedNotification:
+                handleDeminimizedElement(for: element)
+            default:
+                break
+            }
+        }
+    }
+    
+    /// Optionally, stops all persistent observers (for example, when the app is quitting).
+    private func stopPersistentAccessibilityObservers() {
+        for (pid, observer) in persistentObservers {
+            let runLoopSource = AXObserverGetRunLoopSource(observer)
+            CFRunLoopRemoveSource(CFRunLoopGetMain(), runLoopSource, .defaultMode)
+            for notification in Config.persistentNotifications {
+                AXObserverRemoveNotification(observer, pid.getAXUIElement(), notification as CFString)
+            }
+        }
+        persistentObservers.removeAll()
+    }
+    
+    deinit {
+//        stopPersistentAccessibilityObservers()
     }
 }
