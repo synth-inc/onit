@@ -107,7 +107,7 @@ class OnitRegularPanel: NSPanel {
                 
                 if let screen = screen {
                     let menuBarHeight = screen.frame.height - screen.visibleFrame.height
-                    newY = screen.visibleFrame.height - currentPosition.y - window.frame.height + menuBarHeight
+                    newY = screen.frame.origin.y + screen.visibleFrame.height - currentPosition.y - window.frame.height + menuBarHeight
                 } else {
                     print("Couldn't find panel's screen when dragging tethered Onit")
                 }
