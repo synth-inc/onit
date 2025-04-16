@@ -25,7 +25,7 @@ struct App: SwiftUI.App {
     @Default(.launchOnStartupRequested) var launchOnStartupRequested
 
     @State var accessibilityPermissionRequested = false
-    
+
     private var frontmostApplicationOnLaunch: NSRunningApplication?
 
     init() {
@@ -107,14 +107,11 @@ struct App: SwiftUI.App {
         Settings {
             SettingsView()
                 .modelContainer(SwiftDataContainer.appContainer)
-                .onAppear {
-                    if let window = NSApplication.shared.windows.first(where: {
-                        $0.contentViewController is NSHostingController<SettingsView>
-                    }) {
-                        window.level = .floating
-                        window.orderFront(nil)
-                    }
-                }
+                .background( WindowAccessor { window in
+                    let floatingLevel: NSWindow.Level = .floating
+                    let settingsWindowLevel: NSWindow.Level = NSWindow.Level(rawValue: floatingLevel.rawValue + 1)
+                    window.level = settingsWindowLevel
+                })
         }
     }
 

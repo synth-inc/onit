@@ -52,7 +52,7 @@ class TetherAppsManager: ObservableObject {
         
         window.isOpaque = false
         window.backgroundColor = NSColor.clear
-        window.level = .normal
+        window.level = .floating
         window.hasShadow = false
         window.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
         window.isReleasedWhenClosed = false
