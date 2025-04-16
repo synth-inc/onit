@@ -1,5 +1,5 @@
 {
-  "originHash" : "a77a50c50a9c790561cf7b8fad12ebbad0d5748bb464ecf4afe810a17035adc3",
+  "originHash" : "178149b124aa53345a352454f995748fcf32b60727fa0dd7a35991bbbb3ceaf2",
   "pins" : [
     {
       "identity" : "abseil-cpp-binary",
@@ -224,6 +224,15 @@
       "state" : {
         "revision" : "bba848db50462894e7fc0891d018dfecad4ef11e",
         "version" : "2.8.7"
+      }
+    },
+    {
+      "identity" : "swiftybeaver",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/SwiftyBeaver/SwiftyBeaver.git",
+      "state" : {
+        "revision" : "8cba041db09596183331d123f337d0eb2e6e8e91",
+        "version" : "2.1.1"
       }
     }
   ],
