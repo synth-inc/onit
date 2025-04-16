@@ -112,6 +112,7 @@ struct App: SwiftUI.App {
                         $0.contentViewController is NSHostingController<SettingsView>
                     }) {
                         window.level = .floating
+                        window.orderFront(nil)
                     }
                 }
         }
