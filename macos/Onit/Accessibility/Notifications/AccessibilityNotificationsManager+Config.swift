@@ -14,6 +14,7 @@ extension AccessibilityNotificationsManager {
         static let debounceInterval: TimeInterval = 0.3  // 300ms
 
         static let notifications = [
+            kAXFocusedWindowChangedNotification,
             kAXFocusedUIElementChangedNotification,
             kAXSelectedTextChangedNotification,
             kAXValueChangedNotification,

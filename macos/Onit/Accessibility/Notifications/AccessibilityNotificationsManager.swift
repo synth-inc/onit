@@ -274,20 +274,16 @@ class AccessibilityNotificationsManager: ObservableObject {
         handleExternalElement(element) { [weak self] elementPid in
             guard let self = self else { return }
             
+            log.debug("Received notification: \(notification)")
             switch notification {
-            case kAXFocusedUIElementChangedNotification:
+            case kAXFocusedWindowChangedNotification:
+                self.handleWindowBounds(for: element)
+            case kAXFocusedUIElementChangedNotification, kAXSelectedColumnsChangedNotification, kAXSelectedRowsChangedNotification:
                 self.handleFocusChange(for: element)
             case kAXSelectedTextChangedNotification:
                 self.handleSelectionChange(for: element)
             case kAXValueChangedNotification:
                 self.handleValueChanged(for: element)
-            case kAXSelectedColumnsChangedNotification:
-                print("Selected Columns Changed Notification!")
-                // These handle tabbed interfaces
-                self.handleFocusChange(for: element)
-            case kAXSelectedRowsChangedNotification:
-                print("Selected Rows Changed Notification!")
-                self.handleFocusChange(for: element)
             case kAXWindowMovedNotification:
                 self.handleWindowMoved(for: element)
             case kAXWindowResizedNotification:
@@ -367,7 +363,6 @@ class AccessibilityNotificationsManager: ObservableObject {
     func handleFocusChange(for element: AXUIElement) {
         handleExternalElement(element) { [weak self] elementPid in
             print("Focus change from pid: \(elementPid)")
-            self?.handleWindowBounds(for: element)
             self?.retrieveWindowContent(for: elementPid)
         }
     }
