@@ -52,7 +52,7 @@ class TetherAppsManager: ObservableObject {
         
         window.isOpaque = false
         window.backgroundColor = NSColor.clear
-        window.level = .floating
+        window.level = .normal
         window.hasShadow = false
         window.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
         window.isReleasedWhenClosed = false
@@ -236,7 +236,7 @@ class TetherAppsManager: ObservableObject {
         
         updateTetherWindowPosition(for: activeWindow, lastYComputed: lastYComputed)
         
-        tetherWindow.orderFront(nil)
+        tetherWindow.orderFrontRegardless()
     }
     
     private func hideTetherWindow() {
