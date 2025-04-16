@@ -122,6 +122,9 @@ class OnitPanelState: NSObject {
 
     var deleteChatFailed: Bool = false
     
+    var movePanelDebounceTimer: Timer?
+    let movePanelDebounceDelay: TimeInterval = 0.3
+
     init(trackedWindow: TrackedWindow?) {
         self.trackedWindow = trackedWindow
         super.init()

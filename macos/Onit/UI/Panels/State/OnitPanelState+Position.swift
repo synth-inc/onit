@@ -73,7 +73,7 @@ extension OnitPanelState {
         let hasEnoughSpace = spaceOnRight >= onitWidth + TetherAppsManager.spaceBetweenWindows
         
         if action == .move || hasEnoughSpace {
-            movePanel(onitWidth: onitWidth, onitHeight: onitHeight, onitY: onitY)
+            self.movePanel(onitWidth: onitWidth, onitHeight: onitHeight, onitY: onitY, action: action)
         } else {
             let screenFrame = screen.frame
             let onitWidth = TetherAppsManager.minOnitWidth
@@ -88,6 +88,7 @@ extension OnitPanelState {
             }
         }
     }
+
     
     func restoreWindowPosition() {
         var fromActive : NSRect? = nil
@@ -148,7 +149,7 @@ extension OnitPanelState {
     
     // MARK: - Layout
     
-    private func movePanel(onitWidth: CGFloat, onitHeight: CGFloat, onitY: CGFloat) {
+    private func movePanel(onitWidth: CGFloat, onitHeight: CGFloat, onitY: CGFloat, action: TrackedWindowAction) {
         guard let window = trackedWindow?.element,
               let panel = panel,
               let position = window.position(),
@@ -170,7 +171,29 @@ extension OnitPanelState {
         )
         
         if panel.wasAnimated {
-            panel.setFrame(newFrame, display: false)
+            if action == .move {
+                if movePanelDebounceTimer == nil || movePanelDebounceTimer?.isValid == false {
+                    panel.alphaValue = 0.3
+                }
+                movePanelDebounceTimer?.invalidate()
+                movePanelDebounceTimer = Timer.scheduledTimer(withTimeInterval: movePanelDebounceDelay, repeats: false) { _ in
+                    DispatchQueue.main.async {
+                        NSAnimationContext.runAnimationGroup { context in
+                            context.duration = 0.1
+                            panel.animator().alphaValue = 0.0
+                        } completionHandler: {
+                            panel.setFrame(newFrame, display: false)
+                            NSAnimationContext.runAnimationGroup { context in
+                                context.duration = 0.25
+                                panel.animator().alphaValue = 1.0
+                            }
+                        }
+                        print("Moving panel")
+                    }
+                }
+            } else {
+                panel.setFrame(newFrame, display: false)
+            }
         } else {
             panel.resizedApplication = false
             animateEnter(activeWindow: nil,
