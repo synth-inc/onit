@@ -162,21 +162,22 @@ class TetherAppsManager: ObservableObject {
     
     // MARK: - Handling panel state changes
     
-    private func handlePanelStateChange(state: OnitPanelState) {
+    private func handlePanelStateChange(state: OnitPanelState, action: TrackedWindowAction) {
         guard Defaults[.isRegularApp], let window = state.trackedWindow?.element else {
             return
         }
         
         if state.panelOpened && !state.panelMiniaturized {
             // Panel opened
+            
             KeyboardShortcutsManager.enable(modelContainer: SwiftDataContainer.appContainer)
             saveInitialFrameIfNeeded(for: window, state: state)
-            hideTetherWindow()
-
-            // TODO: KNA - Tethered - We should just move the panel without any animation
+            
             if state.currentAnimationTask == nil {
-                state.repositionPanel()
+                state.repositionPanel(action: action)
             }
+                
+            hideTetherWindow()
         } else if !state.panelOpened {
             // Panel closed
             KeyboardShortcutsManager.disable(modelContainer: SwiftDataContainer.appContainer)
@@ -280,7 +281,7 @@ class TetherAppsManager: ObservableObject {
         
         let lastYComputed = lastYComputed ?? getCenterPositionY(for: windowFrame) ?? 0
         
-        if let distanceFromBottom = calculateWindowDistanceFromBottom(for: windowFrame) {
+        if let distanceFromBottom = windowFrame.calculateWindowDistanceFromBottom() {
             state.tetheredButtonYPosition = distanceFromBottom + windowFrame.height - lastYComputed - ExternalTetheredButton.containerHeight
         }
 
@@ -345,46 +346,21 @@ class TetherAppsManager: ObservableObject {
     }
     
     private func getMaxY(for windowFrame: NSRect) -> CGFloat? {
-        guard let distanceFromBottom = calculateWindowDistanceFromBottom(for: windowFrame) else {
+        guard let distanceFromBottom = windowFrame.calculateWindowDistanceFromBottom() else {
             return nil
         }
         return distanceFromBottom + windowFrame.height - ExternalTetheredButton.containerHeight
     }
 
     private func getMinY(for windowFrame: NSRect) -> CGFloat? {
-        return calculateWindowDistanceFromBottom(for: windowFrame) ?? nil
+        return windowFrame.calculateWindowDistanceFromBottom() ?? nil
     }
 
     private func getCenterPositionY(for windowFrame: NSRect) -> CGFloat? {
-        guard let distanceFromBottom = calculateWindowDistanceFromBottom(for: windowFrame) else {
+        guard let distanceFromBottom = windowFrame.calculateWindowDistanceFromBottom() else {
             return nil
         }
         return distanceFromBottom + (windowFrame.height / 2.0) - (ExternalTetheredButton.containerHeight / 2.0)
-    }
-    
-    private func calculateWindowDistanceFromBottom(for windowFrame: NSRect) -> CGFloat? {
-        guard let activeScreen = windowFrame.findScreen() else { return nil }
-        
-        // Find the primary screen (the one with origin at 0,0)
-        let screens = NSScreen.screens
-        let primaryScreen = screens.first { screen in
-            screen.frame.origin.x == 0 && screen.frame.origin.y == 0
-        } ?? NSScreen.main ?? screens.first!
-        
-        // VisibleFrame subtracts the dock and toolbar. Frame is the whole screen.
-        let activeScreenFrame = activeScreen.frame
-        let activeScreenVisibileFrame = activeScreen.visibleFrame
-        let primaryScreenFrame = primaryScreen.frame
-        
-        // This is the height of the dock and/or toolbar.
-        let activeScreenInset = activeScreenFrame.height - activeScreenVisibileFrame.height
-        
-        // This is the maximum possible Y value a window can occupy on a given screen.
-        let fullTop = primaryScreenFrame.height - activeScreenFrame.height - activeScreenVisibileFrame.minY + activeScreenInset
-        
-        // This is how far down the window is from the max possibile position.
-        let windowDistanceFromTop = windowFrame.minY - fullTop
-        return activeScreenVisibileFrame.minY + (activeScreenVisibileFrame.height - windowFrame.height) - windowDistanceFromTop
     }
     
     static private func isFinder(activeWindow: AXUIElement?) -> Bool {
@@ -468,7 +444,7 @@ extension TetherAppsManager: AccessibilityNotificationsDelegate {
     func accessibilityManager(_ manager: AccessibilityNotificationsManager, didActivateWindow window: TrackedWindow) {
         let panelState = getState(for: window)
         
-        handlePanelStateChange(state: panelState)
+        handlePanelStateChange(state: panelState, action: .activate)
     }
     
     func accessibilityManager(_ manager: AccessibilityNotificationsManager, didActivateIgnoredWindow window: TrackedWindow?) {
@@ -496,13 +472,13 @@ extension TetherAppsManager: AccessibilityNotificationsDelegate {
     func accessibilityManager(_ manager: AccessibilityNotificationsManager, didMoveWindow window: TrackedWindow) {
         let panelState = getState(for: window)
         
-        handlePanelStateChange(state: panelState)
+        handlePanelStateChange(state: panelState, action: .move)
     }
     
     func accessibilityManager(_ manager: AccessibilityNotificationsManager, didResizeWindow window: TrackedWindow) {
         let panelState = getState(for: window)
         
-        handlePanelStateChange(state: panelState)
+        handlePanelStateChange(state: panelState, action: .resize)
     }
 }
 
@@ -513,7 +489,7 @@ extension TetherAppsManager: OnitPanelStateDelegate {
         self.state = state
     }
     func panelStateDidChange(state: OnitPanelState) {
-        handlePanelStateChange(state: state)
+        handlePanelStateChange(state: state, action: .undefined)
     }
     
     func userInputsDidChange(instruction: String, contexts: [Context], input: Input?) { }

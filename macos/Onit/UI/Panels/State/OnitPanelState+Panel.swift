@@ -35,7 +35,7 @@ extension OnitPanelState: NSWindowDelegate {
 
         if Defaults[.isRegularApp] {
             if trackedWindow != nil {
-                repositionPanel()
+                repositionPanel(action: .undefined)
             } else {
                 print("Something went wrong while trying to reposition the panel.")
             }

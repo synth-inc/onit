@@ -19,6 +19,13 @@ struct TrackedWindow: Hashable {
     }
 }
 
+enum TrackedWindowAction {
+    case undefined
+    case activate
+    case move
+    case resize
+}
+
 @MainActor
 class AccessibilityWindowsManager {
     var activeTrackedWindow: TrackedWindow?

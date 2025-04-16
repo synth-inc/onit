@@ -20,7 +20,7 @@ extension OnitPanelState {
         currentAnimationTask = nil
     }
     
-    func repositionPanel() {
+    func repositionPanel(action: TrackedWindowAction) {
         guard let window = trackedWindow?.element,
               let windowFrame = window.frame(),
               let panel = self.panel,
@@ -57,9 +57,7 @@ extension OnitPanelState {
         
         // Find the primary screen (the one with origin at 0,0)
         let screens = NSScreen.screens
-        let primaryScreen = screens.first { screen in
-            screen.frame.origin.x == 0 && screen.frame.origin.y == 0
-        } ?? NSScreen.main ?? screens.first!
+        let primaryScreen = NSScreen.primary ?? NSScreen.main ?? screens.first!
         let primaryScreenFrame = primaryScreen.frame
         
         // This is the height of the dock and/or toolbar.
@@ -74,7 +72,7 @@ extension OnitPanelState {
         let spaceOnRight = screenFrame.maxX - (position.x + size.width)
         let hasEnoughSpace = spaceOnRight >= onitWidth + TetherAppsManager.spaceBetweenWindows
         
-        if hasEnoughSpace {
+        if action == .move || hasEnoughSpace {
             movePanel(onitWidth: onitWidth, onitHeight: onitHeight, onitY: onitY)
         } else {
             let screenFrame = screen.frame
