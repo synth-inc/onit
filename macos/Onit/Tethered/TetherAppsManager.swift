@@ -36,7 +36,7 @@ class TetherAppsManager: ObservableObject {
     private var lastYComputed: CGFloat?
     
     private var showTetherDebounceTimer: Timer?
-    private let showTetherDebounceDelay: TimeInterval = 0.3
+    private let showTetherDebounceDelay: TimeInterval = 0.1
     
     // MARK: - Private initializer
     private init() {
