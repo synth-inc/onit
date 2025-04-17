@@ -20,7 +20,7 @@ struct TextInputView: View {
     
     private var chats: [Chat] {
         return allChats.filter {
-            $0.windowPid == state.trackedWindow?.pid
+            $0.windowHash == state.trackedWindow?.hash
         }
     }
 

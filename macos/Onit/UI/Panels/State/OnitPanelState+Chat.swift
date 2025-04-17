@@ -32,12 +32,12 @@ extension OnitPanelState {
                 }
                 
                 let systemPromptCopy = systemPrompt
-                let windowIdentifier = AccessibilityNotificationsManager.shared.windowsManager.activeTrackedWindow
+                let trackedWindow = AccessibilityNotificationsManager.shared.windowsManager.activeTrackedWindow
                 currentChat = Chat(
                     systemPrompt: systemPromptCopy,
                     prompts: [],
                     timestamp: .now,
-                    windowPid: windowIdentifier?.pid
+                    trackedWindow: trackedWindow
                 )
                 currentPrompts = []
                 systemPromptState.shouldShowSystemPrompt = false

@@ -15,14 +15,15 @@ struct HistoryView: View {
     @State private var searchQuery: String = ""
 
     var filteredChats: [Chat] {
-        let filteredChatByPid = chats.filter {
-            $0.windowPid == windowState.trackedWindow?.pid
+        let appBundleIdentifier = windowState.trackedWindow?.pid.bundleIdentifier
+        let bundleIdentifierChats = chats.filter {
+            $0.appBundleIdentifier == appBundleIdentifier
         }
         
         if searchQuery.isEmpty {
-            return filteredChatByPid
+            return bundleIdentifierChats
         } else {
-            return filteredChatByPid.filter {
+            return bundleIdentifierChats.filter {
                 $0.fullText.localizedCaseInsensitiveContains(searchQuery)
             }
         }

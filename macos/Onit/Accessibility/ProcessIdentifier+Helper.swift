@@ -19,8 +19,10 @@ extension pid_t {
     }
 
     func getAppName() -> String? {
-        guard let app = NSRunningApplication(processIdentifier: self) else { return nil }
-
-        return app.localizedName
+        NSRunningApplication(processIdentifier: self)?.localizedName
+    }
+    
+    var bundleIdentifier: String? {
+        NSRunningApplication(processIdentifier: self)?.bundleIdentifier
     }
 }
