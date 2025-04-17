@@ -300,8 +300,6 @@ class AccessibilityNotificationsManager: ObservableObject {
                 self.handleWindowResized(for: element)
             case kAXWindowCreatedNotification:
                 self.handleCreatedWindowElement(for: element)
-            case kAXWindowMiniaturizedNotification:
-                self.handleWindowMiniaturized(for: element)
             case kAXUIElementDestroyedNotification:
                 self.handleDetroyedElement(for: element)
             default:
