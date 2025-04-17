@@ -186,7 +186,7 @@ class TetherAppsManager: ObservableObject {
             } else {
                 // Panel closed
                 KeyboardShortcutsManager.disable(modelContainer: SwiftDataContainer.appContainer)
-                debouncedShowTetherWindow(state: state, activeWindow: window)
+                debouncedShowTetherWindow(state: state, activeWindow: window, action: action)
             }
         } else {
             // If it's hidden, we want to hide the tether window and potentially animate out the panel.
@@ -212,7 +212,11 @@ class TetherAppsManager: ObservableObject {
 
     // MARK: - Tether window management
     
-    private func debouncedShowTetherWindow(state: OnitPanelState, activeWindow: AXUIElement) {
+    private func debouncedShowTetherWindow(
+        state: OnitPanelState,
+        activeWindow: AXUIElement,
+        action: TrackedWindowAction
+    ) {
         hideTetherWindow()
         let pendingTetherWindow = (state, activeWindow)
 
@@ -221,12 +225,12 @@ class TetherAppsManager: ObservableObject {
             guard let self = self else { return }
             
             DispatchQueue.main.async {
-                self.showTetherWindow(state: pendingTetherWindow.0, activeWindow: pendingTetherWindow.1)
+                self.showTetherWindow(state: pendingTetherWindow.0, activeWindow: pendingTetherWindow.1, action: action)
             }
         }
     }
     
-    func showTetherWindow(state: OnitPanelState, activeWindow: AXUIElement?) {
+    func showTetherWindow(state: OnitPanelState, activeWindow: AXUIElement?, action: TrackedWindowAction) {
         let tetherView = ExternalTetheredButton(
             onDrag: { [weak self] translation in
                 self?.tetheredWindowMoved(y: translation)
@@ -237,7 +241,7 @@ class TetherAppsManager: ObservableObject {
         tetherWindow.contentView = buttonView
         lastYComputed = nil
         
-        updateTetherWindowPosition(for: activeWindow, lastYComputed: lastYComputed)
+        updateTetherWindowPosition(for: activeWindow, action: action, lastYComputed: lastYComputed)
         
         tetherWindow.orderFrontRegardless()
     }
@@ -251,7 +255,7 @@ class TetherAppsManager: ObservableObject {
         lastYComputed = nil
     }
     
-    func updateTetherWindowPosition(for window: AXUIElement?, lastYComputed: CGFloat? = nil) {
+    func updateTetherWindowPosition(for window: AXUIElement?, action: TrackedWindowAction, lastYComputed: CGFloat? = nil) {
         guard let activeWindow = window,
               let activeWindowFrame = activeWindow.getFrame(convertedToGlobalCoordinateSpace: true) else {
             return
@@ -289,7 +293,9 @@ class TetherAppsManager: ObservableObject {
             positionY = computeTetheredWindowY(windowFrame: windowFrame, offset: lastYComputed)
         }
         
-        if let activeScreen = windowFrame.findScreen() {
+        let mouseScreen = NSRect(origin: NSEvent.mouseLocation, size: NSSize(width: 1, height: 1)).findScreen()
+        let activeScreen = action == .move ? mouseScreen : windowFrame.findScreen()
+        if let activeScreen = activeScreen {
             let maxX = activeScreen.visibleFrame.maxX
             
             if positionX > maxX - ExternalTetheredButton.containerWidth {
@@ -313,7 +319,7 @@ class TetherAppsManager: ObservableObject {
             height: ExternalTetheredButton.containerHeight
         )
         
-        tetherWindow.setFrame(frame, display: true)
+        tetherWindow.setFrame(frame, display: false)
     }
     
     func tetheredWindowMoved(y: CGFloat) {
