@@ -19,14 +19,6 @@ struct ContentView: View {
     static let idealWidth: CGFloat = 400
     static let bottomPadding: CGFloat = 0
     
-    @State var screenHeight: CGFloat = NSScreen.main?.visibleFrame.height ?? 0
-
-    var maxHeight: CGFloat {
-        guard screenHeight != 0 else { return 0 }
-        
-        return screenHeight - ContentView.bottomPadding
-    }
-    
     var showFileImporterBinding: Binding<Bool> {
         Binding(
             get: { state.showFileImporter },
@@ -60,8 +52,6 @@ struct ContentView: View {
                     }
                 }
             }
-            .trackScreenHeight($screenHeight)
-            .frame(minWidth: isRegularApp ? 0 : 325, idealWidth: ContentView.idealWidth, maxHeight: maxHeight)
             .background(Color.black)
             .overlay {
                 RoundedRectangle(cornerRadius: 14)
