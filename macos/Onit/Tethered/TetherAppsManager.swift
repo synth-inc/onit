@@ -279,7 +279,7 @@ class TetherAppsManager: ObservableObject {
             }
         }
         
-        let lastYComputed = lastYComputed ?? getCenterPositionY(for: windowFrame) ?? 0
+        var lastYComputed = lastYComputed ?? getCenterPositionY(for: windowFrame) ?? 0
         
         if let distanceFromBottom = windowFrame.calculateWindowDistanceFromBottom() {
             state.tetheredButtonYPosition = distanceFromBottom + windowFrame.height - lastYComputed - ExternalTetheredButton.containerHeight
@@ -287,10 +287,15 @@ class TetherAppsManager: ObservableObject {
 
         // This prevents the hint from going beyond the edge of the current screen
         // This can happen when the window is between two screens. 
-        if let activeScreen = windowFrame.findScreen() {
+        if let activeScreen = NSRect(origin: NSEvent.mouseLocation, size: NSSize(width: 1, height: 1)).findScreen() {
             let maxX = activeScreen.visibleFrame.maxX
             if positionX > maxX - ExternalTetheredButton.containerWidth {
                 positionX = maxX - ExternalTetheredButton.containerWidth
+            }
+            
+            let minY = activeScreen.visibleFrame.minY
+            if lastYComputed < minY {
+                lastYComputed = minY
             }
         }
         
