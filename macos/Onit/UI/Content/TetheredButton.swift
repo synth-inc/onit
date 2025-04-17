@@ -16,8 +16,8 @@ struct TetheredButton: View {
     @ObservedObject private var accessibilityPermissionManager = AccessibilityPermissionManager.shared
     @ObservedObject private var featureFlagsManager = FeatureFlagManager.shared
     
-    static let width: CGFloat = 16
-    static let height: CGFloat = 42
+    static let width: CGFloat = 19
+    static let height: CGFloat = 53
     
     private var isAccessibilityFlagsEnabled: Bool {
         featureFlagsManager.accessibility && featureFlagsManager.accessibilityAutoContext
@@ -66,7 +66,7 @@ struct TetheredButton: View {
                 Image(.smallChevRight)
                     .renderingMode(.template)
                     .foregroundColor(.white)
-                    .rotationEffect(.degrees(0))
+                    .rotationEffect((state.panel == nil || state.panel?.resizedApplication == true) ? .degrees(0) : .degrees(180))
                     .frame(width: Self.width, height: Self.height, alignment: .center)
                     .overlay(
                         Group {
