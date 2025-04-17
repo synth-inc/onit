@@ -50,7 +50,7 @@ extension OnitPanelState {
             return
         }
         
-        guard let screen = NSRect(origin: NSEvent.mouseLocation, size: NSSize(width: 1, height: 1)).findScreen() else { return }
+        guard let screen = windowFrame.findScreen() else { return }
         
         let screenFrame = screen.frame
         let visibleFrame = screen.visibleFrame

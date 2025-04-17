@@ -293,8 +293,12 @@ class TetherAppsManager: ObservableObject {
         }
 
         // This prevents the hint from going beyond the edge of the current screen
-        // This can happen when the window is between two screens. 
-        if let activeScreen = NSRect(origin: NSEvent.mouseLocation, size: NSSize(width: 1, height: 1)).findScreen() {
+        // This can happen when the window is between two screens.
+        // However, using windowFrame.findScreen() isn't quite right.
+        // When you're dragging the window shows on the screen that your mouse is on, even if it's mostly on the other screen.
+        // When switching with CMD+Tab, you don't want to use the mouse location, beacuse that could be an an irrelevant monitor.
+        // Until we figure out a way to reliable tell which screen a AXUIElement is on, this won't be perfect.
+        if let activeScreen = windowFrame.findScreen() {
             let maxX = activeScreen.visibleFrame.maxX
             if positionX > maxX - ExternalTetheredButton.containerWidth {
                 positionX = maxX - ExternalTetheredButton.containerWidth
