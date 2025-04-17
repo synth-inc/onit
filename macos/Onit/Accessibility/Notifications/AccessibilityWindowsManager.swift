@@ -43,16 +43,18 @@ class AccessibilityWindowsManager {
             activeTrackedWindow = trackedWindow
             
             return trackedWindow
-        } else if let window = element.findFirstTargetWindow() {
+        } else if element.isTargetWindow() {
 
-            let title = window.title() ?? "NA"
-            let trackedWindow = TrackedWindow(element: window, pid: pid, hash: CFHash(window), title: title)
+            let title = element.title() ?? "NA"
+            let trackedWindow = TrackedWindow(element: element, pid: pid, hash: CFHash(element), title: title)
             
             if !trackedWindows.contains(trackedWindow) {
                 trackedWindows.append(trackedWindow)
             }
             activeTrackedWindow = trackedWindow
             return trackedWindow
+        } else {
+            log.debug("Skipping append for element with role \(element.role() ?? "") title: \(element.title() ?? "")")
         }
         
         return nil

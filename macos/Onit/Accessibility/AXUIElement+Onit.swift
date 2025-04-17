@@ -13,7 +13,7 @@ extension AXUIElement {
     public func findFirstTargetWindow() -> AXUIElement? {
         let windows = self.getRootChildren()
         for window in windows {
-            if isTargetWindow(window) {
+            if window.isTargetWindow() {
                 return window
             }
         }
@@ -24,17 +24,17 @@ extension AXUIElement {
         var toRet : [AXUIElement] = []
         let windows = self.getRootChildren()
         for window in windows {
-            if isTargetWindow(window) {
+            if window.isTargetWindow() {
                 toRet.append(window)
             }
         }
         return toRet
     }
     
-    public func isTargetWindow(_ window: AXUIElement) -> Bool {
-        guard window.subrole() == "AXStandardWindow" else {
+    public func isTargetWindow() -> Bool {
+        guard self.subrole() == "AXStandardWindow" else {
             return false
         }
-        return window.closeButton() != nil && window.minimizeButton() != nil && window.zoomButton() != nil
+        return self.closeButton() != nil && self.minimizeButton() != nil && self.zoomButton() != nil
     }
 }

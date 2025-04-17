@@ -269,7 +269,9 @@ class AccessibilityNotificationsManager: ObservableObject {
         print("\nApplication activated: \(appName ?? "Unknown") \(processID)")
 
         currentSource = appName
-        handleWindowBounds(for: processID.getAXUIElement())
+        if let targetWindow = processID.getAXUIElement().findFirstTargetWindow() {
+            handleWindowBounds(for: targetWindow)
+        }
         processSelectedText(selectedText, for: selectedElement)
         retrieveWindowContent(for: processID)
     }
@@ -282,7 +284,7 @@ class AccessibilityNotificationsManager: ObservableObject {
         handleExternalElement(element) { [weak self] elementPid in
             guard let self = self else { return }
             
-            log.debug("Received notification: \(notification)")
+            log.debug("Received notification: \(notification) \(element.role() ?? "") \(element.title() ?? "")")
             switch notification {
             case kAXFocusedWindowChangedNotification:
                 self.handleWindowBounds(for: element)
