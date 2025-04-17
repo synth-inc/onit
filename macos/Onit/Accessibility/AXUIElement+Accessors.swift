@@ -22,17 +22,6 @@ extension AXUIElement {
     func value() -> String? {
         return self.attribute(forAttribute: kAXValueAttribute as CFString) as? String
     }
-
-    func position() -> CGPoint? {
-        let position = self.attribute(forAttribute: kAXPositionAttribute as CFString)
-        if let position = position {
-            var cgPoint = CGPoint()
-            AXValueGetValue(position as! AXValue, .cgPoint, &cgPoint)
-            return cgPoint
-        } else {
-            return nil
-        }
-    }
         
     // We should not use this function in most cases.
     // kAXWindowsAttribute is OPTIONAL and may applications do not implement it, including Apple default apps like Notes
@@ -70,7 +59,18 @@ extension AXUIElement {
     
     // MARK: - Private functions
     
-    func size() -> CGSize? {
+    private func position() -> CGPoint? {
+        let position = self.attribute(forAttribute: kAXPositionAttribute as CFString)
+        if let position = position {
+            var cgPoint = CGPoint()
+            AXValueGetValue(position as! AXValue, .cgPoint, &cgPoint)
+            return cgPoint
+        } else {
+            return nil
+        }
+    }
+    
+    private func size() -> CGSize? {
         let size = self.attribute(forAttribute: kAXSizeAttribute as CFString)
         if let size = size {
             var cgSize = CGSize()
@@ -81,8 +81,15 @@ extension AXUIElement {
         }
     }
 
-    func frame() -> CGRect? {
+    func getFrame(convertedToGlobalCoordinateSpace coordinateSpace: Bool = false) -> CGRect? {
         if let position = self.position(), let size = self.size() {
+            
+            if coordinateSpace, let primaryScreen = NSScreen.primary {
+                let windowOriginY = primaryScreen.frame.size.height - position.y - size.height
+                
+                return CGRect(origin: CGPoint(x: position.x, y: windowOriginY), size: size)
+            }
+            
             return CGRect(origin: position, size: size)
         } else {
             return nil

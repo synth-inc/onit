@@ -203,15 +203,10 @@ class TetherAppsManager: ObservableObject {
     
     private func saveInitialFrameIfNeeded(for window: AXUIElement, state: OnitPanelState) {
         if targetInitialFrames[window] == nil,
-                  let position = window.position(),
-                  let size = window.size(),
+                  let frame = window.getFrame(),
                   state.currentAnimationTask == nil {
-            targetInitialFrames[window] = CGRect(
-                x: position.x,
-                y: position.y,
-                width: size.width,
-                height: size.height
-            )
+            
+            targetInitialFrames[window] = frame
         }
     }
 
@@ -258,23 +253,19 @@ class TetherAppsManager: ObservableObject {
     
     func updateTetherWindowPosition(for window: AXUIElement?, lastYComputed: CGFloat? = nil) {
         guard let activeWindow = window,
-              var windowFrame = activeWindow.frame(),
-              let size = activeWindow.size(),
-              let position = activeWindow.position(),
-              let primaryScreen = NSScreen.primary else {
+              let activeWindowFrame = activeWindow.getFrame(convertedToGlobalCoordinateSpace: true) else {
             return
         }
-        var isFrameFromAXUIElement = true
-        var positionX = position.x + size.width - ExternalTetheredButton.containerWidth
+        var positionX = activeWindowFrame.origin.x + activeWindowFrame.width - ExternalTetheredButton.containerWidth
+        var optionalWindowFrame: CGRect?
         
         if Self.isFinder(activeWindow: activeWindow) {
             if Self.isFinderShowingDesktopOnly(activeWindow: activeWindow) {
                 if let mouseScreen = NSRect(origin: NSEvent.mouseLocation, size: NSSize(width: 1, height: 1)).findScreen() {
                     let screenFrame = mouseScreen.visibleFrame
                
-                    windowFrame = screenFrame
+                    optionalWindowFrame = screenFrame
                     positionX = screenFrame.maxX - ExternalTetheredButton.containerWidth
-                    isFrameFromAXUIElement = false
                 }
             } else {
                 // These are clicks on the desktop. The appActivation logic gives us the most recent
@@ -289,15 +280,11 @@ class TetherAppsManager: ObservableObject {
                 }
             }
         }
-        // Convert the windowFrame.y to align y axis of tetheredWindow
-        if isFrameFromAXUIElement {
-            let windowOriginY = primaryScreen.frame.size.height - windowFrame.origin.y - windowFrame.height
-            windowFrame = CGRect(origin: CGPoint(x: windowFrame.origin.x, y: windowOriginY), size: windowFrame.size)
-        }
+        let windowFrame = optionalWindowFrame ?? activeWindowFrame
         
         var positionY: CGFloat
         if lastYComputed == nil {
-            positionY = windowFrame.minY + (size.height / 2) - (ExternalTetheredButton.containerHeight / 2)
+            positionY = windowFrame.minY + (windowFrame.height / 2) - (ExternalTetheredButton.containerHeight / 2)
         } else {
             positionY = computeTetheredWindowY(windowFrame: windowFrame, offset: lastYComputed)
         }
@@ -315,6 +302,10 @@ class TetherAppsManager: ObservableObject {
             }
         }
         
+        state.tetheredButtonYPosition = windowFrame.height -
+            (positionY - windowFrame.minY) -
+            ExternalTetheredButton.containerHeight + (TetheredButton.height / 2)
+        
         let frame = NSRect(
             x: positionX,
             y: positionY,
@@ -327,24 +318,24 @@ class TetherAppsManager: ObservableObject {
     
     func tetheredWindowMoved(y: CGFloat) {
         guard let trackedWindow = AccessibilityNotificationsManager.shared.windowsManager.activeTrackedWindow,
-              var windowFrame = trackedWindow.element.frame(),
-              let primaryScreen = NSScreen.primary else {
+              var windowFrame = trackedWindow.element.getFrame(convertedToGlobalCoordinateSpace: true) else {
             return
         }
-        
-        // Convert the windowFrame.y to align y axis of tetheredWindow
-        let windowOriginY = primaryScreen.frame.size.height - windowFrame.origin.y - windowFrame.height
-        windowFrame = CGRect(origin: CGPoint(x: windowFrame.origin.x, y: windowOriginY), size: windowFrame.size)
         
         if Self.isFinderShowingDesktopOnly(activeWindow: trackedWindow.element) {
             windowFrame = windowFrame.findScreen()?.visibleFrame ?? windowFrame
         }
         
-        lastYComputed = computeTetheredWindowY(windowFrame: windowFrame, offset: y)
+        let lastYComputed = computeTetheredWindowY(windowFrame: windowFrame, offset: y)
+        self.lastYComputed = lastYComputed
+        
+        state.tetheredButtonYPosition = windowFrame.height -
+            (lastYComputed - windowFrame.minY) -
+            ExternalTetheredButton.containerHeight + (TetheredButton.height / 2)
 
         let frame = NSRect(
             x: tetherWindow.frame.origin.x,
-            y: lastYComputed!,
+            y: lastYComputed,
             width: ExternalTetheredButton.containerWidth,
             height: ExternalTetheredButton.containerHeight
         )
@@ -400,26 +391,22 @@ class TetherAppsManager: ObservableObject {
     
     func updateLevelState(trackedWindow: TrackedWindow?) {
         if let currentWindow = trackedWindow?.element,
-           let currentWindowPosition = currentWindow.position(),
-           let currentWindowSize = currentWindow.size() {
-            let currentWindowFrame = NSRect(origin: currentWindowPosition, size: currentWindowSize)
-                        
-            if let currentWindowScreen = currentWindowFrame.dominantScreen() {
-                for (key, value) in states {
-                    if let position = key.element.position(), let size = key.element.size() {
-                        let frame = NSRect(origin: position, size: size)
-                        
-                        if currentWindowScreen.frame.intersects(frame) {
-                            /// Same screen
-                            if key == trackedWindow {
-                                value.panel?.setLevel(.floating)
-                            } else {
-                                value.panel?.setLevel(.normal)
-                            }
-                        } else { /** Window is not on same screen */ }
-                    } else { /** Can't find window's frame */ }
-                }
-            } else { /** Can't find current window's screen */ }
+           let currentWindowScreen = currentWindow.getFrame(convertedToGlobalCoordinateSpace: true)?.findScreen() {
+            
+            for (key, value) in states {
+                if let frame = key.element.getFrame(convertedToGlobalCoordinateSpace: true) {
+                    // Do something on the frame
+                    
+                    if currentWindowScreen.frame.intersects(frame) {
+                        /// Same screen
+                        if key == trackedWindow {
+                            value.panel?.setLevel(.floating)
+                        } else {
+                            value.panel?.setLevel(.normal)
+                        }
+                    } else { /** Window is not on same screen */ }
+                } else { /** Can't find window's frame */ }
+            }
         } else {
             /** Can't find current window - ignored apps */
             for (_, value) in states {

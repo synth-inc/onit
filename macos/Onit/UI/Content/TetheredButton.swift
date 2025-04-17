@@ -48,7 +48,7 @@ struct TetheredButton: View {
     var body: some View {
         VStack {
             Spacer()
-//                .frame(height: spacerHeight)
+                .frame(height: spacerHeight)
             
             Button(action: {
                 guard isAccessibilityFlagsEnabled else {

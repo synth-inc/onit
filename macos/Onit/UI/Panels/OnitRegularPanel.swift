@@ -85,43 +85,40 @@ class OnitRegularPanel: NSPanel {
     @objc func windowDidMove(_ notification: Notification) {
         guard let window = notification.object as? NSWindow,
               let activeWindow = state.trackedWindow?.element,
+              let activeWindowFrame = activeWindow.getFrame(),
               wasAnimated, !isAnimating, !isProgrammaticMove else { return }
         
         let currentPosition = window.frame.origin
 
         if currentPosition != dragDetails.lastPosition {
             dragDetails.isDragging = true
-            
-            if let activeWindowPosition = activeWindow.position(),
-               let activeWindowSize = activeWindow.size() {
                 
-                let deltaX: CGFloat
-                if dragDetails.lastPosition == .zero {
-                    let expectedX = activeWindowPosition.x + activeWindowSize.width - (TetheredButton.width / 2)
-                    deltaX = currentPosition.x - expectedX
-                } else {
-                    deltaX = currentPosition.x - dragDetails.lastPosition.x
-                }
-                let newX = activeWindowPosition.x + deltaX
-                var newY = activeWindowPosition.y
-                
-                if let primaryScreen = NSScreen.primary, let screen = screen {
-                    let primaryScreenHeight = primaryScreen.frame.height
-                    let screenOriginY = screen.frame.origin.y
-                    let onitRelativeY = currentPosition.y - screenOriginY
-                    let distanceFromScreenTop = screen.frame.height - onitRelativeY - window.frame.height
-                    
-                    if screen === primaryScreen {
-                        newY = distanceFromScreenTop
-                    } else {
-                        let heightDifference = screen.frame.height - primaryScreenHeight
-                        
-                        newY = -screenOriginY + distanceFromScreenTop - heightDifference
-                    }
-                }
-                
-                _ = activeWindow.setPosition(NSPoint(x: newX, y: newY))
+            let deltaX: CGFloat
+            if dragDetails.lastPosition == .zero {
+                let expectedX = activeWindowFrame.origin.x + activeWindowFrame.width - (TetheredButton.width / 2)
+                deltaX = currentPosition.x - expectedX
+            } else {
+                deltaX = currentPosition.x - dragDetails.lastPosition.x
             }
+            let newX = activeWindowFrame.origin.x + deltaX
+            var newY = activeWindowFrame.origin.y
+            
+            if let primaryScreen = NSScreen.primary, let screen = screen {
+                let primaryScreenHeight = primaryScreen.frame.height
+                let screenOriginY = screen.frame.origin.y
+                let onitRelativeY = currentPosition.y - screenOriginY
+                let distanceFromScreenTop = screen.frame.height - onitRelativeY - window.frame.height
+                
+                if screen === primaryScreen {
+                    newY = distanceFromScreenTop
+                } else {
+                    let heightDifference = screen.frame.height - primaryScreenHeight
+                    
+                    newY = -screenOriginY + distanceFromScreenTop - heightDifference
+                }
+            }
+            
+            _ = activeWindow.setPosition(NSPoint(x: newX, y: newY))
             
             dragDetails.lastPosition = currentPosition
             dragDetails.dragEndTimer?.invalidate()
@@ -135,8 +132,8 @@ class OnitRegularPanel: NSPanel {
     
     private func setupFrame() {
         guard let activeWindow = state.trackedWindow?.element,
-              let position = activeWindow.position(),
-              let size = activeWindow.size() else {
+              let windowFrame = activeWindow.getFrame(convertedToGlobalCoordinateSpace: true),
+              let screenFrame = windowFrame.findScreen()?.frame else {
             
             if let screen = findScreen() {
                 let visibleFrame = screen.visibleFrame
@@ -154,12 +151,9 @@ class OnitRegularPanel: NSPanel {
             return
         }
         
-        guard let screen = NSRect(origin: position, size: size).findScreen() else { return }
-        
-        let screenFrame = screen.frame
-        let onitHeight = min(size.height, screenFrame.height - ContentView.bottomPadding)
-        let onitX = position.x + size.width - (width / 2)
-        let onitY = screenFrame.maxY - (position.y + onitHeight)
+        let onitHeight = min(windowFrame.height, screenFrame.height - ContentView.bottomPadding)
+        let onitX = windowFrame.origin.x + windowFrame.width - (width / 2)
+        let onitY = windowFrame.origin.y
         let newFrame = NSRect(
             x: onitX,
             y: onitY,

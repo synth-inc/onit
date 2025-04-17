@@ -22,12 +22,9 @@ extension OnitPanelState {
     
     func repositionPanel(action: TrackedWindowAction) {
         guard let window = trackedWindow?.element,
-              let windowFrame = window.frame(),
               let panel = self.panel,
               !panel.isAnimating,
-              !panel.dragDetails.isDragging,
-              let position = window.position(),
-              let size = window.size() else {
+              !panel.dragDetails.isDragging else {
             return
         }
         
@@ -50,15 +47,12 @@ extension OnitPanelState {
             return
         }
         
-        guard let screen = windowFrame.findScreen() else { return }
+        guard let windowFrame = window.getFrame(),
+              let screen = window.getFrame(convertedToGlobalCoordinateSpace: true)?.findScreen(),
+              let primaryScreenFrame = NSScreen.primary?.frame else { return }
         
         let screenFrame = screen.frame
         let visibleFrame = screen.visibleFrame
-        
-        // Find the primary screen (the one with origin at 0,0)
-        let screens = NSScreen.screens
-        let primaryScreen = NSScreen.primary ?? NSScreen.main ?? screens.first!
-        let primaryScreenFrame = primaryScreen.frame
         
         // This is the height of the dock and/or toolbar.
         let activeScreenInset = screenFrame.height - visibleFrame.height
@@ -66,20 +60,18 @@ extension OnitPanelState {
         let windowDistanceFromTop = windowFrame.minY - fullTop
         
         let onitWidth = TetherAppsManager.minOnitWidth
-        let onitHeight = min(size.height, screenFrame.height - ContentView.bottomPadding)
+        let onitHeight = min(windowFrame.height, screenFrame.height - ContentView.bottomPadding)
         let onitY = visibleFrame.minY + (visibleFrame.height - windowFrame.height) - windowDistanceFromTop
         
-        let spaceOnRight = screenFrame.maxX - (position.x + size.width)
+        let spaceOnRight = screenFrame.maxX - (windowFrame.origin.x + windowFrame.width)
         let hasEnoughSpace = spaceOnRight >= onitWidth + TetherAppsManager.spaceBetweenWindows
         
         if action == .move || hasEnoughSpace {
             self.movePanel(onitWidth: onitWidth, onitHeight: onitHeight, onitY: onitY, action: action)
         } else {
-            let screenFrame = screen.frame
-            let onitWidth = TetherAppsManager.minOnitWidth
             let minAppWidth = screenFrame.width / 3
             
-            let maxAvailableWidth = screenFrame.maxX - position.x - onitWidth - TetherAppsManager.spaceBetweenWindows
+            let maxAvailableWidth = screenFrame.maxX - windowFrame.origin.x - onitWidth - TetherAppsManager.spaceBetweenWindows
             
             if maxAvailableWidth >= minAppWidth {
                 resizeWindowAndMovePanel(onitWidth: onitWidth, onitHeight: onitHeight, onitY: onitY, maxAvailableWidth: maxAvailableWidth)
@@ -101,7 +93,7 @@ extension OnitPanelState {
             
             if let window = trackedWindow?.element,
                 let initialFrame = TetherAppsManager.shared.targetInitialFrames[window],
-                let curFrame = window.frame() {
+                let curFrame = window.getFrame() {
 
                 // We only try to restore the window if it was resized
                 if panel.resizedApplication {
@@ -111,7 +103,7 @@ extension OnitPanelState {
                     var newWidth = initialFrame.width
 
                     // We want to make sure that we don't expand the window beyond the screen width
-                    if let screenFrame = NSScreen.main?.frame {
+                    if let screenFrame = window.getFrame(convertedToGlobalCoordinateSpace: true)?.findScreen()?.frame {
                         newWidth = min(screenFrame.maxX - curFrame.origin.x, newWidth)
                     }
                         
@@ -167,20 +159,19 @@ extension OnitPanelState {
     
     private func movePanel(onitWidth: CGFloat, onitHeight: CGFloat, onitY: CGFloat, action: TrackedWindowAction) {
         guard let window = trackedWindow?.element,
-              let panel = panel,
-              let position = window.position(),
-              let size = window.size() else {
+              let windowFrame = window.getFrame(),
+              let panel = panel else {
             return
         }
         
         let fromFrame = NSRect(
-            x: position.x + size.width + TetherAppsManager.spaceBetweenWindows,
+            x: windowFrame.origin.x + windowFrame.width + TetherAppsManager.spaceBetweenWindows,
             y: onitY,
             width: 0,
             height: onitHeight
         )
         let newFrame = NSRect(
-            x: position.x + size.width + TetherAppsManager.spaceBetweenWindows,
+            x: windowFrame.origin.x + windowFrame.width + TetherAppsManager.spaceBetweenWindows,
             y: onitY,
             width: onitWidth,
             height: onitHeight
@@ -225,22 +216,21 @@ extension OnitPanelState {
     
     private func moveWindowAndPanel(screenFrame: CGRect, onitWidth: CGFloat, onitHeight: CGFloat, onitY: CGFloat) {
         guard let window = trackedWindow?.element,
-              let panel = panel,
-              let position = window.position(),
-              let size = window.size() else {
+              let windowFrame = window.getFrame(),
+              let panel = panel else {
             return
         }
         
-        let newAppX = screenFrame.maxX - size.width - onitWidth - TetherAppsManager.spaceBetweenWindows
+        let newAppX = screenFrame.maxX - windowFrame.width - onitWidth - TetherAppsManager.spaceBetweenWindows
         let activeWindowTargetRect = CGRect(
             x: newAppX,
-            y: position.y,
-            width: size.width,
-            height: size.height
+            y: windowFrame.origin.y,
+            width: windowFrame.width,
+            height: windowFrame.height
         )
         
         let newFrame = NSRect(
-            x: newAppX + size.width + TetherAppsManager.spaceBetweenWindows,
+            x: newAppX + windowFrame.width + TetherAppsManager.spaceBetweenWindows,
             y: onitY,
             width: onitWidth,
             height: onitHeight
@@ -253,13 +243,13 @@ extension OnitPanelState {
         } else {
             panel.resizedApplication = true
             let activeWindowSourceRect = CGRect(
-                x: position.x,
-                y: position.y,
-                width: size.width,
-                height: size.height
+                x: windowFrame.origin.x,
+                y: windowFrame.origin.y,
+                width: windowFrame.width,
+                height: windowFrame.height
             )
             let fromFrame = NSRect(
-                x: position.x + size.width, 
+                x: windowFrame.origin.x + windowFrame.width,
                 y: onitY,
                 width: 0,
                 height: onitHeight
@@ -279,21 +269,19 @@ extension OnitPanelState {
     private func resizeWindowAndMovePanel(onitWidth: CGFloat, onitHeight: CGFloat, onitY: CGFloat, maxAvailableWidth: CGFloat) {
         guard let window = trackedWindow?.element,
               let panel = panel,
-              let windowFrame = window.frame(),
-              let position = window.position(),
-              let size = window.size() else {
+              let windowFrame = window.getFrame() else {
             return
         }
         
         let activeWindowTargetRect = CGRect(
-            x: position.x,
-            y: position.y,
+            x: windowFrame.origin.x,
+            y: windowFrame.origin.y,
             width: maxAvailableWidth,
-            height: size.height
+            height: windowFrame.height
         )
         
         let newFrame = NSRect(
-            x: position.x + maxAvailableWidth + TetherAppsManager.spaceBetweenWindows,
+            x: windowFrame.origin.x + maxAvailableWidth + TetherAppsManager.spaceBetweenWindows,
             y: onitY,
             width: onitWidth,
             height: onitHeight
@@ -305,10 +293,10 @@ extension OnitPanelState {
         } else {
             panel.resizedApplication = true
             let activeWindowSourceRect = CGRect(
-                x: position.x,
-                y: position.y,
-                width: size.width,
-                height: size.height
+                x: windowFrame.origin.x,
+                y: windowFrame.origin.y,
+                width: windowFrame.width,
+                height: windowFrame.height
             )
             let fromFrame = NSRect(
                 x: windowFrame.maxX - 1, // 1px padding prevents animation lag when window is on edge of external monitors.
