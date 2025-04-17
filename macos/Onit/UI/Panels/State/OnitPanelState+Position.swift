@@ -364,32 +364,47 @@ extension OnitPanelState {
         self.animateChatView = true
         self.showChatView = false
         
+        // Capture the window animation task (if applicable)
+        var windowAnimationTask: Task<Void, Never>? = nil
         if let activeWindow = activeWindow, let fromActive = fromActive, let toActive = toActive {
-            self.animation(for: activeWindow, from: fromActive, to: toActive)
+            windowAnimationTask = self.animation(for: activeWindow, from: fromActive, to: toActive)
         }
         
-        DispatchQueue.main.asyncAfter(deadline: .now() + (animationDuration / 2)) {
-            NSAnimationContext.runAnimationGroup { context in
-                context.duration = self.animationDuration
-                context.timingFunction = CAMediaTimingFunction(name: .easeIn)
-                
-                panel.animator().setFrame(toPanel, display: false)
-            } completionHandler: {
-                panel.hide()
-                panel.isAnimating = false
-                panel.alphaValue = 0
-                self.panel = nil
+        // Start an asynchronous block that waits for both animations to complete.
+        Task { @MainActor in
+            // Await the panel animation by wrapping it in a withCheckedContinuation.
+            await withCheckedContinuation { (continuation: CheckedContinuation<Void, Never>) in
+                DispatchQueue.main.asyncAfter(deadline: .now() + animationDuration / 2) {
+                    NSAnimationContext.runAnimationGroup { context in
+                        context.duration = self.animationDuration
+                        context.timingFunction = CAMediaTimingFunction(name: .easeIn)
+                        panel.animator().setFrame(toPanel, display: false)
+                    } completionHandler: {
+                        continuation.resume()
+                    }
+                }
             }
+            
+            // Await the window (active) animation if it was started.
+            if let windowTask = windowAnimationTask {
+                await windowTask.value
+            }
+            
+            // Now that both animations have completed, execute the final code.
+            panel.hide()
+            panel.isAnimating = false
+            panel.alphaValue = 0
+            self.panel = nil
         }
     }
     
-    private func animation(for activeWindow: AXUIElement, from: NSRect, to: NSRect) {
+    @discardableResult
+    private func animation(for activeWindow: AXUIElement, from: NSRect, to: NSRect) -> Task<Void, Never> {
         cancelCurrentAnimation()
         let steps = 10
         let stepDuration = animationDuration / TimeInterval(steps)
         
-        currentAnimationTask = Task { @MainActor in
-            
+        let task = Task { @MainActor in
             for step in 0...steps {
                 if Task.isCancelled { break }
                 
@@ -419,7 +434,11 @@ extension OnitPanelState {
         func easeOutCubic(_ t: Double) -> Double {
             return 1 - pow(1 - t, 3)
         }
+        
+        currentAnimationTask = task
+        return task
     }
+    
     
     // MARK: - Thread-safe counter
     
