@@ -31,8 +31,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     
     private func configureSwiftBeaver() {
         #if DEBUG
-        let logsDirectory = FileManager.default.urls(for: .libraryDirectory, in: .userDomainMask).first!
-        let logFileURL = logsDirectory.appendingPathComponent("Logs/Onit.log")
+        let logFileURL = URL(fileURLWithPath: "/tmp/Onit.log")
         
         let file = FileDestination(logFileURL: logFileURL)
         let console = ConsoleDestination()
