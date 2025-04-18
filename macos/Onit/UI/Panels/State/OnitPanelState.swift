@@ -130,9 +130,6 @@ class OnitPanelState: NSObject {
     var websiteUrlsScrapeQueue: [String: WebsiteUrlScrapeTask] = [:]
 
     var deleteChatFailed: Bool = false
-    
-    var movePanelDebounceTimer: Timer?
-    let movePanelDebounceDelay: TimeInterval = 0.3
 
     init(trackedWindow: TrackedWindow?) {
         self.trackedWindow = trackedWindow

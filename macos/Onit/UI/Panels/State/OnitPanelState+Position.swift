@@ -182,29 +182,7 @@ extension OnitPanelState {
         log.debug("movePanel: \(newFrame)")
         
         if panel.wasAnimated {
-            if action == .move {
-                if movePanelDebounceTimer == nil || movePanelDebounceTimer?.isValid == false {
-                    panel.alphaValue = 0.3
-                }
-                movePanelDebounceTimer?.invalidate()
-                movePanelDebounceTimer = Timer.scheduledTimer(withTimeInterval: movePanelDebounceDelay, repeats: false) { _ in
-                    DispatchQueue.main.async {
-                        NSAnimationContext.runAnimationGroup { context in
-                            context.duration = 0.1
-                            panel.animator().alphaValue = 0.0
-                        } completionHandler: {
-                            panel.setFrame(newFrame, display: false)
-                            NSAnimationContext.runAnimationGroup { context in
-                                context.duration = 0.25
-                                panel.animator().alphaValue = 1.0
-                            }
-                        }
-                        print("Moving panel")
-                    }
-                }
-            } else {
-                panel.setFrame(newFrame, display: false)
-            }
+            panel.setFrame(newFrame, display: false)
         } else {
             panel.resizedApplication = false
             animateEnter(activeWindow: nil,

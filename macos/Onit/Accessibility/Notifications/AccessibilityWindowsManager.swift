@@ -23,6 +23,7 @@ enum TrackedWindowAction {
     case undefined
     case activate
     case move
+    case moveEnd
     case resize
 }
 

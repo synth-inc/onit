@@ -22,6 +22,11 @@ class TetherAppsManager: ObservableObject {
     @Published var state: OnitPanelState
     var states: [TrackedWindow: OnitPanelState] = [:]
     
+    /// Dragging
+    private let dragManager = GlobalDragManager()
+    private var dragManagerCancellable: AnyCancellable?
+    private var draggingState: OnitPanelState?
+    
     private let defaultState = OnitPanelState(trackedWindow: nil)
     
     private var regularAppCancellable: AnyCancellable?
@@ -71,6 +76,13 @@ class TetherAppsManager: ObservableObject {
             .map(\.newValue)
             .sink(receiveValue: onChange(isRegularApp:))
         
+        dragManagerCancellable = dragManager.$isDragging
+            .sink { isDragging in
+                if !isDragging {
+                    self.onActiveWindowDragEnded()
+                }
+            }
+        
         NotificationCenter.default.addObserver(
             self,
             selector: #selector(appDidBecomeActive),
@@ -83,6 +95,8 @@ class TetherAppsManager: ObservableObject {
             name: NSApplication.willTerminateNotification,
             object: nil
         )
+        
+        dragManager.startMonitoring()
     }
     
     func stopObserving() {
@@ -90,6 +104,7 @@ class TetherAppsManager: ObservableObject {
         regularAppCancellable = nil
         stopAllObservers()
         NotificationCenter.default.removeObserver(self)
+        dragManager.stopMonitoring()
     }
     
     @objc func appDidBecomeActive(_ notification: Notification) {
@@ -105,55 +120,6 @@ class TetherAppsManager: ObservableObject {
     
     @objc private func applicationWillTerminate() {
         resetFramesOnAppChange()
-    }
-    
-    // MARK: - Private functions
-    
-    private func startAllObservers() {
-        AccessibilityNotificationsManager.shared.addDelegate(self)
-    }
-    
-    private func stopAllObservers() {
-        AccessibilityNotificationsManager.shared.removeDelegate(self)
-        hideTetherWindow()
-    }
-    
-    private func onChange(isRegularApp: Bool) {
-        if isRegularApp {
-            startAllObservers()
-        } else {
-            stopAllObservers()
-            resetFramesOnAppChange()
-        }
-        guard !skipFirstRegularAppUpdate else {
-            skipFirstRegularAppUpdate = false
-            return
-        }
-        
-        // Close all panels without animations
-        defaultState.panel?.hide()
-        defaultState.panel = nil
-        
-        for (_, state) in states {
-            state.panel?.hide()
-            state.panel = nil
-        }
-        
-        if !isRegularApp {
-            hideTetherWindow()
-            defaultState.launchPanel()
-        }
-    }
-    
-    private func resetFramesOnAppChange() {
-        targetInitialFrames.forEach { element, initialFrame in
-            guard let window = element.findFirstTargetWindow() else {
-                return
-            }
-            
-            _ = window.setFrame(initialFrame)
-        }
-        targetInitialFrames.removeAll()
     }
     
     // MARK: - Handling panel state changes
@@ -175,6 +141,10 @@ class TetherAppsManager: ObservableObject {
                 // Quick fix - when resizing, center the TetheredButton
                 if action == .resize {
                     state.tetheredButtonYPosition = nil
+                } else if action == .move {
+                    draggingState = state
+                    state.panel?.alphaValue = 0.3
+                    dragManager.startDragging()
                 }
                 
                 KeyboardShortcutsManager.enable(modelContainer: SwiftDataContainer.appContainer)
@@ -250,6 +220,53 @@ class TetherAppsManager: ObservableObject {
     
     // MARK: - Private functions
     
+    private func startAllObservers() {
+        AccessibilityNotificationsManager.shared.addDelegate(self)
+    }
+    
+    private func stopAllObservers() {
+        AccessibilityNotificationsManager.shared.removeDelegate(self)
+        hideTetherWindow()
+    }
+    
+    private func onChange(isRegularApp: Bool) {
+        if isRegularApp {
+            startAllObservers()
+        } else {
+            stopAllObservers()
+            resetFramesOnAppChange()
+        }
+        guard !skipFirstRegularAppUpdate else {
+            skipFirstRegularAppUpdate = false
+            return
+        }
+        
+        // Close all panels without animations
+        defaultState.panel?.hide()
+        defaultState.panel = nil
+        
+        for (_, state) in states {
+            state.panel?.hide()
+            state.panel = nil
+        }
+        
+        if !isRegularApp {
+            hideTetherWindow()
+            defaultState.launchPanel()
+        }
+    }
+    
+    private func resetFramesOnAppChange() {
+        targetInitialFrames.forEach { element, initialFrame in
+            guard let window = element.findFirstTargetWindow() else {
+                return
+            }
+            
+            _ = window.setFrame(initialFrame)
+        }
+        targetInitialFrames.removeAll()
+    }
+    
     private func saveInitialFrameIfNeeded(for window: AXUIElement, state: OnitPanelState) {
         if targetInitialFrames[window] == nil,
                   let frame = window.getFrame(),
@@ -257,5 +274,26 @@ class TetherAppsManager: ObservableObject {
             
             targetInitialFrames[window] = frame
         }
+    }
+    
+    private func onActiveWindowDragEnded() {
+        guard let state = draggingState else { return }
+        
+        draggingState = nil
+        
+        if let panel = state.panel {
+            DispatchQueue.main.async {
+                NSAnimationContext.runAnimationGroup { context in
+                    context.duration = 0.1
+                    panel.animator().alphaValue = 0.0
+                } completionHandler: {
+                    NSAnimationContext.runAnimationGroup { context in
+                        context.duration = 0.25
+                        panel.animator().alphaValue = 1.0
+                    }
+                }
+            }
+        }
+        handlePanelStateChange(state: state, action: .moveEnd)
     }
 }
