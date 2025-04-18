@@ -63,7 +63,8 @@ struct HistoryView: View {
     }
 }
 
-/// Child Components
+// MARK: - Child Components
+
 extension HistoryView {
     private var emptyText: some View {
         Text("No prompts found")
@@ -91,6 +92,8 @@ extension HistoryView {
         }
     }
 }
+
+// MARK: - Preview
 
 #Preview {
     HistoryView()

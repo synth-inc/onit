@@ -10,32 +10,15 @@ import SwiftUI
 
 struct ChatsView: View {
     @Environment(\.model) var model
-    @Default(.isPanelExpanded) var isPanelExpanded: Bool
-    @Default(.isRegularApp) var isRegularApp: Bool
     
-    @State private var contentHeight: CGFloat = 0
-
-    @State var screenHeight: CGFloat = NSScreen.main?.visibleFrame.height ?? 0
+    private let currentPromptsCount: Int
+    
+    init(currentPromptsCount: Int) {
+        self.currentPromptsCount = currentPromptsCount
+    }
+    
     @State private var isScrolling: Bool = false
     @State private var scrollTask: Task<Void, Never>?
-    
-    private var chatsID: Int? {
-        model.currentChat?.hashValue
-    }
-    
-    var maxHeight: CGFloat {
-        guard !model.resizing, screenHeight != 0 else { return 0 }
-        
-        let availableHeight = screenHeight - model.headerHeight -
-        model.inputHeight - model.setUpHeight -
-        model.systemPromptHeight - ContentView.bottomPadding
-        
-        return availableHeight
-    }
-    
-    var realHeight: CGFloat {
-        return isRegularApp ? maxHeight : (isPanelExpanded ? maxHeight : min(contentHeight, maxHeight))
-    }
     
     private func scrollToBottom(using proxy: ScrollViewProxy) {
         guard !isScrolling else { return }
@@ -44,15 +27,14 @@ struct ChatsView: View {
         scrollTask?.cancel()
         
         scrollTask = Task { @MainActor in
-            try? await Task.sleep(nanoseconds: 100_000_000)
+            try? await Task.sleep(for: .milliseconds(200))
             
             guard !Task.isCancelled else { return }
             
-            withAnimation(.smooth(duration: 0.1)) {
-                proxy.scrollTo(chatsID, anchor: .bottom)
+            withAnimation(.easeIn(duration: animationDuration)) {
+                proxy.scrollTo("scrollToBottomElement", anchor: .bottom)
             }
             
-            try? await Task.sleep(nanoseconds: 200_000_000)
             isScrolling = false
         }
     }
@@ -65,51 +47,24 @@ struct ChatsView: View {
                         PromptView(prompt: prompt)
                     }
                 }
-                .id(chatsID)
-                .background(heightReader(scrollProxy: proxy))
+                .opacity(currentPromptsCount > 0 ? 1 : 0)
+                .addAnimation(dependency: currentPromptsCount)
+                
+                Color.clear
+                    .frame(height: 1)
+                    .id("scrollToBottomElement")
             }
-            .trackScreenHeight($screenHeight)
-            .frame(
-                minHeight: 0,
-                idealHeight: realHeight,
-                maxHeight: maxHeight,
-                alignment: .top
-            )
-            .onChange(of: model.currentPrompts?.count) { _, _ in
-                scrollToBottom(using: proxy)
+            .onChange(of: currentPromptsCount) {
+                if currentPromptsCount > 0 { scrollToBottom(using: proxy) }
             }
             .onChange(of: model.currentChat) { old, new in
-                if old == nil && new != nil {
-                    return
-                }
+                if old == nil && new != nil { return }
                 scrollToBottom(using: proxy)
             }
         }
-    }
-    
-    func heightReader(scrollProxy: ScrollViewProxy) -> some View {
-        GeometryReader { proxy in
-            Color.clear
-                .onAppear {
-                    let oldHeight = realHeight
-                    contentHeight = proxy.size.height
-                    
-                    if oldHeight != realHeight {
-                        model.adjustPanelSize()
-                    } else {
-                        scrollToBottom(using: scrollProxy)
-                    }
-                }
-                .onChange(of: proxy.size.height) { _, newHeight in
-                    let oldHeight = realHeight
-                    contentHeight = newHeight
-                    
-                    if oldHeight != realHeight {
-                        model.adjustPanelSize()
-                    } else {
-                        scrollToBottom(using: scrollProxy)
-                    }
-                }
-        }
+        .frame(
+            height: currentPromptsCount > 0 ? nil : 0,
+            alignment: .top
+        )
     }
 }

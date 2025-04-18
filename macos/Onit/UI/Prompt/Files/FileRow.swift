@@ -14,10 +14,8 @@ struct FileRow: View {
         HStack(spacing: 6) {
             PaperclipButton()
             context
-            Spacer()
+            if contextList.isEmpty { Spacer() }
         }
-        .padding(.horizontal, 16)
-        .padding(.top, 8)
     }
 
     @ViewBuilder

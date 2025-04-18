@@ -118,8 +118,8 @@ struct ModelSelectionView: View {
             ActionButton(
                 icon: determineRemoteModelLogo(provider: remoteModel.provider),
                 iconSize: 16,
-                action: { selectedModel.wrappedValue = .remote(remoteModel) },
-                text: remoteModel.displayName
+                text: remoteModel.displayName,
+                action: { selectedModel.wrappedValue = .remote(remoteModel) }
             )
         }
     }
@@ -154,8 +154,8 @@ struct ModelSelectionView: View {
             ActionButton(
                 icon: localModelName.lowercased().contains("llama") ? .logoOllama : .logoProviderUnknown,
                 iconSize: 16,
-                action: { selectedModel.wrappedValue = .local(localModelName) },
-                text: localModelName
+                text: localModelName,
+                action: { selectedModel.wrappedValue = .local(localModelName) }
             )
         }
     }
@@ -206,7 +206,8 @@ struct ModelSelectionView: View {
     }
 }
 
-/// Private Functions
+// MARK: - Private Functions
+
 extension ModelSelectionView {
     private func openModelSettings() {
         NSApp.activate()
@@ -230,6 +231,8 @@ extension ModelSelectionView {
         }
     }
 }
+
+// MARK: - Preview
 
 #Preview {
     ModelSelectionView()

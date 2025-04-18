@@ -7,5 +7,5 @@
 
 import CoreGraphics
 
-let defaultButtonHeight: CGFloat = 24
-let defaultButtonCornerRadius: CGFloat = 4
+let toolbarButtonHeight: CGFloat = 22
+let toolbarButtonCornerRadius: CGFloat = 4

@@ -69,25 +69,25 @@ struct CustomTextField: View {
         .frame(height: 32)
         .padding(.horizontal, 8)
         .background(config.background)
-        .addBorderRadius(
+        .addBorder(
             cornerRadius: 8,
             stroke:
                 textFieldHovered ? config.hoverStrokeColor :
                 focused ? config.focusedStrokeColor :
                 config.strokeColor
         )
-        .addAnimation(value: $textFieldHovered)
+        .addAnimation(dependency: $textFieldHovered.wrappedValue)
         .onHover{ isHovering in textFieldHovered = isHovering }
         .padding(.horizontal, sidePadding)
     }
 }
 
-/// Child Components
+// MARK: - Child Components
+
 extension CustomTextField {
     private var placeholderView: some View {
         Text(placeholder)
-            .font(.system(size: 14, weight: .medium))
-            .foregroundStyle(.gray300)
+            .styleText(color: .gray300)
             .allowsHitTesting(false)
     }
     
@@ -108,6 +108,8 @@ extension CustomTextField {
         .onHover{ isHovering in closeButtonHovered = isHovering }
     }
 }
+
+// MARK: - Preview
 
 #Preview {
     CustomTextField(text: .constant("fea"), placeholder: "Some title")

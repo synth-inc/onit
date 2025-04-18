@@ -16,6 +16,7 @@ struct GeneratedView: View {
         VStack(spacing: 0) {
             if !prompt.responses.isEmpty {
                 let curResponse = prompt.sortedResponses[prompt.generationIndex]
+                
                 switch curResponse.type {
                 case .error:
                     GeneratedErrorView(errorDescription: prompt.sortedResponses[prompt.generationIndex].text)
@@ -23,9 +24,9 @@ struct GeneratedView: View {
                     GeneratedContentView(prompt: prompt)
                 }
             }
+            
             if prompt.generationState == .done {
                 GeneratedToolbar(prompt: prompt)
-                    .padding(.horizontal, 16)
             }
         }
     }

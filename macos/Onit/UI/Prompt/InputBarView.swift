@@ -31,6 +31,7 @@ struct InputBarView: View {
         .background {
             heightListener
         }
+        .border(.red, width: 4)
     }
 
     var heightListener: some View {

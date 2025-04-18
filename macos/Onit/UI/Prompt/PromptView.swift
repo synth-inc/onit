@@ -15,13 +15,14 @@ struct PromptView: View {
         VStack(spacing: 0) {
             content
         }
-        .padding(.bottom, 16)
+        .padding(.bottom, 12)
     }
 
     @ViewBuilder
     var content: some View {
         VStack(alignment: .leading, spacing: 0) {
             FinalContextView(prompt: prompt)
+            
             switch prompt.generationState {
             case .generating:
                 GeneratingView(prompt: prompt)

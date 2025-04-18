@@ -47,7 +47,8 @@ struct MenuSection<Children: View>: View {
     }
 }
 
-/// Child Components
+// MARK: - Child Components
+
 extension MenuSection {
     private var header: some View {
         HStack(alignment: .center, spacing: 8) {

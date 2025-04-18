@@ -22,48 +22,23 @@ struct ContextItem: View {
                     isEditing: isEditing
                 )
             case .auto:
-                Button {
-                    model.showContextWindow(context: item)
-                } label: {
-                    contentView
-                }
-                .tooltip(prompt: "View auto-context file")
+                TagButton(
+                    child: ContextImage(context: item),
+                    text: name,
+                    caption: item.fileType,
+                    tooltip: "View auto-context file",
+                    action: { model.showContextWindow(context: item) },
+                    closeAction: { model.deleteContextItem(item: item) }
+                )
             default:
-                contentView
-            }
-
-            if isEditing {
-                xButton
-            }
-        }
-        .padding(3)
-        .background(isEditing ? .gray700 : .clear, in: .rect(cornerRadius: 4))
-        .frame(maxWidth: item.isError ? 350 : isEditing ? 250 : nil)
-    }
-
-    var contentView: some View {
-        HStack(spacing: 0) {
-            ContextImage(context: item)
-
-            Spacer()
-                .frame(width: 4)
-
-            text
-        }
-    }
-
-    var text: some View {
-        HStack(spacing: 2) {
-            Text(name)
-                .foregroundStyle(.white)
-                .lineLimit(1)
-                .truncationMode(.tail)
-            if let fileType = item.fileType {
-                Text(fileType)
-                    .foregroundStyle(.gray200)
+                TagButton(
+                    child: ContextImage(context: item),
+                    text: name,
+                    caption: item.fileType,
+                    closeAction: { model.deleteContextItem(item: item) }
+                )
             }
         }
-        .appFont(.medium13)
     }
 
     var name: String {
@@ -82,20 +57,9 @@ struct ContextItem: View {
             websiteTitle.isEmpty ? websiteUrl.host() ?? websiteUrl.absoluteString : websiteTitle
         }
     }
-
-    var xButton: some View {
-        Button {
-            model.closeContextWindow(context: item)
-            model.removeContext(context: item)
-        } label: {
-            Color.clear
-                .frame(width: 16, height: 16)
-                .overlay {
-                    Image(.smallCross)
-                }
-        }
-    }
 }
+
+// MARK: - Preview
 
 #if DEBUG
     #Preview {

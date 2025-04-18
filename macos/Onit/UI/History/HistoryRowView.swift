@@ -17,8 +17,8 @@ struct HistoryRowView: View {
 
     var body: some View {
         ActionButton(
-            action: { model.setChat(chat: chat, index: index) },
-            text: getPromptText()
+            text: getPromptText(),
+            action: { model.setChat(chat: chat, index: index) }
         ) {
             Group {
                 if showDelete { deleteButton }

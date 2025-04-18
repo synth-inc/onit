@@ -22,6 +22,7 @@ struct PaperclipButton: View {
         HStack(spacing: 6) {
             IconButton(
                 icon: .paperclip,
+                iconSize: 18,
                 action: { handleAddContext() },
                 tooltipPrompt: accessibilityAutoContextEnabled ? "Add context" : "Upload file"
             )
@@ -33,22 +34,12 @@ struct PaperclipButton: View {
                     Button {
                         handleAddContext()
                     } label: {
-                        HStack(spacing: 0) {
-                            Text("Add context (")
-                                .foregroundStyle(.gray200)
-                                .appFont(.medium13)
-
-                            KeyboardShortcutView(
-                                shortcut: KeyboardShortcuts.getShortcut(
-                                    for: .launchWithAutoContext)?.native
+                        Text("Add context")
+                            .styleText(
+                                size: 11,
+                                weight: .semibold,
+                                color: .gray200
                             )
-                            .foregroundStyle(.gray200)
-                            .appFont(.medium13)
-                            
-                            Text(" for Auto-Context)")
-                                .foregroundStyle(.gray200)
-                                .appFont(.medium13)
-                        }
                     }
                 } else {
                     Button {

@@ -370,4 +370,12 @@ extension OnitModel {
         prompt.responses.append(response)
         prompt.generationState = .done
     }
+    
+    func sendAction() {
+        if websiteUrlsScrapeQueue.isEmpty {
+            let inputText = (pendingInstruction).trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !inputText.isEmpty else { return }
+            createAndSavePrompt()
+        }
+    }
 }

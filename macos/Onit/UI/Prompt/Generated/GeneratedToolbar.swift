@@ -19,7 +19,9 @@ struct GeneratedToolbar: View {
             copy
             regenerate
             selector
+            
             Spacer()
+            
             if prompt.generationIndex >= 0 &&
                 prompt.generationIndex < prompt.responses.count,
                 let model = prompt.sortedResponses[prompt.generationIndex].model {
@@ -27,7 +29,7 @@ struct GeneratedToolbar: View {
                     .foregroundColor(Color.gray300)
             }
         }
-        .foregroundStyle(.FG)
+        .padding(.horizontal, 12)
     }
 
     @ViewBuilder
@@ -38,23 +40,19 @@ struct GeneratedToolbar: View {
     }
 
     var regenerate: some View {
-        Button {
-            model.generate(prompt)
-        } label: {
-            Image(.arrowsSpin)
-                .padding(4)
-        }
-        .tooltip(prompt: "Retry")
+        IconButton(
+            icon: .arrowsSpin,
+            action: { model.generate(prompt) },
+            tooltipPrompt: "Retry"
+        )
     }
 
     var more: some View {
-        Button {
-
-        } label: {
-            Image(.moreHorizontal)
-                .padding(4)
-        }
-        .tooltip(prompt: "More")
+        IconButton(
+            icon: .moreHorizontal,
+            action: { print("More") },
+            tooltipPrompt: "More"
+        )
     }
 
     @ViewBuilder

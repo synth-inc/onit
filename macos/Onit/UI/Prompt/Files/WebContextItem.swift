@@ -18,63 +18,60 @@ struct WebContextItem: View {
     
     init(item: Context, isEditing: Bool) {
         self.item = item
+        
         if case .web(let websiteUrl, let websiteTitle, _) = self.item {
             self.websiteUrl = websiteUrl
             self.websiteTitle = websiteTitle.isEmpty ? (websiteUrl.host() ?? websiteUrl.absoluteString) : websiteTitle
         } else {
             fatalError("Expected a web context item")
         }
+        
         self.isEditing = isEditing
     }
     
     var body: some View {
-        let beingScraped = model.websiteUrlsScrapeQueue.keys.contains(websiteUrl.absoluteString)
+        let websiteUndergoingScrape = model.websiteUrlsScrapeQueue.keys.contains(websiteUrl.absoluteString)
         
-        Button {
-            model.showContextWindow(context: item)
-        } label: {
-            HStack(spacing: 0) {
-                if beingScraped {
-                    ProgressView()
-                        .progressViewStyle(CircularProgressViewStyle())
-                        .scaleEffect(0.5)
-                        .frame(width: 16, height: 16)
-                } else if let webpageDomain = websiteUrl.host() {
-                    AsyncImage(url: URL(string: "https://\(webpageDomain)/favicon.ico")) { image in
-                        if let faviconImage = image.image {
-                            faviconImage.resizable().frame(width: 16, height: 16)
-                        } else {
-                            Image(systemName: "globe")
-                                .resizable()
-                                .frame(width: 16, height: 16)
-                        }
-                    }
-                } else {
-                    Image(systemName: "globe")
-                        .resizable()
-                        .frame(width: 16, height: 16)
-                }
-                
-                Spacer()
-                    .frame(width: 4)
-                
-                HStack(spacing: 2) {
-                    Text(getCurrentWebsiteTitle())
-                        .foregroundStyle(.white)
-                        .lineLimit(1)
-                        .truncationMode(.tail)
-                    if let fileType = item.fileType {
-                        Text(fileType)
-                            .foregroundStyle(.gray200)
+        TagButton(
+            child: websiteUndergoingScrape ? Loader() : favicon,
+            text: getCurrentWebsiteTitle(),
+            caption: item.fileType,
+            action: { model.showContextWindow(context: item) },
+            closeAction: { model.deleteContextItem(item: item) },
+            maxWidth: 250
+        )
+        .opacity(websiteUndergoingScrape ? 0.5 : 1)
+        .disabled(websiteUndergoingScrape)
+    }
+}
+
+// MARK: - Child Components
+
+extension WebContextItem {
+    private var favicon: some View {
+        Group {
+            if let webpageDomain = websiteUrl.host() {
+                AsyncImage(url: URL(string: "https://\(webpageDomain)/favicon.ico")) { image in
+                    if let faviconImage = image.image {
+                        faviconImage.resizable().frame(width: 16, height: 16)
+                    } else {
+                        Image(systemName: "globe")
+                            .resizable()
+                            .frame(width: 16, height: 16)
                     }
                 }
-                .appFont(.medium13)
+            } else {
+                Image(systemName: "globe")
+                    .resizable()
+                    .frame(width: 16, height: 16)
             }
         }
-        .opacity(beingScraped ? 0.5 : 1)
-        .disabled(beingScraped)
     }
-    
+}
+
+// MARK: - Private Functions
+
+extension WebContextItem {
     private func getCurrentWebsiteTitle() -> String {
         let pendingContextList = model.getPendingContextList()
 

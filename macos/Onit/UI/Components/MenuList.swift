@@ -8,15 +8,15 @@
 import SwiftUI
 
 struct MenuList<Sections: View>: View {
-    let header: (any View)?
-    let width: CGFloat
+    private let header: (any View)?
+    private let width: CGFloat
     @ViewBuilder private let sections: () -> Sections
     
     struct Search {
         @Binding var query: String
         var placeholder: String = "Search for..."
     }
-    let search: Search?
+    private let search: Search?
     
     init(
         header: (any View)? = nil,
@@ -47,7 +47,7 @@ struct MenuList<Sections: View>: View {
         }
         .background(.gray900)
         .frame(width: width)
-        .addBorderRadius()
+        .addBorder()
         .addShadow()
     }
 }

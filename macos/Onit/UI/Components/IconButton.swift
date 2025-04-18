@@ -10,6 +10,7 @@ import SwiftUI
 struct IconButton: View {
     private let icon: ImageResource
     private let iconSize: CGFloat
+    private let buttonSize: CGFloat
     private let action: () -> Void
     private let isActive: Bool
     private let activeColor: Color?
@@ -19,7 +20,8 @@ struct IconButton: View {
     
     init(
         icon: ImageResource,
-        iconSize: CGFloat = 20,
+        iconSize: CGFloat = 18,
+        buttonSize: CGFloat = toolbarButtonHeight,
         action: @escaping () -> Void,
         isActive: Bool = false,
         activeColor: Color? = nil,
@@ -29,6 +31,7 @@ struct IconButton: View {
     ) {
         self.icon = icon
         self.iconSize = iconSize
+        self.buttonSize = buttonSize
         self.action = action
         self.isActive = isActive
         self.activeColor = activeColor
@@ -37,7 +40,7 @@ struct IconButton: View {
         self.tooltipShortcut = tooltipShortcut
     }
     
-    @State private var hovered: Bool = false
+    @State private var isHovered: Bool = false
     
     var body: some View {
         if let prompt = tooltipPrompt,
@@ -51,7 +54,8 @@ struct IconButton: View {
     }
 }
 
-/// Child Components
+// MARK: - Child Components
+
 extension IconButton {
     private var iconImage: some View {
         Image(icon)
@@ -65,30 +69,43 @@ extension IconButton {
         Button { action() }
         label: { iconImage }
             .tooltip(prompt: prompt, shortcut: shortcut)
-            .applySharedStyles(hovered: $hovered, isActive: isActive)
+            .applySharedStyles(
+                buttonSize: buttonSize,
+                hovered: $isHovered,
+                isActive: isActive
+            )
     }
     
     private func tooltipButton(prompt: String) -> some View {
         Button { action() }
         label: { iconImage }
             .tooltip(prompt: prompt)
-            .applySharedStyles(hovered: $hovered, isActive: isActive)
+            .applySharedStyles(
+                buttonSize: buttonSize,
+                hovered: $isHovered,
+                isActive: isActive
+            )
     }
     
     private var plainButton: some View {
         Button { action() }
         label: { iconImage }
-            .applySharedStyles(hovered: $hovered, isActive: isActive)
+            .applySharedStyles(
+                buttonSize: buttonSize,
+                hovered: $isHovered,
+                isActive: isActive
+            )
     }
 }
 
-/// Private Functions
+// MARK: - Private Functions
+
 extension IconButton {
     private func handleIconColor() -> Color {
         if isActive {
-            return activeColor ?? .white
-        } else if hovered {
-            return .gray100
+            return activeColor ?? .gray100
+        } else if isHovered {
+            return .white
         } else {
             return inactiveColor ?? .gray200
         }
@@ -97,19 +114,20 @@ extension IconButton {
 
 extension View {
     func applySharedStyles(
+        buttonSize: CGFloat,
         hovered: Binding<Bool>,
         isActive: Bool
     ) -> some View {
-        self
+        
+        return self
             .buttonStyle(PlainButtonStyle())
-            .frame(width: defaultButtonHeight, height: defaultButtonHeight)
+            .frame(width: buttonSize, height: buttonSize)
             .background((hovered.wrappedValue || isActive) ? .gray800 : .clear)
-            .addBorderRadius(
-                cornerRadius: defaultButtonCornerRadius,
+            .addBorder(
+                cornerRadius: toolbarButtonCornerRadius,
                 stroke: isActive ? .gray500 : .clear
             )
-            .addAnimation(value: hovered)
-            .cornerRadius(4)
+            .addAnimation(dependency: hovered.wrappedValue)
             .onHover{ isHovering in hovered.wrappedValue = isHovering }
     }
 }

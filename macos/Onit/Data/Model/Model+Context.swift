@@ -37,4 +37,9 @@ extension OnitModel {
         contextWindowControllers[context]?.closeWindow()
         contextWindowControllers.removeValue(forKey: context)
     }
+    
+    func deleteContextItem(item: Context) {
+        closeContextWindow(context: item)
+        removeContext(context: item)
+    }
 }

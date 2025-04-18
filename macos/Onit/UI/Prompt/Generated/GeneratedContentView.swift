@@ -47,7 +47,7 @@ struct GeneratedContentView: View {
                           configuration: configuration,
                           onUrlClicked: onUrlClicked,
                           onCodeAction: codeAction)
-                .padding(.horizontal, 16)
+                .padding(.horizontal, 12)
             Spacer()
             if textToRead.isEmpty && !(model.isSearchingWeb[prompt.id] ?? false) {
                 HStack {

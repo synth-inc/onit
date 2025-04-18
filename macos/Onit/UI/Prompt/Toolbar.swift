@@ -55,8 +55,6 @@ struct Toolbar: View {
             
             Spacer()
             
-            languageModel
-            
             if isRegularApp { fitActiveWindowButton }
             localMode
             history
@@ -162,47 +160,6 @@ struct Toolbar: View {
             }
         }
         .pickerStyle(.inline)
-    }
-
-    var showModelBinding: Binding<Bool> {
-        Binding(
-            get: { self.model.showModels },
-            set: { self.model.showModels = $0 }
-        )
-    }
-    @ViewBuilder
-    var languageModel: some View {
-        Button {
-            model.showModels.toggle()
-        } label: {
-            HStack(spacing: 0) {
-                Text(
-                    mode == .local
-                        ? (localModel?.split(separator: ":").first.map(String.init)
-                            ?? "Choose model")
-                        : (remoteModel?.displayName ?? "Choose model")
-                )
-                .appFont(.medium13)
-                .padding(.leading, 2)
-                Image(.smallChevDown)
-                    .renderingMode(.template)
-                    .rotationEffect(.degrees(model.showModels ? 180 : 0))
-            }
-            .frame(height: defaultButtonHeight)
-            .padding(.horizontal, 6)
-            .contentShape(.rect)
-            .background {
-                RoundedRectangle(cornerRadius: defaultButtonCornerRadius)
-                    .fill(Color.clear)
-            }
-        }
-        .tooltip(prompt: "Change model")
-        .popover(
-            isPresented: showModelBinding,
-            arrowEdge: .bottom
-        )  {
-            ModelSelectionView()
-        }
     }
 
     var add: some View {

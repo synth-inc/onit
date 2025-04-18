@@ -20,7 +20,7 @@ struct GeneratedErrorView: View {
             }
             Spacer()
         }
-        .padding(.horizontal, 16)
+        .padding(.horizontal, 12)
         .padding(.bottom, 20)
         .padding(.top, 6)
     }
