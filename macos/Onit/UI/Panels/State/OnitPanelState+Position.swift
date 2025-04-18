@@ -29,7 +29,7 @@ extension OnitPanelState {
         }
         
         // Special case for Finder (desktop only)
-        if TetherAppsManager.isFinderShowingDesktopOnly(activeWindow: window) {
+        if window.isDesktopFinder {
             if let mouseScreen = NSRect(origin: NSEvent.mouseLocation, size: NSSize(width: 1, height: 1)).findScreen() {
                 let screenFrame = mouseScreen.frame
                 let onitWidth = TetherAppsManager.minOnitWidth

@@ -57,6 +57,28 @@ extension AXUIElement {
         return appElement.children() ?? []
     }
     
+    var isFinder: Bool {
+        let runningApps = NSWorkspace.shared.runningApplications
+
+        if let finderAppPid = runningApps.first(where: { $0.bundleIdentifier == "com.apple.finder" })?.processIdentifier {
+            return pid() == finderAppPid
+        }
+        
+        return false
+    }
+    
+    var isDesktopFinder: Bool {
+        let runningApps = NSWorkspace.shared.runningApplications
+        
+        guard let finderAppPid = runningApps.first(where: { $0.bundleIdentifier == "com.apple.finder" })?.processIdentifier,
+              pid() == finderAppPid else {
+            
+            return false
+        }
+        
+        return getWindows().first?.role() == "AXScrollArea"
+    }
+    
     // MARK: - Private functions
     
     private func position() -> CGPoint? {

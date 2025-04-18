@@ -34,7 +34,7 @@ class AccessibilityWindowsManager {
     private var trackedWindows: [TrackedWindow] = []
     
     func append(_ element: AXUIElement, pid: pid_t) -> TrackedWindow? {
-        if TetherAppsManager.isFinderShowingDesktopOnly(activeWindow: element) {
+        if element.isDesktopFinder {
             let trackedWindow = TrackedWindow(element: element, pid: pid, hash: CFHash(element), title: "")
             
             if !trackedWindows.contains(trackedWindow) {

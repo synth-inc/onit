@@ -31,13 +31,8 @@ class TetherAppsManager: ObservableObject {
     static let spaceBetweenWindows: CGFloat = -(TetheredButton.width / 2)
     
     var targetInitialFrames: [AXUIElement: CGRect] = [:]
-    
-    private let tetherWindow: NSWindow
-    private var lastYComputed: CGFloat?
-    private var lastOffset: CGFloat?
-    
-    private var showTetherDebounceTimer: Timer?
-    private let showTetherDebounceDelay: TimeInterval = 0.1
+   
+    var tetherHintDetails: TetherHintDetails
     
     // MARK: - Private initializer
     private init() {
@@ -63,7 +58,7 @@ class TetherAppsManager: ObservableObject {
         window.standardWindowButton(.miniaturizeButton)?.isHidden = true
         window.standardWindowButton(.zoomButton)?.isHidden = true
         
-        tetherWindow = window
+        tetherHintDetails = TetherHintDetails(tetherWindow: window)
         state = defaultState
     }
     
@@ -163,7 +158,7 @@ class TetherAppsManager: ObservableObject {
     
     // MARK: - Handling panel state changes
     
-    private func handlePanelStateChange(state: OnitPanelState, action: TrackedWindowAction) {
+    func handlePanelStateChange(state: OnitPanelState, action: TrackedWindowAction) {
         guard Defaults[.isRegularApp], let window = state.trackedWindow?.element else {
             return
         }
@@ -207,200 +202,6 @@ class TetherAppsManager: ObservableObject {
         }
     }
     
-    private func saveInitialFrameIfNeeded(for window: AXUIElement, state: OnitPanelState) {
-        if targetInitialFrames[window] == nil,
-                  let frame = window.getFrame(),
-                  state.currentAnimationTask == nil {
-            
-            targetInitialFrames[window] = frame
-        }
-    }
-
-    // MARK: - Tether window management
-    
-    private func debouncedShowTetherWindow(
-        state: OnitPanelState,
-        activeWindow: AXUIElement,
-        action: TrackedWindowAction
-    ) {
-        hideTetherWindow()
-        let pendingTetherWindow = (state, activeWindow)
-
-        showTetherDebounceTimer?.invalidate()
-        showTetherDebounceTimer = Timer.scheduledTimer(withTimeInterval: showTetherDebounceDelay, repeats: false) { [weak self] _ in
-            guard let self = self else { return }
-            
-            DispatchQueue.main.async {
-                self.showTetherWindow(state: pendingTetherWindow.0, activeWindow: pendingTetherWindow.1, action: action)
-            }
-        }
-    }
-    
-    func showTetherWindow(state: OnitPanelState, activeWindow: AXUIElement?, action: TrackedWindowAction) {
-        let tetherView = ExternalTetheredButton(
-            onDrag: { [weak self] translation in
-                self?.tetheredWindowMoved(y: translation)
-            }
-        ).environment(\.windowState, state)
-        
-        let buttonView = NSHostingView(rootView: tetherView)
-        tetherWindow.contentView = buttonView
-        lastYComputed = nil
-        
-        updateTetherWindowPosition(for: activeWindow, action: action, lastYComputed: lastYComputed)
-        
-        tetherWindow.orderFrontRegardless()
-    }
-    
-    private func hideTetherWindow() {
-        showTetherDebounceTimer?.invalidate()
-        showTetherDebounceTimer = nil
-        
-        tetherWindow.orderOut(nil)
-        tetherWindow.contentView = nil
-        lastYComputed = nil
-    }
-    
-    func updateTetherWindowPosition(for window: AXUIElement?, action: TrackedWindowAction, lastYComputed: CGFloat? = nil) {
-        guard let activeWindow = window,
-              let activeWindowFrame = activeWindow.getFrame(convertedToGlobalCoordinateSpace: true) else {
-            return
-        }
-        var positionX = activeWindowFrame.origin.x + activeWindowFrame.width - ExternalTetheredButton.containerWidth
-        var optionalWindowFrame: CGRect?
-        
-        if Self.isFinder(activeWindow: activeWindow) {
-            if Self.isFinderShowingDesktopOnly(activeWindow: activeWindow) {
-                if let mouseScreen = NSRect(origin: NSEvent.mouseLocation, size: NSSize(width: 1, height: 1)).findScreen() {
-                    let screenFrame = mouseScreen.visibleFrame
-               
-                    optionalWindowFrame = screenFrame
-                    positionX = screenFrame.maxX - ExternalTetheredButton.containerWidth
-                }
-            } else {
-                // These are clicks on the desktop. The appActivation logic gives us the most recent
-                // Finder window, but it could be behind other windows or minimized, so we don't want
-                // to move the hint to it.
-                if let isMain = activeWindow.isMain(), let isMinimized = activeWindow.isMinimized() {
-                    if !isMain || isMinimized {
-                        print("This is a click on the desktop, remove tether window")
-                        hideTetherWindow()
-                        return
-                    }
-                }
-            }
-        }
-        let windowFrame = optionalWindowFrame ?? activeWindowFrame
-        
-        var positionY: CGFloat
-        if lastYComputed == nil {
-            positionY = windowFrame.minY + (windowFrame.height / 2) - (ExternalTetheredButton.containerHeight / 2)
-        } else {
-            positionY = computeTetheredWindowY(windowFrame: windowFrame, offset: lastYComputed)
-        }
-        
-        let mouseScreen = NSRect(origin: NSEvent.mouseLocation, size: NSSize(width: 1, height: 1)).findScreen()
-        let activeScreen = action == .move ? mouseScreen : windowFrame.findScreen()
-        if let activeScreen = activeScreen {
-            let maxX = activeScreen.visibleFrame.maxX
-            
-            if positionX > maxX - ExternalTetheredButton.containerWidth {
-                positionX = maxX - ExternalTetheredButton.containerWidth
-            }
-            
-            let minY = activeScreen.visibleFrame.minY
-            if positionY < minY {
-                positionY = minY
-            }
-        }
-        
-        state.tetheredButtonYPosition = windowFrame.height -
-            (positionY - windowFrame.minY) -
-            ExternalTetheredButton.containerHeight + (TetheredButton.height / 2)
-        
-        let frame = NSRect(
-            x: positionX,
-            y: positionY,
-            width: ExternalTetheredButton.containerWidth,
-            height: ExternalTetheredButton.containerHeight
-        )
-        
-        tetherWindow.setFrame(frame, display: false)
-    }
-    
-    func tetheredWindowMoved(y: CGFloat) {
-        guard let trackedWindow = AccessibilityNotificationsManager.shared.windowsManager.activeTrackedWindow,
-              var windowFrame = trackedWindow.element.getFrame(convertedToGlobalCoordinateSpace: true) else {
-            return
-        }
-        
-        if Self.isFinderShowingDesktopOnly(activeWindow: trackedWindow.element) {
-            windowFrame = windowFrame.findScreen()?.visibleFrame ?? windowFrame
-        }
-        
-        let lastYComputed = computeTetheredWindowY(windowFrame: windowFrame, offset: y)
-        self.lastYComputed = lastYComputed
-        
-        state.tetheredButtonYPosition = windowFrame.height -
-            (lastYComputed - windowFrame.minY) -
-            ExternalTetheredButton.containerHeight + (TetheredButton.height / 2)
-
-        let frame = NSRect(
-            x: tetherWindow.frame.origin.x,
-            y: lastYComputed,
-            width: ExternalTetheredButton.containerWidth,
-            height: ExternalTetheredButton.containerHeight
-        )
-        
-        tetherWindow.setFrame(frame, display: true)
-    }
-    
-    private func computeTetheredWindowY(windowFrame: NSRect, offset: CGFloat?) -> CGFloat {
-        let maxY = windowFrame.maxY - ExternalTetheredButton.containerHeight
-        let minY = windowFrame.minY
-
-        var lastYComputed = self.lastYComputed ?? windowFrame.minY + (windowFrame.height / 2) - (ExternalTetheredButton.containerHeight / 2)
-
-        if let offset = offset {
-            lastYComputed -= offset
-        }
-
-        let finalOffset: CGFloat
-
-        if lastYComputed > maxY {
-            finalOffset = maxY
-        } else if lastYComputed < minY {
-            finalOffset = minY
-        } else {
-            finalOffset = lastYComputed
-        }
-
-        return finalOffset
-    }
-    
-    static private func isFinder(activeWindow: AXUIElement?) -> Bool {
-        let runningApps = NSWorkspace.shared.runningApplications
-
-        if let finderAppPid = runningApps.first(where: { $0.bundleIdentifier == "com.apple.finder" })?.processIdentifier,
-            let activeWindow = activeWindow {
-            return activeWindow.pid() == finderAppPid
-        }
-        return false
-    }
-    
-    static func isFinderShowingDesktopOnly(activeWindow: AXUIElement?) -> Bool {
-        let runningApps = NSWorkspace.shared.runningApplications
-        
-        guard let finderAppPid = runningApps.first(where: { $0.bundleIdentifier == "com.apple.finder" })?.processIdentifier,
-              let activeWindow = activeWindow,
-              activeWindow.pid() == finderAppPid else {
-            
-            return false
-        }
-        
-        return activeWindow.getWindows().first?.role() == "AXScrollArea"
-    }
-    
     func updateLevelState(trackedWindow: TrackedWindow?) {
         if let currentWindow = trackedWindow?.element,
            let currentWindowScreen = currentWindow.getFrame(convertedToGlobalCoordinateSpace: true)?.findScreen() {
@@ -427,7 +228,7 @@ class TetherAppsManager: ObservableObject {
         }
     }
     
-    private func getState(for trackedWindow: TrackedWindow) -> OnitPanelState {
+    func getState(for trackedWindow: TrackedWindow) -> OnitPanelState {
         let panelState: OnitPanelState
         
         if let (_, activeState) = states.first(where: { (key: TrackedWindow, value: OnitPanelState) in
@@ -446,79 +247,15 @@ class TetherAppsManager: ObservableObject {
         
         return panelState
     }
-}
-
-// MARK: - AccessibilityNotificationsDelegate
-
-extension TetherAppsManager: AccessibilityNotificationsDelegate {
     
-    func accessibilityManager(_ manager: AccessibilityNotificationsManager, didActivateWindow window: TrackedWindow) {
-        let panelState = getState(for: window)
-        
-        handlePanelStateChange(state: panelState, action: .activate)
-    }
+    // MARK: - Private functions
     
-    func accessibilityManager(_ manager: AccessibilityNotificationsManager, didActivateIgnoredWindow window: TrackedWindow?) {
-        hideTetherWindow()
-        updateLevelState(trackedWindow: window)
-    }
-    
-    func accessibilityManager(_ manager: AccessibilityNotificationsManager, didMinimizeWindow window: TrackedWindow) {
-        print("didMinimizeWindow - tetherAppsSManager")
-        if let (_, state) = states.first(where: { (key: TrackedWindow, value: OnitPanelState) in
-            key == window
-        }) {
-            state.hidden = true
-            handlePanelStateChange(state: state, action: .undefined)
-            state.panelWasHidden = true
+    private func saveInitialFrameIfNeeded(for window: AXUIElement, state: OnitPanelState) {
+        if targetInitialFrames[window] == nil,
+                  let frame = window.getFrame(),
+                  state.currentAnimationTask == nil {
+            
+            targetInitialFrames[window] = frame
         }
     }
-    
-    func accessibilityManager(_ manager: AccessibilityNotificationsManager, didDeminimizeWindow window: TrackedWindow) {
-        print("didDEminimizeWindow - tetherAppsSManager")
-        if let (_, state) = states.first(where: { (key: TrackedWindow, value: OnitPanelState) in
-            key == window
-        }) {
-            state.hidden = false
-            handlePanelStateChange(state: state, action: .resize)
-            state.panelWasHidden = false
-        }
-    }
-        
-    func accessibilityManager(_ manager: AccessibilityNotificationsManager, didDestroyWindow window: TrackedWindow) {
-        if let (_, state) = states.first(where: { (key: TrackedWindow, value: OnitPanelState) in
-            key == window
-        }) {
-            state.closePanel()
-            state.removeDelegate(self)
-            states.removeValue(forKey: window)
-        }
-        
-        hideTetherWindow()
-    }
-    
-    func accessibilityManager(_ manager: AccessibilityNotificationsManager, didMoveWindow window: TrackedWindow) {
-        let panelState = getState(for: window)
-        
-        handlePanelStateChange(state: panelState, action: .move)
-    }
-    
-    func accessibilityManager(_ manager: AccessibilityNotificationsManager, didResizeWindow window: TrackedWindow) {
-        let panelState = getState(for: window)
-        
-        handlePanelStateChange(state: panelState, action: .resize)
-    }
-}
-
-// MARK: - OnitPanelStateDelegate
-
-extension TetherAppsManager: OnitPanelStateDelegate {
-    func panelBecomeKey(state: OnitPanelState) {
-        self.state = state
-    }
-    func panelStateDidChange(state: OnitPanelState) {
-        handlePanelStateChange(state: state, action: .undefined)
-    }
-    
-    func userInputsDidChange(instruction: String, contexts: [Context], input: Input?) { }
 }
