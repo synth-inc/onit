@@ -18,7 +18,6 @@ class OnitAccessoryPanel: NSPanel {
     private let width = ContentView.idealWidth
     
     var dragDetails: PanelDraggingDetails = .init()
-    var isProgrammaticMove: Bool = false
     var isAnimating: Bool = false
     var wasAnimated: Bool = false
     var animatedFromLeft: Bool = false

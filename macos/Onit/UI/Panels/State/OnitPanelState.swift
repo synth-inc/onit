@@ -40,6 +40,7 @@ class OnitPanelState: NSObject {
     var promptSuggestionService: SystemPromptSuggestionService?
     
     var trackedWindow: TrackedWindow?
+    var isWindowDragging: Bool = false
     
     private var delegates = NSHashTable<AnyObject>.weakObjects()
     

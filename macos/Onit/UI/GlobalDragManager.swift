@@ -22,8 +22,15 @@ class GlobalDragManager: ObservableObject {
     func startMonitoring() {
         stopMonitoring()
         
-        globalMonitor = NSEvent.addGlobalMonitorForEvents(matching: .leftMouseUp) { [weak self] _ in
-            self?.handleMouseUp()
+        globalMonitor = NSEvent.addGlobalMonitorForEvents(matching: [.leftMouseDragged, .leftMouseUp]) { [weak self] event in
+            switch event.type {
+            case .leftMouseDragged:
+                self?.handleMouseDragged(event)
+            case .leftMouseUp:
+                self?.handleMouseUp()
+            default:
+                break
+            }
         }
     }
     
@@ -32,17 +39,20 @@ class GlobalDragManager: ObservableObject {
             NSEvent.removeMonitor(globalMonitor)
             self.globalMonitor = nil
         }
-    }
-    
-    func startDragging() {
-        isDragging = true
+        isDragging = false
     }
     
     // MARK: - Private functions
     
+    private func handleMouseDragged(_ event: NSEvent) {
+        if !isDragging {
+            isDragging = true
+        }
+    }
+    
     private func handleMouseUp() {
-        if isDragging {
-            isDragging = false
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) { [weak self] in
+            self?.isDragging = false
         }
     }
 } 

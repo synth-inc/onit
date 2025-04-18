@@ -30,7 +30,7 @@ extension OnitPanelState {
         
         // Special case for Finder (desktop only)
         if window.isDesktopFinder {
-            if let mouseScreen = NSRect(origin: NSEvent.mouseLocation, size: NSSize(width: 1, height: 1)).findScreen() {
+            if let mouseScreen = NSScreen.mouse {
                 let screenFrame = mouseScreen.frame
                 let onitWidth = TetherAppsManager.minOnitWidth
                 let onitHeight = screenFrame.height - ContentView.bottomPadding
@@ -47,8 +47,12 @@ extension OnitPanelState {
             return
         }
         
+        let screen = action == .moveEnd ?
+            NSScreen.mouse :
+            window.getFrame(convertedToGlobalCoordinateSpace: true)?.findScreen()
+        
         guard let windowFrame = window.getFrame(),
-              let screen = window.getFrame(convertedToGlobalCoordinateSpace: true)?.findScreen(),
+              let screen = screen,
               let rightmostScreen = NSScreen.rightmostScreen,
               let primaryScreenFrame = NSScreen.primary?.frame else { return }
         
@@ -68,11 +72,18 @@ extension OnitPanelState {
         let hasEnoughSpace = spaceOnRight >= onitWidth + TetherAppsManager.spaceBetweenWindows
         
         let isOnRightmostScreen = screen == rightmostScreen
-        
+        log.debug("""
+            - RepositionPanel -
+            screen.origin: \(screen.frame.origin)
+            action: \(action)
+            isOnRightmostScreen: \(isOnRightmostScreen)
+            hasEnoughSpace: \(hasEnoughSpace)
+            maxAvailableWidth: \(screenFrame.maxX - windowFrame.origin.x - onitWidth - TetherAppsManager.spaceBetweenWindows)
+            """)
         if (action == .move && !isOnRightmostScreen) || hasEnoughSpace {
             self.movePanel(onitWidth: onitWidth, onitHeight: onitHeight, onitY: onitY, action: action)
         } else {
-            let minAppWidth = screenFrame.width / 3
+            let minAppWidth = 500.0
             
             let maxAvailableWidth = screenFrame.maxX - windowFrame.origin.x - onitWidth - TetherAppsManager.spaceBetweenWindows
             
@@ -216,7 +227,6 @@ extension OnitPanelState {
             width: onitWidth,
             height: onitHeight
         )
-        log.debug("moveWindowAndPanel: \(newFrame)")
         
         if panel.wasAnimated {
             panel.setFrame(newFrame, display: false)

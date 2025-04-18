@@ -67,11 +67,7 @@ class TooltipManager {
 
         let mouseLocation = NSEvent.mouseLocation
 
-        guard
-            let screen = NSScreen.screens.first(where: {
-                NSMouseInRect(mouseLocation, $0.frame, false)
-            })
-        else {
+        guard let screen = NSScreen.mouse else {
             print("No screen contains the mouse location.")
             return
         }

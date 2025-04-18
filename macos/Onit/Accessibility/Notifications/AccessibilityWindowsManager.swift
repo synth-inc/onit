@@ -24,6 +24,7 @@ enum TrackedWindowAction {
     case activate
     case move
     case moveEnd
+    case moveAutomatically
     case resize
 }
 

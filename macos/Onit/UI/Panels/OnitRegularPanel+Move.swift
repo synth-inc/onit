@@ -13,12 +13,12 @@ extension OnitRegularPanel {
     @objc func windowDidMove(_ notification: Notification) {
         guard let activeWindow = state.trackedWindow?.element,
               let activeWindowFrame = activeWindow.getFrame(),
-              wasAnimated, !isAnimating, !isProgrammaticMove else { return }
+              wasAnimated, !isAnimating, dragDetails.isDragging, !state.isWindowDragging else { return }
         
+        log.error("windowDidMove")
         let currentPosition = adjustPanelIfBeyondRightScreenEdge()
 
         if currentPosition != dragDetails.lastPosition {
-            dragDetails.isDragging = true
             
             let deltaX: CGFloat
             if dragDetails.lastPosition == .zero {

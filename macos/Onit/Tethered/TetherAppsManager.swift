@@ -133,6 +133,8 @@ class TetherAppsManager: ObservableObject {
         if !state.hidden {
             if state.panelOpened {
                 // Panel opened
+                var action = action
+                
                 if state.panelWasHidden {
                     state.tempShowPanel()
                 }
@@ -142,9 +144,7 @@ class TetherAppsManager: ObservableObject {
                 if action == .resize {
                     state.tetheredButtonYPosition = nil
                 } else if action == .move {
-                    draggingState = state
-                    state.panel?.alphaValue = 0.3
-                    dragManager.startDragging()
+                    action = checkIfDragStarted(state: state)
                 }
                 
                 KeyboardShortcutsManager.enable(modelContainer: SwiftDataContainer.appContainer)
@@ -276,9 +276,21 @@ class TetherAppsManager: ObservableObject {
         }
     }
     
+    private func checkIfDragStarted(state: OnitPanelState) -> TrackedWindowAction {
+        guard dragManager.isDragging else { return .moveAutomatically }
+        guard draggingState == nil else { return .move }
+        
+        draggingState = state
+        state.isWindowDragging = true
+        state.panel?.alphaValue = 0.3
+        
+        return .move
+    }
+    
     private func onActiveWindowDragEnded() {
         guard let state = draggingState else { return }
         
+        state.isWindowDragging = false
         draggingState = nil
         
         if let panel = state.panel {

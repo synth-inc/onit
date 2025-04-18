@@ -15,6 +15,11 @@ extension NSScreen {
         }
     }
     
+    static var mouse: NSScreen? {
+        NSRect(origin: NSEvent.mouseLocation, size: NSSize(width: 1, height: 1))
+            .findScreen()
+    }
+    
     static var rightmostScreen: NSScreen? {
         NSScreen.screens.max(by: { $0.frame.origin.x < $1.frame.origin.x })
     }

@@ -65,7 +65,7 @@ extension TetherAppsManager {
         
         if activeWindow.isFinder {
             if activeWindow.isDesktopFinder {
-                if let mouseScreen = NSRect(origin: NSEvent.mouseLocation, size: NSSize(width: 1, height: 1)).findScreen() {
+                if let mouseScreen = NSScreen.mouse {
                     let screenFrame = mouseScreen.visibleFrame
                
                     optionalWindowFrame = screenFrame
@@ -93,8 +93,7 @@ extension TetherAppsManager {
             positionY = computeTetheredWindowY(windowFrame: windowFrame, offset: lastYComputed)
         }
         
-        let mouseScreen = NSRect(origin: NSEvent.mouseLocation, size: NSSize(width: 1, height: 1)).findScreen()
-        let activeScreen = action == .move ? mouseScreen : windowFrame.findScreen()
+        let activeScreen = action == .move ? NSScreen.mouse : windowFrame.findScreen()
         if let activeScreen = activeScreen {
             let maxX = activeScreen.visibleFrame.maxX
             

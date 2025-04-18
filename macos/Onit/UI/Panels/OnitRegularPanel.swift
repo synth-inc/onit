@@ -26,7 +26,6 @@ class OnitRegularPanel: NSPanel {
     private let width = ContentView.idealWidth
     
     var dragDetails: PanelDraggingDetails = .init()
-    var isProgrammaticMove: Bool = false
     var isAnimating: Bool = false
     var wasAnimated: Bool = false
     var animatedFromLeft: Bool = false
@@ -79,7 +78,33 @@ class OnitRegularPanel: NSPanel {
             object: self
         )
         
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(windowWillMove),
+            name: NSWindow.willMoveNotification,
+            object: self
+        )
+        
+        NSEvent.addLocalMonitorForEvents(matching: [.leftMouseDragged]) { [weak self] event in
+            if event.window === self {
+                self?.dragDetails.isDragging = true
+            }
+            return event
+        }
+        
+        NSEvent.addGlobalMonitorForEvents(matching: [.leftMouseUp]) { [weak self] _ in
+            if self?.dragDetails.isDragging == true {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                    self?.dragDetails.isDragging = false
+                }
+            }
+        }
+        
         show()
+    }
+    
+    @objc private func windowWillMove(_ notification: Notification) {
+        dragDetails.isDragging = true
     }
     
     private func setupFrame() {
@@ -114,12 +139,6 @@ class OnitRegularPanel: NSPanel {
         )
         
         setFrame(newFrame, display: false)
-    }
-    
-    override func setFrame(_ frameRect: NSRect, display flag: Bool) {
-        isProgrammaticMove = true
-        super.setFrame(frameRect, display: flag)
-        isProgrammaticMove = false
     }
 }
 

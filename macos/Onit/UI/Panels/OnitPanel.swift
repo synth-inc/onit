@@ -28,7 +28,6 @@ protocol OnitPanel: NSPanel {
     func hide()
     
     var dragDetails: PanelDraggingDetails { get set }
-    var isProgrammaticMove: Bool { get set }
     var wasAnimated: Bool { get set }
     var animatedFromLeft: Bool { get set }
     var resizedApplication: Bool { get set }
@@ -39,10 +38,7 @@ extension OnitPanel {
     
     func findScreen() -> NSScreen? {
         if Defaults[.openOnMouseMonitor] {
-            return NSScreen.screens.first(where: { screen in
-                let mouseLocation = NSEvent.mouseLocation
-                return screen.frame.contains(mouseLocation)
-            })
+            return NSScreen.mouse
         } else {
             return screen ?? NSScreen.screens.first
         }
