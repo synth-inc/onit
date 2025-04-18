@@ -171,6 +171,7 @@ class TetherAppsManager: ObservableObject {
         // We're now introducing a 3rd state.
         if !state.hidden {
             if state.panelOpened {
+                // Panel opened
                 if state.panelWasHidden {
                     state.tempShowPanel()
                 }
@@ -181,12 +182,10 @@ class TetherAppsManager: ObservableObject {
                     state.tetheredButtonYPosition = nil
                 }
                 
-                // Panel opened
                 KeyboardShortcutsManager.enable(modelContainer: SwiftDataContainer.appContainer)
                 saveInitialFrameIfNeeded(for: window, state: state)
                 hideTetherWindow()
 
-                // TODO: KNA - Tethered - We should just move the panel without any animation
                 if state.currentAnimationTask == nil {
                     state.repositionPanel(action: action)
                 }

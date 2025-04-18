@@ -22,7 +22,7 @@ class OnitRegularPanel: NSPanel {
         return _level == .floating
     }
     
-    private let state: OnitPanelState
+    let state: OnitPanelState
     private let width = ContentView.idealWidth
     
     var dragDetails: PanelDraggingDetails = .init()
@@ -80,54 +80,6 @@ class OnitRegularPanel: NSPanel {
         )
         
         show()
-    }
-    
-    @objc func windowDidMove(_ notification: Notification) {
-        guard let window = notification.object as? NSWindow,
-              let activeWindow = state.trackedWindow?.element,
-              let activeWindowFrame = activeWindow.getFrame(),
-              wasAnimated, !isAnimating, !isProgrammaticMove else { return }
-        
-        let currentPosition = window.frame.origin
-
-        if currentPosition != dragDetails.lastPosition {
-            dragDetails.isDragging = true
-                
-            let deltaX: CGFloat
-            if dragDetails.lastPosition == .zero {
-                let expectedX = activeWindowFrame.origin.x + activeWindowFrame.width - (TetheredButton.width / 2)
-                deltaX = currentPosition.x - expectedX
-            } else {
-                deltaX = currentPosition.x - dragDetails.lastPosition.x
-            }
-            let newX = activeWindowFrame.origin.x + deltaX
-            var newY = activeWindowFrame.origin.y
-            
-            if let primaryScreen = NSScreen.primary, let screen = screen {
-                let primaryScreenHeight = primaryScreen.frame.height
-                let screenOriginY = screen.frame.origin.y
-                let onitRelativeY = currentPosition.y - screenOriginY
-                let distanceFromScreenTop = screen.frame.height - onitRelativeY - window.frame.height
-                
-                if screen === primaryScreen {
-                    newY = distanceFromScreenTop
-                } else {
-                    let heightDifference = screen.frame.height - primaryScreenHeight
-                    
-                    newY = -screenOriginY + distanceFromScreenTop - heightDifference
-                }
-            }
-            
-            _ = activeWindow.setPosition(NSPoint(x: newX, y: newY))
-            
-            dragDetails.lastPosition = currentPosition
-            dragDetails.dragEndTimer?.invalidate()
-            dragDetails.dragEndTimer = Timer.scheduledTimer(withTimeInterval: 0.2, repeats: false) { _ in
-                Task { @MainActor in
-                    self.dragDetails = .init()
-                }
-            }
-        }
     }
     
     private func setupFrame() {

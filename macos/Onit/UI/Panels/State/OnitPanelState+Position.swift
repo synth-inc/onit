@@ -49,6 +49,7 @@ extension OnitPanelState {
         
         guard let windowFrame = window.getFrame(),
               let screen = window.getFrame(convertedToGlobalCoordinateSpace: true)?.findScreen(),
+              let rightmostScreen = NSScreen.rightmostScreen,
               let primaryScreenFrame = NSScreen.primary?.frame else { return }
         
         let screenFrame = screen.frame
@@ -66,7 +67,9 @@ extension OnitPanelState {
         let spaceOnRight = screenFrame.maxX - (windowFrame.origin.x + windowFrame.width)
         let hasEnoughSpace = spaceOnRight >= onitWidth + TetherAppsManager.spaceBetweenWindows
         
-        if action == .move || hasEnoughSpace {
+        let isOnRightmostScreen = screen == rightmostScreen
+        
+        if (action == .move && !isOnRightmostScreen) || hasEnoughSpace {
             self.movePanel(onitWidth: onitWidth, onitHeight: onitHeight, onitY: onitY, action: action)
         } else {
             let minAppWidth = screenFrame.width / 3
