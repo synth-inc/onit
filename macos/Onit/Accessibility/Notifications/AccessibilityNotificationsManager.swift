@@ -335,14 +335,6 @@ class AccessibilityNotificationsManager: ObservableObject {
         }
     }
     
-    private func handleWindowMiniaturized(for element: AXUIElement) {
-        handleExternalElement(element) { [weak self] elementPid in
-            guard let self = self else { return }
-         
-            self.notifyDelegates { $0.accessibilityManager(self, didMinimizeWindow: nil) }
-        }
-    }
-    
     func handleCreatedWindowElement(for element: AXUIElement) {
         handleExternalElement(element) { [weak self] elementPid in
             guard let self = self,

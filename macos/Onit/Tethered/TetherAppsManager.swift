@@ -174,6 +174,13 @@ class TetherAppsManager: ObservableObject {
                 if state.panelWasHidden {
                     state.tempShowPanel()
                 }
+                
+                // TODO: KNA - We need to store the frame used to calculate the tetheredButtonYPosition and apply a diff
+                // Quick fix - when resizing, center the TetheredButton
+                if action == .resize {
+                    state.tetheredButtonYPosition = nil
+                }
+                
                 // Panel opened
                 KeyboardShortcutsManager.enable(modelContainer: SwiftDataContainer.appContainer)
                 saveInitialFrameIfNeeded(for: window, state: state)
@@ -489,11 +496,6 @@ extension TetherAppsManager: AccessibilityNotificationsDelegate {
         }
         
         hideTetherWindow()
-    }
-    
-    func accessibilityManager(_ manager: AccessibilityNotificationsManager, didMinimizeWindow window: TrackedWindow?) {
-        hideTetherWindow()
-        updateLevelState(trackedWindow: window)
     }
     
     func accessibilityManager(_ manager: AccessibilityNotificationsManager, didMoveWindow window: TrackedWindow) {

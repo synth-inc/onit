@@ -42,13 +42,17 @@ struct TetheredButton: View {
     }
     
     private var spacerHeight: CGFloat? {
-        state.tetheredButtonYPosition ?? nil
+        state.tetheredButtonYPosition
     }
     
     var body: some View {
         VStack {
-            Spacer()
-                .frame(height: spacerHeight)
+            if let spacerHeight = spacerHeight {
+                Spacer()
+                    .frame(height: spacerHeight)
+            } else {
+                Spacer()
+            }
             
             Button(action: {
                 guard isAccessibilityFlagsEnabled else {
