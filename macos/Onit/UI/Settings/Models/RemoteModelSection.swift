@@ -16,6 +16,7 @@ struct RemoteModelSection: View {
     @State private var validated = false
     @State private var loading = false
     @State private var showAdvanced: Bool = false  
+    @State private var localState: TokenValidationState.ValidationState = .notValidated
 
     @Default(.mode) var mode
     @Default(.remoteModel) var remoteModel
@@ -45,7 +46,14 @@ struct RemoteModelSection: View {
     var provider: AIModel.ModelProvider
 
     var state: TokenValidationState.ValidationState {
-        tokenManager.tokenValidation.state(for: provider)
+        let state = tokenManager.tokenValidation.state(for: provider)
+        if state != localState {
+            DispatchQueue.main.async {
+                localState = state
+                updateUse()
+            }
+        }
+        return state
     }
 
     var models: [AIModel] {
@@ -87,9 +95,6 @@ struct RemoteModelSection: View {
             fetchKey()
             checkValidated()
             checkUse()
-        }
-        .onChange(of: state) {
-            updateUse()
         }
         .onChange(of: use) {
             save(use: use)
@@ -137,7 +142,7 @@ struct RemoteModelSection: View {
                     buttonOverlay
                 }
             }
-            .disabled(state.isValidating)
+            .disabled(loading || state.isValidating)
             .foregroundStyle(.white)
             .buttonStyle(.borderedProminent)
             .frame(height: 22)
@@ -148,17 +153,22 @@ struct RemoteModelSection: View {
 
     @ViewBuilder
     var buttonOverlay: some View {
-        switch state {
-        case .notValidated, .invalid:
-            Text("Verify →")
-        case .validating:
+        if loading {
             ProgressView()
                 .controlSize(.small)
-        case .valid:
-            if validated {
-                Text("Verified")
-            } else {
+        } else {
+            switch localState {
+            case .notValidated, .invalid:
                 Text("Verify →")
+            case .validating:
+                ProgressView()
+                    .controlSize(.small)
+            case .valid:
+                if validated {
+                    Text("Verified")
+                } else {
+                    Text("Verify →")
+                }
             }
         }
     }
