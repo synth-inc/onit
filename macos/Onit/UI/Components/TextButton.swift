@@ -1,5 +1,5 @@
 //
-//  ActionButton.swift
+//  TextButton.swift
 //  Onit
 //
 //  Created by - on 4/14/25.
@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-struct ActionButton<Child: View>: View {
+struct TextButton<Child: View>: View {
     private let icon: ImageResource?
     private let iconSize: CGFloat
     private let text: String
@@ -121,6 +121,7 @@ struct ActionButton<Child: View>: View {
         .frame(maxWidth: fillContainer ? .infinity : maxWidth > 0 ? maxWidth : nil)
         .frame(height: height)
         .background(disabled ? .clear : isHovered ? hoverBackground : background)
+        .scaleEffect(isPressed ? 0.99 : 1)
         .opacity(disabled ? 0.5 : isPressed ? 0.7 : 1)
         .disabled(disabled)
         .cornerRadius(cornerRadius)
@@ -140,7 +141,7 @@ struct ActionButton<Child: View>: View {
 
 // MARK: - Allows `child` prop to be optional.
 
-extension ActionButton where Child == EmptyView {
+extension TextButton where Child == EmptyView {
     init(
         icon: ImageResource? = nil,
         iconSize: CGFloat = DefaultValues().iconSize,

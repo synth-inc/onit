@@ -35,7 +35,7 @@ struct PromptCoreFooterButton: View {
     }
     
     var body: some View {
-        ActionButton(
+        TextButton(
             text: text,
             disabled: disabled,
             action: action,

@@ -81,6 +81,7 @@ struct TagButton: View {
         .frame(maxWidth: maxWidth > 0 ? maxWidth : nil)
         .frame(height: 22)
         .background(setBackground())
+        .scaleEffect(isPressed ? 0.99 : 1)
         .opacity(setOpacity())
         .addBorder(cornerRadius: 4, stroke: .gray400)
         .addAnimation(dependency: $isHovered.wrappedValue)

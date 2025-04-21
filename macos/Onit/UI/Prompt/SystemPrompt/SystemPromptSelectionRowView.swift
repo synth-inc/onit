@@ -15,7 +15,7 @@ struct SystemPromptSelectionRowView: View {
     var prompt: SystemPrompt
     
     var body: some View {
-        ActionButton(
+        TextButton(
             text: prompt.name,
             action: selectPrompt
         ) {

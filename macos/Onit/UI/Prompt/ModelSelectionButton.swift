@@ -23,7 +23,7 @@ struct ModelSelectionButton: View {
     }
     
     var body: some View {
-        ActionButton(
+        TextButton(
             text: text,
             action: { model.showModels.toggle() },
             width: 90,

@@ -16,7 +16,7 @@ struct HistoryRowView: View {
     var index: Int
 
     var body: some View {
-        ActionButton(
+        TextButton(
             text: getPromptText(),
             action: { model.setChat(chat: chat, index: index) }
         ) {

@@ -115,7 +115,7 @@ struct ModelSelectionView: View {
     
     var remoteModelsView: some View {
         ForEach(filteredRemoteModels) { remoteModel in
-            ActionButton(
+            TextButton(
                 icon: determineRemoteModelLogo(provider: remoteModel.provider),
                 iconSize: 16,
                 text: remoteModel.displayName,
@@ -151,7 +151,7 @@ struct ModelSelectionView: View {
 
     var localModelsView: some View {
         ForEach(filteredLocalModels, id: \.self) { localModelName in
-            ActionButton(
+            TextButton(
                 icon: localModelName.lowercased().contains("llama") ? .logoOllama : .logoProviderUnknown,
                 iconSize: 16,
                 text: localModelName,

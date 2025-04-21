@@ -71,7 +71,7 @@ extension IconButton {
             .tooltip(prompt: prompt, shortcut: shortcut)
             .applySharedStyles(
                 buttonSize: buttonSize,
-                hovered: $isHovered,
+                isHovered: $isHovered,
                 isActive: isActive
             )
     }
@@ -82,7 +82,7 @@ extension IconButton {
             .tooltip(prompt: prompt)
             .applySharedStyles(
                 buttonSize: buttonSize,
-                hovered: $isHovered,
+                isHovered: $isHovered,
                 isActive: isActive
             )
     }
@@ -92,7 +92,7 @@ extension IconButton {
         label: { iconImage }
             .applySharedStyles(
                 buttonSize: buttonSize,
-                hovered: $isHovered,
+                isHovered: $isHovered,
                 isActive: isActive
             )
     }
@@ -112,22 +112,24 @@ extension IconButton {
     }
 }
 
+// MARK: - Extending View
+
 extension View {
     func applySharedStyles(
         buttonSize: CGFloat,
-        hovered: Binding<Bool>,
+        isHovered: Binding<Bool>,
         isActive: Bool
     ) -> some View {
         
         return self
             .buttonStyle(PlainButtonStyle())
             .frame(width: buttonSize, height: buttonSize)
-            .background((hovered.wrappedValue || isActive) ? .gray800 : .clear)
+            .background((isHovered.wrappedValue || isActive) ? .gray800 : .clear)
             .addBorder(
                 cornerRadius: toolbarButtonCornerRadius,
                 stroke: isActive ? .gray500 : .clear
             )
-            .addAnimation(dependency: hovered.wrappedValue)
-            .onHover{ isHovering in hovered.wrappedValue = isHovering }
+            .addAnimation(dependency: isHovered.wrappedValue)
+            .onHover{ isHovering in isHovered.wrappedValue = isHovering }
     }
 }
