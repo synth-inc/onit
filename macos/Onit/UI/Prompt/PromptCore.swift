@@ -19,6 +19,7 @@ struct PromptCore: View {
     
     @FocusState private var isFocused: Bool
     
+    
     private var unfocusedBorder = GradientBorder(
         colorOne: .gray500,
         colorTwo: .gray500
@@ -63,6 +64,8 @@ extension PromptCore {
         VStack(spacing: 8) {
             FileRow(contextList: state.pendingContextList)
             PromptInput().focused($isFocused)
+                .onChange(of: state.textFocusTrigger) { isFocused = true }
+                .onAppear { isFocused = true }
         }
         .padding(12)
         .background(.gray800)
