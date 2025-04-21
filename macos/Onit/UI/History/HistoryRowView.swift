@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct HistoryRowView: View {
-    @Environment(\.model) var model
+    @Environment(\.windowState) private var windowState
     
     @State private var showDelete: Bool = false
 
@@ -18,7 +18,7 @@ struct HistoryRowView: View {
     var body: some View {
         TextButton(
             text: getPromptText(),
-            action: { model.setChat(chat: chat, index: index) }
+            action: { windowState.setChat(chat: chat, index: index) }
         ) {
             Group {
                 if showDelete { deleteButton }
@@ -37,7 +37,7 @@ struct HistoryRowView: View {
     
     var deleteButton: some View {
         HStack(alignment: .center) {
-            Text(model.deleteChatFailed ? "Delete failed" : "")
+            Text(windowState.deleteChatFailed ? "Delete failed" : "")
                 .foregroundColor(Color.red)
             
             Image(systemName: "trash")
@@ -47,8 +47,8 @@ struct HistoryRowView: View {
         .contentShape(Rectangle())
         .onTapGesture {
             // We want the padding around the button to also be a tap target
-            if !model.deleteChatFailed {
-                model.deleteChat(chat: chat)
+            if !windowState.deleteChatFailed {
+                windowState.deleteChat(chat: chat)
             }
         }
     }
@@ -66,9 +66,7 @@ struct HistoryRowView: View {
 
 #if DEBUG
     #Preview {
-        ModelContainerPreview {
-            // TODO make samples
-            //        HistoryRowView(chat: .sample)
-        }
+        // TODO make samples
+        //        HistoryRowView(chat: .sample)
     }
 #endif

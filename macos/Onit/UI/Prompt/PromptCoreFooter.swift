@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct PromptCoreFooter: View {
-    @Environment(\.model) var model
+    @Environment(\.windowState) private var state
     
     var body: some View {
         HStack(alignment: .center, spacing: 0) {
@@ -23,8 +23,8 @@ struct PromptCoreFooter: View {
                 MicrophoneButton()
                 PromptCoreFooterButton(
                     text: "􀅇 Send",
-                    disabled: model.pendingInstruction.isEmpty,
-                    action: { model.sendAction() }
+                    disabled: state.pendingInstruction.isEmpty,
+                    action: { state.sendAction() }
                 )
             }
         }

@@ -8,8 +8,6 @@
 import SwiftUI
 
 struct SetUpDialog<Subtitle: View>: View {
-    @Environment(\.model) var model
-
     var title: String
     var showButton: Bool = true
     var buttonText: String? = nil
@@ -66,7 +64,6 @@ struct SetUpDialog<Subtitle: View>: View {
 
             Button {
                 closeAction()
-                model.shrinkContent()
             } label: {
                 Image(.smallCross)
                     .padding(2)

@@ -11,9 +11,9 @@ import SwiftUI
 import SwiftData
 
 struct SystemPromptDetailView: View {
+    @Environment(\.windowState) private var windowState
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
-    @Default(.systemPromptId) private var systemPromptId
     
     @Binding var size: CGSize
     @Binding var showSelection: Bool
@@ -59,7 +59,7 @@ struct SystemPromptDetailView: View {
                 .strokeBorder(.gray600)
         }
         .frame(width: size.width - 16)
-        .onChange(of: systemPromptId, initial: true) { oldValue, newValue in
+        .onChange(of: windowState.systemPromptId, initial: true) { oldValue, newValue in
             let descriptor = FetchDescriptor<SystemPrompt>()
             
             guard let prompt = try? modelContext.fetch(descriptor).first(where: { $0.id == newValue }) else {
@@ -114,7 +114,7 @@ struct SystemPromptDetailView: View {
             
             Spacer()
             
-            if systemPromptId != SystemPrompt.outputOnly.id {
+            if windowState.systemPromptId != SystemPrompt.outputOnly.id {
                 Button {
                     showEditPrompt = true
                     dismiss()

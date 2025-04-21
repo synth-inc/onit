@@ -9,7 +9,10 @@ import Defaults
 import SwiftUI
 
 struct ChatsView: View {
-    @Environment(\.model) var model
+    @Environment(\.windowState) private var state
+    
+    @Default(.isPanelExpanded) var isPanelExpanded: Bool
+    @Default(.isRegularApp) var isRegularApp: Bool
     
     private let currentPromptsCount: Int
     
@@ -43,7 +46,7 @@ struct ChatsView: View {
         ScrollViewReader { proxy in
             ScrollView {
                 LazyVStack(spacing: -16) {
-                    ForEach(model.currentPrompts ?? []) { prompt in
+                    ForEach(state.currentPrompts ?? []) { prompt in
                         PromptView(prompt: prompt)
                     }
                 }
@@ -57,7 +60,7 @@ struct ChatsView: View {
             .onChange(of: currentPromptsCount) {
                 if currentPromptsCount > 0 { scrollToBottom(using: proxy) }
             }
-            .onChange(of: model.currentChat) { old, new in
+            .onChange(of: state.currentChat) { old, new in
                 if old == nil && new != nil { return }
                 scrollToBottom(using: proxy)
             }

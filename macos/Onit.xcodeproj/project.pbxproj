@@ -16,6 +16,7 @@
 		867A647A2D4AD73A00FD4D80 /* Defaults in Frameworks */ = {isa = PBXBuildFile; productRef = 867A64792D4AD73A00FD4D80 /* Defaults */; };
 		867A647C2D4AD73A00FD4D80 /* DefaultsMacros in Frameworks */ = {isa = PBXBuildFile; productRef = 867A647B2D4AD73A00FD4D80 /* DefaultsMacros */; };
 		86A974C12D4A76F800CF6FCE /* Markdown in Frameworks */ = {isa = PBXBuildFile; productRef = 86A974C02D4A76F800CF6FCE /* Markdown */; };
+		86EE5E572DAFA5BD0089FD49 /* SwiftyBeaver in Frameworks */ = {isa = PBXBuildFile; productRef = 86EE5E562DAFA5BD0089FD49 /* SwiftyBeaver */; };
 		86F908912D7AF491008D8027 /* Highlightr in Frameworks */ = {isa = PBXBuildFile; productRef = 86F908902D7AF491008D8027 /* Highlightr */; };
 		900CD80A2D9C0A1E0049592B /* SwiftSoup in Frameworks */ = {isa = PBXBuildFile; productRef = 900CD8092D9C0A1E0049592B /* SwiftSoup */; };
 		904266782D9B40DF002AF820 /* LLMStream in Frameworks */ = {isa = PBXBuildFile; productRef = 904266772D9B40DF002AF820 /* LLMStream */; };
@@ -61,6 +62,7 @@
 				A782C1982D383493009976F8 /* FirebaseCrashlytics in Frameworks */,
 				2842875E2CD0B6A5000C6C67 /* HighlightSwift in Frameworks */,
 				28F57E222CAC84AA006AAA8C /* KeyboardShortcuts in Frameworks */,
+				86EE5E572DAFA5BD0089FD49 /* SwiftyBeaver in Frameworks */,
 				900CD80A2D9C0A1E0049592B /* SwiftSoup in Frameworks */,
 				867A647C2D4AD73A00FD4D80 /* DefaultsMacros in Frameworks */,
 				904266782D9B40DF002AF820 /* LLMStream in Frameworks */,
@@ -121,6 +123,7 @@
 				86F908902D7AF491008D8027 /* Highlightr */,
 				904266772D9B40DF002AF820 /* LLMStream */,
 				900CD8092D9C0A1E0049592B /* SwiftSoup */,
+				86EE5E562DAFA5BD0089FD49 /* SwiftyBeaver */,
 			);
 			productName = Onit;
 			productReference = 2883E4B32CA5ECBB00F79A48 /* Onit.app */;
@@ -163,6 +166,7 @@
 				86F9088F2D7AF491008D8027 /* XCRemoteSwiftPackageReference "Highlightr" */,
 				904266762D9B40DF002AF820 /* XCLocalSwiftPackageReference "../LLMStream" */,
 				900CD8082D9C0A1E0049592B /* XCRemoteSwiftPackageReference "SwiftSoup" */,
+				86EE5E552DAFA5BD0089FD49 /* XCRemoteSwiftPackageReference "SwiftyBeaver" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 2883E4B42CA5ECBB00F79A48 /* Products */;
@@ -509,6 +513,14 @@
 				minimumVersion = 0.5.0;
 			};
 		};
+		86EE5E552DAFA5BD0089FD49 /* XCRemoteSwiftPackageReference "SwiftyBeaver" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/SwiftyBeaver/SwiftyBeaver.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.1.1;
+			};
+		};
 		86F9088F2D7AF491008D8027 /* XCRemoteSwiftPackageReference "Highlightr" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/raspu/Highlightr";
@@ -580,6 +592,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 86A974BF2D4A76F800CF6FCE /* XCRemoteSwiftPackageReference "swift-markdown" */;
 			productName = Markdown;
+		};
+		86EE5E562DAFA5BD0089FD49 /* SwiftyBeaver */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 86EE5E552DAFA5BD0089FD49 /* XCRemoteSwiftPackageReference "SwiftyBeaver" */;
+			productName = SwiftyBeaver;
 		};
 		86F908902D7AF491008D8027 /* Highlightr */ = {
 			isa = XCSwiftPackageProductDependency;

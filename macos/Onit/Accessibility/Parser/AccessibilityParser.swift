@@ -22,17 +22,15 @@ class AccessibilityParser {
 
     // MARK: - Functions
 
-    func getAllTextInElement(appElement: AXUIElement) async -> [String: String]? {
+    func getAllTextInElement(windowElement: AXUIElement) async -> [String: String]? {
         let startTime = CFAbsoluteTimeGetCurrent()
 
-        let appName =
-            appElement.attribute(forAttribute: kAXTitleAttribute as CFString) as? String
-            ?? "Unknown"
+        let appName = windowElement.parent()?.title() ?? "Unknown"
         let parser = parsers[appName] ?? genericParser
 
 //        var debugText = "App found: \(appName) use of parser \(parser)\n"
 
-        var results = parser.parse(element: appElement)
+        var results = parser.parse(element: windowElement)
 
         let endTime = CFAbsoluteTimeGetCurrent()
         let elapsedTime = endTime - startTime

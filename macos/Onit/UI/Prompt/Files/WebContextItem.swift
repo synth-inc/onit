@@ -9,15 +9,25 @@ import SwiftUI
 import SwiftSoup
 
 struct WebContextItem: View {
-    @Environment(\.model) var model
+    @Environment(\.windowState) var windowState
     
     private let item: Context
+    private let isEditing: Bool
+    private let showContextWindow: () -> Void
+    private let removeContextItem: () -> Void
     private let websiteUrl: URL
     private let websiteTitle: String
-    private let isEditing: Bool
     
-    init(item: Context, isEditing: Bool) {
+    init(
+        item: Context,
+        isEditing: Bool,
+        showContextWindow: @escaping () -> Void,
+        removeContextItem: @escaping () -> Void
+    ) {
         self.item = item
+        self.isEditing = isEditing
+        self.showContextWindow = showContextWindow
+        self.removeContextItem = removeContextItem
         
         if case .web(let websiteUrl, let websiteTitle, _) = self.item {
             self.websiteUrl = websiteUrl
@@ -25,19 +35,17 @@ struct WebContextItem: View {
         } else {
             fatalError("Expected a web context item")
         }
-        
-        self.isEditing = isEditing
     }
     
     var body: some View {
-        let websiteUndergoingScrape = model.websiteUrlsScrapeQueue.keys.contains(websiteUrl.absoluteString)
+        let websiteUndergoingScrape = windowState.websiteUrlsScrapeQueue.keys.contains(websiteUrl.absoluteString)
         
         TagButton(
             child: websiteUndergoingScrape ? Loader() : favicon,
             text: getCurrentWebsiteTitle(),
             caption: item.fileType,
-            action: { model.showContextWindow(context: item) },
-            closeAction: { model.deleteContextItem(item: item) },
+            action: showContextWindow,
+            closeAction: removeContextItem,
             maxWidth: 250
         )
         .opacity(websiteUndergoingScrape ? 0.5 : 1)
@@ -73,7 +81,7 @@ extension WebContextItem {
 
 extension WebContextItem {
     private func getCurrentWebsiteTitle() -> String {
-        let pendingContextList = model.getPendingContextList()
+        let pendingContextList = windowState.getPendingContextList()
 
         if let updatedWebContext = pendingContextList.first(where: { context in
             if case .web(let contextWebsiteUrl, _, _) = context,

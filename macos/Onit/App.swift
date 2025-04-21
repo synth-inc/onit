@@ -15,38 +15,35 @@ import SwiftUI
 
 @main
 struct App: SwiftUI.App {
-    @Environment(\.model) var model
+    @Environment(\.appState) var appState
     @NSApplicationDelegateAdaptor(AppDelegate.self) var delegate
+    @ObservedObject private var debugManager = DebugManager.shared
+    @ObservedObject private var accessibilityPermissionManager = AccessibilityPermissionManager.shared
     @ObservedObject private var featureFlagsManager = FeatureFlagManager.shared
 
     @Default(.isRegularApp) var isRegularApp
     @Default(.launchOnStartupRequested) var launchOnStartupRequested
 
     @State var accessibilityPermissionRequested = false
-    
+
     private var frontmostApplicationOnLaunch: NSRunningApplication?
 
     init() {
         frontmostApplicationOnLaunch = NSWorkspace.shared.frontmostApplication
         
-        KeyboardShortcutsManager.configure(model: model)
+        KeyboardShortcutsManager.configure()
         featureFlagsManager.configure()
         
         // For testing new user experience
         // clearTokens()
-        model.showPanel()
-
-        #if !targetEnvironment(simulator)
-        AccessibilityPermissionManager.shared.setModel(model)
-        AccessibilityNotificationsManager.shared.setModel(model)
-
-        SplitViewManager.shared.configure(model: model)
-        SplitViewManager.shared.startObserving()
-        #endif
+        
+        if !isRegularApp {
+            TetherAppsManager.shared.state.launchPanel()
+        }
     }
 
     var body: some Scene {
-        @Bindable var model = model
+        @Bindable var appState = appState
 
         MenuBarExtra {
             MenuBarContent()
@@ -56,16 +53,18 @@ struct App: SwiftUI.App {
                     checkLaunchOnStartup()
                     toggleUIElementMode(enable: isRegularApp)
                 }
-                .onChange(of: model.accessibilityPermissionStatus, initial: true) {
+                .onChange(of: accessibilityPermissionManager.accessibilityPermissionStatus, initial: true) {
                     _, newValue in
                     AccessibilityAnalytics.logPermission(local: newValue)
                     
                     switch newValue {
                     case .granted:
                         AccessibilityNotificationsManager.shared.start(pid: frontmostApplicationOnLaunch?.processIdentifier)
+                        TetherAppsManager.shared.startObserving()
                         TapListener.shared.start()
                     case .denied:
                         AccessibilityNotificationsManager.shared.stop()
+                        TetherAppsManager.shared.stopObserving()
                         TapListener.shared.stop()
                     default:
                         break
@@ -90,11 +89,11 @@ struct App: SwiftUI.App {
                 ], initial: true) { oldValue, newValue in
                     AccessibilityAnalytics.logFlags()
                 }
-                .onChange(of: model.showDebugWindow, initial: true) { oldValue, newValue in
+                .onChange(of: debugManager.showDebugWindow, initial: true) { oldValue, newValue in
                     if newValue {
-                        model.openDebugWindow()
+                        debugManager.openDebugWindow()
                     } else {
-                        model.closeDebugWindow()
+                        debugManager.closeDebugWindow()
                     }
                 }
                 .onChange(of: isRegularApp) { _, newValue in
@@ -102,19 +101,17 @@ struct App: SwiftUI.App {
                 }
         }
         .menuBarExtraStyle(.window)
-        .menuBarExtraAccess(isPresented: $model.showMenuBarExtra)
+        .menuBarExtraAccess(isPresented: $appState.showMenuBarExtra)
         .commands {}
 
         Settings {
             SettingsView()
-                .modelContainer(model.container)
-                .onAppear {
-                    if let window = NSApplication.shared.windows.first(where: {
-                        $0.contentViewController is NSHostingController<SettingsView>
-                    }) {
-                        window.level = .floating
-                    }
-                }
+                .modelContainer(SwiftDataContainer.appContainer)
+                .background( WindowAccessor { window in
+                    let floatingLevel: NSWindow.Level = .floating
+                    let settingsWindowLevel: NSWindow.Level = NSWindow.Level(rawValue: floatingLevel.rawValue + 1)
+                    window.level = settingsWindowLevel
+                })
         }
     }
 

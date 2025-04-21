@@ -6,11 +6,16 @@ final class Chat {
     var systemPrompt: SystemPrompt?
     var prompts: [Prompt]
     var timestamp: Date
+    
+    var appBundleIdentifier: String?
+    var windowHash: UInt?
 
-    init(systemPrompt: SystemPrompt, prompts: [Prompt] = [], timestamp: Date = Date()) {
+    init(systemPrompt: SystemPrompt, prompts: [Prompt] = [], timestamp: Date = Date(), trackedWindow: TrackedWindow? = nil) {
         self.systemPrompt = systemPrompt
         self.prompts = prompts
         self.timestamp = timestamp
+        self.appBundleIdentifier = trackedWindow?.pid.bundleIdentifier
+        self.windowHash = trackedWindow?.hash
     }
 
     var isEmpty: Bool {

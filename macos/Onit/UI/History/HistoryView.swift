@@ -9,16 +9,21 @@ import SwiftData
 import SwiftUI
 
 struct HistoryView: View {
-    @Environment(\.model) var model
+    @Environment(\.windowState) var windowState
     @Query(sort: \Chat.timestamp, order: .reverse) private var chats: [Chat]
 
     @State private var searchQuery: String = ""
 
     var filteredChats: [Chat] {
+        let appBundleIdentifier = windowState.trackedWindow?.pid.bundleIdentifier
+        let bundleIdentifierChats = chats.filter {
+            $0.appBundleIdentifier == appBundleIdentifier
+        }
+        
         if searchQuery.isEmpty {
-            return chats
+            return bundleIdentifierChats
         } else {
-            return chats.filter {
+            return bundleIdentifierChats.filter {
                 $0.fullText.localizedCaseInsensitiveContains(searchQuery)
             }
         }
@@ -50,7 +55,7 @@ struct HistoryView: View {
             header: MenuHeader(title: "History") {
                 IconButton(
                     icon: .smallCross,
-                    action: { model.showHistory = false }
+                    action: { windowState.showHistory = false }
                 )
             },
             search: MenuList.Search(query: $searchQuery)

@@ -8,7 +8,6 @@
 import SwiftUI
 
 struct RemoteModelsSection: View {
-    @Environment(\.model) var model
 
     var body: some View {
         ScrollView {

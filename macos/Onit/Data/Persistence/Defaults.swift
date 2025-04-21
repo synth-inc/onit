@@ -84,6 +84,8 @@ extension Defaults.Keys {
     static let accessibilityAutoContextEnabled = Key<Bool?>(
         "accessibilityAutoContextEnabled", default: nil)
     static let highlightHintMode = Key<HighlightHintMode?>("highlightHintMode", default: nil)
+    
+    static let automaticallyAddAutoContext = Key<Bool>("automaticallyAddAutoContext", default: false)
 
     // Web search
     static let webSearchEnabled = Key<Bool>("webSearchEnabled", default: false)
@@ -109,14 +111,10 @@ extension Defaults.Keys {
     
     // Debug settings
     static let isRegularApp = Key<Bool>("isRegularApp", default: true)
-    static let fitActiveWindow = Key<Bool>("fitActiveWindow", default: false)
     static let launchShortcutToggleEnabled = Key<Bool>("launchShortcutToggleEnabled", default: false)
     static let createNewChatOnPanelOpen = Key<Bool>("createNewChatOnPanelOpen", default: false)
     static let escapeShortcutDisabled = Key<Bool>("escapeShortcutDisabled", default: true)
     static let openOnMouseMonitor = Key<Bool>("openOnMouseMonitor", default: false)
-
-    // System prompts
-    static let systemPromptId = Key<String>("systemPromptId", default: SystemPrompt.outputOnly.id)
 }
 
 extension NSRect: Defaults.Serializable {

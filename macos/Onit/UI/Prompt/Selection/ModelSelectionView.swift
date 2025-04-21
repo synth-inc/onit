@@ -9,7 +9,7 @@ import Defaults
 import SwiftUI
 
 struct ModelSelectionView: View {
-    @Environment(\.model) var model
+    @Environment(\.appState) var appState
     @Environment(\.openSettings) var openSettings
     @Environment(\.remoteModels) var remoteModels
     
@@ -98,7 +98,7 @@ struct ModelSelectionView: View {
         ) {
             if remoteModels.listedModels.isEmpty {
                 Button("Setup remote models") {
-                    model.settingsTab = .models
+                    appState.settingsTab = .models
                     openSettings()
                 }
                 .buttonStyle(SetUpButtonStyle(showArrow: true))
@@ -119,7 +119,8 @@ struct ModelSelectionView: View {
                 icon: determineRemoteModelLogo(provider: remoteModel.provider),
                 iconSize: 16,
                 text: remoteModel.displayName,
-                action: { selectedModel.wrappedValue = .remote(remoteModel) }
+                action: { selectedModel.wrappedValue = .remote(remoteModel) },
+                fontColor: isSelectedRemoteModel(model: remoteModel) ? .blue300 : .white
             )
         }
     }
@@ -134,7 +135,7 @@ struct ModelSelectionView: View {
         ) {
             if availableLocalModels.isEmpty {
                 Button("Setup local models") {
-                    model.settingsTab = .models
+                    appState.settingsTab = .models
                     openSettings()
                 }
                 .buttonStyle(SetUpButtonStyle(showArrow: true))
@@ -155,7 +156,8 @@ struct ModelSelectionView: View {
                 icon: localModelName.lowercased().contains("llama") ? .logoOllama : .logoProviderUnknown,
                 iconSize: 16,
                 text: localModelName,
-                action: { selectedModel.wrappedValue = .local(localModelName) }
+                action: { selectedModel.wrappedValue = .local(localModelName) },
+                fontColor: isSelectedLocalModel(modelName: localModelName) ? .blue300 : .white
             )
         }
     }
@@ -190,7 +192,7 @@ struct ModelSelectionView: View {
 
             if remoteModels.listedModels.isEmpty {
                 Button("Setup remote models") {
-                    model.settingsTab = .models
+                    appState.settingsTab = .models
                     openSettings()
                 }
                 .buttonStyle(SetUpButtonStyle(showArrow: true))
@@ -213,7 +215,7 @@ extension ModelSelectionView {
         NSApp.activate()
         
         if NSApp.isActive {
-            model.setSettingsTab(tab: .models)
+            appState.setSettingsTab(tab: .models)
             openSettings()
             OverlayManager.shared.dismissOverlay()
         }
@@ -228,6 +230,24 @@ extension ModelSelectionView {
         case .deepSeek: return .logoDeepseek
         case .perplexity: return .logoPerplexity
         default: return .logoProviderUnknown
+        }
+    }
+    
+    private func isSelectedRemoteModel(model: AIModel) -> Bool {
+        if let currentModel = selectedModel.wrappedValue,
+           case let .remote(selectedModel) = currentModel {
+            return model.id == selectedModel.id
+        } else {
+            return false
+        }
+    }
+    
+    private func isSelectedLocalModel(modelName: String) -> Bool {
+        if let currentModel = selectedModel.wrappedValue,
+           case let .local(selectedName) = currentModel {
+            return modelName == selectedName
+        } else {
+            return false
         }
     }
 }

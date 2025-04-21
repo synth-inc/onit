@@ -9,7 +9,7 @@ import Defaults
 import SwiftUI
 
 struct GeneratedToolbar: View {
-    @Environment(\.model) var model
+    @Environment(\.windowState) private var state
     @Default(.mode) var mode
 
     var prompt: Prompt
@@ -42,7 +42,9 @@ struct GeneratedToolbar: View {
     var regenerate: some View {
         IconButton(
             icon: .arrowsSpin,
-            action: { model.generate(prompt) },
+            action: {
+                state.generate(prompt)
+            },
             tooltipPrompt: "Retry"
         )
     }
@@ -72,7 +74,8 @@ struct GeneratedToolbar: View {
             if prompt.generationIndex != -1 && !prompt.responses.isEmpty {
                 let text = prompt.sortedResponses[prompt.generationIndex].text
                 HighlightHintWindowController.shared.insertText(text)
-                model.closePanel()
+                
+                state.closePanel()
             } else {
                 print("Not generated: \(prompt.generationState ?? .done)")
             }
@@ -109,10 +112,8 @@ struct GeneratedToolbar: View {
 
 #if DEBUG
     #Preview {
-        ModelContainerPreview {
-            // TODO bring 'em back
-            //        GeneratedToolbar()
-            //            .padding()
-        }
+        // TODO bring 'em back
+        //        GeneratedToolbar()
+        //            .padding()
     }
 #endif

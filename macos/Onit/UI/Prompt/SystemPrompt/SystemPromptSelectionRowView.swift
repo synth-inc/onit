@@ -10,14 +10,17 @@ import KeyboardShortcuts
 import SwiftUI
 
 struct SystemPromptSelectionRowView: View {
-    @Default(.systemPromptId) var systemPromptId
+    @Environment(\.windowState) var windowState
     
     var prompt: SystemPrompt
     
     var body: some View {
+        let isSelected: Bool = windowState.systemPromptId == prompt.id
+        
         TextButton(
             text: prompt.name,
-            action: selectPrompt
+            action: selectPrompt,
+            fontColor: isSelected ? .blue300 : .white
         ) {
             if let shortcut = KeyboardShortcuts.Name(prompt.id).shortcut?.native {
                 KeyboardShortcutView(shortcut: shortcut, characterWidth: 12, spacing: 3)
@@ -32,9 +35,9 @@ struct SystemPromptSelectionRowView: View {
 
 extension SystemPromptSelectionRowView {
     func selectPrompt() {
-        systemPromptId = prompt.id
         prompt.lastUsed = Date()
-        SystemPromptState.shared.userSelectedPrompt = true
+        windowState.systemPromptId = prompt.id
+        windowState.systemPromptState.userSelectedPrompt = true
     }
 }
 

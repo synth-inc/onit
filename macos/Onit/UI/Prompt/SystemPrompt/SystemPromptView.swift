@@ -10,9 +10,8 @@ import SwiftData
 import SwiftUI
 
 struct SystemPromptView: View {
+    @Environment(\.windowState) var windowState
     @Environment(\.modelContext) var modelContext
-    @Default(.systemPromptId) private var systemPromptId
-    @Bindable private var state = SystemPromptState.shared
     
     @State private var showSelection: Bool = false
     @State private var showDetail: Bool = false
@@ -56,7 +55,7 @@ struct SystemPromptView: View {
                 .frame(width: 4)
             
             Button {
-                SystemPromptState.shared.shouldShowSystemPrompt = false
+                windowState.systemPromptState.shouldShowSystemPrompt = false
             } label: {
                 Image(.remove)
                     .resizable()
@@ -65,10 +64,10 @@ struct SystemPromptView: View {
             }
         }
         .popover(isPresented: .init(
-            get: { showSelection || state.shouldShowSelection },
-            set: { 
+            get: { showSelection || windowState.systemPromptState.shouldShowSelection },
+            set: {
                 showSelection = $0
-                state.shouldShowSelection = $0
+                windowState.systemPromptState.shouldShowSelection = $0
             }
         ), arrowEdge: .leading) {
             SystemPromptSelectionView(showNewPrompt: $showNewPrompt)
@@ -85,7 +84,7 @@ struct SystemPromptView: View {
         .onChange(of: shouldSavePrompt) { _, new in
             if new { addPrompt() }
         }
-        .onChange(of: systemPromptId, initial: true) { _, systemPromptId in
+        .onChange(of: windowState.systemPromptId, initial: true) { _, systemPromptId in
             guard let prompts = try? modelContext.fetch(FetchDescriptor<SystemPrompt>()),
                   let prompt = prompts.first(where: { $0.id == systemPromptId }) else {
                 selectedPrompt = .outputOnly
@@ -115,7 +114,7 @@ struct SystemPromptView: View {
         
         KeyboardShortcutsManager.register(systemPrompt: promptToAdd)
         
-        systemPromptId = promptToAdd.id
+        windowState.systemPromptId = promptToAdd.id
         
         promptToAdd = SystemPrompt()
         shouldSavePrompt = false

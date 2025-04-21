@@ -2,16 +2,14 @@ import Defaults
 import SwiftUI
 
 struct ChatView: View {
-    @Environment(\.model) var model
-
-    @Default(.availableLocalModels) var availableLocalModels
+    @Environment(\.windowState) private var state
     
     private var shouldShowSystemPrompt: Bool {
-        model.currentChat?.systemPrompt == nil && SystemPromptState.shared.shouldShowSystemPrompt
+        state.currentChat?.systemPrompt == nil && state.systemPromptState.shouldShowSystemPrompt
     }
     
     private var currentPromptsCount: Int {
-        if let currentPrompts = model.currentPrompts {
+        if let currentPrompts = state.currentPrompts {
             return currentPrompts.count
         } else {
             return 0
@@ -22,7 +20,7 @@ struct ChatView: View {
         VStack(alignment: .leading, spacing: 0) {
             SetUpDialogs()
             
-            systemPrompts
+            systemPrompt
             
             ChatsView(currentPromptsCount: currentPromptsCount)
             
@@ -41,15 +39,19 @@ struct ChatView: View {
 // MARK: - Child Components
 
 extension ChatView {
-    var systemPrompts: some View {
+    var systemPrompt: some View {
         Group {
-            if let systemPrompt = model.currentChat?.systemPrompt {
+            if let systemPrompt = state.currentChat?.systemPrompt {
                 ChatSystemPromptView(systemPrompt: systemPrompt)
+                
+                if currentPromptsCount > 0 {
+                    PromptDivider()
+                }
             }
             
-            if currentPromptsCount > 0 { PromptDivider() }
-            
-            if shouldShowSystemPrompt { SystemPromptView() }
+            if shouldShowSystemPrompt {
+                SystemPromptView()
+            }
         }
     }
 }

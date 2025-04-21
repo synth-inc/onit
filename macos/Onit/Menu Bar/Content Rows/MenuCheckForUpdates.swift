@@ -9,7 +9,7 @@ import Sparkle
 import SwiftUI
 
 struct MenuCheckForUpdates: View {
-    @Environment(\.model) var model
+    @Environment(\.appState) var appState
     @State var checkUpdates: CheckForUpdatesViewModel?
 
     var disabled: Bool {
@@ -19,7 +19,7 @@ struct MenuCheckForUpdates: View {
 
     var body: some View {
         MenuBarRow {
-            model.updater.updater.checkForUpdates()
+            appState.updater.updater.checkForUpdates()
         } leading: {
             Text("Check for updates...")
                 .padding(.horizontal, 10)
@@ -28,7 +28,7 @@ struct MenuCheckForUpdates: View {
         }
         .disabled(disabled)
         .task {
-            checkUpdates = CheckForUpdatesViewModel(updater: model.updater.updater)
+            checkUpdates = CheckForUpdatesViewModel(updater: appState.updater.updater)
         }
     }
 }

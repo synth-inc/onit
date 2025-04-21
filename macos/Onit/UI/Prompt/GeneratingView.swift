@@ -8,7 +8,8 @@
 import SwiftUI
 
 struct GeneratingView: View {
-    @Environment(\.model) var model
+    @Environment(\.windowState) private var state
+    
     var prompt: Prompt
 
     var delete: KeyboardShortcut {
@@ -20,8 +21,8 @@ struct GeneratingView: View {
             Spacer()
             
             Button {
-                model.cancelGenerate()
-                model.textFocusTrigger.toggle()
+                state.cancelGenerate()
+                state.textFocusTrigger.toggle()
             } label: {
                 VStack(spacing: 12) {
                     icon
@@ -53,8 +54,6 @@ struct GeneratingView: View {
 
 #if DEBUG
     #Preview {
-        ModelContainerPreview {
-            //        GeneratingView()
-        }
+        //        GeneratingView()
     }
 #endif

@@ -9,9 +9,9 @@ import KeyboardShortcuts
 import SwiftUI
 
 struct PaperclipButton: View {
-    @Environment(\.model) var model
+    @Environment(\.appState) private var appState
+    @Environment(\.windowState) private var state
     @ObservedObject var featureFlagsManager = FeatureFlagManager.shared
-    @ObservedObject var notificationsManager = AccessibilityNotificationsManager.shared
     @AppStorage("closedAutocontext") private var closedAutocontext = false
 
     var accessibilityAutoContextEnabled: Bool {
@@ -27,7 +27,7 @@ struct PaperclipButton: View {
                 tooltipPrompt: accessibilityAutoContextEnabled ? "Add context" : "Upload file"
             )
 
-            if model.pendingContextList.isEmpty {
+            if state.pendingContextList.isEmpty {
                 if !accessibilityAutoContextEnabled && !closedAutocontext {
                     EnableAutocontextTag()
                 } else if accessibilityAutoContextEnabled {
@@ -66,17 +66,18 @@ struct PaperclipButton: View {
     private func handleAddContext() {
         if accessibilityAutoContextEnabled {
             OverlayManager.shared.captureClickPosition()
-            OverlayManager.shared.showOverlay(model: model, content: ContextPickerView())
+            let view = ContextPickerView()
+                .environment(\.appState, appState)
+                .environment(\.windowState, state)
+            OverlayManager.shared.showOverlay(content: view)
         } else {
-            model.showFileImporter = true
+            state.showFileImporter = true
         }
     }
 }
 
 #if DEBUG
     #Preview {
-        ModelContainerPreview {
-            PaperclipButton()
-        }
+        PaperclipButton()
     }
 #endif

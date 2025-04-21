@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct ContextItem: View {
-    @Environment(\.model) var model
+    @Environment(\.windowState) private var state
 
     var item: Context
     var isEditing: Bool = true
@@ -19,7 +19,9 @@ struct ContextItem: View {
             case .web(_, _, _):
                 WebContextItem(
                     item: item,
-                    isEditing: isEditing
+                    isEditing: isEditing,
+                    showContextWindow: showContextWindow,
+                    removeContextItem: removeContextItem
                 )
             case .auto:
                 TagButton(
@@ -27,15 +29,15 @@ struct ContextItem: View {
                     text: name,
                     caption: item.fileType,
                     tooltip: "View auto-context file",
-                    action: { model.showContextWindow(context: item) },
-                    closeAction: { model.deleteContextItem(item: item) }
+                    action: showContextWindow,
+                    closeAction: removeContextItem
                 )
             default:
                 TagButton(
                     child: ContextImage(context: item),
                     text: name,
                     caption: item.fileType,
-                    closeAction: { model.deleteContextItem(item: item) }
+                    closeAction: removeContextItem
                 )
             }
         }
@@ -43,8 +45,8 @@ struct ContextItem: View {
 
     var name: String {
         switch item {
-        case .auto(let appName, _):
-            appName
+        case .auto(let autoContext):
+            autoContext.appName
         case .file(let url), .image(let url):
             url.lastPathComponent
         case .error(_, let error):
@@ -59,12 +61,28 @@ struct ContextItem: View {
     }
 }
 
+// MARK: - Private Functions
+
+extension ContextItem {
+    private func showContextWindow() {
+        ContextWindowsManager.shared.showContextWindow(
+            windowState: state,
+            context: item
+        )
+    }
+    
+    private func removeContextItem() {
+        ContextWindowsManager.shared.deleteContextItem(
+            item: item
+        )
+        state.removeContext(context: item)
+    }
+}
+
 // MARK: - Preview
 
 #if DEBUG
     #Preview {
-        ModelContainerPreview {
-            ContextItem(item: .file(URL(fileURLWithPath: "")))
-        }
+        ContextItem(item: .file(URL(fileURLWithPath: "")))
     }
 #endif

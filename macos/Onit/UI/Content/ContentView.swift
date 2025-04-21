@@ -9,82 +9,68 @@ import Defaults
 import SwiftUI
 
 struct ContentView: View {
-    @Environment(\.model) var model
+    @Environment(\.windowState) private var state
+    
     @Default(.panelWidth) var panelWidth
     @Default(.isRegularApp) var isRegularApp
-    @Default(.isPanelExpanded) var isPanelExpanded: Bool
     
     static let idealWidth: CGFloat = 400
-    static let bottomPadding: CGFloat = 100
-    
-    @State var screenHeight: CGFloat = NSScreen.main?.visibleFrame.height ?? 0
-    @State private var contentHeight: CGFloat = 0
-
-//    var maxHeight: CGFloat {
-//        guard screenHeight != 0 else { return 0 }
-//        return screenHeight - ContentView.bottomPadding
-//    }
-    
-    private var maxHeight: CGFloat {
-        guard !model.resizing, screenHeight != 0 else { return 0 }
-        
-        let availableHeight =
-            screenHeight -
-            model.headerHeight -
-            model.inputHeight -
-            model.setUpHeight -
-            model.systemPromptHeight -
-            ContentView.bottomPadding
-        
-        return availableHeight
-    }
-    
-    private var appHeight: CGFloat {
-        return isRegularApp ?
-            maxHeight :
-            (isPanelExpanded ? maxHeight : min(contentHeight, maxHeight))
-    }
-    
-    private var toolbarPaddingTop: CGFloat {
-        isRegularApp ? -28 : 0
-    }
+    static let bottomPadding: CGFloat = 0
     
     private var showFileImporterBinding: Binding<Bool> {
         Binding(
-            get: { self.model.showFileImporter },
-            set: { self.model.showFileImporter = $0 }
+            get: { state.showFileImporter },
+            set: { state.showFileImporter = $0 }
         )
     }
 
     var body: some View {
-        ZStack(alignment: .top) {
-            VStack(alignment: .leading, spacing: 0) {
-                Toolbar()
-                    .padding(.top, toolbarPaddingTop)
-                
-                PromptDivider()
-                
-                ChatView()
+        HStack(spacing: -TetheredButton.width / 2) {
+            if isRegularApp { TetheredButton() }
+            
+            ZStack(alignment: .top) {
+                VStack(spacing: 0) {
+                    if !isRegularApp { Toolbar() }
+                    else { Spacer().frame(height: 38) }
+                    
+                    PromptDivider()
+                    
+                    if !isRegularApp { ChatView() }
+                    else if state.showChatView { ChatView().transition(.opacity) }
+                    else { Spacer() }
+                }
             }
-        }
-        .trackScreenHeight($screenHeight)
-        .frame(
-            minWidth: 325,
-            idealWidth: ContentView.idealWidth,
-            maxHeight: maxHeight
-        )
-        .frame(height: appHeight)
-        .background(Color.black)
-        .overlay {
-            RoundedRectangle(cornerRadius: 14)
-                .strokeBorder(.gray600, lineWidth: 1)
-                .edgesIgnoringSafeArea(.top)
+            .background(Color.black)
+            .addBorder(
+                cornerRadius: 14,
+                lineWidth: 2,
+                stroke: .gray600
+            )
+            .edgesIgnoringSafeArea(.top)
         }
         .buttonStyle(PlainButtonStyle())
+        .toolbar {
+            ToolbarItem(placement: .navigation) {
+                if isRegularApp { ToolbarAddButton() }
+                else { EmptyView() }
+            }
+            #if DEBUG
+            ToolbarItem(placement: .automatic) { TetheredToAppView() }
+            #endif
+            ToolbarItem(placement: .automatic) { Spacer() }
+            ToolbarItem(placement: .primaryAction) {
+                if isRegularApp { Toolbar() }
+                else { EmptyView() }
+            }
+        }
+        .simultaneousGesture(
+            TapGesture(count: 1)
+                .onEnded({ state.handlePanelClicked() })
+        )
         .gesture(
             DragGesture(minimumDistance: 1)
                 .onEnded { value in
-                    if let panel = model.panel {
+                    if let panel = state.panel {
                         panelWidth = panel.frame.width
                     }
                 }
@@ -96,12 +82,13 @@ struct ContentView: View {
         ) { result in
             handleFileImport(result)
         }
+        .addAnimation(dependency: state.showChatView)
     }
 
     private func handleFileImport(_ result: Result<[URL], any Error>) {
         switch result {
         case .success(let urls):
-            model.addContext(urls: urls)
+            state.addContext(urls: urls)
         case .failure(let error):
             print(error.localizedDescription)
         }
@@ -109,9 +96,7 @@ struct ContentView: View {
 }
 
 #if DEBUG
-    #Preview {
-        ModelContainerPreview {
-            ContentView()
-        }
-    }
+#Preview {
+    ContentView()
+}
 #endif

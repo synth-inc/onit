@@ -8,18 +8,19 @@
 import SwiftUI
 
 struct InputButtons: View {
-    @Environment(\.model) var model
+    @Environment(\.windowState) private var state
+    
     @Binding var inputExpanded: Bool
 
     var input: Input
 
     var body: some View {
-        @Bindable var model = model
+        @Bindable var state = state
 
         Group {
-            if input == model.pendingInput {
+            if input == state.pendingInput {
                 Button {
-                    model.pendingInput = nil
+                    state.pendingInput = nil
                 } label: {
                     Image(.smallRemove)
                         .renderingMode(.template)
@@ -45,8 +46,6 @@ struct InputButtons: View {
 
 #if DEBUG
     #Preview {
-        ModelContainerPreview {
-            InputButtons(inputExpanded: .constant(true), input: .sample)
-        }
+        InputButtons(inputExpanded: .constant(true), input: .sample)
     }
 #endif

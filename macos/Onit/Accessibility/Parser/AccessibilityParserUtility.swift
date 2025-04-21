@@ -26,8 +26,8 @@ class AccessibilityParserUtility {
     ) -> [String: String] {
         var results: [String: String] = [:]
 
-        guard let currentScreen = NSScreen.main else {
-            print("No main screen found.")
+        guard let currentScreen = element.getFrame(convertedToGlobalCoordinateSpace: true)?.findScreen() else {
+            log.error("Cannot find screen for element")
 
             return [:]
         }
@@ -44,7 +44,7 @@ class AccessibilityParserUtility {
             }
 
             // Skip off-screen element
-            if let frame = currentElement.frame(),
+            if let frame = currentElement.getFrame(convertedToGlobalCoordinateSpace: true),
                 frame.width <= 0 || frame.height <= 0
                     || !currentScreen.visibleFrame.intersects(frame)
             {

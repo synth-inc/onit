@@ -2,7 +2,7 @@ import SwiftUI
 import Defaults
 
 struct WebSearchButton: View {
-    @Environment(\.model) var model
+    @Environment(\.appState) var appState
     @Environment(\.openSettings) var openSettings
     @State private var showingWebSearchAPIKeyAlert = false
 
@@ -23,7 +23,7 @@ struct WebSearchButton: View {
         .help(webSearchButtonHelpText)
         .alert("API Token Required", isPresented: $showingWebSearchAPIKeyAlert) {
             Button("Open Settings") {
-                model.setSettingsTab(tab: .webSearch)
+                appState.setSettingsTab(tab: .webSearch)
                 openSettings()
             }
             Button("Cancel", role: .cancel) {}

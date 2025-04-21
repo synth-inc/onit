@@ -6,6 +6,7 @@
 //
 
 import ApplicationServices
+import Defaults
 import Foundation
 import PostHog
 import SwiftUI
@@ -17,10 +18,13 @@ class AccessibilityNotificationsManager: ObservableObject {
 
     static let shared = AccessibilityNotificationsManager()
 
+    let windowsManager = AccessibilityWindowsManager()
+    
+    private var delegates = NSHashTable<AnyObject>.weakObjects()
+    
     // MARK: - ScreenResult
 
     @Published private(set) var screenResult: ScreenResult = .init()
-    @Published private(set) var activeWindowElement: AXUIElement?
 
     struct ScreenResult {
         struct UserInteractions {
@@ -38,12 +42,14 @@ class AccessibilityNotificationsManager: ObservableObject {
 
     // MARK: - Properties
 
-    private var model: OnitModel?
-
     private var currentSource: String?
 
+    // Transient observers that are started and stopped on app activation/deactivation.
     private var observers: [pid_t: AXObserver] = [:]
-
+    
+    // Persistent observers that are started once per pid and remain until the app quits.
+    private var persistentObservers: [pid_t: AXObserver] = [:]
+    
     private var selectedSource: String?
 
     private var selectedTextByApp: [String: String] = [:]
@@ -53,17 +59,35 @@ class AccessibilityNotificationsManager: ObservableObject {
     private var selectionDebounceWorkItem: DispatchWorkItem?
     private var parseDebounceWorkItem: DispatchWorkItem?
 
-    private var timedOutPIDs: Set<pid_t> = []  // Track PIDs that have timed out
+    private var timedOutWindowHash: Set<UInt> = []  // Track window's hash that have timed out
+
+    #if DEBUG
+    private let ignoredAppNames : [String] = ["Xcode"]
+    #else
+    private let ignoredAppNames = []
+    #endif
 
     // MARK: - Initializers
 
-    private init() {}
+    private init() { }
+    
+    // MARK: - Delegates
+    
+    func addDelegate(_ delegate: AccessibilityNotificationsDelegate) {
+        delegates.add(delegate)
+    }
+    
+    func removeDelegate(_ delegate: AccessibilityNotificationsDelegate) {
+        delegates.remove(delegate)
+    }
+    
+    private func notifyDelegates(_ notification: (AccessibilityNotificationsDelegate) -> Void) {
+        for case let delegate as AccessibilityNotificationsDelegate in delegates.allObjects {
+            notification(delegate)
+        }
+    }
 
     // MARK: - Functions
-
-    func setModel(_ model: OnitModel) {
-        self.model = model
-    }
 
     // MARK: Start / Stop
 
@@ -79,6 +103,7 @@ class AccessibilityNotificationsManager: ObservableObject {
         } else {
             handleAppActivation(appName: pid.getAppName(), processID: pid)
             startAccessibilityObservers(for: pid)
+            startPersistentAccessibilityObservers(for: pid) // Start persistent observer
         }
     }
 
@@ -91,6 +116,8 @@ class AccessibilityNotificationsManager: ObservableObject {
 
         currentSource = nil
         observers.removeAll()
+        // Note: Persistent observers are kept until app quits. Optionally, uncomment the following if a cleanup is desired.
+        // stopPersistentAccessibilityObservers()
     }
 
     private func startAppActivationObservers() {
@@ -120,12 +147,18 @@ class AccessibilityNotificationsManager: ObservableObject {
             }
             return
         }
-        // Skip if the PID is our own process
+        
+        // Skip if the PID is our own process or an ignored app
         if pid == getpid() {
-            print("Not setting up observer for our own process.")
+            print("Not setting up observer for our own process")
+        } else if ignoredAppNames.contains(pid.getAppName() ?? "") {
+            print("Not setting up observer for ignored app: \(pid.getAppName() ?? "Unknown")")
+            notifyDelegates { delegate in
+                delegate.accessibilityManager(self, didActivateIgnoredWindow: nil)
+            }
             return
         }
-
+        
         print("Start accessibility observers for PID: \(pid)")
         var observer: AXObserver?
 
@@ -192,9 +225,17 @@ class AccessibilityNotificationsManager: ObservableObject {
                 // TODO: KNA - Investigate on this
                 // Skip if the activated app is our own app
                 // There's an edge case where the panel somehow has a different processId.
+                // I'm also added ignore logic for Xcode because it makes it hard to debug if the process changes everytime a breakpoint is hit. 
                 let appName = Bundle.main.object(forInfoDictionaryKey: "CFBundleName") as? String
-                if app.processIdentifier == getpid() || app.localizedName == appName {
-                    print("Ignoring activation of our own app.")
+                if app.processIdentifier == getpid() || 
+                    app.localizedName == appName {
+                    print("Ignoring activation of our own app")
+                    return
+                } else if ignoredAppNames.contains(app.localizedName ?? "") {
+                    print("Ignoring activation of ignored app: \(app.localizedName ?? "Unknown")")
+                    notifyDelegates { delegate in
+                        delegate.accessibilityManager(self, didActivateIgnoredWindow: nil)
+                    }
                     return
                 }
 
@@ -202,6 +243,7 @@ class AccessibilityNotificationsManager: ObservableObject {
                 self.handleAppActivation(
                     appName: app.localizedName, processID: app.processIdentifier)
                 self.startAccessibilityObservers(for: app.processIdentifier)
+                self.startPersistentAccessibilityObservers(for: app.processIdentifier) // Start persistent observer on activation
             }
         }
     }
@@ -227,9 +269,11 @@ class AccessibilityNotificationsManager: ObservableObject {
         print("\nApplication activated: \(appName ?? "Unknown") \(processID)")
 
         currentSource = appName
+        if let targetWindow = processID.getAXUIElement().findFirstTargetWindow() {
+            handleWindowBounds(for: targetWindow)
+        }
         processSelectedText(selectedText, for: selectedElement)
-        handleWindowBounds(for: processID.getAXUIElement())
-        parseAccessibility(for: processID)
+        retrieveWindowContent(for: processID)
     }
 
     private func handleAccessibilityNotifications(
@@ -238,24 +282,98 @@ class AccessibilityNotificationsManager: ObservableObject {
         dispatchPrecondition(condition: .onQueue(.main))
 
         handleExternalElement(element) { [weak self] elementPid in
+            guard let self = self else { return }
+            
+            log.debug("Received notification: \(notification) \(element.role() ?? "") \(element.title() ?? "")")
             switch notification {
-            case kAXFocusedUIElementChangedNotification:
-                self?.handleFocusChange(for: element)
+            case kAXFocusedWindowChangedNotification:
+                self.handleWindowBounds(for: element)
+            case kAXFocusedUIElementChangedNotification, kAXSelectedColumnsChangedNotification, kAXSelectedRowsChangedNotification:
+                self.handleFocusChange(for: element)
             case kAXSelectedTextChangedNotification:
-                self?.handleSelectionChange(for: element)
+                self.handleSelectionChange(for: element)
             case kAXValueChangedNotification:
-                self?.handleValueChanged(for: element)
-            case kAXSelectedColumnsChangedNotification:
-                print("Selected Columns Changed Notification!")
-                // These handle tabbed interfaces
-                self?.handleFocusChange(for: element)
-            case kAXSelectedRowsChangedNotification:
-                print("Selected Rows Changed Notification!")
-                self?.handleFocusChange(for: element)
-            case kAXWindowMovedNotification, kAXWindowResizedNotification:
-                self?.handleWindowBounds(for: element)
+                self.handleValueChanged(for: element)
+            case kAXWindowMovedNotification:
+                self.handleWindowMoved(for: element)
+            case kAXWindowResizedNotification:
+                self.handleWindowResized(for: element)
+            case kAXWindowCreatedNotification:
+                self.handleCreatedWindowElement(for: element)
+            case kAXUIElementDestroyedNotification:
+                self.handleDetroyedElement(for: element)
             default:
                 break
+            }
+        }
+    }
+    
+    private func handleWindowMoved(for element: AXUIElement) {
+        handleExternalElement(element) { [weak self] elementPid in
+            guard let self = self,
+                  let trackedWindow = self.windowsManager.append(element, pid: elementPid) else { return }
+            
+            notifyDelegates { $0.accessibilityManager(self, didMoveWindow: trackedWindow) }
+        }
+    }
+    
+    private func handleWindowResized(for element: AXUIElement) {
+        handleExternalElement(element) { [weak self] elementPid in
+            guard let self = self,
+                  let trackedWindow = self.windowsManager.append(element, pid: elementPid) else { return }
+            
+            notifyDelegates { $0.accessibilityManager(self, didResizeWindow: trackedWindow) }
+        }
+    }
+    
+    private func handleWindowBounds(for element: AXUIElement) {
+        handleExternalElement(element) { [weak self] elementPid in
+            guard let self = self,
+                  let trackedWindow = self.windowsManager.append(element, pid: elementPid) else { return }
+            
+            notifyDelegates { $0.accessibilityManager(self, didActivateWindow: trackedWindow) }
+        }
+    }
+    
+    func handleCreatedWindowElement(for element: AXUIElement) {
+        handleExternalElement(element) { [weak self] elementPid in
+            guard let self = self,
+                  let trackedWindow = self.windowsManager.append(element, pid: elementPid) else { return }
+            
+            self.notifyDelegates { $0.accessibilityManager(self, didActivateWindow: trackedWindow) }
+        }
+    }
+    
+    func handleDetroyedElement(for element: AXUIElement) {
+        handleExternalElement(element) { [weak self] elementPid in
+            guard let self = self else { return }
+            
+            let foundWindows = self.windowsManager.trackedWindows(for: element)
+            
+            for foundWindow in foundWindows {
+                if foundWindow.element.role() == nil {
+                    guard let trackedWindow = self.windowsManager.remove(foundWindow) else { return }
+                    
+                    notifyDelegates { $0.accessibilityManager(self, didDestroyWindow: trackedWindow) }
+                }
+            }
+        }
+    }
+    
+    func handleMinimizedElement(for element: AXUIElement) {
+        let trackedWindows = self.windowsManager.trackedWindows(for: element)
+        if let firstTrackedWindow = trackedWindows.first {
+            notifyDelegates { delegate in
+                delegate.accessibilityManager(self, didMinimizeWindow: firstTrackedWindow)
+            }
+        }
+    }
+    
+    func handleDeminimizedElement(for element: AXUIElement) {
+        let trackedWindows = self.windowsManager.trackedWindows(for: element)
+        if let firstTrackedWindow = trackedWindows.first {
+            notifyDelegates { delegate in
+                delegate.accessibilityManager(self, didDeminimizeWindow: firstTrackedWindow)
             }
         }
     }
@@ -263,9 +381,7 @@ class AccessibilityNotificationsManager: ObservableObject {
     func handleFocusChange(for element: AXUIElement) {
         handleExternalElement(element) { [weak self] elementPid in
             print("Focus change from pid: \(elementPid)")
-
-            self?.parseAccessibility(for: elementPid)
-            self?.handleWindowBounds(for: element)
+            self?.retrieveWindowContent(for: elementPid)
         }
     }
 
@@ -300,22 +416,109 @@ class AccessibilityNotificationsManager: ObservableObject {
         DispatchQueue.main.asyncAfter(deadline: .now() + Config.debounceInterval, execute: workItem)
     }
     
-    // MARK: - Window resize / move
+    // MARK: Parsing
     
-    private func handleWindowBounds(for element: AXUIElement) {
-        handleExternalElement(element) { [weak self] elementPid in
-            if let window = element.findWindow() {
-                self?.activeWindowElement = window
+    private func retrieveWindowContent(for pid: pid_t) {
+        guard let focusedWindow = pid.getFocusedWindow() else { return }
+        
+        if let (_, state) = TetherAppsManager.shared.states.first(where: { $0.key.hash == CFHash(focusedWindow) }) {
+            Task { @MainActor in
+                if let documentInfo = findDocument(in: focusedWindow) {
+                    handleWindowContent(documentInfo, for: state)
+                    // TODO: KNA - uncomment this to use WebContentFetchService with AXURL
+                } /* else if let urlInfo = await findUrl(in: focusedWindow) {
+                    handleWindowContent(urlInfo, for: state)
+                } */ else {
+                    parseAccessibility(for: pid, in: focusedWindow, state: state)
+                }
             }
         }
     }
+    
+    private func findDocument(in focusedWindow: AXUIElement) -> [String: String]? {
+        let startTime = CFAbsoluteTimeGetCurrent()
+        var documentValue: CFTypeRef?
+        
+        let hasDocument = AXUIElementCopyAttributeValue(focusedWindow, kAXDocumentAttribute as CFString, &documentValue) == .success
+        
+        if hasDocument, let document = documentValue as? String,
+            document.hasPrefix("file:///"), let fileURL = URL(string: document) {
+            do {
+                let appName = focusedWindow.parent()?.title() ?? ""
+                let appTitle = focusedWindow.title() ?? ""
+                let content = try String(contentsOf: fileURL, encoding: .utf8)
+                
+                return [
+                    AccessibilityParsedElements.applicationName: appName,
+                    AccessibilityParsedElements.applicationTitle: appTitle,
+                    AccessibilityParsedElements.elapsedTime: "\(CFAbsoluteTimeGetCurrent() - startTime)",
+                    "document": content
+                ]
+            } catch {
+                return nil
+            }
+        }
+        
+        return nil
+    }
+    
+    private func findUrl(in focusedWindow: AXUIElement) async -> [String: String]? {
+        func findURLInChildren(element: AXUIElement, depth: Int = 0) -> URL? {
+            if depth >= maxDepth {
+                return nil
+            }
+            
+            if let children = element.children() {
+                for child in children {
+                    if child.role() == "AXWebArea", let url = child.url() {
+                        return url
+                    }
+                    
+                    if let url = findURLInChildren(element: child, depth: depth + 1) {
+                        return url
+                    }
+                }
+            }
+            
+            return nil
+        }
+        
+        func processUrl(_ url: URL, from element: AXUIElement) async -> [String: String]? {
+            do {
+                let appName = element.parent()?.title() ?? ""
+                let appTitle = element.title() ?? ""
+                
+                let (_, content) = try await WebContentFetchService.fetchWebpageContent(websiteUrl: url)
+                
+                return [
+                    AccessibilityParsedElements.applicationName: appName,
+                    AccessibilityParsedElements.applicationTitle: appTitle,
+                    AccessibilityParsedElements.elapsedTime: "\(CFAbsoluteTimeGetCurrent() - startTime)",
+                    "url": url.absoluteString,
+                    "content": content
+                ]
+            } catch {
+                print("Error fetching webpage content: \(error)")
+                return nil
+            }
+        }
+        
+        let maxDepth = 5
+        let startTime = CFAbsoluteTimeGetCurrent()
+        
+        if let url = findURLInChildren(element: focusedWindow) {
+            return await processUrl(url, from: focusedWindow)
+        }
+        
+        return nil
+    }
 
-    // MARK: Parsing
-
-    private func parseAccessibility(for pid: pid_t) {
-        // Check if the PID has previously timed out
-        if timedOutPIDs.contains(pid) {
-            print("Skipping parsing for PID \(pid) due to previous timeout.")
+    private func parseAccessibility(for pid: pid_t, in window: AXUIElement, state: OnitPanelState) {
+        let windowHash = CFHash(window)
+        let appName = window.parent()?.title() ?? "Unknown"
+        
+        if timedOutWindowHash.contains(windowHash) {
+            print("Skipping parsing for window's hash \(windowHash) due to previous timeout.")
             return
         }
 
@@ -329,12 +532,15 @@ class AccessibilityNotificationsManager: ObservableObject {
         let workItem = DispatchWorkItem { [weak self] in
             guard let self = self else { return }
             
-            Task.detached(priority: .background) { [pid, weak self] in
+            Task.detached(priority: .background) { [weak self] in
                 guard let self = self else { return }
+                
                 do {
-                    var results = try await withThrowingTaskGroup(of: [String: String]?.self) { group -> [String: String]? in
+                    let results = try await withThrowingTaskGroup(of: [String: String]?.self) { group -> [String: String]? in
                         group.addTask {
-                            return await AccessibilityParser.shared.getAllTextInElement(appElement: pid.getAXUIElement())
+                            guard let focusedWindow = pid.getFocusedWindow() else { return nil }
+                            
+                            return await AccessibilityParser.shared.getAllTextInElement(windowElement: focusedWindow)
                         }
                         group.addTask {
                             try await Task.sleep(nanoseconds: 10_000_000_000) // 10 second timeout
@@ -345,27 +551,13 @@ class AccessibilityNotificationsManager: ObservableObject {
                         return firstCompleted
                     }
                     
-                    let elapsedTime = results?[AccessibilityParsedElements.elapsedTime]
-                    let appName = results?[AccessibilityParsedElements.applicationName]
-                    let appTitle = results?[AccessibilityParsedElements.applicationTitle]
-                    
-                    results?.removeValue(forKey: AccessibilityParsedElements.elapsedTime)
-                    results?.removeValue(forKey: AccessibilityParsedElements.applicationName)
-                    results?.removeValue(forKey: AccessibilityParsedElements.applicationTitle)
-                    
                     await MainActor.run {
-                        self.screenResult.elapsedTime = elapsedTime
-                        self.screenResult.applicationName = appName
-                        self.screenResult.applicationTitle = appTitle
-                        self.screenResult.others = results
-                        self.screenResult.errorMessage = nil
-                        self.showDebug()
+                        self.handleWindowContent(results, for: state)
                     }
                 } catch {
-                    let appName = pid.getAppName() ?? "Unknown"
                     await MainActor.run {
                         print("Accessibility timeout")
-                        self.timedOutPIDs.insert(pid)
+                        self.timedOutWindowHash.insert(windowHash)
                         PostHogSDK.shared.capture("accessibilityParseTimedOut", properties: ["applicationName": appName])
                         self.screenResult = .init()
                         self.screenResult.errorMessage = "Timeout occurred, could not read application in reasonable amount of time."
@@ -378,6 +570,28 @@ class AccessibilityNotificationsManager: ObservableObject {
         parseDebounceWorkItem = workItem
         
         DispatchQueue.main.asyncAfter(deadline: .now() + Config.debounceInterval, execute: workItem)
+    }
+    
+    private func handleWindowContent(_ results: [String: String]?, for state: OnitPanelState) {
+        let elapsedTime = results?[AccessibilityParsedElements.elapsedTime]
+        let appName = results?[AccessibilityParsedElements.applicationName]
+        let appTitle = results?[AccessibilityParsedElements.applicationTitle]
+        var results = results
+        
+        results?.removeValue(forKey: AccessibilityParsedElements.elapsedTime)
+        results?.removeValue(forKey: AccessibilityParsedElements.applicationName)
+        results?.removeValue(forKey: AccessibilityParsedElements.applicationTitle)
+        
+        self.screenResult.elapsedTime = elapsedTime
+        self.screenResult.applicationName = appName
+        self.screenResult.applicationTitle = appTitle
+        self.screenResult.others = results
+        self.screenResult.errorMessage = nil
+        self.showDebug()
+        
+        if Defaults[.automaticallyAddAutoContext] && results != nil {
+            state.addAutoContext()
+        }
     }
 
     // MARK: Value Changed
@@ -423,7 +637,7 @@ class AccessibilityNotificationsManager: ObservableObject {
         else {
 
             selectedSource = nil
-            model?.pendingInput = nil
+            TetherAppsManager.shared.state.pendingInput = nil
             HighlightHintWindowController.shared.hide()
 
             return
@@ -435,7 +649,7 @@ class AccessibilityNotificationsManager: ObservableObject {
         let bound = selectedElement.selectedTextBound()
         HighlightHintWindowController.shared.show(bound)
 
-        model?.pendingInput = Input(selectedText: selectedText, application: currentSource ?? "")
+        TetherAppsManager.shared.state.pendingInput = Input(selectedText: selectedText, application: currentSource ?? "")
     }
 
     private func extractSelectedText(from element: AXUIElement) -> String? {
@@ -485,7 +699,7 @@ class AccessibilityNotificationsManager: ObservableObject {
         guard AXUIElementGetPid(element, &elementPid) == .success, elementPid != getpid() else {
             return
         }
-
+        
         callback(elementPid)
     }
 
@@ -527,9 +741,90 @@ class AccessibilityNotificationsManager: ObservableObject {
             debugText += "\nNo additional data available.\n"
         }
 
-        if let model = self.model {
-            model.debugText = debugText
+        DebugManager.shared.debugText = debugText
+    }
+
+    // MARK: - Persistent Observer Methods
+
+    /// Starts a persistent AXObserver for the given process identifier that listens for persistentNotifications.
+    private func startPersistentAccessibilityObservers(for pid: pid_t) {
+        guard Thread.isMainThread else {
+            DispatchQueue.main.async {
+                self.startPersistentAccessibilityObservers(for: pid)
+            }
+            return
+        }
+        // Skip if observer already exists.
+        if persistentObservers[pid] != nil {
+            return
+        }
+        if pid == getpid() {
+            print("Not setting up persistent observer for our own process")
+            return
+        }
+        
+        print("Start persistent observer for PID: \(pid)")
+        var observer: AXObserver?
+        let persistentObserverCallback: AXObserverCallbackWithInfo = { observer, element, notification, userInfo, refcon in
+            DispatchQueue.main.async {
+                let instance = Unmanaged<AccessibilityNotificationsManager>.fromOpaque(refcon!).takeUnretainedValue()
+                instance.handlePersistentAccessibilityNotifications(notification as String, info: userInfo as! [String: Any], element: element, observer: observer)
+            }
+        }
+        let result = AXObserverCreateWithInfoCallback(pid, persistentObserverCallback, &observer)
+        if result == .success, let observer = observer {
+            persistentObservers[pid] = observer
+            let refCon = Unmanaged.passUnretained(self).toOpaque()
+            for notification in Config.persistentNotifications {
+                AXObserverAddNotification(
+                    observer,
+                    pid.getAXUIElement(),
+                    notification as CFString,
+                    refCon)
+            }
+            CFRunLoopAddSource(CFRunLoopGetMain(), AXObserverGetRunLoopSource(observer), .defaultMode)
+            print("Persistent observer registered for PID: \(pid)")
+        } else {
+            AccessibilityAnalytics.logObserverError(
+                errorCode: result.rawValue,
+                pid: pid
+            )
         }
     }
+    
+    /// Handles the notifications received by the persistent observer.
+    private func handlePersistentAccessibilityNotifications(
+        _ notification: String, info: [String: Any], element: AXUIElement, observer: AXObserver
+    ) {
+        // Handle persistent notifications as needed.
+        // For now, we simply log them. You could also notify a different delegate method if required.
+        handleExternalElement(element) { [weak self] elementPid in
+            guard let self = self else { return }
+            print("Received Persistent notification: \(notification)")
+            switch notification {
+            case kAXWindowMiniaturizedNotification:
+                handleMinimizedElement(for: element)
+            case kAXWindowDeminiaturizedNotification:
+                handleDeminimizedElement(for: element)
+            default:
+                break
+            }
+        }
+    }
+    
+    /// Optionally, stops all persistent observers (for example, when the app is quitting).
+    private func stopPersistentAccessibilityObservers() {
+        for (pid, observer) in persistentObservers {
+            let runLoopSource = AXObserverGetRunLoopSource(observer)
+            CFRunLoopRemoveSource(CFRunLoopGetMain(), runLoopSource, .defaultMode)
+            for notification in Config.persistentNotifications {
+                AXObserverRemoveNotification(observer, pid.getAXUIElement(), notification as CFString)
+            }
+        }
+        persistentObservers.removeAll()
+    }
+    
+    deinit {
+//        stopPersistentAccessibilityObservers()
+    }
 }
-

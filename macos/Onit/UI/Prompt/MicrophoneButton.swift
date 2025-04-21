@@ -9,7 +9,7 @@ import Defaults
 import SwiftUI
 
 struct MicrophoneButton: View {
-    @Environment(\.model) var model
+    @Environment(\.windowState) private var state
     
     @Default(.openAIToken) var openAIToken
     @Default(.isOpenAITokenValidated) var isOpenAITokenValidated
@@ -162,10 +162,10 @@ extension MicrophoneButton {
                 
                 if !Task.isCancelled {
                     DispatchQueue.main.async {
-                        model.pendingInstruction.insert(
+                        state.pendingInstruction.insert(
                             contentsOf: transcription,
-                            at: model.pendingInstruction.index(
-                                    model.pendingInstruction.startIndex,
+                            at: state.pendingInstruction.index(
+                                    state.pendingInstruction.startIndex,
                                     offsetBy: 0
                                 )
                         )

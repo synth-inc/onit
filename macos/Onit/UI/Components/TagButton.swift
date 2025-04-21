@@ -81,7 +81,7 @@ struct TagButton: View {
         .frame(maxWidth: maxWidth > 0 ? maxWidth : nil)
         .frame(height: 22)
         .background(setBackground())
-        .scaleEffect(isPressed ? 0.99 : 1)
+        .scaleEffect(setScale())
         .opacity(setOpacity())
         .addBorder(cornerRadius: 4, stroke: .gray400)
         .addAnimation(dependency: $isHovered.wrappedValue)
@@ -101,20 +101,17 @@ struct TagButton: View {
 // MARK: - Private Functions
 extension TagButton {
     private func setBackground() -> Color {
-        if let _ = action {
-            return isHovered ? .gray400 : .gray500
-            
-        } else {
-            return .gray500
-        }
+        if let _ = action { return isHovered ? .gray400 : .gray500 }
+        else { return .gray500 }
+    }
+    
+    private func setScale() -> CGFloat {
+        if let _ = action { return isPressed ? 0.99 : 1 }
+        else { return 1 }
     }
     
     private func setOpacity() -> Double {
-        if let _ = action {
-            return isPressed ? 0.7 : 1
-            
-        } else {
-            return 1
-        }
+        if let _ = action { return isPressed ? 0.7 : 1 }
+        else { return 1 }
     }
 }

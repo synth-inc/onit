@@ -21,10 +21,13 @@ class AccessibilityParserBase: AccessibilityParserLogic {
     func parse(element: AXUIElement) -> [String: String]? {
         if let role = element.role(), let title = element.title() {
             switch role {
-            case kAXApplicationRole:
-                return [AccessibilityParsedElements.applicationName: title]
             case kAXWindowRole:
-                return [AccessibilityParsedElements.applicationTitle: title]
+                let appName = element.parent()?.title() ?? "Unknown"
+                
+                return [
+                    AccessibilityParsedElements.applicationName: appName,
+                    AccessibilityParsedElements.applicationTitle: title
+                ]
             default:
                 return nil
             }

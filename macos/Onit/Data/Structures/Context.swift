@@ -7,8 +7,15 @@
 
 import Foundation
 
+struct AutoContext: Codable, Hashable {
+    let appName: String
+    let appHash: UInt
+    let appTitle: String
+    let appContent: [String: String]
+}
+
 enum Context {
-    case auto(String, [String: String])
+    case auto(AutoContext)
     case file(URL)
     case image(URL)
     case tooBig(URL)
@@ -82,8 +89,8 @@ enum Context {
 }
 
 extension Context {
-    init(appName: String, appContent: [String: String]) {
-        self = .auto(appName, appContent)
+    init(appName: String, appHash: UInt, appTitle: String, appContent: [String: String]) {
+        self = .auto(AutoContext(appName: appName, appHash: appHash, appTitle: appTitle, appContent: appContent))
     }
     
     init(title: String, content: String, source: String, url: URL? = nil) {
@@ -123,7 +130,7 @@ extension Context {
 
 extension Context: Codable {
     enum CodingKeys: String, CodingKey {
-        case appName, appContent, type, url, error, websiteUrl, websiteTitle, title, content, source
+        case autoContext, type, url, error, websiteUrl, websiteTitle, title, content, source
     }
     enum ContextType: String, Codable {
         case auto, file, image, tooBig, error, web, webSearch
@@ -135,9 +142,8 @@ extension Context: Codable {
 
         switch type {
         case .auto:
-            let appName = try container.decode(String.self, forKey: .appName)
-            let appContent = try container.decode([String: String].self, forKey: .appContent)
-            self = .auto(appName, appContent)
+            let autoContext = try container.decode(AutoContext.self, forKey: .autoContext)
+            self = .auto(autoContext)
         case .file:
             let url = try container.decode(URL.self, forKey: .url)
             self = .file(url)
@@ -171,9 +177,8 @@ extension Context: Codable {
         var container = encoder.container(keyedBy: CodingKeys.self)
 
         switch self {
-        case .auto(let appName, let appContent):
-            try container.encode(appName, forKey: .appName)
-            try container.encode(appContent, forKey: .appContent)
+        case .auto(let autoContext):
+            try container.encode(autoContext, forKey: .autoContext)
             try container.encode(ContextType.auto, forKey: .type)
         case .file(let url):
             try container.encode(url, forKey: .url)
@@ -217,8 +222,11 @@ extension Context: Equatable, Hashable {
             return url1 == url2
         case (.error(let url1, _), .error(let url2, _)):
             return url1 == url2
-        case (.auto(let appName1, let content1), .auto(let appName2, let content2)):
-            return appName1 == appName2 && content1 == content2
+        case (.auto(let autoContext1), .auto(let autoContext2)):
+            return autoContext1.appName == autoContext2.appName &&
+            autoContext1.appHash == autoContext2.appHash &&
+            autoContext1.appTitle == autoContext2.appTitle &&
+            autoContext1.appContent == autoContext2.appContent
         case (.webSearch(let title1, let content1, let source1, _), .webSearch(let title2, let content2, let source2, _)):
             return title1 == title2 && content1 == content2 && source1 == source2
         case (.web(let websiteUrl1, _, _), .web(let websiteUrl2, _, _)):
@@ -232,9 +240,8 @@ extension Context: Equatable, Hashable {
         switch self {
         case .file(let url), .image(let url), .tooBig(let url), .error(let url, _), .web(let url, _, _):
             hasher.combine(url)
-        case .auto(let appName, let appContent):
-            hasher.combine(appName)
-            hasher.combine(appContent)
+        case .auto(let autoContext):
+            hasher.combine(autoContext)
         case .webSearch(let title, let content, let source, _):
             hasher.combine(title)
             hasher.combine(content)
@@ -304,14 +311,14 @@ extension [Context] {
         var result: [String: String] = [:]
         
         for context in self {
-            if case .auto(let appName, let content) = context {
-                let contentString = content.values.joined(separator: "\n")
-                if let existing = result[appName] {
+            if case .auto(let autoContext) = context {
+                let contentString = autoContext.appContent.values.joined(separator: "\n")
+                if let existing = result[autoContext.appName] {
                     let combined = existing + "\n" + contentString
                     
-                    result[appName] = combined
+                    result[autoContext.appName] = combined
                 } else {
-                    result[appName] = contentString
+                    result[autoContext.appName] = contentString
                 }
             }
         }

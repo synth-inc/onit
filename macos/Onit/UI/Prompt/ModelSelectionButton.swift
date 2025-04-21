@@ -9,23 +9,19 @@ import Defaults
 import SwiftUI
 
 struct ModelSelectionButton: View {
-    @Environment(\.model) var model
+    @Environment(\.windowState) private var state
+    @Environment(\.appState) private var appState
     
     @Default(.mode) var mode
     @Default(.remoteModel) var remoteModel
     @Default(.localModel) var localModel
     
-    var showModelBinding: Binding<Bool> {
-        Binding(
-            get: { self.model.showModels },
-            set: { self.model.showModels = $0 }
-        )
-    }
+    @State private var open: Bool = false
     
     var body: some View {
         TextButton(
             text: text,
-            action: { model.showModels.toggle() },
+            action: { open.toggle() },
             width: 90,
             height: toolbarButtonHeight,
             fillContainer: false,
@@ -37,16 +33,13 @@ struct ModelSelectionButton: View {
         ) {
             Image(.smallChevDown)
                 .addIconStyles(
-                    foregroundColor: model.showModels ? .white : .gray100
+                    foregroundColor: open ? .white : .gray100
                 )
-                .addAnimation(dependency: model.showModels)
-                .rotationEffect(.degrees(model.showModels ? 180 : 0))
+                .addAnimation(dependency: open)
+                .rotationEffect(.degrees(open ? 180 : 0))
         }
         .tooltip(prompt: "Change model")
-        .popover(
-            isPresented: showModelBinding,
-            arrowEdge: .bottom
-        )  {
+        .popover(isPresented: $open)  {
             ModelSelectionView()
         }
     }

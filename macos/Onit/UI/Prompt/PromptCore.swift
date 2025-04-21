@@ -10,7 +10,7 @@ import SwiftData
 import SwiftUI
 
 struct PromptCore: View {
-    @Environment(\.model) var model
+    @Environment(\.windowState) private var state
     @Query(sort: \Chat.timestamp, order: .reverse) private var chats: [Chat]
     @Default(.mode) var mode
     
@@ -36,7 +36,7 @@ struct PromptCore: View {
     
     var body: some View {
         VStack(spacing: 0) {
-            if let pendingInput = model.pendingInput {
+            if let pendingInput = state.pendingInput {
                 InputView(input: pendingInput)
             }
             
@@ -61,7 +61,7 @@ struct PromptCore: View {
 extension PromptCore {
     private var contextAndInput: some View {
         VStack(spacing: 8) {
-            FileRow(contextList: model.pendingContextList)
+            FileRow(contextList: state.pendingContextList)
             PromptInput().focused($isFocused)
         }
         .padding(12)
@@ -88,10 +88,10 @@ extension PromptCore {
         Button {
             guard !chats.isEmpty else { return }
 
-            if model.historyIndex + 1 < chats.count {
-                model.historyIndex += 1
-                model.currentChat = chats[model.historyIndex]
-                model.currentPrompts = chats[model.historyIndex].prompts
+            if state.historyIndex + 1 < chats.count {
+                state.historyIndex += 1
+                state.currentChat = chats[state.historyIndex]
+                state.currentPrompts = chats[state.historyIndex].prompts
             }
         } label: {
             EmptyView()
@@ -101,14 +101,14 @@ extension PromptCore {
 
     var downListener: some View {
         Button {
-            if model.historyIndex > 0 {
-                model.historyIndex -= 1
-                model.currentChat = chats[model.historyIndex]
-                model.currentPrompts = chats[model.historyIndex].prompts
-            } else if model.historyIndex == 0 {
-                model.historyIndex = -1
-                model.currentChat = nil
-                model.currentPrompts = nil
+            if state.historyIndex > 0 {
+                state.historyIndex -= 1
+                state.currentChat = chats[state.historyIndex]
+                state.currentPrompts = chats[state.historyIndex].prompts
+            } else if state.historyIndex == 0 {
+                state.historyIndex = -1
+                state.currentChat = nil
+                state.currentPrompts = nil
             }
         } label: {
             EmptyView()
@@ -118,7 +118,7 @@ extension PromptCore {
     
     var newListener: some View {
         Button {
-            model.newChat()
+            state.newChat()
         } label: {
             EmptyView()
         }

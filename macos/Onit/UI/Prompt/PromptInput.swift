@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct PromptInput: View {
-    @Environment(\.model) var model
+    @Environment(\.windowState) private var state
     
     private var detectLinks: Bool = true // TODO remove this once we use PromptInput for prompt editing
     
@@ -21,8 +21,8 @@ struct PromptInput: View {
     
     private var text: Binding<String> {
         Binding(
-            get: { model.pendingInstruction },
-            set: { model.pendingInstruction = $0 }
+            get: { state.pendingInstruction },
+            set: { state.pendingInstruction = $0 }
         )
     }
     
@@ -40,7 +40,7 @@ struct PromptInput: View {
                        text.wrappedValue.append("\n")
                        return .handled
                    } else if press.key == .return {
-                        model.sendAction()
+                        state.sendAction()
                         return .handled
                     } else {
                         return .ignored
@@ -51,10 +51,10 @@ struct PromptInput: View {
             
             heightSetter
         }
-        .onPreferenceChange(ViewHeightKey.self) { newHeight in
+        .onPreferenceChange(HeightListenerKey.self) { newHeight in
             Task { @MainActor in height = newHeight }
         }
-        .opacity(model.websiteUrlsScrapeQueue.isEmpty ? 1 : 0.5)
+        .opacity(state.websiteUrlsScrapeQueue.isEmpty ? 1 : 0.5)
     }
 }
 
@@ -77,7 +77,7 @@ extension PromptInput {
             .background(
                 GeometryReader { geometry in
                     Color.clear.preference(
-                        key: ViewHeightKey.self,
+                        key: HeightListenerKey.self,
                         value: geometry.size.height
                     )
                 }
@@ -87,7 +87,7 @@ extension PromptInput {
 
 // MARK: - Used for dynamically expanding TextEditor height.
 
-struct ViewHeightKey: PreferenceKey {
+struct HeightListenerKey: PreferenceKey {
     static var defaultValue: CGFloat { 0 }
     
     static func reduce(
@@ -123,7 +123,7 @@ extension PromptInput {
                 var textWithoutWebsiteUrls = text.wrappedValue
                 
                 for url in urls {
-                    let pendingContextList = model.getPendingContextList()
+                    let pendingContextList = state.getPendingContextList()
                     
                     let urlExists = pendingContextList.contains { context in
                         if case .web(let existingWebsiteUrl, _, _) = context {
@@ -133,7 +133,7 @@ extension PromptInput {
                     }
                     
                     if !urlExists {
-                        model.addContext(urls: [url])
+                        state.addContext(urls: [url])
                         
                         textWithoutWebsiteUrls = removeWebsiteUrlFromText(
                             text: textWithoutWebsiteUrls,
