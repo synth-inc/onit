@@ -14,6 +14,7 @@ struct AccountTab: View {
     @State private var email: String = ""
     @State private var requestedEmail: Bool = false
     @State private var token: String = ""
+    @State private var errorMessage: String?
 
     var body: some View {
         VStack(spacing: 24) {
@@ -25,6 +26,12 @@ struct AccountTab: View {
             }
             google
             apple
+
+            if let errorMessage = errorMessage {
+                Text(errorMessage)
+                    .foregroundColor(.red)
+                    .font(.system(size: 12))
+            }
         }
     }
     
@@ -41,9 +48,13 @@ struct AccountTab: View {
     func handleLoginLinkRequest() {
         let client = FetchingClient()
         Task {
-            try await client.requestLoginLink(email: email)
+            do {
+                try await client.requestLoginLink(email: email)
+                requestedEmail = true
+            } catch {
+                errorMessage = error.localizedDescription
+            }
         }
-        requestedEmail = true
     }
 
     var tokenSection: some View {
@@ -59,7 +70,11 @@ struct AccountTab: View {
     func handleTokenLogin() {
         let client = FetchingClient()
         Task {
-            try await client.loginToken(loginToken: token)
+            do {
+                let response = try await client.loginToken(loginToken: token)
+            } catch {
+                errorMessage = error.localizedDescription
+            }
         }
     }
 
@@ -73,21 +88,25 @@ struct AccountTab: View {
         GIDSignIn.sharedInstance.signIn(withPresenting: window) { result, error in
             guard let result = result else {
                 if let error = error {
-                    print(error)
+                    errorMessage = error.localizedDescription
                 } else {
-                    print("Unknown Google sign in error")
+                    errorMessage = "Unknown Google sign in error"
                 }
                 return
             }
 
             guard let idToken = result.user.idToken?.tokenString else {
-                print("Couldn't get Google identity token")
+                errorMessage = "Failed to get Google identity token"
                 return
             }
 
             Task {
-                let client = FetchingClient()
-                let loginResponse = try await client.loginGoogle(idToken: idToken)
+                do {
+                    let client = FetchingClient()
+                    let loginResponse = try await client.loginGoogle(idToken: idToken)
+                } catch {
+                    errorMessage = error.localizedDescription
+                }
             }
         }
     }
@@ -100,10 +119,14 @@ struct AccountTab: View {
                 switch result {
                 case .success(let authResult):
                     Task {
-                        try await handleAppleCredential(authResult)
+                        do {
+                            try await handleAppleCredential(authResult)
+                        } catch {
+                            errorMessage = error.localizedDescription
+                        }
                     }
                 case .failure(let error):
-                    print(error)
+                    errorMessage = error.localizedDescription
                 }
             }
     }
@@ -113,7 +136,10 @@ struct AccountTab: View {
             let credentials = authResults.credential as? ASAuthorizationAppleIDCredential,
             let identityToken = credentials.identityToken,
             let identityTokenString = String(data: identityToken, encoding: .utf8)
-        else { return }
+        else {
+            errorMessage = "Failed to get Apple identity token"
+            return
+        }
         
         let client = FetchingClient()
         let loginResponse = try await client.loginApple(idToken: identityTokenString)
