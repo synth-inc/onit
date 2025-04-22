@@ -34,55 +34,39 @@ extension OnitPanelState {
         }
         let appHash = CFHash(activeTrackedWindow.element)
         let appTitle = activeTrackedWindow.title
-        
-        // TODO: We should find a smarter way to merge content
-        func mergeFragments(_ fragments: [String]) -> String {
-            guard !fragments.isEmpty else { return "" }
 
-            var result = fragments[0]
-
-            for fragment in fragments.dropFirst() {
-                let overlap = findMaxOverlap(between: result, and: fragment)
-                result += fragment.dropFirst(overlap)
-            }
-
-            return result
-        }
-
-        func findMaxOverlap(between a: String, and b: String) -> Int {
-            let minLen = min(a.count, b.count)
-            for i in stride(from: minLen, through: 1, by: -1) {
-                let aSuffix = String(a.suffix(i))
-                let bPrefix = String(b.prefix(i))
-                if aSuffix == bPrefix {
-                    return i
-                }
-            }
-            return 0
-        }
-
+        log.error("")
         if let existingIndex = pendingContextList.firstIndex(where: { context in
             if case .auto(let autoContext) = context {
+                log.error("Searching lhs: \(autoContext.appName) \(autoContext.appHash) \(autoContext.appTitle)")
+                log.error("Searching rhs: \(appName) \(appHash) \(appTitle)")
                 return autoContext.appName == appName && autoContext.appHash == appHash && autoContext.appTitle == appTitle
             }
             return false
         }) {
+            log.error("Found existing auto context")
+            /// For now, we're simply replacing the context.
+            /// Later on, we should implement a data aggregator.
+            let autoContext = Context(appName: appName, appHash: appHash, appTitle: appTitle, appContent: appContent)
+            pendingContextList[existingIndex] = autoContext
+            
+            return
             /** Merge result for existing autoContext */
-            if case .auto(let autoContext) = pendingContextList[existingIndex] {
-                var existingContent = autoContext.appContent
-                let appContentString = appContent[AccessibilityParsedElements.screen] ?? ""
-                let contentString = existingContent[AccessibilityParsedElements.screen] ?? ""
-                
-                if !appContentString.isEmpty && !contentString.isEmpty {
-                    let mergedContent = mergeFragments([contentString, appContentString])
-                    existingContent[AccessibilityParsedElements.screen] = mergedContent
-                    
-                    let updatedContext = Context(appName: appName, appHash: appHash, appTitle: appTitle, appContent: existingContent)
-                    pendingContextList[existingIndex] = updatedContext
-                    
-                    return
-                }
-            }
+//            if case .auto(let autoContext) = pendingContextList[existingIndex] {
+//                var existingContent = autoContext.appContent
+//                let appContentString = appContent[AccessibilityParsedElements.screen] ?? ""
+//                let contentString = existingContent[AccessibilityParsedElements.screen] ?? ""
+//                
+//                if !appContentString.isEmpty && !contentString.isEmpty {
+//                    let mergedContent = mergeFragments([contentString, appContentString])
+//                    existingContent[AccessibilityParsedElements.screen] = mergedContent
+//                    
+//                    let updatedContext = Context(appName: appName, appHash: appHash, appTitle: appTitle, appContent: existingContent)
+//                    pendingContextList[existingIndex] = updatedContext
+//                    
+//                    return
+//                }
+//            }
         }
 
         let autoContext = Context(appName: appName, appHash: appHash, appTitle: appTitle, appContent: appContent)
