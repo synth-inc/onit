@@ -48,12 +48,6 @@ extension OnitRegularPanel {
             _ = activeWindow.setPosition(NSPoint(x: newX, y: newY))
             
             dragDetails.lastPosition = currentPosition
-            dragDetails.dragEndTimer?.invalidate()
-            dragDetails.dragEndTimer = Timer.scheduledTimer(withTimeInterval: 0.2, repeats: false) { _ in
-                Task { @MainActor in
-                    self.dragDetails = .init()
-                }
-            }
         }
     }
     

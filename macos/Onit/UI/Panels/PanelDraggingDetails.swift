@@ -10,5 +10,4 @@ import SwiftUI
 struct PanelDraggingDetails {
     var isDragging: Bool = false
     var lastPosition: NSPoint = .zero
-    var dragEndTimer: Timer?
 }

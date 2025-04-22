@@ -95,7 +95,7 @@ class OnitRegularPanel: NSPanel {
         NSEvent.addGlobalMonitorForEvents(matching: [.leftMouseUp]) { [weak self] _ in
             if self?.dragDetails.isDragging == true {
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                    self?.dragDetails.isDragging = false
+                    self?.dragDetails = .init()
                 }
             }
         }
