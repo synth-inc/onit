@@ -20,6 +20,7 @@ class TetherAppsManager: ObservableObject {
     // MARK: - Properties
     
     @Published var state: OnitPanelState
+    @Published var tetherButtonPanelState: OnitPanelState?
     var states: [TrackedWindow: OnitPanelState] = [:]
     
     /// Dragging
@@ -308,4 +309,5 @@ class TetherAppsManager: ObservableObject {
         }
         handlePanelStateChange(state: state, action: .moveEnd)
     }
+    
 }

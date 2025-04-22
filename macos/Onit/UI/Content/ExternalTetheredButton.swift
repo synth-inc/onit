@@ -144,8 +144,12 @@ struct ExternalTetheredButton: View {
             AccessibilityPermissionManager.shared.requestPermission()
             return
         }
-        
-        TetherAppsManager.shared.state.launchPanel()
+
+        if let state = TetherAppsManager.shared.tetherButtonPanelState {
+            state.launchPanel()
+        } else {    
+            print("Couldn't find activeTrackedWindow")
+        }
     }
 }
 

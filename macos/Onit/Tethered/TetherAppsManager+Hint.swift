@@ -31,7 +31,8 @@ extension TetherAppsManager {
     func hideTetherWindow() {
         tetherHintDetails.showTetherDebounceTimer?.invalidate()
         tetherHintDetails.showTetherDebounceTimer = nil
-        
+        tetherButtonPanelState = nil
+
         tetherHintDetails.tetherWindow.orderOut(nil)
         tetherHintDetails.tetherWindow.contentView = nil
         tetherHintDetails.lastYComputed = nil
@@ -49,7 +50,8 @@ extension TetherAppsManager {
         let buttonView = NSHostingView(rootView: tetherView)
         tetherHintDetails.tetherWindow.contentView = buttonView
         tetherHintDetails.lastYComputed = nil
-        
+        tetherButtonPanelState = state
+
         updateTetherWindowPosition(for: activeWindow, action: action, lastYComputed: tetherHintDetails.lastYComputed)
         
         tetherHintDetails.tetherWindow.orderFrontRegardless()
@@ -106,11 +108,13 @@ extension TetherAppsManager {
                 positionY = minY
             }
         }
-        
-        state.tetheredButtonYPosition = windowFrame.height -
-            (positionY - windowFrame.minY) -
-            ExternalTetheredButton.containerHeight + (TetheredButton.height / 2)
-        
+
+        if let state = tetherButtonPanelState {
+            state.tetheredButtonYPosition = windowFrame.height -
+                (positionY - windowFrame.minY) -
+                ExternalTetheredButton.containerHeight + (TetheredButton.height / 2)
+        }
+
         let frame = NSRect(
             x: positionX,
             y: positionY,
@@ -126,7 +130,7 @@ extension TetherAppsManager {
               var windowFrame = trackedWindow.element.getFrame(convertedToGlobalCoordinateSpace: true) else {
             return
         }
-        
+    
         if trackedWindow.element.isDesktopFinder {
             windowFrame = windowFrame.findScreen()?.visibleFrame ?? windowFrame
         }
@@ -134,9 +138,11 @@ extension TetherAppsManager {
         let lastYComputed = computeTetheredWindowY(windowFrame: windowFrame, offset: y)
         tetherHintDetails.lastYComputed = lastYComputed
         
-        state.tetheredButtonYPosition = windowFrame.height -
-            (lastYComputed - windowFrame.minY) -
-            ExternalTetheredButton.containerHeight + (TetheredButton.height / 2)
+        if let state = tetherButtonPanelState {
+            state.tetheredButtonYPosition = windowFrame.height -
+                (lastYComputed - windowFrame.minY) -
+                ExternalTetheredButton.containerHeight + (TetheredButton.height / 2)
+        }
 
         let frame = NSRect(
             x: tetherHintDetails.tetherWindow.frame.origin.x,
