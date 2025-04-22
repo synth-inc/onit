@@ -10,12 +10,14 @@ import SwiftData
 import SwiftUI
 
 struct PromptCore: View {
-    @Environment(\.windowState) private var state
+    @Environment(\.windowState) private var windowState
     @Query(sort: \Chat.timestamp, order: .reverse) private var chats: [Chat]
     @Default(.mode) var mode
     
     let isEditing: Bool
     init(isEditing: Bool = false) { self.isEditing = isEditing }
+    
+    @StateObject private var audioRecorder = AudioRecorder()
     
     @FocusState private var isFocused: Bool
     
@@ -37,14 +39,14 @@ struct PromptCore: View {
     
     var body: some View {
         VStack(spacing: 0) {
-            if let pendingInput = state.pendingInput {
+            if let pendingInput = windowState.pendingInput {
                 InputView(input: pendingInput)
             }
             
             VStack(spacing: 6) {
                 contextAndInput
                 
-                PromptCoreFooter()
+                PromptCoreFooter(audioRecorder: audioRecorder)
             }
         }
         .background {
@@ -62,10 +64,12 @@ struct PromptCore: View {
 extension PromptCore {
     private var contextAndInput: some View {
         VStack(spacing: 8) {
-            FileRow(contextList: state.pendingContextList)
-            PromptInput().focused($isFocused)
-                .onChange(of: state.textFocusTrigger) { isFocused = true }
-                .onAppear { isFocused = true }
+            FileRow(contextList: windowState.pendingContextList)
+            
+            HStack(spacing: 8) {
+                RecordingIndicator(audioRecorder: audioRecorder)
+                PromptInput(audioRecorder: audioRecorder).focused($isFocused)
+            }
         }
         .padding(12)
         .background(.gray800)
@@ -81,6 +85,7 @@ extension PromptCore {
         .addAnimation(dependency: isFocused, duration: 0.3)
         .padding(.top, 12)
         .padding(.horizontal, 12)
+        .onAppear { isFocused = true }
     }
 }
 
@@ -91,10 +96,10 @@ extension PromptCore {
         Button {
             guard !chats.isEmpty else { return }
 
-            if state.historyIndex + 1 < chats.count {
-                state.historyIndex += 1
-                state.currentChat = chats[state.historyIndex]
-                state.currentPrompts = chats[state.historyIndex].prompts
+            if windowState.historyIndex + 1 < chats.count {
+                windowState.historyIndex += 1
+                windowState.currentChat = chats[windowState.historyIndex]
+                windowState.currentPrompts = chats[windowState.historyIndex].prompts
             }
         } label: {
             EmptyView()
@@ -104,14 +109,14 @@ extension PromptCore {
 
     var downListener: some View {
         Button {
-            if state.historyIndex > 0 {
-                state.historyIndex -= 1
-                state.currentChat = chats[state.historyIndex]
-                state.currentPrompts = chats[state.historyIndex].prompts
-            } else if state.historyIndex == 0 {
-                state.historyIndex = -1
-                state.currentChat = nil
-                state.currentPrompts = nil
+            if windowState.historyIndex > 0 {
+                windowState.historyIndex -= 1
+                windowState.currentChat = chats[windowState.historyIndex]
+                windowState.currentPrompts = chats[windowState.historyIndex].prompts
+            } else if windowState.historyIndex == 0 {
+                windowState.historyIndex = -1
+                windowState.currentChat = nil
+                windowState.currentPrompts = nil
             }
         } label: {
             EmptyView()
@@ -121,7 +126,7 @@ extension PromptCore {
     
     var newListener: some View {
         Button {
-            state.newChat()
+            windowState.newChat()
         } label: {
             EmptyView()
         }

@@ -8,7 +8,13 @@
 import SwiftUI
 
 struct PromptCoreFooter: View {
-    @Environment(\.windowState) private var state
+    @Environment(\.windowState) private var windowState
+    
+    private let audioRecorder: AudioRecorder
+    
+    init(audioRecorder: AudioRecorder) {
+        self.audioRecorder = audioRecorder
+    }
     
     var body: some View {
         HStack(alignment: .center, spacing: 0) {
@@ -20,11 +26,11 @@ struct PromptCoreFooter: View {
             Spacer()
             
             HStack(spacing: 4) {
-                MicrophoneButton()
+                MicrophoneButton(audioRecorder: audioRecorder)
                 PromptCoreFooterButton(
                     text: "􀅇 Send",
-                    disabled: state.pendingInstruction.isEmpty,
-                    action: { state.sendAction() }
+                    disabled: windowState.pendingInstruction.isEmpty,
+                    action: { windowState.sendAction() }
                 )
             }
         }

@@ -14,6 +14,10 @@ struct MenuSection<Children: View>: View {
     private let titleChild: (any View)?
     private let showTopBorder: Bool
     private let maxHeight: CGFloat
+    private let contentTopPadding: CGFloat
+    private let contentRightPadding: CGFloat
+    private let contentBottomPadding: CGFloat
+    private let contentLeftPadding: CGFloat
     @ViewBuilder private let children: () -> Children
     
     init(
@@ -23,6 +27,10 @@ struct MenuSection<Children: View>: View {
         titleChild: (any View)? = nil,
         showTopBorder: Bool = false,
         maxHeight: CGFloat = 0,
+        contentTopPadding: CGFloat = 8,
+        contentRightPadding: CGFloat = 8,
+        contentBottomPadding: CGFloat = 8,
+        contentLeftPadding: CGFloat = 8,
         @ViewBuilder children: @escaping () -> Children
     ) {
         self.titleIcon = titleIcon
@@ -31,6 +39,10 @@ struct MenuSection<Children: View>: View {
         self.titleChild = titleChild
         self.showTopBorder = showTopBorder
         self.maxHeight = maxHeight
+        self.contentTopPadding = contentTopPadding
+        self.contentRightPadding = contentRightPadding
+        self.contentBottomPadding = contentBottomPadding
+        self.contentLeftPadding = contentLeftPadding
         self.children = children
     }
     
@@ -80,6 +92,11 @@ extension MenuSection {
             if !title.isEmpty { header }
             children()
         }
-        .padding(8)
+        .padding(.init(
+            top: contentTopPadding,
+            leading: contentLeftPadding,
+            bottom: contentBottomPadding,
+            trailing: contentRightPadding
+        ))
     }
 }

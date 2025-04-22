@@ -8,12 +8,20 @@
 import SwiftUI
 
 struct PromptInput: View {
-    @Environment(\.windowState) private var state
+    @Environment(\.windowState) private var windowState
     
     private var detectLinks: Bool = true // TODO remove this once we use PromptInput for prompt editing
     
+    private let audioRecorder: AudioRecorder
     private var maxLines: Int
-    init(maxLines: Int = 6) { self.maxLines = maxLines }
+    
+    init(
+        audioRecorder: AudioRecorder,
+        maxLines: Int = 6
+    ) {
+        self.audioRecorder = audioRecorder
+        self.maxLines = maxLines
+    }
     
     @State private var height: CGFloat = 50
     @State private var detectedURLs: [URL] = []
@@ -21,40 +29,46 @@ struct PromptInput: View {
     
     private var text: Binding<String> {
         Binding(
-            get: { state.pendingInstruction },
-            set: { state.pendingInstruction = $0 }
+            get: { windowState.pendingInstruction },
+            set: { windowState.pendingInstruction = $0 }
         )
     }
     
     var body: some View {
         ZStack(alignment: .topLeading) {
-            TextEditor(text: text)
-                .textEditorStyle(PlainTextEditorStyle())
-                .styleText()
-                .frame(height: height)
-                .onChange(of: text.wrappedValue) {
-                    if detectLinks { handleUrlDetection() }
+//            TextEditor(text: text)
+            PromptInputWithCursorPosition(
+                text: text,
+                onCursorPositionChange: { position in
+                    windowState.pendingInstructionCursorPosition = position
                 }
-                .onKeyPress { press in
-                   if press.key == .return && press.modifiers.contains(.shift) {
-                       text.wrappedValue.append("\n")
-                       return .handled
-                   } else if press.key == .return {
-                        state.sendAction()
-                        return .handled
-                    } else {
-                        return .ignored
-                    }
+            )
+            .textEditorStyle(PlainTextEditorStyle())
+            .styleText()
+            .frame(height: height)
+            .onChange(of: text.wrappedValue) {
+                if detectLinks { handleUrlDetection() }
+            }
+            .onKeyPress { press in
+               if press.key == .return && press.modifiers.contains(.shift) {
+                   text.wrappedValue.append("\n")
+                   return .handled
+               } else if press.key == .return {
+                   windowState.sendAction()
+                    return .handled
+                } else {
+                    return .ignored
                 }
+            }
             
             if text.wrappedValue.isEmpty { placeholderText }
             
             heightSetter
         }
-        .onPreferenceChange(HeightListenerKey.self) { newHeight in
+        .onPreferenceChange(PromptInputHeightListenerKey.self) { newHeight in
             Task { @MainActor in height = newHeight }
         }
-        .opacity(state.websiteUrlsScrapeQueue.isEmpty ? 1 : 0.5)
+        .opacity(windowState.websiteUrlsScrapeQueue.isEmpty ? 1 : 0.5)
     }
 }
 
@@ -77,7 +91,7 @@ extension PromptInput {
             .background(
                 GeometryReader { geometry in
                     Color.clear.preference(
-                        key: HeightListenerKey.self,
+                        key: PromptInputHeightListenerKey.self,
                         value: geometry.size.height
                     )
                 }
@@ -87,7 +101,7 @@ extension PromptInput {
 
 // MARK: - Used for dynamically expanding TextEditor height.
 
-struct HeightListenerKey: PreferenceKey {
+struct PromptInputHeightListenerKey: PreferenceKey {
     static var defaultValue: CGFloat { 0 }
     
     static func reduce(
@@ -123,7 +137,7 @@ extension PromptInput {
                 var textWithoutWebsiteUrls = text.wrappedValue
                 
                 for url in urls {
-                    let pendingContextList = state.getPendingContextList()
+                    let pendingContextList = windowState.getPendingContextList()
                     
                     let urlExists = pendingContextList.contains { context in
                         if case .web(let existingWebsiteUrl, _, _) = context {
@@ -133,7 +147,7 @@ extension PromptInput {
                     }
                     
                     if !urlExists {
-                        state.addContext(urls: [url])
+                        windowState.addContext(urls: [url])
                         
                         textWithoutWebsiteUrls = removeWebsiteUrlFromText(
                             text: textWithoutWebsiteUrls,

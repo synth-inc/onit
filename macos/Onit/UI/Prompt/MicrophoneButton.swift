@@ -9,12 +9,16 @@ import Defaults
 import SwiftUI
 
 struct MicrophoneButton: View {
-    @Environment(\.windowState) private var state
+    @Environment(\.windowState) private var windowState
     
     @Default(.openAIToken) var openAIToken
     @Default(.isOpenAITokenValidated) var isOpenAITokenValidated
     
-    @StateObject private var audioRecorder = AudioRecorder()
+    private let audioRecorder: AudioRecorder
+    
+    init(audioRecorder: AudioRecorder) {
+        self.audioRecorder = audioRecorder
+    }
     
     @State private var transcriptionTask: Task<Void, Never>? = nil
     @State private var showingMicrophonePermissionAlert = false
@@ -27,18 +31,6 @@ struct MicrophoneButton: View {
     private let recordingSpacesCount = 8
     
     var body: some View {
-        HStack(alignment: .center, spacing: 2) {
-            RecordingIndicator(audioRecorder: audioRecorder)
-            
-            button
-        }
-    }
-}
-
-// MARK: - Child Components
-
-extension MicrophoneButton {
-    private var button: some View {
         PromptCoreFooterButton(
             text: audioRecorder.isRecording ? "􀊰 Stop" : "􀊰 Voice",
             action: { handleMicrophonePress() },
@@ -162,11 +154,15 @@ extension MicrophoneButton {
                 
                 if !Task.isCancelled {
                     DispatchQueue.main.async {
-                        state.pendingInstruction.insert(
-                            contentsOf: transcription,
-                            at: state.pendingInstruction.index(
-                                    state.pendingInstruction.startIndex,
-                                    offsetBy: 0
+                        let cursorPosition = windowState.pendingInstructionCursorPosition
+                        
+                        let transcriptionContent = transcription + " "
+                        
+                        windowState.pendingInstruction.insert(
+                            contentsOf: transcriptionContent,
+                            at: windowState.pendingInstruction.index(
+                                windowState.pendingInstruction.startIndex,
+                                    offsetBy: cursorPosition
                                 )
                         )
                         

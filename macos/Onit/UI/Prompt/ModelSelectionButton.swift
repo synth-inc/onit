@@ -22,9 +22,8 @@ struct ModelSelectionButton: View {
         TextButton(
             text: text,
             action: { open.toggle() },
-            width: 90,
             height: toolbarButtonHeight,
-            fillContainer: false,
+            fillContainer: true,
             horizontalPadding: 4,
             cornerRadius: 4,
             fontSize: 12,
@@ -40,7 +39,7 @@ struct ModelSelectionButton: View {
         }
         .tooltip(prompt: "Change model")
         .popover(isPresented: $open)  {
-            ModelSelectionView()
+            ModelSelectionView(open: $open)
         }
     }
 }

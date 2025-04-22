@@ -23,9 +23,12 @@ struct ModelSelectionView: View {
     @Default(.availableRemoteModels) var availableRemoteModels
     @Default(.availableLocalModels) var availableLocalModels
     
+    private var open: Binding<Bool>
+    init(open: Binding<Bool>) { self.open = open }
+    
     @State var searchQuery: String = ""
     
-    var filteredRemoteModels: [AIModel] {
+    private var filteredRemoteModels: [AIModel] {
         if searchQuery.isEmpty {
             return remoteModels.listedModels
         } else {
@@ -35,7 +38,7 @@ struct ModelSelectionView: View {
         }
     }
     
-    var filteredLocalModels: [String] {
+    private var filteredLocalModels: [String] {
         if searchQuery.isEmpty {
             return availableLocalModels
         } else {
@@ -45,7 +48,7 @@ struct ModelSelectionView: View {
         }
     }
 
-    var selectedModel: Binding<SelectedModel?> {
+    private var selectedModel: Binding<SelectedModel?> {
         .init {
             if mode == .local, let localModelName = localModel {
                 return .local(localModelName)
@@ -94,7 +97,10 @@ struct ModelSelectionView: View {
             titleIcon: remoteModels.remoteNeedsSetup || noRemoteModels ? .warningSettings : nil,
             titleIconColor: .orange,
             title: "Remote",
-            maxHeight: 178
+            showTopBorder: true,
+            contentRightPadding: 0,
+            contentBottomPadding: 0,
+            contentLeftPadding: 0
         ) {
             if remoteModels.listedModels.isEmpty {
                 Button("Setup remote models") {
@@ -114,15 +120,30 @@ struct ModelSelectionView: View {
     }
     
     var remoteModelsView: some View {
-        ForEach(filteredRemoteModels) { remoteModel in
-            TextButton(
-                icon: determineRemoteModelLogo(provider: remoteModel.provider),
-                iconSize: 16,
-                text: remoteModel.displayName,
-                action: { selectedModel.wrappedValue = .remote(remoteModel) },
-                fontColor: isSelectedRemoteModel(model: remoteModel) ? .blue300 : .white
-            )
+        ScrollView {
+            VStack(spacing: 0) {
+                ForEach(filteredRemoteModels) { remoteModel in
+                    TextButton(
+                        icon: determineRemoteModelLogo(provider: remoteModel.provider),
+                        iconSize: 16,
+                        text: remoteModel.displayName,
+                        selected: isSelectedRemoteModel(model: remoteModel),
+                        action: {
+                            selectedModel.wrappedValue = .remote(remoteModel)
+                            open.wrappedValue = false
+                        }
+                    )
+                }
+            }
+            .padding(.horizontal, 8)
+            .padding(.bottom, 8)
         }
+        .frame(
+            maxHeight:
+                setModelListHeight(
+                    listCount: CGFloat(filteredRemoteModels.count)
+                )
+        )
     }
 
     var local: some View {
@@ -131,7 +152,10 @@ struct ModelSelectionView: View {
             titleIconColor: .orange,
             title: "Local",
             titleChild: add,
-            maxHeight: 186
+            showTopBorder: true,
+            contentRightPadding: 0,
+            contentBottomPadding: 0,
+            contentLeftPadding: 0
         ) {
             if availableLocalModels.isEmpty {
                 Button("Setup local models") {
@@ -151,15 +175,30 @@ struct ModelSelectionView: View {
     }
 
     var localModelsView: some View {
-        ForEach(filteredLocalModels, id: \.self) { localModelName in
-            TextButton(
-                icon: localModelName.lowercased().contains("llama") ? .logoOllama : .logoProviderUnknown,
-                iconSize: 16,
-                text: localModelName,
-                action: { selectedModel.wrappedValue = .local(localModelName) },
-                fontColor: isSelectedLocalModel(modelName: localModelName) ? .blue300 : .white
-            )
+        ScrollView {
+            VStack(spacing: 0) {
+                ForEach(filteredLocalModels, id: \.self) { localModelName in
+                    TextButton(
+                        icon: localModelName.lowercased().contains("llama") ? .logoOllama : .logoProviderUnknown,
+                        iconSize: 16,
+                        text: localModelName,
+                        selected: isSelectedLocalModel(modelName: localModelName),
+                        action: {
+                            selectedModel.wrappedValue = .local(localModelName)
+                            open.wrappedValue = false
+                        }
+                    )
+                }
+            }
+            .padding(.horizontal, 8)
+            .padding(.bottom, 8)
         }
+        .frame(
+            maxHeight:
+                setModelListHeight(
+                    listCount: CGFloat(filteredLocalModels.count)
+                )
+        )
     }
 
     var add: some View {
@@ -211,6 +250,23 @@ struct ModelSelectionView: View {
 // MARK: - Private Functions
 
 extension ModelSelectionView {
+    private func setModelListHeight(listCount: CGFloat) -> CGFloat {
+        let buttonHeight: CGFloat = 32
+        
+        let maxShownButtonCount: CGFloat = 6
+        let nextButtonPeekHeight: CGFloat = 20
+        let listMaxHeight: CGFloat = (maxShownButtonCount * buttonHeight) + nextButtonPeekHeight
+        
+        let listBottomPaddingBuffer: CGFloat = 8
+        let listHeight: CGFloat = listCount * buttonHeight + listBottomPaddingBuffer
+        
+        if listHeight < listMaxHeight {
+            return listHeight
+        } else {
+            return listMaxHeight
+        }
+    }
+    
     private func openModelSettings() {
         NSApp.activate()
         
@@ -255,5 +311,6 @@ extension ModelSelectionView {
 // MARK: - Preview
 
 #Preview {
-    ModelSelectionView()
+    @Previewable @State var open = true
+    ModelSelectionView(open: $open)
 }

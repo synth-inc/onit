@@ -12,6 +12,7 @@ struct TextButton<Child: View>: View {
     private let iconSize: CGFloat
     private let text: String
     private let disabled: Bool
+    private let selected: Bool
     private let action: () -> Void
     
     private let gap: CGFloat
@@ -33,6 +34,7 @@ struct TextButton<Child: View>: View {
     private struct DefaultValues {
         var iconSize: CGFloat = 20
         var disabled: Bool = false
+        var selected: Bool = false
         
         var gap: CGFloat = 10
         var width: CGFloat? = nil
@@ -54,6 +56,7 @@ struct TextButton<Child: View>: View {
         iconSize: CGFloat = DefaultValues().iconSize,
         text: String,
         disabled: Bool = DefaultValues().disabled,
+        selected: Bool = DefaultValues().selected,
         action: @escaping () -> Void,
         
         gap: CGFloat = DefaultValues().gap,
@@ -76,6 +79,7 @@ struct TextButton<Child: View>: View {
         self.iconSize = iconSize
         self.text = text
         self.disabled = disabled
+        self.selected = selected
         self.action = action
         
         self.gap = gap
@@ -101,14 +105,17 @@ struct TextButton<Child: View>: View {
     var body: some View {
         HStack(alignment: .center, spacing: gap) {
             if let icon = icon {
-                Image(icon).addIconStyles(iconSize: iconSize)
+                Image(icon).addIconStyles(
+                    foregroundColor: selected ? .blue300 : .white,
+                    iconSize: iconSize
+                )
             }
             
             Text(text)
                 .styleText(
                     size: fontSize,
                     weight: fontWeight,
-                    color: disabled ? .gray200 : isHovered ? .white : fontColor
+                    color: disabled ? .gray200 : selected ? .blue300 : isHovered ? .white : fontColor
                 )
                 .truncateText()
             
@@ -136,6 +143,7 @@ struct TextButton<Child: View>: View {
                     action()
                 }
         )
+        .allowsHitTesting(!selected)
     }
 }
 
@@ -147,6 +155,7 @@ extension TextButton where Child == EmptyView {
         iconSize: CGFloat = DefaultValues().iconSize,
         text: String,
         disabled: Bool = DefaultValues().disabled,
+        selected: Bool = DefaultValues().selected,
         action: @escaping () -> Void,
         
         gap: CGFloat = DefaultValues().gap,
@@ -168,6 +177,7 @@ extension TextButton where Child == EmptyView {
             iconSize: iconSize,
             text: text,
             disabled: disabled,
+            selected: selected,
             action: action,
             
             gap: gap,
