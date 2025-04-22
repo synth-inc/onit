@@ -66,6 +66,12 @@ struct SettingsView: View {
                     Label("About", systemImage: "info.circle")
                 }
                 .tag(SettingsTab.about)
+            
+            AccountTab()
+                .tabItem {
+                    Label("Account", systemImage: "person.crop.circle")
+                }
+                .tag(SettingsTab.account)
         }
         .frame(idealWidth: 569, minHeight: 500)
         .fixedSize(horizontal: true, vertical: false)
