@@ -22,7 +22,7 @@ struct LoginAppleEndpoint: Endpoint {
     
     var baseURL: URL { OnitServer.baseURL }
     
-    var path: String { "/login/apple" }
+    var path: String { "/auth/login/apple" }
     
     var getParams: [String : String]? { nil }
     

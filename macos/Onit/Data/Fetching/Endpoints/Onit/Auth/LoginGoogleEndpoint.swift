@@ -22,7 +22,7 @@ struct LoginGoogleEndpoint: Endpoint {
     
     var baseURL: URL { OnitServer.baseURL }
     
-    var path: String { "/login/google" }
+    var path: String { "/auth/login/google" }
     
     var getParams: [String : String]? { nil }
     
