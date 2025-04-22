@@ -11,13 +11,58 @@ import GoogleSignInSwift
 import AuthenticationServices
 
 struct AccountTab: View {
+    @State private var email: String = ""
+    @State private var requestedEmail: Bool = false
+    @State private var token: String = ""
+
     var body: some View {
         VStack(spacing: 24) {
+            if !requestedEmail {
+                emailSection
+            }
+            if requestedEmail {
+                tokenSection
+            }
             google
             apple
         }
     }
     
+    var emailSection: some View {
+        VStack(spacing: 12) {
+            TextField("Enter your email", text: $email)
+            Button("Request Magic Link") {
+                handleLoginLinkRequest()
+            }
+            .disabled(email.isEmpty)
+        }
+    }
+
+    func handleLoginLinkRequest() {
+        let client = FetchingClient()
+        Task {
+            try await client.requestLoginLink(email: email)
+        }
+        requestedEmail = true
+    }
+
+    var tokenSection: some View {
+        VStack(spacing: 12) {
+            TextField("Enter your login token", text: $token)
+            Button("Login") {
+                handleTokenLogin()
+            }
+            .disabled(token.isEmpty)
+        }
+    }
+
+    func handleTokenLogin() {
+        let client = FetchingClient()
+        Task {
+            try await client.loginToken(loginToken: token)
+        }
+    }
+
     var google: some View {
         GoogleSignInButton(action: handleGoogleSignInButton)
     }
