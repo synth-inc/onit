@@ -64,7 +64,7 @@ class AccessibilityNotificationsManager: ObservableObject {
     #if DEBUG
     private let ignoredAppNames : [String] = ["Xcode"]
     #else
-    private let ignoredAppNames = []
+    private let ignoredAppNames : [String] = []
     #endif
 
     // MARK: - Initializers
