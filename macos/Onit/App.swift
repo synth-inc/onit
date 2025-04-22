@@ -12,6 +12,7 @@ import MenuBarExtraAccess
 import PostHog
 import ServiceManagement
 import SwiftUI
+import GoogleSignIn
 
 @main
 struct App: SwiftUI.App {
@@ -116,6 +117,9 @@ struct App: SwiftUI.App {
                     let settingsWindowLevel: NSWindow.Level = NSWindow.Level(rawValue: floatingLevel.rawValue + 1)
                     window.level = settingsWindowLevel
                 })
+                .onOpenURL { url in
+                    GIDSignIn.sharedInstance.handle(url)
+                }
         }
     }
 
