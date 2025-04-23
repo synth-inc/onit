@@ -34,8 +34,10 @@ extension OnitPanelState: NSWindowDelegate {
         panel = newPanel
 
         if Defaults[.isRegularApp] {
-            if trackedWindow != nil {
+            if (trackedWindow != nil) {
                 repositionPanel(action: .undefined)
+            } else if trackedScreen != nil {
+                showPanelForScreen()
             } else {
                 print("Something went wrong while trying to reposition the panel.")
             }
@@ -54,7 +56,7 @@ extension OnitPanelState: NSWindowDelegate {
         systemPromptState.shouldShowSystemPrompt = false
 
         if Defaults[.isRegularApp] {
-            if trackedWindow != nil {
+            if trackedWindow != nil || trackedScreen != nil {
                 restoreWindowPosition()
             } else {
                 // What to do

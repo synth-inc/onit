@@ -40,6 +40,7 @@ class OnitPanelState: NSObject {
     var promptSuggestionService: SystemPromptSuggestionService?
     
     var trackedWindow: TrackedWindow?
+    var trackedScreen: TrackedScreen?
     var isWindowDragging: Bool = false
     
     private var delegates = NSHashTable<AnyObject>.weakObjects()
@@ -134,6 +135,13 @@ class OnitPanelState: NSObject {
 
     init(trackedWindow: TrackedWindow?) {
         self.trackedWindow = trackedWindow
+        super.init()
+        
+        self.promptSuggestionService = SystemPromptSuggestionService(state: self)
+    }
+
+    init(trackedScreen: TrackedScreen?) {
+        self.trackedScreen = trackedScreen
         super.init()
         
         self.promptSuggestionService = SystemPromptSuggestionService(state: self)

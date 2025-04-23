@@ -153,7 +153,7 @@ class TetherAppsManager: ObservableObject {
                 hideTetherWindow()
 
                 if state.currentAnimationTask == nil {
-                    state.repositionPanel(action: action)
+                    state.repositionPanel(action: .undefined)
                 }
             } else {
                 // Panel closed

@@ -162,6 +162,41 @@ extension OnitPanelState {
         }
     }
     
+    func showPanelForScreen() {
+        guard let screen = trackedScreen,
+              let panel = self.panel,
+              !panel.isAnimating,
+              !panel.dragDetails.isDragging else {
+            return
+        }
+        
+        let fromFrame = NSRect(
+            x: screen.visibleFrame.maxX - 2,
+            y: screen.visibleFrame.minY,
+            width: 0,
+            height: screen.visibleFrame.height
+        )
+        let newFrame = NSRect(
+            x: screen.visibleFrame.maxX - TetherAppsManager.minOnitWidth,
+            y: screen.visibleFrame.minY,
+            width: TetherAppsManager.minOnitWidth,
+            height: screen.visibleFrame.height
+        )
+        
+        if panel.wasAnimated {
+            panel.setFrame(newFrame, display: false)
+        } else {
+            panel.resizedApplication = false
+            animateEnter(activeWindow: nil,
+                         fromActive: nil,
+                         toActive: nil,
+                         panel: panel,
+                         fromPanel: fromFrame,
+                         toPanel: newFrame)
+        }
+        
+    }
+    
     // MARK: - Layout
     
     private func movePanel(screenFrame: CGRect, onitWidth: CGFloat, onitHeight: CGFloat, onitY: CGFloat) {

@@ -62,10 +62,14 @@ struct App: SwiftUI.App {
                         AccessibilityNotificationsManager.shared.start(pid: frontmostApplicationOnLaunch?.processIdentifier)
                         TetherAppsManager.shared.startObserving()
                         TapListener.shared.start()
+                        UntetheredScreenManager.shared.stopObserving()
+                        AccessibilityDeniedNotificationManager.shared.stop()
                     case .denied:
                         AccessibilityNotificationsManager.shared.stop()
                         TetherAppsManager.shared.stopObserving()
                         TapListener.shared.stop()
+                        UntetheredScreenManager.shared.startObserving() // This has to come first, so that we get the initial 
+                        AccessibilityDeniedNotificationManager.shared.start()
                     default:
                         break
                     }
