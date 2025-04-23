@@ -6,6 +6,7 @@
 //
 
 import Defaults
+import KeyboardShortcuts
 import SwiftData
 import SwiftUI
 
@@ -18,6 +19,9 @@ struct PromptCore: View {
     init(isEditing: Bool = false) { self.isEditing = isEditing }
     
     @StateObject private var audioRecorder = AudioRecorder()
+    
+    @State private var textHeight: CGFloat = 20
+    private let maxHeightLimit: CGFloat = 100
     
     @FocusState private var isFocused: Bool
     
@@ -45,7 +49,6 @@ struct PromptCore: View {
             
             VStack(spacing: 6) {
                 contextAndInput
-                
                 PromptCoreFooter(audioRecorder: audioRecorder)
             }
         }
@@ -62,14 +65,33 @@ struct PromptCore: View {
 // MARK: - Child Components
 
 extension PromptCore {
+    @ViewBuilder
+    private var textField: some View {
+        @Bindable var windowState = windowState
+        
+        TextViewWrapper(
+            text: $windowState.pendingInstruction,
+            cursorPosition: $windowState.pendingInstructionCursorPosition,
+            dynamicHeight: $textHeight,
+            onSubmit: windowState.sendAction,
+            maxHeight: maxHeightLimit,
+            placeholder: placeholderText,
+            audioRecorder: audioRecorder,
+            detectLinks: true
+        )
+        .frame(height: min(textHeight, maxHeightLimit))
+        .appFont(.medium16)
+        .foregroundStyle(.white)
+        .opacity(windowState.websiteUrlsScrapeQueue.isEmpty ? 1 : 0.5)
+        .focused($isFocused)
+        .onAppear { isFocused = true }
+        .onChange(of: windowState.textFocusTrigger) { isFocused = true }
+    }
+    
     private var contextAndInput: some View {
         VStack(spacing: 8) {
             FileRow(contextList: windowState.pendingContextList)
-            
-            HStack(spacing: 8) {
-                RecordingIndicator(audioRecorder: audioRecorder)
-                PromptInput(audioRecorder: audioRecorder).focused($isFocused)
-            }
+            textField
         }
         .padding(12)
         .background(.gray800)
@@ -85,7 +107,6 @@ extension PromptCore {
         .addAnimation(dependency: isFocused, duration: 0.3)
         .padding(.top, 12)
         .padding(.horizontal, 12)
-        .onAppear { isFocused = true }
     }
 }
 
@@ -141,6 +162,26 @@ extension PromptCore {
         switch mode {
         case .remote: return true
         default: return false
+        }
+    }
+    
+    private var placeholderText: String {
+        if let currentChat = windowState.currentChat {
+            if !currentChat.isEmpty {
+
+                if let keyboardShortcutString = KeyboardShortcuts.getShortcut(for: .newChat)?
+                    .description
+                {
+                    "Follow-up... (" + keyboardShortcutString + " for new)"
+                } else {
+                    "Follow-up..."
+                }
+
+            } else {
+                "New instructions..."
+            }
+        } else {
+            "New instructions..."
         }
     }
 }

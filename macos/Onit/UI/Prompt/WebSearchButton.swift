@@ -13,7 +13,7 @@ struct WebSearchButton: View {
     var body: some View {
         IconButton(
             icon: .web,
-            iconSize: 16,
+            iconSize: 17,
             action: { toggleWebSearch() },
             inactiveColor:
                 webSearchEnabled ? .blue400 :

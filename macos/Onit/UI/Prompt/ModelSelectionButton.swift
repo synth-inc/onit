@@ -22,17 +22,18 @@ struct ModelSelectionButton: View {
         TextButton(
             text: text,
             action: { open.toggle() },
+            gap: 0,
             height: toolbarButtonHeight,
-            fillContainer: true,
+            fillContainer: false,
             horizontalPadding: 4,
             cornerRadius: 4,
-            fontSize: 12,
-            fontWeight: .semibold,
+            fontSize: 13,
             fontColor: .gray200
         ) {
             Image(.smallChevDown)
                 .addIconStyles(
-                    foregroundColor: open ? .white : .gray100
+                    foregroundColor: open ? .white : .gray100,
+                    iconSize: 18
                 )
                 .addAnimation(dependency: open)
                 .rotationEffect(.degrees(open ? 180 : 0))

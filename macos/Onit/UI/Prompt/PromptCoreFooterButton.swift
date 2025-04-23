@@ -45,8 +45,7 @@ struct PromptCoreFooterButton: View {
             cornerRadius: 4,
             background: background,
             hoverBackground: hoverBackground,
-            fontSize: 12,
-            fontWeight: .semibold,
+            fontSize: 13,
             fontColor: fontColor
         )
     }

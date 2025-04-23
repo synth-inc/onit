@@ -55,6 +55,7 @@ struct HistoryView: View {
             header: MenuHeader(title: "History") {
                 IconButton(
                     icon: .smallCross,
+                    iconSize: 22,
                     action: { windowState.showHistory = false }
                 )
             },

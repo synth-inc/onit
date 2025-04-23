@@ -14,60 +14,42 @@ struct ChatsView: View {
     @Default(.isPanelExpanded) var isPanelExpanded: Bool
     @Default(.isRegularApp) var isRegularApp: Bool
     
-    private let currentPromptsCount: Int
-    
-    init(currentPromptsCount: Int) {
-        self.currentPromptsCount = currentPromptsCount
+    @State private var contentHeight: CGFloat = 0
+    @State var screenHeight: CGFloat = NSScreen.main?.visibleFrame.height ?? 0
+
+    var maxHeight: CGFloat? {
+        guard !isRegularApp, screenHeight != 0 else { return nil }
+        
+        let availableHeight = screenHeight - state.headerHeight -
+        state.inputHeight - state.setUpHeight -
+        state.systemPromptHeight - ContentView.bottomPadding
+        
+        return availableHeight
     }
     
-    @State private var isScrolling: Bool = false
-    @State private var scrollTask: Task<Void, Never>?
-    
-    private func scrollToBottom(using proxy: ScrollViewProxy) {
-        guard !isScrolling else { return }
+    var realHeight: CGFloat? {
+        guard !isRegularApp, let maxHeight = maxHeight else { return nil}
         
-        isScrolling = true
-        scrollTask?.cancel()
-        
-        scrollTask = Task { @MainActor in
-            try? await Task.sleep(for: .milliseconds(200))
-            
-            guard !Task.isCancelled else { return }
-            
-            withAnimation(.easeIn(duration: animationDuration)) {
-                proxy.scrollTo("scrollToBottomElement", anchor: .bottom)
-            }
-            
-            isScrolling = false
-        }
+        return isPanelExpanded ? maxHeight : min(contentHeight, maxHeight)
     }
     
     var body: some View {
-        ScrollViewReader { proxy in
-            ScrollView {
-                LazyVStack(spacing: -16) {
-                    ForEach(state.currentPrompts ?? []) { prompt in
-                        PromptView(prompt: prompt)
-                    }
-                }
-                .opacity(currentPromptsCount > 0 ? 1 : 0)
-                .addAnimation(dependency: currentPromptsCount)
-                
-                Color.clear
-                    .frame(height: 1)
-                    .id("scrollToBottomElement")
-            }
-            .onChange(of: currentPromptsCount) {
-                if currentPromptsCount > 0 { scrollToBottom(using: proxy) }
-            }
-            .onChange(of: state.currentChat) { old, new in
-                if old == nil && new != nil { return }
-                scrollToBottom(using: proxy)
+        LazyVStack(spacing: -16) {
+            ForEach(state.currentPrompts ?? []) { prompt in
+                PromptView(prompt: prompt)
             }
         }
-        .frame(
-            height: currentPromptsCount > 0 ? nil : 0,
-            alignment: .top
-        )
+        .onHeightChanged {
+            guard !isRegularApp else { return }
+            
+            let oldHeight = realHeight
+            contentHeight = $0
+                                
+            if oldHeight != realHeight {
+                state.panel?.adjustSize()
+            }
+        }
+        .trackScreenHeight($screenHeight)
     }
+    
 }

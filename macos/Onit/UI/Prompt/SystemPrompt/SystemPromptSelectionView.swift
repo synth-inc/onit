@@ -56,9 +56,9 @@ struct SystemPromptSelectionView: View {
             header: MenuHeader(title: "System Prompts") {
                 IconButton(
                     icon: .smallCross,
+                    iconSize: 22,
                     action: {
-//                        SystemPromptState.shared.shouldShowSelection = false
-//                        SystemPromptState.shared.shouldShowSystemPrompt = false
+                        state.systemPromptState.shouldShowSelection = false
                     }
                 )
             },

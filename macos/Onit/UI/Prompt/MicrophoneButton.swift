@@ -125,6 +125,10 @@ extension MicrophoneButton {
             return
         }
         
+        addSpacesAtCursor()
+        
+        addSpacesAtCursor()
+        
         eventMonitor = NSEvent.addLocalMonitorForEvents(matching: .leftMouseUp) { _ in
             stopRecordingAndTranscribe()
             return nil
@@ -154,16 +158,16 @@ extension MicrophoneButton {
                 
                 if !Task.isCancelled {
                     DispatchQueue.main.async {
+                        removeSpacesAtCursor()
+                        
                         let cursorPosition = windowState.pendingInstructionCursorPosition
                         
-                        let transcriptionContent = transcription + " "
-                        
                         windowState.pendingInstruction.insert(
-                            contentsOf: transcriptionContent,
+                            contentsOf: transcription,
                             at: windowState.pendingInstruction.index(
                                 windowState.pendingInstruction.startIndex,
-                                    offsetBy: cursorPosition
-                                )
+                                offsetBy: cursorPosition
+                            )
                         )
                         
                         audioRecorder.isTranscribing = false
@@ -172,6 +176,7 @@ extension MicrophoneButton {
             } catch {
                 if !Task.isCancelled {
                     DispatchQueue.main.async {
+                        removeSpacesAtCursor()
                         errorMessage = error.localizedDescription
                         showingErrorAlert = true
                         audioRecorder.isTranscribing = false
@@ -181,7 +186,7 @@ extension MicrophoneButton {
         }
     }
     
-    func cancelRecording() {
+    private func cancelRecording() {
         if let monitor = eventMonitor {
             NSEvent.removeMonitor(monitor)
             eventMonitor = nil
@@ -189,5 +194,48 @@ extension MicrophoneButton {
         
         _ = audioRecorder.stopRecording()
         audioRecorder.isTranscribing = false
+        
+        if addedRecordingSpaces {
+            removeSpacesAtCursor()
+        }
+    }
+    
+    private func addSpacesAtCursor() {
+        guard !addedRecordingSpaces else { return }
+        
+        let cursorPosition = windowState.pendingInstructionCursorPosition
+        let spaces = String(repeating: " ", count: recordingSpacesCount)
+        
+        windowState.pendingInstruction.insert(
+            contentsOf: spaces,
+            at: windowState.pendingInstruction.index(
+                windowState.pendingInstruction.startIndex,
+                offsetBy: cursorPosition
+            )
+        )
+        
+        addedRecordingSpaces = true
+    }
+    
+    private func removeSpacesAtCursor() {
+        guard addedRecordingSpaces else { return }
+        
+        let cursorPosition = windowState.pendingInstructionCursorPosition
+        let startPosition = cursorPosition
+        let endPosition = max(0, startPosition + recordingSpacesCount)
+        
+        let startIndex = windowState.pendingInstruction.index(
+            windowState.pendingInstruction.startIndex,
+            offsetBy: startPosition
+        )
+        
+        let endIndex = windowState.pendingInstruction.index(
+            windowState.pendingInstruction.startIndex,
+            offsetBy: endPosition
+        )
+        
+        windowState.pendingInstruction.removeSubrange(startIndex..<endIndex)
+        
+        addedRecordingSpaces = false
     }
 }

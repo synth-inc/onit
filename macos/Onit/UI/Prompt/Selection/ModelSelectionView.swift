@@ -75,7 +75,6 @@ struct ModelSelectionView: View {
             header: MenuHeader(title: "Model") {
                 IconButton(
                     icon: .settingsCog,
-                    iconSize: 18,
                     action: { openModelSettings() },
                     tooltipPrompt: "Settings"
                 )

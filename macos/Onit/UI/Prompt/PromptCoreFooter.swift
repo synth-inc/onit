@@ -38,18 +38,3 @@ struct PromptCoreFooter: View {
         .padding(.bottom, 12)
     }
 }
-
-// MARK: - Child Components
-
-extension PromptCoreFooter {
-    private func iconButton(
-        icon: ImageResource,
-        action: @escaping () -> Void
-    ) -> some View {
-        IconButton(
-            icon: icon,
-            iconSize: 16,
-            action: action
-        )
-    }
-}

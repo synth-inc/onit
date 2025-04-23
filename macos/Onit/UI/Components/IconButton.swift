@@ -20,7 +20,7 @@ struct IconButton: View {
     
     init(
         icon: ImageResource,
-        iconSize: CGFloat = 18,
+        iconSize: CGFloat = 20,
         buttonSize: CGFloat = toolbarButtonHeight,
         action: @escaping () -> Void,
         isActive: Bool = false,

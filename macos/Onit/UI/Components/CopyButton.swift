@@ -20,7 +20,7 @@ struct CopyButton: View {
     var body: some View {
         IconButton(
             icon: .copy,
-            iconSize: 16,
+            iconSize: 18,
             action: {
                 let pasteboard = NSPasteboard.general
                 pasteboard.declareTypes([.string], owner: nil)

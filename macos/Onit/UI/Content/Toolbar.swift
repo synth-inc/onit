@@ -70,6 +70,7 @@ struct Toolbar: View {
     var resize: some View {
         IconButton(
             icon: .resize,
+            iconSize: 22,
             action: { state.panel?.toggleFullscreen() },
             tooltipPrompt: "Resize Window",
             tooltipShortcut: .keyboardShortcuts(.resizeWindow)
@@ -106,6 +107,7 @@ struct Toolbar: View {
     var localMode: some View {
         IconButton(
             icon: mode == .local ? .localModeActive : .localMode,
+            iconSize: 22,
             action: { toggleMode() },
             isActive: mode == .local,
             activeColor: .limeGreen,
@@ -123,6 +125,7 @@ struct Toolbar: View {
     var history: some View {
         IconButton(
             icon: .history,
+            iconSize: 22,
             action: { state.showHistory.toggle() },
             isActive: state.showHistory,
             tooltipPrompt: "History"
@@ -145,6 +148,7 @@ struct Toolbar: View {
     var settings: some View {
         IconButton(
             icon: .settingsCog,
+            iconSize: 22,
             action: { openSettingsWindow() },
             tooltipPrompt: "Settings"
         )
