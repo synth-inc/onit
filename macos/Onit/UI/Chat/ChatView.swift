@@ -25,26 +25,30 @@ struct ChatView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            ScrollViewReader { proxy in
-                ScrollView {
-                    SetUpDialogs()
-                    
-                    systemPrompt
-                    
-                    ChatsView()
-                        .id(chatsID)
-                        .onAppear {
-                            scrollToBottom(using: proxy)
-                        }
+            if currentPromptsCount > 0 {
+                ScrollViewReader { proxy in
+                    ScrollView {                    
+                        SetUpDialogs()
+                        systemPrompt
+                        
+                        
+                        ChatsView()
+                            .id(chatsID)
+                            .onAppear {
+                                scrollToBottom(using: proxy)
+                            }
+                    }
+                    .onChange(of: state.streamedResponse) {
+                        scrollToBottom(using: proxy)
+                    }
+                    .onChange(of: state.currentChat) { old, new in
+                        scrollToBottom(using: proxy)
+                    }
                 }
-                .onChange(of: state.streamedResponse) {
-                    scrollToBottom(using: proxy)
-                }
-                .onChange(of: state.currentChat) { old, new in
-                    scrollToBottom(using: proxy)
-                }
+            } else {
+                SetUpDialogs()
+                systemPrompt
             }
-            .frame(height: currentPromptsCount > 0 ? nil : 0 )
             
             PromptCore()
             
@@ -71,6 +75,7 @@ extension ChatView {
             
             if shouldShowSystemPrompt { SystemPromptView() }
         }
+        .padding(.horizontal, 4) // This is weird, none of the .padding modifiers in ChatSystemPromptView seem to have any effect. It's somehow locked in at 8px horizontal padding, so to get the desired 12px, we add 4 here.
     }
 }
 

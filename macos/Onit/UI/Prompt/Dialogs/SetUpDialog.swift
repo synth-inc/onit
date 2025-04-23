@@ -41,16 +41,15 @@ struct SetUpDialog<Subtitle: View>: View {
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(.horizontal, 14)
-        .padding(.top, 16)
-        .padding(.bottom, 10)
+        .padding(.horizontal, 12)
+        .padding(.vertical, 8)
         .background(.gray900, in: .rect(cornerRadius: 16))
         .overlay {
             RoundedRectangle(cornerRadius: 16)
                 .strokeBorder(borderGrad, lineWidth: 1)
         }
-        .padding(.vertical, 16)
-        .padding(.horizontal, 16)
+        .padding(.top, 8)
+        .padding(.horizontal, 12)
     }
 
     var titleView: some View {
@@ -77,6 +76,7 @@ struct SetUpDialog<Subtitle: View>: View {
             .appFont(.medium13)
             .foregroundStyle(.gray100)
             .fixedSize(horizontal: false, vertical: true)
+            .lineLimit(10) // This prevents a re-draw that messes up the height of the OnitPanel in Regular mode.
     }
 
     var button: some View {

@@ -24,6 +24,7 @@ extension ToolbarAddButton {
     private var newChatButton: some View {
         IconButton(
             icon: .circlePlus,
+            iconSize: 22,
             action: { state.newChat() },
             tooltipPrompt: "New Chat",
             tooltipShortcut: .keyboardShortcuts(.newChat)
