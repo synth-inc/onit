@@ -14,7 +14,7 @@ struct MicrophoneButton: View {
     @Default(.openAIToken) var openAIToken
     @Default(.isOpenAITokenValidated) var isOpenAITokenValidated
     
-    private let audioRecorder: AudioRecorder
+    @ObservedObject private var audioRecorder: AudioRecorder
     
     init(audioRecorder: AudioRecorder) {
         self.audioRecorder = audioRecorder
