@@ -62,7 +62,7 @@ struct ChatView: View {
 
 extension ChatView {
     var systemPrompt: some View {
-        Group {
+        VStack(alignment: .leading) {
             if let systemPrompt = state.currentChat?.systemPrompt {
                 ChatSystemPromptView(systemPrompt: systemPrompt)
                 
