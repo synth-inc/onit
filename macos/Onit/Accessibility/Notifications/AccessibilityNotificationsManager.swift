@@ -286,7 +286,7 @@ class AccessibilityNotificationsManager: ObservableObject {
             
             log.debug("Received notification: \(notification) \(element.role() ?? "") \(element.title() ?? "")")
             switch notification {
-            case kAXFocusedWindowChangedNotification:
+            case kAXFocusedWindowChangedNotification, kAXMainWindowChangedNotification:
                 self.handleWindowBounds(for: element)
             case kAXFocusedUIElementChangedNotification, kAXSelectedColumnsChangedNotification, kAXSelectedRowsChangedNotification:
                 self.handleFocusChange(for: element)

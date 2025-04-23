@@ -15,6 +15,7 @@ extension AccessibilityNotificationsManager {
 
         static let notifications = [
             kAXFocusedWindowChangedNotification,
+            kAXMainWindowChangedNotification,
             kAXFocusedUIElementChangedNotification,
             kAXSelectedTextChangedNotification,
             kAXValueChangedNotification,
