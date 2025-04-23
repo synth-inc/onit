@@ -85,7 +85,7 @@ extension Defaults.Keys {
         "accessibilityAutoContextEnabled", default: nil)
     static let highlightHintMode = Key<HighlightHintMode?>("highlightHintMode", default: nil)
     
-    static let automaticallyAddAutoContext = Key<Bool>("automaticallyAddAutoContext", default: false)
+    static let automaticallyAddAutoContext = Key<Bool>("automaticallyAddAutoContext", default: true)
 
     // Web search
     static let webSearchEnabled = Key<Bool>("webSearchEnabled", default: false)
@@ -111,9 +111,9 @@ extension Defaults.Keys {
     
     // Debug settings
     static let isRegularApp = Key<Bool>("isRegularApp", default: true)
-    static let launchShortcutToggleEnabled = Key<Bool>("launchShortcutToggleEnabled", default: false)
-    static let createNewChatOnPanelOpen = Key<Bool>("createNewChatOnPanelOpen", default: false)
-    static let escapeShortcutDisabled = Key<Bool>("escapeShortcutDisabled", default: true)
+    static let launchShortcutToggleEnabled = Key<Bool>("launchShortcutToggleEnabled", default: true)
+    static let createNewChatOnPanelOpen = Key<Bool>("createNewChatOnPanelOpen", default: true)
+    static let escapeShortcutDisabled = Key<Bool>("escapeShortcutDisabled", default: false)
     static let openOnMouseMonitor = Key<Bool>("openOnMouseMonitor", default: false)
 }
 

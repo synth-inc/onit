@@ -28,22 +28,22 @@ struct ShortcutsTab: View {
                 }
                 .padding()
 
-                if accessibilityAutoContextEnabled {
-                    KeyboardShortcuts.Recorder(
-                        "Launch Onit with Auto-Context", name: .launchWithAutoContext
-                    )
-                    .padding()
-                }
-
-                KeyboardShortcuts.Recorder(
-                    "New Chat", name: .newChat
-                )
-                .padding()
-
-                KeyboardShortcuts.Recorder(
-                    "Resize Window", name: .resizeWindow
-                )
-                .padding()
+//                if accessibilityAutoContextEnabled {
+//                    KeyboardShortcuts.Recorder(
+//                        "Launch Onit with Auto-Context", name: .launchWithAutoContext
+//                    )
+//                    .padding()
+//                }
+//
+//                KeyboardShortcuts.Recorder(
+//                    "New Chat", name: .newChat
+//                )
+//                .padding()
+//
+//                KeyboardShortcuts.Recorder(
+//                    "Resize Window", name: .resizeWindow
+//                )
+//                .padding()
 
                 KeyboardShortcuts.Recorder(
                     "Switch Local vs Remote", name: .toggleLocalMode

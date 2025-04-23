@@ -128,18 +128,17 @@ struct AccessibilityTab: View {
                             .font(.system(size: 12))
                             .foregroundStyle(.gray200)
                     }
-
-                    Picker("Choose hint position", selection: $selectedMode) {
-                        ForEach(modes, id: \.self) { mode in
-                            Text(mode.text)
-                                .appFont(.medium14)
-                                .padding(.vertical, 4)
-                        }
-                    }
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .pickerStyle(MenuPickerStyle())
-                    .padding(.vertical, 4)
-                    .tint(.blue600)
+//                    Picker("Choose hint position", selection: $selectedMode) {
+//                        ForEach(modes, id: \.self) { mode in
+//                            Text(mode.text)
+//                                .appFont(.medium14)
+//                                .padding(.vertical, 4)
+//                        }
+//                    }
+//                    .frame(maxWidth: .infinity, alignment: .leading)
+//                    .pickerStyle(MenuPickerStyle())
+//                    .padding(.vertical, 4)
+//                    .tint(.blue600)
                 }
 
                 Section {
