@@ -86,16 +86,12 @@ class UntetheredScreenManager: ObservableObject {
         hideTetherWindow()
     }
 
+    @objc private func appDidBecomeActive(_ notification: Notification) { }
 
-
-    @objc private func appDidBecomeActive(_ notification: Notification) {
-        // DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-    }
+    @objc private func appResignActive(_ notification: Notification) { }
             
-    @objc private func applicationWillTerminate() {
-
-    }
-
+    @objc private func applicationWillTerminate() { }
+    
     func handlePanelStateChange(state: OnitPanelState, action: TrackedScreenAction) {
         guard let screen = state.trackedScreen else {
             return
@@ -103,13 +99,11 @@ class UntetheredScreenManager: ObservableObject {
 
         if !state.hidden {
             if state.panelOpened {
-                KeyboardShortcutsManager.enable(modelContainer: SwiftDataContainer.appContainer)
                 hideTetherWindow()
                 if state.currentAnimationTask == nil {
                     state.repositionPanel(action: .undefined)
                 }
             } else {
-                KeyboardShortcutsManager.disable(modelContainer: SwiftDataContainer.appContainer)
                 debouncedShowTetherWindow(state: state, activeScreen: screen, action: action)
             }
         } else {
@@ -215,6 +209,10 @@ extension UntetheredScreenManager: AccessibilityDeniedNotificationDelegate {
 extension UntetheredScreenManager: OnitPanelStateDelegate {
     func panelBecomeKey(state: OnitPanelState) {
         self.state = state
+        KeyboardShortcutsManager.enable(modelContainer: SwiftDataContainer.appContainer)
+    }
+    func panelResignKey(state: OnitPanelState) {
+        KeyboardShortcutsManager.disable(modelContainer: SwiftDataContainer.appContainer)
     }
     func panelStateDidChange(state: OnitPanelState) {
         handlePanelStateChange(state: state, action: .undefined)

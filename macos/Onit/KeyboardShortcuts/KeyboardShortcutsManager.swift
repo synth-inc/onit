@@ -74,8 +74,9 @@ struct KeyboardShortcutsManager {
         
         KeyboardShortcuts.Name.allCases.forEach { name in
             KeyboardShortcuts.onKeyUp(for: name) {
-                let state = TetherAppsManager.shared.state
-                
+                let state = AccessibilityPermissionManager.shared.accessibilityPermissionStatus == .granted ?
+                    TetherAppsManager.shared.state :
+                    UntetheredScreenManager.shared.state
                 switch name {
                 case .launch:
                     let eventProperties: [String: Any] = [

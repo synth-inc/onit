@@ -12,6 +12,7 @@ import SwiftUI
 
 @MainActor protocol OnitPanelStateDelegate: AnyObject {
     func panelBecomeKey(state: OnitPanelState)
+    func panelResignKey(state: OnitPanelState)
     func panelStateDidChange(state: OnitPanelState)
     func userInputsDidChange(instruction: String, contexts: [Context], input: Input?)
 }
