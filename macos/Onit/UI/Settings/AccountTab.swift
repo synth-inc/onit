@@ -16,6 +16,7 @@ struct AccountTab: View {
     @State private var email: String = ""
     @State private var requestedEmail: Bool = false
     @State private var token: String = ""
+    @State private var loginPassword: String = ""
 
     @State private var setPassword: String = ""
 
@@ -26,6 +27,7 @@ struct AccountTab: View {
             if appState.account == nil {
                 if !requestedEmail {
                     emailSection
+                    loginPasswordSection
                 }
                 if requestedEmail {
                     tokenSection
@@ -42,6 +44,14 @@ struct AccountTab: View {
                     .foregroundColor(.red)
                     .font(.system(size: 12))
             }
+        }
+        .onChange(of: appState.account == nil) { _, _ in
+            email = ""
+            requestedEmail = false
+            token = ""
+            loginPassword = ""
+            setPassword = ""
+            errorMessage = nil
         }
     }
     
@@ -64,6 +74,28 @@ struct AccountTab: View {
             } catch {
                 errorMessage = error.localizedDescription
             }
+        }
+    }
+
+    var loginPasswordSection: some View {
+        VStack(spacing: 12) {
+            TextField("Password", text: $loginPassword)
+            Button("Login") {
+                Task {
+                    await handleLoginPassword(email: email, loginPassword: loginPassword)
+                }
+            }
+            .disabled(loginPassword.isEmpty)
+        }
+    }
+
+    func handleLoginPassword(email: String, loginPassword: String) async {
+        do {
+            let client = FetchingClient()
+            let loginResponse = try await client.loginPassword(email: email, password: loginPassword)
+            handleLogin(loginResponse: loginResponse)
+        } catch {
+            errorMessage = error.localizedDescription
         }
     }
 
