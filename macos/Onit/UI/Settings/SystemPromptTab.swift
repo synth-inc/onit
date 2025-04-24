@@ -133,7 +133,12 @@ struct SystemPromptTab: View {
         )
         fetchDescriptor.fetchLimit = 1
         
-        for (_, state) in TetherAppsManager.shared.states {
+        let tetherAppsManagerStates = TetherAppsManager.shared.states.map { $0.1 }
+        let untetheredScreenManagerStates = UntetheredScreenManager.shared.states.map { $0.1 }
+        let states = (AccessibilityPermissionManager.shared.accessibilityPermissionStatus == .granted ?
+            tetherAppsManagerStates :
+            untetheredScreenManagerStates)
+        for state in states {
             if state.systemPromptId == deletedId {
                 do {
                     let modelContext = ModelContext(state.container)

@@ -16,7 +16,10 @@ struct MenuOpenOnitButton: View {
 
     var body: some View {
         MenuBarRow {
-            TetherAppsManager.shared.state.launchPanel()
+            let state = AccessibilityPermissionManager.shared.accessibilityPermissionStatus == .granted ?
+                TetherAppsManager.shared.state :
+                UntetheredScreenManager.shared.state
+            state.launchPanel()
         } leading: {
             HStack(spacing: 4) {
                 Image(.smirk)

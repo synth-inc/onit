@@ -135,7 +135,11 @@ struct KeyboardShortcutsManager {
         let name = KeyboardShortcuts.Name(systemPrompt.id)
         
         KeyboardShortcuts.onKeyUp(for: name) {
-            TetherAppsManager.shared.state.systemPromptId = systemPrompt.id
+            if (AccessibilityPermissionManager.shared.accessibilityPermissionStatus == .granted) {
+                TetherAppsManager.shared.state.systemPromptId = systemPrompt.id
+            } else {
+                UntetheredScreenManager.shared.state.systemPromptId = systemPrompt.id
+            }
         }
     }
 }

@@ -64,7 +64,7 @@ struct App: SwiftUI.App {
                         TapListener.shared.start()
                         UntetheredScreenManager.shared.stopObserving()
                         AccessibilityDeniedNotificationManager.shared.stop()
-                    case .denied:
+                    case .denied, .notDetermined:
                         AccessibilityNotificationsManager.shared.stop()
                         TetherAppsManager.shared.stopObserving()
                         TapListener.shared.stop()
