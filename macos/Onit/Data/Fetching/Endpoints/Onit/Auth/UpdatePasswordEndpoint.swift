@@ -21,7 +21,7 @@ struct UpdatePasswordEndpoint: Endpoint {
     
     var baseURL: URL { OnitServer.baseURL }
     
-    var path: String { "/auth/password" }
+    var path: String { "/v1/auth/password" }
     
     var getParams: [String : String]? { nil }
     

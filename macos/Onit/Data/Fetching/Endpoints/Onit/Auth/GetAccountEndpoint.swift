@@ -22,7 +22,7 @@ struct GetAccountEndpoint: Endpoint {
     
     var baseURL: URL { OnitServer.baseURL }
     
-    var path: String { "/auth/account" }
+    var path: String { "/v1/auth/account" }
     
     var getParams: [String : String]? { nil }
     

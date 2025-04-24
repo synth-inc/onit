@@ -22,7 +22,7 @@ struct LoginTokenEndpoint: Endpoint {
     
     var baseURL: URL { OnitServer.baseURL }
     
-    var path: String { "/auth/login/token" }
+    var path: String { "/v1/auth/login/token" }
     
     var getParams: [String : String]? { nil }
     

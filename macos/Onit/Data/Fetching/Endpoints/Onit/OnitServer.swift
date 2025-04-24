@@ -8,5 +8,5 @@
 import Foundation
 
 struct OnitServer {
-    static let baseURL = URL(string: "https://onit-server-v2-a93590258ea2.herokuapp.com")!
+    static let baseURL = URL(string: "http://localhost:3000")!
 }

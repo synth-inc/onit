@@ -21,7 +21,7 @@ struct LoginLinkEndpoint: Endpoint {
     
     var baseURL: URL { OnitServer.baseURL }
     
-    var path: String { "/auth/login/link" }
+    var path: String { "/v1/auth/login/link" }
     
     var getParams: [String : String]? { nil }
     
