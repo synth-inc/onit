@@ -42,13 +42,13 @@ struct SetUpDialog<Subtitle: View>: View {
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.horizontal, 12)
-        .padding(.vertical, 8)
+        .padding(.vertical, 12)
         .background(.gray900, in: .rect(cornerRadius: 16))
         .overlay {
             RoundedRectangle(cornerRadius: 16)
                 .strokeBorder(borderGrad, lineWidth: 1)
         }
-        .padding(.top, 8)
+        .padding(.top, 12)
         .padding(.horizontal, 12)
     }
 

@@ -49,20 +49,31 @@ struct SetUpDialogs: View {
         }
         return [:]
     }
+    
+    let scrollMaxHeight: CGFloat = 230
 
     init() {
         // resetAppStorageFlags()
     }
 
     var body: some View {
-        VStack {
-            content
-        }
-        .onHeightChanged(callback: updateHeight)
-        .onChange(of: availableLocalModels.count) { _, new in
-            if new != 0 {
-                seenLocal = true
+        ScrollView {
+            VStack {
+                content
             }
+            .onHeightChanged(callback: updateHeight)
+            .onChange(of: availableLocalModels.count) { _, new in
+                if new != 0 {
+                    seenLocal = true
+                }
+            }
+            .padding(.bottom, state.setUpHeight >= scrollMaxHeight ? 12 : 0)
+        }
+        .frame(maxHeight: min(state.setUpHeight, scrollMaxHeight))
+        
+        if state.setUpHeight > 0 {
+            PromptDivider()
+                .padding(.top, state.setUpHeight < scrollMaxHeight ? 12 : 0)
         }
     }
     
@@ -85,7 +96,16 @@ struct SetUpDialogs: View {
 
     @ViewBuilder
     var content: some View {
-        Group {
+        VStack(spacing: 0) {
+//            #if DEBUG
+//                noRemote
+//                remote
+//                local
+//                restartLocal
+//                expired(.openAI)
+//                expired(.anthropic)
+//            #endif
+            
             if availableRemoteModels.isEmpty && appState.remoteFetchFailed && !closedNoRemoteModels {
                 noRemote
             }

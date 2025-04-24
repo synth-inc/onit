@@ -53,17 +53,17 @@ struct ChatSystemPromptView: View {
             .buttonStyle(DarkerButtonStyle())
             
             if isExpanded {
-                VStack(alignment: .leading, spacing: 8) {
+                VStack(alignment: .leading, spacing: 12) {
                     Text("System Prompt")
                         .appFont(.medium14)
                         .frame(maxWidth: .infinity, alignment: .leading)
-                        .padding([.horizontal, .top], 8)
+                        .padding([.horizontal, .top], 12)
                     
                     ScrollView {
                         Text(systemPrompt.prompt)
                             .appFont(.medium14)
                             .foregroundStyle(.gray100)
-                            .padding(.horizontal, 8)
+                            .padding(.horizontal, 12)
                             .background(
                                 GeometryReader { geometry in
                                     Color.clear
@@ -106,7 +106,7 @@ struct ChatSystemPromptView: View {
                             }
                         }
                     }
-                    .padding([.horizontal, .bottom], 8)
+                    .padding([.horizontal, .bottom], 12)
                 }
                 .background {
                     RoundedRectangle(cornerRadius: 8)
@@ -115,8 +115,9 @@ struct ChatSystemPromptView: View {
                 }
             }
         }
-        .padding(.vertical, 8)
-        .padding(.horizontal, 16)
+        .padding(.top, 8)
+        .padding(.horizontal, 12)
+        .padding(.bottom, isExpanded ? 12 : 8)
         .background {
             GeometryReader { g in
                 Color.clear
