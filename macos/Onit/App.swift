@@ -57,6 +57,7 @@ struct App: SwiftUI.App {
                 .onAppear {
                     checkLaunchOnStartup()
                     toggleUIElementMode(enable: isRegularApp)
+                    restoreSession()
                 }
                 .onChange(of: accessibilityPermissionManager.accessibilityPermissionStatus, initial: true) {
                     _, newValue in
@@ -151,6 +152,15 @@ struct App: SwiftUI.App {
             NSApp.setActivationPolicy(.regular)
         } else {
             NSApp.setActivationPolicy(.accessory)
+        }
+    }
+
+    private func restoreSession() {
+        if TokenManager.token != nil && appState.account == nil {
+            Task {
+                let client = FetchingClient()
+                appState.account = try? await client.getAccount()
+            }
         }
     }
 }

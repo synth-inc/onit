@@ -45,6 +45,12 @@ extension FetchingClient {
                 additionalHeaders: endpoint.additionalHeaders,
                 timeout: endpoint.timeout
             )
+
+            // Handle empty responses
+            if E.Response.self == EmptyResponse.self {
+                return EmptyResponse() as! E.Response
+            }
+
             let decodedResponse = try decoder.decode(E.Response.self, from: data)
             return decodedResponse
         } catch let error as DecodingError {

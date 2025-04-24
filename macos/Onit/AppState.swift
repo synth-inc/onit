@@ -25,6 +25,8 @@ class AppState: NSObject {
     var remoteFetchFailed: Bool = false
     var localFetchFailed: Bool = false
     
+    var account: Account?
+
     // MARK: - Initializer
     
     init(remoteModels: RemoteModelsState) {

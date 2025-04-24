@@ -11,21 +11,31 @@ import GoogleSignInSwift
 import AuthenticationServices
 
 struct AccountTab: View {
+    @Environment(\.appState) var appState
+
     @State private var email: String = ""
     @State private var requestedEmail: Bool = false
     @State private var token: String = ""
+
+    @State private var setPassword: String = ""
+
     @State private var errorMessage: String?
 
     var body: some View {
         VStack(spacing: 24) {
-            if !requestedEmail {
-                emailSection
+            if appState.account == nil {
+                if !requestedEmail {
+                    emailSection
+                }
+                if requestedEmail {
+                    tokenSection
+                }
+                google
+                apple
+            } else {
+                setPasswordSection
+                logoutButton
             }
-            if requestedEmail {
-                tokenSection
-            }
-            google
-            apple
 
             if let errorMessage = errorMessage {
                 Text(errorMessage)
@@ -71,7 +81,8 @@ struct AccountTab: View {
         let client = FetchingClient()
         Task {
             do {
-                let response = try await client.loginToken(loginToken: token)
+                let loginResponse = try await client.loginToken(loginToken: token)
+                handleLogin(loginResponse: loginResponse)
             } catch {
                 errorMessage = error.localizedDescription
             }
@@ -104,6 +115,7 @@ struct AccountTab: View {
                 do {
                     let client = FetchingClient()
                     let loginResponse = try await client.loginGoogle(idToken: idToken)
+                    handleLogin(loginResponse: loginResponse)
                 } catch {
                     errorMessage = error.localizedDescription
                 }
@@ -143,5 +155,43 @@ struct AccountTab: View {
         
         let client = FetchingClient()
         let loginResponse = try await client.loginApple(idToken: identityTokenString)
+        handleLogin(loginResponse: loginResponse)
+    }
+    
+    func handleLogin(loginResponse: LoginResponse) {
+        TokenManager.token = loginResponse.token
+        appState.account = loginResponse.account
+    }
+    
+    var setPasswordSection: some View {
+        VStack(spacing: 12) {
+            TextField("Create a password", text: $setPassword)
+            Button("Set Your Password") {
+                Task {
+                    await handleSetPassword(setPassword: setPassword)
+                }
+            }
+            .disabled(setPassword.isEmpty)
+        }
+    }
+    
+    func handleSetPassword(setPassword: String) async {
+        do {
+            let client = FetchingClient()
+            try await client.updatePassword(password: setPassword)
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+    }
+    
+    var logoutButton: some View {
+        Button("Logout") {
+            handleLogout()
+        }
+    }
+    
+    func handleLogout() {
+        TokenManager.token = nil
+        appState.account = nil
     }
 }
