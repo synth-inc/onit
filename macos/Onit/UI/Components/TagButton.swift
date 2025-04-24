@@ -18,6 +18,7 @@ struct TagButton: View {
     private let closeAction: (() -> Void)?
     
     private let maxWidth: CGFloat
+    private let fill: Bool
     
     init(
         child: (any View)? = nil,
@@ -29,7 +30,8 @@ struct TagButton: View {
         action: (() -> Void)? = nil,
         closeAction: (() -> Void)? = nil,
         
-        maxWidth: CGFloat = 0
+        maxWidth: CGFloat = 0,
+        fill: Bool = false
     ) {
         self.child = child
         self.icon = icon
@@ -41,6 +43,7 @@ struct TagButton: View {
         self.closeAction = closeAction
         
         self.maxWidth = maxWidth
+        self.fill = fill
     }
     
     @State private var isHovered: Bool = false
@@ -58,6 +61,7 @@ struct TagButton: View {
             Text(text)
                 .styleText(size: 13)
                 .truncateText()
+                .frame(maxWidth: .infinity, alignment: .leading)
             
             if let caption = caption {
                 Text(caption)
@@ -78,7 +82,7 @@ struct TagButton: View {
             }
         }
         .padding(.horizontal, 3)
-        .frame(maxWidth: maxWidth > 0 ? maxWidth : nil)
+        .frame(maxWidth: maxWidth > 0 ? maxWidth : fill ? .infinity : nil)
         .frame(height: 22)
         .background(setBackground())
         .scaleEffect(setScale())

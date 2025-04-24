@@ -25,13 +25,13 @@ struct ChatView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
+            SetUpDialogs()
+            
+            systemPrompt
+            
             if currentPromptsCount > 0 {
                 ScrollViewReader { proxy in
-                    ScrollView {                    
-                        SetUpDialogs()
-                        systemPrompt
-                        
-                        
+                    ScrollView {
                         ChatsView()
                             .id(chatsID)
                             .onAppear {
@@ -45,9 +45,6 @@ struct ChatView: View {
                         scrollToBottom(using: proxy)
                     }
                 }
-            } else {
-                SetUpDialogs()
-                systemPrompt
             }
             
             PromptCore()
@@ -66,16 +63,17 @@ struct ChatView: View {
 
 extension ChatView {
     var systemPrompt: some View {
-        VStack(alignment: .leading) {
+        VStack(alignment: .leading, spacing: 0) {
             if let systemPrompt = state.currentChat?.systemPrompt {
-                ChatSystemPromptView(systemPrompt: systemPrompt)
-                
-                if currentPromptsCount > 0 { PromptDivider() }
+                VStack(alignment: .leading, spacing: 0) {
+                    ChatSystemPromptView(systemPrompt: systemPrompt)
+                    
+                    if currentPromptsCount > 0 { PromptDivider() }
+                }
             }
             
             if shouldShowSystemPrompt { SystemPromptView() }
         }
-        .padding(.horizontal, 4) // This is weird, none of the .padding modifiers in ChatSystemPromptView seem to have any effect. It's somehow locked in at 8px horizontal padding, so to get the desired 12px, we add 4 here.
     }
 }
 
