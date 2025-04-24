@@ -21,7 +21,7 @@ class UntetheredScreenManager: ObservableObject {
     @Published var state: OnitPanelState
     @Published var tetherButtonPanelState: OnitPanelState?
     var states: [TrackedScreen: OnitPanelState] = [:]
-    
+    var isObserving: Bool = false
 
     private let defaultState = OnitPanelState(trackedScreen: nil)
 
@@ -65,6 +65,7 @@ class UntetheredScreenManager: ObservableObject {
 
     func startObserving() {
         stopObserving()
+        isObserving = true
         AccessibilityDeniedNotificationManager.shared.delegate = self
         NotificationCenter.default.addObserver(
             self,
@@ -81,6 +82,7 @@ class UntetheredScreenManager: ObservableObject {
     }
 
     func stopObserving() {
+        isObserving = false
         NotificationCenter.default.removeObserver(self)
         AccessibilityDeniedNotificationManager.shared.delegate = nil
         hideTetherWindow()
@@ -141,9 +143,10 @@ class UntetheredScreenManager: ObservableObject {
         tetherHintDetails.showTetherDebounceTimer?.invalidate()
         tetherHintDetails.showTetherDebounceTimer = Timer.scheduledTimer(withTimeInterval: tetherHintDetails.showTetherDebounceDelay, repeats: false) { [weak self] _ in
             guard let self = self else { return }
-            
             DispatchQueue.main.async {
-                self.showTetherWindow(state: pendingTetherWindow.0, activeScreen: pendingTetherWindow.1.screen, action: action)
+                if self.isObserving {
+                    self.showTetherWindow(state: pendingTetherWindow.0, activeScreen: pendingTetherWindow.1.screen, action: action)
+                }
             }
         }
     }
