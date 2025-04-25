@@ -23,21 +23,31 @@ struct ContentView: View {
             set: { state.showFileImporter = $0 }
         )
     }
+    
+    private var shouldShowOnboarding: Bool {
+        let accessibilityPermissionGranted = AccessibilityPermissionManager.shared.accessibilityPermissionStatus == .granted
+        
+        return !accessibilityPermissionGranted && Defaults[.showOnboarding]
+    }
 
     var body: some View {
         HStack(spacing: -TetheredButton.width / 2) {
             if isRegularApp { TetheredButton() }
             
             ZStack(alignment: .top) {
-                VStack(spacing: 0) {
-                    if !isRegularApp { Toolbar() }
-                    else { Spacer().frame(height: 38) }
-                    
-                    PromptDivider()
-                    
-                    if !isRegularApp { ChatView() }
-                    else if state.showChatView { ChatView().transition(.opacity) }
-                    else { Spacer() }
+                if shouldShowOnboarding {
+                    OnboardingAccessibility()
+                } else {
+                    VStack(spacing: 0) {
+                        if !isRegularApp { Toolbar() }
+                        else { Spacer().frame(height: 38) }
+                        
+                        PromptDivider()
+                        
+                        if !isRegularApp { ChatView() }
+                        else if state.showChatView { ChatView().transition(.opacity) }
+                        else { Spacer() }
+                    }
                 }
             }
             .background(Color.black)
@@ -50,17 +60,19 @@ struct ContentView: View {
         }
         .buttonStyle(PlainButtonStyle())
         .toolbar {
-            ToolbarItem(placement: .navigation) {
-                if isRegularApp { ToolbarAddButton() }
-                else { EmptyView() }
-            }
-            #if DEBUG
-            ToolbarItem(placement: .automatic) { TetheredToAppView() }
-            #endif
-            ToolbarItem(placement: .automatic) { Spacer() }
-            ToolbarItem(placement: .primaryAction) {
-                if isRegularApp { Toolbar() }
-                else { EmptyView() }
+            if !shouldShowOnboarding {
+                ToolbarItem(placement: .navigation) {
+                    if isRegularApp { ToolbarAddButton() }
+                    else { EmptyView() }
+                }
+                #if DEBUG
+                ToolbarItem(placement: .automatic) { TetheredToAppView() }
+                #endif
+                ToolbarItem(placement: .automatic) { Spacer() }
+                ToolbarItem(placement: .primaryAction) {
+                    if isRegularApp { Toolbar() }
+                    else { EmptyView() }
+                }
             }
         }
         .simultaneousGesture(
