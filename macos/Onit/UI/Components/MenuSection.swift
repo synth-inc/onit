@@ -85,6 +85,7 @@ extension MenuSection {
                 AnyView(titleChild)
             }
         }
+        .padding(.horizontal, 8)
     }
     
     private var content: some View {
