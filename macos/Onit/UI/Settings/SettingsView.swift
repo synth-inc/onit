@@ -1,5 +1,6 @@
 import KeyboardShortcuts
 import SwiftUI
+import Defaults
 
 struct SettingsView: View {
     @Environment(\.appState) var appState
@@ -38,7 +39,7 @@ struct SettingsView: View {
 
             AccessibilityTab()
                 .tabItem {
-                    if featureFlagsManager.accessibility {
+                    if Defaults[.autoContextEnabled] {
                         Label("Context", systemImage: "lightbulb")
                     } else {
                         Label("Context", systemImage: "lightbulb.slash")

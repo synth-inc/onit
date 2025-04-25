@@ -13,11 +13,7 @@ struct ShortcutsTab: View {
     @Default(.escapeShortcutDisabled) var escapeShortcutDisabled
 
     @ObservedObject private var featureFlagsManager = FeatureFlagManager.shared
-
-    private var accessibilityAutoContextEnabled: Bool {
-        featureFlagsManager.accessibilityAutoContext
-    }
-
+    
     var body: some View {
         Form {
             Section {

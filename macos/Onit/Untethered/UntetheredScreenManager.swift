@@ -6,6 +6,7 @@
 //
 
 import AppKit
+import Defaults
 import SwiftUI
 
 @MainActor
@@ -29,6 +30,12 @@ class UntetheredScreenManager: ObservableObject {
     static let spaceBetweenWindows: CGFloat = -(TetheredButton.width / 2)
 
     var tetherHintDetails: TetherHintDetails
+    var tutorialWindow: NSWindow
+
+    private var shouldShowOnboarding: Bool {
+        let accessibilityPermissionGranted = AccessibilityPermissionManager.shared.accessibilityPermissionStatus == .granted
+        return !accessibilityPermissionGranted && Defaults[.showOnboarding]
+    }
 
     // Dictionary that tracks whether the ExternalTetherButton should be visible for each screen.
     // (For example, if the panel is closed then the tether button is visible.)
@@ -56,6 +63,27 @@ class UntetheredScreenManager: ObservableObject {
         window.standardWindowButton(.closeButton)?.isHidden = true
         window.standardWindowButton(.miniaturizeButton)?.isHidden = true
         window.standardWindowButton(.zoomButton)?.isHidden = true
+        
+        tutorialWindow = NSWindow(
+            contentRect: NSRect(x: 0, y: 0, width: (TetherTutorialOverlay.width * 1.5), height: (TetherTutorialOverlay.height * 1.5)),
+            styleMask: [.borderless],
+            backing: .buffered,
+            defer: false
+        )
+        tutorialWindow.isOpaque = false
+        tutorialWindow.backgroundColor = NSColor.clear
+        tutorialWindow.level = .floating
+        tutorialWindow.hasShadow = false
+        tutorialWindow.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
+        tutorialWindow.isReleasedWhenClosed = false
+        tutorialWindow.titlebarAppearsTransparent = true
+        tutorialWindow.titleVisibility = .hidden
+        tutorialWindow.standardWindowButton(.closeButton)?.isHidden = true
+        tutorialWindow.standardWindowButton(.miniaturizeButton)?.isHidden = true
+        tutorialWindow.standardWindowButton(.zoomButton)?.isHidden = true
+        
+        let tutorialView = NSHostingView(rootView: TetherTutorialOverlay())
+        tutorialWindow.contentView = tutorialView
         
         tetherHintDetails = TetherHintDetails(tetherWindow: window)
         state = defaultState
@@ -159,6 +187,10 @@ class UntetheredScreenManager: ObservableObject {
         tetherHintDetails.tetherWindow.orderOut(nil)
         tetherHintDetails.tetherWindow.contentView = nil
         tetherHintDetails.lastYComputed = nil
+        
+        // Remove the tutorial
+        tutorialWindow.orderOut(nil)
+        tutorialWindow.contentView = nil
     }
 
     func showTetherWindow(state: OnitPanelState, activeScreen: NSScreen, action: TrackedScreenAction) {
@@ -173,8 +205,13 @@ class UntetheredScreenManager: ObservableObject {
         tetherHintDetails.lastYComputed = nil
         tetherButtonPanelState = state
 
+        if (shouldShowOnboarding) {
+            let tutorialView = TetherTutorialOverlay()
+            tutorialWindow.contentView = NSHostingView(rootView: tutorialView)
+            tutorialWindow.orderFrontRegardless()
+        }
+
         updateTetherWindowPosition(for: activeScreen, action: action, lastYComputed: tetherHintDetails.lastYComputed)
-        
         tetherHintDetails.tetherWindow.orderFrontRegardless()
     }
     
@@ -190,10 +227,21 @@ class UntetheredScreenManager: ObservableObject {
             height: ExternalTetheredButton.containerHeight
         )
         tetherHintDetails.tetherWindow.setFrame(frame, display: false)
+        
+        if (shouldShowOnboarding) {
+            let tutorialFrame = NSRect(
+                x: positionX - (TetherTutorialOverlay.width) + (ExternalTetheredButton.containerWidth / 2),
+                y: positionY + (ExternalTetheredButton.containerHeight / 2) - ((TetherTutorialOverlay.height * 1.5) / 2),
+                width: (TetherTutorialOverlay.width * 1.5),
+                height: (TetherTutorialOverlay.height * 1.5)
+            )
+            tutorialWindow.setFrame(tutorialFrame, display: false)
+        }
     }
 
     private func tetheredWindowMoved(y: CGFloat) {
         // TODO
+        
     }
     
 }

@@ -7,6 +7,7 @@
 
 import KeyboardShortcuts
 import SwiftUI
+import Defaults
 
 struct PaperclipButton: View {
     @Environment(\.appState) private var appState
@@ -14,8 +15,10 @@ struct PaperclipButton: View {
     @ObservedObject var featureFlagsManager = FeatureFlagManager.shared
     @AppStorage("closedAutocontext") private var closedAutocontext = false
 
+    @Default(.closedAutoContextTag) var closedAutoContextTag
+    
     var accessibilityAutoContextEnabled: Bool {
-        featureFlagsManager.accessibilityAutoContext
+        Defaults[.autoContextEnabled]
     }
 
     var body: some View {
@@ -28,7 +31,7 @@ struct PaperclipButton: View {
             )
 
             if state.pendingContextList.isEmpty {
-                if !accessibilityAutoContextEnabled && !closedAutocontext {
+                if !accessibilityAutoContextEnabled && !closedAutoContextTag {
                     EnableAutocontextTag()
                 } else if accessibilityAutoContextEnabled {
                     Button {
@@ -36,8 +39,8 @@ struct PaperclipButton: View {
                     } label: {
                         Text("Add context")
                             .styleText(
-                                size: 11,
-                                weight: .semibold,
+                                size: 13,
+                                weight: .medium,
                                 color: .gray200
                             )
                     }

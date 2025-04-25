@@ -54,6 +54,7 @@ extension Defaults.Keys {
     static let closedNoRemoteModels = Key<Bool>("closedNoRemoteModels", default: false)
     static let closedNewRemoteData = Key<Data>("closedNewRemoteData", default: Data())
     static let closedDeprecatedRemoteData = Key<Data>("closedDeprecatedRemoteData", default: Data())
+    static let closedAutoContextTag = Key<Bool>("closedAutoContextTag", default: false)
     static let closedAutoContextDialog = Key<Bool>("closedAutoContext", default: false)
 
     static let seenLocal = Key<Bool>("seenLocal", default: false)
@@ -79,12 +80,11 @@ extension Defaults.Keys {
         "localEndpointURL", default: URL(string: "http://localhost:11434")!)
 
     // Feature flags
-    static let accessibilityEnabled = Key<Bool?>("accessibilityEnabled", default: nil)
-    static let accessibilityInputEnabled = Key<Bool?>("accessibilityInputEnabled", default: nil)
-    static let accessibilityAutoContextEnabled = Key<Bool?>(
-        "accessibilityAutoContextEnabled", default: nil)
     static let highlightHintMode = Key<HighlightHintMode?>("highlightHintMode", default: nil)
     
+    static let autoContextEnabled = Key<Bool>("enableAutoContext", default: true)
+    static let autoContextFromCurrentWindow = Key<Bool>("autoContextFromCurrentWindow", default: true)
+    static let autoContextFromHighlights = Key<Bool>("autoContextFromHighlights", default: true)
     static let automaticallyAddAutoContext = Key<Bool>("automaticallyAddAutoContext", default: true)
 
     // Web search

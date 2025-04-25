@@ -18,16 +18,20 @@ struct OnboardingSkipAccessibility: View {
     @State private var isHoveringClose = false
     
     var body: some View {
-        VStack(alignment: .trailing, spacing: 10) {
+        VStack(alignment: .leading, spacing: 10) {
             header
             
             Text("Onit has been designed to work side-by-side with accessibility permission and relies on it for a lot of its features.")
                 .styleText(size: 13, color: .gray100)
-            
-            Button {
-                Defaults[.showOnboarding] = false
-            } label: {
-                Text("Yes, continue →")
+                .padding(0)
+            HStack {
+                Spacer()
+                Button {
+                    Defaults[.showOnboarding] = false
+                    Defaults[.autoContextEnabled] = false
+                } label: {
+                    Text("Yes, continue →")
+                }
             }
         }
         .frame(maxWidth: .infinity)
@@ -63,4 +67,9 @@ extension OnboardingSkipAccessibility {
             }
         }
     }
+}
+
+
+#Preview {
+    OnboardingSkipAccessibility(showSkipConfirmation: .constant(true))
 }

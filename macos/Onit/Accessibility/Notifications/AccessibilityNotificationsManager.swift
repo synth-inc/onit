@@ -522,7 +522,7 @@ class AccessibilityNotificationsManager: ObservableObject {
             return
         }
 
-        guard FeatureFlagManager.shared.accessibilityAutoContext else {
+        guard Defaults[.autoContextFromCurrentWindow] else {
             self.screenResult = .init()
             return
         }
@@ -630,7 +630,7 @@ class AccessibilityNotificationsManager: ObservableObject {
     }
 
     private func processSelectedText(_ text: String?, for element: AXUIElement?) {
-        guard FeatureFlagManager.shared.accessibilityInput,
+        guard Defaults[.autoContextFromHighlights],
             let selectedText = text,
             let selectedElement = element,
             !selectedText.isEmpty

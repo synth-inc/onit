@@ -7,22 +7,17 @@
 
 import Combine
 import SwiftUI
+import Defaults
 
 struct MenuIcon: View {
     @ObservedObject private var accessibilityPermissionManager = AccessibilityPermissionManager.shared
     @ObservedObject private var featureFlagsManager = FeatureFlagManager.shared
 
     var body: some View {
-        if featureFlagsManager.accessibility {
-            let statusGranted = accessibilityPermissionManager.accessibilityPermissionStatus == .granted
-            Image(statusGranted ? .smirk : .untrusted)
-                .renderingMode(statusGranted ? .template : .original)
-                .animation(.default, value: statusGranted)
-        } else {
-            Image(.smirk)
-                .renderingMode(.template)
-                .animation(.default, value: true)
-        }
+        let statusGranted = accessibilityPermissionManager.accessibilityPermissionStatus == .granted
+        Image(statusGranted ? .smirk : .untrusted)
+            .renderingMode(statusGranted ? .template : .original)
+            .animation(.default, value: statusGranted)
     }
 }
 

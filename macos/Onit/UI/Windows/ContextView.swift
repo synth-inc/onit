@@ -45,7 +45,7 @@ struct ContextView: View {
     private func getDialogInfo() -> (String, String) {
         switch context {
         case .auto(_):
-            return ("Auto-context", "Auto-context is collected as plain text from your current window. You can manage your auto-context preferences in settings.")
+            return ("AutoContext", "AutoContext is collected as plain text from your current window. You can manage your AutoContext preferences in settings.")
         case .web(let websiteUrl, _, _):
             return ("Web Context", "Displaying content retrieved from \(websiteUrl.absoluteString).")
         default:

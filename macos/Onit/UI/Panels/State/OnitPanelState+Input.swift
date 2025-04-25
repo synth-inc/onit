@@ -6,11 +6,12 @@
 //
 
 import AppKit
+import Defaults
 
 extension OnitPanelState {
     func addAutoContext() {
-        guard FeatureFlagManager.shared.accessibility,
-            FeatureFlagManager.shared.accessibilityAutoContext
+        guard Defaults[.autoContextEnabled],
+              Defaults[.autoContextFromCurrentWindow]
         else {
             return
         }

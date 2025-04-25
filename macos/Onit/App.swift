@@ -24,6 +24,10 @@ struct App: SwiftUI.App {
     @Default(.isRegularApp) var isRegularApp
     @Default(.launchOnStartupRequested) var launchOnStartupRequested
 
+    @Default(.autoContextEnabled) var autoContextEnabled
+    @Default(.autoContextFromCurrentWindow) var autoContextFromCurrentWindow
+    @Default(.autoContextFromHighlights) var autoContextFromHighlights
+    
     @State var accessibilityPermissionRequested = false
 
     private var frontmostApplicationOnLaunch: NSRunningApplication?
@@ -74,7 +78,7 @@ struct App: SwiftUI.App {
                         break
                     }
                 }
-                .onChange(of: featureFlagsManager.accessibility, initial: true) {
+                .onChange(of: Defaults[.autoContextEnabled], initial: true) {
                     _, newValue in
                     if newValue {
                         AccessibilityPermissionManager.shared.startListeningPermission()
@@ -83,9 +87,9 @@ struct App: SwiftUI.App {
                     }
                 }
                 .onChange(of: [
-                    featureFlagsManager.accessibility,
-                    featureFlagsManager.accessibilityInput,
-                    featureFlagsManager.accessibilityAutoContext
+                    autoContextEnabled,
+                    autoContextFromCurrentWindow,
+                    autoContextFromHighlights
                 ], initial: true) { oldValue, newValue in
                     AccessibilityAnalytics.logFlags()
                 }

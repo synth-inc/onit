@@ -13,6 +13,8 @@ struct ContentView: View {
     
     @Default(.panelWidth) var panelWidth
     @Default(.isRegularApp) var isRegularApp
+    @ObservedObject private var accessibilityPermissionManager = AccessibilityPermissionManager.shared
+    @Default(.showOnboarding) var showOnboarding
     
     static let idealWidth: CGFloat = 400
     static let bottomPadding: CGFloat = 0
@@ -25,9 +27,8 @@ struct ContentView: View {
     }
     
     private var shouldShowOnboarding: Bool {
-        let accessibilityPermissionGranted = AccessibilityPermissionManager.shared.accessibilityPermissionStatus == .granted
-        
-        return !accessibilityPermissionGranted && Defaults[.showOnboarding]
+        let accessibilityPermissionGranted = accessibilityPermissionManager.accessibilityPermissionStatus == .granted
+        return !accessibilityPermissionGranted && showOnboarding
     }
 
     var body: some View {
@@ -58,6 +59,7 @@ struct ContentView: View {
                     }
                 }
             }
+
             .background(Color.black)
             .addBorder(
                 cornerRadius: 14,
