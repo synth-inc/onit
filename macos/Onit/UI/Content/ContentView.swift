@@ -36,7 +36,15 @@ struct ContentView: View {
             
             ZStack(alignment: .top) {
                 if shouldShowOnboarding {
-                    OnboardingAccessibility()
+                    VStack(spacing: 0) {
+                        if state.showChatView {
+                            OnboardingAccessibility().transition(.opacity)
+                        } else {
+                            Spacer()
+                        }
+                    }
+                    .frame(width: TetherAppsManager.minOnitWidth, height: .infinity)
+                    .background(Color.black)
                 } else {
                     VStack(spacing: 0) {
                         if !isRegularApp { Toolbar() }
