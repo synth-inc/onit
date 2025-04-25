@@ -10,7 +10,7 @@ import SwiftUI
 struct TextButton<Child: View>: View {
     private let icon: ImageResource?
     private let iconSize: CGFloat
-    private let text: String
+    private let text: String?
     private let disabled: Bool
     private let selected: Bool
     private let action: () -> Void
@@ -33,6 +33,7 @@ struct TextButton<Child: View>: View {
     
     private struct DefaultValues {
         var iconSize: CGFloat = 20
+        var text: String? = nil
         var disabled: Bool = false
         var selected: Bool = false
         
@@ -54,7 +55,7 @@ struct TextButton<Child: View>: View {
     init(
         icon: ImageResource? = nil,
         iconSize: CGFloat = DefaultValues().iconSize,
-        text: String,
+        text: String? = DefaultValues().text,
         disabled: Bool = DefaultValues().disabled,
         selected: Bool = DefaultValues().selected,
         action: @escaping () -> Void,
@@ -111,13 +112,15 @@ struct TextButton<Child: View>: View {
                 )
             }
             
-            Text(text)
-                .styleText(
-                    size: fontSize,
-                    weight: fontWeight,
-                    color: disabled ? .gray200 : selected ? .blue300 : isHovered ? .white : fontColor
-                )
-                .truncateText()
+            if let text = text {
+                Text(text)
+                    .styleText(
+                        size: fontSize,
+                        weight: fontWeight,
+                        color: disabled ? .gray200 : selected ? .blue300 : isHovered ? .white : fontColor
+                    )
+                    .truncateText()
+            }
             
             if fillContainer { Spacer() }
             
@@ -153,7 +156,7 @@ extension TextButton where Child == EmptyView {
     init(
         icon: ImageResource? = nil,
         iconSize: CGFloat = DefaultValues().iconSize,
-        text: String,
+        text: String? = DefaultValues().text,
         disabled: Bool = DefaultValues().disabled,
         selected: Bool = DefaultValues().selected,
         action: @escaping () -> Void,

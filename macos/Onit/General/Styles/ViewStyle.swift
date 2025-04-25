@@ -82,13 +82,15 @@ extension View {
     func styleText(
         size: CGFloat = 14,
         weight: Font.Weight = Font.Weight.medium,
-        color: Color = Color.white
+        color: Color = Color.white,
+        align: TextAlignment = TextAlignment.leading
     ) -> some View {
         self
             .font(.system(
                 size: size, weight: weight
             ))
             .foregroundColor(color)
+            .multilineTextAlignment(align)
     }
     
     func truncateText() -> some View {
