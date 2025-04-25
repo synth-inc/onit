@@ -150,7 +150,6 @@ struct ModelSelectionView: View {
             titleIcon: availableLocalModels.isEmpty ? .warningSettings : nil,
             titleIconColor: .orange,
             title: "Local",
-            titleChild: add,
             showTopBorder: true,
             contentRightPadding: 0,
             contentBottomPadding: 0,
@@ -198,19 +197,6 @@ struct ModelSelectionView: View {
                     listCount: CGFloat(filteredLocalModels.count)
                 )
         )
-    }
-
-    var add: some View {
-        HStack(spacing: 4) {
-            Text("Add").appFont(.medium13)
-            Image(.plus)
-        }
-        .padding(.vertical, 4)
-        .padding(.horizontal, 6)
-        .background(.gray400)
-        .cornerRadius(5)
-        .opacity(0.3)
-        .padding(.bottom, 8)
     }
     
     var custom: some View {
