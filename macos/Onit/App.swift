@@ -73,10 +73,6 @@ struct App: SwiftUI.App {
                 .onChange(of: featureFlagsManager.accessibility, initial: true) {
                     _, newValue in
                     if newValue {
-                        if !accessibilityPermissionRequested {
-                            accessibilityPermissionRequested = true
-                            AccessibilityPermissionManager.shared.requestPermission()
-                        }
                         AccessibilityPermissionManager.shared.startListeningPermission()
                     } else {
                         AccessibilityPermissionManager.shared.stopListeningPermission()

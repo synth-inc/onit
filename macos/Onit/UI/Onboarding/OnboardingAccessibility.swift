@@ -61,7 +61,9 @@ extension OnboardingAccessibility {
     
     private var grantAccessButton: some View {
         TextButton(
-            action: openMacOSAccessibilitySettings,
+            action: {
+                AccessibilityPermissionManager.shared.requestPermission()
+            },
             height: 40,
             fillContainer: false,
             cornerRadius: 9,
@@ -104,15 +106,5 @@ extension OnboardingAccessibility {
             }
         }
         .padding(.bottom, 16)
-    }
-}
-
-// MARK: - Private Functions
-
-extension OnboardingAccessibility {
-    private func openMacOSAccessibilitySettings() {
-        if let url = URL(string: MenuCheckForPermissions.link) {
-            NSWorkspace.shared.open(url)
-        }
     }
 }
