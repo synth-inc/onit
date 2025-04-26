@@ -6,6 +6,7 @@
 //
 
 import Defaults
+import DefaultsMacros
 import Sparkle
 import SwiftUI
 
@@ -21,17 +22,19 @@ class AppState: NSObject {
                                                updaterDelegate: nil,
                                                userDriverDelegate: nil)
     
-    var remoteModels: RemoteModelsState
     var remoteFetchFailed: Bool = false
     var localFetchFailed: Bool = false
     
-    var account: Account?
+    var account: Account? {
+        didSet {
+            // If they log out and don't have a key for their current remote model, set to nil
+            invalidateRemoteModel()
+        }
+    }
 
     // MARK: - Initializer
     
-    init(remoteModels: RemoteModelsState) {
-        self.remoteModels = remoteModels
-        
+    override init() {
         super.init()
 
         Task {
@@ -68,7 +71,7 @@ class AppState: NSObject {
             } else if localModel == nil || !models.contains(localModel!) {
                 Defaults[.localModel] = models[0]
             }
-            if remoteModels.listedModels.isEmpty {
+            if listedModels.isEmpty {
                 Defaults[.mode] = .local
             }
             localFetchFailed = false
@@ -96,8 +99,8 @@ class AppState: NSObject {
                 }
 
                 Defaults[.availableRemoteModels] = models
-                if !remoteModels.listedModels.isEmpty {
-                    Defaults[.remoteModel] = remoteModels.listedModels.first
+                if !listedModels.isEmpty {
+                    Defaults[.remoteModel] = listedModels.first
                 }
             } else {
 
@@ -141,7 +144,7 @@ class AppState: NSObject {
                         })
                 }
 
-                if !remoteModels.listedModels.isEmpty
+                if !listedModels.isEmpty
                     && (Defaults[.remoteModel] == nil
                         || !Defaults[.availableRemoteModels].contains(Defaults[.remoteModel]!))
                 {
@@ -152,6 +155,136 @@ class AppState: NSObject {
         } catch {
             print("Error fetching local models:", error)
             remoteFetchFailed = true
+        }
+    }
+
+    // MARK: - Remote Models
+
+    @ObservableDefault(.availableRemoteModels)
+    @ObservationIgnored
+    var availableRemoteModels: [AIModel]
+
+    @ObservableDefault(.availableCustomProviders)
+    @ObservationIgnored
+    var availableCustomProvider: [CustomProvider]
+
+    @ObservableDefault(.isOpenAITokenValidated)
+    @ObservationIgnored
+    var isOpenAITokenValidated: Bool
+
+    @ObservableDefault(.useOpenAI)
+    @ObservationIgnored
+    var useOpenAI: Bool
+
+    @ObservableDefault(.isAnthropicTokenValidated)
+    @ObservationIgnored
+    var isAnthropicTokenValidated: Bool
+
+    @ObservableDefault(.useAnthropic)
+    @ObservationIgnored
+    var useAnthropic: Bool
+
+    @ObservableDefault(.isXAITokenValidated)
+    @ObservationIgnored
+    var isXAITokenValidated: Bool
+
+    @ObservableDefault(.useXAI)
+    @ObservationIgnored
+    var useXAI: Bool
+
+    @ObservableDefault(.isGoogleAITokenValidated)
+    @ObservationIgnored
+    var isGoogleAITokenValidated: Bool
+
+    @ObservableDefault(.useGoogleAI)
+    @ObservationIgnored
+    var useGoogleAI: Bool
+
+    @ObservableDefault(.isDeepSeekTokenValidated)
+    @ObservationIgnored
+    var isDeepSeekTokenValidated: Bool
+
+    @ObservableDefault(.useDeepSeek)
+    @ObservationIgnored
+    var useDeepSeek: Bool
+
+    @ObservableDefault(.isPerplexityTokenValidated)
+    @ObservationIgnored
+    var isPerplexityTokenValidated: Bool
+
+    @ObservableDefault(.usePerplexity)
+    @ObservationIgnored
+    var usePerplexity: Bool
+
+    var listedModels: [AIModel] {
+        var models = availableRemoteModels.filter {
+            Defaults[.visibleModelIds].contains($0.uniqueId)
+        }
+
+        if !useOpenAI || (account == nil && !isOpenAITokenValidated) {
+            models = models.filter { $0.provider != .openAI }
+        }
+        if !useAnthropic || (account == nil && !isAnthropicTokenValidated) {
+            models = models.filter { $0.provider != .anthropic }
+        }
+        if !useXAI || (account == nil && !isXAITokenValidated) {
+            models = models.filter { $0.provider != .xAI }
+        }
+        if !useGoogleAI || (account == nil && !isGoogleAITokenValidated) {
+            models = models.filter { $0.provider != .googleAI }
+        }
+        if !useDeepSeek || (account == nil && !isDeepSeekTokenValidated) {
+            models = models.filter { $0.provider != .deepSeek }
+        }
+        if !usePerplexity || (account == nil && !isPerplexityTokenValidated) {
+            models = models.filter { $0.provider != .perplexity }
+        }
+
+        // Filter out models from disabled custom providers
+        for customProvider in availableCustomProvider {
+            models = models.filter { model in
+                if model.customProviderName == customProvider.name {
+                    return customProvider.isEnabled
+                }
+                return true
+            }
+        }
+
+        return models
+    }
+
+    var remoteNeedsSetup: Bool {
+        listedModels.isEmpty
+    }
+
+    func invalidateRemoteModel() {
+        if account != nil {
+            return
+        }
+
+        guard let provider = Defaults[.remoteModel]?.provider else { return }
+
+        var isValid: Bool
+
+        switch provider {
+        case .openAI:
+            isValid = isOpenAITokenValidated
+        case .anthropic:
+            isValid = isAnthropicTokenValidated
+        case .xAI:
+            isValid = isXAITokenValidated
+        case .googleAI:
+            isValid = isGoogleAITokenValidated
+        case .deepSeek:
+            isValid = isDeepSeekTokenValidated
+        case .perplexity:
+            isValid = isPerplexityTokenValidated
+        case .custom:
+            isValid = true
+        }
+
+        if !isValid {
+            Defaults[.remoteModel] = nil
         }
     }
 }

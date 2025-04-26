@@ -18,13 +18,10 @@ private struct OnitPanelStateKey: @preconcurrency EnvironmentKey {
 private struct OnitAppStateKey: @preconcurrency EnvironmentKey {
     
     @MainActor
-    static let defaultValue: AppState = AppState(
-        remoteModels: RemoteModelsState()
-    )
+    static let defaultValue: AppState = AppState()
 }
 
 extension EnvironmentValues {
-    @Entry var remoteModels: RemoteModelsState = RemoteModelsState()
     @Entry var systemPrompt: SystemPromptState = SystemPromptState()
 
     var appState: AppState {

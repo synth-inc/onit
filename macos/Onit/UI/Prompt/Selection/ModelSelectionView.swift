@@ -11,7 +11,6 @@ import SwiftUI
 struct ModelSelectionView: View {
     @Environment(\.appState) var appState
     @Environment(\.openSettings) var openSettings
-    @Environment(\.remoteModels) var remoteModels
     
     @Default(.mode) var mode
     @Default(.localModel) var localModel
@@ -30,9 +29,9 @@ struct ModelSelectionView: View {
     
     private var filteredRemoteModels: [AIModel] {
         if searchQuery.isEmpty {
-            return remoteModels.listedModels
+            return appState.listedModels
         } else {
-            return remoteModels.listedModels.filter {
+            return appState.listedModels.filter {
                 $0.displayName.localizedCaseInsensitiveContains(searchQuery)
             }
         }
@@ -90,10 +89,10 @@ struct ModelSelectionView: View {
     }
 
     var remote: some View {
-        let noRemoteModels = !remoteModels.remoteNeedsSetup && availableRemoteModels.isEmpty
+        let noRemoteModels = !appState.remoteNeedsSetup && availableRemoteModels.isEmpty
         
         return MenuSection(
-            titleIcon: remoteModels.remoteNeedsSetup || noRemoteModels ? .warningSettings : nil,
+            titleIcon: appState.remoteNeedsSetup || noRemoteModels ? .warningSettings : nil,
             titleIconColor: .orange,
             title: "Remote",
             showTopBorder: true,
@@ -101,7 +100,7 @@ struct ModelSelectionView: View {
             contentBottomPadding: 0,
             contentLeftPadding: 0
         ) {
-            if remoteModels.listedModels.isEmpty {
+            if appState.listedModels.isEmpty {
                 Button("Setup remote models") {
                     appState.settingsTab = .models
                     openSettings()
@@ -220,15 +219,15 @@ struct ModelSelectionView: View {
                     .appFont(.medium13)
                     .foregroundStyle(.white.opacity(0.6))
                 Spacer()
-                if remoteModels.remoteNeedsSetup
-                    || (!remoteModels.remoteNeedsSetup && availableRemoteModels.isEmpty)
+                if appState.remoteNeedsSetup
+                    || (!appState.remoteNeedsSetup && availableRemoteModels.isEmpty)
                 {
                     Image(.warningSettings)
                 }
             }
             .padding(.horizontal, 12)
 
-            if remoteModels.listedModels.isEmpty {
+            if appState.listedModels.isEmpty {
                 Button("Setup remote models") {
                     appState.settingsTab = .models
                     openSettings()
