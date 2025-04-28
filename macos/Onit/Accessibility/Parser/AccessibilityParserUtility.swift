@@ -36,20 +36,15 @@ class AccessibilityParserUtility {
             // Check if the current depth exceeds maxDepth
             guard currentDepth <= maxDepth else { return }
 
-            // Check if the element is valid
-            var elementPid: pid_t = 0
-            if AXUIElementGetPid(currentElement, &elementPid) != .success {
+            guard element.pid() != nil else {
                 print("Invalid element (cannot get pid). Skipping.")
                 return
             }
 
             // Skip off-screen element
             if let frame = currentElement.getFrame(convertedToGlobalCoordinateSpace: true),
-                frame.width <= 0 || frame.height <= 0
-                    || !currentScreen.visibleFrame.intersects(frame)
-            {
-                //debugText = debugText + "Element is off-screen.\n"
-
+                frame.width <= 0 || frame.height <= 0 || !currentScreen.visibleFrame.intersects(frame) {
+                print("Element is off-screen. Skipping.")
                 return
             }
 

@@ -17,25 +17,28 @@ class AccessibilityParser {
 
     private let genericParser = AccessibilityParserGeneric()
     private let parsers: [String: AccessibilityParserLogic] = [
-        "Xcode": AccessibilityParserXCode()
+        "Xcode": AccessibilityParserXCode(),
+        "Calendar": AccessibilityParserCalendar(),
+        "Pages": ClipboardParser()
     ]
 
     // MARK: - Functions
 
-    func getAllTextInElement(windowElement: AXUIElement) async -> [String: String]? {
+    func getAllTextInElement(windowElement: AXUIElement) async -> [String: String] {
         let startTime = CFAbsoluteTimeGetCurrent()
 
         let appName = windowElement.parent()?.title() ?? "Unknown"
+        let appTitle = windowElement.title() ?? "Unknown"
         let parser = parsers[appName] ?? genericParser
-
-//        var debugText = "App found: \(appName) use of parser \(parser)\n"
 
         var results = parser.parse(element: windowElement)
 
         let endTime = CFAbsoluteTimeGetCurrent()
         let elapsedTime = endTime - startTime
 
-        results?[AccessibilityParsedElements.elapsedTime] = "\(elapsedTime)"
+        results[AccessibilityParsedElements.applicationName] = appName
+        results[AccessibilityParsedElements.applicationTitle] = appTitle
+        results[AccessibilityParsedElements.elapsedTime] = "\(elapsedTime)"
 
         return results
     }
