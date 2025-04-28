@@ -41,6 +41,8 @@ class AccessibilityNotificationsManager: ObservableObject {
     }
 
     // MARK: - Properties
+    
+    private let textSelectionPoller = HighlightedTextPoller()
 
     private var currentSource: String?
 
@@ -271,6 +273,14 @@ class AccessibilityNotificationsManager: ObservableObject {
         currentSource = appName
         if let targetWindow = processID.getAXUIElement().findFirstTargetWindow() {
             handleWindowBounds(for: targetWindow)
+            
+            textSelectionPoller.startPolling(
+                observedElement: targetWindow,
+                selectionChangedHandler: { textSelected in
+                    log.error("Text selected found: \(textSelected)")
+                }, deselectionHandler: {
+                    log.error("Text deselected")
+                })
         }
         processSelectedText(selectedText, for: selectedElement)
         retrieveWindowContent(for: processID)

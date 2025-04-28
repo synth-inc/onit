@@ -44,7 +44,7 @@ class AccessibilityParserUtility {
             // Skip off-screen element
             if let frame = currentElement.getFrame(convertedToGlobalCoordinateSpace: true),
                 frame.width <= 0 || frame.height <= 0 || !currentScreen.visibleFrame.intersects(frame) {
-                print("Element is off-screen. Skipping.")
+                // print("Element is off-screen. Skipping.")
                 return
             }
 
