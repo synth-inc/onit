@@ -94,6 +94,36 @@ struct ChatEndpointMessagesBuilder {
         return localMessageStack
     }
 
+    // MARK: - Onit
+
+    static func onit(
+        model: AIModel,
+        responses: [String],
+        systemMessage: String,
+        userMessages: [String]
+    ) -> [OnitChatMessage] {
+        var onitMessageStack: [OnitChatMessage] = []
+
+        if model.supportsSystemPrompts == true {
+            onitMessageStack.append(
+                OnitChatMessage(role: "system", content: systemMessage)
+            )
+        }
+
+        for (index, userMessage) in userMessages.enumerated() {
+            let onitMessage = OnitChatMessage(role: "user", content: userMessage)
+            onitMessageStack.append(onitMessage)
+            // If there is a corresponding response, add it as an assistant message
+            if index < responses.count {
+                let responseMessage = OnitChatMessage(
+                    role: "assistant", content: responses[index])
+                onitMessageStack.append(responseMessage)
+            }
+        }
+
+        return onitMessageStack
+    }
+
     // MARK: - OpenAI
 
     static func openAI(

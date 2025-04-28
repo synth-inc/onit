@@ -9,6 +9,7 @@ import SwiftUI
 import GoogleSignIn
 import GoogleSignInSwift
 import AuthenticationServices
+import Defaults
 
 struct AccountTab: View {
     @Environment(\.appState) var appState
@@ -18,6 +19,7 @@ struct AccountTab: View {
     @State private var token: String = ""
     @State private var loginPassword: String = ""
 
+    @Default(.useOnitChat) var useOnitChat
     @State private var setPassword: String = ""
 
     @State private var errorMessage: String?
@@ -35,6 +37,7 @@ struct AccountTab: View {
                 google
                 apple
             } else {
+                useOnitChatSection
                 setPasswordSection
                 logoutButton
             }
@@ -195,6 +198,17 @@ struct AccountTab: View {
         appState.account = loginResponse.account
     }
     
+    var useOnitChatSection: some View {
+        HStack {
+            Text("Use Onit Chat")
+                .font(.system(size: 13))
+            Spacer()
+            Toggle("", isOn: $useOnitChat)
+                .toggleStyle(.switch)
+                .controlSize(.small)
+        }
+    }
+
     var setPasswordSection: some View {
         VStack(spacing: 12) {
             TextField("Create a password", text: $setPassword)
