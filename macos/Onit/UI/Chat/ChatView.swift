@@ -25,13 +25,13 @@ struct ChatView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            SetUpDialogs()
             
-            systemPrompt
+            SetUpDialogs()
             
             if currentPromptsCount > 0 {
                 ScrollViewReader { proxy in
                     ScrollView {
+                        systemPrompt
                         ChatsView()
                             .id(chatsID)
                             .onAppear {
@@ -44,7 +44,10 @@ struct ChatView: View {
                     .onChange(of: state.currentChat) { old, new in
                         scrollToBottom(using: proxy)
                     }
+                    .padding(.top, 0)
                 }
+            } else {
+                systemPrompt
             }
             
             PromptCore()
@@ -65,13 +68,8 @@ extension ChatView {
     var systemPrompt: some View {
         VStack(alignment: .leading, spacing: 0) {
             if let systemPrompt = state.currentChat?.systemPrompt {
-                VStack(alignment: .leading, spacing: 0) {
-                    ChatSystemPromptView(systemPrompt: systemPrompt)
-                    
-                    if currentPromptsCount > 0 { PromptDivider() }
-                }
+                ChatSystemPromptView(systemPrompt: systemPrompt)
             }
-            
             if shouldShowSystemPrompt { SystemPromptView() }
         }
     }

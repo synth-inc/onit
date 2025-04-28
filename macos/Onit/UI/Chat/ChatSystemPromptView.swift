@@ -37,7 +37,7 @@ struct ChatSystemPromptView: View {
                     isExpanded.toggle()
                 }
             } label: {
-                HStack(alignment: .center, spacing: 6) {
+                HStack(alignment: .top, spacing: 6) {
                     Image(.chatSettings)
                         .renderingMode(.template)
                     Text(systemPrompt.name)
@@ -47,7 +47,8 @@ struct ChatSystemPromptView: View {
                         .renderingMode(.template)
                         .rotationEffect(.degrees(isExpanded ? 180 : 0))
                 }
-                .padding(.vertical, 2)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.vertical, 0)
                 .foregroundStyle(.blue300)
             }
             .buttonStyle(DarkerButtonStyle())
@@ -117,7 +118,7 @@ struct ChatSystemPromptView: View {
         }
         .padding(.top, 8)
         .padding(.horizontal, 12)
-        .padding(.bottom, isExpanded ? 12 : 8)
+        .padding(.bottom, 0)
         .background {
             GeometryReader { g in
                 Color.clear

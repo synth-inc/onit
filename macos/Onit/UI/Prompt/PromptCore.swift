@@ -112,7 +112,7 @@ extension PromptCore {
         )
         .addAnimation(dependency: isRemote, duration: 0.3)
         .addAnimation(dependency: isFocused, duration: 0.3)
-        .padding(.top, 12)
+        .padding(.top, 8)
         .padding(.horizontal, 12)
     }
 }

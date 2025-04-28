@@ -57,7 +57,7 @@ struct SetUpDialogs: View {
     }
 
     var body: some View {
-        ScrollView {
+        ScrollView(showsIndicators: false) {
             VStack {
                 content
             }
@@ -67,14 +67,25 @@ struct SetUpDialogs: View {
                     seenLocal = true
                 }
             }
-            .padding(.bottom, state.setUpHeight >= scrollMaxHeight ? 12 : 0)
+            .padding(.bottom, 4) 
         }
         .frame(maxHeight: min(state.setUpHeight, scrollMaxHeight))
-        
-        if state.setUpHeight > 0 {
-            PromptDivider()
-                .padding(.top, state.setUpHeight < scrollMaxHeight ? 12 : 0)
-        }
+        .overlay(
+            Group {
+                if state.setUpHeight >= scrollMaxHeight {
+                    LinearGradient(
+                        gradient: Gradient(stops: [
+                            .init(color: Color.black, location: 0),
+                            .init(color: Color.black.opacity(0), location: 1)
+                        ]),
+                        startPoint: .bottom,
+                        endPoint: .top
+                    )
+                    .frame(height: 50)
+                }
+            },
+            alignment: .bottom
+        )
     }
     
     private func updateHeight(newHeight: CGFloat) {
@@ -105,7 +116,7 @@ struct SetUpDialogs: View {
 //                expired(.openAI)
 //                expired(.anthropic)
 //            #endif
-            
+//            
             if availableRemoteModels.isEmpty && appState.remoteFetchFailed && !closedNoRemoteModels {
                 noRemote
             }
