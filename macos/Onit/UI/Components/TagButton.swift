@@ -19,6 +19,7 @@ struct TagButton: View {
     
     private let maxWidth: CGFloat
     private let fill: Bool
+    private let isTransparent: Bool
     
     init(
         child: (any View)? = nil,
@@ -31,7 +32,8 @@ struct TagButton: View {
         closeAction: (() -> Void)? = nil,
         
         maxWidth: CGFloat = 0,
-        fill: Bool = false
+        fill: Bool = false,
+        isTransparent: Bool = false
     ) {
         self.child = child
         self.icon = icon
@@ -44,6 +46,7 @@ struct TagButton: View {
         
         self.maxWidth = maxWidth
         self.fill = fill
+        self.isTransparent = isTransparent
     }
     
     @State private var isHovered: Bool = false
@@ -61,7 +64,6 @@ struct TagButton: View {
             Text(text)
                 .styleText(size: 13)
                 .truncateText()
-                .frame(maxWidth: .infinity, alignment: .leading)
             
             if let caption = caption {
                 Text(caption)
@@ -82,12 +84,18 @@ struct TagButton: View {
             }
         }
         .padding(.horizontal, 3)
-        .frame(maxWidth: maxWidth > 0 ? maxWidth : fill ? .infinity : nil)
+        .frame(
+            maxWidth: maxWidth > 0 ? maxWidth : fill ? .infinity : nil,
+            alignment: .leading
+        )
         .frame(height: 22)
         .background(setBackground())
         .scaleEffect(setScale())
         .opacity(setOpacity())
-        .addBorder(cornerRadius: 4, stroke: .gray400)
+        .addBorder(
+            cornerRadius: 4,
+            stroke: isTransparent ? .clear : .gray400
+        )
         .addAnimation(dependency: $isHovered.wrappedValue)
         .help(tooltip ?? "")
         .onHover{ isHovering in isHovered = isHovering }
@@ -105,8 +113,15 @@ struct TagButton: View {
 // MARK: - Private Functions
 extension TagButton {
     private func setBackground() -> Color {
-        if let _ = action { return isHovered ? .gray400 : .gray500 }
-        else { return .gray500 }
+        if let _ = action,
+           isHovered
+        {
+            if isTransparent { return .gray800 }
+            else { return .gray400 }
+        } else {
+            if isTransparent { return .clear }
+            else { return .gray500 }
+        }
     }
     
     private func setScale() -> CGFloat {
