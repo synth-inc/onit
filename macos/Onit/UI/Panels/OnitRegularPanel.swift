@@ -88,7 +88,6 @@ class OnitRegularPanel: NSPanel {
                         Defaults[.panelWidth] = self.width
                         self.isResizing = false
                         self.originalPosition = .zero // Reset original position
-                        self.state.repositionPanel()
                     }
                 )
                 .padding(.leading, 8)
@@ -98,13 +97,11 @@ class OnitRegularPanel: NSPanel {
             .contentShape(Rectangle()) // Make the entire area respond to gestures
         )
         resizeOverlay.wantsLayer = true
-        resizeOverlay.layer?.backgroundColor = .clear
+        resizeOverlay.layer?.backgroundColor = CGColor.clear
+        resizeOverlay.frame = hostingView.bounds
+        hostingView.addSubview(resizeOverlay)
+        resizeOverlay.autoresizingMask = [.width, .height]
         
-        if let contentHostingView = self.contentView {
-            resizeOverlay.frame = contentHostingView.bounds
-            contentHostingView.addSubview(resizeOverlay)
-            resizeOverlay.autoresizingMask = [.width, .height]
-        }
         
         NotificationCenter.default.addObserver(
             self,
