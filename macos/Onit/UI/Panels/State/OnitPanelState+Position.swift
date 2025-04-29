@@ -32,7 +32,7 @@ extension OnitPanelState {
         if window.isDesktopFinder {
             if let mouseScreen = NSScreen.mouse {
                 let screenFrame = mouseScreen.frame
-                let onitWidth = TetherAppsManager.minOnitWidth
+        let onitWidth = ContentView.idealWidth
                 let onitHeight = screenFrame.height - ContentView.bottomPadding
                 let onitY = screenFrame.maxY - onitHeight
                 let onitX = screenFrame.maxX - onitWidth
@@ -64,7 +64,7 @@ extension OnitPanelState {
         let fullTop = primaryScreenFrame.height - screenFrame.height - visibleFrame.minY + activeScreenInset
         let windowDistanceFromTop = windowFrame.minY - fullTop
         
-        let onitWidth = TetherAppsManager.minOnitWidth
+        let onitWidth = ContentView.idealWidth
         let onitHeight = min(windowFrame.height, screenFrame.height - ContentView.bottomPadding)
         let onitY = visibleFrame.minY + (visibleFrame.height - windowFrame.height) - windowDistanceFromTop
         
@@ -492,4 +492,4 @@ extension OnitPanelState {
             return value
         }
     }
-} 
+}  

@@ -26,7 +26,9 @@ class UntetheredScreenManager: ObservableObject {
 
     private let defaultState = OnitPanelState(trackedScreen: nil)
 
-    static let minOnitWidth: CGFloat = ContentView.idealWidth
+    static var minOnitWidth: CGFloat {
+        return ContentView.idealWidth
+    }
     static let spaceBetweenWindows: CGFloat = -(TetheredButton.width / 2)
 
     var tetherHintDetails: TetherHintDetails

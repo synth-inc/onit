@@ -23,7 +23,8 @@ class OnitRegularPanel: NSPanel {
     }
     
     let state: OnitPanelState
-    private let width = ContentView.idealWidth
+    private var width: CGFloat
+    private let minWidth: CGFloat = 300 // Minimum width constraint
     
     var dragDetails: PanelDraggingDetails = .init()
     var isAnimating: Bool = false
@@ -34,6 +35,7 @@ class OnitRegularPanel: NSPanel {
     
     init(state: OnitPanelState) {
         self.state = state
+        self.width = Defaults[.panelWidth] ?? ContentView.idealWidth
         
         super.init(
             contentRect: NSRect(x: 0, y: 0, width: width, height: 0),
@@ -70,6 +72,25 @@ class OnitRegularPanel: NSPanel {
 
         self.contentView = hostingView
         self.contentView?.setFrameOrigin(NSPoint(x: 0, y: 0))
+        
+        let resizeOverlay = NSHostingView(rootView: 
+            ZStack(alignment: .bottomLeading) {
+                Color.clear // Transparent background
+                ResizeHandle(onDrag: { [weak self] deltaX in
+                    self?.resizePanel(byWidth: deltaX)
+                })
+                .padding(.leading, 8)
+                .padding(.bottom, 8)
+            }
+        )
+        resizeOverlay.wantsLayer = true
+        resizeOverlay.layer?.backgroundColor = .clear
+        
+        if let contentHostingView = self.contentView {
+            resizeOverlay.frame = contentHostingView.bounds
+            contentHostingView.addSubview(resizeOverlay)
+            resizeOverlay.autoresizingMask = [.width, .height]
+        }
         
         NotificationCenter.default.addObserver(
             self,
@@ -153,6 +174,24 @@ extension OnitRegularPanel: OnitPanel {
     func toggleFullscreen() { }
     
     func updatePosition() { }
+    
+    func resizePanel(byWidth deltaWidth: CGFloat) {
+        guard !isAnimating else { return }
+        
+        let newWidth = max(minWidth, width - deltaWidth)
+        width = newWidth
+        
+        let currentFrame = frame
+        let newFrame = NSRect(
+            x: currentFrame.origin.x + deltaWidth, // Move panel as it's resized
+            y: currentFrame.origin.y,
+            width: newWidth,
+            height: currentFrame.height
+        )
+        
+        setFrame(newFrame, display: true)
+        ContentView.idealWidth = newWidth // Update static property
+    }
     
     func show() {
         makeKeyAndOrderFront(nil)
