@@ -11,6 +11,7 @@ import SwiftUI
 extension OnitRegularPanel {
     
     @objc func windowDidMove(_ notification: Notification) {
+        if isResizing { return }
         guard let activeWindow = state.trackedWindow?.element,
               let activeWindowFrame = activeWindow.getFrame(),
               wasAnimated, !isAnimating, dragDetails.isDragging, !state.isWindowDragging else { return }

@@ -134,14 +134,6 @@ class OnitRegularPanel: NSPanel {
         show()
     }
     
-    @objc private func windowDidMove(_ notification: Notification) {
-        if isResizing {
-            return
-        }
-        
-        state.repositionPanel()
-    }
-    
     @objc private func windowWillMove(_ notification: Notification) {
         dragDetails.isDragging = true
     }
