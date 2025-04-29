@@ -23,9 +23,10 @@ class OnitRegularPanel: NSPanel {
     }
     
     let state: OnitPanelState
-    private var width: CGFloat
-    private let minWidth: CGFloat = 300 // Minimum width constraint
-    
+    var width: CGFloat
+    static let minWidth: CGFloat = 300 // Minimum width constraint
+    static let minAppWidth = 500.0
+
     var dragDetails: PanelDraggingDetails = .init()
     var isAnimating: Bool = false
     var wasAnimated: Bool = false
@@ -34,6 +35,7 @@ class OnitRegularPanel: NSPanel {
     var isResizing: Bool = false
     private var originalPosition: NSPoint = .zero
     var onitContentView: ContentView?
+    var originalPanelWidth: CGFloat = -1.0
     
     init(state: OnitPanelState) {
         self.state = state
@@ -81,6 +83,10 @@ class OnitRegularPanel: NSPanel {
                 ResizeHandle(
                     onDrag: { [weak self] deltaX in
                         self?.isResizing = true
+                        // Store the original panel width so we can resize the activeWindow afterwards
+                        if self?.originalPanelWidth == -1.0 {
+                            self?.originalPanelWidth = self?.width ?? 0
+                        }
                         self?.resizePanel(byWidth: deltaX)
                     },
                     onDragEnded: { [weak self] in
@@ -189,6 +195,7 @@ extension OnitRegularPanel: OnitPanel {
     func resizePanel(byWidth deltaWidth: CGFloat) {
         guard !isAnimating else { return }
         
+<<<<<<< HEAD
         let originalMovableState = isMovableByWindowBackground
         isMovableByWindowBackground = false
         
@@ -224,6 +231,29 @@ extension OnitRegularPanel: OnitPanel {
         ContentView.idealWidth = newWidth
         
         isMovableByWindowBackground = originalMovableState
+=======
+        let newWidth = width - deltaWidth
+    
+        let currentFrame = frame
+        
+        if (newWidth >= OnitRegularPanel.minWidth) {
+            width = newWidth
+            print("Resizing panel - Width: \(newWidth), New X: \(frame.maxX - newWidth)")
+            
+            let newFrame = NSRect(
+                x: currentFrame.maxX - newWidth, // Keep right edge fixed
+                y: currentFrame.origin.y,
+                width: newWidth,
+                height: currentFrame.height
+            )
+            
+            setFrame(newFrame, display: true)
+            ContentView.idealWidth = newWidth // Update static property
+        } else {
+            setFrame(currentFrame, display: true)
+            print("Setting frame: \(currentFrame.origin.x), \(currentFrame.origin.y), \(currentFrame.width), \(currentFrame.height)")
+        }
+>>>>>>> 0434366 (more fixing)
     }
     
     func show() {

@@ -76,11 +76,10 @@ extension OnitPanelState {
         if (action == .move && !isOnRightmostScreen) || hasEnoughSpace {
             self.movePanel(screenFrame: screenFrame, onitWidth: onitWidth, onitHeight: onitHeight, onitY: onitY)
         } else {
-            let minAppWidth = 500.0
             
             let maxAvailableWidth = screenFrame.maxX - windowFrame.origin.x - onitWidth - TetherAppsManager.spaceBetweenWindows
             
-            if maxAvailableWidth >= minAppWidth {
+            if maxAvailableWidth >= OnitRegularPanel.minAppWidth {
                 resizeWindowAndMovePanel(onitWidth: onitWidth, onitHeight: onitHeight, onitY: onitY, maxAvailableWidth: maxAvailableWidth)
             } else {
                 moveWindowAndPanel(screenFrame: screenFrame, onitWidth: onitWidth, onitHeight: onitHeight, onitY: onitY)
