@@ -34,7 +34,10 @@ struct TokenManager {
             kSecValueData as String: data
         ]
 
-        SecItemDelete(query as CFDictionary) // Delete any existing item
+        let deleteStatus = SecItemDelete(query as CFDictionary)
+        if deleteStatus != errSecSuccess && deleteStatus != errSecItemNotFound {
+            return false
+        }
 
         let status = SecItemAdd(query as CFDictionary, nil)
         return status == errSecSuccess
