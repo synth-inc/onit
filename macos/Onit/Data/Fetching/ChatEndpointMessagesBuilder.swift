@@ -104,7 +104,7 @@ struct ChatEndpointMessagesBuilder {
     ) -> [OnitChatMessage] {
         var onitMessageStack: [OnitChatMessage] = []
 
-        if model.supportsSystemPrompts == true {
+        if model.supportsSystemPrompts {
             onitMessageStack.append(
                 OnitChatMessage(role: "system", content: systemMessage)
             )
@@ -135,7 +135,7 @@ struct ChatEndpointMessagesBuilder {
     ) -> [OpenAIChatMessage] {
         var openAIMessageStack: [OpenAIChatMessage] = []
 
-        if model.supportsSystemPrompts == true {
+        if model.supportsSystemPrompts {
             openAIMessageStack.append(
                 OpenAIChatMessage(role: "system", content: .text(systemMessage))
             )
