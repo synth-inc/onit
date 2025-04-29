@@ -8,7 +8,7 @@
 import Foundation
 
 extension FetchingClient {
-    func loginPassword(email:String, password: String) async throws -> LoginResponse {
+    func loginPassword(email: String, password: String) async throws -> LoginResponse {
         let endpoint = LoginPasswordEndpoint(email: email, password: password)
         let response = try await execute(endpoint)
         return response
