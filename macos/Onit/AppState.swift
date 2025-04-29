@@ -28,14 +28,19 @@ class AppState: NSObject {
     var account: Account? {
         didSet {
             if account == nil {
+                fetchSubscriptionTask?.cancel()
+                fetchSubscriptionTask = nil
                 subscription = nil
             } else {
-                Task {
+                fetchSubscriptionTask?.cancel()
+                fetchSubscriptionTask = Task {
                     subscription = try? await FetchingClient().getSubscription()
                 }
             }
         }
     }
+    private var fetchSubscriptionTask: Task<Void, Never>?
+    
     var subscription: Subscription? {
         didSet {
             if subscriptionActive {
