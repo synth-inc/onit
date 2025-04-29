@@ -193,6 +193,7 @@ struct AccountTab: View {
         handleLogin(loginResponse: loginResponse)
     }
     
+    @MainActor
     func handleLogin(loginResponse: LoginResponse) {
         TokenManager.token = loginResponse.token
         appState.account = loginResponse.account
@@ -236,6 +237,7 @@ struct AccountTab: View {
         }
     }
     
+    @MainActor
     func handleLogout() {
         TokenManager.token = nil
         appState.account = nil
