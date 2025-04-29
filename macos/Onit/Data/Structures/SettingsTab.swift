@@ -8,8 +8,8 @@ enum SettingsTab: String {
     case accessibility
     case webSearch
     case about
-    case account
     #if DEBUG
         case debug
+        case account
     #endif
 }
