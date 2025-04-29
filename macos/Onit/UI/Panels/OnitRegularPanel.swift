@@ -92,6 +92,8 @@ class OnitRegularPanel: NSPanel {
                 .padding(.leading, 8)
                 .padding(.bottom, 8)
             }
+            .allowsHitTesting(true) // Ensure the ZStack intercepts all events
+            .contentShape(Rectangle()) // Make the entire area respond to gestures
         )
         resizeOverlay.wantsLayer = true
         resizeOverlay.layer?.backgroundColor = .clear

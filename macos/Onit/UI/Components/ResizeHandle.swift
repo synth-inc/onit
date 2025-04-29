@@ -21,8 +21,8 @@ struct ResizeHandle: View {
         .frame(width: size, height: size)
         .background(Color.gray600.opacity(0.5))
         .cornerRadius(size/2)
-        .gesture(
-            DragGesture(minimumDistance: 1)
+        .highPriorityGesture(
+            DragGesture(minimumDistance: 1, coordinateSpace: .local)
                 .onChanged { value in
                     onDrag(value.translation.width)
                 }
@@ -30,6 +30,8 @@ struct ResizeHandle: View {
                     onDragEnded?()
                 }
         )
+        .contentShape(Rectangle()) // Ensure the entire area is tappable
+        .allowsHitTesting(true) // Make sure the view intercepts all events
     }
 }
 
