@@ -16,7 +16,7 @@ extension FetchingClient {
         token: String? = nil,
         additionalHeaders: [String: String]? = nil,
         timeout: TimeInterval? = nil
-    ) async throws -> Data {
+    ) async throws -> Data? {
         print("fetching from \(url)")
         let request = makeRequest(
             from: url,
@@ -60,11 +60,11 @@ extension FetchingClient {
         return request
     }
 
-    private func fetchAndHandle(using request: URLRequest, file: URL? = nil) async throws -> Data {
+    private func fetchAndHandle(using request: URLRequest, file: URL? = nil) async throws -> Data? {
         do {
             let (data, response) = try await fetchDataAndResponse(using: request, file: file)
             try handle(response: response, withData: data)
-            return data
+            return response.mimeType == "application/json" ? data : nil
         } catch let error as FetchingError {
             throw error
         } catch {

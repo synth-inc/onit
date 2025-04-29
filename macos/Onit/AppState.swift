@@ -27,10 +27,18 @@ class AppState: NSObject {
     
     var account: Account? {
         didSet {
-            // If they log out and don't have a key for their current remote model, set to nil
-            invalidateRemoteModel()
+            if account == nil {
+                // If they log out and don't have a key for their current remote model, set to nil
+                invalidateRemoteModel()
+                Defaults[.useOnitChat] = false
+            } else {
+                Task {
+                    subscription = try? await FetchingClient().getSubscription()
+                }
+            }
         }
     }
+    var subscription: Subscription?
 
     // MARK: - Initializer
     
@@ -258,10 +266,6 @@ class AppState: NSObject {
     }
 
     func invalidateRemoteModel() {
-        if account != nil {
-            return
-        }
-
         guard let provider = Defaults[.remoteModel]?.provider else { return }
 
         var isValid: Bool

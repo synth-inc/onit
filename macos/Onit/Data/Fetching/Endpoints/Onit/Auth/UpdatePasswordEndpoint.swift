@@ -17,7 +17,7 @@ extension FetchingClient {
 struct UpdatePasswordEndpoint: Endpoint {
     typealias Request = UpdatePasswordRequest
     
-    typealias Response = EmptyResponse
+    typealias Response = EmptyResponse?
     
     var baseURL: URL { OnitServer.baseURL }
     

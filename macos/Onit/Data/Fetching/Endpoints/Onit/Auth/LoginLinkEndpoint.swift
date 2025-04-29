@@ -17,7 +17,7 @@ extension FetchingClient {
 struct LoginLinkEndpoint: Endpoint {
     typealias Request = LoginLinkRequest
     
-    typealias Response = EmptyResponse
+    typealias Response = EmptyResponse?
     
     var baseURL: URL { OnitServer.baseURL }
     
