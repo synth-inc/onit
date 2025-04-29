@@ -28,7 +28,7 @@ struct LoginPasswordEndpoint: Endpoint {
     
     var method: HTTPMethod { .post }
     
-    var token: String? { TokenManager.token }
+    var token: String? { nil }
     
     let email: String
     
