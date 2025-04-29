@@ -190,19 +190,37 @@ extension OnitRegularPanel: OnitPanel {
     func resizePanel(byWidth deltaWidth: CGFloat) {
         guard !isAnimating else { return }
         
+        let originalMovableState = isMovableByWindowBackground
+        isMovableByWindowBackground = false
+        
         let newWidth = max(minWidth, width - deltaWidth)
         width = newWidth
         
-        let currentFrame = frame
+        let rightEdgeX = frame.maxX
+        
         let newFrame = NSRect(
-            x: currentFrame.maxX - newWidth, // Keep right edge fixed
-            y: currentFrame.origin.y,
+            x: rightEdgeX - newWidth, // Keep right edge fixed
+            y: frame.origin.y,
             width: newWidth,
-            height: currentFrame.height
+            height: frame.height
         )
         
         setFrame(newFrame, display: true)
-        ContentView.idealWidth = newWidth // Update static property
+        
+        if frame.maxX != rightEdgeX {
+            let adjustedFrame = NSRect(
+                x: rightEdgeX - newWidth,
+                y: frame.origin.y,
+                width: newWidth,
+                height: frame.height
+            )
+            setFrame(adjustedFrame, display: true)
+        }
+        
+        // Update the static property
+        ContentView.idealWidth = newWidth
+        
+        isMovableByWindowBackground = originalMovableState
     }
     
     func show() {
