@@ -23,17 +23,22 @@ class OnitRegularPanel: NSPanel {
     }
     
     let state: OnitPanelState
-    private let width = ContentView.idealWidth
-    
+    var width: CGFloat
+    static let minWidth: CGFloat = 320 // Minimum width constraint
+    static let minAppWidth = 500.0
+
     var dragDetails: PanelDraggingDetails = .init()
     var isAnimating: Bool = false
     var wasAnimated: Bool = false
     var animatedFromLeft: Bool = false
     var resizedApplication: Bool = false
+    var isResizing: Bool = false
     var onitContentView: ContentView?
+    var originalFrame : NSRect = .zero
     
     init(state: OnitPanelState) {
         self.state = state
+        self.width = state.panelWidth
         
         super.init(
             contentRect: NSRect(x: 0, y: 0, width: width, height: 0),
@@ -47,6 +52,7 @@ class OnitRegularPanel: NSPanel {
         level = .floating
         titleVisibility = .hidden
         titlebarAppearsTransparent = true
+//        isMovable = false
         isMovableByWindowBackground = true
         delegate = state
         isFloatingPanel = false
@@ -70,6 +76,39 @@ class OnitRegularPanel: NSPanel {
 
         self.contentView = hostingView
         self.contentView?.setFrameOrigin(NSPoint(x: 0, y: 0))
+        
+        let resizeOverlay = NSHostingView(rootView: 
+            ZStack(alignment: .bottomLeading) {
+                Color.clear // Transparent background
+                ResizeHandle(
+                    onDrag: { [weak self] deltaX in
+                        guard let self = self else { return }
+                        self.isResizing = true
+                        if self.originalFrame == .zero {
+                            self.originalFrame = NSRect(origin: frame.origin, size: frame.size)
+                            print("Original panel width: \(self.originalFrame.width)")
+                        }
+                        self.resizePanel(byWidth: deltaX)
+                    },
+                    onDragEnded: { [weak self] in
+                        guard let self = self else { return }
+                        Defaults[.panelWidth] = self.width
+                        self.panelResizeEnded(originalPanelWidth: self.originalFrame.width)
+                        self.originalFrame = .zero
+                        self.isResizing = false
+                    }
+                )
+                .padding(.leading, TetheredButton.width / 2)
+            }
+            .allowsHitTesting(true) // Ensure the ZStack intercepts all events
+            .contentShape(Rectangle()) // Make the entire area respond to gestures
+        )
+        resizeOverlay.wantsLayer = true
+        resizeOverlay.layer?.backgroundColor = CGColor.clear
+        resizeOverlay.frame = hostingView.bounds
+        hostingView.addSubview(resizeOverlay)
+        resizeOverlay.autoresizingMask = [.width, .height]
+        
         
         NotificationCenter.default.addObserver(
             self,
@@ -104,6 +143,7 @@ class OnitRegularPanel: NSPanel {
     }
     
     @objc private func windowWillMove(_ notification: Notification) {
+
         dragDetails.isDragging = true
     }
     
@@ -146,6 +186,30 @@ extension OnitRegularPanel: OnitPanel {
     
     func setLevel(_ level: NSWindow.Level) {
         self._level = level
+    }
+    
+    func resizePanel(byWidth deltaWidth: CGFloat) {
+        guard !isAnimating else { return }
+        
+        let newWidth = width - deltaWidth
+        let newX = frame.origin.x - deltaWidth
+        
+        if (newWidth >= OnitRegularPanel.minWidth) {
+            width = newWidth
+            
+            // Always use the original position to calculate the new frame
+            // This prevents accumulated drift during resize
+            
+            let newFrame = NSRect(
+                x: originalFrame.maxX - newWidth,
+                y: frame.origin.y,
+                width: newWidth,
+                height: frame.height
+            )
+                
+            setFrame(newFrame, display: true)
+            state.panelWidth = newWidth // Update state property
+        }
     }
     
     func show() {

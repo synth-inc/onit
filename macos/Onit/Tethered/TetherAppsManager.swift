@@ -30,7 +30,6 @@ class TetherAppsManager: ObservableObject {
     
     private let defaultState = OnitPanelState(trackedWindow: nil)
     
-    static let minOnitWidth: CGFloat = ContentView.idealWidth
     static let spaceBetweenWindows: CGFloat = -(TetheredButton.width / 2)
     
     var targetInitialFrames: [AXUIElement: CGRect] = [:]

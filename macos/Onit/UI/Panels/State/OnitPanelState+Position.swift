@@ -32,7 +32,7 @@ extension OnitPanelState {
         if window.isDesktopFinder {
             if let mouseScreen = NSScreen.mouse {
                 let screenFrame = mouseScreen.frame
-                let onitWidth = TetherAppsManager.minOnitWidth
+                let onitWidth = self.panelWidth
                 let onitHeight = screenFrame.height - ContentView.bottomPadding
                 let onitY = screenFrame.maxY - onitHeight
                 let onitX = screenFrame.maxX - onitWidth
@@ -64,7 +64,7 @@ extension OnitPanelState {
         let fullTop = primaryScreenFrame.height - screenFrame.height - visibleFrame.minY + activeScreenInset
         let windowDistanceFromTop = windowFrame.minY - fullTop
         
-        let onitWidth = TetherAppsManager.minOnitWidth
+        let onitWidth = self.panelWidth
         let onitHeight = min(windowFrame.height, screenFrame.height - ContentView.bottomPadding)
         let onitY = visibleFrame.minY + (visibleFrame.height - windowFrame.height) - windowDistanceFromTop
         
@@ -76,11 +76,10 @@ extension OnitPanelState {
         if (action == .move && !isOnRightmostScreen) || hasEnoughSpace {
             self.movePanel(screenFrame: screenFrame, onitWidth: onitWidth, onitHeight: onitHeight, onitY: onitY)
         } else {
-            let minAppWidth = 500.0
             
             let maxAvailableWidth = screenFrame.maxX - windowFrame.origin.x - onitWidth - TetherAppsManager.spaceBetweenWindows
             
-            if maxAvailableWidth >= minAppWidth {
+            if maxAvailableWidth >= OnitRegularPanel.minAppWidth {
                 resizeWindowAndMovePanel(onitWidth: onitWidth, onitHeight: onitHeight, onitY: onitY, maxAvailableWidth: maxAvailableWidth)
             } else {
                 moveWindowAndPanel(screenFrame: screenFrame, onitWidth: onitWidth, onitHeight: onitHeight, onitY: onitY)
@@ -179,9 +178,9 @@ extension OnitPanelState {
             height: screen.visibleFrame.height
         )
         let newFrame = NSRect(
-            x: screen.visibleFrame.maxX - TetherAppsManager.minOnitWidth,
+            x: screen.visibleFrame.maxX - self.panelWidth,
             y: screen.visibleFrame.minY,
-            width: TetherAppsManager.minOnitWidth,
+            width: self.panelWidth,
             height: screen.visibleFrame.height
         )
         
@@ -494,4 +493,4 @@ extension OnitPanelState {
             return value
         }
     }
-} 
+}          
