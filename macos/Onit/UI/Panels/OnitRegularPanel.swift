@@ -83,7 +83,10 @@ class OnitRegularPanel: NSPanel {
                         self?.resizePanel(byWidth: deltaX)
                     },
                     onDragEnded: { [weak self] in
-                        self?.isResizing = false
+                        guard let self = self else { return }
+                        Defaults[.panelWidth] = self.width
+                        self.isResizing = false
+                        self.state.repositionPanel()
                     }
                 )
                 .padding(.leading, 8)
