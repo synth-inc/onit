@@ -32,6 +32,7 @@ class OnitRegularPanel: NSPanel {
     var animatedFromLeft: Bool = false
     var resizedApplication: Bool = false
     var isResizing: Bool = false
+    private var originalPosition: NSPoint = .zero
     var onitContentView: ContentView?
     
     init(state: OnitPanelState) {
@@ -86,6 +87,7 @@ class OnitRegularPanel: NSPanel {
                         guard let self = self else { return }
                         Defaults[.panelWidth] = self.width
                         self.isResizing = false
+                        self.originalPosition = .zero // Reset original position
                         self.state.repositionPanel()
                     }
                 )
@@ -193,24 +195,28 @@ extension OnitRegularPanel: OnitPanel {
         let originalMovableState = isMovableByWindowBackground
         isMovableByWindowBackground = false
         
+        if originalPosition == .zero {
+            originalPosition = frame.origin
+        }
+        
         let newWidth = max(minWidth, width - deltaWidth)
         width = newWidth
         
-        let rightEdgeX = frame.maxX
+        let rightEdgeX = originalPosition.x + frame.width
         
         let newFrame = NSRect(
             x: rightEdgeX - newWidth, // Keep right edge fixed
-            y: frame.origin.y,
+            y: originalPosition.y,    // Keep original Y position
             width: newWidth,
             height: frame.height
         )
         
         setFrame(newFrame, display: true)
         
-        if frame.maxX != rightEdgeX {
+        if frame.maxX != rightEdgeX || frame.origin.y != originalPosition.y {
             let adjustedFrame = NSRect(
                 x: rightEdgeX - newWidth,
-                y: frame.origin.y,
+                y: originalPosition.y,
                 width: newWidth,
                 height: frame.height
             )
