@@ -183,7 +183,7 @@ extension OnitRegularPanel: OnitPanel {
         
         let currentFrame = frame
         let newFrame = NSRect(
-            x: currentFrame.origin.x + deltaWidth, // Move panel as it's resized
+            x: currentFrame.maxX - newWidth, // Keep right edge fixed
             y: currentFrame.origin.y,
             width: newWidth,
             height: currentFrame.height
