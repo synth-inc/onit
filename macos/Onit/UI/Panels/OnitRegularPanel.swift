@@ -31,6 +31,7 @@ class OnitRegularPanel: NSPanel {
     var wasAnimated: Bool = false
     var animatedFromLeft: Bool = false
     var resizedApplication: Bool = false
+    var isResizing: Bool = false
     var onitContentView: ContentView?
     
     init(state: OnitPanelState) {
@@ -76,9 +77,15 @@ class OnitRegularPanel: NSPanel {
         let resizeOverlay = NSHostingView(rootView: 
             ZStack(alignment: .bottomLeading) {
                 Color.clear // Transparent background
-                ResizeHandle(onDrag: { [weak self] deltaX in
-                    self?.resizePanel(byWidth: deltaX)
-                })
+                ResizeHandle(
+                    onDrag: { [weak self] deltaX in
+                        self?.isResizing = true
+                        self?.resizePanel(byWidth: deltaX)
+                    },
+                    onDragEnded: { [weak self] in
+                        self?.isResizing = false
+                    }
+                )
                 .padding(.leading, 8)
                 .padding(.bottom, 8)
             }
@@ -122,6 +129,14 @@ class OnitRegularPanel: NSPanel {
         }
         
         show()
+    }
+    
+    @objc private func windowDidMove(_ notification: Notification) {
+        if isResizing {
+            return
+        }
+        
+        state.repositionPanel()
     }
     
     @objc private func windowWillMove(_ notification: Notification) {

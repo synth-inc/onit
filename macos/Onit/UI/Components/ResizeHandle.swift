@@ -10,6 +10,7 @@ import SwiftUI
 struct ResizeHandle: View {
     var size: CGFloat = 16
     var onDrag: (CGFloat) -> Void
+    var onDragEnded: (() -> Void)?
     
     var body: some View {
         ZStack {
@@ -24,6 +25,9 @@ struct ResizeHandle: View {
             DragGesture(minimumDistance: 1)
                 .onChanged { value in
                     onDrag(value.translation.width)
+                }
+                .onEnded { _ in
+                    onDragEnded?()
                 }
         )
     }
