@@ -61,6 +61,7 @@ struct AccountTab: View {
     var emailSection: some View {
         VStack(spacing: 12) {
             TextField("Enter your email", text: $email)
+                .textContentType(.emailAddress)
             Button("Request Magic Link") {
                 handleLoginLinkRequest()
             }
