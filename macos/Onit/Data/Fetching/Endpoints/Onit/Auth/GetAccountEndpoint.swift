@@ -32,7 +32,7 @@ struct GetAccountEndpoint: Endpoint {
     
     var requestBody: Request? { nil }
     
-    var additionalHeaders: [String : String]?
+    var additionalHeaders: [String : String]? { nil }
     
     var timeout: TimeInterval? { nil }
     

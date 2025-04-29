@@ -24,16 +24,16 @@ struct GetSubscriptionEndpoint: Endpoint {
 
     var path: String { "/v1/subscription" }
 
-    var getParams: [String : String]?
+    var getParams: [String : String]? { nil }
 
     var method: HTTPMethod { .get }
 
     var token: String? { TokenManager.token }
 
-    var requestBody: Request?
+    var requestBody: Request? { nil }
 
-    var additionalHeaders: [String : String]?
+    var additionalHeaders: [String : String]? { nil }
 
-    var timeout: TimeInterval?
+    var timeout: TimeInterval? { nil }
 
 }
