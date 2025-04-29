@@ -6,127 +6,128 @@
 //
 
 import Cocoa
+import Defaults
 import ApplicationServices
 
 class HighlightedTextPoller {
-    private let queue = DispatchQueue(label: "inc.synth.onit.HighlightedTextPoller", qos: .userInteractive)
-    private let searchSemaphore = DispatchSemaphore(value: 1)
+    static let appNames: [String] = [
+        "Notes",
+        "iTerm2"
+    ]
     
-    private var timer: DispatchSourceTimer?
-    private var selectionChangedHandler: ((String) -> Void)?
-    private var deselectionHandler: (() -> Void)?
+    private let queue = DispatchQueue(label: "inc.synth.onit.HighlightedTextPoller", qos: .userInteractive)
+    
+    private var timerByPID: [pid_t: DispatchSourceTimer] = [:]
+    private var selectionChangedHandler: ((String?, AXUIElement?) -> Void)?
     private var lastSelectedText: String?
     private var foundSelectedText = false
-    
-    
-    /// TODO: KNA
-    /// - Reduce the CPU (Stop searching when selected text is found)
-    /// - Limit with max depth
-    /// - Replace the old logic by the new one
-    
+    private let maxSearchDepth = 100
     
     func startPolling(
-        observedElement: AXUIElement,
+        pid: pid_t,
         interval: TimeInterval = 0.5,
-        selectionChangedHandler: @escaping (String) -> Void,
-        deselectionHandler: @escaping () -> Void
+        selectionChangedHandler: @escaping (String?, AXUIElement?) -> Void
     ) {
-        stopPolling()
+        stopPolling(pid: pid)
+        
+        guard let appName = pid.getAppName(), Self.appNames.contains(appName) else {
+            return
+        }
         
         self.selectionChangedHandler = selectionChangedHandler
-        self.deselectionHandler = deselectionHandler
         
         let timer = DispatchSource.makeTimerSource(queue: queue)
         timer.schedule(deadline: .now(), repeating: interval)
         timer.setEventHandler { [weak self] in
-            guard let self = self else { return }
-            
-            if self.searchSemaphore.wait(timeout: .now()) != .success {
+            guard Defaults[.autoContextFromHighlights],
+                  let self = self,
+                  let focusedWindow = pid.getFocusedWindow() else {
                 return
             }
             
             self.foundSelectedText = false
-            self.checkSelection(for: observedElement)
+            
+            guard !self.highlightedTextFound(for: focusedWindow) else {
+                return
+            }
+            
+            scanElementHierarchyForSelectedText(focusedWindow: focusedWindow)
             
             if !self.foundSelectedText && self.lastSelectedText != nil {
                 self.lastSelectedText = nil
-                self.deselectionHandler?()
+                self.selectionChangedHandler?(nil, nil)
             }
-            
-            self.searchSemaphore.signal()
         }
         
-        self.timer = timer
+        timerByPID[pid] = timer
         timer.resume()
     }
     
-    func stopPolling() {
-        timer?.cancel()
-        timer = nil
+    func stopPolling(pid: pid_t) {
+        timerByPID[pid]?.cancel()
+        timerByPID[pid] = nil
     }
     
-    private func checkSelection(for observedElement: AXUIElement) {
-        var selectedTextValue: AnyObject?
-        let error = AXUIElementCopyAttributeValue(observedElement, kAXSelectedTextAttribute as CFString, &selectedTextValue)
-        
-        if error == .success, let selectedText = selectedTextValue as? String, !selectedText.isEmpty {
+    private func highlightedTextFound(for observedElement: AXUIElement) -> Bool {
+        if let selectedText = observedElement.selectedText() {
+            guard AccessibilityTextSelectionFilter.filter(element: observedElement) == false else {
+                return false
+            }
+            
             processSelectedText(selectedText, in: observedElement)
-            return
+            return true
         }
         
-        scanElementHierarchyForSelectedText(element: observedElement)
+        return false
     }
     
-    private func scanElementHierarchyForSelectedText(element: AXUIElement) {
+    private func scanElementHierarchyForSelectedText(focusedWindow: AXUIElement) {
         var documentValue: AnyObject?
-        let documentError = AXUIElementCopyAttributeValue(element, kAXDocumentAttribute as CFString, &documentValue)
+        let documentError = AXUIElementCopyAttributeValue(focusedWindow, kAXDocumentAttribute as CFString, &documentValue)
         
         if documentError == .success, let document = documentValue {
-            var textValue: AnyObject?
-            let textError = AXUIElementCopyAttributeValue(document as! AXUIElement, kAXSelectedTextAttribute as CFString, &textValue)
-            
-            if textError == .success, let selectedText = textValue as? String, !selectedText.isEmpty {
-                processSelectedText(selectedText, in: document as! AXUIElement)
+            guard !highlightedTextFound(for: document as! AXUIElement) else {
                 return
             }
         }
         
-        findSelectedTextInChildren(of: element)
+        _ = highlightedTextFound(in: focusedWindow, element: focusedWindow)
     }
     
-    private func findSelectedTextInChildren(of element: AXUIElement, depth: Int = 0) {
+    private func highlightedTextFound(in focusedWindow: AXUIElement, element: AXUIElement, depth: Int = 0) -> Bool {
+        guard depth < maxSearchDepth else {
+            return false
+        }
+        
         guard let children = element.children() else {
-            return
+            return false
         }
         
         for child in children {
-            var selectedTextValue: AnyObject?
-            let textError = AXUIElementCopyAttributeValue(child, kAXSelectedTextAttribute as CFString, &selectedTextValue)
-            
-            if textError == .success, 
-               let selectedText = selectedTextValue as? String,
-               !selectedText.isEmpty {
-//                log.error("depth: \(depth)")
-                processSelectedText(selectedText, in: child)
-                return
+            guard !highlightedTextFound(for: child) else {
+                return true
             }
             
-            findSelectedTextInChildren(of: child, depth: depth + 1)
+            guard !highlightedTextFound(in: focusedWindow, element: child, depth: depth + 1) else {
+                return true
+            }
         }
+        
+        return false
     }
     
     private func processSelectedText(_ selectedText: String, in element: AXUIElement) {
-        guard AccessibilityTextSelectionFilter.filter(element: element) == false else { return }
-        
         foundSelectedText = true
         
         if selectedText != lastSelectedText {
             lastSelectedText = selectedText
-            selectionChangedHandler?(selectedText)
+            selectionChangedHandler?(selectedText, element)
         }
     }
     
     deinit {
-        stopPolling()
+        for pid in timerByPID.keys {
+            stopPolling(pid: pid)
+        }
     }
 }

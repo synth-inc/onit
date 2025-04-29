@@ -42,7 +42,7 @@ class AccessibilityNotificationsManager: ObservableObject {
 
     // MARK: - Properties
     
-    private let textSelectionPoller = HighlightedTextPoller()
+    private let highlightedTextPoller = HighlightedTextPoller()
 
     private var currentSource: String?
 
@@ -56,6 +56,7 @@ class AccessibilityNotificationsManager: ObservableObject {
 
     private var selectedTextByApp: [String: String] = [:]
     private var selectedElementByApp: [String: AXUIElement] = [:]
+    private var selectedTextDate: Date?
 
     private var valueDebounceWorkItem: DispatchWorkItem?
     private var selectionDebounceWorkItem: DispatchWorkItem?
@@ -184,8 +185,14 @@ class AccessibilityNotificationsManager: ObservableObject {
             // Release the previous observer if it exists
             self.observers[pid] = observer
             let refCon = Unmanaged.passUnretained(self).toOpaque()
-            for notification in Config.notifications {
-                // print("Registering observer for \(notification)...")
+            
+            var notifications = Config.notifications
+            
+            if HighlightedTextPoller.appNames.contains(pid.getAppName() ?? "") {
+                notifications.removeAll(where: { $0 == kAXSelectedTextChangedNotification })
+            }
+            
+            for notification in notifications {
                 AXObserverAddNotification(
                     observer, pid.getAXUIElement(), notification as CFString, refCon)
             }
@@ -242,8 +249,8 @@ class AccessibilityNotificationsManager: ObservableObject {
                 }
 
                 self.stopAccessibilityObservers(for: app.processIdentifier)
-                self.handleAppActivation(
-                    appName: app.localizedName, processID: app.processIdentifier)
+
+                self.handleAppActivation(appName: app.localizedName, processID: app.processIdentifier)
                 self.startAccessibilityObservers(for: app.processIdentifier)
                 self.startPersistentAccessibilityObservers(for: app.processIdentifier) // Start persistent observer on activation
             }
@@ -254,10 +261,7 @@ class AccessibilityNotificationsManager: ObservableObject {
         if let app = notification.userInfo?[NSWorkspace.applicationUserInfoKey]
             as? NSRunningApplication
         {
-            print(
-                "Application deactivated: \(app.localizedName ?? "Unknown") \(app.processIdentifier)"
-            )
-
+            self.handleAppDeactivation(appName: app.localizedName, processID: app.processIdentifier)
             self.stopAccessibilityObservers(for: app.processIdentifier)
         }
     }
@@ -265,25 +269,24 @@ class AccessibilityNotificationsManager: ObservableObject {
     // MARK: Handling app activated/deactived
 
     private func handleAppActivation(appName: String?, processID: pid_t) {
+        print("Application activated: \(appName ?? "Unknown") \(processID)")
         let selectedText = selectedTextByApp[appName ?? "Unknown"]
         let selectedElement = selectedElementByApp[appName ?? "Unknown"]
-
-        print("\nApplication activated: \(appName ?? "Unknown") \(processID)")
+        processSelectedText(selectedText, for: selectedElement)
+        
+        highlightedTextPoller.startPolling(pid: processID, selectionChangedHandler: processSelectedText)
 
         currentSource = appName
-        if let targetWindow = processID.getAXUIElement().findFirstTargetWindow() {
+        if let targetWindow = processID.getFocusedWindow() {
             handleWindowBounds(for: targetWindow)
-            
-            textSelectionPoller.startPolling(
-                observedElement: targetWindow,
-                selectionChangedHandler: { textSelected in
-                    log.error("Text selected found: \(textSelected)")
-                }, deselectionHandler: {
-                    log.error("Text deselected")
-                })
         }
-        processSelectedText(selectedText, for: selectedElement)
+        
         retrieveWindowContent(for: processID)
+    }
+    
+    private func handleAppDeactivation(appName: String?, processID: pid_t) {
+        print("Application deactivated: \(appName ?? "Unknown") \(processID)")
+        highlightedTextPoller.stopPolling(pid: processID)
     }
 
     private func handleAccessibilityNotifications(
@@ -414,7 +417,12 @@ class AccessibilityNotificationsManager: ObservableObject {
 
     private func handleSelectionChange(for element: AXUIElement) {
         guard AccessibilityTextSelectionFilter.filter(element: element) == false else { return }
-
+        // Fix to work with PDF in Chrome
+        if let selectedTextDate = selectedTextDate, Date().timeIntervalSince(selectedTextDate) < 0.002 {
+            return
+        }
+        
+        selectedTextDate = Date()
         selectionDebounceWorkItem?.cancel()
 
         let workItem = DispatchWorkItem { [weak self] in
@@ -630,7 +638,7 @@ class AccessibilityNotificationsManager: ObservableObject {
         dispatchPrecondition(condition: .onQueue(.main))
 
         handleExternalElement(element) { [weak self] pid in
-            let selectedTextExtracted = self?.extractSelectedText(from: element)
+            let selectedTextExtracted = element.selectedText()
 
             self?.processSelectedText(selectedTextExtracted, for: element)
             self?.selectedTextByApp[pid.getAppName() ?? "Unknown"] = selectedTextExtracted
@@ -640,65 +648,28 @@ class AccessibilityNotificationsManager: ObservableObject {
     }
 
     private func processSelectedText(_ text: String?, for element: AXUIElement?) {
-        guard Defaults[.autoContextFromHighlights],
-            let selectedText = text,
-            let selectedElement = element,
-            !selectedText.isEmpty
-        else {
+        Task { @MainActor in
+            guard Defaults[.autoContextFromHighlights],
+                let selectedText = text,
+                let selectedElement = element,
+                !selectedText.isEmpty
+            else {
 
-            selectedSource = nil
-            TetherAppsManager.shared.state.pendingInput = nil
-            HighlightHintWindowController.shared.hide()
+                selectedSource = nil
+                TetherAppsManager.shared.state.pendingInput = nil
+                HighlightHintWindowController.shared.hide()
 
-            return
+                return
+            }
+            screenResult.userInteraction.selectedText = selectedText
+
+            selectedSource = currentSource
+
+            let bound = selectedElement.selectedTextBound()
+            HighlightHintWindowController.shared.show(bound)
+
+            TetherAppsManager.shared.state.pendingInput = Input(selectedText: selectedText, application: currentSource ?? "")
         }
-        screenResult.userInteraction.selectedText = selectedText
-
-        selectedSource = currentSource
-
-        let bound = selectedElement.selectedTextBound()
-        HighlightHintWindowController.shared.show(bound)
-
-        TetherAppsManager.shared.state.pendingInput = Input(selectedText: selectedText, application: currentSource ?? "")
-    }
-
-    private func extractSelectedText(from element: AXUIElement) -> String? {
-        // Ensure we're on the main thread
-        dispatchPrecondition(condition: .onQueue(.main))
-
-        var selectedRangeValue: CFTypeRef?
-        var selectedRange = CFRange()
-
-        guard
-            AXUIElementCopyAttributeValue(
-                element, kAXSelectedTextRangeAttribute as CFString, &selectedRangeValue) == .success
-        else {
-            print("Failed to get selected text range")
-            return nil
-        }
-        let rangeValue = selectedRangeValue as! AXValue
-
-        guard AXValueGetValue(rangeValue, .cfRange, &selectedRange) else {
-            print("Failed to convert range value")
-            return nil
-        }
-
-        var selectedTextValue: CFTypeRef?
-        let textResult = AXUIElementCopyParameterizedAttributeValue(
-            element,
-            kAXStringForRangeParameterizedAttribute as CFString,
-            rangeValue,
-            &selectedTextValue
-        )
-
-        guard textResult == .success,
-            let selectedText = selectedTextValue as? String,
-            !selectedText.isEmpty
-        else {
-            return nil
-        }
-
-        return selectedText
     }
 
     /** Ensure the received `AXUIElement` is not from our process */
