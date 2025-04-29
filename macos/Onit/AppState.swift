@@ -28,9 +28,7 @@ class AppState: NSObject {
     var account: Account? {
         didSet {
             if account == nil {
-                // If they log out and don't have a key for their current remote model, set to nil
-                invalidateRemoteModel()
-                Defaults[.useOnitChat] = false
+                subscription = nil
             } else {
                 Task {
                     subscription = try? await FetchingClient().getSubscription()
@@ -38,7 +36,16 @@ class AppState: NSObject {
             }
         }
     }
-    var subscription: Subscription?
+    var subscription: Subscription? {
+        didSet {
+            if subscription?.status == "active" {
+                return
+            }
+            // If they don't have a subscription and don't have a key for their current remote model, set to nil
+            invalidateRemoteModel()
+            Defaults[.useOnitChat] = false
+        }
+    }
 
     // MARK: - Initializer
     
@@ -228,23 +235,24 @@ class AppState: NSObject {
         var models = availableRemoteModels.filter {
             Defaults[.visibleModelIds].contains($0.uniqueId)
         }
+        let hasActiveSubscription = subscription?.status == "active"
 
-        if !useOpenAI || (account == nil && !isOpenAITokenValidated) {
+        if !useOpenAI || (!hasActiveSubscription && !isOpenAITokenValidated) {
             models = models.filter { $0.provider != .openAI }
         }
-        if !useAnthropic || (account == nil && !isAnthropicTokenValidated) {
+        if !useAnthropic || (!hasActiveSubscription && !isAnthropicTokenValidated) {
             models = models.filter { $0.provider != .anthropic }
         }
-        if !useXAI || (account == nil && !isXAITokenValidated) {
+        if !useXAI || (!hasActiveSubscription && !isXAITokenValidated) {
             models = models.filter { $0.provider != .xAI }
         }
-        if !useGoogleAI || (account == nil && !isGoogleAITokenValidated) {
+        if !useGoogleAI || (!hasActiveSubscription && !isGoogleAITokenValidated) {
             models = models.filter { $0.provider != .googleAI }
         }
-        if !useDeepSeek || (account == nil && !isDeepSeekTokenValidated) {
+        if !useDeepSeek || (!hasActiveSubscription && !isDeepSeekTokenValidated) {
             models = models.filter { $0.provider != .deepSeek }
         }
-        if !usePerplexity || (account == nil && !isPerplexityTokenValidated) {
+        if !usePerplexity || (!hasActiveSubscription && !isPerplexityTokenValidated) {
             models = models.filter { $0.provider != .perplexity }
         }
 
