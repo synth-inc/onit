@@ -10,7 +10,7 @@ import Foundation
 extension FetchingClient {
     func requestLoginLink(email: String) async throws -> Void {
         let endpoint = LoginLinkEndpoint(email: email)
-        let response = try await execute(endpoint)
+        let _ = try await execute(endpoint)
     }
 }
 

@@ -10,8 +10,7 @@ import Foundation
 extension FetchingClient {
     func loginToken(loginToken: String) async throws -> LoginResponse {
         let endpoint = LoginTokenEndpoint(loginToken: loginToken)
-        let response = try await execute(endpoint)
-        return response
+        return try await execute(endpoint)
     }
 }
 

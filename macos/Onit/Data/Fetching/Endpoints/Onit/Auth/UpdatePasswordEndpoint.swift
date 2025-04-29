@@ -10,7 +10,7 @@ import Foundation
 extension FetchingClient {
     func updatePassword(password: String) async throws -> Void {
         let endpoint = UpdatePasswordEndpoint(password: password)
-        let response = try await execute(endpoint)
+        let _ = try await execute(endpoint)
     }
 }
 

@@ -10,8 +10,7 @@ import Foundation
 extension FetchingClient {
     func getSubscription() async throws -> Subscription? {
         let endpoint = GetSubscriptionEndpoint()
-        let response = try await execute(endpoint)
-        return response
+        return try await execute(endpoint)
     }
 }
 

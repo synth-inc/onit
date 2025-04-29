@@ -10,8 +10,7 @@ import Foundation
 extension FetchingClient {
     func getAccount() async throws -> Account {
         let endpoint = GetAccountEndpoint()
-        let response = try await execute(endpoint)
-        return response
+        return try await execute(endpoint)
     }
 }
 
