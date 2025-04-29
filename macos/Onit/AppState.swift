@@ -38,7 +38,7 @@ class AppState: NSObject {
     }
     var subscription: Subscription? {
         didSet {
-            if subscription?.status == "active" {
+            if subscriptionActive {
                 return
             }
             // If they don't have a subscription and don't have a key for their current remote model, set to nil
@@ -46,6 +46,7 @@ class AppState: NSObject {
             Defaults[.useOnitChat] = false
         }
     }
+    var subscriptionActive: Bool { subscription?.status == "active" }
 
     // MARK: - Initializer
     
@@ -235,24 +236,23 @@ class AppState: NSObject {
         var models = availableRemoteModels.filter {
             Defaults[.visibleModelIds].contains($0.uniqueId)
         }
-        let hasActiveSubscription = subscription?.status == "active"
 
-        if !useOpenAI || (!hasActiveSubscription && !isOpenAITokenValidated) {
+        if !useOpenAI || (!subscriptionActive && !isOpenAITokenValidated) {
             models = models.filter { $0.provider != .openAI }
         }
-        if !useAnthropic || (!hasActiveSubscription && !isAnthropicTokenValidated) {
+        if !useAnthropic || (!subscriptionActive && !isAnthropicTokenValidated) {
             models = models.filter { $0.provider != .anthropic }
         }
-        if !useXAI || (!hasActiveSubscription && !isXAITokenValidated) {
+        if !useXAI || (!subscriptionActive && !isXAITokenValidated) {
             models = models.filter { $0.provider != .xAI }
         }
-        if !useGoogleAI || (!hasActiveSubscription && !isGoogleAITokenValidated) {
+        if !useGoogleAI || (!subscriptionActive && !isGoogleAITokenValidated) {
             models = models.filter { $0.provider != .googleAI }
         }
-        if !useDeepSeek || (!hasActiveSubscription && !isDeepSeekTokenValidated) {
+        if !useDeepSeek || (!subscriptionActive && !isDeepSeekTokenValidated) {
             models = models.filter { $0.provider != .deepSeek }
         }
-        if !usePerplexity || (!hasActiveSubscription && !isPerplexityTokenValidated) {
+        if !usePerplexity || (!subscriptionActive && !isPerplexityTokenValidated) {
             models = models.filter { $0.provider != .perplexity }
         }
 

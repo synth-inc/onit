@@ -115,7 +115,7 @@ struct RemoteModelSection: View {
 
     var titleView: some View {
         ModelTitle(title: provider.title, isOn: $use, showToggle: Binding(
-            get: { appState.account != nil || validated },
+            get: { appState.subscriptionActive || validated },
             set: { _ in }
         ))
     }
@@ -208,7 +208,7 @@ struct RemoteModelSection: View {
     
     @ViewBuilder
     var advancedSettings: some View {
-        if use && (appState.account != nil || validated) {
+        if use && (appState.subscriptionActive || validated) {
             DisclosureGroup("Advanced", isExpanded: $showAdvanced) {
                 StreamingToggle(isOn: streamResponseBinding)
                     .padding(.leading, 8)
@@ -219,7 +219,7 @@ struct RemoteModelSection: View {
 
     @ViewBuilder
     var modelsView: some View {
-        if use && (appState.account != nil || validated) {
+        if use && (appState.subscriptionActive || validated) {
             GroupBox {
                 VStack(alignment: .leading, spacing: 0) {
                     ForEach(models) { model in
