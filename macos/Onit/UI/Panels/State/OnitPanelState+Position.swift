@@ -32,7 +32,7 @@ extension OnitPanelState {
         if window.isDesktopFinder {
             if let mouseScreen = NSScreen.mouse {
                 let screenFrame = mouseScreen.frame
-        let onitWidth = ContentView.idealWidth
+                let onitWidth = ContentView.idealWidth
                 let onitHeight = screenFrame.height - ContentView.bottomPadding
                 let onitY = screenFrame.maxY - onitHeight
                 let onitX = screenFrame.maxX - onitWidth
@@ -492,4 +492,4 @@ extension OnitPanelState {
             return value
         }
     }
-}  
+}    

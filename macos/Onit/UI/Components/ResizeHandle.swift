@@ -1,5 +1,8 @@
 //
+//  ResizeHandle.swift
+//  Onit
 //
+//  Created by Devin AI on 4/29/25.
 //
 
 import SwiftUI
