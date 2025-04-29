@@ -82,7 +82,7 @@ struct AccountTab: View {
 
     var loginPasswordSection: some View {
         VStack(spacing: 12) {
-            TextField("Password", text: $loginPassword)
+            SecureField("Password", text: $loginPassword)
             Button("Login") {
                 Task {
                     await handleLoginPassword(email: email, loginPassword: loginPassword)
@@ -211,7 +211,7 @@ struct AccountTab: View {
 
     var setPasswordSection: some View {
         VStack(spacing: 12) {
-            TextField("Create a password", text: $setPassword)
+            SecureField("Create a password", text: $setPassword)
             Button("Set Your Password") {
                 Task {
                     await handleSetPassword(setPassword: setPassword)
