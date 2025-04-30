@@ -261,13 +261,6 @@ extension AXUIElement {
         }
         return nil
     }
-
-    public func focusedWindow() -> AXUIElement? {
-        if let value = self.attribute(forAttribute: kAXFocusedWindowAttribute as CFString) {
-            return (value as! AXUIElement)
-        }
-        return nil
-    }
     
     public func isModal() -> Bool? {
         return self.attribute(forAttribute: kAXModalAttribute as CFString) as? Bool
