@@ -123,7 +123,8 @@ class OnitPanelState: NSObject {
     var generatingPrompt: Prompt?
     var generatingPromptPriorState: GenerationState?
     
-    var streamedResponse: String = ""
+    /// Don't leave this text empty to ensure the first scroll works.
+    var streamedResponse: String = " "
     
     // Web search state
     var webSearchError: Error? = nil
