@@ -8,6 +8,10 @@
 
 import Defaults
 import SwiftUI
+import Foundation
+
+import AccessibilityScreenManager
+import FeatureFlagManager
 
 struct ExternalTetheredButton: View {
     @Environment(\.appState) var appState
