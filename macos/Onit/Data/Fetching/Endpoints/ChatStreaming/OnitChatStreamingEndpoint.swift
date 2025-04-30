@@ -15,7 +15,7 @@ struct OnitChatStreamingEndpoint: StreamingEndpoint {
 
     var baseURL: URL { OnitServer.baseURL }
 
-    var path: String { "/v1/chat/completions" }
+    var path: String { "/v1/chat/message" }
 
     var getParams: [String: String]? { nil }
 
