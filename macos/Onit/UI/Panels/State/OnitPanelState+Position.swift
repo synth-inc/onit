@@ -123,8 +123,10 @@ extension OnitPanelState {
                         width: newWidth,
                         height: curFrame.height
                     )
-                    TetherAppsManager.shared.targetInitialFrames.removeValue(forKey: window)
                 }
+                // We need to remove this everytime, to prevent saving old frames.
+                // If we have old frames, we won't save the new ones.
+                TetherAppsManager.shared.targetInitialFrames.removeValue(forKey: window)
             }
         
 

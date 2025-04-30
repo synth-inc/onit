@@ -113,7 +113,7 @@ struct TagButton: View {
 // MARK: - Private Functions
 extension TagButton {
     private func setBackground() -> Color {
-        if let _ = action,
+        if action != nil,
            isHovered
         {
             if isTransparent { return .gray800 }

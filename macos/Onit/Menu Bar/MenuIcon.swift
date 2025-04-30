@@ -11,7 +11,6 @@ import Defaults
 
 struct MenuIcon: View {
     @ObservedObject private var accessibilityPermissionManager = AccessibilityPermissionManager.shared
-    @ObservedObject private var featureFlagsManager = FeatureFlagManager.shared
 
     var body: some View {
         let statusGranted = accessibilityPermissionManager.accessibilityPermissionStatus == .granted

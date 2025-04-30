@@ -27,7 +27,7 @@ struct CopyButton: View {
                 pasteboard.setString(textToCopy, forType: .string)
                 showCheckmark = true
 
-                Task {
+                Task { @MainActor in
                     try await Task.sleep(for: .seconds(2))
                     showCheckmark = false
                 }
