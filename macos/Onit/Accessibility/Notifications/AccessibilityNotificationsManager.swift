@@ -42,7 +42,7 @@ class AccessibilityNotificationsManager: ObservableObject {
 
     // MARK: - Properties
     
-    private let highlightedTextPoller = HighlightedTextPoller()
+    private let highlightedTextPoller = HighlightedTextCoordinator()
 
     private var currentSource: String?
 
@@ -54,8 +54,8 @@ class AccessibilityNotificationsManager: ObservableObject {
     
     private var selectedSource: String?
 
-    private var selectedTextByApp: [String: String] = [:]
-    private var selectedElementByApp: [String: AXUIElement] = [:]
+    private var selectedTextByApp: [UInt: String] = [:]
+    private var selectedElementByApp: [UInt: AXUIElement] = [:]
     private var selectedTextDate: Date?
 
     private var valueDebounceWorkItem: DispatchWorkItem?
@@ -188,7 +188,7 @@ class AccessibilityNotificationsManager: ObservableObject {
             
             var notifications = Config.notifications
             
-            if HighlightedTextPoller.appNames.contains(pid.getAppName() ?? "") {
+            if HighlightedTextCoordinator.appNames.contains(pid.getAppName() ?? "") {
                 notifications.removeAll(where: { $0 == kAXSelectedTextChangedNotification })
             }
             
@@ -270,15 +270,27 @@ class AccessibilityNotificationsManager: ObservableObject {
 
     private func handleAppActivation(appName: String?, processID: pid_t) {
         print("Application activated: \(appName ?? "Unknown") \(processID)")
-        let selectedText = selectedTextByApp[appName ?? "Unknown"]
-        let selectedElement = selectedElementByApp[appName ?? "Unknown"]
-        processSelectedText(selectedText, for: selectedElement)
         
-        highlightedTextPoller.startPolling(pid: processID, selectionChangedHandler: processSelectedText)
+        Task.detached {
+            await self.highlightedTextPoller.startPolling(pid: processID, selectionChangedHandler: { [weak self] text, bounds in
+                guard let self = self else { return }
+                
+                Task { @MainActor in
+                    self.processSelectedText(text, elementBounds: bounds)
+                }
+            })
+        }
 
         currentSource = appName
         if let targetWindow = processID.getFocusedWindow() {
             handleWindowBounds(for: targetWindow)
+            
+            let windowHash = CFHash(targetWindow)
+            let selectedText = selectedTextByApp[windowHash]
+            let selectedElement = selectedElementByApp[windowHash]
+            let selectedElementBounds = selectedElement?.selectedTextBound()
+            
+            processSelectedText(selectedText, elementBounds: selectedElementBounds)
         }
         
         retrieveWindowContent(for: processID)
@@ -286,7 +298,10 @@ class AccessibilityNotificationsManager: ObservableObject {
     
     private func handleAppDeactivation(appName: String?, processID: pid_t) {
         print("Application deactivated: \(appName ?? "Unknown") \(processID)")
-        highlightedTextPoller.stopPolling(pid: processID)
+        
+        Task.detached {
+            await self.highlightedTextPoller.stopPolling(pid: processID)
+        }
     }
 
     private func handleAccessibilityNotifications(
@@ -639,37 +654,39 @@ class AccessibilityNotificationsManager: ObservableObject {
 
         handleExternalElement(element) { [weak self] pid in
             let selectedTextExtracted = element.selectedText()
+            let elementBounds = element.selectedTextBound()
 
-            self?.processSelectedText(selectedTextExtracted, for: element)
-            self?.selectedTextByApp[pid.getAppName() ?? "Unknown"] = selectedTextExtracted
-            self?.selectedElementByApp[pid.getAppName() ?? "Unknown"] = element
+            self?.processSelectedText(selectedTextExtracted, elementBounds: elementBounds)
+            if let window = element.findFirstTargetWindow() {
+                log.error("window title \(window.title())")
+                let hash = CFHash(window)
+                
+                self?.selectedTextByApp[hash] = selectedTextExtracted
+                self?.selectedElementByApp[hash] = element
+            }
+            
             self?.showDebug()
         }
     }
 
-    private func processSelectedText(_ text: String?, for element: AXUIElement?) {
-        Task { @MainActor in
-            guard Defaults[.autoContextFromHighlights],
-                let selectedText = text,
-                let selectedElement = element,
-                !selectedText.isEmpty
-            else {
-
-                selectedSource = nil
-                TetherAppsManager.shared.state.pendingInput = nil
-                HighlightHintWindowController.shared.hide()
-
-                return
-            }
-            screenResult.userInteraction.selectedText = selectedText
-
-            selectedSource = currentSource
-
-            let bound = selectedElement.selectedTextBound()
-            HighlightHintWindowController.shared.show(bound)
-
-            TetherAppsManager.shared.state.pendingInput = Input(selectedText: selectedText, application: currentSource ?? "")
+    private func processSelectedText(_ text: String?, elementBounds: CGRect?) {
+        guard Defaults[.autoContextFromHighlights],
+              let selectedText = text,
+              !selectedText.isEmpty else {
+            selectedSource = nil
+            TetherAppsManager.shared.state.pendingInput = nil
+            HighlightHintWindowController.shared.hide()
+            return
         }
+        
+        screenResult.userInteraction.selectedText = selectedText
+        selectedSource = currentSource
+        
+        if let elementBounds = elementBounds {
+            HighlightHintWindowController.shared.show(elementBounds)
+        }
+        
+        TetherAppsManager.shared.state.pendingInput = Input(selectedText: selectedText, application: currentSource ?? "")
     }
 
     /** Ensure the received `AXUIElement` is not from our process */
