@@ -59,12 +59,20 @@ struct App: SwiftUI.App {
                     AccessibilityAnalytics.logPermission(local: newValue)
                     switch newValue {
                     case .granted:
-                        TetherAppsManager.shared.startObserving()
                         AccessibilityNotificationsManager.shared.start(pid: frontmostApplicationOnLaunch?.processIdentifier)
                         UntetheredScreenManager.shared.stopObserving()
                         frontmostApplicationOnLaunch = nil
+                        
+                        if FeatureFlagManager.shared.useScreenModeWithAccessibility {
+                            TetherAppsManager.shared.stopObserving()
+                            AccessibilityScreenManager.shared.startObserving()
+                        } else {
+                            AccessibilityScreenManager.shared.stopObserving()
+                            TetherAppsManager.shared.startObserving()
+                        }
                     case .denied, .notDetermined:
                         TetherAppsManager.shared.stopObserving()
+                        AccessibilityScreenManager.shared.stopObserving()
                         AccessibilityNotificationsManager.shared.stop()
                         UntetheredScreenManager.shared.startObserving()
                     }

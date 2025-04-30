@@ -21,6 +21,10 @@ extension OnitPanelState {
     }
     
     func repositionPanel(action: TrackedWindowAction) {
+        if isScreenMode {
+            return
+        }
+        
         guard let window = trackedWindow?.element,
               let panel = self.panel,
               !panel.isAnimating,
@@ -90,6 +94,10 @@ extension OnitPanelState {
 
     
     func restoreWindowPosition() {
+        if isScreenMode {
+            return
+        }
+        
         var fromActive : NSRect? = nil
         var toActive: NSRect? = nil
         if let panel = self.panel, !panel.isAnimating {
@@ -202,6 +210,10 @@ extension OnitPanelState {
     // MARK: - Layout
     
     private func movePanel(screenFrame: CGRect, onitWidth: CGFloat, onitHeight: CGFloat, onitY: CGFloat) {
+        if isScreenMode {
+            return
+        }
+        
         guard let window = trackedWindow?.element,
               let windowFrame = window.getFrame(),
               let panel = panel else {
@@ -236,6 +248,10 @@ extension OnitPanelState {
     }
     
     private func moveWindowAndPanel(screenFrame: CGRect, onitWidth: CGFloat, onitHeight: CGFloat, onitY: CGFloat) {
+        if isScreenMode {
+            return
+        }
+        
         guard let window = trackedWindow?.element,
               let windowFrame = window.getFrame(),
               let panel = panel else {
@@ -289,6 +305,10 @@ extension OnitPanelState {
     }
     
     private func resizeWindowAndMovePanel(onitWidth: CGFloat, onitHeight: CGFloat, onitY: CGFloat, maxAvailableWidth: CGFloat) {
+        if isScreenMode {
+            return
+        }
+        
         guard let window = trackedWindow?.element,
               let panel = panel,
               let windowFrame = window.getFrame() else {
@@ -494,4 +514,4 @@ extension OnitPanelState {
             return value
         }
     }
-} 
+}          

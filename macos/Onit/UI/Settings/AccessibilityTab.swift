@@ -13,7 +13,7 @@ struct AccessibilityTab: View {
     @ObservedObject private var accessibilityPermissionManager = AccessibilityPermissionManager.shared
     @ObservedObject private var featureFlagsManager = FeatureFlagManager.shared
     
-    private var autoContextEnabled: Bool {
+    var autoContextEnabled: Bool {
         accessibilityPermissionManager.accessibilityPermissionStatus == .granted
     }
 
@@ -157,6 +157,22 @@ struct AccessibilityTab: View {
                             )
                         }
                     }
+                    
+                    HStack {
+                        Text("Use screen mode instead of window mode")
+                            .font(.system(size: 13))
+                        Spacer()
+                        Toggle(
+                            "",
+                            isOn: Binding(
+                                get: { FeatureFlagManager.shared.useScreenModeWithAccessibility },
+                                set: { FeatureFlagManager.shared.toggleScreenModeWithAccessibility($0) }
+                            )
+                        )
+                        .toggleStyle(.switch)
+                        .controlSize(.small)
+                    }
+                    .padding(.top, 8)
                 }
             }
         }
