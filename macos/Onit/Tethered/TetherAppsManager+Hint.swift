@@ -19,7 +19,7 @@ extension TetherAppsManager {
         let pendingTetherWindow = (state, activeWindow)
 
         tetherHintDetails.showTetherDebounceTimer?.invalidate()
-        tetherHintDetails.showTetherDebounceTimer = Timer.scheduledTimer(withTimeInterval: tetherHintDetails.showTetherDebounceDelay, repeats: false) { [weak self] _ in
+        tetherHintDetails.showTetherDebounceTimer = Timer.scheduledTimer(withTimeInterval: tetherHintDetails.showTetherDebounceDelay, repeats: false) { [weak self, action] _ in
             guard let self = self else { return }
             
             DispatchQueue.main.async {
