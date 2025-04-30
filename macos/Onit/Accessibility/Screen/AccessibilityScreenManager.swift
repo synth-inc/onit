@@ -163,21 +163,23 @@ class AccessibilityScreenManager: ObservableObject {
     
     private func resizeOverlappingWindowsIfNeeded(panelFrame: NSRect) {
         let accessibilityManager = AccessibilityNotificationsManager.shared
-        guard let activeWindow = accessibilityManager.activeWindow?.element else { return }
+        let allWindows = accessibilityManager.windowsManager.getAllTrackedWindows()
         
-        guard let windowFrame = activeWindow.getFrame(convertedToGlobalCoordinateSpace: true) else { return }
-        
-        if windowFrame.intersects(panelFrame) {
-            let maxWidth = panelFrame.minX - windowFrame.minX - AccessibilityScreenManager.spaceBetweenWindows
+        for window in allWindows {
+            guard let windowFrame = window.element.getFrame(convertedToGlobalCoordinateSpace: true) else { continue }
             
-            let newFrame = NSRect(
-                x: windowFrame.minX,
-                y: windowFrame.minY,
-                width: min(maxWidth, windowFrame.width),
-                height: windowFrame.height
-            )
-            
-            _ = activeWindow.setFrame(newFrame)
+            if windowFrame.intersects(panelFrame) {
+                let maxWidth = panelFrame.minX - windowFrame.minX - AccessibilityScreenManager.spaceBetweenWindows
+                
+                let newFrame = NSRect(
+                    x: windowFrame.minX,
+                    y: windowFrame.minY,
+                    width: min(maxWidth, windowFrame.width),
+                    height: windowFrame.height
+                )
+                
+                _ = window.element.setFrame(newFrame)
+            }
         }
     }
 
