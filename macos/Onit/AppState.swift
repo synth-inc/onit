@@ -148,7 +148,7 @@ class AppState: NSObject {
             }
 
         } catch {
-            print("Error fetching local models:", error)
+            print("Error fetching remote models:", error)
             remoteFetchFailed = true
         }
     }
