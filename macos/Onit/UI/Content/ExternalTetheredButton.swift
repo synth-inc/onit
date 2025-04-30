@@ -103,7 +103,11 @@ struct ExternalTetheredButton: View {
         guard !isDragging else { return }
         
         if let state = OnitPanelStateCoordinator.shared.tetherButtonPanelState {
-            state.launchPanel()
+			if state.panelOpened {
+				state.closePanel()
+			} else {
+	            state.launchPanel()
+			}
         } else {
             log.warning("Couldn't find panel state for tether button")
         }

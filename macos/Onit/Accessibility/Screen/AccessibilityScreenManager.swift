@@ -156,7 +156,24 @@ class AccessibilityScreenManager: ObservableObject {
             height: onitHeight
         )
         
-        panel.setFrame(newFrame, display: true)
+        if panel.wasAnimated {
+            panel.setFrame(newFrame, display: true)
+            state.showChatView = true // Add this line to explicitly set showChatView
+        } else {
+            state.animateEnter(
+                activeWindow: nil,
+                fromActive: nil,
+                toActive: nil,
+                panel: panel,
+                fromPanel: NSRect(
+                    x: screenFrame.maxX - 2,
+                    y: screenFrame.minY,
+                    width: 0,
+                    height: screenFrame.height
+                ),
+                toPanel: newFrame
+            )
+        }
         
         resizeOverlappingWindowsIfNeeded(panelFrame: newFrame)
     }
@@ -243,9 +260,12 @@ class AccessibilityScreenManager: ObservableObject {
 
     private func tetheredWindowMoved(y: CGFloat) {
         if let tetherPanelState = tetherButtonPanelState, 
-           let screen = tetherPanelState.trackedScreen,
-           !tetherPanelState.panelOpened {
-            tetherPanelState.launchPanel()
+           let screen = tetherPanelState.trackedScreen {
+            if tetherPanelState.panelOpened {
+                tetherPanelState.closePanel()
+            } else {
+                tetherPanelState.launchPanel()
+            }
         }
     }
 }
