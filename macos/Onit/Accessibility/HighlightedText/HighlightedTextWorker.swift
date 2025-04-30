@@ -67,10 +67,13 @@ final class HighlightedTextWorker {
 
     private func highlightedTextFound(for element: AXUIElement) -> Bool {
         if let selectedText = element.selectedText(),
-           AccessibilityTextSelectionFilter.filter(element: element) == false {
+           HighlightedTextValidator.isValid(element: element) {
+            
             processSelectedText(selectedText, in: element)
+            
             return true
         }
+        
         return false
     }
 

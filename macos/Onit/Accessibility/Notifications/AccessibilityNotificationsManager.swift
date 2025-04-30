@@ -52,10 +52,6 @@ class AccessibilityNotificationsManager: ObservableObject {
     // Persistent observers that are started once per pid and remain until the app quits.
     private var persistentObservers: [pid_t: AXObserver] = [:]
     
-    private var selectedSource: String?
-
-    private var highlightedTextByWindowHash: [UInt: String] = [:]
-    private var highlightedTextFrameByWindowHash: [UInt: CGRect] = [:]
     private var lastHighlightingProcessedAt: Date?
 
     private var valueDebounceWorkItem: DispatchWorkItem?
@@ -276,11 +272,6 @@ class AccessibilityNotificationsManager: ObservableObject {
                 guard let self = self else { return }
                 
                 Task { @MainActor in
-                    if let focusedWindow = processID.getFocusedWindow() {
-                        let focusedWindowHash = CFHash(focusedWindow)
-                        
-                        self.storeSelectedText(text, for: focusedWindowHash, with: frame)
-                    }
                     self.processSelectedText(text, elementFrame: frame)
                 }
             })
@@ -289,10 +280,7 @@ class AccessibilityNotificationsManager: ObservableObject {
         currentSource = appName
         
         if let focusedWindow = processID.getFocusedWindow() {
-            let focusedWindowHash = CFHash(focusedWindow)
-            
             handleWindowBounds(for: focusedWindow)
-            restoreSelectedText(for: focusedWindowHash)
         }
         
         retrieveWindowContent(for: processID)
@@ -412,12 +400,6 @@ class AccessibilityNotificationsManager: ObservableObject {
         handleExternalElement(element) { [weak self] elementPid in
             print("Focus change from pid: \(elementPid)")
             
-            if let focusedWindow = elementPid.getFocusedWindow() {
-                let focusedWindowHash = CFHash(focusedWindow)
-                
-                self?.restoreSelectedText(for: focusedWindowHash)
-            }
-            
             self?.retrieveWindowContent(for: elementPid)
         }
     }
@@ -440,7 +422,8 @@ class AccessibilityNotificationsManager: ObservableObject {
     }
 
     private func handleSelectionChange(for element: AXUIElement) {
-        guard AccessibilityTextSelectionFilter.filter(element: element) == false else { return }
+        guard HighlightedTextValidator.isValid(element: element) else { return }
+        
         // Fix to work with PDF in Chrome
         if let lastHighlightingProcessedAt = lastHighlightingProcessedAt, Date().timeIntervalSince(lastHighlightingProcessedAt) < 0.002 {
             return
@@ -618,11 +601,16 @@ class AccessibilityNotificationsManager: ObservableObject {
         let elapsedTime = results?[AccessibilityParsedElements.elapsedTime]
         let appName = results?[AccessibilityParsedElements.applicationName]
         let appTitle = results?[AccessibilityParsedElements.applicationTitle]
+        let highlightedText = results?[AccessibilityParsedElements.highlightedText]
+        
         var results = results
         
         results?.removeValue(forKey: AccessibilityParsedElements.elapsedTime)
         results?.removeValue(forKey: AccessibilityParsedElements.applicationName)
         results?.removeValue(forKey: AccessibilityParsedElements.applicationTitle)
+        results?.removeValue(forKey: AccessibilityParsedElements.highlightedText)
+        
+        self.processSelectedText(highlightedText, elementFrame: nil)
         
         self.screenResult.elapsedTime = elapsedTime
         self.screenResult.applicationName = appName
@@ -664,42 +652,23 @@ class AccessibilityNotificationsManager: ObservableObject {
         handleExternalElement(element) { [weak self] pid in
             let selectedTextExtracted = element.selectedText()
             let elementBounds = element.selectedTextBound()
-
-            if let window = element.findFirstTargetWindow() {
-                let windowHash = CFHash(window)
-                self?.storeSelectedText(selectedTextExtracted, for: windowHash, with: elementBounds)
-            }
             
             self?.processSelectedText(selectedTextExtracted, elementFrame: elementBounds)
-            
             self?.showDebug()
         }
-    }
-    
-    private func storeSelectedText(_ text: String?, for windowHash: UInt, with frame: CGRect?) {
-        highlightedTextByWindowHash[windowHash] = text
-        highlightedTextFrameByWindowHash[windowHash] = frame
-    }
-    
-    private func restoreSelectedText(for windowHash: UInt) {
-        let selectedText = highlightedTextByWindowHash[windowHash]
-        let selectedElementFrame = highlightedTextFrameByWindowHash[windowHash]
-        
-        processSelectedText(selectedText, elementFrame: selectedElementFrame)
     }
 
     private func processSelectedText(_ text: String?, elementFrame: CGRect?) {
         guard Defaults[.autoContextFromHighlights],
               let selectedText = text,
-              !selectedText.isEmpty else {
-            selectedSource = nil
+              HighlightedTextValidator.isValid(text: selectedText) else {
+            
             TetherAppsManager.shared.state.pendingInput = nil
             HighlightHintWindowController.shared.hide()
             return
         }
         
         screenResult.userInteraction.selectedText = selectedText
-        selectedSource = currentSource
         
         if let elementFrame = elementFrame {
             HighlightHintWindowController.shared.show(elementFrame)
@@ -709,8 +678,7 @@ class AccessibilityNotificationsManager: ObservableObject {
     }
 
     /** Ensure the received `AXUIElement` is not from our process */
-    private func handleExternalElement(_ element: AXUIElement, callback: @escaping (pid_t) -> Void)
-    {
+    private func handleExternalElement(_ element: AXUIElement, callback: @escaping (pid_t) -> Void) {
         var elementPid: pid_t = 0
 
         guard AXUIElementGetPid(element, &elementPid) == .success, elementPid != getpid() else {

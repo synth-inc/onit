@@ -8,19 +8,29 @@
 import ApplicationServices.HIServices.AXUIElement
 
 /// Generic  implementation of the ``AccessibilityParserLogic``
-class AccessibilityParserGeneric: AccessibilityParserLogic {
+class AccessibilityParserGeneric: AccessibilityParserBase {
 
     // MARK: - AccessibilityParserLogic
 
     /** See ``AccessibilityParserLogic`` parse function */
-    func parse(element: AXUIElement) -> [String: String] {
+    override func parse(element: AXUIElement) -> [String: String] {
         var result: [String: String] = [:]
         var screen: String = ""
+        var highlightedTextFound = false
         
         _ = AccessibilityParserUtility.recursivelyParse(
             element: element,
             maxDepth: AccessibilityParserConfig.recursiveDepthMax
         ) { element in
+            
+            if !highlightedTextFound {
+                let parentResult = super.parse(element: element)
+                
+                if !parentResult.isEmpty {
+                    highlightedTextFound = true
+                    result.merge(parentResult) { _, new in new }
+                }
+            }
             
             if let value = element.value(), !value.isEmpty {
                 screen += "\(value) "
