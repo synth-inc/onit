@@ -152,7 +152,7 @@ extension OnboardingAuth {
                         emailAddressInput
                         continueWithEmailButton
                     }
-                    agreement
+//                    agreement
                 }
             }
         }
