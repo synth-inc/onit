@@ -102,6 +102,7 @@ class UntetheredScreenManager: ObservableObject {
     func startObserving() {
         guard !isObserving else { return }
         
+        stopObserving()
         isObserving = true
         
         // Add global monitor to capture mouse moved events
