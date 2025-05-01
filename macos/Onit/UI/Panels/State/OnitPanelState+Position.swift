@@ -310,6 +310,21 @@ extension OnitPanelState {
         )
         
         if panel.wasAnimated {
+            /// Do not restore the position if the window was resized after the panel was shown:
+            /// - Fullscreen
+            /// - Dragged to the right with insufficient space
+            
+            /** This code will restore the current frame & fill the space previously occupied by the panel. */
+//            let newInitialFrame = CGRect(
+//                x: windowFrame.origin.x,
+//                y: windowFrame.origin.y,
+//                width: maxAvailableWidth + onitWidth,
+//                height: windowFrame.height
+//            )
+//            TetherAppsManager.shared.targetInitialFrames[window] = newInitialFrame
+            
+            /** This code explicitly disables automatic frame restoration. */
+//            TetherAppsManager.shared.targetInitialFrames.removeValue(forKey: window)
             panel.setFrame(newFrame, display: false)
             _ = window.setFrame(activeWindowTargetRect)
         } else {
