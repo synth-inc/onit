@@ -21,6 +21,14 @@ class UntetheredScreenManager: ObservableObject {
     
     @Published var state: OnitPanelState
     @Published var tetherButtonPanelState: OnitPanelState?
+    
+    
+    let trackedScreenManager = TrackedScreenManager()
+    var lastScreenFrame = CGRect.zero
+    
+    private var globalMouseMonitor: Any?
+    private var localMouseMonitor: Any?
+    
     var states: [TrackedScreen: OnitPanelState] = [:]
     var isObserving: Bool = false
 
@@ -92,35 +100,61 @@ class UntetheredScreenManager: ObservableObject {
     // MARK: - Functions
 
     func startObserving() {
-        stopObserving()
+        guard !isObserving else { return }
+        
         isObserving = true
-        AccessibilityDeniedNotificationManager.shared.delegate = self
-        NotificationCenter.default.addObserver(
-            self,
-            selector: #selector(appDidBecomeActive),
-            name: NSApplication.didBecomeActiveNotification,
-            object: nil
-        )
-        NotificationCenter.default.addObserver(
-            self,
-            selector: #selector(applicationWillTerminate),
-            name: NSApplication.willTerminateNotification,
-            object: nil
-        )
+        
+        // Add global monitor to capture mouse moved events
+        globalMouseMonitor = NSEvent.addGlobalMonitorForEvents(matching: .mouseMoved) { [weak self] event in
+            guard let self = self else { return }
+            handleMouseMoved(event: event)
+        }
+
+        // Add local monitor to capture mouse moved events when the application is foregrounded
+        localMouseMonitor = NSEvent.addLocalMonitorForEvents(matching: .mouseMoved) { [weak self] event in
+            guard let self = self else { return event }
+            handleMouseMoved(event: event)
+            return event
+        }
+        
+        // Add the main screen on startup.
+        if let mouseScreen = NSScreen.mouse {
+            if let trackedScreen = trackedScreenManager.append(screen: mouseScreen) {
+                handleActivation(of: trackedScreen)
+            }
+            lastScreenFrame = mouseScreen.frame
+        }
     }
 
     func stopObserving() {
         isObserving = false
-        NotificationCenter.default.removeObserver(self)
-        AccessibilityDeniedNotificationManager.shared.delegate = nil
+        if let globalMouseMonitor = globalMouseMonitor {
+            NSEvent.removeMonitor(globalMouseMonitor)
+            self.globalMouseMonitor = nil
+        }
+        
+        if let localMouseMonitor = localMouseMonitor {
+            NSEvent.removeMonitor(localMouseMonitor)
+            self.localMouseMonitor = nil
+        }
         hideTetherWindow()
     }
 
-    @objc private func appDidBecomeActive(_ notification: Notification) { }
-
-    @objc private func appResignActive(_ notification: Notification) { }
-            
-    @objc private func applicationWillTerminate() { }
+    private func handleMouseMoved(event: NSEvent) {
+        if let mouseScreen = NSScreen.mouse {
+            if !mouseScreen.frame.equalTo(lastScreenFrame) {
+                if let trackedScreen = trackedScreenManager.append(screen: mouseScreen) {
+                    handleActivation(of: trackedScreen)
+                }
+                lastScreenFrame = mouseScreen.frame
+            }
+        }
+    }
+    
+    private func handleActivation(of screen: TrackedScreen) {
+        let panelState = getState(for: screen)
+        handlePanelStateChange(state: panelState, action: .undefined)
+    }
     
     func handlePanelStateChange(state: OnitPanelState, action: TrackedScreenAction) {
         guard let screen = state.trackedScreen else {
@@ -288,15 +322,6 @@ class UntetheredScreenManager: ObservableObject {
         tetherHintDetails.tetherWindow.setFrame(frame, display: true)
     }
     
-}
-
-// MARK: - AccessibilityDeniedNotificationsDelegate
-
-extension UntetheredScreenManager: AccessibilityDeniedNotificationDelegate {
-    func accessibilityDeniedNotificationManager(_ manager: AccessibilityDeniedNotificationManager, didActivateScreen screen: TrackedScreen) {
-        let panelState = getState(for: screen)
-        handlePanelStateChange(state: panelState, action: .undefined)
-    }
 }
 
 // MARK: - OnitPanelStateDelegate
