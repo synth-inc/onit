@@ -52,7 +52,6 @@ struct OnboardingAuth: View {
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .padding(.horizontal, 40)
         .padding(.top, 134)
     }
 }
@@ -157,6 +156,7 @@ extension OnboardingAuth {
                 }
             }
         }
+        .padding(.horizontal, 40)
     }
     
     private var agreement: some View {
@@ -237,12 +237,28 @@ extension OnboardingAuth {
                 .allowsHitTesting(!token.isEmpty)
                 .addAnimation(dependency: token)
             }
+            .padding(.horizontal, 40)
             
             Spacer()
             
             VStack(alignment: .center, spacing: 28) {
-                Text(generateResendLinkText())
-                    .styleText(size: 12, align: .center)
+                VStack(alignment: .center, spacing: 0) {
+                    Text("Didn't get it? Check your spam folder and the spelling")
+                        .styleText(size: 12, color: .gray200, align: .center)
+                        .frame(maxWidth: .infinity)
+                    
+                    HStack(spacing: 4) {
+                        Text("of your email address, or")
+                            .styleText(size: 12, color: .gray200)
+                        
+                        Button {
+                            requestEmailLoginLink()
+                        } label: {
+                            Text("Resend Link")
+                                .styleText(size: 12)
+                        }
+                    }
+                }
                 
                 Text("← Back")
                     .frame(height: 40)
@@ -326,11 +342,6 @@ extension OnboardingAuth {
                     errorMessageEmail = error.localizedDescription
                 }
             }
-            
-            if isSignUp { print("AUTH SIGN UP") }
-            else { print("AUTH SIGN IN") }
-            
-            print("email: \(email)")
         }
     }
 }
@@ -387,18 +398,6 @@ extension OnboardingAuth {
 // MARK: - Private Functions (onboarding auth token form)
 
 extension OnboardingAuth {
-    private func generateResendLinkText() -> AttributedString {
-        var resendLinkText = AttributedString("Didn’t get it? Check your spam folder and the spelling of your email address, or ")
-        resendLinkText.foregroundColor = .gray200
-        
-        var termsText = AttributedString("Resend Link")
-        termsText.foregroundColor = .white
-//        termsText.
-        resendLinkText.append(termsText)
-        
-        return resendLinkText
-    }
-    
     private func handleTokenLogin() {
         let client = FetchingClient()
         Task {
