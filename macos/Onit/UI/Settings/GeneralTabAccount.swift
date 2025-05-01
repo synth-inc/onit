@@ -13,7 +13,8 @@ struct GeneralTabAccount: View {
     
     @Default(.showOnboardingSignUp) var showOnboardingSignUp
     
-    @State private var showDeleteAccountAlert = false
+    @State private var showDeleteAccountAlert: Bool = false
+    @State private var accountDeleteError: String = ""
     
     var body: some View {
         SettingsSection(
@@ -32,6 +33,11 @@ struct GeneralTabAccount: View {
                         logoutButton
                         deleteAccountButton
                     }
+                }
+                
+                if !accountDeleteError.isEmpty {
+                    Text(accountDeleteError)
+                        .styleText(size: 13, weight: .regular, color: .red)
                 }
             }
         }
@@ -127,7 +133,16 @@ extension GeneralTabAccount {
     
     @MainActor
     private func deleteAccount() {
-        print("Delete account")
-//        logout()
+        accountDeleteError = ""
+        let client = FetchingClient()
+        
+        Task {
+            do {
+                try await client.deleteAccount()
+                logout()
+            } catch {
+                accountDeleteError = error.localizedDescription
+            }
+        }
     }
 }
