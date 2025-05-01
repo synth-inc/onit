@@ -61,18 +61,23 @@ struct OnboardingAuth: View {
 extension OnboardingAuth {
     private var formAuthButtons: some View {
         VStack(spacing: 4) {
-            HStack(spacing: 12) {
-                OnboardingAuthButton(
-                    icon: .logoGoogle,
-                    action: handleGoogleSignInButton
-                )
-                
-                OnboardingAuthButton(
-                    icon: .logoApple,
-                    action: { print("Apple Auth") }
-                )
-            }
-            .frame(width: 188)
+//            HStack(spacing: 12) {
+//                OnboardingAuthButton(
+//                    icon: .logoGoogle,
+//                    action: handleGoogleSignInButton
+//                )
+//                
+//                OnboardingAuthButton(
+//                    icon: .logoApple,
+//                    action: { print("Apple Auth") }
+//                )
+//            }
+//            .frame(width: 188)
+            
+            OnboardingAuthButton(
+                icon: .logoGoogle,
+                action: handleGoogleSignInButton
+            )
             
             SignInWithAppleButton(
                 onRequest: { request in
@@ -91,10 +96,13 @@ extension OnboardingAuth {
                         errorMessageAuth = error.localizedDescription
                     }
                 }
+                .frame(height: 40)
+                .styleText(size: 16)
+                .addBorder(cornerRadius: 9, stroke: .gray700)
             
             if let errorMessageAuth = errorMessageAuth {
                 Text(errorMessageAuth)
-                    .styleText(size: 12, weight: .medium, color: .red)
+                    .styleText(size: 12, weight: .medium, color: .red, align: .center)
             }
         }
     }
@@ -274,6 +282,8 @@ extension OnboardingAuth {
                             .onChanged {_ in isPressedBackButton = true }
                             .onEnded{ _ in
                                 isPressedBackButton = false
+                                token = ""
+                                errorMessageToken = ""
                                 requestedEmailLogin = false
                             }
                     )
