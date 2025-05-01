@@ -15,7 +15,7 @@ struct OnitChatStreamingEndpoint: StreamingEndpoint {
 
     var baseURL: URL { OnitServer.baseURL }
 
-    var path: String { "/v1/chat/completions" }
+    var path: String { "/v1/chat/message" }
 
     var getParams: [String: String]? { nil }
 
@@ -56,7 +56,18 @@ struct OnitChatRequest: Codable {
 
 struct OnitChatMessage: Codable {
     let role: String
-    let content: String
+    let content: [OnitContent]
+}
+
+struct OnitContent: Codable {
+    let type: String
+    let text: String?
+    let source: OnitImageSource?
+}
+
+struct OnitImageSource: Codable {
+    let mimeType: String
+    let data: String
 }
 
 struct OnitChatStreamingResponse: Codable {
