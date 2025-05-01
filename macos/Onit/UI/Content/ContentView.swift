@@ -15,6 +15,7 @@ struct ContentView: View {
     @Default(.isRegularApp) var isRegularApp
     @ObservedObject private var accessibilityPermissionManager = AccessibilityPermissionManager.shared
     @Default(.showOnboarding) var showOnboarding
+    @Default(.showOnboardingSignUp) var showOnboardingSignUp
     
     static let idealWidth: CGFloat = 400
     static let bottomPadding: CGFloat = 0
@@ -46,6 +47,8 @@ struct ContentView: View {
                     }
                     .frame(width: TetherAppsManager.minOnitWidth, height: .infinity)
                     .background(Color.black)
+                } else if let isSignUp = showOnboardingSignUp {
+                    OnboardingAuth(isSignUp: isSignUp)
                 } else {
                     VStack(spacing: 0) {
                         if !isRegularApp { Toolbar() }
@@ -59,7 +62,6 @@ struct ContentView: View {
                     }
                 }
             }
-
             .background(Color.black)
             .addBorder(
                 cornerRadius: 14,

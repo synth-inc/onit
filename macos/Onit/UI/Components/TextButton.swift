@@ -10,6 +10,7 @@ import SwiftUI
 struct TextButton<Child: View>: View {
     private let icon: ImageResource?
     private let iconSize: CGFloat
+    private let iconColor: Color?
     private let text: String?
     private let disabled: Bool
     private let selected: Bool
@@ -33,6 +34,7 @@ struct TextButton<Child: View>: View {
     
     private struct DefaultValues {
         var iconSize: CGFloat = 20
+        var iconColor: Color? = nil
         var text: String? = nil
         var disabled: Bool = false
         var selected: Bool = false
@@ -55,6 +57,7 @@ struct TextButton<Child: View>: View {
     init(
         icon: ImageResource? = nil,
         iconSize: CGFloat = DefaultValues().iconSize,
+        iconColor: Color? = DefaultValues().iconColor,
         text: String? = DefaultValues().text,
         disabled: Bool = DefaultValues().disabled,
         selected: Bool = DefaultValues().selected,
@@ -78,6 +81,7 @@ struct TextButton<Child: View>: View {
     ) {
         self.icon = icon
         self.iconSize = iconSize
+        self.iconColor = iconColor
         self.text = text
         self.disabled = disabled
         self.selected = selected
@@ -107,7 +111,7 @@ struct TextButton<Child: View>: View {
         HStack(alignment: .center, spacing: gap) {
             if let icon = icon {
                 Image(icon).addIconStyles(
-                    foregroundColor: selected ? .blue300 : .white,
+                    foregroundColor: selected ? .blue300 : iconColor ?? .white,
                     iconSize: iconSize
                 )
             }
@@ -135,7 +139,7 @@ struct TextButton<Child: View>: View {
         .opacity(disabled ? 0.5 : isPressed ? 0.7 : 1)
         .disabled(disabled)
         .cornerRadius(cornerRadius)
-        .addAnimation(dependency: $isHovered.wrappedValue)
+        .addAnimation(dependency: isHovered)
         .addAnimation(dependency: disabled)
         .onHover{ isHovering in isHovered = isHovering }
         .gesture(
@@ -156,6 +160,7 @@ extension TextButton where Child == EmptyView {
     init(
         icon: ImageResource? = nil,
         iconSize: CGFloat = DefaultValues().iconSize,
+        iconColor: Color? = DefaultValues().iconColor,
         text: String? = DefaultValues().text,
         disabled: Bool = DefaultValues().disabled,
         selected: Bool = DefaultValues().selected,
@@ -178,6 +183,7 @@ extension TextButton where Child == EmptyView {
         self.init(
             icon: icon,
             iconSize: iconSize,
+            iconColor: iconColor,
             text: text,
             disabled: disabled,
             selected: selected,
