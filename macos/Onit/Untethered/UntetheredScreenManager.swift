@@ -194,7 +194,7 @@ class UntetheredScreenManager: ObservableObject {
     func showTetherWindow(state: OnitPanelState, activeScreen: NSScreen, action: TrackedScreenAction) {
          let tetherView = ExternalTetheredButton(
              onDrag: { [weak self] translation in
-                 self?.tetheredWindowMoved(y: translation)
+                 self?.tetheredWindowMoved(screen: activeScreen, y: translation)
              }
          ).environment(\.windowState, state)
 
@@ -215,8 +215,14 @@ class UntetheredScreenManager: ObservableObject {
     
     private func updateTetherWindowPosition(for screen: NSScreen, action: TrackedScreenAction, lastYComputed: CGFloat? = nil) {
         let activeScreenFrame = screen.visibleFrame
-        var positionX = activeScreenFrame.maxX - ExternalTetheredButton.containerWidth
-        var positionY = activeScreenFrame.minY + (activeScreenFrame.height / 2) - (ExternalTetheredButton.containerHeight / 2)
+        let positionX = activeScreenFrame.maxX - ExternalTetheredButton.containerWidth
+        var positionY: CGFloat
+        
+        if lastYComputed == nil {
+            positionY = activeScreenFrame.minY + (activeScreenFrame.height / 2) - (ExternalTetheredButton.containerHeight / 2)
+        } else {
+            positionY = computeHintYPosition(for: activeScreenFrame, offset: lastYComputed)
+        }
         
         let frame = NSRect(
             x: positionX,
@@ -236,10 +242,50 @@ class UntetheredScreenManager: ObservableObject {
             tutorialWindow.setFrame(tutorialFrame, display: false)
         }
     }
+    
+    private func computeHintYPosition(for screenVisibleFrame: CGRect, offset: CGFloat?) -> CGFloat {
+        let maxY = screenVisibleFrame.maxY - ExternalTetheredButton.containerHeight
+        let minY = screenVisibleFrame.minY
 
-    private func tetheredWindowMoved(y: CGFloat) {
-        // TODO
+        var lastYComputed = tetherHintDetails.lastYComputed ?? screenVisibleFrame.minY + (screenVisibleFrame.height / 2) - (ExternalTetheredButton.containerHeight / 2)
+
+        if let offset = offset {
+            lastYComputed -= offset
+        }
+
+        let finalOffset: CGFloat
+
+        if lastYComputed > maxY {
+            finalOffset = maxY
+        } else if lastYComputed < minY {
+            finalOffset = minY
+        } else {
+            finalOffset = lastYComputed
+        }
+
+        return finalOffset
+    }
+
+    private func tetheredWindowMoved(screen: NSScreen, y: CGFloat) {
+        let screenFrame = screen.visibleFrame
+        let lastYComputed = computeHintYPosition(for: screenFrame, offset: y)
         
+        tetherHintDetails.lastYComputed = lastYComputed
+        
+        if let state = tetherButtonPanelState {
+            state.tetheredButtonYPosition = screenFrame.height -
+                (lastYComputed - screenFrame.minY) -
+                ExternalTetheredButton.containerHeight + (TetheredButton.height / 2)
+        }
+
+        let frame = NSRect(
+            x: tetherHintDetails.tetherWindow.frame.origin.x,
+            y: lastYComputed,
+            width: ExternalTetheredButton.containerWidth,
+            height: ExternalTetheredButton.containerHeight
+        )
+        
+        tetherHintDetails.tetherWindow.setFrame(frame, display: true)
     }
     
 }
