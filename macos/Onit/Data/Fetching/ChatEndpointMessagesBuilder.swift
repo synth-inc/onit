@@ -98,6 +98,7 @@ struct ChatEndpointMessagesBuilder {
 
     static func onit(
         model: AIModel,
+        images: [[URL]],
         responses: [String],
         systemMessage: String,
         userMessages: [String]
@@ -106,18 +107,58 @@ struct ChatEndpointMessagesBuilder {
 
         if model.supportsSystemPrompts {
             onitMessageStack.append(
-                OnitChatMessage(role: "system", content: systemMessage)
+                OnitChatMessage(
+                    role: "system",
+                    content: [
+                        OnitContent(
+                            type: "text", text: systemMessage, source: nil)
+                    ])
             )
         }
 
         for (index, userMessage) in userMessages.enumerated() {
-            let onitMessage = OnitChatMessage(role: "user", content: userMessage)
-            onitMessageStack.append(onitMessage)
+            let content: [OnitContent]
+            if images[index].isEmpty {
+                content = [
+                    OnitContent(
+                        type: "text", text: userMessage, source: nil)
+                ]
+            } else {
+                content =
+                    [
+                        OnitContent(
+                            type: "text", text: userMessage, source: nil)
+                    ]
+                    + images[index].compactMap { url in
+                        guard let imageData = try? Data(contentsOf: url) else {
+                            print("Unable to read image data from URL: \(url)")
+                            return nil
+                        }
+                        let base64EncodedData = imageData.base64EncodedString()
+                        let mimeType = url.mimeType
+                        return OnitContent(
+                            type: "image",
+                            text: nil,
+                            source: OnitImageSource(
+                                mimeType: mimeType,
+                                data: base64EncodedData
+                            )
+                        )
+                    }
+            }
+
+            onitMessageStack.append(
+                OnitChatMessage(role: "user", content: content))
+
             // If there is a corresponding response, add it as an assistant message
             if index < responses.count {
-                let responseMessage = OnitChatMessage(
-                    role: "assistant", content: responses[index])
-                onitMessageStack.append(responseMessage)
+                let assistantContent = [
+                    OnitContent(
+                        type: "text", text: responses[index], source: nil)
+                ]
+                let assistantMessage = OnitChatMessage(
+                    role: "assistant", content: assistantContent)
+                onitMessageStack.append(assistantMessage)
             }
         }
 

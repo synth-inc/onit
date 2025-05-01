@@ -22,6 +22,7 @@ struct ChatStreamingEndpointBuilder {
         if Defaults[.useOnitChat] {
             return ChatStreamingEndpointBuilder.onit(
                 model: model,
+                images: images,
                 responses: responses,
                 systemMessage: systemMessage,
                 userMessages: userMessages)
@@ -88,12 +89,14 @@ struct ChatStreamingEndpointBuilder {
 
     private static func onit(
         model: AIModel,
+        images: [[URL]],
         responses: [String],
         systemMessage: String,
         userMessages: [String]
     ) -> OnitChatStreamingEndpoint {
         let messages = ChatEndpointMessagesBuilder.onit(
             model: model,
+            images: images,
             responses: responses,
             systemMessage: systemMessage,
             userMessages: userMessages)
