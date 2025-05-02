@@ -9,15 +9,17 @@ import SwiftUI
 import KeyboardShortcuts
 
 struct MenuOpenOnitButton: View {
-    @Environment(\.model) var model
-
+    
     var shortcut: KeyboardShortcut {
         .init(.space, modifiers: [.option, .command])
     }
 
     var body: some View {
         MenuBarRow {
-            model.showPanel()
+            let state = AccessibilityPermissionManager.shared.accessibilityPermissionStatus == .granted ?
+                TetherAppsManager.shared.state :
+                UntetheredScreenManager.shared.state
+            state.launchPanel()
         } leading: {
             HStack(spacing: 4) {
                 Image(.smirk)
@@ -43,8 +45,6 @@ struct MenuOpenOnitButton: View {
 
 #if DEBUG
     #Preview {
-        ModelContainerPreview {
-            MenuOpenOnitButton()
-        }
+        MenuOpenOnitButton()
     }
 #endif

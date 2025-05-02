@@ -22,8 +22,66 @@ extension AXUIElement {
     func value() -> String? {
         return self.attribute(forAttribute: kAXValueAttribute as CFString) as? String
     }
+        
+    // We should not use this function in most cases.
+    // kAXWindowsAttribute is OPTIONAL and may applications do not implement it, including Apple default apps like Notes
+    // Instead we should use getRootChildren() followed by filtering with isValidWindow().
+    func getWindows() -> [AXUIElement] {
+        var elementPid: pid_t = 0
 
-    func position() -> CGPoint? {
+        guard AXUIElementGetPid(self, &elementPid) == .success, elementPid != getpid() else {
+            return []
+        }
+        
+        let appElement = AXUIElementCreateApplication(elementPid)
+        
+        var windowList: CFArray?
+        let result = AXUIElementCopyAttributeValues(appElement, kAXWindowsAttribute as CFString, 0, 1, &windowList)
+        
+        guard result == .success,
+              let windows = windowList as? [AXUIElement] else {
+            return [appElement]
+        }
+        
+        return windows
+    }
+    
+    func getRootChildren() -> [AXUIElement] {
+        var elementPid: pid_t = 0
+
+        guard AXUIElementGetPid(self, &elementPid) == .success, elementPid != getpid() else {
+            return []
+        }
+        
+        let appElement = AXUIElementCreateApplication(elementPid)
+        return appElement.children() ?? []
+    }
+    
+    var isFinder: Bool {
+        let runningApps = NSWorkspace.shared.runningApplications
+
+        if let finderAppPid = runningApps.first(where: { $0.bundleIdentifier == "com.apple.finder" })?.processIdentifier {
+            return pid() == finderAppPid
+        }
+        
+        return false
+    }
+    
+    var isDesktopFinder: Bool {
+        let runningApps = NSWorkspace.shared.runningApplications
+        
+        guard let finderAppPid = runningApps.first(where: { $0.bundleIdentifier == "com.apple.finder" })?.processIdentifier,
+              pid() == finderAppPid else {
+            
+            return false
+        }
+        
+        return getWindows().first?.role() == "AXScrollArea"
+    }
+    
+    // MARK: - Private functions
+    
+    private func position() -> CGPoint? {
         let position = self.attribute(forAttribute: kAXPositionAttribute as CFString)
         if let position = position {
             var cgPoint = CGPoint()
@@ -33,29 +91,8 @@ extension AXUIElement {
             return nil
         }
     }
-
-    func findWindow() -> AXUIElement? {
-        var elementPid: pid_t = 0
-
-        guard AXUIElementGetPid(self, &elementPid) == .success, elementPid != getpid() else {
-            return nil
-        }
-        
-        let appElement = AXUIElementCreateApplication(elementPid)
-        
-        var windowList: CFArray?
-        let result = AXUIElementCopyAttributeValues(appElement, kAXWindowsAttribute as CFString, 0, 1, &windowList)
-        
-        guard result == .success,
-              let windows = windowList as? [AXUIElement],
-              let firstWindow = windows.first else {
-            return nil
-        }
-        
-        return firstWindow
-    }
-
-    func size() -> CGSize? {
+    
+    private func size() -> CGSize? {
         let size = self.attribute(forAttribute: kAXSizeAttribute as CFString)
         if let size = size {
             var cgSize = CGSize()
@@ -66,8 +103,15 @@ extension AXUIElement {
         }
     }
 
-    func frame() -> CGRect? {
+    func getFrame(convertedToGlobalCoordinateSpace coordinateSpace: Bool = false) -> CGRect? {
         if let position = self.position(), let size = self.size() {
+            
+            if coordinateSpace, let primaryScreen = NSScreen.primary {
+                let windowOriginY = primaryScreen.frame.size.height - position.y - size.height
+                
+                return CGRect(origin: CGPoint(x: position.x, y: windowOriginY), size: size)
+            }
+            
             return CGRect(origin: position, size: size)
         } else {
             return nil
@@ -90,6 +134,10 @@ extension AXUIElement {
         return self.attribute(forAttribute: kAXTitleAttribute as CFString) as? String
     }
     
+    func url() -> URL? {
+        return self.attribute(forAttribute: kAXURLAttribute as CFString) as? URL
+    }
+    
     func parent() -> AXUIElement? {
         if let value = self.attribute(forAttribute: kAXParentAttribute as CFString) {
             return value as! AXUIElement
@@ -105,7 +153,7 @@ extension AXUIElement {
         return self.attribute(forAttribute: kAXVisibleChildrenAttribute as CFString)
             as? [AXUIElement]
     }
-
+    
     func selectedTextBound() -> CGRect? {
         var rangeValue: CFTypeRef?
         guard
@@ -163,6 +211,61 @@ extension AXUIElement {
 
     func setFrame(_ frame: CGRect) -> Bool {
         return setPosition(frame.origin) && setSize(frame.size)
+    }
+    
+    func pid() -> pid_t? {
+        var pid: pid_t = 0
+        
+        if AXUIElementGetPid(self, &pid) == .success {
+            return pid
+        }
+        
+        return nil
+    }
+    
+    public func closeButton() -> AXUIElement? {
+        if let value = self.attribute(forAttribute: kAXCloseButtonAttribute as CFString) {
+            return (value as! AXUIElement)
+        }
+        return nil
+    }
+    
+    public func minimizeButton() -> AXUIElement? {
+        if let value = self.attribute(forAttribute: kAXMinimizeButtonAttribute as CFString) {
+            return (value as! AXUIElement)
+        }
+        return nil
+    }
+
+    public func zoomButton() -> AXUIElement? {
+        
+        if let value = self.attribute(forAttribute: kAXZoomButtonAttribute as CFString) {
+            return (value as! AXUIElement)
+        }
+        return nil
+    }
+
+    public func focusedWindow() -> AXUIElement? {
+        if let value = self.attribute(forAttribute: kAXFocusedWindowAttribute as CFString) {
+            return (value as! AXUIElement)
+        }
+        return nil
+    }
+    
+    public func isModal() -> Bool? {
+        return self.attribute(forAttribute: kAXModalAttribute as CFString) as? Bool
+    }
+
+    public func isMain() -> Bool? {
+        return self.attribute(forAttribute: kAXMainAttribute as CFString) as? Bool
+    }
+    
+    public func isMinimized() -> Bool? {
+        return self.attribute(forAttribute: kAXMinimizedAttribute as CFString) as? Bool
+    }
+    
+    func bringToFront() {
+        AXUIElementPerformAction(self, kAXRaiseAction as CFString)
     }
 }
 

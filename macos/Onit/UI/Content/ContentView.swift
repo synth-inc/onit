@@ -9,54 +9,88 @@ import Defaults
 import SwiftUI
 
 struct ContentView: View {
-    @Environment(\.model) var model
+    @Environment(\.windowState) private var state
+    
     @Default(.panelWidth) var panelWidth
     @Default(.isRegularApp) var isRegularApp
+    @ObservedObject private var accessibilityPermissionManager = AccessibilityPermissionManager.shared
+    @Default(.showOnboarding) var showOnboarding
     
     static let idealWidth: CGFloat = 400
-    static let bottomPadding: CGFloat = 100
+    static let bottomPadding: CGFloat = 0
     
-    @State var screenHeight: CGFloat = NSScreen.main?.visibleFrame.height ?? 0
-
-    var maxHeight: CGFloat {
-        guard screenHeight != 0 else { return 0 }
-        
-        return screenHeight - ContentView.bottomPadding
-    }
-    
-    var toolbarPaddingTop: CGFloat {
-        isRegularApp ? -28 : 0
-    }
-    
-    var showFileImporterBinding: Binding<Bool> {
+    private var showFileImporterBinding: Binding<Bool> {
         Binding(
-            get: { self.model.showFileImporter },
-            set: { self.model.showFileImporter = $0 }
+            get: { state.showFileImporter },
+            set: { state.showFileImporter = $0 }
         )
+    }
+    
+    private var shouldShowOnboarding: Bool {
+        let accessibilityPermissionGranted = accessibilityPermissionManager.accessibilityPermissionStatus == .granted
+        return !accessibilityPermissionGranted && showOnboarding
     }
 
     var body: some View {
-        ZStack(alignment: .top) {
-            VStack(spacing: 0) {
-                Toolbar()
-                    .padding(.top, toolbarPaddingTop)
-                PromptDivider()
-                ChatView()
+        HStack(spacing: -TetheredButton.width / 2) {
+            if isRegularApp { TetheredButton() }
+            
+            ZStack(alignment: .top) {
+                if shouldShowOnboarding {
+                    VStack(spacing: 0) {
+                        if state.showChatView {
+                            OnboardingAccessibility().transition(.opacity)
+                        } else {
+                            Spacer()
+                        }
+                    }
+                    .frame(width: TetherAppsManager.minOnitWidth, height: .infinity)
+                    .background(Color.black)
+                } else {
+                    VStack(spacing: 0) {
+                        if !isRegularApp { Toolbar() }
+                        else { Spacer().frame(height: 38) }
+                        
+                        PromptDivider()
+                        
+                        if !isRegularApp { ChatView() }
+                        else if state.showChatView { ChatView().transition(.opacity) }
+                        else { Spacer() }
+                    }
+                }
+            }
+
+            .background(Color.black)
+            .addBorder(
+                cornerRadius: 14,
+                lineWidth: 2,
+                stroke: .gray600
+            )
+            .edgesIgnoringSafeArea(.top)
+        }
+        .buttonStyle(PlainButtonStyle())
+        .toolbar {
+            if !shouldShowOnboarding {
+                ToolbarItem(placement: .navigation) {
+                    if isRegularApp { ToolbarAddButton() }
+                    else { EmptyView() }
+                }
+                ToolbarItem(placement: .automatic) { TetheredToAppView() }
+                ToolbarItem(placement: .automatic) { Spacer() }
+                ToolbarItem(placement: .primaryAction) {
+                    if isRegularApp { Toolbar() }
+                    else { EmptyView() }
+                }
             }
         }
-        .background(Color.black)
-        .buttonStyle(.plain)
-        .trackScreenHeight($screenHeight)
-        .frame(minWidth: 325, idealWidth: ContentView.idealWidth, maxHeight: maxHeight)
-        .overlay {
-            RoundedRectangle(cornerRadius: 14)
-                .strokeBorder(.gray600, lineWidth: 2)
-                .edgesIgnoringSafeArea(.top)
-        }
+        .simultaneousGesture(
+            TapGesture(count: 1)
+                .onEnded({ state.handlePanelClicked() })
+        )
         .gesture(
             DragGesture(minimumDistance: 1)
                 .onEnded { value in
-                    if let panel = model.panel {
+                    if let panel = state.panel {
                         panelWidth = panel.frame.width
                     }
                 }
@@ -68,12 +102,13 @@ struct ContentView: View {
         ) { result in
             handleFileImport(result)
         }
+        .addAnimation(dependency: state.showChatView)
     }
 
     private func handleFileImport(_ result: Result<[URL], any Error>) {
         switch result {
         case .success(let urls):
-            model.addContext(urls: urls)
+            state.addContext(urls: urls)
         case .failure(let error):
             print(error.localizedDescription)
         }
@@ -81,9 +116,7 @@ struct ContentView: View {
 }
 
 #if DEBUG
-    #Preview {
-        ModelContainerPreview {
-            ContentView()
-        }
-    }
+#Preview {
+    ContentView()
+}
 #endif

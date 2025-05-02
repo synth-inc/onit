@@ -20,7 +20,7 @@ struct RecordingIndicator: View {
                 }
             }
         }
-        .onChange(of: audioRecorder.isTranscribing) { _ in
+        .onChange(of: audioRecorder.isTranscribing) {
             // Redraw the view when isTranscribing changes
         }
     }
@@ -92,13 +92,9 @@ struct LoadingIndicator: View {
                 .frame(width: 22, height: 22)
             
             Color.blue400.mask {
-                ProgressView()
-                    .progressViewStyle(CircularProgressViewStyle())
-                    .frame(width: 16, height: 16)
-                    .controlSize(.small)
-                    .scaleEffect(0.9)
-                    .fixedSize()
+                Loader()
             }
+            .frame(width: 16, height: 16)
         }
     }
 }

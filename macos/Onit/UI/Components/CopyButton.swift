@@ -18,29 +18,29 @@ struct CopyButton: View {
     }
 
     var body: some View {
-        Button {
-            let pasteboard = NSPasteboard.general
-            pasteboard.declareTypes([.string], owner: nil)
-            pasteboard.setString(textToCopy, forType: .string)
-            showCheckmark = true
+        IconButton(
+            icon: .copy,
+            iconSize: 18,
+            action: {
+                let pasteboard = NSPasteboard.general
+                pasteboard.declareTypes([.string], owner: nil)
+                pasteboard.setString(textToCopy, forType: .string)
+                showCheckmark = true
 
-            Task {
-                try await Task.sleep(for: .seconds(2))
-                showCheckmark = false
-            }
-        } label: {
-            Image(.copy)
-                .renderingMode(.template)
-                .padding(4)
-                .opacity(showCheckmark ? 0 : 1)
-                .overlay {
-                    Image(systemName: "checkmark.circle.fill")
-                        .foregroundStyle(Color.limeGreen)
-                        .opacity(showCheckmark ? 1 : 0)
+                Task { @MainActor in
+                    try await Task.sleep(for: .seconds(2))
+                    showCheckmark = false
                 }
+            },
+            tooltipPrompt: "Copy"
+        )
+        .opacity(showCheckmark ? 0 : 1)
+        .overlay {
+            Image(systemName: "checkmark.circle.fill")
+                .foregroundStyle(Color.limeGreen)
+                .opacity(showCheckmark ? 1 : 0)
         }
-        .tooltip(prompt: "Copy")
-        .animation(.default, value: showCheckmark)
+        .addAnimation(dependency: showCheckmark)
     }
 }
 

@@ -9,7 +9,7 @@ import Defaults
 import SwiftUI
 
 struct GeneratedToolbar: View {
-    @Environment(\.model) var model
+    @Environment(\.windowState) private var state
     @Default(.mode) var mode
 
     var prompt: Prompt
@@ -19,7 +19,9 @@ struct GeneratedToolbar: View {
             copy
             regenerate
             selector
+            
             Spacer()
+            
             if prompt.generationIndex >= 0 &&
                 prompt.generationIndex < prompt.responses.count,
                 let model = prompt.sortedResponses[prompt.generationIndex].model {
@@ -27,7 +29,7 @@ struct GeneratedToolbar: View {
                     .foregroundColor(Color.gray300)
             }
         }
-        .foregroundStyle(.FG)
+        .padding(.horizontal, 12)
     }
 
     @ViewBuilder
@@ -38,23 +40,21 @@ struct GeneratedToolbar: View {
     }
 
     var regenerate: some View {
-        Button {
-            model.generate(prompt)
-        } label: {
-            Image(.arrowsSpin)
-                .padding(4)
-        }
-        .tooltip(prompt: "Retry")
+        IconButton(
+            icon: .arrowsSpin,
+            action: {
+                state.generate(prompt)
+            },
+            tooltipPrompt: "Retry"
+        )
     }
 
     var more: some View {
-        Button {
-
-        } label: {
-            Image(.moreHorizontal)
-                .padding(4)
-        }
-        .tooltip(prompt: "More")
+        IconButton(
+            icon: .moreHorizontal,
+            action: { print("More") },
+            tooltipPrompt: "More"
+        )
     }
 
     @ViewBuilder
@@ -74,7 +74,8 @@ struct GeneratedToolbar: View {
             if prompt.generationIndex != -1 && !prompt.responses.isEmpty {
                 let text = prompt.sortedResponses[prompt.generationIndex].text
                 HighlightHintWindowController.shared.insertText(text)
-                model.closePanel()
+                
+                state.closePanel()
             } else {
                 print("Not generated: \(prompt.generationState ?? .done)")
             }
@@ -111,10 +112,8 @@ struct GeneratedToolbar: View {
 
 #if DEBUG
     #Preview {
-        ModelContainerPreview {
-            // TODO bring 'em back
-            //        GeneratedToolbar()
-            //            .padding()
-        }
+        // TODO bring 'em back
+        //        GeneratedToolbar()
+        //            .padding()
     }
 #endif

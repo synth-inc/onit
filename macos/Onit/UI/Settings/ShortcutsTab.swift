@@ -10,16 +10,10 @@ import SwiftUI
 import Defaults
 
 struct ShortcutsTab: View {
-    @Environment(\.model) var model
-
     @Default(.escapeShortcutDisabled) var escapeShortcutDisabled
 
     @ObservedObject private var featureFlagsManager = FeatureFlagManager.shared
-
-    private var accessibilityAutoContextEnabled: Bool {
-        featureFlagsManager.accessibilityAutoContext
-    }
-
+    
     var body: some View {
         Form {
             Section {
@@ -30,22 +24,22 @@ struct ShortcutsTab: View {
                 }
                 .padding()
 
-                if accessibilityAutoContextEnabled {
-                    KeyboardShortcuts.Recorder(
-                        "Launch Onit with Auto-Context", name: .launchWithAutoContext
-                    )
-                    .padding()
-                }
-
-                KeyboardShortcuts.Recorder(
-                    "New Chat", name: .newChat
-                )
-                .padding()
-
-                KeyboardShortcuts.Recorder(
-                    "Resize Window", name: .resizeWindow
-                )
-                .padding()
+//                if accessibilityAutoContextEnabled {
+//                    KeyboardShortcuts.Recorder(
+//                        "Launch Onit with Auto-Context", name: .launchWithAutoContext
+//                    )
+//                    .padding()
+//                }
+//
+//                KeyboardShortcuts.Recorder(
+//                    "New Chat", name: .newChat
+//                )
+//                .padding()
+//
+//                KeyboardShortcuts.Recorder(
+//                    "Resize Window", name: .resizeWindow
+//                )
+//                .padding()
 
                 KeyboardShortcuts.Recorder(
                     "Switch Local vs Remote", name: .toggleLocalMode
@@ -56,14 +50,12 @@ struct ShortcutsTab: View {
                 .padding()
             }
         }
-        .onChange(of: escapeShortcutDisabled) { newValue in
+        .onChange(of: escapeShortcutDisabled) { _, newValue in
             if newValue {
                 // True is disabled. 
                 KeyboardShortcuts.disable(.escape)
             } else {
                 KeyboardShortcuts.enable(.escape)
-                
-            KeyboardShortcuts.enable(.escape)
             }
         }
         .padding()

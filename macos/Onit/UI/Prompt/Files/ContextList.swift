@@ -18,7 +18,7 @@ struct ContextList: View {
             ScrollView(.vertical) {
                 VStack(alignment: .leading, spacing: 6) {
                     ForEach(contextList, id: \.self) { context in
-                        ContextItem(item: context, isEditing: false)
+                        ContextItem(item: context, isEditing: false, inList: true)
                             .frame(maxWidth: .infinity, alignment: .leading)
                             .scrollTargetLayout()
                             .contentShape(Rectangle())
@@ -53,8 +53,6 @@ struct ContextList: View {
 
 #if DEBUG
     #Preview {
-        ModelContainerPreview {
-            ContextList(contextList: [])
-        }
+        ContextList(contextList: [])
     }
 #endif

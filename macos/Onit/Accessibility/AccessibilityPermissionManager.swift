@@ -11,7 +11,7 @@
 ///
 /// The `@preconcurrency` annotation is used because of `kAXTrustedCheckOptionPrompt` usage.
 @MainActor
-class AccessibilityPermissionManager {
+class AccessibilityPermissionManager: ObservableObject {
 
     // MARK: - Singleton instance
 
@@ -28,18 +28,13 @@ class AccessibilityPermissionManager {
     /** Get the state of permission managed by the `Timer` */
     private var isProcessTrustedFromTimer: Bool?
 
-    /** Reference to `OnitModel` used to update the `accessibilityPermissionStatus` property */
-    private var model: OnitModel?
+    @Published var accessibilityPermissionStatus: AccessibilityPermissionStatus = .notDetermined
 
     // MARK: - Initializers
 
     private init() {}
 
     // MARK: - Functions
-
-    func setModel(_ model: OnitModel) {
-        self.model = model
-    }
 
     /** Start the accessibility permission listener */
     func startListeningPermission() {
@@ -81,9 +76,9 @@ class AccessibilityPermissionManager {
             isProcessTrustedFromTimer = isProcessTrusted
 
             if isProcessTrusted {
-                model?.accessibilityPermissionStatus = .granted
+                accessibilityPermissionStatus = .granted
             } else {
-                model?.accessibilityPermissionStatus = .denied
+                accessibilityPermissionStatus = .denied
             }
         }
     }

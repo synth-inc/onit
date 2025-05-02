@@ -9,7 +9,7 @@ import Defaults
 import SwiftUI
 
 struct FinalContextView: View {
-    @Environment(\.model) var model
+    @Environment(\.windowState) var windowState
     @State var isExpanded: Bool = false
     @State private var isEditing: Bool = false
     @State private var isHoveringInstruction: Bool = false
@@ -34,7 +34,7 @@ struct FinalContextView: View {
         @Default(.lineHeight) var lineHeight
         @Default(.fontSize) var fontSize
         
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: 8) {
             VStack {
                 TextViewWrapper(
                     text: Binding(
@@ -46,7 +46,7 @@ struct FinalContextView: View {
                     onSubmit: {
                         if isEditing {
                             isEditing = false
-                            model.generate(prompt)
+                            windowState.generate(prompt)
                         }
                     },
                     maxHeight: maxHeightLimit,
@@ -69,7 +69,7 @@ struct FinalContextView: View {
                         Spacer()
                         Button("Cancel") {
                             isEditing = false
-                            model.textFocusTrigger.toggle()
+                            windowState.textFocusTrigger.toggle()
                         }
                         .padding(.vertical, 6)
                         .padding(.horizontal, 8)
@@ -80,8 +80,8 @@ struct FinalContextView: View {
                         Button("Send") {
                             // Handle send action
                             isEditing = false
-                            model.generate(prompt)
-                            model.textFocusTrigger.toggle()
+                            windowState.generate(prompt)
+                            windowState.textFocusTrigger.toggle()
                         }
                         .padding(.vertical, 6)
                         .padding(.horizontal, 8)
@@ -117,7 +117,7 @@ struct FinalContextView: View {
                 isHoveringInstruction = hovering
             }
             
-            if model.isSearchingWeb[prompt.id] ?? false {
+            if windowState.isSearchingWeb[prompt.id] ?? false {
                 HStack {
                     Image(.web)
                         .resizable()
@@ -157,7 +157,7 @@ struct FinalContextView: View {
                             if context.isWebSearchContext, let url = context.webURL {
                                 NSWorkspace.shared.open(url)
                             } else {
-                                model.showContextWindow(context: context)
+                                ContextWindowsManager.shared.showContextWindow(windowState: windowState, context: context)
                             }
                         })
                             .background {
@@ -169,7 +169,8 @@ struct FinalContextView: View {
                 }
             }
         }
-        .padding()
+        .padding(.horizontal, 12)
+        .padding(.vertical, 8)
     }
 }
 

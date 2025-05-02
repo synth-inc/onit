@@ -8,10 +8,11 @@
 import SwiftUI
 
 struct ContextItem: View {
-    @Environment(\.model) var model
+    @Environment(\.windowState) private var state
 
     var item: Context
     var isEditing: Bool = true
+    var inList: Bool = false
 
     var body: some View {
         HStack(spacing: 0) {
@@ -19,57 +20,39 @@ struct ContextItem: View {
             case .web(_, _, _):
                 WebContextItem(
                     item: item,
-                    isEditing: isEditing
+                    isEditing: isEditing,
+                    inList: inList,
+                    showContextWindow: showContextWindow,
+                    removeContextItem: removeContextItem
                 )
             case .auto:
-                Button {
-                    model.showContextWindow(context: item)
-                } label: {
-                    contentView
-                }
-                .tooltip(prompt: "View auto-context file")
+                TagButton(
+                    child: ContextImage(context: item),
+                    text: name,
+                    caption: item.fileType,
+                    tooltip: "View auto-context file",
+                    action: showContextWindow,
+                    closeAction: inList ? nil : { removeContextItem() },
+                    fill: inList,
+                    isTransparent: inList
+                )
             default:
-                contentView
-            }
-
-            if isEditing {
-                xButton
-            }
-        }
-        .padding(3)
-        .background(isEditing ? .gray700 : .clear, in: .rect(cornerRadius: 4))
-        .frame(maxWidth: item.isError ? 350 : isEditing ? 250 : nil)
-    }
-
-    var contentView: some View {
-        HStack(spacing: 0) {
-            ContextImage(context: item)
-
-            Spacer()
-                .frame(width: 4)
-
-            text
-        }
-    }
-
-    var text: some View {
-        HStack(spacing: 2) {
-            Text(name)
-                .foregroundStyle(.white)
-                .lineLimit(1)
-                .truncationMode(.tail)
-            if let fileType = item.fileType {
-                Text(fileType)
-                    .foregroundStyle(.gray200)
+                TagButton(
+                    child: ContextImage(context: item),
+                    text: name,
+                    caption: item.fileType,
+                    closeAction: inList ? nil : { removeContextItem() },
+                    fill: inList,
+                    isTransparent: inList
+                )
             }
         }
-        .appFont(.medium13)
     }
 
     var name: String {
         switch item {
-        case .auto(let appName, _):
-            appName
+        case .auto(let autoContext):
+            autoContext.appName
         case .file(let url), .image(let url):
             url.lastPathComponent
         case .error(_, let error):
@@ -82,25 +65,30 @@ struct ContextItem: View {
             websiteTitle.isEmpty ? websiteUrl.host() ?? websiteUrl.absoluteString : websiteTitle
         }
     }
+}
 
-    var xButton: some View {
-        Button {
-            model.closeContextWindow(context: item)
-            model.removeContext(context: item)
-        } label: {
-            Color.clear
-                .frame(width: 16, height: 16)
-                .overlay {
-                    Image(.smallCross)
-                }
-        }
+// MARK: - Private Functions
+
+extension ContextItem {
+    private func showContextWindow() {
+        ContextWindowsManager.shared.showContextWindow(
+            windowState: state,
+            context: item
+        )
+    }
+    
+    private func removeContextItem() {
+        ContextWindowsManager.shared.deleteContextItem(
+            item: item
+        )
+        state.removeContext(context: item)
     }
 }
 
+// MARK: - Preview
+
 #if DEBUG
     #Preview {
-        ModelContainerPreview {
-            ContextItem(item: .file(URL(fileURLWithPath: "")))
-        }
+        ContextItem(item: .file(URL(fileURLWithPath: "")))
     }
 #endif

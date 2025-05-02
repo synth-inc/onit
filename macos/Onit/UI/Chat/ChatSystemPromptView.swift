@@ -8,7 +8,8 @@
 import SwiftUI
 
 struct ChatSystemPromptView: View {
-    @Environment(\.model) var model
+    @Environment(\.windowState) private var state
+    
     @State var isExpanded: Bool = false
     @State private var contentHeight: CGFloat = 0
     
@@ -36,7 +37,7 @@ struct ChatSystemPromptView: View {
                     isExpanded.toggle()
                 }
             } label: {
-                HStack(alignment: .center, spacing: 6) {
+                HStack(alignment: .top, spacing: 6) {
                     Image(.chatSettings)
                         .renderingMode(.template)
                     Text(systemPrompt.name)
@@ -46,23 +47,24 @@ struct ChatSystemPromptView: View {
                         .renderingMode(.template)
                         .rotationEffect(.degrees(isExpanded ? 180 : 0))
                 }
-                .padding(.vertical, 2)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.vertical, 0)
                 .foregroundStyle(.blue300)
             }
             .buttonStyle(DarkerButtonStyle())
             
             if isExpanded {
-                VStack(alignment: .leading, spacing: 8) {
+                VStack(alignment: .leading, spacing: 12) {
                     Text("System Prompt")
                         .appFont(.medium14)
                         .frame(maxWidth: .infinity, alignment: .leading)
-                        .padding([.horizontal, .top], 8)
+                        .padding([.horizontal, .top], 12)
                     
                     ScrollView {
                         Text(systemPrompt.prompt)
                             .appFont(.medium14)
                             .foregroundStyle(.gray100)
-                            .padding(.horizontal, 8)
+                            .padding(.horizontal, 12)
                             .background(
                                 GeometryReader { geometry in
                                     Color.clear
@@ -100,12 +102,12 @@ struct ChatSystemPromptView: View {
                                     .foregroundStyle(.blue300)
                                     .underline()
                                     .onTapGesture {
-                                        model.newChat(shouldSystemPrompt: true)
+                                        state.newChat(shouldSystemPrompt: true)
                                     }
                             }
                         }
                     }
-                    .padding([.horizontal, .bottom], 8)
+                    .padding([.horizontal, .bottom], 12)
                 }
                 .background {
                     RoundedRectangle(cornerRadius: 8)
@@ -114,19 +116,20 @@ struct ChatSystemPromptView: View {
                 }
             }
         }
-        .padding(.vertical, 8)
-        .padding(.horizontal, 16)
+        .padding(.top, 8)
+        .padding(.horizontal, 12)
+        .padding(.bottom, 0)
         .background {
             GeometryReader { g in
                 Color.clear
                     .onAppear {
-                        model.systemPromptHeight = g.size.height
+                        state.systemPromptHeight = g.size.height
                     }
                     .onChange(of: g.size.height) { _, new in
-                        model.systemPromptHeight = new
+                        state.systemPromptHeight = new
                     }
                     .onDisappear {
-                        model.systemPromptHeight = 0
+                        state.systemPromptHeight = 0
                     }
             }
         }

@@ -7,51 +7,42 @@
 
 import KeyboardShortcuts
 import SwiftUI
+import Defaults
 
 struct PaperclipButton: View {
-    @Environment(\.model) var model
+    @Environment(\.appState) private var appState
+    @Environment(\.windowState) private var state
     @ObservedObject var featureFlagsManager = FeatureFlagManager.shared
-    @ObservedObject var notificationsManager = AccessibilityNotificationsManager.shared
     @AppStorage("closedAutocontext") private var closedAutocontext = false
 
+    @Default(.closedAutoContextTag) var closedAutoContextTag
+    
     var accessibilityAutoContextEnabled: Bool {
-        featureFlagsManager.accessibilityAutoContext
+        Defaults[.autoContextEnabled]
     }
 
     var body: some View {
         HStack(spacing: 6) {
-            Button {
-                handleAddContext()
-            } label: {
-                Image(.paperclip)
-                    .resizable()
-                    .frame(width: 16, height: 16)
-                    .padding(3)
-            }
-            .tooltip(prompt: accessibilityAutoContextEnabled ? "Add context" : "Upload file")
+            IconButton(
+                icon: .paperclip,
+                iconSize: 18,
+                action: { handleAddContext() },
+                tooltipPrompt: accessibilityAutoContextEnabled ? "Add context" : "Upload file"
+            )
 
-            if model.pendingContextList.isEmpty {
-                if !accessibilityAutoContextEnabled && !closedAutocontext {
+            if state.pendingContextList.isEmpty {
+                if !accessibilityAutoContextEnabled && !closedAutoContextTag {
                     EnableAutocontextTag()
                 } else if accessibilityAutoContextEnabled {
                     Button {
                         handleAddContext()
                     } label: {
-                        HStack(spacing: 0) {
-                            Text("Add context (")
-                                .foregroundStyle(.gray200)
-                                .appFont(.medium13)
-
-                            KeyboardShortcutView(
-                                shortcut: KeyboardShortcuts.getShortcut(
-                                    for: .launchWithAutoContext)?.native
+                        Text("Add context")
+                            .styleText(
+                                size: 13,
+                                weight: .medium,
+                                color: .gray200
                             )
-                            .foregroundStyle(.gray200)
-                            .appFont(.medium13)
-                            Text(" for Auto-Context)")
-                                .foregroundStyle(.gray200)
-                                .appFont(.medium13)
-                        }
                     }
                 } else {
                     Button {
@@ -78,17 +69,18 @@ struct PaperclipButton: View {
     private func handleAddContext() {
         if accessibilityAutoContextEnabled {
             OverlayManager.shared.captureClickPosition()
-            OverlayManager.shared.showOverlay(model: model, content: ContextPickerView())
+            let view = ContextPickerView()
+                .environment(\.appState, appState)
+                .environment(\.windowState, state)
+            OverlayManager.shared.showOverlay(content: view)
         } else {
-            model.showFileImporter = true
+            state.showFileImporter = true
         }
     }
 }
 
 #if DEBUG
     #Preview {
-        ModelContainerPreview {
-            PaperclipButton()
-        }
+        PaperclipButton()
     }
 #endif

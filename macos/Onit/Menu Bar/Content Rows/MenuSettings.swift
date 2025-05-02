@@ -9,14 +9,14 @@ import KeyboardShortcuts
 import SwiftUI
 
 struct MenuSettings: View {
+    @Environment(\.appState) var appState
     @Environment(\.openSettings) var openSettings
-    @Environment(\.model) var model
 
     var body: some View {
         MenuBarRow {
             NSApp.activate()
             if NSApp.isActive {
-                model.setSettingsTab(tab: .general)
+                appState.setSettingsTab(tab: .general)
                 openSettings()
             }
         } leading: {

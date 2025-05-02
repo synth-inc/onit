@@ -11,7 +11,6 @@ import SwiftUI
 
 struct SystemPromptTab: View {
     @Environment(\.modelContext) var modelContext
-    @Default(.systemPromptId) var systemPromptId
     
     @State var searchText: String = ""
     @State var selectedPrompt: SystemPrompt? = nil
@@ -37,11 +36,17 @@ struct SystemPromptTab: View {
         GeometryReader { geometry in
             VStack {
                 HStack {
-                    let config = CustomTextField.Config(strokeColor: .gray300,
-                                                        clear: true,
-                                                        leftIcon: .search)
-                    
-                    CustomTextField("Search name, prompt or tag...", text: $searchText, config: config)
+                    CustomTextField(
+                        text: $searchText,
+                        placeholder: "Search name, prompt or tag...",
+                        config: CustomTextField.Config(
+                            strokeColor: .gray300,
+                            hoverStrokeColor: .gray200,
+                            focusedStrokeColor: .gray100,
+                            clear: true,
+                            leftIcon: .search
+                        )
+                    )
                     
                     Button {
                         showAdd = true
@@ -109,10 +114,7 @@ struct SystemPromptTab: View {
         if let systemPrompt = selectedPrompt {
             selectedPrompt = nil
             
-            /// The prompt we're deleting is the one selected for chat
-            if systemPromptId == systemPrompt.id {
-                selectMostRecentlyUsedPrompt(deletedId: systemPrompt.id)
-            }
+            selectMostRecentlyUsedPromptIfNeeded(deletedId: systemPrompt.id)
             
             // Unregister the shortcut keyboard
             KeyboardShortcutsManager.unregister(systemPrompt: systemPrompt)
@@ -124,22 +126,33 @@ struct SystemPromptTab: View {
         shouldDeleteSelectedPrompt = false
     }
     
-    private func selectMostRecentlyUsedPrompt(deletedId: String) {
+    private func selectMostRecentlyUsedPromptIfNeeded(deletedId: String) {
         var fetchDescriptor = FetchDescriptor<SystemPrompt>(
             predicate: #Predicate { $0.id != deletedId },
             sortBy: [SortDescriptor(\.lastUsed, order: .reverse)]
         )
         fetchDescriptor.fetchLimit = 1
         
-        do {
-            let result = try modelContext.fetch(fetchDescriptor)
-            if let systemPrompt = result.first {
-                systemPromptId = systemPrompt.id
-            } else {
-                systemPromptId = SystemPrompt.outputOnly.id
+        let tetherAppsManagerStates = TetherAppsManager.shared.states.map { $0.1 }
+        let untetheredScreenManagerStates = UntetheredScreenManager.shared.states.map { $0.1 }
+        let states = (AccessibilityPermissionManager.shared.accessibilityPermissionStatus == .granted ?
+            tetherAppsManagerStates :
+            untetheredScreenManagerStates)
+        for state in states {
+            if state.systemPromptId == deletedId {
+                do {
+                    let modelContext = ModelContext(state.container)
+                    let result = try modelContext.fetch(fetchDescriptor)
+                    
+                    if let systemPrompt = result.first {
+                        state.systemPromptId = systemPrompt.id
+                    } else {
+                        state.systemPromptId = SystemPrompt.outputOnly.id
+                    }
+                } catch {
+                    state.systemPromptId = SystemPrompt.outputOnly.id
+                }
             }
-        } catch {
-            systemPromptId = SystemPrompt.outputOnly.id
         }
     }
     

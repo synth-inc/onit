@@ -8,8 +8,6 @@
 import SwiftUI
 
 struct HoverableButtonStyle: ButtonStyle {
-    @Environment(\.model) var model
-
     @State private var hovering = false
     @State private var frame: CGRect = .zero
 
@@ -40,7 +38,7 @@ struct HoverableButtonStyle: ButtonStyle {
             }
             .onChange(of: configuration.isPressed) { _, pressed in
                 if pressed {
-                    model.setTooltip(nil, immediate: true)
+                    TooltipManager.shared.setTooltip(nil, immediate: true)
                 }
             }
     }
@@ -68,28 +66,26 @@ struct HoverableButtonStyle: ButtonStyle {
         self.hovering = hovering
 
         if hovering {
-            model.setTooltip(tooltip)
+            TooltipManager.shared.setTooltip(tooltip)
         } else {
-            model.setTooltip(nil)
+            TooltipManager.shared.setTooltip(nil)
         }
     }
 }
 
 #if DEBUG
     #Preview {
-        ModelContainerPreview {
-            Color.black
-                .overlay {
-                    Button {
+        Color.black
+            .overlay {
+                Button {
 
-                    } label: {
-                        Text(.sample)
-                            .padding()
-                    }
-                    .buttonStyle(
-                        HoverableButtonStyle(tooltip: .sample, background: true)
-                    )
+                } label: {
+                    Text(.sample)
+                        .padding()
                 }
-        }
+                .buttonStyle(
+                    HoverableButtonStyle(tooltip: .sample, background: true)
+                )
+            }
     }
 #endif

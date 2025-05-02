@@ -6,9 +6,10 @@
 //
 
 import SwiftUI
+import Defaults
 
 struct MenuBarContent: View {
-    @Environment(\.model) var model
+    @ObservedObject private var accessibilityPermissionManager = AccessibilityPermissionManager.shared
     @ObservedObject private var featureFlagsManager = FeatureFlagManager.shared
 
     var body: some View {
@@ -16,7 +17,7 @@ struct MenuBarContent: View {
             MenuCheckForPermissions()
             MenuOpenOnitButton()
             MenuDivider()
-            if featureFlagsManager.accessibility && model.accessibilityPermissionStatus == .granted
+            if Defaults[.autoContextEnabled] && accessibilityPermissionManager.accessibilityPermissionStatus == .granted
             {
                 MenuAppearsInPicker()
                 MenuDivider()

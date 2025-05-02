@@ -25,7 +25,7 @@ struct InputView: View {
                 .fill(.gray800)
                 .strokeBorder(.gray600)
         }
-        .padding([.horizontal, .top], isEditing ? 8 : 0)
+        .padding([.horizontal, .top], isEditing ? 12 : 0)
     }
 
     var divider: some View {
@@ -37,8 +37,6 @@ struct InputView: View {
 
 #if DEBUG
     #Preview {
-        ModelContainerPreview {
-            InputView(input: .sample)
-        }
+        InputView(input: .sample)
     }
 #endif

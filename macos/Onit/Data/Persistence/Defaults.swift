@@ -54,6 +54,7 @@ extension Defaults.Keys {
     static let closedNoRemoteModels = Key<Bool>("closedNoRemoteModels", default: false)
     static let closedNewRemoteData = Key<Data>("closedNewRemoteData", default: Data())
     static let closedDeprecatedRemoteData = Key<Data>("closedDeprecatedRemoteData", default: Data())
+    static let closedAutoContextTag = Key<Bool>("closedAutoContextTag", default: false)
     static let closedAutoContextDialog = Key<Bool>("closedAutoContext", default: false)
 
     static let seenLocal = Key<Bool>("seenLocal", default: false)
@@ -79,11 +80,12 @@ extension Defaults.Keys {
         "localEndpointURL", default: URL(string: "http://localhost:11434")!)
 
     // Feature flags
-    static let accessibilityEnabled = Key<Bool?>("accessibilityEnabled", default: nil)
-    static let accessibilityInputEnabled = Key<Bool?>("accessibilityInputEnabled", default: nil)
-    static let accessibilityAutoContextEnabled = Key<Bool?>(
-        "accessibilityAutoContextEnabled", default: nil)
     static let highlightHintMode = Key<HighlightHintMode?>("highlightHintMode", default: nil)
+    
+    static let autoContextEnabled = Key<Bool>("enableAutoContext", default: true)
+    static let autoContextFromCurrentWindow = Key<Bool>("autoContextFromCurrentWindow", default: true)
+    static let autoContextFromHighlights = Key<Bool>("autoContextFromHighlights", default: true)
+    static let automaticallyAddAutoContext = Key<Bool>("automaticallyAddAutoContext", default: true)
 
     // Web search
     static let webSearchEnabled = Key<Bool>("webSearchEnabled", default: false)
@@ -109,14 +111,13 @@ extension Defaults.Keys {
     
     // Debug settings
     static let isRegularApp = Key<Bool>("isRegularApp", default: true)
-    static let fitActiveWindow = Key<Bool>("fitActiveWindow", default: false)
-    static let launchShortcutToggleEnabled = Key<Bool>("launchShortcutToggleEnabled", default: false)
-    static let createNewChatOnPanelOpen = Key<Bool>("createNewChatOnPanelOpen", default: false)
-    static let escapeShortcutDisabled = Key<Bool>("escapeShortcutDisabled", default: true)
+    static let launchShortcutToggleEnabled = Key<Bool>("launchShortcutToggleEnabled", default: true)
+    static let createNewChatOnPanelOpen = Key<Bool>("createNewChatOnPanelOpen", default: true)
+    static let escapeShortcutDisabled = Key<Bool>("escapeShortcutDisabled", default: false)
     static let openOnMouseMonitor = Key<Bool>("openOnMouseMonitor", default: false)
-
-    // System prompts
-    static let systemPromptId = Key<String>("systemPromptId", default: SystemPrompt.outputOnly.id)
+    
+    // Onboarding
+    static let showOnboarding = Key<Bool>("showOnboarding", default: true)
 }
 
 extension NSRect: Defaults.Serializable {

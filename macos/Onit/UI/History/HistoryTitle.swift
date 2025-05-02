@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct HistoryTitle: View {
-    @Environment(\.model) var model
+    @Environment(\.windowState) private var state
 
     var body: some View {
         HStack {
@@ -17,7 +17,7 @@ struct HistoryTitle: View {
                 .foregroundStyle(.FG)
             Spacer()
             Button {
-                model.showHistory = false
+                state.showHistory = false
             } label: {
                 Image(.smallCross)
                     .renderingMode(.template)
@@ -33,8 +33,6 @@ struct HistoryTitle: View {
 
 #if DEBUG
     #Preview {
-        ModelContainerPreview {
-            HistoryTitle()
-        }
+        HistoryTitle()
     }
 #endif

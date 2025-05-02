@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct HistoryRowView: View {
-    @Environment(\.model) var model
+    @Environment(\.windowState) private var windowState
     
     @State private var showDelete: Bool = false
 
@@ -16,25 +16,15 @@ struct HistoryRowView: View {
     var index: Int
 
     var body: some View {
-        Button {
-            model.setChat(chat: chat, index: index)
-        } label: {
-            HStack {
-                Text(getPromptText())
-                    .appFont(.medium16)
-                    .foregroundStyle(.FG)
-                
-                Spacer()
-                
-                Group {
-                    if showDelete { deleteButton }
-                    else { chatResponseCount }
-                }
+        TextButton(
+            text: getPromptText(),
+            action: { windowState.setChat(chat: chat, index: index) }
+        ) {
+            Group {
+                if showDelete { deleteButton }
+                else { chatResponseCount }
             }
-            .padding(.leading, 10)
         }
-        .frame(height: 36)
-        .buttonStyle(HoverableButtonStyle(background: true))
         .onHover { hovering in showDelete = hovering }
     }
     
@@ -43,24 +33,22 @@ struct HistoryRowView: View {
             .appFont(.medium13)
             .monospacedDigit()
             .foregroundStyle(.gray200)
-            .padding(.trailing, 10)
     }
     
     var deleteButton: some View {
         HStack(alignment: .center) {
-            Text(model.deleteChatFailed ? "Delete failed" : "")
+            Text(windowState.deleteChatFailed ? "Delete failed" : "")
                 .foregroundColor(Color.red)
             
             Image(systemName: "trash")
                 .frame(width: 14, height: 14)
-                .padding(.trailing, 10)
         }
         .frame(height: 34)
         .contentShape(Rectangle())
         .onTapGesture {
             // We want the padding around the button to also be a tap target
-            if !model.deleteChatFailed {
-                model.deleteChat(chat: chat)
+            if !windowState.deleteChatFailed {
+                windowState.deleteChat(chat: chat)
             }
         }
     }
@@ -78,9 +66,7 @@ struct HistoryRowView: View {
 
 #if DEBUG
     #Preview {
-        ModelContainerPreview {
-            // TODO make samples
-            //        HistoryRowView(chat: .sample)
-        }
+        // TODO make samples
+        //        HistoryRowView(chat: .sample)
     }
 #endif

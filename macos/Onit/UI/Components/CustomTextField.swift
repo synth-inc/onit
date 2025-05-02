@@ -8,80 +8,109 @@
 import SwiftUI
 
 struct CustomTextField: View {
+    @Binding var text: String
+    private let placeholder: String
+    private let iconSize: CGFloat
+    private let sidePadding: CGFloat
     
     struct Config {
         var background: Color = .clear
-        var strokeColor: Color = .gray700
+        var strokeColor: Color = .gray600
+        var hoverStrokeColor: Color = .gray500
+        var focusedStrokeColor: Color = .gray400
         var clear: Bool = false
         var leftIcon: ImageResource? = nil
     }
-
-    var title: String
-    @Binding var text: String
-    
     private let config: Config
-    private let imageSize: CGFloat = 16
     
-    private var leadingPadding: CGFloat {
-        if let _ = config.leftIcon {
-            return imageSize + 8
-        } else {
-            return 0
-        }
-    }
-    
-    private var trailingPadding: CGFloat {
-        if config.clear && !text.isEmpty {
-            return imageSize + 8
-        } else {
-            return 0
-        }
-    }
-
-    init(_ title: String, text: Binding<String>, config: Config = Config()) {
-        self.title = title
-        _text = text
+    init(
+        text: Binding<String>,
+        placeholder: String = "Search for...",
+        sidePadding: CGFloat = 0,
+        config: Config = Config(),
+        iconSize: CGFloat = 18
+    ) {
+        self._text = text
+        self.placeholder = placeholder
+        self.sidePadding = sidePadding
         self.config = config
+        self.iconSize = iconSize
     }
+    
+    @State private var textFieldHovered: Bool = false
+    @State private var closeButtonHovered: Bool = false
+    @FocusState private var focused: Bool
 
     var body: some View {
-        ZStack(alignment: .leading) {
-            ZStack(alignment: .trailing) {
-                TextField(title, text: $text)
-                    .textFieldStyle(.plain)
-                    .padding(EdgeInsets(top: 8,
-                                        leading: leadingPadding,
-                                        bottom: 8,
-                                        trailing: trailingPadding))
-                
-                if config.clear && !text.isEmpty {
-                    Image(.smallCross)
-                        .resizable()
-                        .frame(width: imageSize, height: imageSize)
-                        .padding(.trailing, 4)
-                        .onTapGesture {
-                            text = ""
-                        }
-                }
-            }
-            
+        HStack(alignment: .center, spacing: 8) {
             if let leftIcon = config.leftIcon {
                 Image(leftIcon)
                     .resizable()
-                    .frame(width: imageSize, height: imageSize)
-                    .padding(.leading, 4)
+                    .renderingMode(.template)
+                    .foregroundColor(.gray200)
+                    .frame(width: iconSize, height: iconSize)
             }
+            
+            ZStack(alignment: .leading) {
+                TextField("", text: $text)
+                    .textFieldStyle(.plain)
+                    .font(.system(size: 14, weight: .medium))
+                    .foregroundColor(.white)
+                    .tint(.blue600.opacity(0.2))
+                    .fixedSize(horizontal: false, vertical: true)
+                    .focused($focused)
+                
+                if text.isEmpty { placeholderView }
+            }
+            
+            if config.clear && !text.isEmpty { clearButton }
         }
+        .frame(maxWidth: .infinity)
+        .frame(height: 32)
+        .padding(.horizontal, 8)
         .background(config.background)
-        .cornerRadius(5)
-        .overlay(
-            RoundedRectangle(cornerRadius: 5)
-                .stroke(lineWidth: 1.0)
-                .fill(config.strokeColor)
+        .addBorder(
+            cornerRadius: 8,
+            stroke:
+                textFieldHovered ? config.hoverStrokeColor :
+                focused ? config.focusedStrokeColor :
+                config.strokeColor
         )
+        .addAnimation(dependency: $textFieldHovered.wrappedValue)
+        .onHover{ isHovering in textFieldHovered = isHovering }
+        .padding(.horizontal, sidePadding)
     }
 }
 
+// MARK: - Child Components
+
+extension CustomTextField {
+    private var placeholderView: some View {
+        Text(placeholder)
+            .styleText(color: .gray300)
+            .allowsHitTesting(false)
+    }
+    
+    private var clearButton: some View {
+        Button {
+            text = ""
+        } label: {
+            Image(.smallCross)
+                .resizable()
+                .renderingMode(.template)
+                .foregroundColor(closeButtonHovered ? .white : .gray200)
+                .frame(maxWidth: .infinity)
+                .frame(maxHeight: .infinity)
+        }
+        .buttonStyle(PlainButtonStyle())
+        .frame(width: 18, height: 18)
+        .animation(.easeIn(duration: animationDuration), value: $closeButtonHovered.wrappedValue)
+        .onHover{ isHovering in closeButtonHovered = isHovering }
+    }
+}
+
+// MARK: - Preview
+
 #Preview {
-    CustomTextField("Some title", text: .constant("fea"))
+    CustomTextField(text: .constant("fea"), placeholder: "Some title")
 }

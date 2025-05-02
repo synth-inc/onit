@@ -9,74 +9,84 @@ import SwiftUI
 import SwiftSoup
 
 struct WebContextItem: View {
-    @Environment(\.model) var model
+    @Environment(\.windowState) var windowState
     
     private let item: Context
+    private let isEditing: Bool
+    private let inList: Bool
+    private let showContextWindow: () -> Void
+    private let removeContextItem: () -> Void
     private let websiteUrl: URL
     private let websiteTitle: String
-    private let isEditing: Bool
     
-    init(item: Context, isEditing: Bool) {
+    init(
+        item: Context,
+        isEditing: Bool,
+        inList: Bool,
+        showContextWindow: @escaping () -> Void,
+        removeContextItem: @escaping () -> Void
+    ) {
         self.item = item
+        self.isEditing = isEditing
+        self.inList = inList
+        self.showContextWindow = showContextWindow
+        self.removeContextItem = removeContextItem
+        
         if case .web(let websiteUrl, let websiteTitle, _) = self.item {
             self.websiteUrl = websiteUrl
             self.websiteTitle = websiteTitle.isEmpty ? (websiteUrl.host() ?? websiteUrl.absoluteString) : websiteTitle
         } else {
             fatalError("Expected a web context item")
         }
-        self.isEditing = isEditing
     }
     
     var body: some View {
-        let beingScraped = model.websiteUrlsScrapeQueue.keys.contains(websiteUrl.absoluteString)
+        let websiteUndergoingScrape = windowState.websiteUrlsScrapeQueue.keys.contains(websiteUrl.absoluteString)
         
-        Button {
-            model.showContextWindow(context: item)
-        } label: {
-            HStack(spacing: 0) {
-                if beingScraped {
-                    ProgressView()
-                        .progressViewStyle(CircularProgressViewStyle())
-                        .scaleEffect(0.5)
-                        .frame(width: 16, height: 16)
-                } else if let webpageDomain = websiteUrl.host() {
-                    AsyncImage(url: URL(string: "https://\(webpageDomain)/favicon.ico")) { image in
-                        if let faviconImage = image.image {
-                            faviconImage.resizable().frame(width: 16, height: 16)
-                        } else {
-                            Image(systemName: "globe")
-                                .resizable()
-                                .frame(width: 16, height: 16)
-                        }
-                    }
-                } else {
-                    Image(systemName: "globe")
-                        .resizable()
-                        .frame(width: 16, height: 16)
-                }
-                
-                Spacer()
-                    .frame(width: 4)
-                
-                HStack(spacing: 2) {
-                    Text(getCurrentWebsiteTitle())
-                        .foregroundStyle(.white)
-                        .lineLimit(1)
-                        .truncationMode(.tail)
-                    if let fileType = item.fileType {
-                        Text(fileType)
-                            .foregroundStyle(.gray200)
+        TagButton(
+            child: websiteUndergoingScrape ? Loader() : favicon,
+            text: getCurrentWebsiteTitle(),
+            caption: item.fileType,
+            action: showContextWindow,
+            closeAction: inList ? nil : removeContextItem,
+            maxWidth: inList ? 0 : 250,
+            fill: inList,
+            isTransparent: inList
+        )
+        .opacity(websiteUndergoingScrape ? 0.5 : 1)
+        .disabled(websiteUndergoingScrape)
+    }
+}
+
+// MARK: - Child Components
+
+extension WebContextItem {
+    private var favicon: some View {
+        Group {
+            if let webpageDomain = websiteUrl.host() {
+                AsyncImage(url: URL(string: "https://\(webpageDomain)/favicon.ico")) { image in
+                    if let faviconImage = image.image {
+                        faviconImage.resizable().frame(width: 16, height: 16)
+                    } else {
+                        Image(systemName: "globe")
+                            .resizable()
+                            .frame(width: 16, height: 16)
                     }
                 }
-                .appFont(.medium13)
+            } else {
+                Image(systemName: "globe")
+                    .resizable()
+                    .frame(width: 16, height: 16)
             }
         }
-        .opacity(beingScraped ? 0.5 : 1)
-        .disabled(beingScraped)
     }
-    
+}
+
+// MARK: - Private Functions
+
+extension WebContextItem {
     private func getCurrentWebsiteTitle() -> String {
-        let pendingContextList = model.getPendingContextList()
+        let pendingContextList = windowState.getPendingContextList()
 
         if let updatedWebContext = pendingContextList.first(where: { context in
             if case .web(let contextWebsiteUrl, _, _) = context,

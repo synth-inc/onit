@@ -11,7 +11,7 @@ import LLMStream
 import SwiftUI
 
 struct GeneratedContentView: View {
-    @Environment(\.model) var model
+    @Environment(\.windowState) private var state
     @Environment(\.openURL) var openURL
     
     @Default(.fontSize) var fontSize
@@ -28,7 +28,7 @@ struct GeneratedContentView: View {
     var textToRead: String {
         let response = prompt.sortedResponses[prompt.generationIndex]
         
-        return response.isPartial ? model.streamedResponse : response.text
+        return response.isPartial ? state.streamedResponse : response.text
     }
     
     var configuration: LLMStreamConfiguration {
@@ -47,9 +47,9 @@ struct GeneratedContentView: View {
                           configuration: configuration,
                           onUrlClicked: onUrlClicked,
                           onCodeAction: codeAction)
-                .padding(.horizontal, 16)
+                .padding(.horizontal, 12)
             Spacer()
-            if textToRead.isEmpty && !(model.isSearchingWeb[prompt.id] ?? false) {
+            if textToRead.isEmpty && !(state.isSearchingWeb[prompt.id] ?? false) {
                 HStack {
                     Spacer()
                     QLImage("loader_rotated-200")

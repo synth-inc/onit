@@ -9,10 +9,10 @@ import Defaults
 import SwiftUI
 
 struct ModelSelectionView: View {
-    @Environment(\.model) var model
+    @Environment(\.appState) var appState
     @Environment(\.openSettings) var openSettings
     @Environment(\.remoteModels) var remoteModels
-
+    
     @Default(.mode) var mode
     @Default(.localModel) var localModel
     @Default(.remoteModel) var remoteModel
@@ -22,8 +22,33 @@ struct ModelSelectionView: View {
     @Default(.useGoogleAI) var useGoogleAI
     @Default(.availableRemoteModels) var availableRemoteModels
     @Default(.availableLocalModels) var availableLocalModels
+    
+    private var open: Binding<Bool>
+    init(open: Binding<Bool>) { self.open = open }
+    
+    @State var searchQuery: String = ""
+    
+    private var filteredRemoteModels: [AIModel] {
+        if searchQuery.isEmpty {
+            return remoteModels.listedModels
+        } else {
+            return remoteModels.listedModels.filter {
+                $0.displayName.localizedCaseInsensitiveContains(searchQuery)
+            }
+        }
+    }
+    
+    private var filteredLocalModels: [String] {
+        if searchQuery.isEmpty {
+            return availableLocalModels
+        } else {
+            return availableLocalModels.filter {
+                $0.localizedCaseInsensitiveContains(searchQuery)
+            }
+        }
+    }
 
-    var selectedModel: Binding<SelectedModel?> {
+    private var selectedModel: Binding<SelectedModel?> {
         .init {
             if mode == .local, let localModelName = localModel {
                 return .local(localModelName)
@@ -44,50 +69,41 @@ struct ModelSelectionView: View {
             }
         }
     }
-
+    
     var body: some View {
-        VStack(spacing: 0) {
+        MenuList(
+            header: MenuHeader(title: "Model") {
+                IconButton(
+                    icon: .settingsCog,
+                    action: { openModelSettings() },
+                    tooltipPrompt: "Settings"
+                )
+            },
+            search: MenuList.Search(
+                query: $searchQuery,
+                placeholder: "Search models..."
+            )
+        ) {
             remote
-            divider
             local
-            divider
-            advanced
-        }
-        .foregroundStyle(.FG)
-        .padding(.vertical, 12)
-        .background(.gray600, in: .rect(cornerRadius: 12))
-        .frame(minWidth: 218, alignment: .leading)
-        .overlay(alignment: .topTrailing) {
-            Button(action: {
-                OverlayManager.shared.dismissOverlay()
-            }) {
-                Image(.smallRemove)
-                    .renderingMode(.template)
-                    .foregroundStyle(.gray200)
-            }
-            .padding(8)
-            .buttonStyle(PlainButtonStyle())
         }
     }
 
     var remote: some View {
-        VStack(alignment: .leading, spacing: 2) {
-            HStack {
-                Text("Remote models")
-                    .appFont(.medium13)
-                    .foregroundStyle(.white.opacity(0.6))
-                Spacer()
-                if remoteModels.remoteNeedsSetup
-                    || (!remoteModels.remoteNeedsSetup && availableRemoteModels.isEmpty)
-                {
-                    Image(.warningSettings)
-                }
-            }
-            .padding(.horizontal, 12)
-
+        let noRemoteModels = !remoteModels.remoteNeedsSetup && availableRemoteModels.isEmpty
+        
+        return MenuSection(
+            titleIcon: remoteModels.remoteNeedsSetup || noRemoteModels ? .warningSettings : nil,
+            titleIconColor: .orange,
+            title: "Remote",
+            showTopBorder: true,
+            contentRightPadding: 0,
+            contentBottomPadding: 0,
+            contentLeftPadding: 0
+        ) {
             if remoteModels.listedModels.isEmpty {
                 Button("Setup remote models") {
-                    model.settingsTab = .models
+                    appState.settingsTab = .models
                     openSettings()
                 }
                 .buttonStyle(SetUpButtonStyle(showArrow: true))
@@ -101,7 +117,88 @@ struct ModelSelectionView: View {
             }
         }
     }
+    
+    var remoteModelsView: some View {
+        ScrollView {
+            VStack(spacing: 0) {
+                ForEach(filteredRemoteModels) { remoteModel in
+                    TextButton(
+                        icon: determineRemoteModelLogo(provider: remoteModel.provider),
+                        iconSize: 16,
+                        text: remoteModel.displayName,
+                        selected: isSelectedRemoteModel(model: remoteModel),
+                        action: {
+                            selectedModel.wrappedValue = .remote(remoteModel)
+                            open.wrappedValue = false
+                        }
+                    )
+                }
+            }
+            .padding(.horizontal, 8)
+            .padding(.bottom, 8)
+        }
+        .frame(
+            maxHeight:
+                setModelListHeight(
+                    listCount: CGFloat(filteredRemoteModels.count)
+                )
+        )
+    }
 
+    var local: some View {
+        MenuSection(
+            titleIcon: availableLocalModels.isEmpty ? .warningSettings : nil,
+            titleIconColor: .orange,
+            title: "Local",
+            showTopBorder: true,
+            contentRightPadding: 0,
+            contentBottomPadding: 0,
+            contentLeftPadding: 0
+        ) {
+            if availableLocalModels.isEmpty {
+                Button("Setup local models") {
+                    appState.settingsTab = .models
+                    openSettings()
+                }
+                .buttonStyle(SetUpButtonStyle(showArrow: true))
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.horizontal, 12)
+                .padding(.top, 6)
+                .padding(.bottom, 10)
+
+            } else {
+                localModelsView
+            }
+        }
+    }
+
+    var localModelsView: some View {
+        ScrollView {
+            VStack(spacing: 0) {
+                ForEach(filteredLocalModels, id: \.self) { localModelName in
+                    TextButton(
+                        icon: localModelName.lowercased().contains("llama") ? .logoOllama : .logoProviderUnknown,
+                        iconSize: 16,
+                        text: localModelName,
+                        selected: isSelectedLocalModel(modelName: localModelName),
+                        action: {
+                            selectedModel.wrappedValue = .local(localModelName)
+                            open.wrappedValue = false
+                        }
+                    )
+                }
+            }
+            .padding(.horizontal, 8)
+            .padding(.bottom, 8)
+        }
+        .frame(
+            maxHeight:
+                setModelListHeight(
+                    listCount: CGFloat(filteredLocalModels.count)
+                )
+        )
+    }
+    
     var custom: some View {
         VStack(alignment: .leading, spacing: 2) {
             HStack {
@@ -119,7 +216,7 @@ struct ModelSelectionView: View {
 
             if remoteModels.listedModels.isEmpty {
                 Button("Setup remote models") {
-                    model.settingsTab = .models
+                    appState.settingsTab = .models
                     openSettings()
                 }
                 .buttonStyle(SetUpButtonStyle(showArrow: true))
@@ -133,136 +230,72 @@ struct ModelSelectionView: View {
             }
         }
     }
+}
 
-    var remoteModelsView: some View {
-        ScrollView {
-            VStack(alignment: .leading) {
-                Picker("", selection: selectedModel) {
-                    ForEach(remoteModels.listedModels) { model in
-                        Text(model.displayName)
-                            .appFont(.medium14)
-                            .tag(SelectedModel.remote(model))
-                            .padding(.vertical, 4)
-                    }
-                }
-                .pickerStyle(.inline)
-                .clipped()
-                .padding(.vertical, 4)
-                .padding(.bottom, 5)
-                .padding(.leading, 5)
-                .tint(.blue600)
-            }
+// MARK: - Private Functions
+
+extension ModelSelectionView {
+    private func setModelListHeight(listCount: CGFloat) -> CGFloat {
+        let buttonHeight: CGFloat = 32
+        
+        let maxShownButtonCount: CGFloat = 6
+        let nextButtonPeekHeight: CGFloat = 20
+        let listMaxHeight: CGFloat = (maxShownButtonCount * buttonHeight) + nextButtonPeekHeight
+        
+        let listBottomPaddingBuffer: CGFloat = 8
+        let listHeight: CGFloat = listCount * buttonHeight + listBottomPaddingBuffer
+        
+        if listHeight < listMaxHeight {
+            return listHeight
+        } else {
+            return listMaxHeight
         }
-        .frame(maxHeight: 300)
     }
-
-    var divider: some View {
-        Color.gray400
-            .frame(height: 1)
-    }
-
-    var local: some View {
-        VStack(spacing: 2) {
-            HStack(spacing: 4) {
-                Text("Local models")
-                    .foregroundStyle(.FG.opacity(0.6))
-                    .appFont(.medium13)
-                if availableLocalModels.isEmpty {
-                    Image(.warningSettings)
-                }
-                Spacer()
-                add
-            }
-            .padding(.horizontal, 12)
-
-            if availableLocalModels.isEmpty {
-                Button("Setup local models") {
-                    model.settingsTab = .models
-                    openSettings()
-                }
-                .buttonStyle(SetUpButtonStyle(showArrow: true))
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(.horizontal, 12)
-                .padding(.top, 6)
-                .padding(.bottom, 10)
-
-            } else {
-                localModelsView
-            }
+    
+    private func openModelSettings() {
+        NSApp.activate()
+        
+        if NSApp.isActive {
+            appState.setSettingsTab(tab: .models)
+            openSettings()
+            OverlayManager.shared.dismissOverlay()
         }
-        .padding(.top, 8)
-        .padding(.bottom, 4)
     }
-
-    var localModelsView: some View {
-        Picker("", selection: selectedModel) {
-            ForEach(availableLocalModels, id: \.self) { localModelName in
-                Text(localModelName)
-                    .appFont(.medium14)
-                    .tag(SelectedModel.local(localModelName))
-                    .padding(.vertical, 4)
-            }
+    
+    private func determineRemoteModelLogo(provider: AIModel.ModelProvider) -> ImageResource {
+        switch provider {
+        case .openAI: return .logoOpenai
+        case .anthropic: return .logoAnthropic
+        case .xAI: return .logoXai
+        case .googleAI: return .logoGoogleai
+        case .deepSeek: return .logoDeepseek
+        case .perplexity: return .logoPerplexity
+        default: return .logoProviderUnknown
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .pickerStyle(.inline)
-        .padding(.vertical, 4)
-        .padding(.bottom, 5)
-        .padding(.leading, 5)
-        .tint(.blue600)
     }
-
-    var add: some View {
-        HStack(spacing: 4) {
-            Text("Add")
-                .appFont(.medium13)
-            Image(.plus)
+    
+    private func isSelectedRemoteModel(model: AIModel) -> Bool {
+        if let currentModel = selectedModel.wrappedValue,
+           case let .remote(selectedModel) = currentModel {
+            return model.id == selectedModel.id
+        } else {
+            return false
         }
-        .padding(.vertical, 2)
-        .padding(.leading, 4)
-        .padding(.trailing, 4)
-        .background(.gray400, in: .rect(cornerRadius: 5))
-        .opacity(0.3)
     }
-
-    var advanced: some View {
-        Button {
-            NSApp.activate()
-            if NSApp.isActive {
-                model.setSettingsTab(tab: .models)
-                openSettings()
-                OverlayManager.shared.dismissOverlay()
-            }
-        } label: {
-            HStack {
-                Text("Advanced settings")
-                Spacer()
-                Image(.chevRight)
-            }
-            .padding(6)
-            .contentShape(.rect)
+    
+    private func isSelectedLocalModel(modelName: String) -> Bool {
+        if let currentModel = selectedModel.wrappedValue,
+           case let .local(selectedName) = currentModel {
+            return modelName == selectedName
+        } else {
+            return false
         }
-        .padding(.horizontal, 6)
-        .padding(.top, 6)
-        .buttonStyle(AdvancedSettingsButtonStyle())
     }
 }
 
-struct AdvancedSettingsButtonStyle: ButtonStyle {
-    @State private var hovering = false
-
-    func makeBody(configuration: Configuration) -> some View {
-        configuration.label
-            .background(Color.white.opacity(hovering ? 0.1 : 0))
-            .onContinuousHover { state in
-                if case .active = state {
-                    hovering = true
-                } else {
-                    hovering = false
-                }
-            }
-    }
-}
+// MARK: - Preview
 
 #Preview {
-    ModelSelectionView()
+    @Previewable @State var open = true
+    ModelSelectionView(open: $open)
 }

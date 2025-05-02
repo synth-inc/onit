@@ -10,35 +10,38 @@ import KeyboardShortcuts
 import SwiftUI
 
 struct SystemPromptSelectionRowView: View {
-    @Default(.systemPromptId) var systemPromptId
+    @Environment(\.windowState) var windowState
     
     var prompt: SystemPrompt
     
     var body: some View {
-        Button(action: {
-            systemPromptId = prompt.id
-            prompt.lastUsed = Date()
-            SystemPromptState.shared.userSelectedPrompt = true
-        }) {
-            HStack {
-                Text(prompt.name)
-                    .lineLimit(1)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                
-                if let shortcut = KeyboardShortcuts.Name(prompt.id).shortcut?.native {
-                    KeyboardShortcutView(shortcut: shortcut, characterWidth: 12, spacing: 3)
-                        .font(.system(size: 13, weight: .light))
-                        .foregroundStyle(.gray200)
-                }
+        let isSelected: Bool = windowState.systemPromptId == prompt.id
+        
+        TextButton(
+            text: prompt.name,
+            selected: isSelected,
+            action: selectPrompt
+        ) {
+            if let shortcut = KeyboardShortcuts.Name(prompt.id).shortcut?.native {
+                KeyboardShortcutView(shortcut: shortcut, characterWidth: 12, spacing: 3)
+                    .font(.system(size: 13, weight: .light))
+                    .foregroundStyle(.gray200)
             }
-            .padding(8)
-        // Use .black and not .clear because only text will be clickable
-            .background(systemPromptId == prompt.id ? .gray700 : Color.black)
-            .clipShape(RoundedRectangle(cornerRadius: 8))
         }
-        .buttonStyle(.plain)
     }
 }
+
+// MARK: - Private Functions
+
+extension SystemPromptSelectionRowView {
+    func selectPrompt() {
+        prompt.lastUsed = Date()
+        windowState.systemPromptId = prompt.id
+        windowState.systemPromptState.userSelectedPrompt = true
+    }
+}
+
+// MARK: - Preview
 
 #if DEBUG
     #Preview {

@@ -8,24 +8,24 @@
 import SwiftUI
 
 struct InputBarView: View {
-    @Environment(\.model) var model
+    @Environment(\.windowState) private var state
     
     private var shouldShowSystemPrompt: Bool {
-        model.currentChat?.systemPrompt == nil && SystemPromptState.shared.shouldShowSystemPrompt
+        state.currentChat?.systemPrompt == nil && state.systemPromptState.shouldShowSystemPrompt
     }
 
     var body: some View {
         VStack(spacing: 0) {
-            if model.currentPrompts?.count ?? 0 > 0 {
+            if state.currentPrompts?.count ?? 0 > 0 {
                 PromptDivider()
             }
-            if let pendingInput = model.pendingInput {
+            if let pendingInput = state.pendingInput {
                 InputView(input: pendingInput)
             }
             if shouldShowSystemPrompt {
                 SystemPromptView()
             }
-            FileRow(contextList: model.pendingContextList)
+            FileRow(contextList: state.pendingContextList)
             TextInputView()
         }
         .background {
@@ -37,12 +37,12 @@ struct InputBarView: View {
         GeometryReader { proxy in
             Color.clear
                 .onAppear {
-                    model.inputHeight = proxy.size.height
-//                    model.adjustPanelSize()
+                    state.inputHeight = proxy.size.height
+                    state.panel?.adjustSize()
                 }
                 .onChange(of: proxy.size.height) { _, new in
-                    model.inputHeight = new
-//                    model.adjustPanelSize()
+                    state.inputHeight = new
+                    state.panel?.adjustSize()
                 }
         }
     }

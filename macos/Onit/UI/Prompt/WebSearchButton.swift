@@ -2,7 +2,7 @@ import SwiftUI
 import Defaults
 
 struct WebSearchButton: View {
-    @Environment(\.model) var model
+    @Environment(\.appState) var appState
     @Environment(\.openSettings) var openSettings
     @State private var showingWebSearchAPIKeyAlert = false
 
@@ -11,18 +11,19 @@ struct WebSearchButton: View {
     @Default(.webSearchEnabled) var webSearchEnabled
     
     var body: some View {
-        return Button(action: toggleWebSearch) {
-            Image(.web)
-                .resizable()
-                .renderingMode(.template)
-                .foregroundStyle(webSearchEnabled ? Color.blue400 : (isTavilyAPITokenValidated ? Color.gray200 : Color.gray700))
-                .frame(width: 18, height: 18)
-        }
-        .buttonStyle(.plain)
+        IconButton(
+            icon: .web,
+            iconSize: 17,
+            action: { toggleWebSearch() },
+            inactiveColor:
+                webSearchEnabled ? .blue400 :
+                !isTavilyAPITokenValidated ? .gray700 :
+                nil
+        )
         .help(webSearchButtonHelpText)
         .alert("API Token Required", isPresented: $showingWebSearchAPIKeyAlert) {
             Button("Open Settings") {
-                model.setSettingsTab(tab: .webSearch)
+                appState.setSettingsTab(tab: .webSearch)
                 openSettings()
             }
             Button("Cancel", role: .cancel) {}

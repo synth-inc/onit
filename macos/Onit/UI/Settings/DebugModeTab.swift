@@ -2,7 +2,7 @@ import SwiftUI
 import Defaults
 
 struct DebugModeTab: View {
-    @Environment(\.model) var model
+    @ObservedObject private var debugManager = DebugManager.shared
     @ObservedObject private var featureFlagsManager = FeatureFlagManager.shared
 
     var body: some View {
@@ -14,15 +14,9 @@ struct DebugModeTab: View {
                     Text("Show debug window")
                         .font(.system(size: 13))
                     Spacer()
-                    Toggle(
-                        "",
-                        isOn: Binding(
-                            get: { model.showDebugWindow },
-                            set: { model.showDebugWindow = $0 }
-                        )
-                    )
-                    .toggleStyle(.switch)
-                    .controlSize(.small)
+                    Toggle("", isOn: $debugManager.showDebugWindow)
+                        .toggleStyle(.switch)
+                        .controlSize(.small)
                 }
             }
         }

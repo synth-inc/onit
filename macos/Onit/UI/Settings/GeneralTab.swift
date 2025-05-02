@@ -4,7 +4,8 @@ import ServiceManagement
 import SwiftUI
 
 struct GeneralTab: View {
-    @Environment(\.model) var model
+    @Environment(\.windowState) private var state
+    
     @Default(.fontSize) var fontSize
     @Default(.lineHeight) var lineHeight
     @Default(.panelPosition) var panelPosition
@@ -12,7 +13,7 @@ struct GeneralTab: View {
     @Default(.launchShortcutToggleEnabled) var launchShortcutToggleEnabled
     @Default(.createNewChatOnPanelOpen) var createNewChatOnPanelOpen
     @Default(.openOnMouseMonitor) var openOnMouseMonitor
-
+    
     @State var isLaunchAtStartupEnabled: Bool = SMAppService.mainApp.status == .enabled
     @State var isAnalyticsEnabled: Bool = PostHogSDK.shared.isOptOut() == false
     
@@ -24,7 +25,7 @@ struct GeneralTab: View {
             
             appearanceSection
             
-            experimentalSection
+            // experimentalSection
         }
         .formStyle(.grouped)
         .padding()
@@ -127,32 +128,32 @@ struct GeneralTab: View {
                         .controlSize(.small)
                     }
                 }
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("Panel Position")
-                        .font(.system(size: 13))
-
-                    HStack(spacing: 8) {
-                        ForEach(PanelPosition.allCases, id: \.self) { position in
-                            Button {
-                                panelPosition = position
-                                model.updatePanelPosition()
-                            } label: {
-                                VStack(spacing: 4) {
-                                    Image(systemName: position.systemImage)
-                                        .font(.system(size: 16))
-                                    Text(position.rawValue)
-                                        .font(.system(size: 11))
-                                }
-                                .frame(maxWidth: .infinity)
-                                .padding(.vertical, 8)
-                                .background(panelPosition == position ? Color.accentColor : Color.clear)
-                                .clipShape(RoundedRectangle(cornerRadius: 6))
-                                .contentShape(Rectangle())
-                            }
-                            .buttonStyle(.plain)
-                        }
-                    }
-                }
+//                VStack(alignment: .leading, spacing: 8) {
+//                    Text("Panel Position")
+//                        .font(.system(size: 13))
+//
+//                    HStack(spacing: 8) {
+//                        ForEach(PanelPosition.allCases, id: \.self) { position in
+//                            Button {
+//                                panelPosition = position
+//                                state.panel?.updatePosition()
+//                            } label: {
+//                                VStack(spacing: 4) {
+//                                    Image(systemName: position.systemImage)
+//                                        .font(.system(size: 16))
+//                                    Text(position.rawValue)
+//                                        .font(.system(size: 11))
+//                                }
+//                                .frame(maxWidth: .infinity)
+//                                .padding(.vertical, 8)
+//                                .background(panelPosition == position ? Color.accentColor : Color.clear)
+//                                .clipShape(RoundedRectangle(cornerRadius: 6))
+//                                .contentShape(Rectangle())
+//                            }
+//                            .buttonStyle(.plain)
+//                        }
+//                    }
+//                }
             }
         } header: {
             HStack {
@@ -182,11 +183,6 @@ struct GeneralTab: View {
                     )
                     .toggleStyle(.switch)
                     .controlSize(.small)
-                }
-                // Re-draw the panel on change
-                .onChange(of: isRegularApp, initial: false) {
-                    model.closePanel()
-                    model.showPanel()
                 }
 
                 HStack {

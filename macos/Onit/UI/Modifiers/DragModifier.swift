@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct DragModifier: ViewModifier {
-    @Environment(\.model) var model
+    @Environment(\.windowState) private var state
 
     @State var dragging = false
     @State private var droppedImage: NSImage = NSImage(
@@ -32,12 +32,12 @@ struct DragModifier: ViewModifier {
                         guard let item = items.first else { return false }
                         if let data = item.data {
                             if let image = NSImage(data: data) {
-                                model.addContext(images: [image])
+                                state.addContext(images: [image])
                                 return true
                             }
                             return false
                         } else if let url = item.url {
-                            model.addContext(urls: [url])
+                            state.addContext(urls: [url])
                             return true
                         }
                         return false

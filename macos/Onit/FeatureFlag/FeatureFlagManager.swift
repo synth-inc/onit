@@ -20,11 +20,7 @@ class FeatureFlagManager: ObservableObject {
 
     // MARK: - Feature Flags
 
-    @Published private(set) var accessibilityInput: Bool = false
-    @Published private(set) var accessibilityAutoContext: Bool = false
     @Published private(set) var highlightHintMode: HighlightHintMode = .none
-
-    @Published private(set) var accessibility: Bool = false
     @Published private(set) var autocontextDemoVideoUrl: String? = nil
     
     private var wasAccessibilityInputEnabled: Bool = false
@@ -52,42 +48,10 @@ class FeatureFlagManager: ObservableObject {
         PostHogSDK.shared.setup(config)
     }
 
-    func overrideAccessibilityInput(_ value: Bool) {
-        Defaults[.accessibilityInputEnabled] = value
-
-        accessibilityInput = value
-    }
-
-    func overrideAccessibilityAutoContext(_ value: Bool) {
-        Defaults[.accessibilityAutoContextEnabled] = value
-
-        accessibilityAutoContext = value
-    }
-
     func overrideHighlightHintMode(_ value: HighlightHintMode) {
         Defaults[.highlightHintMode] = value
 
         highlightHintMode = value
-    }
-
-    func overrideAccessibility(_ value: Bool) {
-        Defaults[.accessibilityEnabled] = value
-
-        accessibility = value
-
-        if value {
-            // Restore previous accessibility settings
-            overrideAccessibilityInput(wasAccessibilityInputEnabled)
-            overrideAccessibilityAutoContext(wasAccessibilityAutoContextEnabled)
-        } else {
-            // Store current settings before disabling
-            wasAccessibilityInputEnabled = accessibilityInput
-            wasAccessibilityAutoContextEnabled = accessibilityAutoContext
-
-            // Disable all accessibility features
-            overrideAccessibilityInput(false)
-            overrideAccessibilityAutoContext(false)
-        }
     }
 
     // MARK: - Objective-C Functions
@@ -99,52 +63,6 @@ class FeatureFlagManager: ObservableObject {
     // MARK: - Private functions
 
     private func setFeatureFlagsFromRemote() {
-        // Set global accessibility toggle
-        if let accessibilityEnabled = Defaults[.accessibilityEnabled] {
-            accessibility = accessibilityEnabled
-        } else {
-            accessibility = PostHogSDK.shared.isFeatureEnabled("accessibility")
-        }
-
-        // Only set individual accessibility features if global toggle is on
-        if accessibility {
-            if let accessibilityInputEnabled = Defaults[.accessibilityInputEnabled] {
-                accessibilityInput = accessibilityInputEnabled
-                wasAccessibilityInputEnabled = accessibilityInputEnabled
-            } else {
-                let enabled = PostHogSDK.shared.isFeatureEnabled("accessibility_input")
-                accessibilityInput = enabled
-                wasAccessibilityInputEnabled = enabled
-            }
-
-            if let accessibilityAutoContextEnabled = Defaults[.accessibilityAutoContextEnabled] {
-                accessibilityAutoContext = accessibilityAutoContextEnabled
-                wasAccessibilityAutoContextEnabled = accessibilityAutoContextEnabled
-            } else {
-                let enabled = PostHogSDK.shared.isFeatureEnabled("accessibility_autocontext")
-                accessibilityAutoContext = enabled
-                wasAccessibilityAutoContextEnabled = enabled
-            }
-        } else {
-            // Store current settings but keep features disabled
-            if let accessibilityInputEnabled = Defaults[.accessibilityInputEnabled] {
-                wasAccessibilityInputEnabled = accessibilityInputEnabled
-            } else {
-                wasAccessibilityInputEnabled = PostHogSDK.shared.isFeatureEnabled(
-                    "accessibility_input")
-            }
-
-            if let accessibilityAutoContextEnabled = Defaults[.accessibilityAutoContextEnabled] {
-                wasAccessibilityAutoContextEnabled = accessibilityAutoContextEnabled
-            } else {
-                wasAccessibilityAutoContextEnabled = PostHogSDK.shared.isFeatureEnabled(
-                    "accessibility_autocontext")
-            }
-
-            accessibilityInput = false
-            accessibilityAutoContext = false
-        }
-
         if let highlightHintMode = Defaults[.highlightHintMode] {
             self.highlightHintMode = highlightHintMode
         } else {
