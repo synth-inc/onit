@@ -178,12 +178,10 @@ extension OnitPanelState {
             width: 0,
             height: screen.visibleFrame.height
         )
-        /// Add 1px to the width to avoid being ignored by `animateEnter`, since `panel.frame` would otherwise exactly match `newFrame`
-        /// Without this, the state.showChatView will never be true and the panel will display an empty space
         let newFrame = NSRect(
             x: screen.visibleFrame.maxX - TetherAppsManager.minOnitWidth,
             y: screen.visibleFrame.minY,
-            width: TetherAppsManager.minOnitWidth + 1,
+            width: TetherAppsManager.minOnitWidth,
             height: screen.visibleFrame.height
         )
         
@@ -358,7 +356,7 @@ extension OnitPanelState {
         fromPanel: CGRect,
         toPanel: CGRect
     ) {
-        guard !panel.isAnimating, panel.frame != toPanel else { return }
+        guard !panel.isAnimating else { return }
         
         panel.isAnimating = true
         panel.setFrame(fromPanel, display: false)
