@@ -356,7 +356,7 @@ extension OnitPanelState {
         fromPanel: CGRect,
         toPanel: CGRect
     ) {
-        guard !panel.isAnimating, panel.frame != toPanel else { return }
+        guard !panel.isAnimating else { return }
         
         panel.isAnimating = true
         panel.setFrame(fromPanel, display: false)

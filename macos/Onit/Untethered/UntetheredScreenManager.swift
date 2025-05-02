@@ -21,6 +21,14 @@ class UntetheredScreenManager: ObservableObject {
     
     @Published var state: OnitPanelState
     @Published var tetherButtonPanelState: OnitPanelState?
+    
+    
+    let trackedScreenManager = TrackedScreenManager()
+    var lastScreenFrame = CGRect.zero
+    
+    private var globalMouseMonitor: Any?
+    private var localMouseMonitor: Any?
+    
     var states: [TrackedScreen: OnitPanelState] = [:]
     var isObserving: Bool = false
 
@@ -92,35 +100,62 @@ class UntetheredScreenManager: ObservableObject {
     // MARK: - Functions
 
     func startObserving() {
+        guard !isObserving else { return }
+        
         stopObserving()
         isObserving = true
-        AccessibilityDeniedNotificationManager.shared.delegate = self
-        NotificationCenter.default.addObserver(
-            self,
-            selector: #selector(appDidBecomeActive),
-            name: NSApplication.didBecomeActiveNotification,
-            object: nil
-        )
-        NotificationCenter.default.addObserver(
-            self,
-            selector: #selector(applicationWillTerminate),
-            name: NSApplication.willTerminateNotification,
-            object: nil
-        )
+        
+        // Add global monitor to capture mouse moved events
+        globalMouseMonitor = NSEvent.addGlobalMonitorForEvents(matching: .mouseMoved) { [weak self] event in
+            guard let self = self else { return }
+            handleMouseMoved(event: event)
+        }
+
+        // Add local monitor to capture mouse moved events when the application is foregrounded
+        localMouseMonitor = NSEvent.addLocalMonitorForEvents(matching: .mouseMoved) { [weak self] event in
+            guard let self = self else { return event }
+            handleMouseMoved(event: event)
+            return event
+        }
+        
+        // Add the main screen on startup.
+        if let mouseScreen = NSScreen.mouse {
+            if let trackedScreen = trackedScreenManager.append(screen: mouseScreen) {
+                handleActivation(of: trackedScreen)
+            }
+            lastScreenFrame = mouseScreen.frame
+        }
     }
 
     func stopObserving() {
         isObserving = false
-        NotificationCenter.default.removeObserver(self)
-        AccessibilityDeniedNotificationManager.shared.delegate = nil
+        if let globalMouseMonitor = globalMouseMonitor {
+            NSEvent.removeMonitor(globalMouseMonitor)
+            self.globalMouseMonitor = nil
+        }
+        
+        if let localMouseMonitor = localMouseMonitor {
+            NSEvent.removeMonitor(localMouseMonitor)
+            self.localMouseMonitor = nil
+        }
         hideTetherWindow()
     }
 
-    @objc private func appDidBecomeActive(_ notification: Notification) { }
-
-    @objc private func appResignActive(_ notification: Notification) { }
-            
-    @objc private func applicationWillTerminate() { }
+    private func handleMouseMoved(event: NSEvent) {
+        if let mouseScreen = NSScreen.mouse {
+            if !mouseScreen.frame.equalTo(lastScreenFrame) {
+                if let trackedScreen = trackedScreenManager.append(screen: mouseScreen) {
+                    handleActivation(of: trackedScreen)
+                }
+                lastScreenFrame = mouseScreen.frame
+            }
+        }
+    }
+    
+    private func handleActivation(of screen: TrackedScreen) {
+        let panelState = getState(for: screen)
+        handlePanelStateChange(state: panelState, action: .undefined)
+    }
     
     func handlePanelStateChange(state: OnitPanelState, action: TrackedScreenAction) {
         guard let screen = state.trackedScreen else {
@@ -194,7 +229,7 @@ class UntetheredScreenManager: ObservableObject {
     func showTetherWindow(state: OnitPanelState, activeScreen: NSScreen, action: TrackedScreenAction) {
          let tetherView = ExternalTetheredButton(
              onDrag: { [weak self] translation in
-                 self?.tetheredWindowMoved(y: translation)
+                 self?.tetheredWindowMoved(screen: activeScreen, y: translation)
              }
          ).environment(\.windowState, state)
 
@@ -215,8 +250,14 @@ class UntetheredScreenManager: ObservableObject {
     
     private func updateTetherWindowPosition(for screen: NSScreen, action: TrackedScreenAction, lastYComputed: CGFloat? = nil) {
         let activeScreenFrame = screen.visibleFrame
-        var positionX = activeScreenFrame.maxX - ExternalTetheredButton.containerWidth
-        var positionY = activeScreenFrame.minY + (activeScreenFrame.height / 2) - (ExternalTetheredButton.containerHeight / 2)
+        let positionX = activeScreenFrame.maxX - ExternalTetheredButton.containerWidth
+        var positionY: CGFloat
+        
+        if lastYComputed == nil {
+            positionY = activeScreenFrame.minY + (activeScreenFrame.height / 2) - (ExternalTetheredButton.containerHeight / 2)
+        } else {
+            positionY = computeHintYPosition(for: activeScreenFrame, offset: lastYComputed)
+        }
         
         let frame = NSRect(
             x: positionX,
@@ -236,21 +277,52 @@ class UntetheredScreenManager: ObservableObject {
             tutorialWindow.setFrame(tutorialFrame, display: false)
         }
     }
+    
+    private func computeHintYPosition(for screenVisibleFrame: CGRect, offset: CGFloat?) -> CGFloat {
+        let maxY = screenVisibleFrame.maxY - ExternalTetheredButton.containerHeight
+        let minY = screenVisibleFrame.minY
 
-    private func tetheredWindowMoved(y: CGFloat) {
-        // TODO
+        var lastYComputed = tetherHintDetails.lastYComputed ?? screenVisibleFrame.minY + (screenVisibleFrame.height / 2) - (ExternalTetheredButton.containerHeight / 2)
+
+        if let offset = offset {
+            lastYComputed -= offset
+        }
+
+        let finalOffset: CGFloat
+
+        if lastYComputed > maxY {
+            finalOffset = maxY
+        } else if lastYComputed < minY {
+            finalOffset = minY
+        } else {
+            finalOffset = lastYComputed
+        }
+
+        return finalOffset
+    }
+
+    private func tetheredWindowMoved(screen: NSScreen, y: CGFloat) {
+        let screenFrame = screen.visibleFrame
+        let lastYComputed = computeHintYPosition(for: screenFrame, offset: y)
         
+        tetherHintDetails.lastYComputed = lastYComputed
+        
+        if let state = tetherButtonPanelState {
+            state.tetheredButtonYPosition = screenFrame.height -
+                (lastYComputed - screenFrame.minY) -
+                ExternalTetheredButton.containerHeight + (TetheredButton.height / 2)
+        }
+
+        let frame = NSRect(
+            x: tetherHintDetails.tetherWindow.frame.origin.x,
+            y: lastYComputed,
+            width: ExternalTetheredButton.containerWidth,
+            height: ExternalTetheredButton.containerHeight
+        )
+        
+        tetherHintDetails.tetherWindow.setFrame(frame, display: true)
     }
     
-}
-
-// MARK: - AccessibilityDeniedNotificationsDelegate
-
-extension UntetheredScreenManager: AccessibilityDeniedNotificationDelegate {
-    func accessibilityDeniedNotificationManager(_ manager: AccessibilityDeniedNotificationManager, didActivateScreen screen: TrackedScreen) {
-        let panelState = getState(for: screen)
-        handlePanelStateChange(state: panelState, action: .undefined)
-    }
 }
 
 // MARK: - OnitPanelStateDelegate
