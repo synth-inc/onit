@@ -120,6 +120,9 @@ extension Defaults.Keys {
     // Onboarding
     static let showOnboarding = Key<Bool>("showOnboarding", default: true)
     static let showOnboardingSignUp = Key<Bool?>("showOnboardingSignUp", default: nil) /// nil = don't show onboarding auth ; true = show sign up ; false = show sign in
+    
+    // Alerts
+    static let showTwoWeekProTrialEndedAlert = Key<Bool>("showTwoWeekProTrialEndedAlert", default: false)
 }
 
 extension NSRect: Defaults.Serializable {

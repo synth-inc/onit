@@ -9,6 +9,7 @@ import Defaults
 import SwiftUI
 
 struct ContentView: View {
+    @Environment(\.appState) var appState
     @Environment(\.windowState) private var state
     
     @Default(.panelWidth) var panelWidth
@@ -16,6 +17,7 @@ struct ContentView: View {
     @ObservedObject private var accessibilityPermissionManager = AccessibilityPermissionManager.shared
     @Default(.showOnboarding) var showOnboarding
     @Default(.showOnboardingSignUp) var showOnboardingSignUp
+    @Default(.showTwoWeekProTrialEndedAlert) var showTwoWeekProTrialEndedAlert
     
     static let idealWidth: CGFloat = 400
     static let bottomPadding: CGFloat = 0
@@ -50,15 +52,27 @@ struct ContentView: View {
                 } else if let isSignUp = showOnboardingSignUp {
                     OnboardingAuth(isSignUp: isSignUp)
                 } else {
-                    VStack(spacing: 0) {
-                        if !isRegularApp { Toolbar() }
-                        else { Spacer().frame(height: 38) }
+                    ZStack {
+                        VStack(spacing: 0) {
+                            if !isRegularApp { Toolbar() }
+                            else { Spacer().frame(height: 38) }
+                            
+                            PromptDivider()
+                            
+                            if !isRegularApp { ChatView() }
+                            else if state.showChatView { ChatView().transition(.opacity) }
+                            else { Spacer() }
+                        }
                         
-                        PromptDivider()
-                        
-                        if !isRegularApp { ChatView() }
-                        else if state.showChatView { ChatView().transition(.opacity) }
-                        else { Spacer() }
+                        if showTwoWeekProTrialEndedAlert {
+                            TwoWeekProTrialEndedAlert()
+                        } else if appState.showFreeLimitAlert {
+                            FreeLimitAlert()
+                        } else if appState.showProLimitAlert {
+                            ProLimitAlert()
+                        } else if appState.showInaccessibleRemoteModelAlert {
+                            InaccessibleRemoteModelAlert()
+                        }
                     }
                 }
             }

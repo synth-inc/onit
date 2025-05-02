@@ -52,6 +52,10 @@ class AppState: NSObject {
         }
     }
     var subscriptionActive: Bool { subscription?.status == "active" }
+    
+    var showFreeLimitAlert: Bool = false
+    var showProLimitAlert: Bool = false
+    var showInaccessibleRemoteModelAlert: Bool = false
 
     // MARK: - Initializer
     
@@ -176,6 +180,68 @@ class AppState: NSObject {
         } catch {
             print("Error fetching local models:", error)
             remoteFetchFailed = true
+        }
+    }
+    
+    // MARK: - Alert Functions
+    
+    func checkTwoWeekProTrialEnded() -> Bool {
+        return false
+    }
+    
+    func checkFreeLimitReached() -> Bool {
+        return false
+    }
+    
+    func checkProLimitReached() -> Bool {
+        return false
+    }
+    
+    func checkInaccessibleRemoteModel() -> Bool {
+        if subscriptionActive {
+            // No need to verify whether or not a remote modal is accessible for subscribed users.
+            return false
+        } else {
+            guard Defaults[.mode] == .remote else { return false }
+            
+            guard let currentModel = Defaults[.remoteModel] else { return false }
+            
+            // Verify API key is validated for the current provider
+            let validatedProviderApiKey: Bool
+            
+            switch currentModel.provider {
+            case .openAI:
+                validatedProviderApiKey = isOpenAITokenValidated
+            case .anthropic:
+                validatedProviderApiKey = isAnthropicTokenValidated
+            case .xAI:
+                validatedProviderApiKey = isXAITokenValidated
+            case .googleAI:
+                validatedProviderApiKey = isGoogleAITokenValidated
+            case .deepSeek:
+                validatedProviderApiKey = isDeepSeekTokenValidated
+            case .perplexity:
+                validatedProviderApiKey = isPerplexityTokenValidated
+            case .custom:
+                // Custom providers don't require subscription validation
+                validatedProviderApiKey = true
+            }
+            
+            return !validatedProviderApiKey
+        }
+    }
+    
+    func checkSubscriptionAlerts(callback: @escaping () -> Void) {
+        if checkTwoWeekProTrialEnded() {
+            Defaults[.showTwoWeekProTrialEndedAlert] = true
+        } else if checkFreeLimitReached() {
+            showFreeLimitAlert = true
+        } else if checkProLimitReached() {
+            showProLimitAlert = true
+        } else if checkInaccessibleRemoteModel() {
+            showInaccessibleRemoteModelAlert = true
+        } else {
+            callback()
         }
     }
 

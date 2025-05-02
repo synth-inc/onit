@@ -9,7 +9,9 @@ import Defaults
 import SwiftUI
 
 struct FinalContextView: View {
+    @Environment(\.appState) var appState
     @Environment(\.windowState) var windowState
+    
     @State var isExpanded: Bool = false
     @State private var isEditing: Bool = false
     @State private var isHoveringInstruction: Bool = false
@@ -46,7 +48,10 @@ struct FinalContextView: View {
                     onSubmit: {
                         if isEditing {
                             isEditing = false
-                            windowState.generate(prompt)
+                            
+                            appState.checkSubscriptionAlerts {
+                                windowState.generate(prompt)
+                            }
                         }
                     },
                     maxHeight: maxHeightLimit,
@@ -80,7 +85,11 @@ struct FinalContextView: View {
                         Button("Send") {
                             // Handle send action
                             isEditing = false
-                            windowState.generate(prompt)
+                            
+                            appState.checkSubscriptionAlerts {
+                                windowState.generate(prompt)
+                            }
+                            
                             windowState.textFocusTrigger.toggle()
                         }
                         .padding(.vertical, 6)

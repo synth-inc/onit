@@ -129,6 +129,7 @@ struct ModelSelectionView: View {
                         action: {
                             selectedModel.wrappedValue = .remote(remoteModel)
                             open.wrappedValue = false
+                            appState.checkSubscriptionAlerts {}
                         }
                     )
                 }

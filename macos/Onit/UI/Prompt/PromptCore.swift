@@ -11,6 +11,7 @@ import SwiftData
 import SwiftUI
 
 struct PromptCore: View {
+    @Environment(\.appState) var appState
     @Environment(\.windowState) private var windowState
     @Query(sort: \Chat.timestamp, order: .reverse) private var chats: [Chat]
     @Default(.mode) var mode
@@ -49,7 +50,10 @@ struct PromptCore: View {
             
             VStack(spacing: 6) {
                 contextAndInput
-                PromptCoreFooter(audioRecorder: audioRecorder)
+                PromptCoreFooter(
+                    audioRecorder: audioRecorder,
+                    handleSend: handleSend
+                )
             }
         }
         .background {
@@ -73,7 +77,7 @@ extension PromptCore {
             text: $windowState.pendingInstruction,
             cursorPosition: $windowState.pendingInstructionCursorPosition,
             dynamicHeight: $textHeight,
-            onSubmit: windowState.sendAction,
+            onSubmit: handleSend,
             maxHeight: maxHeightLimit,
             placeholder: placeholderText,
             audioRecorder: audioRecorder,
@@ -182,6 +186,16 @@ extension PromptCore {
             }
         } else {
             "New instructions..."
+        }
+    }
+}
+
+// MARK: - Private Functions
+
+extension PromptCore {
+    private func handleSend() {
+        appState.checkSubscriptionAlerts {
+            windowState.sendAction()
         }
     }
 }
