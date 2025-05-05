@@ -148,6 +148,10 @@ extension AXUIElement {
     func children() -> [AXUIElement]? {
         return self.attribute(forAttribute: kAXChildrenAttribute as CFString) as? [AXUIElement]
     }
+    
+    func visibleChildren() -> [AXUIElement]? {
+        return self.attribute(forAttribute: kAXVisibleChildrenAttribute as CFString) as? [AXUIElement]
+    }
 
     func isVisible(focusedWindow: AXUIElement) -> Bool {
         guard let frame = getFrame(convertedToGlobalCoordinateSpace: true) else {

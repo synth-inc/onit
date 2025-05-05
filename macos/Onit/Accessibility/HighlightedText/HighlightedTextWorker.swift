@@ -64,7 +64,7 @@ final class HighlightedTextWorker {
         timer?.cancel()
         timer = nil
     }
-
+    
     private func highlightedTextFound(for element: AXUIElement) -> Bool {
         if let selectedText = element.selectedText(),
            HighlightedTextValidator.isValid(element: element) {
@@ -89,20 +89,19 @@ final class HighlightedTextWorker {
 
         _ = highlightedTextFound(in: focusedWindow, element: focusedWindow)
     }
-
+    
     private func highlightedTextFound(in focusedWindow: AXUIElement, element: AXUIElement, depth: Int = 0) -> Bool {
         guard depth < maxSearchDepth else { return false }
-        guard let children = element.children() else { return false }
-
-        for child in children {
-            if highlightedTextFound(for: child) {
-                return true
-            }
-            if highlightedTextFound(in: focusedWindow, element: child, depth: depth + 1) {
-                return true
+        if let children = element.visibleChildren() ?? element.children() {
+            for child in children {
+                if highlightedTextFound(for: child) {
+                    return true
+                }
+                if highlightedTextFound(in: focusedWindow, element: child, depth: depth + 1) {
+                    return true
+                }
             }
         }
-
         return false
     }
 
