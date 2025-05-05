@@ -179,6 +179,30 @@ class AppState: NSObject {
         }
     }
 
+    func handleTokenLogin(_ url: URL) {
+        guard url.scheme == "onit" else {
+            return
+        }
+
+        guard let components = URLComponents(url: url, resolvingAgainstBaseURL: true) else {
+            print("Invalid URL")
+            return
+        }
+
+        guard let token = components.queryItems?.first(where: { $0.name == "token" })?.value else {
+            print("Login token not found")
+            return
+        }
+
+        Task { @MainActor in
+            do {
+                let loginResponse = try await FetchingClient().loginToken(loginToken: token)
+                TokenManager.token = loginResponse.token
+                account = loginResponse.account
+            } catch {}
+        }
+    }
+
     // MARK: - Remote Models
 
     @ObservableDefault(.availableRemoteModels)
