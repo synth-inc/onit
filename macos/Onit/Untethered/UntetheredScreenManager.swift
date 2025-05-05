@@ -128,7 +128,6 @@ class UntetheredScreenManager: ObservableObject {
     }
 
     func stopObserving() {
-        isObserving = false
         if let globalMouseMonitor = globalMouseMonitor {
             NSEvent.removeMonitor(globalMouseMonitor)
             self.globalMouseMonitor = nil
@@ -138,7 +137,28 @@ class UntetheredScreenManager: ObservableObject {
             NSEvent.removeMonitor(localMouseMonitor)
             self.localMouseMonitor = nil
         }
+        
+        closePanels()
         hideTetherWindow()
+        
+        state = defaultState
+        tetherButtonPanelState = nil
+        trackedScreenManager.reset()
+        lastScreenFrame = CGRect.zero
+        states = [:]
+        isObserving = false
+        tetherButtonVisibility = [:]
+    }
+    
+    private func closePanels() {
+        // Close all panels without animations
+        defaultState.panel?.hide()
+        defaultState.panel = nil
+        
+        for (_, state) in states {
+            state.panel?.hide()
+            state.panel = nil
+        }
     }
 
     private func handleMouseMoved(event: NSEvent) {

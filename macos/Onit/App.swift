@@ -32,8 +32,7 @@ struct App: SwiftUI.App {
     @Default(.autoContextFromHighlights) var autoContextFromHighlights
     
     @State var accessibilityPermissionRequested = false
-
-    private var frontmostApplicationOnLaunch: NSRunningApplication?
+    @State private var frontmostApplicationOnLaunch: NSRunningApplication?
 
     init() {
         configureSwiftBeaver()
@@ -68,13 +67,14 @@ struct App: SwiftUI.App {
                     case .granted:
                         TetherAppsManager.shared.startObserving()
                         AccessibilityNotificationsManager.shared.start(pid: frontmostApplicationOnLaunch?.processIdentifier)
-                        TapListener.shared.start()
                         UntetheredScreenManager.shared.stopObserving()
-                    case .denied, .notDetermined:
+                    case .denied:
+                        self.frontmostApplicationOnLaunch = nil
                         TetherAppsManager.shared.stopObserving()
                         AccessibilityNotificationsManager.shared.stop()
-                        TapListener.shared.stop()
                         UntetheredScreenManager.shared.startObserving()
+                    case .notDetermined:
+                        ()
                     }
                 }
                 .onChange(of: Defaults[.autoContextEnabled], initial: true) {
