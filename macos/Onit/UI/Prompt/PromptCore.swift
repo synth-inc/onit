@@ -16,7 +16,15 @@ struct PromptCore: View {
     @Default(.mode) var mode
     
     let isEditing: Bool
-    init(isEditing: Bool = false) { self.isEditing = isEditing }
+    let editingText: Binding<String>?
+    
+    init(
+        isEditing: Bool = false,
+        editingText: Binding<String>? = nil
+    ) {
+        self.isEditing = isEditing
+        self.editingText = editingText
+    }
     
     @StateObject private var audioRecorder = AudioRecorder()
     
@@ -24,7 +32,6 @@ struct PromptCore: View {
     private let maxHeightLimit: CGFloat = 100
     
     @FocusState private var isFocused: Bool
-    
     
     private var unfocusedBorder = GradientBorder(
         colorOne: .gray500,
@@ -70,7 +77,7 @@ extension PromptCore {
         @Bindable var windowState = windowState
         
         TextViewWrapper(
-            text: $windowState.pendingInstruction,
+            text: editingText ?? $windowState.pendingInstruction,
             cursorPosition: $windowState.pendingInstructionCursorPosition,
             dynamicHeight: $textHeight,
             onSubmit: windowState.sendAction,
@@ -105,7 +112,7 @@ extension PromptCore {
         )
         .addAnimation(dependency: isRemote, duration: 0.3)
         .addAnimation(dependency: isFocused, duration: 0.3)
-        .padding(.top, 12)
+        .padding(.top, 8)
         .padding(.horizontal, 12)
     }
 }

@@ -104,7 +104,8 @@ struct SystemPromptView: View {
                     showSelection = true
                 }
         }
-        .padding([.horizontal, .top], 8)
+        .padding(.horizontal, 12)
+        .padding(.top, 8)
         .saveSize(in: $size)
     }
     

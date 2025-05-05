@@ -39,7 +39,7 @@ struct PromptCoreFooterButton: View {
             text: text,
             disabled: disabled,
             action: action,
-            height: toolbarButtonHeight,
+            height: ToolbarButtonStyle.height,
             fillContainer: false,
             horizontalPadding: 4,
             cornerRadius: 4,

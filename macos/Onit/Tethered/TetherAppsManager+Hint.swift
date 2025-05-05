@@ -18,7 +18,6 @@ extension TetherAppsManager {
         hideTetherWindow()
         let pendingTetherWindow = (state, activeWindow)
 
-        tetherHintDetails.showTetherDebounceTimer?.invalidate()
         tetherHintDetails.showTetherDebounceTimer = Timer.scheduledTimer(withTimeInterval: tetherHintDetails.showTetherDebounceDelay, repeats: false) { [weak self] _ in
             guard let self = self else { return }
             
@@ -29,7 +28,6 @@ extension TetherAppsManager {
     }
     
     func hideTetherWindow() {
-        tetherHintDetails.showTetherDebounceTimer?.invalidate()
         tetherHintDetails.showTetherDebounceTimer = nil
         tetherButtonPanelState = nil
 

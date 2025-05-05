@@ -64,7 +64,7 @@ class AppState: NSObject {
 
             // This handles an edge case where Ollama is running but there is no internet connection
             // We put the user in localmode so they can use the product.
-            // We don't do the opposite, becuase we don't want to put the product in remote mode without them knowing.
+            // We don't do the opposite, because we don't want to put the product in remote mode without them knowing.
             if !Defaults[.availableLocalModels].isEmpty && Defaults[.availableRemoteModels].isEmpty
             {
                 Defaults[.mode] = .local
@@ -174,7 +174,7 @@ class AppState: NSObject {
             }
 
         } catch {
-            print("Error fetching local models:", error)
+            print("Error fetching remote models:", error)
             remoteFetchFailed = true
         }
     }

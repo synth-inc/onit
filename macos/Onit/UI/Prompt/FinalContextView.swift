@@ -34,7 +34,7 @@ struct FinalContextView: View {
         @Default(.lineHeight) var lineHeight
         @Default(.fontSize) var fontSize
         
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: 8) {
             VStack {
                 TextViewWrapper(
                     text: Binding(
@@ -169,7 +169,8 @@ struct FinalContextView: View {
                 }
             }
         }
-        .padding()
+        .padding(.horizontal, 12)
+        .padding(.vertical, 8)
     }
 }
 

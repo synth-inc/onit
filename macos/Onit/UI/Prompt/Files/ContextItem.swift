@@ -12,6 +12,7 @@ struct ContextItem: View {
 
     var item: Context
     var isEditing: Bool = true
+    var inList: Bool = false
 
     var body: some View {
         HStack(spacing: 0) {
@@ -20,6 +21,7 @@ struct ContextItem: View {
                 WebContextItem(
                     item: item,
                     isEditing: isEditing,
+                    inList: inList,
                     showContextWindow: showContextWindow,
                     removeContextItem: removeContextItem
                 )
@@ -30,14 +32,18 @@ struct ContextItem: View {
                     caption: item.fileType,
                     tooltip: "View auto-context file",
                     action: showContextWindow,
-                    closeAction: removeContextItem
+                    closeAction: inList ? nil : { removeContextItem() },
+                    fill: inList,
+                    isTransparent: inList
                 )
             default:
                 TagButton(
                     child: ContextImage(context: item),
                     text: name,
                     caption: item.fileType,
-                    closeAction: removeContextItem
+                    closeAction: inList ? nil : { removeContextItem() },
+                    fill: inList,
+                    isTransparent: inList
                 )
             }
         }

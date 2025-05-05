@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct MenuList<Sections: View>: View {
-    private let header: (any View)?
+    private let header: MenuHeader<IconButton>?
     private let width: CGFloat
     @ViewBuilder private let sections: () -> Sections
     
@@ -19,7 +19,7 @@ struct MenuList<Sections: View>: View {
     private let search: Search?
     
     init(
-        header: (any View)? = nil,
+        header: MenuHeader<IconButton>? = nil,
         width: CGFloat = 320,
         search: Search? = nil,
         @ViewBuilder sections: @escaping () -> Sections
@@ -32,7 +32,7 @@ struct MenuList<Sections: View>: View {
     
     var body: some View {
         VStack(spacing: 0) {
-            if let header = header { AnyView(header) }
+            if let header = header { header }
             
             if let search = search {
                 SearchBar(

@@ -75,9 +75,7 @@ struct ContentView: View {
                     if isRegularApp { ToolbarAddButton() }
                     else { EmptyView() }
                 }
-                #if DEBUG
                 ToolbarItem(placement: .automatic) { TetheredToAppView() }
-                #endif
                 ToolbarItem(placement: .automatic) { Spacer() }
                 ToolbarItem(placement: .primaryAction) {
                     if isRegularApp { Toolbar() }
