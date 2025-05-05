@@ -68,13 +68,11 @@ struct App: SwiftUI.App {
                         TetherAppsManager.shared.startObserving()
                         AccessibilityNotificationsManager.shared.start(pid: frontmostApplicationOnLaunch?.processIdentifier)
                         UntetheredScreenManager.shared.stopObserving()
-                    case .denied:
-                        self.frontmostApplicationOnLaunch = nil
+                        frontmostApplicationOnLaunch = nil
+                    case .denied, .notDetermined:
                         TetherAppsManager.shared.stopObserving()
                         AccessibilityNotificationsManager.shared.stop()
                         UntetheredScreenManager.shared.startObserving()
-                    case .notDetermined:
-                        ()
                     }
                 }
                 .onChange(of: Defaults[.autoContextEnabled], initial: true) {
