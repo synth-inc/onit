@@ -10,7 +10,7 @@ import AppKit
 import Carbon
 
 /// Implementation of `AccessibilityParserLogic` which use the Clipboard
-class ClipboardParser: AccessibilityParserLogic {
+class ClipboardParser: @preconcurrency AccessibilityParserLogic {
     
     private var lastParsingDate: Date?
     private var lastParsingScreen: String?
@@ -18,7 +18,7 @@ class ClipboardParser: AccessibilityParserLogic {
     // MARK: - AccessibilityParserLogic
 
     /** See ``AccessibilityParserLogic`` parse function */
-    func parse(element: AXUIElement) -> [String: String] {
+    @MainActor func parse(element: AXUIElement) -> [String: String] {
         /// Prevent the system from looping because highlighting text emits a new event.
         if let lastParsingDate = lastParsingDate,
            let lastParsingScreen = lastParsingScreen,
@@ -32,6 +32,8 @@ class ClipboardParser: AccessibilityParserLogic {
             return [:]
         }
         
+//        deselectWithShortcut()
+//        deselectWithEscape()
         deselectWithArrowKeys()
         
         let screen = readFromPasteboardWithRetry(previousContent: previousClipboardContent)
@@ -72,12 +74,30 @@ class ClipboardParser: AccessibilityParserLogic {
         return true
     }
     
-    private func deselectWithEscape() {
-        let escapeDown = CGEvent(keyboardEventSource: nil, virtualKey: CGKeyCode(53), keyDown: true)
-        let escapeUp = CGEvent(keyboardEventSource: nil, virtualKey: CGKeyCode(53), keyDown: false)
+    private func deselectWithShortcut() {
+        guard let aKey = "a".keyCode,
+              let cmdADown = CGEvent(keyboardEventSource: nil, virtualKey: aKey, keyDown: true),
+              let cmdAUp = CGEvent(keyboardEventSource: nil, virtualKey: aKey, keyDown: false) else {
+            return
+        }
+
+        cmdADown.flags = [.maskCommand, .maskShift]
+        cmdAUp.flags = [.maskCommand, .maskShift]
         
-        escapeDown?.post(tap: .cghidEventTap)
-        escapeUp?.post(tap: .cghidEventTap)
+        cmdADown.post(tap: .cghidEventTap)
+        cmdAUp.post(tap: .cghidEventTap)
+    }
+    
+    @MainActor private func deselectWithEscape() {
+        guard let escapeDown = CGEvent(keyboardEventSource: nil, virtualKey: CGKeyCode(53), keyDown: true),
+              let escapeUp = CGEvent(keyboardEventSource: nil, virtualKey: CGKeyCode(53), keyDown: false) else { return }
+        
+        KeyboardShortcutsManager.temporaryDisableEscape = true
+        
+        escapeDown.post(tap: .cghidEventTap)
+        escapeUp.post(tap: .cghidEventTap)
+        
+        KeyboardShortcutsManager.temporaryDisableEscape = false
     }
     
     private func deselectWithArrowKeys() {

@@ -13,6 +13,8 @@ import SwiftData
 @MainActor
 struct KeyboardShortcutsManager {
     
+    static var temporaryDisableEscape = false
+    
     static func configure() {
         registerSettingsShortcuts()
         
@@ -95,6 +97,8 @@ struct KeyboardShortcutsManager {
                     state.addAutoContext()
                     state.launchPanel()
                 case .escape:
+                    log.error("ESC handled \(temporaryDisableEscape)")
+                    guard !temporaryDisableEscape else { return }
                     state.escapeAction()
                 case .newChat:
                     state.newChat()
