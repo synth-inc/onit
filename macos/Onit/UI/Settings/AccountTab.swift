@@ -21,6 +21,7 @@ struct AccountTab: View {
     @State private var loginPassword: String = ""
 
     @Default(.useOnitChat) var useOnitChat
+    @State private var features: [SubscriptionFeature]?
     @State private var setPassword: String = ""
 
     @State private var errorMessage: String?
@@ -40,6 +41,7 @@ struct AccountTab: View {
             } else {
                 useOnitChatSection
                 subscriptionSection
+                subscriptionFeaturesSection
                 setPasswordSection
                 logoutButton
             }
@@ -285,6 +287,32 @@ struct AccountTab: View {
             if let url = URL(string: response.sessionUrl) {
                 openURL(url)
             }
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+    }
+
+    var subscriptionFeaturesSection: some View {
+        VStack {
+            Button("Fetch the Features") {
+                Task {
+                    await handleFetchSubscriptionFeatures()
+                }
+            }
+            if let features = features {
+                Text("Subscription Features:")
+                    .font(.system(size: 13))
+                List(features) { feature in
+                    Text(feature.name)
+                }
+            }
+        }
+    }
+
+    func handleFetchSubscriptionFeatures() async {
+        do {
+            let client = FetchingClient()
+            features = try await client.getSubscriptionFeatures()
         } catch {
             errorMessage = error.localizedDescription
         }
