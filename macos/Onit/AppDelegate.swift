@@ -10,9 +10,13 @@ import PostHog
 import SwiftUI
 
 class AppDelegate: NSObject, NSApplicationDelegate {
+    
+    private let clipboardPoller = ClipboardPoller()
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         FirebaseApp.configure()
+        
+        clipboardPoller.start()
 
         // This is helpful for debugging the new user experience, but should never be committed!
         //        if let appDomain = Bundle.main.bundleIdentifier {
@@ -23,5 +27,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     func applicationWillTerminate(_ notification: Notification) {
         PostHogSDK.shared.capture("app_quit")
+        clipboardPoller.stop()
     }
 }

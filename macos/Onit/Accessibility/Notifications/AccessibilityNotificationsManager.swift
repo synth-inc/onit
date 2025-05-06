@@ -602,16 +602,12 @@ class AccessibilityNotificationsManager: ObservableObject {
         let elapsedTime = results?[AccessibilityParsedElements.elapsedTime]
         let appName = results?[AccessibilityParsedElements.applicationName]
         let appTitle = results?[AccessibilityParsedElements.applicationTitle]
-        let highlightedText = results?[AccessibilityParsedElements.highlightedText]
         
         var results = results
         
         results?.removeValue(forKey: AccessibilityParsedElements.elapsedTime)
         results?.removeValue(forKey: AccessibilityParsedElements.applicationName)
         results?.removeValue(forKey: AccessibilityParsedElements.applicationTitle)
-        results?.removeValue(forKey: AccessibilityParsedElements.highlightedText)
-        
-        self.processSelectedText(highlightedText, elementFrame: nil)
         
         self.screenResult.elapsedTime = elapsedTime
         self.screenResult.applicationName = appName

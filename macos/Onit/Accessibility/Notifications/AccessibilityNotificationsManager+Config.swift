@@ -17,7 +17,7 @@ extension AccessibilityNotificationsManager {
             kAXFocusedWindowChangedNotification,
             kAXMainWindowChangedNotification,
             kAXFocusedUIElementChangedNotification,
-            kAXSelectedTextChangedNotification,
+//            kAXSelectedTextChangedNotification,
             kAXValueChangedNotification,
             kAXSelectedColumnsChangedNotification,
             kAXSelectedRowsChangedNotification,
