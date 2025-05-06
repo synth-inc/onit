@@ -106,6 +106,14 @@ class TetherAppsManager: ObservableObject {
         stopAllObservers()
         NotificationCenter.default.removeObserver(self)
         dragManager.stopMonitoring()
+        
+        closePanels()
+        hideTetherWindow()
+        
+        state = defaultState
+        tetherButtonPanelState = nil
+        states = [:]
+        targetInitialFrames = [:]
     }
     
     @objc func appDidBecomeActive(_ notification: Notification) {
@@ -242,6 +250,15 @@ class TetherAppsManager: ObservableObject {
             return
         }
         
+        closePanels()
+        
+        if !isRegularApp {
+            hideTetherWindow()
+            defaultState.launchPanel()
+        }
+    }
+    
+    private func closePanels() {
         // Close all panels without animations
         defaultState.panel?.hide()
         defaultState.panel = nil
@@ -249,11 +266,6 @@ class TetherAppsManager: ObservableObject {
         for (_, state) in states {
             state.panel?.hide()
             state.panel = nil
-        }
-        
-        if !isRegularApp {
-            hideTetherWindow()
-            defaultState.launchPanel()
         }
     }
     
