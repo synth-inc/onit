@@ -224,10 +224,17 @@ struct AccountTab: View {
                 }
             }
             Spacer()
-            if appState.subscriptionActive {
-                Button("Billing Portal Session") {
-                    Task {
-                        await handleCreateSubscriptionBillingPortalSession()
+            if let subscription = appState.subscription, appState.subscriptionActive {
+                HStack {
+                    Button("Billing Portal Session") {
+                        Task {
+                            await handleCreateSubscriptionBillingPortalSession()
+                        }
+                    }
+                    Button(subscription.cancelAtPeriodEnd ? "Renew" : "Cancel") {
+                        Task {
+                            await handleUpdateSubscriptionCancel(cancelAtPeriodEnd: !subscription.cancelAtPeriodEnd)
+                        }
                     }
                 }
             } else {
@@ -256,6 +263,16 @@ struct AccountTab: View {
             if let url = URL(string: response.sessionUrl) {
                 openURL(url)
             }
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+    }
+
+    func handleUpdateSubscriptionCancel(cancelAtPeriodEnd: Bool) async {
+        do {
+            let client = FetchingClient()
+            try await client.updateSubscriptionCancel(cancelAtPeriodEnd: cancelAtPeriodEnd)
+            await handleRefreshSubscriptionState()
         } catch {
             errorMessage = error.localizedDescription
         }
