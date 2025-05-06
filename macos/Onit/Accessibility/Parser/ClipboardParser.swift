@@ -32,7 +32,7 @@ class ClipboardParser: AccessibilityParserLogic {
             return [:]
         }
         
-        deselectWithEscape()
+        deselectWithArrowKeys()
         
         let screen = readFromPasteboardWithRetry(previousContent: previousClipboardContent)
         
@@ -78,6 +78,22 @@ class ClipboardParser: AccessibilityParserLogic {
         
         escapeDown?.post(tap: .cghidEventTap)
         escapeUp?.post(tap: .cghidEventTap)
+    }
+    
+    private func deselectWithArrowKeys() {
+        let leftKeyDown = CGEvent(keyboardEventSource: nil, virtualKey: CGKeyCode(123), keyDown: true)
+        let leftKeyUp = CGEvent(keyboardEventSource: nil, virtualKey: CGKeyCode(123), keyDown: false)
+        
+        let rightKeyDown = CGEvent(keyboardEventSource: nil, virtualKey: CGKeyCode(124), keyDown: true)
+        let rightKeyUp = CGEvent(keyboardEventSource: nil, virtualKey: CGKeyCode(124), keyDown: false)
+        
+        leftKeyDown?.post(tap: .cghidEventTap)
+        leftKeyUp?.post(tap: .cghidEventTap)
+        
+        usleep(1000)
+        
+        rightKeyDown?.post(tap: .cghidEventTap)
+        rightKeyUp?.post(tap: .cghidEventTap)
     }
     
     private func clickAt(position: CGPoint) {

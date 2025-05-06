@@ -444,6 +444,7 @@ class AccessibilityNotificationsManager: ObservableObject {
     // MARK: Parsing
     
     private func retrieveWindowContent(for pid: pid_t) {
+        
         guard let focusedWindow = pid.getFocusedWindow() else { return }
         
         if let (_, state) = TetherAppsManager.shared.states.first(where: { $0.key.hash == CFHash(focusedWindow) }) {
