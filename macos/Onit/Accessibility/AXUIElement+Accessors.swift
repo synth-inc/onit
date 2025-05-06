@@ -223,6 +223,13 @@ extension AXUIElement {
         return nil
     }
     
+    func appName() -> String? {
+        if let pid = pid() {
+            return NSRunningApplication(processIdentifier: pid)?.localizedName
+        }
+        return nil
+    }
+
     public func closeButton() -> AXUIElement? {
         if let value = self.attribute(forAttribute: kAXCloseButtonAttribute as CFString) {
             return (value as! AXUIElement)
