@@ -12,6 +12,9 @@ import MenuBarExtraAccess
 import PostHog
 import ServiceManagement
 import SwiftUI
+import SwiftyBeaver
+
+let log = SwiftyBeaver.self
 
 @main
 struct App: SwiftUI.App {
@@ -33,6 +36,7 @@ struct App: SwiftUI.App {
     private var frontmostApplicationOnLaunch: NSRunningApplication?
 
     init() {
+        configureSwiftBeaver()
         frontmostApplicationOnLaunch = NSWorkspace.shared.frontmostApplication
         
         KeyboardShortcutsManager.configure()
@@ -60,22 +64,17 @@ struct App: SwiftUI.App {
                 .onChange(of: accessibilityPermissionManager.accessibilityPermissionStatus, initial: true) {
                     _, newValue in
                     AccessibilityAnalytics.logPermission(local: newValue)
-                    
                     switch newValue {
                     case .granted:
                         TetherAppsManager.shared.startObserving()
                         AccessibilityNotificationsManager.shared.start(pid: frontmostApplicationOnLaunch?.processIdentifier)
                         TapListener.shared.start()
                         UntetheredScreenManager.shared.stopObserving()
-                        AccessibilityDeniedNotificationManager.shared.stop()
                     case .denied, .notDetermined:
                         TetherAppsManager.shared.stopObserving()
                         AccessibilityNotificationsManager.shared.stop()
                         TapListener.shared.stop()
-                        UntetheredScreenManager.shared.startObserving() // This has to come first, so that we get the initial 
-                        AccessibilityDeniedNotificationManager.shared.start()
-                    default:
-                        break
+                        UntetheredScreenManager.shared.startObserving()
                     }
                 }
                 .onChange(of: Defaults[.autoContextEnabled], initial: true) {
@@ -117,6 +116,18 @@ struct App: SwiftUI.App {
                     window.level = settingsWindowLevel
                 })
         }
+    }
+    
+    private func configureSwiftBeaver() {
+        #if DEBUG
+        let logFileURL = URL(fileURLWithPath: "/tmp/Onit.log")
+        
+        let file = FileDestination(logFileURL: logFileURL)
+        let console = ConsoleDestination()
+        
+        log.addDestination(console)
+        log.addDestination(file)
+        #endif
     }
 
     private func clearTokens() {

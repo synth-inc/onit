@@ -7,6 +7,7 @@
 
 import Defaults
 import SwiftUI
+import PostHog
 
 extension OnitPanelState: NSWindowDelegate {
     
@@ -72,6 +73,7 @@ extension OnitPanelState: NSWindowDelegate {
     
     func launchPanel() {
         guard let panel = panel else {
+            PostHogSDK.shared.capture("launch_panel", properties:  ["applicationName": trackedWindow?.element.appName() ?? "N/A"])
             showPanel()
             return
         }
