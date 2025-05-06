@@ -51,7 +51,7 @@ class AppState: NSObject {
             Defaults[.useOnitChat] = false
         }
     }
-    var subscriptionActive: Bool { subscription?.status == "active" }
+    var subscriptionActive: Bool { subscription?.status == "active" || subscription?.status == "trialing" }
 
     // MARK: - Initializer
     

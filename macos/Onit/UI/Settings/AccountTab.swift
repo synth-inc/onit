@@ -13,6 +13,7 @@ import Defaults
 
 struct AccountTab: View {
     @Environment(\.appState) var appState
+    @Environment(\.openURL) var openURL
 
     @State private var email: String = ""
     @State private var requestedEmail: Bool = false
@@ -38,6 +39,7 @@ struct AccountTab: View {
                 apple
             } else {
                 useOnitChatSection
+                subscriptionSection
                 setPasswordSection
                 logoutButton
             }
@@ -208,6 +210,66 @@ struct AccountTab: View {
             Toggle("", isOn: $useOnitChat)
                 .toggleStyle(.switch)
                 .controlSize(.small)
+        }
+    }
+
+    var subscriptionSection: some View {
+        HStack {
+            HStack {
+                Text(appState.subscriptionActive ? "Subscribed!" : "Not Subscribed >:(")
+                Button("Refresh") {
+                    Task {
+                        await handleRefreshSubscriptionState()
+                    }
+                }
+            }
+            Spacer()
+            if appState.subscriptionActive {
+                Button("Billing Portal Session") {
+                    Task {
+                        await handleCreateSubscriptionBillingPortalSession()
+                    }
+                }
+            } else {
+                Button("Checkout Session") {
+                    Task {
+                        await handleCreateSubscriptionCheckoutSession()
+                    }
+                }
+            }
+        }
+    }
+
+    func handleRefreshSubscriptionState() async {
+        do {
+            let client = FetchingClient()
+            appState.subscription = try await client.getSubscription()
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+    }
+
+    func handleCreateSubscriptionBillingPortalSession() async {
+        do {
+            let client = FetchingClient()
+            let response = try await client.createSubscriptionBillingPortalSession()
+            if let url = URL(string: response.sessionUrl) {
+                openURL(url)
+            }
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+    }
+
+    func handleCreateSubscriptionCheckoutSession() async {
+        do {
+            let client = FetchingClient()
+            let response = try await client.createSubscriptionCheckoutSession()
+            if let url = URL(string: response.sessionUrl) {
+                openURL(url)
+            }
+        } catch {
+            errorMessage = error.localizedDescription
         }
     }
 
