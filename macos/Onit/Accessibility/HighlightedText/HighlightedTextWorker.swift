@@ -29,6 +29,8 @@ final class HighlightedTextWorker {
     }
 
     func start() {
+        stop()
+        
         let handler = selectionChangedHandler
         let timer = DispatchSource.makeTimerSource(queue: queue)
         

@@ -31,15 +31,16 @@ class AccessibilityParserUtility {
 
             return [:]
         }
+        
+        guard element.pid() != nil else {
+            print("Invalid element (cannot get pid). Skipping.")
+            
+            return [:]
+        }
 
         func helper(currentElement: AXUIElement, currentDepth: Int) {
             // Check if the current depth exceeds maxDepth
             guard currentDepth <= maxDepth else { return }
-
-            guard element.pid() != nil else {
-                print("Invalid element (cannot get pid). Skipping.")
-                return
-            }
 
             // Skip off-screen element
             if let frame = currentElement.getFrame(convertedToGlobalCoordinateSpace: true),

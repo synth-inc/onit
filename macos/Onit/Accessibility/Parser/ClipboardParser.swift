@@ -45,29 +45,26 @@ class ClipboardParser: AccessibilityParserLogic {
     }
     
     private func copyToClipboard() -> Bool {
-        guard let aKey = "a".keyCode, let cKey = "c".keyCode else {
+        guard let aKey = "a".keyCode, let cKey = "c".keyCode,
+              let cmdADown = CGEvent(keyboardEventSource: nil, virtualKey: aKey, keyDown: true),
+              let cmdAUp = CGEvent(keyboardEventSource: nil, virtualKey: aKey, keyDown: false),
+              let cmdCDown = CGEvent(keyboardEventSource: nil, virtualKey: cKey, keyDown: true),
+              let cmdCUp = CGEvent(keyboardEventSource: nil, virtualKey: cKey, keyDown: false) else {
             return false
         }
+
+        cmdADown.flags = .maskCommand
+        cmdAUp.flags = .maskCommand
+        cmdCDown.flags = .maskCommand
+        cmdCUp.flags = .maskCommand
         
-        let cmdADown = CGEvent(keyboardEventSource: nil, virtualKey: aKey, keyDown: true)
-        cmdADown?.flags = .maskCommand
-        
-        let cmdAUp = CGEvent(keyboardEventSource: nil, virtualKey: aKey, keyDown: false)
-        cmdAUp?.flags = .maskCommand
-        
-        let cmdCDown = CGEvent(keyboardEventSource: nil, virtualKey: cKey, keyDown: true)
-        cmdCDown?.flags = .maskCommand
-        
-        let cmdCUp = CGEvent(keyboardEventSource: nil, virtualKey: cKey, keyDown: false)
-        cmdCUp?.flags = .maskCommand
-        
-        cmdADown?.post(tap: .cghidEventTap)
-        cmdAUp?.post(tap: .cghidEventTap)
+        cmdADown.post(tap: .cghidEventTap)
+        cmdAUp.post(tap: .cghidEventTap)
         
         usleep(1000)
         
-        cmdCDown?.post(tap: .cghidEventTap)
-        cmdCUp?.post(tap: .cghidEventTap)
+        cmdCDown.post(tap: .cghidEventTap)
+        cmdCUp.post(tap: .cghidEventTap)
         
         return true
     }
