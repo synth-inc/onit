@@ -7,5 +7,7 @@
 
 import CoreGraphics
 
-let toolbarButtonHeight: CGFloat = 24
-let toolbarButtonCornerRadius: CGFloat = 4
+enum ToolbarButtonStyle {
+    static let height: CGFloat = 24
+    static let cornerRadius: CGFloat = 4
+}

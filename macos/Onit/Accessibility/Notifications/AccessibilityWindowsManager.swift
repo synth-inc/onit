@@ -32,7 +32,6 @@ enum TrackedWindowAction {
 class AccessibilityWindowsManager {
     var activeTrackedWindow: TrackedWindow?
     
-    private var destroyedTrackedWindow: TrackedWindow?
     private var trackedWindows: [TrackedWindow] = []
     
     func append(_ element: AXUIElement, pid: pid_t) -> TrackedWindow? {
@@ -65,8 +64,6 @@ class AccessibilityWindowsManager {
     func remove(_ trackedWindow: TrackedWindow) -> TrackedWindow? {
         if let index = trackedWindows.firstIndex(of: trackedWindow) {
             trackedWindows.remove(at: index)
-            
-            destroyedTrackedWindow = trackedWindow
             return trackedWindow
         }
         return nil

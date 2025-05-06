@@ -168,7 +168,6 @@ class UntetheredScreenManager: ObservableObject {
         hideTetherWindow()
         let pendingTetherWindow = (state, activeScreen)
 
-        tetherHintDetails.showTetherDebounceTimer?.invalidate()
         tetherHintDetails.showTetherDebounceTimer = Timer.scheduledTimer(withTimeInterval: tetherHintDetails.showTetherDebounceDelay, repeats: false) { [weak self] _ in
             guard let self = self else { return }
             DispatchQueue.main.async {
@@ -180,7 +179,6 @@ class UntetheredScreenManager: ObservableObject {
     }
     
     func hideTetherWindow() {
-        tetherHintDetails.showTetherDebounceTimer?.invalidate()
         tetherHintDetails.showTetherDebounceTimer = nil
         tetherButtonPanelState = nil
 

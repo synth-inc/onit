@@ -11,7 +11,6 @@ struct MenuSection<Children: View>: View {
     private let titleIcon: ImageResource?
     private let titleIconColor: Color
     private let title: String
-    private let titleChild: (any View)?
     private let showTopBorder: Bool
     private let maxHeight: CGFloat
     private let contentTopPadding: CGFloat
@@ -36,7 +35,6 @@ struct MenuSection<Children: View>: View {
         self.titleIcon = titleIcon
         self.titleIconColor = titleIconColor
         self.title = title
-        self.titleChild = titleChild
         self.showTopBorder = showTopBorder
         self.maxHeight = maxHeight
         self.contentTopPadding = contentTopPadding
@@ -79,12 +77,8 @@ extension MenuSection {
             }
             .padding(.horizontal, 8)
             .padding(.bottom, 6)
-            
-            if let titleChild = titleChild {
-                Spacer()
-                AnyView(titleChild)
-            }
         }
+        .padding(.horizontal, 8)
     }
     
     private var content: some View {

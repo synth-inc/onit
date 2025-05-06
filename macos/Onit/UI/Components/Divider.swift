@@ -7,11 +7,13 @@
 
 import SwiftUI
 
-func DividerHorizontal(
-    height: CGFloat = 1,
-    foregroundColor: Color = Color.gray700
-) -> some View {
-    return Rectangle()
-        .frame(height: height)
-        .foregroundColor(foregroundColor)
+struct DividerHorizontal : View {
+    var height: CGFloat = 1
+    var foregroundColor: Color = Color.gray700
+
+    var body: some View {
+        return Rectangle()
+            .frame(height: height)
+            .foregroundColor(foregroundColor)
+    }
 }

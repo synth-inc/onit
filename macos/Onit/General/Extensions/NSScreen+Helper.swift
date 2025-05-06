@@ -21,6 +21,6 @@ extension NSScreen {
     }
     
     static var rightmostScreen: NSScreen? {
-        NSScreen.screens.max(by: { $0.frame.origin.x < $1.frame.origin.x })
+        NSScreen.screens.max(by: { $0.frame.origin.x + $0.frame.width < $1.frame.origin.x + $1.frame.width})
     }
 }

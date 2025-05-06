@@ -12,7 +12,6 @@ import MenuBarExtraAccess
 import PostHog
 import ServiceManagement
 import SwiftUI
-import GoogleSignIn
 
 @main
 struct App: SwiftUI.App {
@@ -118,8 +117,26 @@ struct App: SwiftUI.App {
                     let settingsWindowLevel: NSWindow.Level = NSWindow.Level(rawValue: floatingLevel.rawValue + 1)
                     window.level = settingsWindowLevel
                 })
+        }
+
+        Window("URLHandler", id: "urlHandler") {
+            Color.clear
+                .frame(width: 0, height: 0)
+                .onAppear {
+                    if let window = NSApp.windows.first(where: { $0.title == "URLHandler" }) {
+                        window.setFrame(NSRect(x: 0, y: 0, width: 1, height: 1), display: false)
+                        window.isOpaque = false
+                        window.hasShadow = false
+                        window.backgroundColor = .clear
+                        window.isReleasedWhenClosed = false
+                        window.level = .floating
+                        window.ignoresMouseEvents = true
+                        window.styleMask = []
+                        window.orderOut(nil)
+                    }
+                }
                 .onOpenURL { url in
-                    GIDSignIn.sharedInstance.handle(url)
+                    appState.handleTokenLogin(url)
                 }
         }
     }

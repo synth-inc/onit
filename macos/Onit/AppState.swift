@@ -51,7 +51,7 @@ class AppState: NSObject {
             Defaults[.useOnitChat] = false
         }
     }
-    var subscriptionActive: Bool { subscription?.status == "active" }
+    var subscriptionActive: Bool { subscription?.status == "active" || subscription?.status == "trialing" }
     
     var showFreeLimitAlert: Bool = false
     var showProLimitAlert: Bool = false
@@ -68,7 +68,7 @@ class AppState: NSObject {
 
             // This handles an edge case where Ollama is running but there is no internet connection
             // We put the user in localmode so they can use the product.
-            // We don't do the opposite, becuase we don't want to put the product in remote mode without them knowing.
+            // We don't do the opposite, because we don't want to put the product in remote mode without them knowing.
             if !Defaults[.availableLocalModels].isEmpty && Defaults[.availableRemoteModels].isEmpty
             {
                 Defaults[.mode] = .local
@@ -178,7 +178,7 @@ class AppState: NSObject {
             }
 
         } catch {
-            print("Error fetching local models:", error)
+            print("Error fetching remote models:", error)
             remoteFetchFailed = true
         }
     }
@@ -242,6 +242,30 @@ class AppState: NSObject {
             showInaccessibleRemoteModelAlert = true
         } else {
             callback()
+        }
+    }
+
+    func handleTokenLogin(_ url: URL) {
+        guard url.scheme == "onit" else {
+            return
+        }
+
+        guard let components = URLComponents(url: url, resolvingAgainstBaseURL: true) else {
+            print("Invalid URL")
+            return
+        }
+
+        guard let token = components.queryItems?.first(where: { $0.name == "token" })?.value else {
+            print("Login token not found")
+            return
+        }
+
+        Task { @MainActor in
+            do {
+                let loginResponse = try await FetchingClient().loginToken(loginToken: token)
+                TokenManager.token = loginResponse.token
+                account = loginResponse.account
+            } catch {}
         }
     }
 

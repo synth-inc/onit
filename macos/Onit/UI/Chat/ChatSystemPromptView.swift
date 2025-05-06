@@ -37,7 +37,7 @@ struct ChatSystemPromptView: View {
                     isExpanded.toggle()
                 }
             } label: {
-                HStack(alignment: .center, spacing: 6) {
+                HStack(alignment: .top, spacing: 6) {
                     Image(.chatSettings)
                         .renderingMode(.template)
                     Text(systemPrompt.name)
@@ -47,23 +47,24 @@ struct ChatSystemPromptView: View {
                         .renderingMode(.template)
                         .rotationEffect(.degrees(isExpanded ? 180 : 0))
                 }
-                .padding(.vertical, 2)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.vertical, 0)
                 .foregroundStyle(.blue300)
             }
             .buttonStyle(DarkerButtonStyle())
             
             if isExpanded {
-                VStack(alignment: .leading, spacing: 8) {
+                VStack(alignment: .leading, spacing: 12) {
                     Text("System Prompt")
                         .appFont(.medium14)
                         .frame(maxWidth: .infinity, alignment: .leading)
-                        .padding([.horizontal, .top], 8)
+                        .padding([.horizontal, .top], 12)
                     
                     ScrollView {
                         Text(systemPrompt.prompt)
                             .appFont(.medium14)
                             .foregroundStyle(.gray100)
-                            .padding(.horizontal, 8)
+                            .padding(.horizontal, 12)
                             .background(
                                 GeometryReader { geometry in
                                     Color.clear
@@ -106,7 +107,7 @@ struct ChatSystemPromptView: View {
                             }
                         }
                     }
-                    .padding([.horizontal, .bottom], 8)
+                    .padding([.horizontal, .bottom], 12)
                 }
                 .background {
                     RoundedRectangle(cornerRadius: 8)
@@ -115,8 +116,9 @@ struct ChatSystemPromptView: View {
                 }
             }
         }
-        .padding(.vertical, 8)
-        .padding(.horizontal, 16)
+        .padding(.top, 8)
+        .padding(.horizontal, 12)
+        .padding(.bottom, 0)
         .background {
             GeometryReader { g in
                 Color.clear

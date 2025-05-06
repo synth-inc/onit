@@ -13,6 +13,7 @@ struct WebContextItem: View {
     
     private let item: Context
     private let isEditing: Bool
+    private let inList: Bool
     private let showContextWindow: () -> Void
     private let removeContextItem: () -> Void
     private let websiteUrl: URL
@@ -21,11 +22,13 @@ struct WebContextItem: View {
     init(
         item: Context,
         isEditing: Bool,
+        inList: Bool,
         showContextWindow: @escaping () -> Void,
         removeContextItem: @escaping () -> Void
     ) {
         self.item = item
         self.isEditing = isEditing
+        self.inList = inList
         self.showContextWindow = showContextWindow
         self.removeContextItem = removeContextItem
         
@@ -45,8 +48,10 @@ struct WebContextItem: View {
             text: getCurrentWebsiteTitle(),
             caption: item.fileType,
             action: showContextWindow,
-            closeAction: removeContextItem,
-            maxWidth: 250
+            closeAction: inList ? nil : removeContextItem,
+            maxWidth: inList ? 0 : 250,
+            fill: inList,
+            isTransparent: inList
         )
         .opacity(websiteUndergoingScrape ? 0.5 : 1)
         .disabled(websiteUndergoingScrape)

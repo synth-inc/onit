@@ -13,6 +13,7 @@ import Defaults
 
 struct AccountTab: View {
     @Environment(\.appState) var appState
+    @Environment(\.openURL) var openURL
 
     @State private var email: String = ""
     @State private var requestedEmail: Bool = false
@@ -20,6 +21,7 @@ struct AccountTab: View {
     @State private var loginPassword: String = ""
 
     @Default(.useOnitChat) var useOnitChat
+    @State private var features: [SubscriptionFeature]?
     @State private var setPassword: String = ""
 
     @State private var errorMessage: String?
@@ -38,6 +40,8 @@ struct AccountTab: View {
                 apple
             } else {
                 useOnitChatSection
+                subscriptionSection
+                subscriptionFeaturesSection
                 setPasswordSection
                 logoutButton
             }
@@ -208,6 +212,109 @@ struct AccountTab: View {
             Toggle("", isOn: $useOnitChat)
                 .toggleStyle(.switch)
                 .controlSize(.small)
+        }
+    }
+
+    var subscriptionSection: some View {
+        HStack {
+            HStack {
+                Text(appState.subscriptionActive ? "Subscribed!" : "Not Subscribed >:(")
+                Button("Refresh") {
+                    Task {
+                        await handleRefreshSubscriptionState()
+                    }
+                }
+            }
+            Spacer()
+            if let subscription = appState.subscription, appState.subscriptionActive {
+                HStack {
+                    Button("Billing Portal Session") {
+                        Task {
+                            await handleCreateSubscriptionBillingPortalSession()
+                        }
+                    }
+                    Button(subscription.cancelAtPeriodEnd ? "Renew" : "Cancel") {
+                        Task {
+                            await handleUpdateSubscriptionCancel(cancelAtPeriodEnd: !subscription.cancelAtPeriodEnd)
+                        }
+                    }
+                }
+            } else {
+                Button("Checkout Session") {
+                    Task {
+                        await handleCreateSubscriptionCheckoutSession()
+                    }
+                }
+            }
+        }
+    }
+
+    func handleRefreshSubscriptionState() async {
+        do {
+            let client = FetchingClient()
+            appState.subscription = try await client.getSubscription()
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+    }
+
+    func handleCreateSubscriptionBillingPortalSession() async {
+        do {
+            let client = FetchingClient()
+            let response = try await client.createSubscriptionBillingPortalSession()
+            if let url = URL(string: response.sessionUrl) {
+                openURL(url)
+            }
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+    }
+
+    func handleUpdateSubscriptionCancel(cancelAtPeriodEnd: Bool) async {
+        do {
+            let client = FetchingClient()
+            try await client.updateSubscriptionCancel(cancelAtPeriodEnd: cancelAtPeriodEnd)
+            await handleRefreshSubscriptionState()
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+    }
+
+    func handleCreateSubscriptionCheckoutSession() async {
+        do {
+            let client = FetchingClient()
+            let response = try await client.createSubscriptionCheckoutSession()
+            if let url = URL(string: response.sessionUrl) {
+                openURL(url)
+            }
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+    }
+
+    var subscriptionFeaturesSection: some View {
+        VStack {
+            Button("Fetch the Features") {
+                Task {
+                    await handleFetchSubscriptionFeatures()
+                }
+            }
+            if let features = features {
+                Text("Subscription Features:")
+                    .font(.system(size: 13))
+                List(features) { feature in
+                    Text(feature.name)
+                }
+            }
+        }
+    }
+
+    func handleFetchSubscriptionFeatures() async {
+        do {
+            let client = FetchingClient()
+            features = try await client.getSubscriptionFeatures()
+        } catch {
+            errorMessage = error.localizedDescription
         }
     }
 
