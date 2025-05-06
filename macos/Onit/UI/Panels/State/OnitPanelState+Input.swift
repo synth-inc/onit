@@ -36,20 +36,22 @@ extension OnitPanelState {
         let appHash = CFHash(activeTrackedWindow.element)
         let appTitle = activeTrackedWindow.title
 
-        log.error("")
         if let existingIndex = pendingContextList.firstIndex(where: { context in
             if case .auto(let autoContext) = context {
-                log.error("Searching lhs: \(autoContext.appName) \(autoContext.appHash) \(autoContext.appTitle)")
-                log.error("Searching rhs: \(appName) \(appHash) \(appTitle)")
-                return autoContext.appName == appName && autoContext.appHash == appHash && autoContext.appTitle == appTitle
+                return autoContext.appName == appName && autoContext.appHash == appHash
             }
             return false
         }) {
-            log.error("Found existing auto context")
             /// For now, we're simply replacing the context.
             /// Later on, we should implement a data aggregator.
-            let autoContext = Context(appName: appName, appHash: appHash, appTitle: appTitle, appContent: appContent)
-            pendingContextList[existingIndex] = autoContext
+            
+            let oldContext = pendingContextList[existingIndex]
+            let newContext = Context(appName: appName, appHash: appHash, appTitle: appTitle, appContent: appContent)
+            
+            if oldContext != newContext {
+                ContextWindowsManager.shared.deleteContextItem(item: oldContext)
+                pendingContextList[existingIndex] = newContext
+            }
             
             return
             /** Merge result for existing autoContext */

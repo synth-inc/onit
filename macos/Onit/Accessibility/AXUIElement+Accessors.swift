@@ -148,10 +148,31 @@ extension AXUIElement {
     func children() -> [AXUIElement]? {
         return self.attribute(forAttribute: kAXChildrenAttribute as CFString) as? [AXUIElement]
     }
-
+    
     func visibleChildren() -> [AXUIElement]? {
-        return self.attribute(forAttribute: kAXVisibleChildrenAttribute as CFString)
-            as? [AXUIElement]
+        return self.attribute(forAttribute: kAXVisibleChildrenAttribute as CFString) as? [AXUIElement]
+    }
+
+    func isVisible(focusedWindow: AXUIElement) -> Bool {
+        guard let frame = getFrame(convertedToGlobalCoordinateSpace: true) else {
+            return false
+        }
+        guard let focusedWindowFrame = focusedWindow.getFrame(convertedToGlobalCoordinateSpace: true) else {
+            return false
+        }
+        
+        return frame.intersects(focusedWindowFrame)
+    }
+    
+    func selectedText() -> String? {
+        var selectedTextValue: AnyObject?
+        let error = AXUIElementCopyAttributeValue(self, kAXSelectedTextAttribute as CFString, &selectedTextValue)
+        
+        if error == .success, let selectedText = selectedTextValue as? String, !selectedText.isEmpty {
+            return selectedText
+        }
+
+        return nil
     }
     
     func selectedTextBound() -> CGRect? {
@@ -247,13 +268,6 @@ extension AXUIElement {
     public func zoomButton() -> AXUIElement? {
         
         if let value = self.attribute(forAttribute: kAXZoomButtonAttribute as CFString) {
-            return (value as! AXUIElement)
-        }
-        return nil
-    }
-
-    public func focusedWindow() -> AXUIElement? {
-        if let value = self.attribute(forAttribute: kAXFocusedWindowAttribute as CFString) {
             return (value as! AXUIElement)
         }
         return nil

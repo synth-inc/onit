@@ -4,8 +4,9 @@ import SwiftUI
 struct ChatView: View {
     @Environment(\.windowState) private var state
     
-    @State private var debounceTimer: Timer?
-    @State private var finalScrollTimer: Timer?
+    @State private var autoScrollTimer: Timer?
+    @State private var autoScrollTimeoutTimer: Timer?
+    @State private var isAutoScrolling: Bool = false
     
     private var chatsID: Int? {
         state.currentChat?.hashValue
@@ -35,14 +36,14 @@ struct ChatView: View {
                         ChatsView()
                             .id(chatsID)
                             .onAppear {
-                                scrollToBottom(using: proxy)
+                                startAutoScrolling(using: proxy)
                             }
                     }
                     .onChange(of: state.streamedResponse) { old, new in
-                        scrollToBottom(using: proxy)
+                        startAutoScrolling(using: proxy)
                     }
                     .onChange(of: state.currentChat) { old, new in
-                        scrollToBottom(using: proxy)
+                        startAutoScrolling(using: proxy)
                     }
                     .padding(.top, 0)
                 }
@@ -79,30 +80,52 @@ extension ChatView {
 
 extension ChatView {
     @MainActor
-    private func scrollToBottom(using proxy: ScrollViewProxy) {
-        finalScrollTimer?.invalidate()
-        debounceTimer?.invalidate()
+    private func startAutoScrolling(using proxy: ScrollViewProxy) {
+        if isAutoScrolling {
+            resetAutoScrollTimeout(using: proxy)
+            return
+        }
         
-        let currentChatsID = chatsID
-        debounceTimer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: false) { _ in
+        stopAutoScrolling()
+        isAutoScrolling = true
+        autoScrollTimer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { _ in
             Task { @MainActor in
-                withAnimation(.smooth(duration: 0.1)) {
-                    proxy.scrollTo(
-                        currentChatsID,
-                        anchor: .bottom
-                    )
-                }
-                
-                // Schedule a final scroll after content is likely fully rendered
-                self.finalScrollTimer = Timer.scheduledTimer(withTimeInterval: 0.3, repeats: false) { _ in
-                    Task { @MainActor in
-                        withAnimation(.smooth(duration: 0.1)) {
-                            proxy.scrollTo(currentChatsID, anchor: .bottom)
-                        }
-                    }
-                }
+                self.scrollToBottom(using: proxy)
             }
         }
+        
+        scrollToBottom(using: proxy)
+        resetAutoScrollTimeout(using: proxy)
+    }
+    
+    @MainActor
+    private func resetAutoScrollTimeout(using proxy: ScrollViewProxy) {
+        autoScrollTimeoutTimer?.invalidate()
+        autoScrollTimeoutTimer = Timer.scheduledTimer(withTimeInterval: 0.3, repeats: false) { _ in
+            Task { @MainActor in
+                self.stopAutoScrolling()
+                self.scrollToBottom(using: proxy)
+            }
+        }
+    }
+    
+    @MainActor
+    private func scrollToBottom(using proxy: ScrollViewProxy) {
+        withAnimation(.smooth(duration: 0.1)) {
+            proxy.scrollTo(
+                chatsID,
+                anchor: .bottom
+            )
+        }
+    }
+    
+    @MainActor
+    private func stopAutoScrolling() {
+        autoScrollTimer?.invalidate()
+        autoScrollTimer = nil
+        autoScrollTimeoutTimer?.invalidate()
+        autoScrollTimeoutTimer = nil
+        isAutoScrolling = false
     }
 }
 
