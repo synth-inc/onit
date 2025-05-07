@@ -91,6 +91,7 @@ class AccessibilityNotificationsManager: ObservableObject {
     // MARK: Start / Stop
 
     func start(pid: pid_t?) {
+        print("ACCESSIBILITY NOTIFICATION MANAGER START")
         startAppActivationObservers()
         
         guard let pid = pid else { return }
@@ -157,8 +158,9 @@ class AccessibilityNotificationsManager: ObservableObject {
             }
             return
         }
-        
-        print("Start accessibility observers for PID: \(pid)")
+    
+        log.debug("Start accessibility observers for PID: \(pid)")
+        self.stopAccessibilityObservers(for: pid)
         var observer: AXObserver?
 
         let observerCallback: AXObserverCallbackWithInfo = {
@@ -207,7 +209,10 @@ class AccessibilityNotificationsManager: ObservableObject {
 
     private func stopAccessibilityObservers(for pid: pid_t) {
         // Check if the process ID is already in self.observers
-        guard let existingObserver = self.observers[pid] else { return }
+        guard let existingObserver = self.observers[pid] else {
+            log.debug("No existing observer, not restarting \(pid)")
+            return
+        }
 
         let runLoopSource = AXObserverGetRunLoopSource(existingObserver)
         CFRunLoopRemoveSource(CFRunLoopGetMain(), runLoopSource, .defaultMode)
@@ -217,7 +222,7 @@ class AccessibilityNotificationsManager: ObservableObject {
         }
 
         self.observers.removeValue(forKey: pid)
-        print("Stop accessibility observers for PID: \(pid).")
+        log.debug("Stop accessibility observers for PID: \(pid).")
     }
 
     // MARK: Notifications handling

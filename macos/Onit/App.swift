@@ -63,13 +63,21 @@ struct App: SwiftUI.App {
                 .onChange(of: accessibilityPermissionManager.accessibilityPermissionStatus, initial: true) {
                     _, newValue in
                     AccessibilityAnalytics.logPermission(local: newValue)
+                    // Add a small delay to ensure accessibility permissions are fully applied
                     switch newValue {
                     case .granted:
+                        log.debug("Accessbility Permission Status - GRANTED")
                         TetherAppsManager.shared.startObserving()
                         AccessibilityNotificationsManager.shared.start(pid: frontmostApplicationOnLaunch?.processIdentifier)
                         UntetheredScreenManager.shared.stopObserving()
                         frontmostApplicationOnLaunch = nil
-                    case .denied, .notDetermined:
+                    case .denied:
+                        log.debug("Accessbility Permission Status - DENIED")
+                        TetherAppsManager.shared.stopObserving()
+                        AccessibilityNotificationsManager.shared.stop()
+                        UntetheredScreenManager.shared.startObserving()
+                    case .notDetermined:
+                        log.debug("Accessbility Permission Status - NOT DETERMINED")
                         TetherAppsManager.shared.stopObserving()
                         AccessibilityNotificationsManager.shared.stop()
                         UntetheredScreenManager.shared.startObserving()
