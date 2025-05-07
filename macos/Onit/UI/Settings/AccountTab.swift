@@ -21,6 +21,7 @@ struct AccountTab: View {
     @State private var loginPassword: String = ""
 
     @Default(.useOnitChat) var useOnitChat
+    @State private var freeTrialAvailable: Bool?
     @State private var features: [SubscriptionFeature]?
     @State private var setPassword: String = ""
 
@@ -41,6 +42,7 @@ struct AccountTab: View {
             } else {
                 useOnitChatSection
                 subscriptionSection
+                subscriptionFreeTrialAvailableSection
                 subscriptionFeaturesSection
                 setPasswordSection
                 logoutButton
@@ -287,6 +289,29 @@ struct AccountTab: View {
             if let url = URL(string: response.sessionUrl) {
                 openURL(url)
             }
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+    }
+
+    var subscriptionFreeTrialAvailableSection: some View {
+        HStack {
+            Button("Is a free trial available?") {
+                Task {
+                    await handleFetchFreeTrialAvailable()
+                }
+            }
+            Spacer()
+            if let freeTrialAvailable = freeTrialAvailable {
+                Text(freeTrialAvailable ? "It is 😏" : "It is not 😒")
+            }
+        }
+    }
+
+    func handleFetchFreeTrialAvailable() async {
+        do {
+            let client = FetchingClient()
+            freeTrialAvailable = try await client.getSubscriptionFreeTrialAvailable()
         } catch {
             errorMessage = error.localizedDescription
         }
