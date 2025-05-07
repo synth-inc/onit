@@ -56,29 +56,6 @@ struct App: SwiftUI.App {
                 .onAppear {
                     checkLaunchOnStartup()
                 }
-                .onChange(of: accessibilityPermissionManager.accessibilityPermissionStatus, initial: true) {
-                    _, newValue in
-                    AccessibilityAnalytics.logPermission(local: newValue)
-                    switch newValue {
-                    case .granted:
-                        AccessibilityNotificationsManager.shared.start(pid: frontmostApplicationOnLaunch?.processIdentifier)
-                        UntetheredScreenManager.shared.stopObserving()
-                        frontmostApplicationOnLaunch = nil
-                        
-                        if FeatureFlagManager.shared.useScreenModeWithAccessibility {
-                            TetherAppsManager.shared.stopObserving()
-                            AccessibilityScreenManager.shared.startObserving()
-                        } else {
-                            AccessibilityScreenManager.shared.stopObserving()
-                            TetherAppsManager.shared.startObserving()
-                        }
-                    case .denied, .notDetermined:
-                        TetherAppsManager.shared.stopObserving()
-                        AccessibilityScreenManager.shared.stopObserving()
-                        AccessibilityNotificationsManager.shared.stop()
-                        UntetheredScreenManager.shared.startObserving()
-                    }
-                }
                 .onChange(of: [
                     autoContextFromCurrentWindow,
                     autoContextFromHighlights
