@@ -24,8 +24,8 @@ class OnitPanelStateCoordinator {
     
     var states: [OnitPanelState] {
         accessibilityPermissionManager.accessibilityPermissionStatus == .granted ?
-            TetherAppsManager.shared.states.map { $0.1 } :
-            UntetheredScreenManager.shared.states.map { $0.1 }
+            Array(TetherAppsManager.shared.states.values) :
+            Array(UntetheredScreenManager.shared.states.values)
     }
     
     var tetherButtonPanelState: OnitPanelState? {
