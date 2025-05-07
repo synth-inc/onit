@@ -7,20 +7,38 @@
 
 import SwiftUI
 
+// NSViewRepresentable that prevents mouseDown from moving the window
+struct NonDraggableNSView: NSViewRepresentable {
+    
+    func makeNSView(context: Self.Context) -> NSView {
+        let view = NonDraggableView()
+        return view
+    }
+    func updateNSView(_ nsView: NSView, context: Self.Context) {
+    }
+
+    class NonDraggableView: NSView {
+        override var mouseDownCanMoveWindow: Bool { false }
+    }
+}
+
 struct ResizeHandle: View {
-    var size: CGFloat = 16
+    var size: CGFloat = 24
     var onDrag: (CGFloat) -> Void
     var onDragEnded: (() -> Void)?
     
     var body: some View {
         ZStack {
-            Image(systemName: "arrow.left.and.right")
-                .font(.system(size: 10))
-                .foregroundColor(.white.opacity(0.7))
+            Image(.cornerResize)
+                .foregroundColor(.gray300)
+                .padding(8)
+            // Overlay the non-draggable NSView
+            NonDraggableNSView()
+                .frame(width: size, height: size)
+                .allowsHitTesting(true)
+                .background(Color.clear)
         }
         .frame(width: size, height: size)
-        .background(Color.gray600.opacity(0.5))
-        .cornerRadius(size/2)
         .highPriorityGesture(
             DragGesture(minimumDistance: 1, coordinateSpace: .local)
                 .onChanged { value in

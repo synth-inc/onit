@@ -24,7 +24,7 @@ class OnitRegularPanel: NSPanel {
     
     let state: OnitPanelState
     var width: CGFloat
-    static let minWidth: CGFloat = 300 // Minimum width constraint
+    static let minWidth: CGFloat = 320 // Minimum width constraint
     static let minAppWidth = 500.0
 
     var dragDetails: PanelDraggingDetails = .init()
@@ -33,9 +33,8 @@ class OnitRegularPanel: NSPanel {
     var animatedFromLeft: Bool = false
     var resizedApplication: Bool = false
     var isResizing: Bool = false
-    private var originalPosition: NSPoint = .zero
     var onitContentView: ContentView?
-    var originalPanelWidth: CGFloat = -1.0
+    var originalFrame : NSRect = .zero
     
     init(state: OnitPanelState) {
         self.state = state
@@ -53,6 +52,7 @@ class OnitRegularPanel: NSPanel {
         level = .floating
         titleVisibility = .hidden
         titlebarAppearsTransparent = true
+//        isMovable = false
         isMovableByWindowBackground = true
         delegate = state
         isFloatingPanel = false
@@ -82,22 +82,19 @@ class OnitRegularPanel: NSPanel {
                 Color.clear // Transparent background
                 ResizeHandle(
                     onDrag: { [weak self] deltaX in
-                        self?.isResizing = true
-                        // Store the original panel width so we can resize the activeWindow afterwards
-                        if self?.originalPanelWidth == -1.0 {
-                            self?.originalPanelWidth = self?.width ?? 0
-                        }
-                        self?.resizePanel(byWidth: deltaX)
+                        guard let self = self else { return }
+                        self.isResizing = true
+                        self.originalFrame = frame
+                        self.resizePanel(byWidth: deltaX)
                     },
                     onDragEnded: { [weak self] in
                         guard let self = self else { return }
                         Defaults[.panelWidth] = self.width
+                        self.originalFrame = .zero
                         self.isResizing = false
-                        self.originalPosition = .zero // Reset original position
                     }
                 )
-                .padding(.leading, 8)
-                .padding(.bottom, 8)
+                .padding(.leading, TetheredButton.width / 2)
             }
             .allowsHitTesting(true) // Ensure the ZStack intercepts all events
             .contentShape(Rectangle()) // Make the entire area respond to gestures
@@ -142,6 +139,7 @@ class OnitRegularPanel: NSPanel {
     }
     
     @objc private func windowWillMove(_ notification: Notification) {
+
         dragDetails.isDragging = true
     }
     
@@ -195,65 +193,25 @@ extension OnitRegularPanel: OnitPanel {
     func resizePanel(byWidth deltaWidth: CGFloat) {
         guard !isAnimating else { return }
         
-<<<<<<< HEAD
-        let originalMovableState = isMovableByWindowBackground
-        isMovableByWindowBackground = false
-        
-        if originalPosition == .zero {
-            originalPosition = frame.origin
-        }
-        
-        let newWidth = max(minWidth, width - deltaWidth)
-        width = newWidth
-        
-        let rightEdgeX = originalPosition.x + frame.width
-        
-        let newFrame = NSRect(
-            x: rightEdgeX - newWidth, // Keep right edge fixed
-            y: originalPosition.y,    // Keep original Y position
-            width: newWidth,
-            height: frame.height
-        )
-        
-        setFrame(newFrame, display: true)
-        
-        if frame.maxX != rightEdgeX || frame.origin.y != originalPosition.y {
-            let adjustedFrame = NSRect(
-                x: rightEdgeX - newWidth,
-                y: originalPosition.y,
-                width: newWidth,
-                height: frame.height
-            )
-            setFrame(adjustedFrame, display: true)
-        }
-        
-        // Update the static property
-        ContentView.idealWidth = newWidth
-        
-        isMovableByWindowBackground = originalMovableState
-=======
         let newWidth = width - deltaWidth
-    
-        let currentFrame = frame
+        let newX = frame.origin.x - deltaWidth
         
         if (newWidth >= OnitRegularPanel.minWidth) {
             width = newWidth
-            print("Resizing panel - Width: \(newWidth), New X: \(frame.maxX - newWidth)")
+            
+            // Always use the original position to calculate the new frame
+            // This prevents accumulated drift during resize
             
             let newFrame = NSRect(
-                x: currentFrame.maxX - newWidth, // Keep right edge fixed
-                y: currentFrame.origin.y,
+                x: originalFrame.maxX - newWidth,
+                y: frame.origin.y,
                 width: newWidth,
-                height: currentFrame.height
+                height: frame.height
             )
-            
+                
             setFrame(newFrame, display: true)
             ContentView.idealWidth = newWidth // Update static property
-        } else {
-            setFrame(currentFrame, display: true)
-            print("Setting frame: \(currentFrame.origin.x), \(currentFrame.origin.y), \(currentFrame.width), \(currentFrame.height)")
         }
->>>>>>> 0434366 (more fixing)
     }
     
     func show() {
