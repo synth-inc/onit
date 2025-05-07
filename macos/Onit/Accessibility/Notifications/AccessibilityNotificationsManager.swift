@@ -304,12 +304,13 @@ class AccessibilityNotificationsManager: ObservableObject {
             
             log.debug("Received notification: \(notification) \(element.role() ?? "") \(element.title() ?? "")")
             switch notification {
+            case kAXSelectedTextChangedNotification:
+                log.debug("[AXSelectedTextChanged] handleAccessibilityNotifications: entering handleSelectionChange")
+                self.handleSelectionChange(for: element)
             case kAXFocusedWindowChangedNotification, kAXMainWindowChangedNotification:
                 self.handleWindowBounds(for: element)
             case kAXFocusedUIElementChangedNotification, kAXSelectedColumnsChangedNotification, kAXSelectedRowsChangedNotification:
                 self.handleFocusChange(for: element)
-            case kAXSelectedTextChangedNotification:
-                self.handleSelectionChange(for: element)
             case kAXValueChangedNotification:
                 self.handleValueChanged(for: element)
             case kAXWindowMovedNotification:
@@ -422,16 +423,20 @@ class AccessibilityNotificationsManager: ObservableObject {
     }
 
     private func handleSelectionChange(for element: AXUIElement) {
-        guard HighlightedTextValidator.isValid(element: element) else { return }
-        
+        log.debug("[AXSelectedTextChanged] handleSelectionChange: entry")
+        guard HighlightedTextValidator.isValid(element: element) else {
+            log.debug("[AXSelectedTextChanged] handleSelectionChange: HighlightedTextValidator.isValid == false, early exit")
+            return
+        }
         // Fix to work with PDF in Chrome
         if let lastHighlightingProcessedAt = lastHighlightingProcessedAt, Date().timeIntervalSince(lastHighlightingProcessedAt) < 0.002 {
+            log.debug("[AXSelectedTextChanged] handleSelectionChange: throttled by lastHighlightingProcessedAt, early exit")
             return
         }
         
         lastHighlightingProcessedAt = Date()
         selectionDebounceWorkItem?.cancel()
-
+        log.debug("[AXSelectedTextChanged] handleSelectionChange: scheduling processSelectionChange")
         let workItem = DispatchWorkItem { [weak self] in
             self?.processSelectionChange(for: element)
         }
@@ -647,28 +652,44 @@ class AccessibilityNotificationsManager: ObservableObject {
     // MARK: Text Selection
 
     private func processSelectionChange(for element: AXUIElement) {
+        log.debug("[AXSelectedTextChanged] processSelectionChange: entry")
         // Ensure we're on the main thread
+        if !Thread.isMainThread {
+            log.debug("[AXSelectedTextChanged] processSelectionChange: WARNING - Not on main thread!")
+        }
         dispatchPrecondition(condition: .onQueue(.main))
-
+        
         handleExternalElement(element) { [weak self] pid in
+            log.debug("[AXSelectedTextChanged] processSelectionChange: got external element pid=\(pid)")
             let selectedTextExtracted = element.selectedText()
             let elementBounds = element.selectedTextBound()
-            
+            log.debug("[AXSelectedTextChanged] processSelectionChange: extracted selectedText=\(selectedTextExtracted ?? "nil")")
             self?.processSelectedText(selectedTextExtracted, elementFrame: elementBounds)
             self?.showDebug()
         }
     }
 
     private func processSelectedText(_ text: String?, elementFrame: CGRect?) {
-        guard Defaults[.autoContextFromHighlights],
-              let selectedText = text,
-              HighlightedTextValidator.isValid(text: selectedText) else {
-            
+        log.debug("[AXSelectedTextChanged] processSelectedText: entry with text=\(text ?? "nil")")
+        guard Defaults[.autoContextFromHighlights] else {
+            log.debug("[AXSelectedTextChanged] processSelectedText: autoContextFromHighlights is false, early exit")
             TetherAppsManager.shared.state.pendingInput = nil
             HighlightHintWindowController.shared.hide()
             return
         }
-        
+        guard let selectedText = text else {
+            log.debug("[AXSelectedTextChanged] processSelectedText: text is nil, early exit")
+            TetherAppsManager.shared.state.pendingInput = nil
+            HighlightHintWindowController.shared.hide()
+            return
+        }
+        guard HighlightedTextValidator.isValid(text: selectedText) else {
+            log.debug("[AXSelectedTextChanged] processSelectedText: HighlightedTextValidator.isValid(text:) == false, early exit")
+            TetherAppsManager.shared.state.pendingInput = nil
+            HighlightHintWindowController.shared.hide()
+            return
+        }
+        log.debug("[AXSelectedTextChanged] processSelectedText: setting selectedText and updating UI")
         screenResult.userInteraction.selectedText = selectedText
         
         if let elementFrame = elementFrame {
@@ -681,11 +702,16 @@ class AccessibilityNotificationsManager: ObservableObject {
     /** Ensure the received `AXUIElement` is not from our process */
     private func handleExternalElement(_ element: AXUIElement, callback: @escaping (pid_t) -> Void) {
         var elementPid: pid_t = 0
-
-        guard AXUIElementGetPid(element, &elementPid) == .success, elementPid != getpid() else {
+        let pidResult = AXUIElementGetPid(element, &elementPid)
+        if pidResult != .success {
+            print("[AXSelectedTextChanged] handleExternalElement: AXUIElementGetPid failed, early exit")
             return
         }
-        
+        if elementPid == getpid() {
+            print("[AXSelectedTextChanged] handleExternalElement: elementPid is our own process, early exit")
+            return
+        }
+        print("[AXSelectedTextChanged] handleExternalElement: elementPid=\(elementPid), proceeding")
         callback(elementPid)
     }
 

@@ -37,6 +37,8 @@ struct AboutTab: View {
                 }
             }
             .buttonStyle(.link)
+
+            LogViewer()
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .padding()

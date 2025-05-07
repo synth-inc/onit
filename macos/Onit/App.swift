@@ -117,15 +117,22 @@ struct App: SwiftUI.App {
     }
     
     private func configureSwiftBeaver() {
-        #if DEBUG
-        let logFileURL = URL(fileURLWithPath: "/tmp/Onit.log")
-        
+        let fileManager = FileManager.default
+        let logsDirectory = fileManager.homeDirectoryForCurrentUser.appendingPathComponent("Documents/Onit", isDirectory: true)
+        let logFileURL = logsDirectory.appendingPathComponent("Onit.log")
+        do {
+            if !fileManager.fileExists(atPath: logsDirectory.path) {
+                try fileManager.createDirectory(at: logsDirectory, withIntermediateDirectories: true, attributes: nil)
+            }
+        } catch {
+            print("Failed to create log directory: \(error)")
+        }
         let file = FileDestination(logFileURL: logFileURL)
         let console = ConsoleDestination()
         
         log.addDestination(console)
         log.addDestination(file)
-        #endif
+//        #endif
     }
 
     private func clearTokens() {
