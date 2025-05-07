@@ -84,12 +84,16 @@ class OnitRegularPanel: NSPanel {
                     onDrag: { [weak self] deltaX in
                         guard let self = self else { return }
                         self.isResizing = true
-                        self.originalFrame = frame
+                        if self.originalFrame == .zero {
+                            self.originalFrame = NSRect(origin: frame.origin, size: frame.size)
+                            print("Original panel width: \(self.originalFrame.width)")
+                        }
                         self.resizePanel(byWidth: deltaX)
                     },
                     onDragEnded: { [weak self] in
                         guard let self = self else { return }
                         Defaults[.panelWidth] = self.width
+                        self.panelResizeEnded(originalPanelWidth: self.originalFrame.width)
                         self.originalFrame = .zero
                         self.isResizing = false
                     }

@@ -56,37 +56,18 @@ extension OnitRegularPanel {
               let activeWindowFrame = activeWindow.getFrame(),
               wasAnimated, !isAnimating, dragDetails.isDragging, !state.isWindowDragging else { return }
 
-        // Get the screen that contains the active window
-        guard let activeWindowFrame = activeWindow.getFrame(convertedToGlobalCoordinateSpace: true),
-              let activeWindowScreen = activeWindowFrame.findScreen() else {
-            return
-        }
-        
-        
         // Adjust the active window's width to match the panel's new width
-        let currentPosition = frame.origin
         let deltaWidth = self.width - originalPanelWidth
         
         if deltaWidth != 0 {
             let newWidth = activeWindowFrame.width - deltaWidth
-            if newWidth >= OnitRegularPanel.minAppWidth {
-                let newFrame = NSRect(
-                    x: activeWindowFrame.origin.x,
-                    y: activeWindowFrame.origin.y,
-                    width: newWidth,
-                    height: activeWindowFrame.height
-                )
-                _ = activeWindow.setFrame(newFrame)
-            } else {
-                // If we've gone below the minimum app width, then bump the ActiveWindow to the left
-                let newFrame = NSRect(
-                    x: activeWindowFrame.origin.x - (OnitRegularPanel.minAppWidth - newWidth),
-                    y: activeWindowFrame.origin.y,
-                    width: OnitRegularPanel.minAppWidth,
-                    height: activeWindowFrame.height
-                )
-                _ = activeWindow.setFrame(newFrame)
-            }
+            let newFrame = NSRect(
+                x: activeWindowFrame.origin.x,
+                y: activeWindowFrame.origin.y,
+                width: newWidth,
+                height: activeWindowFrame.height
+            )
+            _ = activeWindow.setFrame(newFrame)
         }
     }
     
