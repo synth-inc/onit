@@ -1,5 +1,5 @@
 //
-//  OnitPanelStateCoordinator.swift
+//  PanelStateCoordinator.swift
 //  Onit
 //
 //  Created by Kévin Naudin on 06/05/2025.
@@ -10,37 +10,29 @@ import Foundation
 import SwiftUI
 
 @MainActor
-class OnitPanelStateCoordinator {
+class PanelStateCoordinator {
     
     // MARK: - Singleton instance
     
-    static let shared = OnitPanelStateCoordinator()
+    static let shared = PanelStateCoordinator()
     
     // MARK: - Properties
     
     private let accessibilityPermissionManager = AccessibilityPermissionManager.shared
     private let featureFlagManager = FeatureFlagManager.shared
     
+    private let tetheredManager = PanelStateTetheredManager.shared
+    private let untetheredManager = PanelStateUntetheredManager.shared
+    private let pinnedManager = PanelStatePinnedManager.shared
+    
     private var frontmostApplicationAtLaunch: NSRunningApplication?
     private var stateChangesCancellable: AnyCancellable?
     
-    var state: OnitPanelState {
-        accessibilityPermissionManager.accessibilityPermissionStatus == .granted ?
-            TetherAppsManager.shared.state :
-            UntetheredScreenManager.shared.state
-    }
+    private var currentManager: PanelStateManagerLogic = PanelStateBaseManager()
     
-    var states: [OnitPanelState] {
-        accessibilityPermissionManager.accessibilityPermissionStatus == .granted ?
-            Array(TetherAppsManager.shared.states.values) :
-            Array(UntetheredScreenManager.shared.states.values)
-    }
-    
-    var tetherButtonPanelState: OnitPanelState? {
-        accessibilityPermissionManager.accessibilityPermissionStatus == .granted ?
-            TetherAppsManager.shared.tetherButtonPanelState :
-            UntetheredScreenManager.shared.tetherButtonPanelState
-    }
+    var state: OnitPanelState { currentManager.state }
+    var states: [OnitPanelState] { currentManager.states }
+    var tetherButtonPanelState: OnitPanelState? { currentManager.tetherButtonPanelState }
     
     // MARK: - Private initializer
     
@@ -49,7 +41,6 @@ class OnitPanelStateCoordinator {
     // MARK: - Functions
     
     func configure(frontmostApplication: NSRunningApplication?) {
-        log.error("frontmostApplication: \(frontmostApplication?.localizedName ?? "None")")
         frontmostApplicationAtLaunch = frontmostApplication
         
         stateChangesCancellable = Publishers.CombineLatest(
@@ -63,24 +54,33 @@ class OnitPanelStateCoordinator {
     private func handleStateChange(accessibilityPermission: AccessibilityPermissionStatus, pinnedModeEnabled: Bool) {
         log.error("accessibilityPermission: \(accessibilityPermission), pinnedModeEnabled: \(pinnedModeEnabled)")
         AccessibilityAnalytics.logPermission(local: accessibilityPermission)
+        
+        let oldManager = currentManager
+        
         switch accessibilityPermission {
         case .granted:
             AccessibilityNotificationsManager.shared.start(pid: frontmostApplicationAtLaunch?.processIdentifier)
-            UntetheredScreenManager.shared.stopObserving()
             frontmostApplicationAtLaunch = nil
             
             if FeatureFlagManager.shared.useScreenModeWithAccessibility {
-                TetherAppsManager.shared.stopObserving()
-                AccessibilityScreenManager.shared.startObserving()
+                currentManager = pinnedManager
             } else {
-                AccessibilityScreenManager.shared.stopObserving()
-                TetherAppsManager.shared.startObserving()
+                currentManager = tetheredManager
             }
         case .denied, .notDetermined:
-            TetherAppsManager.shared.stopObserving()
-            AccessibilityScreenManager.shared.stopObserving()
             AccessibilityNotificationsManager.shared.stop()
-            UntetheredScreenManager.shared.startObserving()
+            currentManager = untetheredManager
         }
+        
+        if (oldManager as AnyObject) !== (currentManager as AnyObject) {
+            stopAllManagers()
+            currentManager.start()
+        }
+    }
+    
+    private func stopAllManagers() {
+        tetheredManager.stop()
+        untetheredManager.stop()
+        pinnedManager.stop()
     }
 }

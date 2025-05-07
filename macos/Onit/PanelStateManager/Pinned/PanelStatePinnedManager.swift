@@ -1,4 +1,8 @@
 //
+//  PanelStatePinnedManager.swift
+//  Onit
+//
+//  Created by Timothy Lenardo on 07/05/25.
 //
 
 import AppKit
@@ -6,50 +10,24 @@ import Defaults
 import SwiftUI
 
 @MainActor
-class AccessibilityScreenManager: ObservableObject {
+class PanelStatePinnedManager: PanelStateBaseManager, ObservableObject {
 
-
-    static let shared = AccessibilityScreenManager()
+    static let shared = PanelStatePinnedManager()
     
-    
-    @Published var state: OnitPanelState
-    @Published var tetherButtonPanelState: OnitPanelState?
-    var states: [TrackedScreen: OnitPanelState] = [:]
-    var isObserving: Bool = false
-    
-    private let defaultState = OnitPanelState(trackedScreen: nil)
+    var statesByScreen: [NSScreen: OnitPanelState] = [:] {
+        didSet {
+            states = Array(statesByScreen.values)
+        }
+    }
     
     static let minOnitWidth: CGFloat = ContentView.idealWidth
     static let spaceBetweenWindows: CGFloat = -(TetheredButton.width / 2)
     
-    var tetherHintDetails: TetherHintDetails
     var tutorialWindow: NSWindow
     
     @Published var tetherButtonVisibility: [NSScreen: Bool] = [:]
     
-    private init() {
-        class CustomWindow: NSWindow {
-            override var canBecomeKey: Bool { true }
-        }
-        let window = CustomWindow(
-            contentRect: NSRect(x: 0, y: 0, width: ExternalTetheredButton.containerWidth, height: ExternalTetheredButton.containerHeight),
-            styleMask: [.borderless],
-            backing: .buffered,
-            defer: false
-        )
-        
-        window.isOpaque = false
-        window.backgroundColor = NSColor.clear
-        window.level = .floating
-        window.hasShadow = false
-        window.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
-        window.isReleasedWhenClosed = false
-        window.titlebarAppearsTransparent = true
-        window.titleVisibility = .hidden
-        window.standardWindowButton(.closeButton)?.isHidden = true
-        window.standardWindowButton(.miniaturizeButton)?.isHidden = true
-        window.standardWindowButton(.zoomButton)?.isHidden = true
-        
+    private override init() {
         tutorialWindow = NSWindow(
             contentRect: NSRect(x: 0, y: 0, width: (TetherTutorialOverlay.width * 1.5), height: (TetherTutorialOverlay.height * 1.5)),
             styleMask: [.borderless],
@@ -71,14 +49,13 @@ class AccessibilityScreenManager: ObservableObject {
         let tutorialView = NSHostingView(rootView: TetherTutorialOverlay())
         tutorialWindow.contentView = tutorialView
         
-        tetherHintDetails = TetherHintDetails(tetherWindow: window)
-        state = defaultState
+        super.init()
     }
 
 
-    func startObserving() {
-        stopObserving()
-        isObserving = true
+    override func start() {
+        stop()
+
         AccessibilityNotificationsManager.shared.addDelegate(self)
         NotificationCenter.default.addObserver(
             self,
@@ -94,18 +71,18 @@ class AccessibilityScreenManager: ObservableObject {
         )
     }
 
-    func stopObserving() {
-        isObserving = false
-        NotificationCenter.default.removeObserver(self)
+    override func stop() {
         AccessibilityNotificationsManager.shared.removeDelegate(self)
-        hideTetherWindow()
+        NotificationCenter.default.removeObserver(self)
+        
+        super.stop()
     }
 
     @objc private func appDidBecomeActive(_ notification: Notification) { }
 
     @objc private func applicationWillTerminate() { }
     
-    func handlePanelStateChange(state: OnitPanelState, action: TrackedScreenAction) {
+    func handlePanelStateChange(state: OnitPanelState) {
         guard let screen = state.trackedScreen else {
             return
         }
@@ -115,26 +92,27 @@ class AccessibilityScreenManager: ObservableObject {
                 hideTetherWindow()
                 showPanelForScreen(state: state, screen: screen)
             } else {
-                debouncedShowTetherWindow(state: state, activeScreen: screen, action: action)
+                debouncedShowTetherWindow(state: state, activeScreen: screen)
             }
         } else {
+            
         }
 
         state.panel?.setLevel(.floating)
     }
 
-    func getState(for trackedScreen: TrackedScreen) -> OnitPanelState {
+    func getState(for screen: NSScreen) -> OnitPanelState {
         let panelState: OnitPanelState
 
-        if let (_, activeState) = states.first(where: { (key: TrackedScreen, value: OnitPanelState) in
-            key == trackedScreen
+        if let (_, activeState) = statesByScreen.first(where: { (key: NSScreen, value: OnitPanelState) in
+            key == screen
         }) {
-            activeState.trackedScreen = trackedScreen
+            activeState.trackedScreen = screen
             panelState = activeState
         } else {
-            panelState = OnitPanelState(trackedScreen: trackedScreen)
+            panelState = OnitPanelState(screen: screen)
             
-            states[trackedScreen] = panelState
+            statesByScreen[screen] = panelState
         }
 
         panelState.addDelegate(self)
@@ -142,11 +120,11 @@ class AccessibilityScreenManager: ObservableObject {
         return panelState
     }
     
-    func showPanelForScreen(state: OnitPanelState, screen: TrackedScreen) {
+    func showPanelForScreen(state: OnitPanelState, screen: NSScreen) {
         guard let panel = state.panel else { return }
         
-        let screenFrame = screen.screen.visibleFrame
-        let onitWidth = AccessibilityScreenManager.minOnitWidth
+        let screenFrame = screen.visibleFrame
+        let onitWidth = PanelStatePinnedManager.minOnitWidth
         let onitHeight = screenFrame.height
         
         let newFrame = NSRect(
@@ -193,7 +171,7 @@ class AccessibilityScreenManager: ObservableObject {
             guard let windowFrame = window.element.getFrame(convertedToGlobalCoordinateSpace: true) else { continue }
             
             if windowFrame.intersects(panelFrame) {
-                let maxWidth = panelFrame.minX - windowFrame.minX - AccessibilityScreenManager.spaceBetweenWindows
+                let maxWidth = panelFrame.minX - windowFrame.minX - PanelStatePinnedManager.spaceBetweenWindows
                 
                 let newFrame = NSRect(
                     x: windowFrame.minX,
@@ -207,7 +185,7 @@ class AccessibilityScreenManager: ObservableObject {
         }
     }
 
-    func debouncedShowTetherWindow(state: OnitPanelState, activeScreen: TrackedScreen, action: TrackedScreenAction) {
+    func debouncedShowTetherWindow(state: OnitPanelState, activeScreen: NSScreen) {
         hideTetherWindow()
         let pendingTetherWindow = (state, activeScreen)
 
@@ -215,27 +193,19 @@ class AccessibilityScreenManager: ObservableObject {
         tetherHintDetails.showTetherDebounceTimer = Timer.scheduledTimer(withTimeInterval: tetherHintDetails.showTetherDebounceDelay, repeats: false) { [weak self] _ in
             guard let self = self else { return }
             DispatchQueue.main.async {
-                if self.isObserving {
-                    self.showTetherWindow(state: pendingTetherWindow.0, activeScreen: pendingTetherWindow.1.screen, action: action)
-                }
+                self.showTetherWindow(state: pendingTetherWindow.0, activeScreen: pendingTetherWindow.1)
             }
         }
     }
     
-    func hideTetherWindow() {
-        tetherHintDetails.showTetherDebounceTimer?.invalidate()
-        tetherHintDetails.showTetherDebounceTimer = nil
-        tetherButtonPanelState = nil
-
-        tetherHintDetails.tetherWindow.orderOut(nil)
-        tetherHintDetails.tetherWindow.contentView = nil
-        tetherHintDetails.lastYComputed = nil
+    override func hideTetherWindow() {
+        super.hideTetherWindow()
         
         tutorialWindow.orderOut(nil)
         tutorialWindow.contentView = nil
     }
 
-    func showTetherWindow(state: OnitPanelState, activeScreen: NSScreen, action: TrackedScreenAction) {
+    func showTetherWindow(state: OnitPanelState, activeScreen: NSScreen) {
          let tetherView = ExternalTetheredButton(
              onDrag: { [weak self] translation in
                  self?.tetheredWindowMoved(y: translation)
@@ -247,11 +217,11 @@ class AccessibilityScreenManager: ObservableObject {
         tetherHintDetails.lastYComputed = nil
         tetherButtonPanelState = state
 
-        updateTetherWindowPosition(for: activeScreen, action: action, lastYComputed: tetherHintDetails.lastYComputed)
+        updateTetherWindowPosition(for: activeScreen, lastYComputed: tetherHintDetails.lastYComputed)
         tetherHintDetails.tetherWindow.orderFrontRegardless()
     }
     
-    private func updateTetherWindowPosition(for screen: NSScreen, action: TrackedScreenAction, lastYComputed: CGFloat? = nil) {
+    private func updateTetherWindowPosition(for screen: NSScreen, lastYComputed: CGFloat? = nil) {
         let activeScreenFrame = screen.visibleFrame
         let positionX = activeScreenFrame.maxX - ExternalTetheredButton.containerWidth
         let positionY = activeScreenFrame.minY + (activeScreenFrame.height / 2) - (ExternalTetheredButton.containerHeight / 2)
@@ -278,13 +248,13 @@ class AccessibilityScreenManager: ObservableObject {
 }
 
 
-extension AccessibilityScreenManager: AccessibilityNotificationsDelegate {
+extension PanelStatePinnedManager: AccessibilityNotificationsDelegate {
     func accessibilityManager(_ manager: AccessibilityNotificationsManager, didActivateWindow window: TrackedWindow) {
         if let windowFrame = window.element.getFrame(convertedToGlobalCoordinateSpace: true),
-           let screen = windowFrame.findScreen(),
-           let trackedScreenManager = TrackedScreenManager.shared.append(screen: screen) {
-            let panelState = getState(for: trackedScreenManager)
-            handlePanelStateChange(state: panelState, action: .activate)
+           let screen = windowFrame.findScreen() {
+            let panelState = getState(for: screen)
+            
+            handlePanelStateChange(state: panelState)
         }
     }
     
@@ -299,8 +269,7 @@ extension AccessibilityScreenManager: AccessibilityNotificationsDelegate {
     func accessibilityManager(_ manager: AccessibilityNotificationsManager, didReceiveClipboardText text: String) {}
 }
 
-
-extension AccessibilityScreenManager: OnitPanelStateDelegate {
+extension PanelStatePinnedManager: OnitPanelStateDelegate {
     func panelBecomeKey(state: OnitPanelState) {
         self.state = state
         KeyboardShortcutsManager.enable(modelContainer: SwiftDataContainer.appContainer)
@@ -311,7 +280,7 @@ extension AccessibilityScreenManager: OnitPanelStateDelegate {
     }
     
     func panelStateDidChange(state: OnitPanelState) {
-        handlePanelStateChange(state: state, action: .undefined)
+        handlePanelStateChange(state: state)
     }
     
     func userInputsDidChange(instruction: String, contexts: [Context], input: Input?) {}

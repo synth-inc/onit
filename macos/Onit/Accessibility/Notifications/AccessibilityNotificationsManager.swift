@@ -447,7 +447,7 @@ class AccessibilityNotificationsManager: ObservableObject {
         
         guard let focusedWindow = pid.getFocusedWindow() else { return }
         
-        if let (_, state) = TetherAppsManager.shared.states.first(where: { $0.key.hash == CFHash(focusedWindow) }) {
+        if let (_, state) = PanelStateTetheredManager.shared.statesByWindow.first(where: { $0.key.hash == CFHash(focusedWindow) }) {
             Task { @MainActor in
                 if let documentInfo = findDocument(in: focusedWindow) {
                     handleWindowContent(documentInfo, for: state)
@@ -664,13 +664,13 @@ class AccessibilityNotificationsManager: ObservableObject {
               let selectedText = text,
               HighlightedTextValidator.isValid(text: selectedText) else {
             
-            TetherAppsManager.shared.state.pendingInput = nil
+            PanelStateTetheredManager.shared.state.pendingInput = nil
             return
         }
         
         screenResult.userInteraction.selectedText = selectedText
         
-        TetherAppsManager.shared.state.pendingInput = Input(selectedText: selectedText, application: currentSource ?? "")
+        PanelStateTetheredManager.shared.state.pendingInput = Input(selectedText: selectedText, application: currentSource ?? "")
     }
 
     /** Ensure the received `AXUIElement` is not from our process */

@@ -41,7 +41,7 @@ struct ContentView: View {
                             Spacer()
                         }
                     }
-                    .frame(width: TetherAppsManager.minOnitWidth)
+                    .frame(width: PanelStateTetheredManager.minOnitWidth)
                     .frame(maxHeight: .infinity)
                     .background(Color.black)
                 } else {

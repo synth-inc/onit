@@ -1,5 +1,5 @@
 //
-//  UntetheredScreenManager.swift
+//  PanelStateUntetheredManager.swift
 //  Onit
 //
 //  Created by Timothy Lenardo on 4/23/25.
@@ -10,34 +10,28 @@ import Defaults
 import SwiftUI
 
 @MainActor
-class UntetheredScreenManager: ObservableObject {
+class PanelStateUntetheredManager: PanelStateBaseManager, ObservableObject {
 
     // MARK: - Singleton instance
 
-    static let shared = UntetheredScreenManager()
+    static let shared = PanelStateUntetheredManager()
     
-    // Reference to the screen-based panel state manager.
-    // private let trackedScreenManager = TrackedScreenManager.shared
+    // MARK: - Properties
     
-    @Published var state: OnitPanelState
-    @Published var tetherButtonPanelState: OnitPanelState?
-    
-    
-    let trackedScreenManager = TrackedScreenManager()
     var lastScreenFrame = CGRect.zero
     
     private var globalMouseMonitor: Any?
     private var localMouseMonitor: Any?
     
-    var states: [TrackedScreen: OnitPanelState] = [:]
-    var isObserving: Bool = false
-
-    private let defaultState = OnitPanelState(trackedScreen: nil)
+    var statesByScreen: [NSScreen: OnitPanelState] = [:] {
+        didSet {
+            states = Array(statesByScreen.values)
+        }
+    }
 
     static let minOnitWidth: CGFloat = ContentView.idealWidth
     static let spaceBetweenWindows: CGFloat = -(TetheredButton.width / 2)
 
-    var tetherHintDetails: TetherHintDetails
     var tutorialWindow: NSWindow
 
     private var shouldShowOnboarding: Bool {
@@ -49,29 +43,9 @@ class UntetheredScreenManager: ObservableObject {
     // (For example, if the panel is closed then the tether button is visible.)
     @Published var tetherButtonVisibility: [NSScreen: Bool] = [:]
     
-    private init() {
-        class CustomWindow: NSWindow {
-            override var canBecomeKey: Bool { true }
-        }
-        let window = CustomWindow(
-            contentRect: NSRect(x: 0, y: 0, width: ExternalTetheredButton.containerWidth, height: ExternalTetheredButton.containerHeight),
-            styleMask: [.borderless],
-            backing: .buffered,
-            defer: false
-        )
-        
-        window.isOpaque = false
-        window.backgroundColor = NSColor.clear
-        window.level = .floating
-        window.hasShadow = false
-        window.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
-        window.isReleasedWhenClosed = false
-        window.titlebarAppearsTransparent = true
-        window.titleVisibility = .hidden
-        window.standardWindowButton(.closeButton)?.isHidden = true
-        window.standardWindowButton(.miniaturizeButton)?.isHidden = true
-        window.standardWindowButton(.zoomButton)?.isHidden = true
-        
+    // MARK: - Initializer
+    
+    private override init() {
         tutorialWindow = NSWindow(
             contentRect: NSRect(x: 0, y: 0, width: (TetherTutorialOverlay.width * 1.5), height: (TetherTutorialOverlay.height * 1.5)),
             styleMask: [.borderless],
@@ -93,17 +67,13 @@ class UntetheredScreenManager: ObservableObject {
         let tutorialView = NSHostingView(rootView: TetherTutorialOverlay())
         tutorialWindow.contentView = tutorialView
         
-        tetherHintDetails = TetherHintDetails(tetherWindow: window)
-        state = defaultState
+        super.init()
     }
 
     // MARK: - Functions
 
-    func startObserving() {
-        guard !isObserving else { return }
-        
-        stopObserving()
-        isObserving = true
+    override func start() {
+        stop()
         
         // Add global monitor to capture mouse moved events
         globalMouseMonitor = NSEvent.addGlobalMonitorForEvents(matching: .mouseMoved) { [weak self] event in
@@ -120,14 +90,12 @@ class UntetheredScreenManager: ObservableObject {
         
         // Add the main screen on startup.
         if let mouseScreen = NSScreen.mouse {
-            if let trackedScreen = trackedScreenManager.append(screen: mouseScreen) {
-                handleActivation(of: trackedScreen)
-            }
+            handleActivation(of: mouseScreen)
             lastScreenFrame = mouseScreen.frame
         }
     }
 
-    func stopObserving() {
+    override func stop() {
         if let globalMouseMonitor = globalMouseMonitor {
             NSEvent.removeMonitor(globalMouseMonitor)
             self.globalMouseMonitor = nil
@@ -138,46 +106,28 @@ class UntetheredScreenManager: ObservableObject {
             self.localMouseMonitor = nil
         }
         
-        closePanels()
-        hideTetherWindow()
+        super.stop()
         
-        state = defaultState
-        tetherButtonPanelState = nil
-        trackedScreenManager.reset()
         lastScreenFrame = CGRect.zero
-        states = [:]
-        isObserving = false
+        statesByScreen = [:]
         tetherButtonVisibility = [:]
-    }
-    
-    private func closePanels() {
-        // Close all panels without animations
-        defaultState.panel?.hide()
-        defaultState.panel = nil
-        
-        for (_, state) in states {
-            state.panel?.hide()
-            state.panel = nil
-        }
     }
 
     private func handleMouseMoved(event: NSEvent) {
         if let mouseScreen = NSScreen.mouse {
             if !mouseScreen.frame.equalTo(lastScreenFrame) {
-                if let trackedScreen = trackedScreenManager.append(screen: mouseScreen) {
-                    handleActivation(of: trackedScreen)
-                }
+                handleActivation(of: mouseScreen)
                 lastScreenFrame = mouseScreen.frame
             }
         }
     }
     
-    private func handleActivation(of screen: TrackedScreen) {
+    private func handleActivation(of screen: NSScreen) {
         let panelState = getState(for: screen)
-        handlePanelStateChange(state: panelState, action: .undefined)
+        handlePanelStateChange(state: panelState)
     }
     
-    func handlePanelStateChange(state: OnitPanelState, action: TrackedScreenAction) {
+    func handlePanelStateChange(state: OnitPanelState) {
         guard let screen = state.trackedScreen else {
             return
         }
@@ -189,7 +139,7 @@ class UntetheredScreenManager: ObservableObject {
                     state.repositionPanel(action: .undefined)
                 }
             } else {
-                debouncedShowTetherWindow(state: state, activeScreen: screen, action: action)
+                debouncedShowTetherWindow(state: state, activeScreen: screen)
             }
         } else {
             // We can't hide the panel in untethered mode.   
@@ -199,18 +149,18 @@ class UntetheredScreenManager: ObservableObject {
     }
 
 
-    func getState(for trackedScreen: TrackedScreen) -> OnitPanelState {
+    func getState(for screen: NSScreen) -> OnitPanelState {
         let panelState: OnitPanelState
 
-        if let (_, activeState) = states.first(where: { (key: TrackedScreen, value: OnitPanelState) in
-            key == trackedScreen
+        if let (_, activeState) = statesByScreen.first(where: { (key: NSScreen, value: OnitPanelState) in
+            key == screen
         }) {
-            activeState.trackedScreen = trackedScreen
+            activeState.trackedScreen = screen
             panelState = activeState
         } else {
-            panelState = OnitPanelState(trackedScreen: trackedScreen)
+            panelState = OnitPanelState(screen: screen)
             
-            states[trackedScreen] = panelState
+            statesByScreen[screen] = panelState
         }
 
         panelState.addDelegate(self)
@@ -219,34 +169,28 @@ class UntetheredScreenManager: ObservableObject {
     }
 
 
-    func debouncedShowTetherWindow(state: OnitPanelState, activeScreen: TrackedScreen, action: TrackedScreenAction) {
+    func debouncedShowTetherWindow(state: OnitPanelState, activeScreen: NSScreen) {
         hideTetherWindow()
         let pendingTetherWindow = (state, activeScreen)
 
         tetherHintDetails.showTetherDebounceTimer = Timer.scheduledTimer(withTimeInterval: tetherHintDetails.showTetherDebounceDelay, repeats: false) { [weak self] _ in
             guard let self = self else { return }
+            
             DispatchQueue.main.async {
-                if self.isObserving {
-                    self.showTetherWindow(state: pendingTetherWindow.0, activeScreen: pendingTetherWindow.1.screen, action: action)
-                }
+                self.showTetherWindow(state: pendingTetherWindow.0, activeScreen: pendingTetherWindow.1)
             }
         }
     }
     
-    func hideTetherWindow() {
-        tetherHintDetails.showTetherDebounceTimer = nil
-        tetherButtonPanelState = nil
-
-        tetherHintDetails.tetherWindow.orderOut(nil)
-        tetherHintDetails.tetherWindow.contentView = nil
-        tetherHintDetails.lastYComputed = nil
+    override func hideTetherWindow() {
+        super.hideTetherWindow()
         
         // Remove the tutorial
         tutorialWindow.orderOut(nil)
         tutorialWindow.contentView = nil
     }
 
-    func showTetherWindow(state: OnitPanelState, activeScreen: NSScreen, action: TrackedScreenAction) {
+    func showTetherWindow(state: OnitPanelState, activeScreen: NSScreen) {
          let tetherView = ExternalTetheredButton(
              onDrag: { [weak self] translation in
                  self?.tetheredWindowMoved(screen: activeScreen, y: translation)
@@ -264,11 +208,11 @@ class UntetheredScreenManager: ObservableObject {
             tutorialWindow.orderFrontRegardless()
         }
 
-        updateTetherWindowPosition(for: activeScreen, action: action, lastYComputed: tetherHintDetails.lastYComputed)
+        updateTetherWindowPosition(for: activeScreen, lastYComputed: tetherHintDetails.lastYComputed)
         tetherHintDetails.tetherWindow.orderFrontRegardless()
     }
     
-    private func updateTetherWindowPosition(for screen: NSScreen, action: TrackedScreenAction, lastYComputed: CGFloat? = nil) {
+    private func updateTetherWindowPosition(for screen: NSScreen, lastYComputed: CGFloat? = nil) {
         let activeScreenFrame = screen.visibleFrame
         let positionX = activeScreenFrame.maxX - ExternalTetheredButton.containerWidth
         var positionY: CGFloat
@@ -342,12 +286,11 @@ class UntetheredScreenManager: ObservableObject {
         
         tetherHintDetails.tetherWindow.setFrame(frame, display: true)
     }
-    
 }
 
 // MARK: - OnitPanelStateDelegate
 
-extension UntetheredScreenManager: OnitPanelStateDelegate {
+extension PanelStateUntetheredManager: OnitPanelStateDelegate {
     func panelBecomeKey(state: OnitPanelState) {
         self.state = state
         KeyboardShortcutsManager.enable(modelContainer: SwiftDataContainer.appContainer)
@@ -356,7 +299,7 @@ extension UntetheredScreenManager: OnitPanelStateDelegate {
         KeyboardShortcutsManager.disable(modelContainer: SwiftDataContainer.appContainer)
     }
     func panelStateDidChange(state: OnitPanelState) {
-        handlePanelStateChange(state: state, action: .undefined)
+        handlePanelStateChange(state: state)
     }
     func userInputsDidChange(instruction: String, contexts: [Context], input: Input?) { }
 }

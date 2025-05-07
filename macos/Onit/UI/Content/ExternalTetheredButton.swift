@@ -99,7 +99,7 @@ struct ExternalTetheredButton: View {
     private func tetherAction() {
         guard !isDragging else { return }
         
-        if let state = OnitPanelStateCoordinator.shared.tetherButtonPanelState {
+        if let state = PanelStateCoordinator.shared.tetherButtonPanelState {
 			if state.panelOpened {
 				state.closePanel()
 			} else {

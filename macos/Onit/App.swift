@@ -38,7 +38,7 @@ struct App: SwiftUI.App {
         KeyboardShortcutsManager.configure()
         featureFlagsManager.configure()
         
-        OnitPanelStateCoordinator.shared.configure(
+        PanelStateCoordinator.shared.configure(
             frontmostApplication: NSWorkspace.shared.frontmostApplication
         )
         
