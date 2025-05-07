@@ -52,6 +52,7 @@ struct InputBody: View {
     func textView(text: String) -> some View {
         Text(text)
             .multilineTextAlignment(.leading)
+            .foregroundColor(.FG)
             .frame(maxWidth: .infinity, alignment: .leading)
             .fixedSize(horizontal: false, vertical: true)
             .padding(10)
