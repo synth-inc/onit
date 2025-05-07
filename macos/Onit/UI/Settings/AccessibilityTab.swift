@@ -133,24 +133,29 @@ struct AccessibilityTab: View {
                             .font(.system(size: 12))
                             .foregroundStyle(.gray200)
                     }
-                    HStack {
-                        Text("Automatically pull context")
-                            .font(.system(size: 13))
-                        Spacer()
-                        Toggle(
-                            "",
-                            isOn: Binding(
-                                get: { automaticallyAddAutoContext },
-                                set: { automaticallyAddAutoContext = $0 }
+                    VStack(alignment: .leading, spacing: 4) {
+                        HStack {
+                            Text("Automatically Read Current Window")
+                                .font(.system(size: 13))
+                            Spacer()
+                            Toggle(
+                                "",
+                                isOn: Binding(
+                                    get: { automaticallyAddAutoContext },
+                                    set: { automaticallyAddAutoContext = $0 }
+                                )
                             )
-                        )
-                        .toggleStyle(.switch)
-                        .controlSize(.small)
-                    }
-                    if !automaticallyAddAutoContext {
-                        KeyboardShortcuts.Recorder(
-                            "Shortcut", name: .launchWithAutoContext
-                        )
+                            .toggleStyle(.switch)
+                            .controlSize(.small)
+                        }
+                        Text("When enabled, Onit will automatically capture context from the active window. Please use this feature cautiously, as sensitive information may be unintentionally uploaded.")
+                            .font(.system(size: 12))
+                            .foregroundStyle(.gray200)
+                        if !automaticallyAddAutoContext {
+                            KeyboardShortcuts.Recorder(
+                                "Shortcut", name: .launchWithAutoContext
+                            )
+                        }
                     }
                 }
             }
