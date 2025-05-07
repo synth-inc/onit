@@ -30,9 +30,6 @@ class TetherAppsManager: ObservableObject {
     
     private let defaultState = OnitPanelState(trackedWindow: nil)
     
-    private var regularAppCancellable: AnyCancellable?
-    private var skipFirstRegularAppUpdate: Bool = true
-    
     static let minOnitWidth: CGFloat = ContentView.idealWidth
     static let spaceBetweenWindows: CGFloat = -(TetheredButton.width / 2)
     
@@ -73,9 +70,7 @@ class TetherAppsManager: ObservableObject {
     func startObserving() {
         stopObserving()
         
-        regularAppCancellable = Defaults.publisher(.isRegularApp)
-            .map(\.newValue)
-            .sink(receiveValue: onChange(isRegularApp:))
+        startAllObservers()
         
         dragManagerCancellable = dragManager.$isDragging
             .sink { isDragging in
@@ -101,8 +96,6 @@ class TetherAppsManager: ObservableObject {
     }
     
     func stopObserving() {
-        regularAppCancellable?.cancel()
-        regularAppCancellable = nil
         stopAllObservers()
         NotificationCenter.default.removeObserver(self)
         dragManager.stopMonitoring()
@@ -134,7 +127,7 @@ class TetherAppsManager: ObservableObject {
     // MARK: - Handling panel state changes
     
     func handlePanelStateChange(state: OnitPanelState, action: TrackedWindowAction) {
-        guard Defaults[.isRegularApp], let window = state.trackedWindow?.element else {
+        guard let window = state.trackedWindow?.element else {
             return
         }
         
@@ -236,26 +229,6 @@ class TetherAppsManager: ObservableObject {
     private func stopAllObservers() {
         AccessibilityNotificationsManager.shared.removeDelegate(self)
         hideTetherWindow()
-    }
-    
-    private func onChange(isRegularApp: Bool) {
-        if isRegularApp {
-            startAllObservers()
-        } else {
-            stopAllObservers()
-            resetFramesOnAppChange()
-        }
-        guard !skipFirstRegularAppUpdate else {
-            skipFirstRegularAppUpdate = false
-            return
-        }
-        
-        closePanels()
-        
-        if !isRegularApp {
-            hideTetherWindow()
-            defaultState.launchPanel()
-        }
     }
     
     private func closePanels() {

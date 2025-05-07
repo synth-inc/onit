@@ -7,44 +7,10 @@ import AppKit
 
 struct AccessibilityTab: View {
 
-    struct HighlightHintModeUI: Identifiable, Hashable, Equatable {
-        let mode: HighlightHintMode
-        let text: String
-
-        var id: String { text }
-
-        static func from(mode: HighlightHintMode) -> Self {
-            let text: String
-
-            switch mode {
-            case .topRight:
-                text = "Top-right corner of the screen"
-            case .textfield:
-                text = "Above the highlighted text"
-            case .none:
-                text = "No hint"
-            }
-
-            return .init(mode: mode, text: text)
-        }
-
-        static func == (lhs: HighlightHintModeUI, rhs: HighlightHintModeUI) -> Bool {
-            return lhs.mode == rhs.mode
-        }
-    }
-
-    private let modes: [HighlightHintModeUI] = [
-        HighlightHintModeUI.from(mode: .none),
-        HighlightHintModeUI.from(mode: .topRight),
-        //        HighlightHintModeUI.from(mode: .textfield)
-    ]
-
     @Default(.autoContextEnabled) var autoContextEnabled
     @Default(.autoContextFromHighlights) var autoContextFromHighlights
     @Default(.autoContextFromCurrentWindow) var autoContextFromCurrentWindow
     @Default(.automaticallyAddAutoContext) var automaticallyAddAutoContext
-    @State private var selectedMode: HighlightHintModeUI = HighlightHintModeUI.from(
-        mode: FeatureFlagManager.shared.highlightHintMode)
 
     @ObservedObject private var featureFlagsManager = FeatureFlagManager.shared
 
@@ -195,21 +161,6 @@ struct AccessibilityTab: View {
         }
         .formStyle(.grouped)
         .padding()
-        .onChange(of: selectedMode, initial: false) { old, new in
-            highlightModeChange(oldValue: old, newValue: new)
-        }
-    }
-
-    private func highlightModeChange(oldValue: HighlightHintModeUI, newValue: HighlightHintModeUI) {
-        FeatureFlagManager.shared.overrideHighlightHintMode(newValue.mode)
-        HighlightHintWindowController.shared.changeMode(newValue.mode)
-
-        let eventProperties: [String: Any] = [
-            "old": oldValue.mode,
-            "new": newValue.mode,
-        ]
-
-        PostHogSDK.shared.capture("highlight_hint_mode_change", properties: eventProperties)
     }
 }
 

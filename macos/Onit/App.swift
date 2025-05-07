@@ -24,7 +24,6 @@ struct App: SwiftUI.App {
     @ObservedObject private var accessibilityPermissionManager = AccessibilityPermissionManager.shared
     @ObservedObject private var featureFlagsManager = FeatureFlagManager.shared
 
-    @Default(.isRegularApp) var isRegularApp
     @Default(.launchOnStartupRequested) var launchOnStartupRequested
 
     @Default(.autoContextEnabled) var autoContextEnabled
@@ -43,10 +42,6 @@ struct App: SwiftUI.App {
         
         // For testing new user experience
         // clearTokens()
-        
-        if !isRegularApp {
-            TetherAppsManager.shared.state.launchPanel()
-        }
     }
 
     var body: some Scene {
@@ -58,7 +53,6 @@ struct App: SwiftUI.App {
             MenuIcon()
                 .onAppear {
                     checkLaunchOnStartup()
-                    toggleUIElementMode(enable: isRegularApp)
                 }
                 .onChange(of: accessibilityPermissionManager.accessibilityPermissionStatus, initial: true) {
                     _, newValue in
@@ -96,9 +90,6 @@ struct App: SwiftUI.App {
                     } else {
                         debugManager.closeDebugWindow()
                     }
-                }
-                .onChange(of: isRegularApp) { _, newValue in
-                    toggleUIElementMode(enable: newValue)
                 }
         }
         .menuBarExtraStyle(.window)
@@ -148,14 +139,6 @@ struct App: SwiftUI.App {
             } catch {
                 print("Error: \(error)")
             }
-        }
-    }
-    
-    private func toggleUIElementMode(enable: Bool) {
-        if enable {
-            NSApp.setActivationPolicy(.regular)
-        } else {
-            NSApp.setActivationPolicy(.accessory)
         }
     }
 }

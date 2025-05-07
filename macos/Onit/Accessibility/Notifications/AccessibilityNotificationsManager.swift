@@ -665,15 +665,10 @@ class AccessibilityNotificationsManager: ObservableObject {
               HighlightedTextValidator.isValid(text: selectedText) else {
             
             TetherAppsManager.shared.state.pendingInput = nil
-            HighlightHintWindowController.shared.hide()
             return
         }
         
         screenResult.userInteraction.selectedText = selectedText
-        
-        if let elementFrame = elementFrame {
-            HighlightHintWindowController.shared.show(elementFrame)
-        }
         
         TetherAppsManager.shared.state.pendingInput = Input(selectedText: selectedText, application: currentSource ?? "")
     }
