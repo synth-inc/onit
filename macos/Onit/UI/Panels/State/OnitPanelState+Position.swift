@@ -36,7 +36,7 @@ extension OnitPanelState {
         if window.isDesktopFinder {
             if let mouseScreen = NSScreen.mouse {
                 let screenFrame = mouseScreen.frame
-                let onitWidth = PanelStateTetheredManager.minOnitWidth
+                let onitWidth = ContentView.idealWidth
                 let onitHeight = screenFrame.height - ContentView.bottomPadding
                 let onitY = screenFrame.maxY - onitHeight
                 let onitX = screenFrame.maxX - onitWidth
@@ -68,12 +68,12 @@ extension OnitPanelState {
         let fullTop = primaryScreenFrame.height - screenFrame.height - visibleFrame.minY + activeScreenInset
         let windowDistanceFromTop = windowFrame.minY - fullTop
         
-        let onitWidth = PanelStateTetheredManager.minOnitWidth
+        let onitWidth = ContentView.idealWidth
         let onitHeight = min(windowFrame.height, screenFrame.height - ContentView.bottomPadding)
         let onitY = visibleFrame.minY + (visibleFrame.height - windowFrame.height) - windowDistanceFromTop
         
         let spaceOnRight = screenFrame.maxX - (windowFrame.origin.x + windowFrame.width)
-        let hasEnoughSpace = spaceOnRight >= onitWidth + PanelStateTetheredManager.spaceBetweenWindows
+        let hasEnoughSpace = spaceOnRight >= onitWidth + PanelStateBaseManager.spaceBetweenWindows
         
         let isOnRightmostScreen = screen == rightmostScreen
         
@@ -82,7 +82,7 @@ extension OnitPanelState {
         } else {
             let minAppWidth = 500.0
             
-            let maxAvailableWidth = screenFrame.maxX - windowFrame.origin.x - onitWidth - PanelStateTetheredManager.spaceBetweenWindows
+            let maxAvailableWidth = screenFrame.maxX - windowFrame.origin.x - onitWidth - PanelStateBaseManager.spaceBetweenWindows
             
             if maxAvailableWidth >= minAppWidth {
                 resizeWindowAndMovePanel(onitWidth: onitWidth, onitHeight: onitHeight, onitY: onitY, maxAvailableWidth: maxAvailableWidth)
@@ -183,9 +183,9 @@ extension OnitPanelState {
             height: screen.visibleFrame.height
         )
         let newFrame = NSRect(
-            x: screen.visibleFrame.maxX - PanelStateTetheredManager.minOnitWidth,
+            x: screen.visibleFrame.maxX - ContentView.idealWidth,
             y: screen.visibleFrame.minY,
-            width: PanelStateTetheredManager.minOnitWidth,
+            width: ContentView.idealWidth,
             height: screen.visibleFrame.height
         )
         
@@ -217,13 +217,13 @@ extension OnitPanelState {
         }
         
         let fromFrame = NSRect(
-            x: windowFrame.origin.x + windowFrame.width + PanelStateTetheredManager.spaceBetweenWindows,
+            x: windowFrame.origin.x + windowFrame.width + PanelStateBaseManager.spaceBetweenWindows,
             y: onitY,
             width: 0,
             height: onitHeight
         )
         let newFrame = NSRect(
-            x: windowFrame.origin.x + windowFrame.width + PanelStateTetheredManager.spaceBetweenWindows,
+            x: windowFrame.origin.x + windowFrame.width + PanelStateBaseManager.spaceBetweenWindows,
             y: onitY,
             width: onitWidth,
             height: onitHeight
@@ -254,7 +254,7 @@ extension OnitPanelState {
             return
         }
         
-        let newAppX = screenFrame.maxX - windowFrame.width - onitWidth - PanelStateTetheredManager.spaceBetweenWindows
+        let newAppX = screenFrame.maxX - windowFrame.width - onitWidth - PanelStateBaseManager.spaceBetweenWindows
         let yOffset = calculateYOffset(screenFrame: screenFrame, onitY: onitY)
         
         let activeWindowTargetRect = CGRect(
@@ -265,7 +265,7 @@ extension OnitPanelState {
         )
         
         let newFrame = NSRect(
-            x: newAppX + windowFrame.width + PanelStateTetheredManager.spaceBetweenWindows,
+            x: newAppX + windowFrame.width + PanelStateBaseManager.spaceBetweenWindows,
             y: onitY + yOffset,
             width: onitWidth,
             height: onitHeight
@@ -319,7 +319,7 @@ extension OnitPanelState {
         )
         
         let newFrame = NSRect(
-            x: windowFrame.origin.x + maxAvailableWidth + PanelStateTetheredManager.spaceBetweenWindows,
+            x: windowFrame.origin.x + maxAvailableWidth + PanelStateBaseManager.spaceBetweenWindows,
             y: onitY,
             width: onitWidth,
             height: onitHeight

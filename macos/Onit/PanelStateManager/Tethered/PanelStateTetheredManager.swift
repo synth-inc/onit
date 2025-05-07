@@ -30,9 +30,6 @@ class PanelStateTetheredManager: PanelStateBaseManager, ObservableObject {
     private var dragManagerCancellable: AnyCancellable?
     private var draggingState: OnitPanelState?
     
-    static let minOnitWidth: CGFloat = ContentView.idealWidth
-    static let spaceBetweenWindows: CGFloat = -(TetheredButton.width / 2)
-    
     var targetInitialFrames: [AXUIElement: CGRect] = [:]
     
     // MARK: - Private initializer

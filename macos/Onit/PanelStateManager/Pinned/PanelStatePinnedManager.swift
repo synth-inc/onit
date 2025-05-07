@@ -20,9 +20,6 @@ class PanelStatePinnedManager: PanelStateBaseManager, ObservableObject {
         }
     }
     
-    static let minOnitWidth: CGFloat = ContentView.idealWidth
-    static let spaceBetweenWindows: CGFloat = -(TetheredButton.width / 2)
-    
     var tutorialWindow: NSWindow
     
     @Published var tetherButtonVisibility: [NSScreen: Bool] = [:]
@@ -124,7 +121,7 @@ class PanelStatePinnedManager: PanelStateBaseManager, ObservableObject {
         guard let panel = state.panel else { return }
         
         let screenFrame = screen.visibleFrame
-        let onitWidth = PanelStatePinnedManager.minOnitWidth
+        let onitWidth = ContentView.idealWidth
         let onitHeight = screenFrame.height
         
         let newFrame = NSRect(
@@ -171,7 +168,7 @@ class PanelStatePinnedManager: PanelStateBaseManager, ObservableObject {
             guard let windowFrame = window.element.getFrame(convertedToGlobalCoordinateSpace: true) else { continue }
             
             if windowFrame.intersects(panelFrame) {
-                let maxWidth = panelFrame.minX - windowFrame.minX - PanelStatePinnedManager.spaceBetweenWindows
+                let maxWidth = panelFrame.minX - windowFrame.minX - PanelStateBaseManager.spaceBetweenWindows
                 
                 let newFrame = NSRect(
                     x: windowFrame.minX,

@@ -447,6 +447,7 @@ class AccessibilityNotificationsManager: ObservableObject {
         
         guard let focusedWindow = pid.getFocusedWindow() else { return }
         
+        // TODO: KNA - Not sure about using the Coordinator.state
         if let (_, state) = PanelStateTetheredManager.shared.statesByWindow.first(where: { $0.key.hash == CFHash(focusedWindow) }) {
             Task { @MainActor in
                 if let documentInfo = findDocument(in: focusedWindow) {
@@ -664,13 +665,14 @@ class AccessibilityNotificationsManager: ObservableObject {
               let selectedText = text,
               HighlightedTextValidator.isValid(text: selectedText) else {
             
-            PanelStateTetheredManager.shared.state.pendingInput = nil
+            PanelStateCoordinator.shared.state.pendingInput = nil
             return
         }
         
         screenResult.userInteraction.selectedText = selectedText
         
-        PanelStateTetheredManager.shared.state.pendingInput = Input(selectedText: selectedText, application: currentSource ?? "")
+        let input = Input(selectedText: selectedText, application: currentSource ?? "")
+        PanelStateCoordinator.shared.state.pendingInput = input
     }
 
     /** Ensure the received `AXUIElement` is not from our process */

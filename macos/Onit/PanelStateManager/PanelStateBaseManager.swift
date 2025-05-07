@@ -21,6 +21,8 @@ class PanelStateBaseManager: PanelStateManagerLogic {
     var states: [OnitPanelState]
     var tetherHintDetails: TetherHintDetails
     
+    static let spaceBetweenWindows: CGFloat = -(TetheredButton.width / 2)
+    
     // MARK: - Initializer
     
     init() {

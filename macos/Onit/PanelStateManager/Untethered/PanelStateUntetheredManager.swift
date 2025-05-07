@@ -29,9 +29,6 @@ class PanelStateUntetheredManager: PanelStateBaseManager, ObservableObject {
         }
     }
 
-    static let minOnitWidth: CGFloat = ContentView.idealWidth
-    static let spaceBetweenWindows: CGFloat = -(TetheredButton.width / 2)
-
     var tutorialWindow: NSWindow
 
     private var shouldShowOnboarding: Bool {

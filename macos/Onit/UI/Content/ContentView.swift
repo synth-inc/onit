@@ -41,7 +41,7 @@ struct ContentView: View {
                             Spacer()
                         }
                     }
-                    .frame(width: PanelStateTetheredManager.minOnitWidth)
+                    .frame(width: ContentView.idealWidth)
                     .frame(maxHeight: .infinity)
                     .background(Color.black)
                 } else {
