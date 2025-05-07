@@ -10,7 +10,6 @@ import Defaults
 
 struct MenuCheckForPermissions: View {
     @ObservedObject private var accessibilityPermissionManager = AccessibilityPermissionManager.shared
-    @ObservedObject private var featureFlagsManager = FeatureFlagManager.shared
     
     let circleHeight: CGFloat = 5
     static let link = "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility"

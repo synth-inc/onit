@@ -48,11 +48,7 @@ extension OnitPanelState: NSWindowDelegate {
         systemPromptState.shouldShowSelection = false
         systemPromptState.shouldShowSystemPrompt = false
 
-        if trackedWindow != nil || trackedScreen != nil {
-            restoreWindowPosition()
-        } else {
-            // What to do
-        }
+        restoreWindowPosition()
     }
     
     func launchPanel() {
