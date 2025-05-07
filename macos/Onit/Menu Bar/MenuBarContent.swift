@@ -17,10 +17,6 @@ struct MenuBarContent: View {
             MenuCheckForPermissions()
             MenuOpenOnitButton()
             MenuDivider()
-            if accessibilityPermissionManager.accessibilityPermissionStatus == .granted {
-                MenuAppearsInPicker()
-                MenuDivider()
-            }
             MenuSettings()
             MenuCheckForUpdates()
             MenuHowItWorks()

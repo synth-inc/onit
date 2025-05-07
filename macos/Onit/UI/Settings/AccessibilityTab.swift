@@ -53,7 +53,7 @@ struct AccessibilityTab: View {
             Section {
                 VStack(alignment: .leading, spacing: 4) {
                     HStack {
-                        Text((autoContextEnabled ? "Revoke": "Grant") + " Accessibility access")
+                        Text("Accessibility enabled")
                             .font(.system(size: 13))
                         Spacer()
                         Toggle(
@@ -70,9 +70,9 @@ struct AccessibilityTab: View {
                         .toggleStyle(.switch)
                         .controlSize(.small)
                     }
-//                    Text("You'll need to grant Accessibility access.")
-//                        .font(.system(size: 12))
-//                        .foregroundStyle(.gray200)
+                    Text("Required for automatic context loading, text insertion, window resizing, and many other Onit features.")
+                        .font(.system(size: 12))
+                        .foregroundStyle(.gray200)
                 }
             }
 
