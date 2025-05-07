@@ -24,10 +24,7 @@ struct App: SwiftUI.App {
     @ObservedObject private var accessibilityPermissionManager = AccessibilityPermissionManager.shared
     @ObservedObject private var featureFlagsManager = FeatureFlagManager.shared
 
-    @Default(.isRegularApp) var isRegularApp
     @Default(.launchOnStartupRequested) var launchOnStartupRequested
-
-    @Default(.autoContextEnabled) var autoContextEnabled
     @Default(.autoContextFromCurrentWindow) var autoContextFromCurrentWindow
     @Default(.autoContextFromHighlights) var autoContextFromHighlights
     
@@ -38,15 +35,13 @@ struct App: SwiftUI.App {
         configureSwiftBeaver()
         frontmostApplicationOnLaunch = NSWorkspace.shared.frontmostApplication
         
+        accessibilityPermissionManager.configure()
+        
         KeyboardShortcutsManager.configure()
         featureFlagsManager.configure()
         
         // For testing new user experience
         // clearTokens()
-        
-        if !isRegularApp {
-            TetherAppsManager.shared.state.launchPanel()
-        }
     }
 
     var body: some Scene {
@@ -58,7 +53,6 @@ struct App: SwiftUI.App {
             MenuIcon()
                 .onAppear {
                     checkLaunchOnStartup()
-                    toggleUIElementMode(enable: isRegularApp)
                 }
                 .onChange(of: accessibilityPermissionManager.accessibilityPermissionStatus, initial: true) {
                     _, newValue in
@@ -75,16 +69,7 @@ struct App: SwiftUI.App {
                         UntetheredScreenManager.shared.startObserving()
                     }
                 }
-                .onChange(of: Defaults[.autoContextEnabled], initial: true) {
-                    _, newValue in
-                    if newValue {
-                        AccessibilityPermissionManager.shared.startListeningPermission()
-                    } else {
-                        AccessibilityPermissionManager.shared.stopListeningPermission()
-                    }
-                }
                 .onChange(of: [
-                    autoContextEnabled,
                     autoContextFromCurrentWindow,
                     autoContextFromHighlights
                 ], initial: true) { oldValue, newValue in
@@ -96,9 +81,6 @@ struct App: SwiftUI.App {
                     } else {
                         debugManager.closeDebugWindow()
                     }
-                }
-                .onChange(of: isRegularApp) { _, newValue in
-                    toggleUIElementMode(enable: newValue)
                 }
         }
         .menuBarExtraStyle(.window)
@@ -148,14 +130,6 @@ struct App: SwiftUI.App {
             } catch {
                 print("Error: \(error)")
             }
-        }
-    }
-    
-    private func toggleUIElementMode(enable: Bool) {
-        if enable {
-            NSApp.setActivationPolicy(.regular)
-        } else {
-            NSApp.setActivationPolicy(.accessory)
         }
     }
 }

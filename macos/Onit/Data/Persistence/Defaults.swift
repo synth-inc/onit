@@ -10,10 +10,7 @@ import Defaults
 import Foundation
 
 extension Defaults.Keys {
-    static let isPanelExpanded = Key<Bool>("isPanelExpanded", default: false)
-    static let defaultPanelFrame = Key<NSRect>(
-        "defaultPanelFrame", default: NSRect(x: 0, y: 0, width: 400, height: 600))
-
+    
     // Remote model tokens
     static let openAIToken = Key<String?>("openAIToken", default: nil)
     static let anthropicToken = Key<String?>("anthropicToken", default: nil)
@@ -80,9 +77,7 @@ extension Defaults.Keys {
         "localEndpointURL", default: URL(string: "http://localhost:11434")!)
 
     // Feature flags
-    static let highlightHintMode = Key<HighlightHintMode?>("highlightHintMode", default: nil)
     
-    static let autoContextEnabled = Key<Bool>("enableAutoContext", default: true)
     static let autoContextFromCurrentWindow = Key<Bool>("autoContextFromCurrentWindow", default: true)
     static let autoContextFromHighlights = Key<Bool>("autoContextFromHighlights", default: true)
     static let automaticallyAddAutoContext = Key<Bool>("automaticallyAddAutoContext", default: true)
@@ -91,10 +86,6 @@ extension Defaults.Keys {
     static let webSearchEnabled = Key<Bool>("webSearchEnabled", default: false)
     static let tavilyAPIToken = Key<String>("tavilyAPIToken", default: "")
     static let isTavilyAPITokenValidated = Key<Bool>("tavilyAPITokenValidated", default: false)
-
-    // Window state
-    static let panelWidth = Key<Double?>("panelWidth", default: nil)
-    static let panelPosition = Key<PanelPosition>("panelPosition", default: .topRight)
 
     // General settings
     static let launchOnStartupRequested = Key<Bool>("launchOnStartupRequested", default: false)
@@ -110,7 +101,6 @@ extension Defaults.Keys {
     static let localRequestTimeout = Key<TimeInterval?>("localRequestTimeout", default: 60.0)
     
     // Debug settings
-    static let isRegularApp = Key<Bool>("isRegularApp", default: true)
     static let launchShortcutToggleEnabled = Key<Bool>("launchShortcutToggleEnabled", default: true)
     static let createNewChatOnPanelOpen = Key<Bool>("createNewChatOnPanelOpen", default: true)
     static let escapeShortcutDisabled = Key<Bool>("escapeShortcutDisabled", default: false)

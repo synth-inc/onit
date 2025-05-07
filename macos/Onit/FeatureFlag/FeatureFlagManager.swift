@@ -20,11 +20,9 @@ class FeatureFlagManager: ObservableObject {
 
     // MARK: - Feature Flags
 
-    @Published private(set) var highlightHintMode: HighlightHintMode = .none
     @Published private(set) var autocontextDemoVideoUrl: String? = nil
     
     private var wasAccessibilityInputEnabled: Bool = false
-    private var wasAccessibilityAutoContextEnabled: Bool = false
 
     // MARK: - Functions
 
@@ -48,12 +46,6 @@ class FeatureFlagManager: ObservableObject {
         PostHogSDK.shared.setup(config)
     }
 
-    func overrideHighlightHintMode(_ value: HighlightHintMode) {
-        Defaults[.highlightHintMode] = value
-
-        highlightHintMode = value
-    }
-
     // MARK: - Objective-C Functions
 
     @objc private func receiveFeatureFlags() {
@@ -63,18 +55,6 @@ class FeatureFlagManager: ObservableObject {
     // MARK: - Private functions
 
     private func setFeatureFlagsFromRemote() {
-        if let highlightHintMode = Defaults[.highlightHintMode] {
-            self.highlightHintMode = highlightHintMode
-        } else {
-            if let value = PostHogSDK.shared.getFeatureFlag("highlight_hint_mode") as? String,
-                let mode = HighlightHintMode(rawValue: value)
-            {
-                self.highlightHintMode = mode
-            } else {
-                self.highlightHintMode = .none
-            }
-        }
-
         // Get demo video URL from feature flag
         if let rawValue = PostHogSDK.shared.getFeatureFlagPayload("autocontext_demo_video_url") {
             if let payload = rawValue as? [String: Any], let urlString = payload["url"] as? String {
