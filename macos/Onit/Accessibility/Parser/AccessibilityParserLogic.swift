@@ -13,7 +13,7 @@ protocol AccessibilityParserLogic {
     /**
      * Parse the `AXUIElement` to retrieve desired data
      * - parameter appElement: `AXUIElement` to parse
-     * - returns: An optional dictionnary of data retrieved
+     * - returns: A dictionary of data retrieved
      */
     func parse(element: AXUIElement) -> [String: String]
 }

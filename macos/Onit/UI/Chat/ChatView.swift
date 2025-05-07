@@ -38,6 +38,9 @@ struct ChatView: View {
                             .onAppear {
                                 startAutoScrolling(using: proxy)
                             }
+                            .onDisappear {
+                                stopAutoScrolling()
+                            }
                     }
                     .onChange(of: state.streamedResponse) { old, new in
                         startAutoScrolling(using: proxy)
@@ -112,10 +115,9 @@ extension ChatView {
     @MainActor
     private func scrollToBottom(using proxy: ScrollViewProxy) {
         withAnimation(.smooth(duration: 0.1)) {
-            proxy.scrollTo(
-                chatsID,
-                anchor: .bottom
-            )
+            if let id = chatsID {
+                proxy.scrollTo(id, anchor: .bottom)
+            }
         }
     }
     
