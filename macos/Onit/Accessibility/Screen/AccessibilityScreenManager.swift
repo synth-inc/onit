@@ -160,19 +160,26 @@ class AccessibilityScreenManager: ObservableObject {
             panel.setFrame(newFrame, display: true)
             state.showChatView = true // Add this line to explicitly set showChatView
         } else {
-            state.animateEnter(
-                activeWindow: nil,
-                fromActive: nil,
-                toActive: nil,
-                panel: panel,
-                fromPanel: NSRect(
-                    x: screenFrame.maxX - 2,
-                    y: screenFrame.minY,
-                    width: 0,
-                    height: screenFrame.height
-                ),
-                toPanel: newFrame
+            guard !panel.isAnimating, panel.frame != newFrame else { return }
+            
+            let fromPanel = NSRect(
+                x: screenFrame.maxX - 2,
+                y: screenFrame.minY,
+                width: 0,
+                height: screenFrame.height
             )
+            panel.isAnimating = true
+            panel.setFrame(fromPanel, display: false)
+            panel.alphaValue = 1
+            
+            state.animateChatView = true
+            state.showChatView = false
+            
+            panel.setFrame(newFrame, display: true)
+            state.animateChatView = true
+            state.showChatView = true
+            panel.isAnimating = false
+            panel.wasAnimated = true
         }
         
         resizeOverlappingWindowsIfNeeded(panelFrame: newFrame)
