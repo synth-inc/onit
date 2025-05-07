@@ -78,7 +78,6 @@ extension Defaults.Keys {
 
     // Feature flags
     
-    static let autoContextEnabled = Key<Bool>("enableAutoContext", default: true)
     static let autoContextFromCurrentWindow = Key<Bool>("autoContextFromCurrentWindow", default: true)
     static let autoContextFromHighlights = Key<Bool>("autoContextFromHighlights", default: true)
     static let automaticallyAddAutoContext = Key<Bool>("automaticallyAddAutoContext", default: true)

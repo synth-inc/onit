@@ -17,8 +17,7 @@ struct MenuBarContent: View {
             MenuCheckForPermissions()
             MenuOpenOnitButton()
             MenuDivider()
-            if Defaults[.autoContextEnabled] && accessibilityPermissionManager.accessibilityPermissionStatus == .granted
-            {
+            if accessibilityPermissionManager.accessibilityPermissionStatus == .granted {
                 MenuAppearsInPicker()
                 MenuDivider()
             }

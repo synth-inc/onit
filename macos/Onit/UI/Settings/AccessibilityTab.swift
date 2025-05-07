@@ -6,13 +6,16 @@ import KeyboardShortcuts
 import AppKit
 
 struct AccessibilityTab: View {
-
-    @Default(.autoContextEnabled) var autoContextEnabled
     @Default(.autoContextFromHighlights) var autoContextFromHighlights
     @Default(.autoContextFromCurrentWindow) var autoContextFromCurrentWindow
     @Default(.automaticallyAddAutoContext) var automaticallyAddAutoContext
 
+    @ObservedObject private var accessibilityPermissionManager = AccessibilityPermissionManager.shared
     @ObservedObject private var featureFlagsManager = FeatureFlagManager.shared
+    
+    private var autoContextEnabled: Bool {
+        accessibilityPermissionManager.accessibilityPermissionStatus == .granted
+    }
 
     var body: some View {
         Form {
@@ -50,22 +53,26 @@ struct AccessibilityTab: View {
             Section {
                 VStack(alignment: .leading, spacing: 4) {
                     HStack {
-                        Text("Enable AutoContext")
+                        Text((autoContextEnabled ? "Revoke": "Grant") + " Accessibility access")
                             .font(.system(size: 13))
                         Spacer()
                         Toggle(
                             "",
                             isOn: Binding(
                                 get: { autoContextEnabled },
-                                set: { autoContextEnabled = $0 }
+                                set: { _ in
+                                    if let url = URL(string: MenuCheckForPermissions.link) {
+                                        NSWorkspace.shared.open(url)
+                                    }
+                                }
                             )
                         )
                         .toggleStyle(.switch)
                         .controlSize(.small)
                     }
-                    Text("You'll need to grant Accessibility access.")
-                        .font(.system(size: 12))
-                        .foregroundStyle(.gray200)
+//                    Text("You'll need to grant Accessibility access.")
+//                        .font(.system(size: 12))
+//                        .foregroundStyle(.gray200)
                 }
             }
 
@@ -97,17 +104,6 @@ struct AccessibilityTab: View {
                             .font(.system(size: 12))
                             .foregroundStyle(.gray200)
                     }
-//                    Picker("Choose hint position", selection: $selectedMode) {
-//                        ForEach(modes, id: \.self) { mode in
-//                            Text(mode.text)
-//                                .appFont(.medium14)
-//                                .padding(.vertical, 4)
-//                        }
-//                    }
-//                    .frame(maxWidth: .infinity, alignment: .leading)
-//                    .pickerStyle(MenuPickerStyle())
-//                    .padding(.vertical, 4)
-//                    .tint(.blue600)
                 }
 
                 Section {

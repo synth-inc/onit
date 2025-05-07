@@ -25,8 +25,6 @@ struct App: SwiftUI.App {
     @ObservedObject private var featureFlagsManager = FeatureFlagManager.shared
 
     @Default(.launchOnStartupRequested) var launchOnStartupRequested
-
-    @Default(.autoContextEnabled) var autoContextEnabled
     @Default(.autoContextFromCurrentWindow) var autoContextFromCurrentWindow
     @Default(.autoContextFromHighlights) var autoContextFromHighlights
     
@@ -36,6 +34,8 @@ struct App: SwiftUI.App {
     init() {
         configureSwiftBeaver()
         frontmostApplicationOnLaunch = NSWorkspace.shared.frontmostApplication
+        
+        accessibilityPermissionManager.configure()
         
         KeyboardShortcutsManager.configure()
         featureFlagsManager.configure()
@@ -69,16 +69,7 @@ struct App: SwiftUI.App {
                         UntetheredScreenManager.shared.startObserving()
                     }
                 }
-                .onChange(of: Defaults[.autoContextEnabled], initial: true) {
-                    _, newValue in
-                    if newValue {
-                        AccessibilityPermissionManager.shared.startListeningPermission()
-                    } else {
-                        AccessibilityPermissionManager.shared.stopListeningPermission()
-                    }
-                }
                 .onChange(of: [
-                    autoContextEnabled,
                     autoContextFromCurrentWindow,
                     autoContextFromHighlights
                 ], initial: true) { oldValue, newValue in

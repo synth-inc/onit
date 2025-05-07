@@ -23,7 +23,6 @@ class FeatureFlagManager: ObservableObject {
     @Published private(set) var autocontextDemoVideoUrl: String? = nil
     
     private var wasAccessibilityInputEnabled: Bool = false
-    private var wasAccessibilityAutoContextEnabled: Bool = false
 
     // MARK: - Functions
 

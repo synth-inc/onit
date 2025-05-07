@@ -10,11 +10,7 @@ import Defaults
 
 extension OnitPanelState {
     func addAutoContext() {
-        guard Defaults[.autoContextEnabled],
-              Defaults[.autoContextFromCurrentWindow]
-        else {
-            return
-        }
+        guard Defaults[.autoContextFromCurrentWindow] else { return }
 
         let appName = AccessibilityNotificationsManager.shared.screenResult.applicationName ?? "AutoContext"
         if let errorMessage = AccessibilityNotificationsManager.shared.screenResult.errorMessage {
