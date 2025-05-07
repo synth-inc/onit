@@ -29,16 +29,18 @@ struct App: SwiftUI.App {
     @Default(.autoContextFromHighlights) var autoContextFromHighlights
     
     @State var accessibilityPermissionRequested = false
-    @State private var frontmostApplicationOnLaunch: NSRunningApplication?
 
     init() {
         configureSwiftBeaver()
-        frontmostApplicationOnLaunch = NSWorkspace.shared.frontmostApplication
         
         accessibilityPermissionManager.configure()
         
         KeyboardShortcutsManager.configure()
         featureFlagsManager.configure()
+        
+        OnitPanelStateCoordinator.shared.configure(
+            frontmostApplication: NSWorkspace.shared.frontmostApplication
+        )
         
         // For testing new user experience
         // clearTokens()
