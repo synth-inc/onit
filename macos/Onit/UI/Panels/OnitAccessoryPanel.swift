@@ -155,10 +155,7 @@ extension OnitAccessoryPanel: OnitPanel {
     
     func show() {
         var windowWidth = frame.width
-        
-        if let savedWidth = Defaults[.panelWidth] {
-            windowWidth = savedWidth
-        }
+        windowWidth = Defaults[.panelWidth]
         
         if let newFrame = calculatePanelFrame(windowWidth: windowWidth) {
             setFrame(newFrame, display: true, animate: false)

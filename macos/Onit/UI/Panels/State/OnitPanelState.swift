@@ -7,6 +7,7 @@
 
 import ApplicationServices
 import Combine
+import Defaults
 import SwiftData
 import SwiftUI
 
@@ -83,14 +84,7 @@ class OnitPanelState: NSObject {
     
     var tetheredButtonYPosition: CGFloat?
     
-    var panelWidth: CGFloat {
-        didSet {
-            Defaults[.panelWidth] = panelWidth
-            notifyDelegates { delegate in
-                delegate.panelStateDidChange(state: self)
-            }
-        }
-    }
+    var panelWidth: CGFloat 
     
     var currentChat: Chat?
     var currentPrompts: [Prompt]?
@@ -145,7 +139,7 @@ class OnitPanelState: NSObject {
 
     init(trackedWindow: TrackedWindow?) {
         self.trackedWindow = trackedWindow
-        self.panelWidth = Defaults[.panelWidth] ?? 400
+        self.panelWidth = Defaults[.panelWidth]
         super.init()
         
         self.promptSuggestionService = SystemPromptSuggestionService(state: self)
@@ -153,7 +147,7 @@ class OnitPanelState: NSObject {
 
     init(trackedScreen: TrackedScreen?) {
         self.trackedScreen = trackedScreen
-        self.panelWidth = Defaults[.panelWidth] ?? 400
+        self.panelWidth = Defaults[.panelWidth]
         super.init()
         
         self.promptSuggestionService = SystemPromptSuggestionService(state: self)

@@ -57,17 +57,29 @@ extension OnitRegularPanel {
               wasAnimated, !isAnimating, dragDetails.isDragging, !state.isWindowDragging else { return }
 
         // Adjust the active window's width to match the panel's new width
-        let deltaWidth = self.width - originalPanelWidth
-        
+        let deltaWidth = self.width - originalPanelWidth        
         if deltaWidth != 0 {
-            let newWidth = activeWindowFrame.width - deltaWidth
-            let newFrame = NSRect(
-                x: activeWindowFrame.origin.x,
-                y: activeWindowFrame.origin.y,
-                width: newWidth,
-                height: activeWindowFrame.height
-            )
-            _ = activeWindow.setFrame(newFrame)
+            // There's an edge case where window's are non-resizable (for example VoiceOver Utility)
+            // We need to check if the window is resizable before attempting to resize it
+            var isSettable: DarwinBoolean = false
+            let settableResult = AXUIElementIsAttributeSettable(activeWindow, kAXSizeAttribute as CFString, &isSettable)
+
+            if isSettable.boolValue {
+                // If the window is resizeable then we should resize it
+                let newWidth = round(activeWindowFrame.width - deltaWidth)
+                let newFrame = NSRect(
+                    x: activeWindowFrame.origin.x,
+                    y: activeWindowFrame.origin.y,
+                    width: newWidth,
+                    height: activeWindowFrame.height
+                )
+                _ = activeWindow.setFrame(newFrame)
+            } else {
+                // If the window is not resizeable then we should move it's position but not change it's size. 
+               let newX = round(activeWindowFrame.origin.x - deltaWidth)
+               let newPosition = NSPoint(x: newX, y: activeWindowFrame.origin.y)
+               _ = activeWindow.setPosition(newPosition)
+            }       
         }
     }
     

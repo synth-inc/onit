@@ -43,7 +43,7 @@ struct ContentView: View {
                             Spacer()
                         }
                     }
-                    .frame(width: TetherAppsManager.minOnitWidth, height: .infinity)
+                    .frame(width: panelWidth, height: .infinity)
                     .background(Color.black)
                 } else {
                     VStack(spacing: 0) {
