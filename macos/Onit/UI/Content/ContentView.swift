@@ -43,7 +43,8 @@ struct ContentView: View {
                             Spacer()
                         }
                     }
-                    .frame(width: panelWidth, height: .infinity)
+                    .frame(width: panelWidth)
+                    .frame(maxHeight: .infinity)
                     .background(Color.black)
                 } else {
                     VStack(spacing: 0) {

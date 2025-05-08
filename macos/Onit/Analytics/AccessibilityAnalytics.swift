@@ -35,7 +35,7 @@ struct AccessibilityAnalytics {
                 "is_trusted": AXIsProcessTrusted(),
                 "accessibility_enabled": Defaults[.autoContextEnabled],
                 "input_enabled": Defaults[.autoContextFromHighlights],
-                "autocontext_enabled": Defaults[.autoContextFromHighlights],
+                "autocontext_enabled": Defaults[.autoContextFromCurrentWindow],
                 "app_version": AccessibilityAnalytics.appVersion,
                 "os_version": ProcessInfo.processInfo.operatingSystemVersionString
             ]
@@ -48,7 +48,7 @@ struct AccessibilityAnalytics {
             "is_trusted": AXIsProcessTrusted(),
             "accessibility_enabled": Defaults[.autoContextEnabled],
             "input_enabled": Defaults[.autoContextFromHighlights],
-            "autocontext_enabled": Defaults[.autoContextFromHighlights],
+            "autocontext_enabled": Defaults[.autoContextFromCurrentWindow],
             "app_version": AccessibilityAnalytics.appVersion,
             "os_version": ProcessInfo.processInfo.operatingSystemVersionString
         ]

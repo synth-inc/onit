@@ -122,8 +122,10 @@ extension OnitPanelState {
                         width: newWidth,
                         height: curFrame.height
                     )
-                    TetherAppsManager.shared.targetInitialFrames.removeValue(forKey: window)
                 }
+                // We need to remove this everytime, to prevent saving old frames.
+                // If we have old frames, we won't save the new ones.
+                TetherAppsManager.shared.targetInitialFrames.removeValue(forKey: window)
             }
         
 
@@ -353,7 +355,7 @@ extension OnitPanelState {
         fromPanel: CGRect,
         toPanel: CGRect
     ) {
-        guard !panel.isAnimating, panel.frame != toPanel else { return }
+        guard !panel.isAnimating else { return }
         
         panel.isAnimating = true
         panel.setFrame(fromPanel, display: false)

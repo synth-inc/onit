@@ -129,7 +129,6 @@ class TokenValidationManager {
             case .custom:
                 return nil
             }
-            
         }
         return nil
     }

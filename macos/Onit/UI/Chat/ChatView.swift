@@ -38,7 +38,7 @@ struct ChatView: View {
                                 scrollToBottom(using: proxy)
                             }
                     }
-                    .onChange(of: state.streamedResponse) {
+                    .onChange(of: state.streamedResponse) { old, new in
                         scrollToBottom(using: proxy)
                     }
                     .onChange(of: state.currentChat) { old, new in
