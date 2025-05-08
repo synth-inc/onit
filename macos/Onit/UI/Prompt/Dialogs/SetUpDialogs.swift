@@ -93,12 +93,10 @@ struct SetUpDialogs: View {
         let task = DispatchWorkItem {
             guard state.panel?.isVisible == true else {
                 state.setUpHeight = 0
-                state.panel?.adjustSize()
                 return
             }
             
             state.setUpHeight = newHeight
-            state.panel?.adjustSize()
         }
         debounceTask = task
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.3, execute: task)

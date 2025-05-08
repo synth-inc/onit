@@ -8,8 +8,6 @@ struct GeneralTab: View {
     
     @Default(.fontSize) var fontSize
     @Default(.lineHeight) var lineHeight
-    @Default(.panelPosition) var panelPosition
-    @Default(.isRegularApp) var isRegularApp
     @Default(.launchShortcutToggleEnabled) var launchShortcutToggleEnabled
     @Default(.createNewChatOnPanelOpen) var createNewChatOnPanelOpen
     @Default(.openOnMouseMonitor) var openOnMouseMonitor
@@ -128,32 +126,6 @@ struct GeneralTab: View {
                         .controlSize(.small)
                     }
                 }
-//                VStack(alignment: .leading, spacing: 8) {
-//                    Text("Panel Position")
-//                        .font(.system(size: 13))
-//
-//                    HStack(spacing: 8) {
-//                        ForEach(PanelPosition.allCases, id: \.self) { position in
-//                            Button {
-//                                panelPosition = position
-//                                state.panel?.updatePosition()
-//                            } label: {
-//                                VStack(spacing: 4) {
-//                                    Image(systemName: position.systemImage)
-//                                        .font(.system(size: 16))
-//                                    Text(position.rawValue)
-//                                        .font(.system(size: 11))
-//                                }
-//                                .frame(maxWidth: .infinity)
-//                                .padding(.vertical, 8)
-//                                .background(panelPosition == position ? Color.accentColor : Color.clear)
-//                                .clipShape(RoundedRectangle(cornerRadius: 6))
-//                                .contentShape(Rectangle())
-//                            }
-//                            .buttonStyle(.plain)
-//                        }
-//                    }
-//                }
             }
         } header: {
             HStack {
@@ -166,25 +138,6 @@ struct GeneralTab: View {
     var experimentalSection: some View {
         Section {
             VStack(spacing: 16) {
-                HStack {
-                    Text("Use Onit as a standard application")
-                        .font(.system(size: 13))
-                    SettingInfoButton(
-                        title: "Use Onit as a standard application",
-                        description:
-                            "When enabled, Onit will be a standard application, meaing it can be accessed from the Dock and Spotlight.",
-                        defaultValue: "off",
-                        valueType: "Bool"
-                    )
-                    Spacer()
-                    Toggle(
-                        "",
-                        isOn: $isRegularApp
-                    )
-                    .toggleStyle(.switch)
-                    .controlSize(.small)
-                }
-
                 HStack {
                     Text("Use launch shortcut as a toggle")
                         .font(.system(size: 13))

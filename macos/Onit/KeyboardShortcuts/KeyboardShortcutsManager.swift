@@ -74,15 +74,11 @@ struct KeyboardShortcutsManager {
         
         KeyboardShortcuts.Name.allCases.forEach { name in
             KeyboardShortcuts.onKeyUp(for: name) {
-                let state = AccessibilityPermissionManager.shared.accessibilityPermissionStatus == .granted ?
-                    TetherAppsManager.shared.state :
-                    UntetheredScreenManager.shared.state
+                let state = OnitPanelStateCoordinator.shared.state
                 switch name {
                 case .launch:
                     let eventProperties: [String: Any] = [
-                        "app_hidden": state.panel == nil,
-                        "highlight_hint_visible": HighlightHintWindowController.shared.isVisible(),
-                        "highlight_hint_mode": FeatureFlagManager.shared.highlightHintMode,
+                        "app_hidden": state.panel == nil
                     ]
                     PostHogSDK.shared.capture("shortcut_launch", properties: eventProperties)
                     state.launchPanel()
@@ -98,8 +94,6 @@ struct KeyboardShortcutsManager {
                     state.escapeAction()
                 case .newChat:
                     state.newChat()
-                case .resizeWindow:
-                    state.panel?.toggleFullscreen()
                 case .toggleLocalMode:
                     Defaults[.mode] = Defaults[.mode] == .local ? .remote : .local
                 default:
@@ -135,11 +129,7 @@ struct KeyboardShortcutsManager {
         let name = KeyboardShortcuts.Name(systemPrompt.id)
         
         KeyboardShortcuts.onKeyUp(for: name) {
-            if (AccessibilityPermissionManager.shared.accessibilityPermissionStatus == .granted) {
-                TetherAppsManager.shared.state.systemPromptId = systemPrompt.id
-            } else {
-                UntetheredScreenManager.shared.state.systemPromptId = systemPrompt.id
-            }
+            OnitPanelStateCoordinator.shared.state.systemPromptId = systemPrompt.id
         }
     }
 }

@@ -10,9 +10,6 @@ import SwiftUI
 
 struct ContentView: View {
     @Environment(\.windowState) private var state
-    
-    @Default(.panelWidth) var panelWidth
-    @Default(.isRegularApp) var isRegularApp
     @ObservedObject private var accessibilityPermissionManager = AccessibilityPermissionManager.shared
     @Default(.showOnboarding) var showOnboarding
     
@@ -33,7 +30,7 @@ struct ContentView: View {
 
     var body: some View {
         HStack(spacing: -TetheredButton.width / 2) {
-            if isRegularApp { TetheredButton() }
+            TetheredButton()
             
             ZStack(alignment: .top) {
                 if shouldShowOnboarding {
@@ -44,17 +41,16 @@ struct ContentView: View {
                             Spacer()
                         }
                     }
-                    .frame(width: TetherAppsManager.minOnitWidth, height: .infinity)
+                    .frame(width: TetherAppsManager.minOnitWidth)
+                    .frame(maxHeight: .infinity)
                     .background(Color.black)
                 } else {
                     VStack(spacing: 0) {
-                        if !isRegularApp { Toolbar() }
-                        else { Spacer().frame(height: 38) }
+                        Spacer().frame(height: 38)
                         
                         PromptDivider()
                         
-                        if !isRegularApp { ChatView() }
-                        else if state.showChatView { ChatView().transition(.opacity) }
+                        if state.showChatView { ChatView().transition(.opacity) }
                         else { Spacer() }
                     }
                 }
@@ -72,28 +68,18 @@ struct ContentView: View {
         .toolbar {
             if !shouldShowOnboarding {
                 ToolbarItem(placement: .navigation) {
-                    if isRegularApp { ToolbarAddButton() }
-                    else { EmptyView() }
+                    ToolbarAddButton()
                 }
                 ToolbarItem(placement: .automatic) { TetheredToAppView() }
                 ToolbarItem(placement: .automatic) { Spacer() }
                 ToolbarItem(placement: .primaryAction) {
-                    if isRegularApp { Toolbar() }
-                    else { EmptyView() }
+                    Toolbar()
                 }
             }
         }
         .simultaneousGesture(
             TapGesture(count: 1)
                 .onEnded({ state.handlePanelClicked() })
-        )
-        .gesture(
-            DragGesture(minimumDistance: 1)
-                .onEnded { value in
-                    if let panel = state.panel {
-                        panelWidth = panel.frame.width
-                    }
-                }
         )
         .fileImporter(
             isPresented: showFileImporterBinding,

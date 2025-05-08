@@ -148,12 +148,6 @@ extension OnitRegularPanel: OnitPanel {
         self._level = level
     }
     
-    func adjustSize() { }
-    
-    func toggleFullscreen() { }
-    
-    func updatePosition() { }
-    
     func show() {
         makeKeyAndOrderFront(nil)
         setupFrame()

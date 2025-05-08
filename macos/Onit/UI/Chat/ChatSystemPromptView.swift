@@ -119,20 +119,6 @@ struct ChatSystemPromptView: View {
         .padding(.top, 8)
         .padding(.horizontal, 12)
         .padding(.bottom, 0)
-        .background {
-            GeometryReader { g in
-                Color.clear
-                    .onAppear {
-                        state.systemPromptHeight = g.size.height
-                    }
-                    .onChange(of: g.size.height) { _, new in
-                        state.systemPromptHeight = new
-                    }
-                    .onDisappear {
-                        state.systemPromptHeight = 0
-                    }
-            }
-        }
     }
 }
 
