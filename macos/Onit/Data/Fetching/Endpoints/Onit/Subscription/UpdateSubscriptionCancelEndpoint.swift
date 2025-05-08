@@ -10,7 +10,7 @@ import Foundation
 extension FetchingClient {
     func updateSubscriptionCancel(cancelAtPeriodEnd: Bool) async throws -> Void {
         let endpoint = UpdateSubscriptionCancelEndpoint(cancelAtPeriodEnd: cancelAtPeriodEnd)
-        let _ =  try await execute(endpoint)
+        let _ = try await execute(endpoint)
     }
 }
 
