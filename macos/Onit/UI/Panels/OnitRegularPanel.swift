@@ -38,7 +38,7 @@ class OnitRegularPanel: NSPanel {
     
     init(state: OnitPanelState) {
         self.state = state
-        self.width = Defaults[.panelWidth] ?? ContentView.idealWidth
+        self.width = state.panelWidth
         
         super.init(
             contentRect: NSRect(x: 0, y: 0, width: width, height: 0),
@@ -214,7 +214,7 @@ extension OnitRegularPanel: OnitPanel {
             )
                 
             setFrame(newFrame, display: true)
-            ContentView.idealWidth = newWidth // Update static property
+            state.panelWidth = newWidth // Update state property
         }
     }
     

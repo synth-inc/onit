@@ -83,6 +83,15 @@ class OnitPanelState: NSObject {
     
     var tetheredButtonYPosition: CGFloat?
     
+    var panelWidth: CGFloat {
+        didSet {
+            Defaults[.panelWidth] = panelWidth
+            notifyDelegates { delegate in
+                delegate.panelStateDidChange(state: self)
+            }
+        }
+    }
+    
     var currentChat: Chat?
     var currentPrompts: [Prompt]?
     
@@ -136,6 +145,7 @@ class OnitPanelState: NSObject {
 
     init(trackedWindow: TrackedWindow?) {
         self.trackedWindow = trackedWindow
+        self.panelWidth = Defaults[.panelWidth] ?? 400
         super.init()
         
         self.promptSuggestionService = SystemPromptSuggestionService(state: self)
@@ -143,6 +153,7 @@ class OnitPanelState: NSObject {
 
     init(trackedScreen: TrackedScreen?) {
         self.trackedScreen = trackedScreen
+        self.panelWidth = Defaults[.panelWidth] ?? 400
         super.init()
         
         self.promptSuggestionService = SystemPromptSuggestionService(state: self)
