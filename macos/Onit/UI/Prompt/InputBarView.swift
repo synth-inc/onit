@@ -28,22 +28,5 @@ struct InputBarView: View {
             FileRow(contextList: state.pendingContextList)
             TextInputView()
         }
-        .background {
-            heightListener
-        }
-    }
-
-    var heightListener: some View {
-        GeometryReader { proxy in
-            Color.clear
-                .onAppear {
-                    state.inputHeight = proxy.size.height
-                    state.panel?.adjustSize()
-                }
-                .onChange(of: proxy.size.height) { _, new in
-                    state.inputHeight = new
-                    state.panel?.adjustSize()
-                }
-        }
     }
 }

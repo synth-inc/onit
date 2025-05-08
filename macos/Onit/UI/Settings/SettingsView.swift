@@ -4,6 +4,7 @@ import Defaults
 
 struct SettingsView: View {
     @Environment(\.appState) var appState
+    @ObservedObject private var accessibilityPermissionManager = AccessibilityPermissionManager.shared
     @ObservedObject private var featureFlagsManager = FeatureFlagManager.shared
 
     var body: some View {
@@ -39,7 +40,7 @@ struct SettingsView: View {
 
             AccessibilityTab()
                 .tabItem {
-                    if Defaults[.autoContextEnabled] {
+                    if accessibilityPermissionManager.accessibilityPermissionStatus == .granted {
                         Label("Context", systemImage: "lightbulb")
                     } else {
                         Label("Context", systemImage: "lightbulb.slash")

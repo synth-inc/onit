@@ -7,6 +7,7 @@
 
 import Defaults
 import SwiftUI
+import PostHog
 
 extension OnitPanelState: NSWindowDelegate {
     
@@ -27,22 +28,14 @@ extension OnitPanelState: NSWindowDelegate {
             newChat(clearContext: false)
         }
 
-        let newPanel: OnitPanel = Defaults[.isRegularApp] ?
-            OnitRegularPanel(state: self) :
-            OnitAccessoryPanel(state: self)
-        
-        panel = newPanel
+        panel = OnitRegularPanel(state: self)
 
-        if Defaults[.isRegularApp] {
-            if (trackedWindow != nil) {
-                repositionPanel(action: .undefined)
-            } else if trackedScreen != nil {
-                showPanelForScreen()
-            } else {
-                print("Something went wrong while trying to reposition the panel.")
-            }
+        if trackedWindow != nil {
+            repositionPanel(action: .undefined)
+        } else if trackedScreen != nil {
+            showPanelForScreen()
         } else {
-            KeyboardShortcutsManager.enable(modelContainer: container)
+            print("Something went wrong while trying to reposition the panel.")
         }
 
         // Focus the text input when we're activating the panel
@@ -55,23 +48,12 @@ extension OnitPanelState: NSWindowDelegate {
         systemPromptState.shouldShowSelection = false
         systemPromptState.shouldShowSystemPrompt = false
 
-        if Defaults[.isRegularApp] {
-            if trackedWindow != nil || trackedScreen != nil {
-                restoreWindowPosition()
-            } else {
-                // What to do
-            }
-        } else {
-            panel.hide()
-            self.panel = nil
-            KeyboardShortcutsManager.disable(modelContainer: container)
-        }
-        
-        HighlightHintWindowController.shared.adjustWindow()
+        restoreWindowPosition()
     }
     
     func launchPanel() {
         guard let panel = panel else {
+            PostHogSDK.shared.capture("launch_panel", properties:  ["applicationName": trackedWindow?.element.appName() ?? "N/A"])
             showPanel()
             return
         }
@@ -137,6 +119,6 @@ extension OnitPanelState: NSWindowDelegate {
     func windowShouldClose(_ sender: NSWindow) -> Bool {
         closePanel()
         
-        return !Defaults[.isRegularApp]
+        return false
     }
 }

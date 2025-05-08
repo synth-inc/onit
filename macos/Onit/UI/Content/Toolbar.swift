@@ -15,28 +15,18 @@ struct Toolbar: View {
     @Environment(\.windowState) private var state
     
     @Default(.mode) var mode
-    @Default(.isRegularApp) var isRegularApp
 
     var body: some View {
         HStack(alignment: .center, spacing: 4) {
-            if !isRegularApp {
-                esc
-                ToolbarAddButton()
-                Spacer()
-            }
-            
             localMode
             history
             settings
-            
-            if !isRegularApp { resize }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .frame(height: 32, alignment: .center)
         .foregroundStyle(.gray200)
-        .padding(.horizontal, isRegularApp ? 0 : 12)
+        .padding(.horizontal, 0)
         .background { escListener }
-        .background { heightListener }
     }
 
     var esc: some View {
@@ -53,28 +43,6 @@ struct Toolbar: View {
     // Empty view for layout purposes
     var escListener: some View {
         EmptyView()
-    }
-    
-    var heightListener: some View {
-        GeometryReader { proxy in
-            Color.clear
-                .onAppear {
-                    state.headerHeight = proxy.size.height
-                }
-                .onChange(of: proxy.size.height) { _, new in
-                    state.headerHeight = new
-                }
-        }
-    }
-
-    var resize: some View {
-        IconButton(
-            icon: .resize,
-            iconSize: 22,
-            action: { state.panel?.toggleFullscreen() },
-            tooltipPrompt: "Resize Window",
-            tooltipShortcut: .keyboardShortcuts(.resizeWindow)
-        )
     }
 
     // Helper function to create a picker for models

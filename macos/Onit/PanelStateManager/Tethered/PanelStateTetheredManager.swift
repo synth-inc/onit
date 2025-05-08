@@ -1,5 +1,5 @@
 //
-//  TetherAppsManager.swift
+//  PanelStateTetheredManager.swift
 //  Onit
 //
 //  Created by Kévin Naudin on 12/03/2025.
@@ -11,71 +11,39 @@ import Defaults
 import SwiftUI
 
 @MainActor
-class TetherAppsManager: ObservableObject {
+class PanelStateTetheredManager: PanelStateBaseManager, ObservableObject {
     
     // MARK: - Singleton instance
     
-    static let shared = TetherAppsManager()
+    static let shared = PanelStateTetheredManager()
     
     // MARK: - Properties
     
-    @Published var state: OnitPanelState
-    @Published var tetherButtonPanelState: OnitPanelState?
-    var states: [TrackedWindow: OnitPanelState] = [:]
+    var statesByWindow: [TrackedWindow: OnitPanelState] = [:] {
+        didSet {
+            states = Array(statesByWindow.values)
+        }
+    }
     
     /// Dragging
     private let dragManager = GlobalDragManager()
     private var dragManagerCancellable: AnyCancellable?
     private var draggingState: OnitPanelState?
     
-    private let defaultState = OnitPanelState(trackedWindow: nil)
-    
-    private var regularAppCancellable: AnyCancellable?
-    private var skipFirstRegularAppUpdate: Bool = true
-    
-    static let minOnitWidth: CGFloat = ContentView.idealWidth
-    static let spaceBetweenWindows: CGFloat = -(TetheredButton.width / 2)
-    
     var targetInitialFrames: [AXUIElement: CGRect] = [:]
-   
-    var tetherHintDetails: TetherHintDetails
     
     // MARK: - Private initializer
-    private init() {
-        class CustomWindow: NSWindow {
-            override var canBecomeKey: Bool { true }
-        }
-        let window = CustomWindow(
-            contentRect: NSRect(x: 0, y: 0, width: ExternalTetheredButton.containerWidth, height: ExternalTetheredButton.containerHeight),
-            styleMask: [.borderless],
-            backing: .buffered,
-            defer: false
-        )
-        
-        window.isOpaque = false
-        window.backgroundColor = NSColor.clear
-        window.level = .floating
-        window.hasShadow = false
-        window.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
-        window.isReleasedWhenClosed = false
-        window.titlebarAppearsTransparent = true
-        window.titleVisibility = .hidden
-        window.standardWindowButton(.closeButton)?.isHidden = true
-        window.standardWindowButton(.miniaturizeButton)?.isHidden = true
-        window.standardWindowButton(.zoomButton)?.isHidden = true
-        
-        tetherHintDetails = TetherHintDetails(tetherWindow: window)
-        state = defaultState
+    
+    private override init() {
+        super.init()
     }
     
     // MARK: - Functions
     
-    func startObserving() {
-        stopObserving()
+    override func start() {
+        stop()
         
-        regularAppCancellable = Defaults.publisher(.isRegularApp)
-            .map(\.newValue)
-            .sink(receiveValue: onChange(isRegularApp:))
+        AccessibilityNotificationsManager.shared.addDelegate(self)
         
         dragManagerCancellable = dragManager.$isDragging
             .sink { isDragging in
@@ -100,17 +68,20 @@ class TetherAppsManager: ObservableObject {
         dragManager.startMonitoring()
     }
     
-    func stopObserving() {
-        regularAppCancellable?.cancel()
-        regularAppCancellable = nil
-        stopAllObservers()
+    override func stop() {
+        AccessibilityNotificationsManager.shared.removeDelegate(self)
         NotificationCenter.default.removeObserver(self)
         dragManager.stopMonitoring()
+        
+        super.stop()
+        
+        statesByWindow = [:]
+        targetInitialFrames = [:]
     }
     
     @objc func appDidBecomeActive(_ notification: Notification) {
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-            for (_, state) in self.states {
+            for (_, state) in self.statesByWindow {
                 if let panel = state.panel, panel.isKeyWindow, let window = state.trackedWindow?.element {
                     window.bringToFront()
                     return
@@ -126,7 +97,7 @@ class TetherAppsManager: ObservableObject {
     // MARK: - Handling panel state changes
     
     func handlePanelStateChange(state: OnitPanelState, action: TrackedWindowAction) {
-        guard Defaults[.isRegularApp], let window = state.trackedWindow?.element else {
+        guard let window = state.trackedWindow?.element else {
             return
         }
         
@@ -177,7 +148,7 @@ class TetherAppsManager: ObservableObject {
         if let currentWindow = trackedWindow?.element,
            let currentWindowScreen = currentWindow.getFrame(convertedToGlobalCoordinateSpace: true)?.findScreen() {
             
-            for (key, value) in states {
+            for (key, value) in statesByWindow {
                 if let frame = key.element.getFrame(convertedToGlobalCoordinateSpace: true) {
                     // Do something on the frame
                     
@@ -193,7 +164,7 @@ class TetherAppsManager: ObservableObject {
             }
         } else {
             /** Can't find current window - ignored apps */
-            for (_, value) in states {
+            for (_, value) in statesByWindow {
                 value.panel?.level = .normal
             }
         }
@@ -202,7 +173,7 @@ class TetherAppsManager: ObservableObject {
     func getState(for trackedWindow: TrackedWindow) -> OnitPanelState {
         let panelState: OnitPanelState
         
-        if let (_, activeState) = states.first(where: { (key: TrackedWindow, value: OnitPanelState) in
+        if let (_, activeState) = statesByWindow.first(where: { (key: TrackedWindow, value: OnitPanelState) in
             key == trackedWindow
         }) {
             activeState.trackedWindow = trackedWindow
@@ -210,7 +181,7 @@ class TetherAppsManager: ObservableObject {
         } else {
             panelState = OnitPanelState(trackedWindow: trackedWindow)
             
-            states[trackedWindow] = panelState
+            statesByWindow[trackedWindow] = panelState
         }
         
         panelState.addDelegate(self)
@@ -220,42 +191,6 @@ class TetherAppsManager: ObservableObject {
     }
     
     // MARK: - Private functions
-    
-    private func startAllObservers() {
-        AccessibilityNotificationsManager.shared.addDelegate(self)
-    }
-    
-    private func stopAllObservers() {
-        AccessibilityNotificationsManager.shared.removeDelegate(self)
-        hideTetherWindow()
-    }
-    
-    private func onChange(isRegularApp: Bool) {
-        if isRegularApp {
-            startAllObservers()
-        } else {
-            stopAllObservers()
-            resetFramesOnAppChange()
-        }
-        guard !skipFirstRegularAppUpdate else {
-            skipFirstRegularAppUpdate = false
-            return
-        }
-        
-        // Close all panels without animations
-        defaultState.panel?.hide()
-        defaultState.panel = nil
-        
-        for (_, state) in states {
-            state.panel?.hide()
-            state.panel = nil
-        }
-        
-        if !isRegularApp {
-            hideTetherWindow()
-            defaultState.launchPanel()
-        }
-    }
     
     private func resetFramesOnAppChange() {
         targetInitialFrames.forEach { element, initialFrame in
@@ -308,5 +243,4 @@ class TetherAppsManager: ObservableObject {
         }
         handlePanelStateChange(state: state, action: .moveEnd)
     }
-    
 }

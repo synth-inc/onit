@@ -1,14 +1,14 @@
 //
-//  AccessibilityParserGeneric.swift
+//  AccessibilityParserCalendar.swift
 //  Onit
 //
-//  Created by Kévin Naudin on 20/01/2025.
+//  Created by Kévin Naudin on 28/04/2025.
 //
 
-import ApplicationServices.HIServices.AXUIElement
+import ApplicationServices.HIServices
 
-/// Generic  implementation of the ``AccessibilityParserLogic``
-class AccessibilityParserGeneric: AccessibilityParserBase {
+/// Implementation of `AccessibilityParserLogic` for Calendar app
+class AccessibilityParserCalendar: AccessibilityParserBase {
 
     // MARK: - AccessibilityParserLogic
 
@@ -17,7 +17,7 @@ class AccessibilityParserGeneric: AccessibilityParserBase {
         var result: [String: String] = [:]
         var screen: String = ""
         var highlightedTextFound = false
-        
+
         _ = AccessibilityParserUtility.recursivelyParse(
             element: element,
             maxDepth: AccessibilityParserConfig.recursiveDepthMax
@@ -32,15 +32,20 @@ class AccessibilityParserGeneric: AccessibilityParserBase {
                 }
             }
             
-            if let value = element.value(), !value.isEmpty {
-                screen += "\(value) "
+            guard let role = element.role(), role == kAXStaticTextRole,
+                  let description = element.description(),
+                  !description.isEmpty,
+                  !screen.contains(description) else {
+                return nil
             }
+            
+            screen += "\(description)\n"
 
             return nil
         }
-
+        
         result[AccessibilityParsedElements.screen] = screen
-
+        
         return result
     }
 }

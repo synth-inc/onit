@@ -18,23 +18,21 @@
         <string>$(MARKETING_VERSION)</string>
         <key>CFBundleURLTypes</key>
         <array>
-                <dict>
-                        <key>CFBundleTypeRole</key>
-                        <string>Editor</string>
-                        <key>CFBundleURLName</key>
-                        <string>onit</string>
-                        <key>CFBundleURLSchemes</key>
-                        <array>
-                                <string>onit</string>
-                        </array>
-                </dict>
+            <dict>
+                <key>CFBundleTypeRole</key>
+                <string>Editor</string>
+                <key>CFBundleURLName</key>
+                <string>onit</string>
+                <key>CFBundleURLSchemes</key>
+                <array>
+                    <string>onit</string>
+                </array>
+            </dict>
         </array>
         <key>CFBundleVersion</key>
         <string>$(CURRENT_PROJECT_VERSION)</string>
         <key>LSApplicationCategoryType</key>
         <string>public.app-category.utilities</string>
-        <key>LSUIElement</key>
-        <true/>
         <key>NSApplicationCrashOnExceptions</key>
         <true/>
         <key>NSHumanReadableCopyright</key>

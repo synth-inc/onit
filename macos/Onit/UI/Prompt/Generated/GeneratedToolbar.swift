@@ -73,7 +73,6 @@ struct GeneratedToolbar: View {
         Button {
             if prompt.generationIndex != -1 && !prompt.responses.isEmpty {
                 let text = prompt.sortedResponses[prompt.generationIndex].text
-                HighlightHintWindowController.shared.insertText(text)
                 
                 state.closePanel()
             } else {

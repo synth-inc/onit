@@ -1,5 +1,5 @@
 //
-//  AccessibilityTextSelectionFilter.swift
+//  HighlightedTextValidator.swift
 //  Onit
 //
 //  Created by Kévin Naudin on 29/01/2025.
@@ -7,10 +7,10 @@
 
 import ApplicationServices
 
-struct AccessibilityTextSelectionFilter {
+struct HighlightedTextValidator {
 
-    static func filter(element: AXUIElement) -> Bool {
-        guard element.role() == "AXTextField" else { return false }
+    static func isValid(element: AXUIElement) -> Bool {
+        guard element.role() == "AXTextField" else { return true }
 
         guard let description = element.description() else {
             // Arc
@@ -19,28 +19,35 @@ struct AccessibilityTextSelectionFilter {
                 as? String,
                 placeholder == "Search or Enter URL…"
             {
-                return true
+                return false
             }
-            return false
+            return true
         }
 
         switch description {
 
         // Chrome + Microsoft Edge
         case "Address and search bar":
-            return true
+            return false
         // Firefox
         case "Search or enter address":
-            return true
+            return false
         // Safari
         case "Smart Search Field", "Enter website name":
-            return true
+            return false
         // Opera
         case "Address field":
-            return true
+            return false
 
         default:
-            return false
+            return true
         }
+    }
+    
+    static func isValid(text: String) -> Bool {
+        guard !text.isEmpty else { return false }
+        guard text.count >= 3 else { return false }
+        
+        return true
     }
 }

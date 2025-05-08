@@ -15,15 +15,22 @@ class AccessibilityParserXCode: AccessibilityParserBase {
     /** See ``AccessibilityParserLogic`` parse function */
     override func parse(element: AXUIElement) -> [String: String] {
         var result: [String: String] = [:]
+        var highlightedTextFound = false
 
         return AccessibilityParserUtility.recursivelyParse(
             element: element,
-            maxDepth: Config.recursiveDepthMax
+            maxDepth: AccessibilityParserConfig.recursiveDepthMax
         ) { element in
-            if let parentResult = super.parse(element: element) {
-                result.merge(parentResult) { _, new in new }
+            
+            if !highlightedTextFound {
+                let parentResult = super.parse(element: element)
+                
+                if !parentResult.isEmpty {
+                    highlightedTextFound = true
+                    result.merge(parentResult) { _, new in new }
+                }
             }
-
+            
             guard let description = element.description(),
                   description != "Console",
                   let role = element.role(),

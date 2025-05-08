@@ -15,7 +15,13 @@ extension pid_t {
     }
     
     func getFocusedWindow() -> AXUIElement? {
-        return getAXUIElement().focusedWindow()
+        let appElement = getAXUIElement()
+        
+        if let value = appElement.attribute(forAttribute: kAXFocusedWindowAttribute as CFString) {
+            return (value as! AXUIElement)
+        }
+        
+        return nil
     }
 
     func getAppName() -> String? {

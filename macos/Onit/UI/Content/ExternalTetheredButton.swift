@@ -8,6 +8,7 @@
 
 import Defaults
 import SwiftUI
+import Foundation
 
 struct ExternalTetheredButton: View {
     @Environment(\.appState) var appState
@@ -27,10 +28,6 @@ struct ExternalTetheredButton: View {
     @State private var hovering = false
     @State private var isDragging = false
     @State private var dragStartTime: Date?
-    
-    private var isAccessibilityAuthorized: Bool {
-        accessibilityPermissionManager.accessibilityPermissionStatus == .granted
-    }
     
     private var fitActiveWindowPrompt: String {
         return "Launch Onit"
@@ -102,18 +99,14 @@ struct ExternalTetheredButton: View {
     private func tetherAction() {
         guard !isDragging else { return }
         
-        if isAccessibilityAuthorized {
-            if let state = TetherAppsManager.shared.tetherButtonPanelState {
-                state.launchPanel()
-            } else {
-                print("Couldn't find activeTrackedWindow")
-            }
+        if let state = PanelStateCoordinator.shared.tetherButtonPanelState {
+			if state.panelOpened {
+				state.closePanel()
+			} else {
+	            state.launchPanel()
+			}
         } else {
-            if let state = UntetheredScreenManager.shared.tetherButtonPanelState {
-                state.launchPanel()
-            } else {
-                print("Couldn't find activeTrackedWindow")
-            }
+            log.warning("Couldn't find panel state for tether button")
         }
     }
 }
