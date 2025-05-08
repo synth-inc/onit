@@ -35,6 +35,7 @@ struct SettingsSection<Child: View>: View {
         Section(header: header) {
             child()
         }
+        .padding(3)
     }
 }
 

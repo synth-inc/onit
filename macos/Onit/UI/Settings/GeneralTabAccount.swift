@@ -47,68 +47,66 @@ struct GeneralTabAccount: View {
 // MARK: - Child Components
 
 extension GeneralTabAccount {
+    private func text(
+        text: String,
+        weight: Font.Weight = Font.Weight.regular
+    ) -> some View {
+        Text(text)
+            .styleText(
+                size: 13,
+                weight: weight,
+                color: Color(hex: "#A1A4AF") ?? .gray100
+            )
+    }
+    
     private var loggedOutText: some View {
-        Text("Create an account to access all features and use models without APIs!")
-            .styleText(size: 13, weight: .regular, color: .gray100)
+        text(text: "Create an account to access all features and use models without APIs!")
     }
     
     private var loggedInText: some View {
         HStack(spacing: 4) {
             if let email = appState.account?.email {
-                Text("You are signed in as").styleText(size: 13, weight: .regular, color: .gray100)
-                Text(email).styleText(size: 13, weight: .bold, color: .gray100)
+                text(text: "You are signed in as")
+                text(text: email, weight: .semibold)
             } else if let appleEmail = appState.account?.appleEmail {
-                Text("You are signed in as").styleText(size: 13, weight: .regular, color: .gray100)
-                Text(appleEmail).styleText(size: 13, weight: .bold, color: .gray100)
+                text(text: "You are signed in as")
+                text(text: appleEmail, weight: .semibold)
             } else {
-                Text("Signed in.").styleText(size: 13, weight: .regular, color: .gray100)
+                text(text: "Signed in.")
             }
         }
     }
     
     private var createAnAccountButton: some View {
-        Button {
-            Defaults[.showOnboardingSignUp] = true
-        } label: {
-            HStack(alignment: .center, spacing: 2) {
-                Text("👤").styleText(size: 11, weight: .regular)
-                Text("Create an account").styleText(size: 13, weight: .regular)
-            }
-        }
-        .buttonStyle(DefaultButtonStyle())
-        .background(.blue)
-        .cornerRadius(5)
+        SimpleButton(
+            iconText: "👤",
+            text: "Create an account",
+            action: { Defaults[.showOnboardingSignUp] = true },
+            background: .blue
+        )
     }
     
     private var signInButton: some View {
-        Button {
-            Defaults[.showOnboardingSignUp] = false
-        } label: {
-            Text("Sign in").styleText(size: 13, weight: .regular)
-        }
-        .buttonStyle(DefaultButtonStyle())
+        SimpleButton(
+            text: "Sign in",
+            action: { Defaults[.showOnboardingSignUp] = false }
+        )
     }
     
     private var logoutButton: some View {
-        Button {
-            logout()
-        } label: {
-            Text("Log out").styleText(size: 13, weight: .regular)
-        }
-        .buttonStyle(DefaultButtonStyle())
+        SimpleButton(
+            text: "Log out",
+            action: logout
+        )
     }
     
     private var deleteAccountButton: some View {
-        Button {
-            showDeleteAccountAlert = true
-        } label: {
-            Text("Delete account").styleText(size: 13, color: .red)
-        }
-        .buttonStyle(PlainButtonStyle())
-        .frame(height: 22)
-        .padding(.horizontal, 7)
-        .background(.redBrick)
-        .cornerRadius(5)
+        SimpleButton(
+            text: "Delete account",
+            textColor: .red,
+            action: { showDeleteAccountAlert = true },
+            background: .redBrick
+        )
         .alert(
             "Are you sure you want to delete your account?",
             isPresented: $showDeleteAccountAlert
@@ -129,6 +127,7 @@ extension GeneralTabAccount {
     private func logout() {
         TokenManager.token = nil
         appState.account = nil
+        Defaults[.showOnboardingSignUp] = false
     }
     
     @MainActor

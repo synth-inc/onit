@@ -23,6 +23,9 @@ struct OnboardingAuth: View {
     @State private var isHoveredInput: Bool = false
     @State private var isPressedInput: Bool = false
     
+    @State private var isHoveredBackButton: Bool = false
+    @State private var isPressedBackButton: Bool = false
+    
     @State private var email: String = ""
     @State private var loginPassword: String = ""
     @State private var requestedEmailLogin: Bool = false
@@ -30,11 +33,6 @@ struct OnboardingAuth: View {
     
     @State private var errorMessageEmail: String = ""
     @State private var errorMessageAuth: String? = nil
-    
-    @State private var token: String = ""
-    @State private var isHoveredBackButton: Bool = false
-    @State private var isPressedBackButton: Bool = false
-    @State private var errorMessageToken: String = ""
     
     var submitDisabled: Bool {
         return email.isEmpty || !errorMessageEmail.isEmpty
@@ -217,35 +215,16 @@ extension OnboardingAuth {
                 .styleText(size: 23)
             
             VStack(alignment: .center, spacing: 2) {
-                Text("Click the link we sent to:").styleText(size: 13, color: .gray100)
+                Text("Click the link we sent to:")
+                    .styleText(
+                        size: 13,
+                        weight: .regular,
+                        color: .gray100
+                    )
+                
                 Text(email).styleText(size: 15, weight: .regular)
             }
             .padding(.vertical, 16)
-            
-            VStack(spacing: 12) {
-                InputField(
-                    placeholder: "Token",
-                    text: $token,
-                    errorMessage: errorMessageToken,
-                    onSubmit: handleTokenLogin
-                )
-                
-                TextButton(
-                    action: handleTokenLogin,
-                    height: 40,
-                    cornerRadius: 9,
-                    background: .blue400,
-                    hoverBackground: .blue350
-                ) {
-                    Text("Continue with token")
-                        .frame(maxWidth: .infinity, alignment: .center)
-                        .styleText(weight: .regular)
-                }
-                .opacity(token.isEmpty ? 0.5 : 1)
-                .allowsHitTesting(!token.isEmpty)
-                .addAnimation(dependency: token)
-            }
-            .padding(.horizontal, 40)
             
             Spacer()
             
@@ -282,8 +261,6 @@ extension OnboardingAuth {
                             .onChanged {_ in isPressedBackButton = true }
                             .onEnded{ _ in
                                 isPressedBackButton = false
-                                token = ""
-                                errorMessageToken = ""
                                 requestedEmailLogin = false
                             }
                     )
@@ -402,21 +379,5 @@ extension OnboardingAuth {
         let client = FetchingClient()
         let loginResponse = try await client.loginApple(idToken: identityTokenString)
         handleLogin(loginResponse: loginResponse)
-    }
-}
-
-// MARK: - Private Functions (onboarding auth token form)
-
-extension OnboardingAuth {
-    private func handleTokenLogin() {
-        let client = FetchingClient()
-        Task {
-            do {
-                let loginResponse = try await client.loginToken(loginToken: token)
-                handleLogin(loginResponse: loginResponse)
-            } catch {
-                errorMessageToken = error.localizedDescription
-            }
-        }
     }
 }

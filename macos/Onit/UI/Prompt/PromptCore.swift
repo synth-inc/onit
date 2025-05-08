@@ -100,7 +100,16 @@ extension PromptCore {
     }
     
     private var contextAndInput: some View {
-        VStack(spacing: 8) {
+        VStack(alignment: .leading, spacing: 8) {
+            if !appState.subscriptionPlanError.isEmpty {
+                Text(appState.subscriptionPlanError)
+                    .styleText(
+                        size: 13,
+                        weight: .regular,
+                        color: .red
+                    )
+            }
+            
             FileRow(contextList: windowState.pendingContextList)
             textField
         }

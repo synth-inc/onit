@@ -49,7 +49,9 @@ struct ContentView: View {
                     }
                     .frame(width: TetherAppsManager.minOnitWidth, height: .infinity)
                     .background(Color.black)
-                } else if let isSignUp = showOnboardingSignUp {
+                } else if let isSignUp = showOnboardingSignUp,
+                          appState.account == nil
+                {
                     OnboardingAuth(isSignUp: isSignUp)
                 } else {
                     ZStack {
@@ -70,8 +72,6 @@ struct ContentView: View {
                             FreeLimitAlert()
                         } else if appState.showProLimitAlert {
                             ProLimitAlert()
-                        } else if appState.showInaccessibleRemoteModelAlert {
-                            InaccessibleRemoteModelAlert()
                         }
                     }
                 }

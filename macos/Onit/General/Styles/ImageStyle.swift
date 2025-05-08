@@ -9,7 +9,7 @@ import SwiftUI
 
 extension Image {
     func addIconStyles(
-        foregroundColor: Color = Color.white,
+        foregroundColor: Color = Color.primary,
         iconSize: CGFloat = 20
     ) -> some View {
         self

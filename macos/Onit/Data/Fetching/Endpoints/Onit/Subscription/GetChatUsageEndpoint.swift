@@ -1,27 +1,27 @@
 //
-//  GetSubscriptionEndpoint.swift
+//  GetChatUsageEndpoint.swift
 //  Onit
 //
-//  Created by Jason Swanson on 4/29/25.
+//  Created by Loyd Kim on 5/5/25.
 //
 
 import Foundation
 
 extension FetchingClient {
-    func getSubscription() async throws -> Subscription? {
-        let endpoint = GetSubscriptionEndpoint()
+    func getChatUsage() async throws -> ChatUsage? {
+        let endpoint = GetChatUsageEndpoint()
         return try await execute(endpoint)
     }
 }
 
-struct GetSubscriptionEndpoint: Endpoint {
+struct GetChatUsageEndpoint: Endpoint {
     typealias Request = EmptyRequest
 
-    typealias Response = Subscription?
+    typealias Response = ChatUsage?
 
     var baseURL: URL { OnitServer.baseURL }
 
-    var path: String { "/v1/subscription" }
+    var path: String { "/v1/chat/usage" }
 
     var getParams: [String : String]? { nil }
 

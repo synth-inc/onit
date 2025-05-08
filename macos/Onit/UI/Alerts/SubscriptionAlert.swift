@@ -18,45 +18,64 @@ struct SubscriptionAlert: View {
     private let close: (() -> Void)?
     private let description: String
     private let descriptionAction: (() -> Void)?
+    private let descriptionActionLoading: Bool
     private let caption: String?
     private let subscriptionText: String?
-    private let perks: [String]?
+    private let showSubscriptionPerks: Bool
     private let footerSupportingText: String?
+    private let errorMessage: Binding<String>?
     
     init(
         title: String,
         close: (() -> Void)? = nil,
         description: String,
         descriptionAction: (() -> Void)? = nil,
+        descriptionActionLoading: Bool = false,
         caption: String? = nil,
         subscriptionText: String? = nil,
-        perks: [String]? = nil,
-        footerSupportingText: String? = nil
+        showSubscriptionPerks: Bool = false,
+        footerSupportingText: String? = nil,
+        errorMessage: Binding<String>? = nil
     ) {
         self.title = title
         self.close = close
         self.description = description
         self.descriptionAction = descriptionAction
+        self.descriptionActionLoading = descriptionActionLoading
         self.caption = caption
         self.subscriptionText = subscriptionText
-        self.perks = perks
+        self.showSubscriptionPerks = showSubscriptionPerks
         self.footerSupportingText = footerSupportingText
+        self.errorMessage = errorMessage
     }
     
     var body: some View {
         HStack(alignment: .center) {
             VStack(alignment: .center, spacing: 16) {
+                if let errorMessage = errorMessage,
+                    !errorMessage.wrappedValue.isEmpty
+                {
+                    Text(errorMessage.wrappedValue)
+                        .styleText(
+                            size: 13,
+                            weight: .regular,
+                            color: .red
+                        )
+                }
+                
                 header
                 
                 VStack(alignment: .center, spacing: 8) {
                     if let descriptionAction = descriptionAction {
                         descriptionButton(descriptionAction)
+                            .opacity(descriptionActionLoading ? 0.5 : 1)
+                            .allowsHitTesting(!descriptionActionLoading)
                     } else {
                         descriptionText
                     }
                     
                     if let caption = caption {
-                        Text(caption).styleText(size: 13)
+                        Text(caption).styleText(size: 13, weight: .regular)
                     }
                 }
                 
@@ -64,7 +83,9 @@ struct SubscriptionAlert: View {
                     SubscriptionButton(text: subscriptionText)
                 }
                 
-                if let perks = perks { perksList(perks) }
+                if showSubscriptionPerks {
+                    SubscriptionFeatures(centerErrorText: true)
+                }
                 
                 footer
             }
@@ -121,10 +142,10 @@ extension SubscriptionAlert {
             )
     }
     
-    private func descriptionButton(_ captionAction: @escaping () -> Void) -> some View {
+    private func descriptionButton(_ action: @escaping () -> Void) -> some View {
         Button {
             showTwoWeekProTrialEndedAlert = false
-            captionAction()
+            action()
         } label: {
             Text(description)
                 .styleText(
@@ -134,14 +155,6 @@ extension SubscriptionAlert {
                 )
         }
         .buttonStyle(PlainButtonStyle())
-    }
-    
-    private func perksList(_ perks: [String]) -> some View {
-        VStack(alignment: .leading, spacing: 9) {
-            ForEach(perks, id: \.self) { perk in
-                Text(perk).styleText(size: 13, weight: .regular)
-            }
-        }
     }
     
     private var footerDivider: some View {

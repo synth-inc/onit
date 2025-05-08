@@ -8,17 +8,24 @@
 import SwiftUI
 
 struct TwoWeekProTrialEndedAlert: View {
+    @Environment(\.appState) var appState
+    
+    @State var descriptionActionLoading: Bool = false
+    @State var errorMessage: String = ""
+    
     var body: some View {
         SubscriptionAlert(
             title: "Your 2-week Pro trial has ended",
             description: "Downgrade to free plan →",
-            descriptionAction: downgradeToFreePlan,
+            descriptionAction: {
+                Task {
+                    await downgradeToFreePlan()
+                }
+            },
+            descriptionActionLoading: descriptionActionLoading,
             subscriptionText: "Continue with Pro!",
-            perks: [
-                "⭐️ 1000 generations",
-                "⭐️ Access to all features",
-                "⭐️ Priority support"
-            ]
+            showSubscriptionPerks: true,
+            errorMessage: $errorMessage
         )
     }
 }
@@ -26,7 +33,27 @@ struct TwoWeekProTrialEndedAlert: View {
 // MARK: - Private Functions
 
 extension TwoWeekProTrialEndedAlert {
-    private func downgradeToFreePlan() {
-        print("DOWNGRADE TO FREE PLAN")
+    private func refreshSubscriptionState() async {
+        do {
+            let client = FetchingClient()
+            appState.subscription = try await client.getSubscription()
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+    }
+    
+    private func downgradeToFreePlan() async {
+        do {
+            descriptionActionLoading = true
+            
+            let client = FetchingClient()
+            try await client.updateSubscriptionCancel(cancelAtPeriodEnd: true)
+            await refreshSubscriptionState()
+            
+            descriptionActionLoading = false
+        } catch {
+            errorMessage = error.localizedDescription
+            descriptionActionLoading = false
+        }
     }
 }

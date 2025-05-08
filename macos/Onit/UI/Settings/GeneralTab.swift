@@ -32,7 +32,6 @@ struct GeneralTab: View {
             // experimentalSection
         }
         .formStyle(.grouped)
-        .padding()
     }
     
     var launchOnStartupSection: some View {
