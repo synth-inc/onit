@@ -80,6 +80,7 @@ class OnitRegularPanel: NSPanel {
         let resizeOverlay = NSHostingView(rootView: 
             ZStack(alignment: .bottomLeading) {
                 Color.clear // Transparent background
+                
                 ResizeHandle(
                     onDrag: { [weak self] deltaX in
                         guard let self = self else { return }
@@ -105,9 +106,16 @@ class OnitRegularPanel: NSPanel {
         )
         resizeOverlay.wantsLayer = true
         resizeOverlay.layer?.backgroundColor = CGColor.clear
-        resizeOverlay.frame = hostingView.bounds
+        
+        // The drag resizing mask introduces an issue where the scrollview stops working. This is a workaround that limits the width & height
+        // The height doesn't make any sense.
+        // If I make it 32px height (which is the right size) it shows up 32 pixels too high.
+        // If I make it 10px height, it shows up 54 pixels too high.
+        // If I make it 64px height (which is 2x the right size), it shows up in the correct location
+        // I don't know where that number is coming from- there must be autolayout stuff happening behind the scenes that isn't clear. 
+        resizeOverlay.frame = NSRect(x: 0, y: 0, width: (TetheredButton.width / 2) + ResizeHandle.size, height: ((TetheredButton.width / 2) + ResizeHandle.size) * 2.0)
         hostingView.addSubview(resizeOverlay)
-        resizeOverlay.autoresizingMask = [.width, .height]
+        resizeOverlay.autoresizingMask = [.maxXMargin, .minYMargin]
         
         
         NotificationCenter.default.addObserver(

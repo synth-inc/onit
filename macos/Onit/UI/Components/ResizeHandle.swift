@@ -23,7 +23,7 @@ struct NonDraggableNSView: NSViewRepresentable {
 }
 
 struct ResizeHandle: View {
-    var size: CGFloat = 24
+    static let size: CGFloat = 24
     var onDrag: (CGFloat) -> Void
     var onDragEnded: (() -> Void)?
     
@@ -34,11 +34,11 @@ struct ResizeHandle: View {
                 .padding(8)
             // Overlay the non-draggable NSView
             NonDraggableNSView()
-                .frame(width: size, height: size)
+                .frame(width: ResizeHandle.size, height: ResizeHandle.size)
                 .allowsHitTesting(true)
                 .background(Color.clear)
         }
-        .frame(width: size, height: size)
+        .frame(width: ResizeHandle.size, height: ResizeHandle.size)
         .highPriorityGesture(
             DragGesture(minimumDistance: 1, coordinateSpace: .local)
                 .onChanged { value in
