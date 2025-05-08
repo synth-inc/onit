@@ -210,8 +210,10 @@ extension PromptCore {
 
 extension PromptCore {
     private func handleSend() {
-        appState.checkSubscriptionAlerts {
-            windowState.sendAction()
+        Task {
+            await appState.checkSubscriptionAlerts {
+                windowState.sendAction()
+            }
         }
     }
 }

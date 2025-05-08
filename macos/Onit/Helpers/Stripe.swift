@@ -19,7 +19,8 @@ struct Stripe {
             
             return nil
         } catch {
-            return error.localizedDescription
+            print("Error: \(error.localizedDescription)")
+            return "Failed to open subscription form."
         }
     }
     
@@ -34,7 +35,8 @@ struct Stripe {
                 return "false"
             }
         } catch {
-            return error.localizedDescription
+            print("Error: \(error.localizedDescription)")
+            return "Failed to check for free trial availability."
         }
     }
 }

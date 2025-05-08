@@ -9,6 +9,12 @@ import CoreGraphics
 import Defaults
 import Foundation
 
+enum OnboardingAuthState: String, Defaults.Serializable {
+    case hideAuth
+    case showSignUp
+    case showSignIn
+}
+
 extension Defaults.Keys {
     
     // Remote model tokens
@@ -109,7 +115,7 @@ extension Defaults.Keys {
     
     // Onboarding
     static let showOnboarding = Key<Bool>("showOnboarding", default: true)
-    static let showOnboardingSignUp = Key<Bool?>("showOnboardingSignUp", default: nil) /// nil = don't show onboarding auth ; true = show sign up ; false = show sign in
+    static let onboardingAuthState = Key<OnboardingAuthState>("onboardingAuthState", default: .hideAuth)
     
     // Alerts
     static let showTwoWeekProTrialEndedAlert = Key<Bool>("showTwoWeekProTrialEndedAlert", default: false)

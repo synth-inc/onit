@@ -38,10 +38,8 @@ struct SubscriptionFeatures: View {
                 }
             }
         }
-        .onAppear {
-            Task {
-                await handleFetchSubscriptionFeatures()
-            }
+        .task {
+            await handleFetchSubscriptionFeatures()
         }
     }
 }

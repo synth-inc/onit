@@ -37,8 +37,8 @@ struct FreeLimitAlert: View {
             showSubscriptionPerks: true,
             footerSupportingText: footerSupportingText
         )
-        .onAppear {
-            Task { await fetchRenewalDate() }
+        .task {
+            await fetchRenewalDate()
         }
     }
 }
@@ -46,7 +46,7 @@ struct FreeLimitAlert: View {
 // MARK: - Private Functions
 
 extension FreeLimitAlert {
-    private func fetchRenewalDate() async -> Void {
+    private func fetchRenewalDate() async {
         fetchingRenewalDate = true
         
         do {

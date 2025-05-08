@@ -13,7 +13,7 @@ struct ContentView: View {
     @Environment(\.windowState) private var state
     @ObservedObject private var accessibilityPermissionManager = AccessibilityPermissionManager.shared
     @Default(.showOnboarding) var showOnboarding
-    @Default(.showOnboardingSignUp) var showOnboardingSignUp
+    @Default(.onboardingAuthState) var onboardingAuthState
     @Default(.showTwoWeekProTrialEndedAlert) var showTwoWeekProTrialEndedAlert
     
     static let idealWidth: CGFloat = 400
@@ -47,8 +47,8 @@ struct ContentView: View {
                     .frame(width: TetherAppsManager.minOnitWidth)
                     .frame(maxHeight: .infinity)
                     .background(Color.black)
-                } else if let isSignUp = showOnboardingSignUp, appState.account == nil {
-                    OnboardingAuth(isSignUp: isSignUp)
+                } else if onboardingAuthState != .hideAuth && appState.account == nil {
+                    OnboardingAuth(isSignUp: onboardingAuthState == .showSignUp)
                 } else {
                     ZStack {
                         VStack(spacing: 0) {

@@ -49,8 +49,8 @@ struct FinalContextView: View {
                         if isEditing {
                             isEditing = false
                             
-                            appState.checkSubscriptionAlerts {
-                                windowState.generate(prompt)
+                            Task {
+                                await handleSend()
                             }
                         }
                     },
@@ -86,8 +86,8 @@ struct FinalContextView: View {
                             // Handle send action
                             isEditing = false
                             
-                            appState.checkSubscriptionAlerts {
-                                windowState.generate(prompt)
+                            Task {
+                                await handleSend()
                             }
                             
                             windowState.textFocusTrigger.toggle()
@@ -180,6 +180,16 @@ struct FinalContextView: View {
         }
         .padding(.horizontal, 12)
         .padding(.vertical, 8)
+    }
+}
+
+// MARK: - Private Functions
+
+extension FinalContextView {
+    private func handleSend() async {
+        await appState.checkSubscriptionAlerts {
+            windowState.generate(prompt)
+        }
     }
 }
 

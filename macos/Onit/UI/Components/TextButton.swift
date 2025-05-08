@@ -10,7 +10,7 @@ import SwiftUI
 struct TextButton<Child: View>: View {
     private let icon: ImageResource?
     private let iconSize: CGFloat
-    private let iconColor: Color?
+    private let iconColor: Color
     private let text: String?
     private let disabled: Bool
     private let selected: Bool
@@ -34,7 +34,7 @@ struct TextButton<Child: View>: View {
     
     private struct DefaultValues {
         var iconSize: CGFloat = 20
-        var iconColor: Color? = nil
+        var iconColor: Color = .white
         var text: String? = nil
         var disabled: Bool = false
         var selected: Bool = false
@@ -57,7 +57,7 @@ struct TextButton<Child: View>: View {
     init(
         icon: ImageResource? = nil,
         iconSize: CGFloat = DefaultValues().iconSize,
-        iconColor: Color? = DefaultValues().iconColor,
+        iconColor: Color = DefaultValues().iconColor,
         text: String? = DefaultValues().text,
         disabled: Bool = DefaultValues().disabled,
         selected: Bool = DefaultValues().selected,
@@ -111,7 +111,7 @@ struct TextButton<Child: View>: View {
         HStack(alignment: .center, spacing: gap) {
             if let icon = icon {
                 Image(icon).addIconStyles(
-                    foregroundColor: selected ? .blue300 : iconColor ?? .white,
+                    foregroundColor: selected ? .blue300 : iconColor,
                     iconSize: iconSize
                 )
             }
@@ -160,7 +160,7 @@ extension TextButton where Child == EmptyView {
     init(
         icon: ImageResource? = nil,
         iconSize: CGFloat = DefaultValues().iconSize,
-        iconColor: Color? = DefaultValues().iconColor,
+        iconColor: Color = DefaultValues().iconColor,
         text: String? = DefaultValues().text,
         disabled: Bool = DefaultValues().disabled,
         selected: Bool = DefaultValues().selected,

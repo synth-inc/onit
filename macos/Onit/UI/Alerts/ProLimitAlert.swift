@@ -46,8 +46,8 @@ struct ProLimitAlert: View {
             description: description,
             caption: caption
         )
-        .onAppear {
-            Task { await fetchData() }
+        .task {
+            await fetchData()
         }
     }
 }
@@ -55,14 +55,14 @@ struct ProLimitAlert: View {
 // MARK: - Private Functions
 
 extension ProLimitAlert {
-    private func fetchData() async -> Void {
+    private func fetchData() async {
         do {
             fetchingData = true
             
             let client = FetchingClient()
             let chatUsageResponse = try await client.getChatUsage()
             
-            if  let quota = chatUsageResponse?.quota {
+            if let quota = chatUsageResponse?.quota {
                 chatRequestsQuota = Int(quota.rounded())
             } else {
                 quotaErrorMessage = quotaErrorMessageFallback
@@ -78,6 +78,8 @@ extension ProLimitAlert {
             
             fetchingData = false
         } catch {
+            quotaErrorMessage = quotaErrorMessageFallback
+            renewalDateErrorMessage = renewalErrorMessageFallback
             fetchingData = false
         }
     }

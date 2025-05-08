@@ -14,7 +14,7 @@ import SwiftUI
 struct OnboardingAuth: View {
     @Environment(\.appState) var appState
     
-    @Default(.showOnboardingSignUp) var showOnboardingSignUp
+    @Default(.onboardingAuthState) var onboardingAuthState
     
     private let isSignUp: Bool
     init(isSignUp: Bool) { self.isSignUp = isSignUp }
@@ -177,9 +177,9 @@ extension OnboardingAuth {
             
             Button {
                 if isSignUp {
-                    showOnboardingSignUp = false
+                    onboardingAuthState = .showSignIn
                 } else {
-                    showOnboardingSignUp = true
+                    onboardingAuthState = .showSignUp
                 }
             } label: {
                 Text(isSignUp ? "Sign In" : "Sign up")
@@ -198,7 +198,7 @@ extension OnboardingAuth {
                     .styleText(size: 13, weight: .regular, color: .gray100)
                 
                 Button {
-                    showOnboardingSignUp = nil
+                    onboardingAuthState = .hideAuth
                 } label: {
                     Text("skip account creation & use own APIs →")
                         .styleText(size: 13, weight: .regular)
@@ -303,7 +303,7 @@ extension OnboardingAuth {
     private func handleLogin(loginResponse: LoginResponse) {
         TokenManager.token = loginResponse.token
         appState.account = loginResponse.account
-        showOnboardingSignUp = nil
+        onboardingAuthState = .hideAuth
     }
 }
 
@@ -317,6 +317,7 @@ extension OnboardingAuth {
         return isValidEmailFormat
     }
     
+    @MainActor
     private func requestEmailLoginLink() {
         if !submitDisabled {
             let client = FetchingClient()

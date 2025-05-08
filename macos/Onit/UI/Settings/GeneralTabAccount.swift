@@ -11,7 +11,7 @@ import SwiftUI
 struct GeneralTabAccount: View {
     @Environment(\.appState) var appState
     
-    @Default(.showOnboardingSignUp) var showOnboardingSignUp
+    @Default(.onboardingAuthState) var onboardingAuthState
     
     @State private var showDeleteAccountAlert: Bool = false
     @State private var accountDeleteError: String = ""
@@ -81,7 +81,7 @@ extension GeneralTabAccount {
         SimpleButton(
             iconText: "👤",
             text: "Create an account",
-            action: { Defaults[.showOnboardingSignUp] = true },
+            action: { onboardingAuthState = .showSignUp },
             background: .blue
         )
     }
@@ -89,7 +89,7 @@ extension GeneralTabAccount {
     private var signInButton: some View {
         SimpleButton(
             text: "Sign in",
-            action: { Defaults[.showOnboardingSignUp] = false }
+            action: { onboardingAuthState = .showSignIn }
         )
     }
     
@@ -127,7 +127,7 @@ extension GeneralTabAccount {
     private func logout() {
         TokenManager.token = nil
         appState.account = nil
-        Defaults[.showOnboardingSignUp] = false
+        Defaults[.onboardingAuthState] = .showSignIn
     }
     
     @MainActor

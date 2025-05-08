@@ -35,17 +35,17 @@ struct RemoteModelButton: View {
             action: {
                 selectedModel.wrappedValue = .remote(remoteModel)
                 modelSelectionViewOpen.wrappedValue = false
-                appState.checkSubscriptionAlerts {}
+                Task {
+                    await appState.checkSubscriptionAlerts {}
+                }
             }
         ) {
             if planLimitReached {
                 Circle().fill(.blue300).frame(width: 6, height: 6)
             }
         }
-        .onAppear {
-            Task {
-                await checkPlanLimitReached()
-            }
+        .task {
+            await checkPlanLimitReached()
         }
     }
 }

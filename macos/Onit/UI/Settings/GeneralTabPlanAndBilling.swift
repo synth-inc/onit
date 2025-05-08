@@ -93,10 +93,8 @@ struct GeneralTabPlanAndBilling: View {
                 }
             }
         }
-        .onAppear() {
-            Task {
-                await fetchSubscriptionData()
-            }
+        .task() {
+            await fetchSubscriptionData()
         }
         .onChange(of: userLoggedIn) {
             if userLoggedIn {
@@ -223,61 +221,59 @@ extension GeneralTabPlanAndBilling {
 // MARK: - Private Functions
 
 extension GeneralTabPlanAndBilling {
-    private func fetchSubscriptionData() async -> Void {
-        Task {
-            do {
-                subscriptionDataErrorMessage = ""
-                fetchingSubscriptionData = true
+    private func fetchSubscriptionData() async {
+        do {
+            subscriptionDataErrorMessage = ""
+            fetchingSubscriptionData = true
+            
+            if userLoggedIn {
+                await refreshSubscriptionState()
                 
-                if userLoggedIn {
-                    await refreshSubscriptionState()
+                planType = appState.subscriptionStatus
+                
+                if appState.subscriptionStatus == SubscriptionStatus.free {
+                    checkingFreeTrialAvailable = true
                     
-                    planType = appState.subscriptionStatus
+                    let response = await Stripe.checkFreeTrialAvailable()
+                    let trialAvailable = response.lowercased()
                     
-                    if appState.subscriptionStatus == SubscriptionStatus.free {
-                        checkingFreeTrialAvailable = true
-                        
-                        let response = await Stripe.checkFreeTrialAvailable()
-                        let trialAvailable = response.lowercased()
-                        
-                        if trialAvailable == "true" { freeTrialAvailable = true }
-                        else if trialAvailable == "false" { freeTrialAvailable = false }
-                        else { subscriptionDataErrorMessage = response }
-                        
-                        checkingFreeTrialAvailable = false
-                    }
+                    if trialAvailable == "true" { freeTrialAvailable = true }
+                    else if trialAvailable == "false" { freeTrialAvailable = false }
+                    else { subscriptionDataErrorMessage = response }
                     
-                    
-                    // Setting chat usage and quota.
-                    let client = FetchingClient()
-                    let chatUsageResponse = try await client.getChatUsage()
-                    
-                    if let usage = chatUsageResponse?.usage {
-                        chatGenerationsUsage = Int(usage.rounded())
-                    }
-                    if let quota = chatUsageResponse?.quota {
-                        chatGenerationsQuota = Int(quota.rounded())
-                    }
-                    
-                    // Setting renewal date.
-                    if let currentPeriodEnd = chatUsageResponse?.currentPeriodEnd {
-                        renewalDate = convertEpochDateToCleanDate(
-                            epochDate: currentPeriodEnd
-                        )
-                    }
+                    checkingFreeTrialAvailable = false
                 }
                 
-                fetchingSubscriptionData = false
-            } catch {
-                planType = nil
-                chatGenerationsUsage = nil
-                chatGenerationsQuota = nil
-                renewalDate = nil
                 
-                subscriptionDataErrorMessage = error.localizedDescription
+                // Setting chat usage and quota.
+                let client = FetchingClient()
+                let chatUsageResponse = try await client.getChatUsage()
                 
-                fetchingSubscriptionData = false
+                if let usage = chatUsageResponse?.usage {
+                    chatGenerationsUsage = Int(usage.rounded())
+                }
+                if let quota = chatUsageResponse?.quota {
+                    chatGenerationsQuota = Int(quota.rounded())
+                }
+                
+                // Setting renewal date.
+                if let currentPeriodEnd = chatUsageResponse?.currentPeriodEnd {
+                    renewalDate = convertEpochDateToCleanDate(
+                        epochDate: currentPeriodEnd
+                    )
+                }
             }
+                
+            fetchingSubscriptionData = false
+        } catch {
+            planType = nil
+            chatGenerationsUsage = nil
+            chatGenerationsQuota = nil
+            renewalDate = nil
+            
+            subscriptionDataErrorMessage = error.localizedDescription
+            
+            fetchingSubscriptionData = false
         }
     }
     

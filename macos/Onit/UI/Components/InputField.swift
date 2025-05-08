@@ -33,7 +33,7 @@ struct InputField: View {
             TextField(placeholder, text: $text)
                 .textFieldStyle(PlainTextFieldStyle())
                 .frame(height: 40)
-                .font(.system(size: 14))
+                .styleText(size: 14)
                 .padding(.horizontal, 14)
                 .background(isHovered ? .gray800 : .gray900)
                 .addBorder(

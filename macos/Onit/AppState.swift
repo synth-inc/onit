@@ -257,7 +257,7 @@ class AppState: NSObject {
         }
     }
     
-    func checkSubscriptionAlerts(callback: @escaping () -> Void) {
+    func checkSubscriptionAlerts(callback: @escaping () -> Void) async {
         subscriptionPlanError = ""
         Defaults[.showTwoWeekProTrialEndedAlert] = false
         showFreeLimitAlert = false

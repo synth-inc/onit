@@ -16,7 +16,7 @@ struct GeneralTab: View {
     @State var isAnalyticsEnabled: Bool = PostHogSDK.shared.isOptOut() == false
     
     var body: some View {
-        Form() {
+        Form {
             GeneralTabPlanAndBilling()
             
             GeneralTabAccount()
@@ -49,7 +49,7 @@ struct GeneralTab: View {
                         .controlSize(.small)
                 }
             }
-            .onChange(of: isLaunchAtStartupEnabled, initial: false) { old, new in
+            .onChange(of: isLaunchAtStartupEnabled, initial: false) { _, _ in
                 toggleLaunchAtStartup()
             }
         }
