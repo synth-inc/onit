@@ -199,7 +199,9 @@ class AppState: NSObject {
                 let loginResponse = try await FetchingClient().loginToken(loginToken: token)
                 TokenManager.token = loginResponse.token
                 account = loginResponse.account
-            } catch {}
+            } catch {
+                print("Login by token failed with error: \(error)")
+            }
         }
     }
 
