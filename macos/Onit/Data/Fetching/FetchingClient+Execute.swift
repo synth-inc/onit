@@ -49,6 +49,8 @@ extension FetchingClient {
             if let data = data {
                 let decodedResponse = try decoder.decode(E.Response.self, from: data)
                 return decodedResponse
+            // This is testing if the Response in the Endpoint definition is optional
+            // If it's optional and no data was returned from the endpoint, return that optional
             } else if let optional = Optional<Any>.none as? E.Response {
                 return optional
             } else {
