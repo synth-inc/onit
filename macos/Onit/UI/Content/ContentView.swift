@@ -16,7 +16,6 @@ struct ContentView: View {
     @ObservedObject private var accessibilityPermissionManager = AccessibilityPermissionManager.shared
     @Default(.showOnboarding) var showOnboarding
     
-    static let idealWidth: CGFloat = 400
     static let bottomPadding: CGFloat = 0
     
     private var showFileImporterBinding: Binding<Bool> {
@@ -44,7 +43,7 @@ struct ContentView: View {
                             Spacer()
                         }
                     }
-                    .frame(width: TetherAppsManager.minOnitWidth)
+                    .frame(width: panelWidth)
                     .frame(maxHeight: .infinity)
                     .background(Color.black)
                 } else {
@@ -93,6 +92,7 @@ struct ContentView: View {
                 .onEnded { value in
                     if let panel = state.panel {
                         panelWidth = panel.frame.width
+                        state.panelWidth = panel.frame.width
                     }
                 }
         )

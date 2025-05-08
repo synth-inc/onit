@@ -33,7 +33,6 @@ class TetherAppsManager: ObservableObject {
     private var regularAppCancellable: AnyCancellable?
     private var skipFirstRegularAppUpdate: Bool = true
     
-    static let minOnitWidth: CGFloat = ContentView.idealWidth
     static let spaceBetweenWindows: CGFloat = -(TetheredButton.width / 2)
     
     var targetInitialFrames: [AXUIElement: CGRect] = [:]

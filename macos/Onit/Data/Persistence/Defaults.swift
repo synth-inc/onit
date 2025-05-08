@@ -93,7 +93,7 @@ extension Defaults.Keys {
     static let isTavilyAPITokenValidated = Key<Bool>("tavilyAPITokenValidated", default: false)
 
     // Window state
-    static let panelWidth = Key<Double?>("panelWidth", default: nil)
+    static let panelWidth = Key<Double>("panelWidth", default: 400)
     static let panelPosition = Key<PanelPosition>("panelPosition", default: .topRight)
 
     // General settings

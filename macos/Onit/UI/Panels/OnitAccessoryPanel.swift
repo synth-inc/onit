@@ -15,7 +15,7 @@ class OnitAccessoryPanel: NSPanel {
         return true
     }
     
-    private let width = ContentView.idealWidth
+    private var width: CGFloat = 400 // Default width, will be updated from state
     
     var dragDetails: PanelDraggingDetails = .init()
     var isAnimating: Bool = false
@@ -24,11 +24,8 @@ class OnitAccessoryPanel: NSPanel {
     var resizedApplication: Bool = false
     
     init(state: OnitPanelState) {
+        self.width = state.panelWidth
         var windowWidth = width
-        
-        if let savedWidth = Defaults[.panelWidth] {
-            windowWidth = savedWidth
-        }
         
         super.init(
             contentRect: NSRect(x: 0, y: 0, width: windowWidth, height: 0),
@@ -158,10 +155,7 @@ extension OnitAccessoryPanel: OnitPanel {
     
     func show() {
         var windowWidth = frame.width
-        
-        if let savedWidth = Defaults[.panelWidth] {
-            windowWidth = savedWidth
-        }
+        windowWidth = Defaults[.panelWidth]
         
         if let newFrame = calculatePanelFrame(windowWidth: windowWidth) {
             setFrame(newFrame, display: true, animate: false)
