@@ -44,6 +44,7 @@ struct ProLimitAlert: View {
             title: "Pro Limit Reached",
             close: { appState.showProLimitAlert = false },
             description: description,
+            descriptionLoading: fetchingData,
             caption: caption
         )
         .task {

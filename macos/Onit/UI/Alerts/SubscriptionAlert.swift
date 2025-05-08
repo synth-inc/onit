@@ -17,6 +17,7 @@ struct SubscriptionAlert: View {
     private let title: String
     private let close: (() -> Void)?
     private let description: String
+    private let descriptionLoading: Bool
     private let descriptionAction: (() -> Void)?
     private let descriptionActionLoading: Bool
     private let caption: String?
@@ -29,6 +30,7 @@ struct SubscriptionAlert: View {
         title: String,
         close: (() -> Void)? = nil,
         description: String,
+        descriptionLoading: Bool = false,
         descriptionAction: (() -> Void)? = nil,
         descriptionActionLoading: Bool = false,
         caption: String? = nil,
@@ -40,6 +42,7 @@ struct SubscriptionAlert: View {
         self.title = title
         self.close = close
         self.description = description
+        self.descriptionLoading = descriptionLoading
         self.descriptionAction = descriptionAction
         self.descriptionActionLoading = descriptionActionLoading
         self.caption = caption
@@ -66,7 +69,9 @@ struct SubscriptionAlert: View {
                 header
                 
                 VStack(alignment: .center, spacing: 8) {
-                    if let descriptionAction = descriptionAction {
+                    if descriptionActionLoading {
+                        Shimmer(width: 220, height: 16)
+                    } else if let descriptionAction = descriptionAction {
                         descriptionButton(descriptionAction)
                             .opacity(descriptionActionLoading ? 0.5 : 1)
                             .allowsHitTesting(!descriptionActionLoading)
