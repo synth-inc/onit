@@ -114,16 +114,14 @@ class OnitPanelState: NSObject {
     var showHistory: Bool = false
     var historyIndex = -1
     
-    var headerHeight: CGFloat = 0
-    var inputHeight: CGFloat = 0
     var setUpHeight: CGFloat = 0
-    var systemPromptHeight: CGFloat = 0
     
     var generateTask: Task<Void, Never>? = nil
     var generatingPrompt: Prompt?
     var generatingPromptPriorState: GenerationState?
     
-    var streamedResponse: String = ""
+    /// Don't leave this text empty to ensure the first scroll works.
+    var streamedResponse: String = " "
     
     // Web search state
     var webSearchError: Error? = nil

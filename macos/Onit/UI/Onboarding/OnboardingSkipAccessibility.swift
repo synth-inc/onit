@@ -28,7 +28,6 @@ struct OnboardingSkipAccessibility: View {
                 Spacer()
                 Button {
                     Defaults[.showOnboarding] = false
-                    Defaults[.autoContextEnabled] = false
                 } label: {
                     Text("Yes, continue →")
                 }

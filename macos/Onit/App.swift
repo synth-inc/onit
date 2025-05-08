@@ -12,6 +12,9 @@ import MenuBarExtraAccess
 import PostHog
 import ServiceManagement
 import SwiftUI
+import SwiftyBeaver
+
+let log = SwiftyBeaver.self
 
 @main
 struct App: SwiftUI.App {
@@ -21,29 +24,24 @@ struct App: SwiftUI.App {
     @ObservedObject private var accessibilityPermissionManager = AccessibilityPermissionManager.shared
     @ObservedObject private var featureFlagsManager = FeatureFlagManager.shared
 
-    @Default(.isRegularApp) var isRegularApp
     @Default(.launchOnStartupRequested) var launchOnStartupRequested
-
-    @Default(.autoContextEnabled) var autoContextEnabled
     @Default(.autoContextFromCurrentWindow) var autoContextFromCurrentWindow
     @Default(.autoContextFromHighlights) var autoContextFromHighlights
     
     @State var accessibilityPermissionRequested = false
-
-    private var frontmostApplicationOnLaunch: NSRunningApplication?
+    @State private var frontmostApplicationOnLaunch: NSRunningApplication?
 
     init() {
+        configureSwiftBeaver()
         frontmostApplicationOnLaunch = NSWorkspace.shared.frontmostApplication
+        
+        accessibilityPermissionManager.configure()
         
         KeyboardShortcutsManager.configure()
         featureFlagsManager.configure()
         
         // For testing new user experience
         // clearTokens()
-        
-        if !isRegularApp {
-            TetherAppsManager.shared.state.launchPanel()
-        }
     }
 
     var body: some Scene {
@@ -56,39 +54,23 @@ struct App: SwiftUI.App {
                 .onAppear {
                     checkLaunchOnStartup()
                     restoreSession()
-                    toggleUIElementMode(enable: isRegularApp)
                 }
                 .onChange(of: accessibilityPermissionManager.accessibilityPermissionStatus, initial: true) {
                     _, newValue in
                     AccessibilityAnalytics.logPermission(local: newValue)
-                    
                     switch newValue {
                     case .granted:
                         TetherAppsManager.shared.startObserving()
                         AccessibilityNotificationsManager.shared.start(pid: frontmostApplicationOnLaunch?.processIdentifier)
-                        TapListener.shared.start()
                         UntetheredScreenManager.shared.stopObserving()
-                        AccessibilityDeniedNotificationManager.shared.stop()
+                        frontmostApplicationOnLaunch = nil
                     case .denied, .notDetermined:
                         TetherAppsManager.shared.stopObserving()
                         AccessibilityNotificationsManager.shared.stop()
-                        TapListener.shared.stop()
-                        UntetheredScreenManager.shared.startObserving() // This has to come first, so that we get the initial 
-                        AccessibilityDeniedNotificationManager.shared.start()
-                    default:
-                        break
-                    }
-                }
-                .onChange(of: Defaults[.autoContextEnabled], initial: true) {
-                    _, newValue in
-                    if newValue {
-                        AccessibilityPermissionManager.shared.startListeningPermission()
-                    } else {
-                        AccessibilityPermissionManager.shared.stopListeningPermission()
+                        UntetheredScreenManager.shared.startObserving()
                     }
                 }
                 .onChange(of: [
-                    autoContextEnabled,
                     autoContextFromCurrentWindow,
                     autoContextFromHighlights
                 ], initial: true) { oldValue, newValue in
@@ -100,9 +82,6 @@ struct App: SwiftUI.App {
                     } else {
                         debugManager.closeDebugWindow()
                     }
-                }
-                .onChange(of: isRegularApp) { _, newValue in
-                    toggleUIElementMode(enable: newValue)
                 }
         }
         .menuBarExtraStyle(.window)
@@ -140,6 +119,18 @@ struct App: SwiftUI.App {
                 }
         }
     }
+    
+    private func configureSwiftBeaver() {
+        #if DEBUG
+        let logFileURL = URL(fileURLWithPath: "/tmp/Onit.log")
+        
+        let file = FileDestination(logFileURL: logFileURL)
+        let console = ConsoleDestination()
+        
+        log.addDestination(console)
+        log.addDestination(file)
+        #endif
+    }
 
     private func clearTokens() {
         // Helpful for debugging the new-user-experience
@@ -161,14 +152,6 @@ struct App: SwiftUI.App {
             } catch {
                 print("Error: \(error)")
             }
-        }
-    }
-    
-    private func toggleUIElementMode(enable: Bool) {
-        if enable {
-            NSApp.setActivationPolicy(.regular)
-        } else {
-            NSApp.setActivationPolicy(.accessory)
         }
     }
 

@@ -13,15 +13,6 @@ protocol OnitPanel: NSPanel {
     func setLevel(_ level: NSWindow.Level)
     
     @MainActor
-    func adjustSize()
-    
-    @MainActor
-    func toggleFullscreen()
-    
-    @MainActor
-    func updatePosition()
-    
-    @MainActor
     func show()
     
     @MainActor

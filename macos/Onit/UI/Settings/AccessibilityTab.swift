@@ -6,47 +6,16 @@ import KeyboardShortcuts
 import AppKit
 
 struct AccessibilityTab: View {
-
-    struct HighlightHintModeUI: Identifiable, Hashable, Equatable {
-        let mode: HighlightHintMode
-        let text: String
-
-        var id: String { text }
-
-        static func from(mode: HighlightHintMode) -> Self {
-            let text: String
-
-            switch mode {
-            case .topRight:
-                text = "Top-right corner of the screen"
-            case .textfield:
-                text = "Above the highlighted text"
-            case .none:
-                text = "No hint"
-            }
-
-            return .init(mode: mode, text: text)
-        }
-
-        static func == (lhs: HighlightHintModeUI, rhs: HighlightHintModeUI) -> Bool {
-            return lhs.mode == rhs.mode
-        }
-    }
-
-    private let modes: [HighlightHintModeUI] = [
-        HighlightHintModeUI.from(mode: .none),
-        HighlightHintModeUI.from(mode: .topRight),
-        //        HighlightHintModeUI.from(mode: .textfield)
-    ]
-
-    @Default(.autoContextEnabled) var autoContextEnabled
     @Default(.autoContextFromHighlights) var autoContextFromHighlights
     @Default(.autoContextFromCurrentWindow) var autoContextFromCurrentWindow
     @Default(.automaticallyAddAutoContext) var automaticallyAddAutoContext
-    @State private var selectedMode: HighlightHintModeUI = HighlightHintModeUI.from(
-        mode: FeatureFlagManager.shared.highlightHintMode)
 
+    @ObservedObject private var accessibilityPermissionManager = AccessibilityPermissionManager.shared
     @ObservedObject private var featureFlagsManager = FeatureFlagManager.shared
+    
+    private var autoContextEnabled: Bool {
+        accessibilityPermissionManager.accessibilityPermissionStatus == .granted
+    }
 
     var body: some View {
         Form {
@@ -84,20 +53,24 @@ struct AccessibilityTab: View {
             Section {
                 VStack(alignment: .leading, spacing: 4) {
                     HStack {
-                        Text("Enable AutoContext")
+                        Text("Accessibility enabled")
                             .font(.system(size: 13))
                         Spacer()
                         Toggle(
                             "",
                             isOn: Binding(
                                 get: { autoContextEnabled },
-                                set: { autoContextEnabled = $0 }
+                                set: { _ in
+                                    if let url = URL(string: MenuCheckForPermissions.link) {
+                                        NSWorkspace.shared.open(url)
+                                    }
+                                }
                             )
                         )
                         .toggleStyle(.switch)
                         .controlSize(.small)
                     }
-                    Text("You'll need to grant Accessibility access.")
+                    Text("Required for automatic context loading, text insertion, window resizing, and many other Onit features.")
                         .font(.system(size: 12))
                         .foregroundStyle(.gray200)
                 }
@@ -131,17 +104,6 @@ struct AccessibilityTab: View {
                             .font(.system(size: 12))
                             .foregroundStyle(.gray200)
                     }
-//                    Picker("Choose hint position", selection: $selectedMode) {
-//                        ForEach(modes, id: \.self) { mode in
-//                            Text(mode.text)
-//                                .appFont(.medium14)
-//                                .padding(.vertical, 4)
-//                        }
-//                    }
-//                    .frame(maxWidth: .infinity, alignment: .leading)
-//                    .pickerStyle(MenuPickerStyle())
-//                    .padding(.vertical, 4)
-//                    .tint(.blue600)
                 }
 
                 Section {
@@ -171,45 +133,35 @@ struct AccessibilityTab: View {
                             .font(.system(size: 12))
                             .foregroundStyle(.gray200)
                     }
-                    HStack {
-                        Text("Automatically pull context")
-                            .font(.system(size: 13))
-                        Spacer()
-                        Toggle(
-                            "",
-                            isOn: Binding(
-                                get: { automaticallyAddAutoContext },
-                                set: { automaticallyAddAutoContext = $0 }
+                    VStack(alignment: .leading, spacing: 4) {
+                        HStack {
+                            Text("Automatically Read Current Window")
+                                .font(.system(size: 13))
+                            Spacer()
+                            Toggle(
+                                "",
+                                isOn: Binding(
+                                    get: { automaticallyAddAutoContext },
+                                    set: { automaticallyAddAutoContext = $0 }
+                                )
                             )
-                        )
-                        .toggleStyle(.switch)
-                        .controlSize(.small)
-                    }
-                    if !automaticallyAddAutoContext {
-                        KeyboardShortcuts.Recorder(
-                            "Shortcut", name: .launchWithAutoContext
-                        )
+                            .toggleStyle(.switch)
+                            .controlSize(.small)
+                        }
+                        Text("When enabled, Onit will automatically capture context from the active window. Please use this feature cautiously, as sensitive information may be unintentionally uploaded.")
+                            .font(.system(size: 12))
+                            .foregroundStyle(.gray200)
+                        if !automaticallyAddAutoContext {
+                            KeyboardShortcuts.Recorder(
+                                "Shortcut", name: .launchWithAutoContext
+                            )
+                        }
                     }
                 }
             }
         }
         .formStyle(.grouped)
         .padding()
-        .onChange(of: selectedMode, initial: false) { old, new in
-            highlightModeChange(oldValue: old, newValue: new)
-        }
-    }
-
-    private func highlightModeChange(oldValue: HighlightHintModeUI, newValue: HighlightHintModeUI) {
-        FeatureFlagManager.shared.overrideHighlightHintMode(newValue.mode)
-        HighlightHintWindowController.shared.changeMode(newValue.mode)
-
-        let eventProperties: [String: Any] = [
-            "old": oldValue.mode,
-            "new": newValue.mode,
-        ]
-
-        PostHogSDK.shared.capture("highlight_hint_mode_change", properties: eventProperties)
     }
 }
 

@@ -2,37 +2,26 @@
 //  AccessibilityParserBase.swift
 //  Onit
 //
-//  Created by Kévin Naudin on 20/01/2025.
+//  Created by Kévin Naudin on 30/04/2025.
 //
 
-import ApplicationServices.HIServices.AXRoleConstants
 import ApplicationServices.HIServices.AXUIElement
+import Foundation
 
-/// Base parser providing common parsing logic.
+/// Base  implementation of the ``AccessibilityParserLogic``
 class AccessibilityParserBase: AccessibilityParserLogic {
 
     // MARK: - AccessibilityParserLogic
 
-    /**
-     * Default parsing logic to retrieve basic accessibility data.
-     * - parameter element: The `AXUIElement` to parse
-     * - returns: A dictionary containing general data.
-     */
-    func parse(element: AXUIElement) -> [String: String]? {
-        if let role = element.role(), let title = element.title() {
-            switch role {
-            case kAXWindowRole:
-                let appName = element.parent()?.title() ?? "Unknown"
-                
-                return [
-                    AccessibilityParsedElements.applicationName: appName,
-                    AccessibilityParsedElements.applicationTitle: title
-                ]
-            default:
-                return nil
-            }
+    /** See ``AccessibilityParserLogic`` parse function */
+    func parse(element: AXUIElement) -> [String: String] {
+        var results: [String: String] = [:]
+        
+        if let selectedText = element.selectedText(),
+           HighlightedTextValidator.isValid(element: element) {
+            results[AccessibilityParsedElements.highlightedText] = selectedText
         }
 
-        return nil
+        return results
     }
 }

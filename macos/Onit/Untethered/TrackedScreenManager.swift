@@ -44,4 +44,8 @@ class TrackedScreenManager: ObservableObject {
     func remove(screen: NSScreen) {
         trackedScreens.removeAll { $0.frame == screen.frame }
     }
+    
+    func reset() {
+        trackedScreens.removeAll()
+    }
 }
