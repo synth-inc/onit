@@ -16,5 +16,5 @@ struct SubscriptionFeature: Codable, Identifiable {
         case description
     }
 
-    let id = UUID()
+    var id: String { name }
 }
