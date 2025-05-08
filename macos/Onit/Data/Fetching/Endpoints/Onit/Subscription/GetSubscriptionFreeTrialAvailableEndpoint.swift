@@ -10,8 +10,8 @@ import Foundation
 extension FetchingClient {
     func getSubscriptionFreeTrialAvailable() async throws -> Bool {
         let endpoint = GetSubscriptionFreeTrialAvailableEndpoint()
-        let reponse = try await execute(endpoint)
-        return reponse.freeTrialAvailable
+        let response = try await execute(endpoint)
+        return response.freeTrialAvailable
     }
 }
 
