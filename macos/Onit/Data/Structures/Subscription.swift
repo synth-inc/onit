@@ -8,5 +8,6 @@
 struct Subscription: Codable {
     let id: String
     let status: String
+    let statusMessage: String?
     let cancelAtPeriodEnd: Bool
 }
