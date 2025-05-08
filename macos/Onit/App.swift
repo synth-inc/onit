@@ -55,8 +55,8 @@ struct App: SwiftUI.App {
             MenuIcon()
                 .onAppear {
                     checkLaunchOnStartup()
-                    toggleUIElementMode(enable: isRegularApp)
                     restoreSession()
+                    toggleUIElementMode(enable: isRegularApp)
                 }
                 .onChange(of: accessibilityPermissionManager.accessibilityPermissionStatus, initial: true) {
                     _, newValue in
