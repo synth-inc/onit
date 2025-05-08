@@ -168,7 +168,7 @@ extension OnitPanelState {
                     }
                     let apiToken = TokenValidationManager.getTokenForModel(model)
                     
-                    if shouldUseStream(model) {
+                    if Defaults[.useOnitChat] || shouldUseStream(model) {
                         prompt.generationState = .streaming
                         let asyncText = try await streamingClient.chat(
                             systemMessage: systemPrompt.prompt,

@@ -6,6 +6,7 @@
 //
 
 import Defaults
+import DefaultsMacros
 import Sparkle
 import SwiftUI
 
@@ -21,15 +22,40 @@ class AppState: NSObject {
                                                updaterDelegate: nil,
                                                userDriverDelegate: nil)
     
-    var remoteModels: RemoteModelsState
     var remoteFetchFailed: Bool = false
     var localFetchFailed: Bool = false
     
+    var account: Account? {
+        didSet {
+            if account == nil {
+                fetchSubscriptionTask?.cancel()
+                fetchSubscriptionTask = nil
+                subscription = nil
+            } else {
+                fetchSubscriptionTask?.cancel()
+                fetchSubscriptionTask = Task {
+                    subscription = try? await FetchingClient().getSubscription()
+                }
+            }
+        }
+    }
+    private var fetchSubscriptionTask: Task<Void, Never>?
+    
+    var subscription: Subscription? {
+        didSet {
+            if subscriptionActive {
+                return
+            }
+            // If they don't have a subscription and don't have a key for their current remote model, set to nil
+            invalidateRemoteModel()
+            Defaults[.useOnitChat] = false
+        }
+    }
+    var subscriptionActive: Bool { subscription?.status == "active" || subscription?.status == "trialing" }
+
     // MARK: - Initializer
     
-    init(remoteModels: RemoteModelsState) {
-        self.remoteModels = remoteModels
-        
+    override init() {
         super.init()
 
         Task {
@@ -66,7 +92,7 @@ class AppState: NSObject {
             } else if localModel == nil || !models.contains(localModel!) {
                 Defaults[.localModel] = models[0]
             }
-            if remoteModels.listedModels.isEmpty {
+            if listedModels.isEmpty {
                 Defaults[.mode] = .local
             }
             localFetchFailed = false
@@ -94,8 +120,8 @@ class AppState: NSObject {
                 }
 
                 Defaults[.availableRemoteModels] = models
-                if !remoteModels.listedModels.isEmpty {
-                    Defaults[.remoteModel] = remoteModels.listedModels.first
+                if !listedModels.isEmpty {
+                    Defaults[.remoteModel] = listedModels.first
                 }
             } else {
 
@@ -139,7 +165,7 @@ class AppState: NSObject {
                         })
                 }
 
-                if !remoteModels.listedModels.isEmpty
+                if !listedModels.isEmpty
                     && (Defaults[.remoteModel] == nil
                         || !Defaults[.availableRemoteModels].contains(Defaults[.remoteModel]!))
                 {
@@ -150,6 +176,158 @@ class AppState: NSObject {
         } catch {
             print("Error fetching remote models:", error)
             remoteFetchFailed = true
+        }
+    }
+
+    func handleTokenLogin(_ url: URL) {
+        guard url.scheme == "onit" else {
+            return
+        }
+
+        guard let components = URLComponents(url: url, resolvingAgainstBaseURL: true) else {
+            print("Invalid URL")
+            return
+        }
+
+        guard let token = components.queryItems?.first(where: { $0.name == "token" })?.value else {
+            print("Login token not found")
+            return
+        }
+
+        Task { @MainActor in
+            do {
+                let loginResponse = try await FetchingClient().loginToken(loginToken: token)
+                TokenManager.token = loginResponse.token
+                account = loginResponse.account
+            } catch {
+                print("Login by token failed with error: \(error)")
+            }
+        }
+    }
+
+    // MARK: - Remote Models
+
+    @ObservableDefault(.availableRemoteModels)
+    @ObservationIgnored
+    var availableRemoteModels: [AIModel]
+
+    @ObservableDefault(.availableCustomProviders)
+    @ObservationIgnored
+    var availableCustomProvider: [CustomProvider]
+
+    @ObservableDefault(.isOpenAITokenValidated)
+    @ObservationIgnored
+    var isOpenAITokenValidated: Bool
+
+    @ObservableDefault(.useOpenAI)
+    @ObservationIgnored
+    var useOpenAI: Bool
+
+    @ObservableDefault(.isAnthropicTokenValidated)
+    @ObservationIgnored
+    var isAnthropicTokenValidated: Bool
+
+    @ObservableDefault(.useAnthropic)
+    @ObservationIgnored
+    var useAnthropic: Bool
+
+    @ObservableDefault(.isXAITokenValidated)
+    @ObservationIgnored
+    var isXAITokenValidated: Bool
+
+    @ObservableDefault(.useXAI)
+    @ObservationIgnored
+    var useXAI: Bool
+
+    @ObservableDefault(.isGoogleAITokenValidated)
+    @ObservationIgnored
+    var isGoogleAITokenValidated: Bool
+
+    @ObservableDefault(.useGoogleAI)
+    @ObservationIgnored
+    var useGoogleAI: Bool
+
+    @ObservableDefault(.isDeepSeekTokenValidated)
+    @ObservationIgnored
+    var isDeepSeekTokenValidated: Bool
+
+    @ObservableDefault(.useDeepSeek)
+    @ObservationIgnored
+    var useDeepSeek: Bool
+
+    @ObservableDefault(.isPerplexityTokenValidated)
+    @ObservationIgnored
+    var isPerplexityTokenValidated: Bool
+
+    @ObservableDefault(.usePerplexity)
+    @ObservationIgnored
+    var usePerplexity: Bool
+
+    var listedModels: [AIModel] {
+        var models = availableRemoteModels.filter {
+            Defaults[.visibleModelIds].contains($0.uniqueId)
+        }
+
+        if !useOpenAI || (!subscriptionActive && !isOpenAITokenValidated) {
+            models = models.filter { $0.provider != .openAI }
+        }
+        if !useAnthropic || (!subscriptionActive && !isAnthropicTokenValidated) {
+            models = models.filter { $0.provider != .anthropic }
+        }
+        if !useXAI || (!subscriptionActive && !isXAITokenValidated) {
+            models = models.filter { $0.provider != .xAI }
+        }
+        if !useGoogleAI || (!subscriptionActive && !isGoogleAITokenValidated) {
+            models = models.filter { $0.provider != .googleAI }
+        }
+        if !useDeepSeek || (!subscriptionActive && !isDeepSeekTokenValidated) {
+            models = models.filter { $0.provider != .deepSeek }
+        }
+        if !usePerplexity || (!subscriptionActive && !isPerplexityTokenValidated) {
+            models = models.filter { $0.provider != .perplexity }
+        }
+
+        // Filter out models from disabled custom providers
+        for customProvider in availableCustomProvider {
+            models = models.filter { model in
+                if model.customProviderName == customProvider.name {
+                    return customProvider.isEnabled
+                }
+                return true
+            }
+        }
+
+        return models
+    }
+
+    var remoteNeedsSetup: Bool {
+        listedModels.isEmpty
+    }
+
+    func invalidateRemoteModel() {
+        guard let provider = Defaults[.remoteModel]?.provider else { return }
+
+        var isValid: Bool
+
+        switch provider {
+        case .openAI:
+            isValid = isOpenAITokenValidated
+        case .anthropic:
+            isValid = isAnthropicTokenValidated
+        case .xAI:
+            isValid = isXAITokenValidated
+        case .googleAI:
+            isValid = isGoogleAITokenValidated
+        case .deepSeek:
+            isValid = isDeepSeekTokenValidated
+        case .perplexity:
+            isValid = isPerplexityTokenValidated
+        case .custom:
+            isValid = true
+        }
+
+        if !isValid {
+            Defaults[.remoteModel] = nil
         }
     }
 }

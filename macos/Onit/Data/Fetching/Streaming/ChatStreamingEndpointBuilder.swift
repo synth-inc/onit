@@ -19,6 +19,14 @@ struct ChatStreamingEndpointBuilder {
         systemMessage: String,
         userMessages: [String]
     ) throws -> any StreamingEndpoint {
+        if Defaults[.useOnitChat] {
+            return ChatStreamingEndpointBuilder.onit(
+                model: model,
+                images: images,
+                responses: responses,
+                systemMessage: systemMessage,
+                userMessages: userMessages)
+        }
         switch model.provider {
         case .openAI:
             return ChatStreamingEndpointBuilder.openAI(
@@ -77,6 +85,24 @@ struct ChatStreamingEndpointBuilder {
                 systemMessage: systemMessage,
                 userMessages: userMessages)
         }
+    }
+
+    private static func onit(
+        model: AIModel,
+        images: [[URL]],
+        responses: [String],
+        systemMessage: String,
+        userMessages: [String]
+    ) -> OnitChatStreamingEndpoint {
+        let messages = ChatEndpointMessagesBuilder.onit(
+            model: model,
+            images: images,
+            responses: responses,
+            systemMessage: systemMessage,
+            userMessages: userMessages)
+
+        return OnitChatStreamingEndpoint(
+            model: model.id, messages: messages)
     }
 
     private static func openAI(
