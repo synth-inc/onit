@@ -9,9 +9,13 @@ import Defaults
 import SwiftUI
 
 struct ContentView: View {
+    @Environment(\.appState) var appState
     @Environment(\.windowState) private var state
     @ObservedObject private var accessibilityPermissionManager = AccessibilityPermissionManager.shared
     @Default(.showOnboarding) var showOnboarding
+    @Default(.onboardingAuthState) var onboardingAuthState
+    @Default(.showTwoWeekProTrialEndedAlert) var showTwoWeekProTrialEndedAlert
+    @Default(.hasClosedTrialEndedAlert) var hasClosedTrialEndedAlert
     
     static let idealWidth: CGFloat = 400
     static let bottomPadding: CGFloat = 0
@@ -44,18 +48,29 @@ struct ContentView: View {
                     .frame(width: TetherAppsManager.minOnitWidth)
                     .frame(maxHeight: .infinity)
                     .background(Color.black)
+                } else if onboardingAuthState != .hideAuth && appState.account == nil {
+                    OnboardingAuth(isSignUp: onboardingAuthState == .showSignUp)
                 } else {
-                    VStack(spacing: 0) {
-                        Spacer().frame(height: 38)
+                    ZStack {
+                        VStack(spacing: 0) {
+                            Spacer().frame(height: 38)
+                            
+                            PromptDivider()
+                            
+                            if state.showChatView { ChatView().transition(.opacity) }
+                            else { Spacer() }
+                        }
                         
-                        PromptDivider()
-                        
-                        if state.showChatView { ChatView().transition(.opacity) }
-                        else { Spacer() }
+                        if showTwoWeekProTrialEndedAlert {
+                            TwoWeekProTrialEndedAlert()
+                        } else if appState.showFreeLimitAlert {
+                            FreeLimitAlert()
+                        } else if appState.showProLimitAlert {
+                            ProLimitAlert()
+                        }
                     }
                 }
             }
-
             .background(Color.black)
             .addBorder(
                 cornerRadius: 14,
@@ -89,6 +104,24 @@ struct ContentView: View {
             handleFileImport(result)
         }
         .addAnimation(dependency: state.showChatView)
+        .onAppear {
+            if !hasClosedTrialEndedAlert {
+                if let subscriptionStatus = appState.subscription?.status{
+                    if subscriptionStatus == "active" {
+                        hasClosedTrialEndedAlert = true
+                    } else if subscriptionStatus == "canceled",
+                       let trialEndDate = appState.subscription?.trialEnd
+                    {
+                        let today = getTodayAsEpochDate()
+                        let trialExpired = today >= trialEndDate
+                        
+                        if trialExpired {
+                            showTwoWeekProTrialEndedAlert = true
+                        }
+                    }
+                }
+            }
+        }
     }
 
     private func handleFileImport(_ result: Result<[URL], any Error>) {

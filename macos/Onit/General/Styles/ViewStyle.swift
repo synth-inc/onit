@@ -82,7 +82,7 @@ extension View {
     func styleText(
         size: CGFloat = 14,
         weight: Font.Weight = Font.Weight.medium,
-        color: Color = Color.white,
+        color: Color = Color.primary,
         align: TextAlignment = TextAlignment.leading
     ) -> some View {
         self

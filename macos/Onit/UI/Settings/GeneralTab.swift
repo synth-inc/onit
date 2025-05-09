@@ -17,20 +17,26 @@ struct GeneralTab: View {
     
     var body: some View {
         Form {
+            GeneralTabPlanAndBilling()
+            
+            GeneralTabAccount()
+            
             launchOnStartupSection
             
             analyticsSection
-            
+                        
             appearanceSection
             
             // experimentalSection
         }
         .formStyle(.grouped)
-        .padding()
     }
     
     var launchOnStartupSection: some View {
-        Section {
+        SettingsSection(
+            iconSystem: "power",
+            title: "Auto start"
+        ) {
             VStack(alignment: .leading, spacing: 20) {
                 HStack {
                     Text("Run onit when my computer starts")
@@ -43,19 +49,17 @@ struct GeneralTab: View {
                         .controlSize(.small)
                 }
             }
-            .onChange(of: isLaunchAtStartupEnabled, initial: false) { old, new in
+            .onChange(of: isLaunchAtStartupEnabled, initial: false) { _, _ in
                 toggleLaunchAtStartup()
-            }
-        } header: {
-            HStack {
-                Image(systemName: "power")
-                Text("Auto start")
             }
         }
     }
     
     var analyticsSection: some View {
-        Section {
+        SettingsSection(
+            iconSystem: "chart.bar.xaxis",
+            title: "Analytics"
+        ) {
             VStack(alignment: .leading, spacing: 4) {
                 HStack {
                     Text("Enable analytics")
@@ -72,16 +76,14 @@ struct GeneralTab: View {
             .onChange(of: isAnalyticsEnabled, initial: false) {
                 toggleAnalyticsOptOut()
             }
-        } header: {
-            HStack {
-                Image(systemName: "chart.bar.xaxis")
-                Text("Analytics")
-            }
         }
     }
 
     var appearanceSection: some View {
-        Section {
+        SettingsSection(
+            iconSystem: "paintbrush",
+            title: "Appearance"
+        ) {
             VStack(spacing: 16) {
                 VStack(spacing: 8) {
                     HStack {
@@ -95,7 +97,7 @@ struct GeneralTab: View {
                             .monospacedDigit()
                             .frame(width: 40)
                     }
-
+                    
                     HStack {
                         Spacer()
                         Button("Restore Default") {
@@ -104,7 +106,7 @@ struct GeneralTab: View {
                         .controlSize(.small)
                     }
                 }
-
+                
                 VStack(spacing: 8) {
                     HStack {
                         Text("Line Height")
@@ -117,7 +119,7 @@ struct GeneralTab: View {
                             .monospacedDigit()
                             .frame(width: 40)
                     }
-
+                    
                     HStack {
                         Spacer()
                         Button("Restore Default") {
@@ -126,11 +128,32 @@ struct GeneralTab: View {
                         .controlSize(.small)
                     }
                 }
-            }
-        } header: {
-            HStack {
-                Image(systemName: "paintbrush")
-                Text("Appearance")
+                //                VStack(alignment: .leading, spacing: 8) {
+                //                    Text("Panel Position")
+                //                        .font(.system(size: 13))
+                //
+                //                    HStack(spacing: 8) {
+                //                        ForEach(PanelPosition.allCases, id: \.self) { position in
+                //                            Button {
+                //                                panelPosition = position
+                //                                state.panel?.updatePosition()
+                //                            } label: {
+                //                                VStack(spacing: 4) {
+                //                                    Image(systemName: position.systemImage)
+                //                                        .font(.system(size: 16))
+                //                                    Text(position.rawValue)
+                //                                        .font(.system(size: 11))
+                //                                }
+                //                                .frame(maxWidth: .infinity)
+                //                                .padding(.vertical, 8)
+                //                                .background(panelPosition == position ? Color.accentColor : Color.clear)
+                //                                .clipShape(RoundedRectangle(cornerRadius: 6))
+                //                                .contentShape(Rectangle())
+                //                            }
+                //                            .buttonStyle(.plain)
+                //                        }
+                //                    }
+                //                }
             }
         }
     }

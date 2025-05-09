@@ -121,15 +121,10 @@ struct ModelSelectionView: View {
         ScrollView {
             VStack(spacing: 0) {
                 ForEach(filteredRemoteModels) { remoteModel in
-                    TextButton(
-                        icon: determineRemoteModelLogo(provider: remoteModel.provider),
-                        iconSize: 16,
-                        text: remoteModel.displayName,
-                        selected: isSelectedRemoteModel(model: remoteModel),
-                        action: {
-                            selectedModel.wrappedValue = .remote(remoteModel)
-                            open.wrappedValue = false
-                        }
+                    RemoteModelButton(
+                        modelSelectionViewOpen: open,
+                        selectedModel: selectedModel,
+                        remoteModel: remoteModel
                     )
                 }
             }
@@ -258,27 +253,6 @@ extension ModelSelectionView {
             appState.setSettingsTab(tab: .models)
             openSettings()
             OverlayManager.shared.dismissOverlay()
-        }
-    }
-    
-    private func determineRemoteModelLogo(provider: AIModel.ModelProvider) -> ImageResource {
-        switch provider {
-        case .openAI: return .logoOpenai
-        case .anthropic: return .logoAnthropic
-        case .xAI: return .logoXai
-        case .googleAI: return .logoGoogleai
-        case .deepSeek: return .logoDeepseek
-        case .perplexity: return .logoPerplexity
-        default: return .logoProviderUnknown
-        }
-    }
-    
-    private func isSelectedRemoteModel(model: AIModel) -> Bool {
-        if let currentModel = selectedModel.wrappedValue,
-           case let .remote(selectedModel) = currentModel {
-            return model.id == selectedModel.id
-        } else {
-            return false
         }
     }
     
