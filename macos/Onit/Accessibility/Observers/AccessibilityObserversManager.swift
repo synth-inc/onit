@@ -25,9 +25,9 @@ class AccessibilityObserversManager {
     private var observers: [pid_t: AXObserver] = [:]
     private var persistentObservers: [pid_t: AXObserver] = [:]
     
-    // Protection contre les appels rapides multiples
+    private let minimumStartInterval: TimeInterval = 0.5
     private var lastStartTime: Date?
-    private let minimumStartInterval: TimeInterval = 0.5 // 500ms
+    private var accessibilityPermissionRequested: Bool = false
     
     enum ProcessAuthorizationState {
         case authorized
@@ -38,6 +38,10 @@ class AccessibilityObserversManager {
     // MARK: - Functions
     
     func start(pid: pid_t?) {
+        if !accessibilityPermissionRequested {
+            accessibilityPermissionRequested = true
+            AccessibilityPermissionManager.shared.requestPermission()
+        }
         // Ensure we don't start twice too quickly
         if let lastStartTime = lastStartTime,
            Date().timeIntervalSince(lastStartTime) < minimumStartInterval {
@@ -151,6 +155,12 @@ class AccessibilityObserversManager {
     }
     
     private func startNotificationsObserver(for pid: pid_t) {
+        guard Thread.isMainThread else {
+            DispatchQueue.main.async {
+                self.startNotificationsObserver(for: pid)
+            }
+            return
+        }
         stopNotificationsObserver(for: pid)
         
         let appName = pid.getAppName() ?? "Unknown"
@@ -168,7 +178,7 @@ class AccessibilityObserversManager {
                 let userInfo = userInfo as! [String: Any] as Dictionary
                 
                 accessibilityInstance.handleAccessibilityNotifications(
-                    notification as String, element: element, info: userInfo)
+                    notification as String, element: element, info: userInfo, observer: observer)
             }
         }
 
@@ -296,7 +306,7 @@ class AccessibilityObserversManager {
     // MARK: - Notifications handling
     
     private func handleAccessibilityNotifications(
-        _ notification: String, element: AXUIElement, info: [String: Any]
+        _ notification: String, element: AXUIElement, info: [String: Any], observer: AXObserver
     ) {
         log.info("Notification received: \(notification)")
         if let elementPid = element.pid() {
