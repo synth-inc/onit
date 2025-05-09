@@ -87,6 +87,9 @@ extension Defaults.Keys {
     static let tavilyAPIToken = Key<String>("tavilyAPIToken", default: "")
     static let isTavilyAPITokenValidated = Key<Bool>("tavilyAPITokenValidated", default: false)
 
+    // Window state
+    static let panelWidth = Key<Double>("panelWidth", default: 400)
+
     // General settings
     static let launchOnStartupRequested = Key<Bool>("launchOnStartupRequested", default: false)
     static let fontSize = Key<Double>("fontSize", default: 14.0)

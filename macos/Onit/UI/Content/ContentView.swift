@@ -10,10 +10,11 @@ import SwiftUI
 
 struct ContentView: View {
     @Environment(\.windowState) private var state
+    
+    @Default(.panelWidth) var panelWidth
     @ObservedObject private var accessibilityPermissionManager = AccessibilityPermissionManager.shared
     @Default(.showOnboarding) var showOnboarding
     
-    static let idealWidth: CGFloat = 400
     static let bottomPadding: CGFloat = 0
     
     private var showFileImporterBinding: Binding<Bool> {
@@ -41,8 +42,9 @@ struct ContentView: View {
                             Spacer()
                         }
                     }
-                    .frame(width: TetherAppsManager.minOnitWidth)
+                    .frame(width: panelWidth)
                     .frame(maxHeight: .infinity)
+
                     .background(Color.black)
                 } else {
                     VStack(spacing: 0) {
