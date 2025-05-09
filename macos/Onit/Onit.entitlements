@@ -12,5 +12,7 @@
 	<true/>
 	<key>com.apple.security.web</key>
 	<true/>
+    <key>com.apple.security.accessibility</key>
+    <true/>
 </dict>
 </plist>

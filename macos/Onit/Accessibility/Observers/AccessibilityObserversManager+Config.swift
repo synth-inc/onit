@@ -11,7 +11,7 @@ extension AccessibilityObserversManager {
 
     struct Config {
         
-        static let notifications = [
+        static let notifications: [String] = [
             kAXFocusedWindowChangedNotification,
             kAXMainWindowChangedNotification,
             kAXFocusedUIElementChangedNotification,
@@ -57,7 +57,7 @@ extension AccessibilityObserversManager {
             //            kAXWindowResizedNotification
         ]
 
-        static let persistentNotifications = [
+        static let persistentNotifications: [String] = [
             kAXWindowDeminiaturizedNotification,
             kAXWindowMiniaturizedNotification,
         ]
