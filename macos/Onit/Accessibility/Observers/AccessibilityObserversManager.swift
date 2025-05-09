@@ -25,18 +25,36 @@ class AccessibilityObserversManager {
     private var observers: [pid_t: AXObserver] = [:]
     private var persistentObservers: [pid_t: AXObserver] = [:]
     
-    private var skipNextDeactivation = false
+    // Protection contre les appels rapides multiples
+    private var lastStartTime: Date?
+    private let minimumStartInterval: TimeInterval = 0.5 // 500ms
+    
+    enum ProcessAuthorizationState {
+        case authorized
+        case ignored
+        case current
+    }
     
     // MARK: - Functions
     
     func start(pid: pid_t?) {
+        // Ensure we don't start twice too quickly
+        if let lastStartTime = lastStartTime,
+           Date().timeIntervalSince(lastStartTime) < minimumStartInterval {
+            log.error("Ignoring rapid consecutive start call")
+            return
+        }
+        
+        lastStartTime = Date()
+        
         stop()
         
         startAppActivationObservers()
         
-        guard let pid = pid, isProcessAllowed(appPid: pid) else { return }
+        guard let pid = pid, authorizationState(for: pid) == .authorized else { return }
         
-        print("Observers started with \(pid.getAppName()) process identifier")
+        let appName = pid.getAppName() ?? "Unknown"
+        log.info("Observers automatically started for `\(appName)` (\(pid))")
         delegate?.accessibilityObserversManager(didActivateApplication: pid.getAppName(), processID: pid)
         startNotificationsObserver(for: pid)
         startPersistentNotificationsObserver(for: pid)
@@ -50,7 +68,7 @@ class AccessibilityObserversManager {
         }
         
         for pid in persistentObservers.keys {
-            stopPersistentNotificationsObservers(for: pid)
+            stopPersistentNotificationsObserver(for: pid)
         }
     }
     
@@ -79,24 +97,28 @@ class AccessibilityObserversManager {
             return
         }
         
-        guard isProcessAllowed(appPid: app.processIdentifier, ignoredCallback: { appName in
-            log.debug("Ignoring activation of `\(appName ?? "")`")
-            self.delegate?.accessibilityObserversManager(didActivateIgnoredApplication: app.localizedName)
-        }) else {
-            log.debug("Application not allowed to be monitored: \(app.localizedName ?? "Unknown")")
-//            skipNextDeactivation = true
-            return
+        switch authorizationState(for: app.processIdentifier) {
+        case .current:
+            log.debug("Ignoring activation of Onit (\(app.processIdentifier))")
+        case .ignored:
+            log.debug("Ignoring activation of `\(app.localizedName ?? "Unknown")` (\(app.processIdentifier))")
+            delegate?.accessibilityObserversManager(didActivateIgnoredApplication: app.localizedName)
+        case .authorized:
+            log.info("Application `\(app.localizedName ?? "Unknown")` (\(app.processIdentifier)) activated")
+            
+            if !isAXServerInitialized(pid: app.processIdentifier) {
+                log.error("AXServer not fully initialized")
+                AccessibilityAnalytics.logAXServerInitializationError(app: app)
+            }
+            
+            delegate?.accessibilityObserversManager(
+                didActivateApplication: app.localizedName,
+                processID: app.processIdentifier
+            )
+            
+            startNotificationsObserver(for: app.processIdentifier)
+            startPersistentNotificationsObserver(for: app.processIdentifier)
         }
-        
-        log.info("Application `\(app.localizedName ?? "")` activated with pid: \(app.processIdentifier)")
-        
-        delegate?.accessibilityObserversManager(
-            didActivateApplication: app.localizedName,
-            processID: app.processIdentifier
-        )
-        
-        startNotificationsObserver(for: app.processIdentifier)
-        startPersistentNotificationsObserver(for: app.processIdentifier)
     }
     
     @objc private func appDeactivationReceived(notification: Notification) {
@@ -106,36 +128,39 @@ class AccessibilityObserversManager {
             return
         }
         
-        guard isProcessAllowed(appPid: app.processIdentifier) else {
-            log.debug("Application not allowed to be monitored: \(app.localizedName ?? "Unknown")")
+        // Check if Onit is activated so we don't deactivate the active app
+        if let activeApp = NSWorkspace.shared.frontmostApplication,
+           authorizationState(for: activeApp.processIdentifier) == .current {
+            log.debug("Onit is active, ignoring deactivation of `\(app.localizedName ?? "Unknown")` (\(app.processIdentifier))")
             return
         }
         
-//        guard !skipNextDeactivation else {
-//            skipNextDeactivation = false
-//            return
-//        }
-        
-        log.info("Application `\(app.localizedName ?? "")` deactivated with pid: \(app.processIdentifier)")
-        
-        delegate?.accessibilityObserversManager(
-            didDeactivateApplication: app.localizedName,
-            processID: app.processIdentifier
-        )
-        stopNotificationsObserver(for: app.processIdentifier)
+        switch authorizationState(for: app.processIdentifier) {
+        case .current:
+            log.info("Ignoring deactivation of Onit (\(app.processIdentifier))")
+        case .ignored:
+            log.info("Ignoring deactivation of `\(app.localizedName ?? "Unknown")` (\(app.processIdentifier))")
+        case .authorized:
+            log.info("Application `\(app.localizedName ?? "Unknown")` (\(app.processIdentifier)) deactivated")
+            delegate?.accessibilityObserversManager(
+                didDeactivateApplication: app.localizedName,
+                processID: app.processIdentifier
+            )
+            stopNotificationsObserver(for: app.processIdentifier)
+        }
     }
     
     private func startNotificationsObserver(for pid: pid_t) {
         stopNotificationsObserver(for: pid)
         
-        let appName = pid.getAppName()
-        log.info("Registering observers for \(appName ?? "Unknown") with PID: \(pid)")
+        let appName = pid.getAppName() ?? "Unknown"
+        log.info("Registering observers for `\(appName)` (\(pid))")
         
         var observer: AXObserver?
         let observerCallback: AXObserverCallbackWithInfo = {
             observer, element, notification, userInfo, refcon in
             // Dispatch to main thread immediately
-            log.info("notification received \(notification)")
+            log.info("Notification received: \(notification)")
             DispatchQueue.main.async {
                 let accessibilityInstance = Unmanaged<AccessibilityObserversManager>
                     .fromOpaque(refcon!)
@@ -171,9 +196,9 @@ class AccessibilityObserversManager {
             
             CFRunLoopAddSource(CFRunLoopGetMain(), AXObserverGetRunLoopSource(observer), .defaultMode)
             
-            log.info("Observer registered for \(appName ?? "Unknown") with PID: \(pid)")
+            log.info("Observer registered for `\(appName)` (\(pid))")
         } else {
-            log.error("Failed to registering observer for \(appName ?? "Unknown") with PID: \(pid)")
+            log.error("Failed to register observer for `\(appName)` (\(pid))")
             AccessibilityAnalytics.logObserverError(
                 errorCode: result.rawValue,
                 pid: pid
@@ -184,11 +209,11 @@ class AccessibilityObserversManager {
     private func startPersistentNotificationsObserver(for pid: pid_t) {
         let appName = pid.getAppName() ?? "Unknown"
         guard persistentObservers[pid] == nil else {
-            log.debug("Persistent observer already registered for app: \(appName)")
+            log.debug("Persistent observer already registered for `\(appName)` (\(pid))")
             return
         }
         
-        log.info("Registering persistent observers for \(appName) with PID: \(pid)")
+        log.info("Registering persistent observers for `\(appName)` (\(pid))")
         
         var observer: AXObserver?
         let observerCallback: AXObserverCallbackWithInfo = {
@@ -222,9 +247,9 @@ class AccessibilityObserversManager {
             }
             CFRunLoopAddSource(CFRunLoopGetMain(), AXObserverGetRunLoopSource(observer), .defaultMode)
             
-            log.info("Persistent observer registered for \(appName) with PID: \(pid)")
+            log.info("Persistent observer registered for `\(appName)` (\(pid))")
         } else {
-            log.error("Failed to registering observer for \(appName) with PID: \(pid)")
+            log.error("Failed to register persistent observer for `\(appName)` (\(pid))")
             AccessibilityAnalytics.logObserverError(
                 errorCode: result.rawValue,
                 pid: pid
@@ -247,10 +272,10 @@ class AccessibilityObserversManager {
         }
 
         observers.removeValue(forKey: pid)
-        log.info("Stop observing notifications for PID: \(pid).")
+        log.info("Stopped observing notifications for `\(pid.getAppName() ?? "Unknown")` (\(pid))")
     }
     
-    private func stopPersistentNotificationsObservers(for pid: pid_t) {
+    private func stopPersistentNotificationsObserver(for pid: pid_t) {
         guard let existingObserver = self.persistentObservers[pid] else { return }
         
         let runLoopSource = AXObserverGetRunLoopSource(existingObserver)
@@ -265,7 +290,7 @@ class AccessibilityObserversManager {
         }
         
         persistentObservers.removeValue(forKey: pid)
-        log.info("Stop observing persistent notifications for PID: \(pid).")
+        log.info("Stopped observing persistent notifications for `\(pid.getAppName() ?? "Unknown")` (\(pid))")
     }
     
     // MARK: - Notifications handling
@@ -273,7 +298,7 @@ class AccessibilityObserversManager {
     private func handleAccessibilityNotifications(
         _ notification: String, element: AXUIElement, info: [String: Any]
     ) {
-        log.info("notification: \(notification)")
+        log.info("Notification received: \(notification)")
         if let elementPid = element.pid() {
            delegate?.accessibilityObserversManager(
                 didReceiveNotification: notification,
@@ -287,7 +312,7 @@ class AccessibilityObserversManager {
     private func handlePersistentAccessibilityNotifications(
         _ notification: String, element: AXUIElement, info: [String: Any]
     ) {
-        log.info("notification: \(notification)")
+        log.info("Persistent notification received: \(notification)")
         if let elementPid = element.pid() {
             delegate?.accessibilityObserversManager(
                 didReceiveNotification: notification,
@@ -298,18 +323,48 @@ class AccessibilityObserversManager {
         }
     }
     
-    private func isProcessAllowed(appPid: pid_t, ignoredCallback: ((String?) -> Void)? = nil) -> Bool {
-        let appName = appPid.getAppName()
+    private func authorizationState(for pid: pid_t) -> ProcessAuthorizationState {
+        let appName = pid.getAppName()
         let onitName = Bundle.main.object(forInfoDictionaryKey: "CFBundleName") as? String
         
-        if appPid == getpid() || appName == onitName {
-            return false
+        if pid == getpid() || appName == onitName {
+            return .current
         } else if ignoredAppNames.contains(appName ?? "") {
-            ignoredCallback?(appName)
-            
-            return false
+            return .ignored
         }
         
-        return true
+        return .authorized
+    }
+    
+    private func isAXServerInitialized(pid: pid_t) -> Bool {
+        func isAppleApplication(for pid: pid_t) -> Bool {
+            guard let bundleIdentifier = pid.bundleIdentifier else {
+                return false
+            }
+            
+            return bundleIdentifier.starts(with: "com.apple.")
+        }
+        
+        func canReadFocusedUIElement(for pid: pid_t) -> Bool {
+            let appElement = pid.getAXUIElement()
+            
+            var focusedElement: CFTypeRef?
+            let result = AXUIElementCopyAttributeValue(appElement, kAXFocusedUIElementAttribute as CFString, &focusedElement)
+            
+            if result == .success {
+                return true
+            } else {
+                if result == .cannotComplete {
+                    log.error("We're stuck with Accessibility")
+                }
+                return false
+            }
+        }
+        
+        guard !isAppleApplication(for: pid) else {
+            return true
+        }
+        
+        return canReadFocusedUIElement(for: pid)
     }
 }

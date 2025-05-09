@@ -40,6 +40,35 @@ struct AccessibilityAnalytics {
         )
     }
     
+    @MainActor static func logAXServerInitializationError(app: NSRunningApplication) {
+        func findAccessibilityInspectorAppURL() -> URL? {
+            let workspace = NSWorkspace.shared
+            let bundleIdentifier = "com.apple.AccessibilityInspector"
+            
+            return workspace.urlForApplication(withBundleIdentifier: bundleIdentifier)
+        }
+        
+        var properties: [String: Any] = [
+            "is_trusted": AXIsProcessTrusted(),
+            "input_enabled": Defaults[.autoContextFromHighlights],
+            "autocontext_enabled": Defaults[.autoContextFromCurrentWindow],
+            "app_version": AccessibilityAnalytics.appVersion,
+            "os_version": ProcessInfo.processInfo.operatingSystemVersionString,
+            "user_has_accessibility_inspector": findAccessibilityInspectorAppURL() != nil ? true : false
+        ]
+        
+        if let appName = app.localizedName {
+            properties["app_name"] = appName
+        }
+        if let appBundle = app.bundleIdentifier {
+            properties["app_bundle_id"] = appBundle
+        }
+        
+        PostHogSDK.shared.capture("accessibility_not_fully_initialized_error",
+            properties: properties
+        )
+    }
+    
     @MainActor static func logObserverError(errorCode: Int32, pid: pid_t) {
         var properties: [String: Any] = [
             "error_code": errorCode,

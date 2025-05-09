@@ -96,15 +96,15 @@ class AccessibilityNotificationsManager: ObservableObject {
     private func handleAppActivation(appName: String?, processID: pid_t) {
         print("Application activated: \(appName ?? "Unknown") \(processID)")
          
-//        Task.detached {
-//            await self.highlightedTextCoordinator.startPolling(pid: processID, selectionChangedHandler: { [weak self] text, frame in
-//                guard let self = self else { return }
-//                
-//                Task { @MainActor in
-//                    self.processSelectedText(text, elementFrame: frame)
-//                }
-//            })
-//        }
+        Task.detached {
+            await self.highlightedTextCoordinator.startPolling(pid: processID, selectionChangedHandler: { [weak self] text, frame in
+                guard let self = self else { return }
+                
+                Task { @MainActor in
+                    self.processSelectedText(text, elementFrame: frame)
+                }
+            })
+        }
 
         currentSource = appName
         
@@ -206,9 +206,8 @@ class AccessibilityNotificationsManager: ObservableObject {
     }
 
     func handleFocusChange(elementPid: pid_t) {
-        // TODO: KNA - Maybe add some debounce on this
         print("Focus change from pid: \(elementPid)")
-            
+        
         retrieveWindowContent(for: elementPid)
     }
 
