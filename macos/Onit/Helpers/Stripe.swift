@@ -24,19 +24,19 @@ struct Stripe {
         }
     }
     
-    static func checkFreeTrialAvailable() async -> String {
+    static func checkFreeTrialAvailable() async -> (Bool?, String?) {
         do {
             let client = FetchingClient()
             let freeTrialAvailable = try await client.getSubscriptionFreeTrialAvailable()
             
             if freeTrialAvailable {
-                return "true"
+                return (true, nil)
             } else {
-                return "false"
+                return (false, nil)
             }
         } catch {
             print("Error: \(error.localizedDescription)")
-            return "Failed to check for free trial availability."
+            return (nil, "Failed to check for free trial availability.")
         }
     }
 }

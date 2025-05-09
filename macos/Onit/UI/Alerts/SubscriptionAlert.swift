@@ -5,14 +5,11 @@
 //  Created by Loyd Kim on 5/2/25.
 //
 
-import Defaults
 import SwiftUI
 
 struct SubscriptionAlert: View {
     @Environment(\.appState) var appState
     @Environment(\.openSettings) var openSettings
-    
-    @Default(.showTwoWeekProTrialEndedAlert) var showTwoWeekProTrialEndedAlert
     
     private let title: String
     private let close: (() -> Void)?
@@ -149,7 +146,6 @@ extension SubscriptionAlert {
     
     private func descriptionButton(_ action: @escaping () -> Void) -> some View {
         Button {
-            showTwoWeekProTrialEndedAlert = false
             action()
         } label: {
             Text(description)
@@ -197,7 +193,6 @@ extension SubscriptionAlert {
                     footerTextView("Or, add your API key in")
                     
                     Button {
-                        showTwoWeekProTrialEndedAlert = false
                         openModelSettings()
                     } label: {
                         Text("Settings").styleText(size: 11, color: .gray100)

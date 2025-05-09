@@ -15,6 +15,7 @@ struct ContentView: View {
     @Default(.showOnboarding) var showOnboarding
     @Default(.onboardingAuthState) var onboardingAuthState
     @Default(.showTwoWeekProTrialEndedAlert) var showTwoWeekProTrialEndedAlert
+    @Default(.hasClosedTrialEndedAlert) var hasClosedTrialEndedAlert
     
     static let idealWidth: CGFloat = 400
     static let bottomPadding: CGFloat = 0
@@ -103,6 +104,24 @@ struct ContentView: View {
             handleFileImport(result)
         }
         .addAnimation(dependency: state.showChatView)
+        .onAppear {
+            if !hasClosedTrialEndedAlert {
+                if let subscriptionStatus = appState.subscription?.status{
+                    if subscriptionStatus == "active" {
+                        hasClosedTrialEndedAlert = true
+                    } else if subscriptionStatus == "canceled",
+                       let trialEndDate = appState.subscription?.trialEnd
+                    {
+                        let today = getTodayAsEpochDate()
+                        let trialExpired = today >= trialEndDate
+                        
+                        if trialExpired {
+                            showTwoWeekProTrialEndedAlert = true
+                        }
+                    }
+                }
+            }
+        }
     }
 
     private func handleFileImport(_ result: Result<[URL], any Error>) {

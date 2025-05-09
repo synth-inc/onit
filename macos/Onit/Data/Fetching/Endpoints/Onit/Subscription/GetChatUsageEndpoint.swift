@@ -17,7 +17,7 @@ extension FetchingClient {
 struct GetChatUsageEndpoint: Endpoint {
     typealias Request = EmptyRequest
 
-    typealias Response = ChatUsage?
+    typealias Response = ChatUsage
 
     var baseURL: URL { OnitServer.baseURL }
 

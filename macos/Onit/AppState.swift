@@ -53,19 +53,25 @@ class AppState: NSObject {
     }
     var subscriptionActive: Bool { subscription?.status == "active" || subscription?.status == "trialing" }
     
+    var subscriptionCanceled: Bool {
+        if let canceled = subscription?.cancelAtPeriodEnd {
+            return canceled
+        } else {
+            return false
+        }
+    }
+    
     var subscriptionStatus: String? {
         if account != nil && subscription == nil {
             return SubscriptionStatus.free
         } else if let subscription = subscription {
             switch subscription.status {
-            case "canceled":
-                return SubscriptionStatus.canceled
             case "trialing":
                 return SubscriptionStatus.trialing
             case "active":
                 return SubscriptionStatus.active
             default:
-                // Stripe statuses: Incomplete, Incomplete Expired, Past Due, Unpaid, and Paused
+                // Stripe statuses: Canceled, Incomplete, Incomplete Expired, Past Due, Unpaid, and Paused
                 return SubscriptionStatus.free
             }
         } else {
@@ -268,12 +274,6 @@ class AppState: NSObject {
         if account == nil {
             if !providerApiKeyExists {
                 subscriptionPlanError = "Add the provider API key to send a message."
-            } else {
-                callback()
-            }
-        } else if subscriptionStatus == SubscriptionStatus.canceled {
-            if !providerApiKeyExists {
-                Defaults[.showTwoWeekProTrialEndedAlert] = true
             } else {
                 callback()
             }

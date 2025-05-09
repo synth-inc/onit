@@ -5,10 +5,14 @@
 //  Created by Loyd Kim on 5/2/25.
 //
 
+import Defaults
 import SwiftUI
 
 struct SubscriptionButton: View {
     @Environment(\.openURL) var openURL
+    
+    @Default(.showTwoWeekProTrialEndedAlert) var showTwoWeekProTrialEndedAlert
+    @Default(.hasClosedTrialEndedAlert) var hasClosedTrialEndedAlert
     
     private let text: String
     
@@ -76,6 +80,8 @@ struct SubscriptionButton: View {
                             if let error = await Stripe.openSubscriptionForm(openURL) {
                                 errorMessage = error
                             }
+                            showTwoWeekProTrialEndedAlert = false
+                            hasClosedTrialEndedAlert = true
                         }
                     }
             )

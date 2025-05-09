@@ -77,17 +77,18 @@ struct GeneralTabPlanAndBilling: View {
                         }
                     }
                 } else if appState.subscriptionStatus == SubscriptionStatus.trialing || appState.subscriptionStatus == SubscriptionStatus.active {
-                    manageSubscriptionButton
-                } else if appState.subscriptionStatus == SubscriptionStatus.canceled {
                     HStack(spacing: 11) {
-                        renewSubscriptionButton
+                        if appState.subscriptionCanceled {
+                            renewSubscriptionButton
+                        }
+                        
                         manageSubscriptionButton
                     }
                 }
                 
                 if !userLoggedIn ||
-                    planType == SubscriptionStatus.free ||
-                    planType == SubscriptionStatus.trialing
+                    appState.subscriptionCanceled ||
+                    planType == SubscriptionStatus.free
                 {
                     SubscriptionFeatures()
                 }
@@ -188,6 +189,36 @@ extension GeneralTabPlanAndBilling {
             )
     }
     
+    private func getCanceledText(_ renewalDate: String) -> String? {
+        if let subscriptionCanceled = appState.subscription?.cancelAtPeriodEnd,
+           subscriptionCanceled
+        {
+            return "Your Onit subscription expires on \(renewalDate)."
+        } else {
+            return nil
+        }
+    }
+    
+    private func handleRenewalDate(_ renewalDate: String) -> String {
+        if planType == SubscriptionStatus.free {
+            return "Free quota renews \(renewalDate)."
+        } else if planType == SubscriptionStatus.active {
+            if let canceledText = getCanceledText(renewalDate) {
+                return canceledText
+            } else {
+                return "Next billing & renewal date is \(renewalDate)."
+            }
+        } else if planType == SubscriptionStatus.trialing {
+            if let canceledText = getCanceledText(renewalDate) {
+                return canceledText
+            } else {
+                return "Your trial ends \(renewalDate)."
+            }
+        } else {
+            return "Renewal date not available."
+        }
+    }
+    
     private func caption(
         planType: String,
         usage: Int,
@@ -195,24 +226,22 @@ extension GeneralTabPlanAndBilling {
         renewalDate: String
     ) -> some View {
         VStack(alignment: .leading, spacing: 6) {
-            Text(planType).styleText(size: 13, weight: .regular)
+            Text(
+                appState.subscriptionCanceled ? "Pro plan expiring soon" : planType
+            ).styleText(size: 13, weight: .regular)
             
             VStack(alignment: .leading, spacing: 1) {
-                if planType == SubscriptionStatus.active {
-                    captionText("You are subscribed to the Onit Pro plan!")
-                } else if planType == SubscriptionStatus.trialing {
-                    captionText("You are on the Pro free trial!")
+                if !appState.subscriptionCanceled {
+                    if planType == SubscriptionStatus.active {
+                        captionText("You are subscribed to the Onit Pro plan!")
+                    } else if planType == SubscriptionStatus.trialing {
+                        captionText("You are on the Pro free trial!")
+                    }
                 }
                 
                 captionText("\(usage)/\(quota) generations used.")
                 
-                captionText(
-                    planType == SubscriptionStatus.free ? "Free quota renews \(renewalDate)." :
-                        planType == SubscriptionStatus.canceled ? "Your Onit subscription expires on \(renewalDate)." :
-                        planType == SubscriptionStatus.active ? "Next billing & renewal date is \(renewalDate)." :
-                        planType == SubscriptionStatus.trialing ? "Your trial ends \(renewalDate)." :
-                        "Renewal date not available."
-                )
+                captionText(handleRenewalDate(renewalDate))
             }
         }
     }
@@ -234,14 +263,15 @@ extension GeneralTabPlanAndBilling {
                 if appState.subscriptionStatus == SubscriptionStatus.free {
                     checkingFreeTrialAvailable = true
                     
-                    let response = await Stripe.checkFreeTrialAvailable()
-                    let trialAvailable = response.lowercased()
+                    let (isFreeTrialAvailable, errorMessage) = await Stripe.checkFreeTrialAvailable()
                     
-                    if trialAvailable == "true" { freeTrialAvailable = true }
-                    else if trialAvailable == "false" { freeTrialAvailable = false }
-                    else { subscriptionDataErrorMessage = response }
-                    
-                    checkingFreeTrialAvailable = false
+                    if let error = errorMessage {
+                        subscriptionDataErrorMessage = error
+                    } else if let isAvailable = isFreeTrialAvailable {
+                        freeTrialAvailable = isAvailable
+                    } else {
+                        freeTrialAvailable = false
+                    }
                 }
                 
                 
