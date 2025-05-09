@@ -199,7 +199,6 @@ extension OnitRegularPanel: OnitPanel {
         guard !isAnimating else { return }
         
         let newWidth = width - deltaWidth
-        let newX = frame.origin.x - deltaWidth
         
         if (newWidth >= OnitRegularPanel.minWidth) {
             width = newWidth
