@@ -10,7 +10,6 @@ import SwiftUI
 
 struct ContentView: View {
     @Environment(\.appState) var appState
-    @Environment(\.openWindow) private var openWindow
     @Environment(\.windowState) private var state
     @ObservedObject private var accessibilityPermissionManager = AccessibilityPermissionManager.shared
     
@@ -59,8 +58,6 @@ struct ContentView: View {
                     .onDisappear {
                         if appState.account == nil {
                             onboardingAuthState = .showSignUp
-                            openWindow(id: windowOnboardingAuthId)
-                            setOnboardingAuthWindowToFloat()
                         }
                     }
                 } else if shouldShowOnboardingAuth {

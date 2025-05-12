@@ -340,6 +340,8 @@ extension OnboardingAuth {
 
 extension OnboardingAuth {
     private func handleGoogleSignInButton() {
+        errorMessageAuth = nil
+        
         guard let window = NSApp.keyWindow else { return }
 
         GIDSignIn.sharedInstance.signIn(withPresenting: window) { result, error in
