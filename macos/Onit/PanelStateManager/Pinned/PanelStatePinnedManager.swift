@@ -11,18 +11,20 @@ import SwiftUI
 
 @MainActor
 class PanelStatePinnedManager: PanelStateBaseManager, ObservableObject {
+    
+    // MARK: - Singleton instance
 
     static let shared = PanelStatePinnedManager()
     
-    var statesByScreen: [NSScreen: OnitPanelState] = [:] {
-        didSet {
-            states = Array(statesByScreen.values)
-        }
-    }
+    // MARK: - Properties
+    
+    private var lastScreenFrame = CGRect.zero
+    private var globalMouseMonitor: Any?
+    private var localMouseMonitor: Any?
     
     var tutorialWindow: NSWindow
     
-    @Published var tetherButtonVisibility: [NSScreen: Bool] = [:]
+    // MARK: - Initializer
     
     private override init() {
         tutorialWindow = NSWindow(
@@ -47,152 +49,89 @@ class PanelStatePinnedManager: PanelStateBaseManager, ObservableObject {
         tutorialWindow.contentView = tutorialView
         
         super.init()
+        
+        states = [defaultState]
     }
 
+    // MARK: - Functions
 
     override func start() {
         stop()
 
+        globalMouseMonitor = NSEvent.addGlobalMonitorForEvents(matching: .mouseMoved) { [weak self] event in
+            guard let self = self else { return }
+            activateMouseScreen()
+        }
+        
+        localMouseMonitor = NSEvent.addLocalMonitorForEvents(matching: .mouseMoved) { [weak self] event in
+            guard let self = self else { return event }
+            activateMouseScreen()
+            return event
+        }
+        
         AccessibilityNotificationsManager.shared.addDelegate(self)
-        NotificationCenter.default.addObserver(
-            self,
-            selector: #selector(appDidBecomeActive),
-            name: NSApplication.didBecomeActiveNotification,
-            object: nil
-        )
         NotificationCenter.default.addObserver(
             self,
             selector: #selector(applicationWillTerminate),
             name: NSApplication.willTerminateNotification,
             object: nil
         )
+        
+        state.addDelegate(self)
+        
+        activateMouseScreen(forced: true)
     }
 
     override func stop() {
+        if let globalMouseMonitor = globalMouseMonitor {
+            NSEvent.removeMonitor(globalMouseMonitor)
+            self.globalMouseMonitor = nil
+        }
+        if let localMouseMonitor = localMouseMonitor {
+            NSEvent.removeMonitor(localMouseMonitor)
+            self.localMouseMonitor = nil
+        }
+        lastScreenFrame = .zero
         AccessibilityNotificationsManager.shared.removeDelegate(self)
         NotificationCenter.default.removeObserver(self)
+        
+        state.removeDelegate(self)
         
         super.stop()
     }
 
-    @objc private func appDidBecomeActive(_ notification: Notification) { }
-
-    @objc private func applicationWillTerminate() { }
-    
-    func handlePanelStateChange(state: OnitPanelState) {
-        guard let screen = state.trackedScreen else {
-            return
-        }
-
-        if !state.hidden {
-            if state.panelOpened {
-                hideTetherWindow()
-                showPanelForScreen(state: state, screen: screen)
-            } else {
-                debouncedShowTetherWindow(state: state, activeScreen: screen)
-            }
-        } else {
-            
-        }
-
-        state.panel?.setLevel(.floating)
-    }
-
-    func getState(for screen: NSScreen) -> OnitPanelState {
-        let panelState: OnitPanelState
-
-        if let (_, activeState) = statesByScreen.first(where: { (key: NSScreen, value: OnitPanelState) in
-            key == screen
-        }) {
-            activeState.trackedScreen = screen
-            panelState = activeState
-        } else {
-            panelState = OnitPanelState(screen: screen)
-            
-            statesByScreen[screen] = panelState
-        }
-
-        panelState.addDelegate(self)
-        state = panelState
-        return panelState
+    @objc private func applicationWillTerminate() {
+        resetFramesOnAppChange()
     }
     
-    func showPanelForScreen(state: OnitPanelState, screen: NSScreen) {
-        guard let panel = state.panel else { return }
-        
-        let screenFrame = screen.visibleFrame
-        let onitWidth = ContentView.idealWidth
-        let onitHeight = screenFrame.height
-        
-        let newFrame = NSRect(
-            x: screenFrame.maxX - onitWidth,
-            y: screenFrame.minY,
-            width: onitWidth,
-            height: onitHeight
-        )
-        
-        if panel.wasAnimated {
-            panel.setFrame(newFrame, display: true)
-            state.showChatView = true // Add this line to explicitly set showChatView
-        } else {
-            guard !panel.isAnimating, panel.frame != newFrame else { return }
-            
-            let fromPanel = NSRect(
-                x: screenFrame.maxX - 2,
-                y: screenFrame.minY,
-                width: 0,
-                height: screenFrame.height
-            )
-            panel.isAnimating = true
-            panel.setFrame(fromPanel, display: false)
-            panel.alphaValue = 1
-            
-            state.animateChatView = true
-            state.showChatView = false
-            
-            panel.setFrame(newFrame, display: true)
-            state.animateChatView = true
-            state.showChatView = true
-            panel.isAnimating = false
-            panel.wasAnimated = true
-        }
-        
-        resizeOverlappingWindowsIfNeeded(panelFrame: newFrame)
+    func handlePanelStateChange() {
+         if !state.panelOpened {
+             state.trackedScreen = nil
+             
+             activateMouseScreen(forced: true)
+         }
     }
     
-    private func resizeOverlappingWindowsIfNeeded(panelFrame: NSRect) {
-        let accessibilityManager = AccessibilityNotificationsManager.shared
-        let allWindows = accessibilityManager.windowsManager.getAllTrackedWindows()
-        
-        for window in allWindows {
-            guard let windowFrame = window.element.getFrame(convertedToGlobalCoordinateSpace: true) else { continue }
-            
-            if windowFrame.intersects(panelFrame) {
-                let maxWidth = panelFrame.minX - windowFrame.minX - PanelStateBaseManager.spaceBetweenWindows
-                
-                let newFrame = NSRect(
-                    x: windowFrame.minX,
-                    y: windowFrame.minY,
-                    width: min(maxWidth, windowFrame.width),
-                    height: windowFrame.height
-                )
-                
-                _ = window.element.setFrame(newFrame)
+    private func activateMouseScreen(forced: Bool = false) {
+        if forced {
+            lastScreenFrame = .zero
+        }
+        if let mouseScreen = NSScreen.mouse {
+            if !mouseScreen.frame.equalTo(lastScreenFrame) {
+                handleActivation(of: mouseScreen)
+                lastScreenFrame = mouseScreen.frame
             }
         }
     }
-
-    func debouncedShowTetherWindow(state: OnitPanelState, activeScreen: NSScreen) {
-        hideTetherWindow()
-        let pendingTetherWindow = (state, activeScreen)
-
-        tetherHintDetails.showTetherDebounceTimer?.invalidate()
-        tetherHintDetails.showTetherDebounceTimer = Timer.scheduledTimer(withTimeInterval: tetherHintDetails.showTetherDebounceDelay, repeats: false) { [weak self] _ in
-            guard let self = self else { return }
-            DispatchQueue.main.async {
-                self.showTetherWindow(state: pendingTetherWindow.0, activeScreen: pendingTetherWindow.1)
-            }
+    
+    private func handleActivation(of screen: NSScreen) {
+        if state.trackedScreen != screen {
+            debouncedShowTetherWindow(activeScreen: screen)
+        } else {
+            hideTetherWindow()
         }
+        
+//        handlePanelStateChange()
     }
     
     override func hideTetherWindow() {
@@ -201,60 +140,11 @@ class PanelStatePinnedManager: PanelStateBaseManager, ObservableObject {
         tutorialWindow.orderOut(nil)
         tutorialWindow.contentView = nil
     }
-
-    func showTetherWindow(state: OnitPanelState, activeScreen: NSScreen) {
-         let tetherView = ExternalTetheredButton(
-             onDrag: { [weak self] translation in
-                 self?.tetheredWindowMoved(y: translation)
-             }
-         ).environment(\.windowState, state)
-
-        let buttonView = NSHostingView(rootView: tetherView)
-        tetherHintDetails.tetherWindow.contentView = buttonView
-        tetherHintDetails.lastYComputed = nil
-        tetherButtonPanelState = state
-
-        updateTetherWindowPosition(for: activeScreen, lastYComputed: tetherHintDetails.lastYComputed)
-        tetherHintDetails.tetherWindow.orderFrontRegardless()
-    }
-    
-    private func updateTetherWindowPosition(for screen: NSScreen, lastYComputed: CGFloat? = nil) {
-        let activeScreenFrame = screen.visibleFrame
-        let positionX = activeScreenFrame.maxX - ExternalTetheredButton.containerWidth
-        let positionY = activeScreenFrame.minY + (activeScreenFrame.height / 2) - (ExternalTetheredButton.containerHeight / 2)
-        
-        let frame = NSRect(
-            x: positionX,
-            y: positionY,
-            width: ExternalTetheredButton.containerWidth,
-            height: ExternalTetheredButton.containerHeight
-        )
-        tetherHintDetails.tetherWindow.setFrame(frame, display: false)
-    }
-
-    private func tetheredWindowMoved(y: CGFloat) {
-        if let tetherPanelState = tetherButtonPanelState, 
-           let screen = tetherPanelState.trackedScreen {
-            if tetherPanelState.panelOpened {
-                tetherPanelState.closePanel()
-            } else {
-                tetherPanelState.launchPanel()
-            }
-        }
-    }
 }
 
 
 extension PanelStatePinnedManager: AccessibilityNotificationsDelegate {
-    func accessibilityManager(_ manager: AccessibilityNotificationsManager, didActivateWindow window: TrackedWindow) {
-        if let windowFrame = window.element.getFrame(convertedToGlobalCoordinateSpace: true),
-           let screen = windowFrame.findScreen() {
-            let panelState = getState(for: screen)
-            
-            handlePanelStateChange(state: panelState)
-        }
-    }
-    
+    func accessibilityManager(_ manager: AccessibilityNotificationsManager, didActivateWindow window: TrackedWindow) { }
     func accessibilityManager(_ manager: AccessibilityNotificationsManager, didActivateIgnoredWindow window: TrackedWindow?) {}
     func accessibilityManager(_ manager: AccessibilityNotificationsManager, didMinimizeWindow window: TrackedWindow) {}
     func accessibilityManager(_ manager: AccessibilityNotificationsManager, didDeminimizeWindow window: TrackedWindow) {}
@@ -277,8 +167,7 @@ extension PanelStatePinnedManager: OnitPanelStateDelegate {
     }
     
     func panelStateDidChange(state: OnitPanelState) {
-        handlePanelStateChange(state: state)
+        handlePanelStateChange()
     }
-    
     func userInputsDidChange(instruction: String, contexts: [Context], input: Input?) {}
 }

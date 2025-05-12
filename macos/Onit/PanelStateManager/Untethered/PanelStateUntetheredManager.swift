@@ -189,9 +189,12 @@ class PanelStateUntetheredManager: PanelStateBaseManager, ObservableObject {
 
     func showTetherWindow(state: OnitPanelState, activeScreen: NSScreen) {
          let tetherView = ExternalTetheredButton(
-             onDrag: { [weak self] translation in
-                 self?.tetheredWindowMoved(screen: activeScreen, y: translation)
-             }
+            onClick: {
+                state.launchPanel()
+            },
+            onDrag: { [weak self] translation in
+                self?.tetheredWindowMoved(screen: activeScreen, y: translation)
+            }
          ).environment(\.windowState, state)
 
         let buttonView = NSHostingView(rootView: tetherView)
@@ -199,7 +202,7 @@ class PanelStateUntetheredManager: PanelStateBaseManager, ObservableObject {
         tetherHintDetails.lastYComputed = nil
         tetherButtonPanelState = state
 
-        if (shouldShowOnboarding) {
+        if shouldShowOnboarding {
             let tutorialView = TetherTutorialOverlay()
             tutorialWindow.contentView = NSHostingView(rootView: tutorialView)
             tutorialWindow.orderFrontRegardless()

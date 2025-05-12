@@ -20,6 +20,7 @@ class PanelStateBaseManager: PanelStateManagerLogic {
     
     var states: [OnitPanelState]
     var tetherHintDetails: TetherHintDetails
+    var targetInitialFrames: [AXUIElement: CGRect] = [:]
     
     static let spaceBetweenWindows: CGFloat = -(TetheredButton.width / 2)
     
@@ -60,11 +61,15 @@ class PanelStateBaseManager: PanelStateManagerLogic {
     }
     
     func stop() {
+        if AccessibilityPermissionManager.shared.accessibilityPermissionStatus == .granted {
+            resetFramesOnAppChange()
+        }
         closePanels()
         hideTetherWindow()
         
         state = defaultState
         tetherButtonPanelState = nil
+        targetInitialFrames = [:]
     }
     
     func hideTetherWindow() {
@@ -74,6 +79,17 @@ class PanelStateBaseManager: PanelStateManagerLogic {
         tetherHintDetails.tetherWindow.orderOut(nil)
         tetherHintDetails.tetherWindow.contentView = nil
         tetherHintDetails.lastYComputed = nil
+    }
+    
+    func resetFramesOnAppChange() {
+        targetInitialFrames.forEach { element, initialFrame in
+            guard let window = element.findFirstTargetWindow() else {
+                return
+            }
+            
+            _ = window.setFrame(initialFrame)
+        }
+        targetInitialFrames.removeAll()
     }
     
     // MARK: - Private functions

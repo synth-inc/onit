@@ -18,21 +18,17 @@ class PanelStateCoordinator {
     
     // MARK: - Properties
     
-    private let accessibilityPermissionManager = AccessibilityPermissionManager.shared
-    private let featureFlagManager = FeatureFlagManager.shared
-    
     private let tetheredManager = PanelStateTetheredManager.shared
     private let untetheredManager = PanelStateUntetheredManager.shared
     private let pinnedManager = PanelStatePinnedManager.shared
     
+    private var currentManager: PanelStateManagerLogic = PanelStateBaseManager()
+    
     private var frontmostApplicationAtLaunch: NSRunningApplication?
     private var stateChangesCancellable: AnyCancellable?
     
-    private var currentManager: PanelStateManagerLogic = PanelStateBaseManager()
-    
     var state: OnitPanelState { currentManager.state }
     var states: [OnitPanelState] { currentManager.states }
-    var tetherButtonPanelState: OnitPanelState? { currentManager.tetherButtonPanelState }
     
     // MARK: - Private initializer
     
@@ -44,9 +40,12 @@ class PanelStateCoordinator {
         frontmostApplicationAtLaunch = frontmostApplication
         
         stateChangesCancellable = Publishers.CombineLatest(
-            accessibilityPermissionManager.$accessibilityPermissionStatus,
-            featureFlagManager.$useScreenModeWithAccessibility
-        ).sink { [weak self] permission, pinnedModeEnabled in
+            AccessibilityPermissionManager.shared.$accessibilityPermissionStatus,
+            FeatureFlagManager.shared.$useScreenModeWithAccessibility
+        )
+        .filter { $0.0 != .notDetermined }
+        .debounce(for: .milliseconds(300), scheduler: RunLoop.main)
+        .sink { [weak self] permission, pinnedModeEnabled in
             self?.handleStateChange(accessibilityPermission: permission, pinnedModeEnabled: pinnedModeEnabled)
         }
     }
@@ -62,7 +61,7 @@ class PanelStateCoordinator {
             AccessibilityNotificationsManager.shared.start(pid: frontmostApplicationAtLaunch?.processIdentifier)
             frontmostApplicationAtLaunch = nil
             
-            if FeatureFlagManager.shared.useScreenModeWithAccessibility {
+            if pinnedModeEnabled {
                 currentManager = pinnedManager
             } else {
                 currentManager = tetheredManager

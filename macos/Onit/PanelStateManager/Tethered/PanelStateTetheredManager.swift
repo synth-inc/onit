@@ -30,8 +30,6 @@ class PanelStateTetheredManager: PanelStateBaseManager, ObservableObject {
     private var dragManagerCancellable: AnyCancellable?
     private var draggingState: OnitPanelState?
     
-    var targetInitialFrames: [AXUIElement: CGRect] = [:]
-    
     // MARK: - Private initializer
     
     private override init() {
@@ -76,7 +74,6 @@ class PanelStateTetheredManager: PanelStateBaseManager, ObservableObject {
         super.stop()
         
         statesByWindow = [:]
-        targetInitialFrames = [:]
     }
     
     @objc func appDidBecomeActive(_ notification: Notification) {
@@ -191,17 +188,6 @@ class PanelStateTetheredManager: PanelStateBaseManager, ObservableObject {
     }
     
     // MARK: - Private functions
-    
-    private func resetFramesOnAppChange() {
-        targetInitialFrames.forEach { element, initialFrame in
-            guard let window = element.findFirstTargetWindow() else {
-                return
-            }
-            
-            _ = window.setFrame(initialFrame)
-        }
-        targetInitialFrames.removeAll()
-    }
     
     private func saveInitialFrameIfNeeded(for window: AXUIElement, state: OnitPanelState) {
         if targetInitialFrames[window] == nil,
