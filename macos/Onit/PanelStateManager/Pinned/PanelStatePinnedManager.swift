@@ -70,6 +70,12 @@ class PanelStatePinnedManager: PanelStateBaseManager, ObservableObject {
         }
         
         AccessibilityNotificationsManager.shared.addDelegate(self)
+        
+        NSWorkspace.shared.notificationCenter.addObserver(
+            self,
+            selector: #selector(appLaunchedReceived),
+            name: NSWorkspace.didLaunchApplicationNotification,
+            object: nil)
         NotificationCenter.default.addObserver(
             self,
             selector: #selector(applicationWillTerminate),
@@ -93,23 +99,31 @@ class PanelStatePinnedManager: PanelStateBaseManager, ObservableObject {
         }
         lastScreenFrame = .zero
         AccessibilityNotificationsManager.shared.removeDelegate(self)
+        NSWorkspace.shared.notificationCenter.removeObserver(self)
         NotificationCenter.default.removeObserver(self)
         
         state.removeDelegate(self)
         
         super.stop()
     }
+    
+    @objc private func appLaunchedReceived(notification: Notification) {
+        guard state.panelOpened, let screen = state.panel?.screen, let userInfo = notification.userInfo else { return }
+        
+        guard let app = (userInfo[NSWorkspace.applicationUserInfoKey] as? NSRunningApplication) ??
+                (userInfo["NSWorkspaceApplicationKey"] as? NSRunningApplication) else { return }
+        
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { [weak self] in
+            let windows = app.processIdentifier.getWindows()
+            
+            for window in windows {
+                self?.resizeWindow(for: screen, window: window)
+            }
+        }
+    }
 
     @objc private func applicationWillTerminate() {
         resetFramesOnAppChange()
-    }
-    
-    func handlePanelStateChange() {
-         if !state.panelOpened {
-             state.trackedScreen = nil
-             
-             activateMouseScreen(forced: true)
-         }
     }
     
     private func activateMouseScreen(forced: Bool = false) {
@@ -130,8 +144,46 @@ class PanelStatePinnedManager: PanelStateBaseManager, ObservableObject {
         } else {
             hideTetherWindow()
         }
+    }
+    
+    func resizeWindows(for screen: NSScreen) {
+        let onitName = Bundle.main.object(forInfoDictionaryKey: "CFBundleName") as? String
+        let appPids = NSWorkspace.shared.runningApplications
+            .filter { $0.activationPolicy == .regular }
+            .filter { $0.localizedName != onitName }
+            .map { $0.processIdentifier }
+         
+        for pid in appPids {
+            let windows = pid.getWindows()
+            
+            for window in windows {
+                resizeWindow(for: screen, window: window)
+            }
+        }
+    }
+    
+    private func resizeWindow(for screen: NSScreen, window: AXUIElement) {
+        guard !targetInitialFrames.keys.contains(window) else { return }
         
-//        handlePanelStateChange()
+        if let windowFrameConverted = window.getFrame(convertedToGlobalCoordinateSpace: true),
+           let windowScreen = windowFrameConverted.findScreen(),
+           windowScreen == screen,
+           let windowFrame = window.getFrame() {
+            
+            let panelWidth = ContentView.idealWidth - (TetheredButton.width / 2)
+            let screenFrame = screen.visibleFrame
+            let availableSpace = screenFrame.maxX - windowFrame.maxX
+            
+            if availableSpace < panelWidth {
+                targetInitialFrames[window] = windowFrame
+                
+                let overlapAmount = panelWidth - availableSpace
+                let newWidth = windowFrame.width - overlapAmount
+                let newFrame = CGRect(x: windowFrame.origin.x, y: windowFrame.origin.y, width: newWidth, height: windowFrame.height)
+                
+                _ = window.setFrame(newFrame)
+            }
+        }
     }
     
     override func hideTetherWindow() {
@@ -150,18 +202,18 @@ class PanelStatePinnedManager: PanelStateBaseManager, ObservableObject {
     }
 }
 
-
 extension PanelStatePinnedManager: AccessibilityNotificationsDelegate {
-    func accessibilityManager(_ manager: AccessibilityNotificationsManager, didActivateWindow window: TrackedWindow) { }
+    func accessibilityManager(_ manager: AccessibilityNotificationsManager, didActivateWindow window: TrackedWindow) {
+        guard state.panelOpened, let screen = state.panel?.screen else { return }
+        
+        resizeWindow(for: screen, window: window.element)
+    }
     func accessibilityManager(_ manager: AccessibilityNotificationsManager, didActivateIgnoredWindow window: TrackedWindow?) {}
     func accessibilityManager(_ manager: AccessibilityNotificationsManager, didMinimizeWindow window: TrackedWindow) {}
     func accessibilityManager(_ manager: AccessibilityNotificationsManager, didDeminimizeWindow window: TrackedWindow) {}
+    func accessibilityManager(_ manager: AccessibilityNotificationsManager, didDestroyWindow window: TrackedWindow) {}
     func accessibilityManager(_ manager: AccessibilityNotificationsManager, didMoveWindow window: TrackedWindow) {}
     func accessibilityManager(_ manager: AccessibilityNotificationsManager, didResizeWindow window: TrackedWindow) {}
-    func accessibilityManager(_ manager: AccessibilityNotificationsManager, didDestroyWindow window: TrackedWindow) {}
-    func accessibilityManager(_ manager: AccessibilityNotificationsManager, didReceiveTextSelection text: String, from window: TrackedWindow) {}
-    func accessibilityManager(_ manager: AccessibilityNotificationsManager, didReceiveSelectedText text: String, from window: TrackedWindow) {}
-    func accessibilityManager(_ manager: AccessibilityNotificationsManager, didReceiveClipboardText text: String) {}
 }
 
 extension PanelStatePinnedManager: OnitPanelStateDelegate {
@@ -175,7 +227,16 @@ extension PanelStatePinnedManager: OnitPanelStateDelegate {
     }
     
     func panelStateDidChange(state: OnitPanelState) {
-        handlePanelStateChange()
+        if !state.panelOpened {
+            resetFramesOnAppChange()
+            
+            state.trackedScreen = nil
+            
+            activateMouseScreen(forced: true)
+        } else {
+            state.panel?.setLevel(.floating)
+        }
     }
+    
     func userInputsDidChange(instruction: String, contexts: [Context], input: Input?) {}
 }

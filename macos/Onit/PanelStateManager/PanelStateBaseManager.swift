@@ -83,11 +83,7 @@ class PanelStateBaseManager: PanelStateManagerLogic {
     
     func resetFramesOnAppChange() {
         targetInitialFrames.forEach { element, initialFrame in
-            guard let window = element.findFirstTargetWindow() else {
-                return
-            }
-            
-            _ = window.setFrame(initialFrame)
+            _ = element.setFrame(initialFrame)
         }
         targetInitialFrames.removeAll()
     }
