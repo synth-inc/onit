@@ -140,7 +140,10 @@ struct AccountTab: View {
 
         GIDSignIn.sharedInstance.signIn(withPresenting: window) { result, error in
             guard let result = result else {
-                if let error = error {
+                if let error = error as? NSError, error.domain == "com.google.GIDSignIn", error.code == -5 {
+                    // The user canceled the sign-in flow
+                    return
+                } else if let error = error {
                     errorMessage = error.localizedDescription
                 } else {
                     errorMessage = "Unknown Google sign in error"
