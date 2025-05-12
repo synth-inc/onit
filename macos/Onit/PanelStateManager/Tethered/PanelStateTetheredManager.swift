@@ -229,4 +229,24 @@ class PanelStateTetheredManager: PanelStateBaseManager, ObservableObject {
         }
         handlePanelStateChange(state: state, action: .moveEnd)
     }
+    
+    override func filterHistoryChats(_ chats: [Chat]) -> [Chat] {
+        guard let appBundleIdentifier = state.trackedWindow?.pid.bundleIdentifier else {
+            return super.filterHistoryChats(chats)
+        }
+        
+        return chats.filter { chat in
+            chat.appBundleIdentifier == appBundleIdentifier
+        }
+    }
+    
+    override func filterPanelChats(_ chats: [Chat]) -> [Chat] {
+        guard let windowHash = state.trackedWindow?.hash else {
+            return super.filterPanelChats(chats)
+        }
+        
+        return chats.filter { chat in
+            chat.windowHash == windowHash
+        }
+    }
 }

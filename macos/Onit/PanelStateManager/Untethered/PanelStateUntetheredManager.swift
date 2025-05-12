@@ -286,6 +286,14 @@ class PanelStateUntetheredManager: PanelStateBaseManager, ObservableObject {
         
         tetherHintDetails.tetherWindow.setFrame(frame, display: true)
     }
+
+    override func filterHistoryChats(_ chats: [Chat]) -> [Chat] {
+        return super.filterHistoryChats(chats)
+    }
+    
+    override func filterPanelChats(_ chats: [Chat]) -> [Chat] {
+        return super.filterPanelChats(chats)
+    }
 }
 
 // MARK: - OnitPanelStateDelegate

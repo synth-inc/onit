@@ -92,6 +92,14 @@ class PanelStateBaseManager: PanelStateManagerLogic {
         targetInitialFrames.removeAll()
     }
     
+    func filterHistoryChats(_ chats: [Chat]) -> [Chat] {
+        return chats
+    }
+    
+    func filterPanelChats(_ chats: [Chat]) -> [Chat] {
+        return chats
+    }
+    
     // MARK: - Private functions
     
     private func closePanels() {

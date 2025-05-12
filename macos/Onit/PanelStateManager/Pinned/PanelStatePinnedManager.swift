@@ -140,6 +140,14 @@ class PanelStatePinnedManager: PanelStateBaseManager, ObservableObject {
         tutorialWindow.orderOut(nil)
         tutorialWindow.contentView = nil
     }
+
+    override func filterHistoryChats(_ chats: [Chat]) -> [Chat] {
+        return super.filterHistoryChats(chats)
+    }
+    
+    override func filterPanelChats(_ chats: [Chat]) -> [Chat] {
+        return super.filterPanelChats(chats)
+    }
 }
 
 

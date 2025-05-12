@@ -16,7 +16,7 @@ class PanelStateCoordinator {
     
     static let shared = PanelStateCoordinator()
     
-    // MARK: - Properties
+    // MARK: - Private properties
     
     private let tetheredManager = PanelStateTetheredManager.shared
     private let untetheredManager = PanelStateUntetheredManager.shared
@@ -26,6 +26,8 @@ class PanelStateCoordinator {
     
     private var frontmostApplicationAtLaunch: NSRunningApplication?
     private var stateChangesCancellable: AnyCancellable?
+    
+    // MARK: - Public properties
     
     var state: OnitPanelState { currentManager.state }
     var states: [OnitPanelState] { currentManager.states }
@@ -48,6 +50,13 @@ class PanelStateCoordinator {
         .sink { [weak self] permission, pinnedModeEnabled in
             self?.handleStateChange(accessibilityPermission: permission, pinnedModeEnabled: pinnedModeEnabled)
         }
+    }
+    
+    func historyFilteredChats(_ allChats: [Chat]) -> [Chat] {
+        currentManager.filterHistoryChats(allChats)
+    }
+    func panelFilteredChats(_ allChats: [Chat]) -> [Chat] {
+        currentManager.filterPanelChats(allChats)
     }
     
     private func handleStateChange(accessibilityPermission: AccessibilityPermissionStatus, pinnedModeEnabled: Bool) {
