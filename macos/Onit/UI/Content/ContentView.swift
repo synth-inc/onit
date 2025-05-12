@@ -10,9 +10,11 @@ import SwiftUI
 
 struct ContentView: View {
     @Environment(\.appState) var appState
+    @Environment(\.openWindow) private var openWindow
     @Environment(\.windowState) private var state
     @ObservedObject private var accessibilityPermissionManager = AccessibilityPermissionManager.shared
-    @Default(.showOnboarding) var showOnboarding
+    
+    @Default(.showOnboardingAccessibility) var showOnboardingAccessibility
     @Default(.onboardingAuthState) var onboardingAuthState
     @Default(.showTwoWeekProTrialEndedAlert) var showTwoWeekProTrialEndedAlert
     @Default(.hasClosedTrialEndedAlert) var hasClosedTrialEndedAlert
@@ -27,9 +29,15 @@ struct ContentView: View {
         )
     }
     
-    private var shouldShowOnboarding: Bool {
+    private var shouldShowOnboardingAccessibility: Bool {
         let accessibilityPermissionGranted = accessibilityPermissionManager.accessibilityPermissionStatus == .granted
-        return !accessibilityPermissionGranted && showOnboarding
+        return !accessibilityPermissionGranted && showOnboardingAccessibility
+    }
+    
+    private var shouldShowOnboardingAuth: Bool {
+        let loggedOut = appState.account == nil
+        let showOnboardingAuth = onboardingAuthState != .hideAuth
+        return loggedOut && showOnboardingAuth
     }
 
     var body: some View {
@@ -37,7 +45,7 @@ struct ContentView: View {
             TetheredButton()
             
             ZStack(alignment: .top) {
-                if shouldShowOnboarding {
+                if shouldShowOnboardingAccessibility {
                     VStack(spacing: 0) {
                         if state.showChatView {
                             OnboardingAccessibility().transition(.opacity)
@@ -48,7 +56,14 @@ struct ContentView: View {
                     .frame(width: TetherAppsManager.minOnitWidth)
                     .frame(maxHeight: .infinity)
                     .background(Color.black)
-                } else if onboardingAuthState != .hideAuth && appState.account == nil {
+                    .onDisappear {
+                        if appState.account == nil {
+                            onboardingAuthState = .showSignUp
+                            openWindow(id: windowOnboardingAuthId)
+                            setOnboardingAuthWindowToFloat()
+                        }
+                    }
+                } else if shouldShowOnboardingAuth {
                     OnboardingAuth(isSignUp: onboardingAuthState == .showSignUp)
                 } else {
                     ZStack {
@@ -81,7 +96,7 @@ struct ContentView: View {
         }
         .buttonStyle(PlainButtonStyle())
         .toolbar {
-            if !shouldShowOnboarding {
+            if !shouldShowOnboardingAccessibility {
                 ToolbarItem(placement: .navigation) {
                     ToolbarAddButton()
                 }

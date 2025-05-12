@@ -203,6 +203,7 @@ extension OnboardingAuth {
                     Text("skip account creation & use own APIs →")
                         .styleText(size: 13, weight: .regular)
                 }
+                .buttonStyle(PlainButtonStyle())
             }
         }
     }
@@ -244,6 +245,7 @@ extension OnboardingAuth {
                             Text("Resend Link")
                                 .styleText(size: 12)
                         }
+                        .buttonStyle(PlainButtonStyle())
                     }
                 }
                 

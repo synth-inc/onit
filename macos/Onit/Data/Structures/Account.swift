@@ -12,3 +12,9 @@ struct Account: Codable {
     let appleUserId: String?
     let appleEmail: String?
 }
+
+extension Account: Equatable {
+    static func == (lhs: Account, rhs: Account) -> Bool {
+        return lhs.email == rhs.email
+    }
+}

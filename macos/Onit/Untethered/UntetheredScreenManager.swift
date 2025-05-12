@@ -42,7 +42,7 @@ class UntetheredScreenManager: ObservableObject {
 
     private var shouldShowOnboarding: Bool {
         let accessibilityPermissionGranted = AccessibilityPermissionManager.shared.accessibilityPermissionStatus == .granted
-        return !accessibilityPermissionGranted && Defaults[.showOnboarding]
+        return !accessibilityPermissionGranted && Defaults[.showOnboardingAccessibility]
     }
 
     // Dictionary that tracks whether the ExternalTetherButton should be visible for each screen.

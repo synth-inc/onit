@@ -19,6 +19,8 @@ let log = SwiftyBeaver.self
 @main
 struct App: SwiftUI.App {
     @Environment(\.appState) var appState
+    @Environment(\.dismissWindow) private var dismissWindow
+    
     @NSApplicationDelegateAdaptor(AppDelegate.self) var delegate
     @ObservedObject private var debugManager = DebugManager.shared
     @ObservedObject private var accessibilityPermissionManager = AccessibilityPermissionManager.shared
@@ -27,6 +29,7 @@ struct App: SwiftUI.App {
     @Default(.launchOnStartupRequested) var launchOnStartupRequested
     @Default(.autoContextFromCurrentWindow) var autoContextFromCurrentWindow
     @Default(.autoContextFromHighlights) var autoContextFromHighlights
+    @Default(.onboardingAuthState) var onboardingAuthState
     
     @State var accessibilityPermissionRequested = false
     @State private var frontmostApplicationOnLaunch: NSRunningApplication?
@@ -117,6 +120,34 @@ struct App: SwiftUI.App {
                 .onOpenURL { url in
                     appState.handleTokenLogin(url)
                 }
+        }
+        
+        Window("",id: windowOnboardingAuthId) {
+            if onboardingAuthState != .hideAuth && appState.account == nil {
+                VStack {
+                    OnboardingAuth(isSignUp: onboardingAuthState == .showSignUp)
+                }
+                .background(Color.black)
+                .frame(width: 400, height: 800)
+                .addBorder(
+                    cornerRadius: 14,
+                    lineWidth: 2,
+                    stroke: .gray600
+                )
+                .edgesIgnoringSafeArea(.top)
+            }
+        }
+        .windowResizability(.contentSize)
+        .defaultPosition(.center)
+        .onChange(of: appState.account) { _, new in
+            if new != nil {
+                dismissWindow(id: windowOnboardingAuthId)
+            }
+        }
+        .onChange(of: onboardingAuthState) { _, new in
+            if new == .hideAuth {
+                dismissWindow(id: windowOnboardingAuthId)
+            }
         }
     }
     

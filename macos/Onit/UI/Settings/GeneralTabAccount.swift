@@ -10,6 +10,7 @@ import SwiftUI
 
 struct GeneralTabAccount: View {
     @Environment(\.appState) var appState
+    @Environment(\.openWindow) private var openWindow
     
     @Default(.onboardingAuthState) var onboardingAuthState
     
@@ -81,7 +82,11 @@ extension GeneralTabAccount {
         SimpleButton(
             iconText: "👤",
             text: "Create an account",
-            action: { onboardingAuthState = .showSignUp },
+            action: {
+                onboardingAuthState = .showSignUp
+                openWindow(id: windowOnboardingAuthId)
+                setOnboardingAuthWindowToFloat()
+            },
             background: .blue
         )
     }
@@ -89,7 +94,11 @@ extension GeneralTabAccount {
     private var signInButton: some View {
         SimpleButton(
             text: "Sign in",
-            action: { onboardingAuthState = .showSignIn }
+            action: {
+                onboardingAuthState = .showSignIn
+                openWindow(id: windowOnboardingAuthId)
+                setOnboardingAuthWindowToFloat()
+            }
         )
     }
     
