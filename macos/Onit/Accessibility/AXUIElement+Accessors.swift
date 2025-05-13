@@ -47,16 +47,38 @@ extension AXUIElement {
     }
     
     func getRootChildren() -> [AXUIElement] {
+        // print("getRootChildren: Starting to get root children")
         var elementPid: pid_t = 0
 
-        guard AXUIElementGetPid(self, &elementPid) == .success, elementPid != getpid() else {
+        let pidResult = AXUIElementGetPid(self, &elementPid)
+        print("getRootChildren: Got PID \(elementPid), result: \(pidResult)")
+
+        guard pidResult == .success, elementPid != getpid() else {
+            print("getRootChildren: Failed PID check or is own process, returning empty array")
             return []
         }
-        
+
+        print("getRootChildren: Creating application element for PID \(elementPid)")
         let appElement = AXUIElementCreateApplication(elementPid)
-        return appElement.children() ?? []
+
+        // Print application element role and title
+        if let role = appElement.role() {
+            print("getRootChildren: Application element role: \(role)")
+        } else {
+            print("getRootChildren: Application element role: nil")
+        }
+        
+        if let title = appElement.title() {
+            print("getRootChildren: Application element title: \(title)")
+        } else {
+            print("getRootChildren: Application element title: nil")
+        }
+
+        let children = appElement.children()
+        print("getRootChildren: Got \(children?.count ?? 0) children")
+        return children ?? []
     }
-    
+
     var isFinder: Bool {
         let runningApps = NSWorkspace.shared.runningApplications
 
