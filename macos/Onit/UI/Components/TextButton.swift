@@ -136,7 +136,7 @@ struct TextButton<Child: View>: View {
         .frame(height: height)
         .background(disabled ? .clear : isHovered ? hoverBackground : background)
         .scaleEffect(isPressed ? 0.99 : 1)
-        .opacity(disabled ? 0.5 : isPressed ? 0.7 : 1)
+        .opacity(disabled ? 0.4 : isPressed ? 0.7 : 1)
         .disabled(disabled)
         .cornerRadius(cornerRadius)
         .addAnimation(dependency: isHovered)

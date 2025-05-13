@@ -116,15 +116,11 @@ extension GeneralTabAccount {
             action: { showDeleteAccountAlert = true },
             background: .redBrick
         )
-        .alert(
-            "Are you sure you want to delete your account?",
-            isPresented: $showDeleteAccountAlert
-        ) {
-            Button("Cancel", role: .cancel) { }
-            Button("Delete", role: .destructive) { deleteAccount() }
-        } message: {
-            Text("This action cannot be undone.")
-                .styleText(size: 11, weight: .regular)
+        .sheet(isPresented: $showDeleteAccountAlert) {
+            GeneralTabAccountAlert(
+                show: $showDeleteAccountAlert,
+                logout: logout
+            )
         }
     }
 }
@@ -137,20 +133,5 @@ extension GeneralTabAccount {
         TokenManager.token = nil
         appState.account = nil
         Defaults[.onboardingAuthState] = .showSignIn
-    }
-    
-    @MainActor
-    private func deleteAccount() {
-        accountDeleteError = ""
-        let client = FetchingClient()
-        
-        Task {
-            do {
-                try await client.deleteAccount()
-                logout()
-            } catch {
-                accountDeleteError = error.localizedDescription
-            }
-        }
     }
 }

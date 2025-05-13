@@ -272,6 +272,8 @@ extension GeneralTabPlanAndBilling {
                     } else {
                         freeTrialAvailable = false
                     }
+                    
+                    checkingFreeTrialAvailable = false
                 }
                 
                 
