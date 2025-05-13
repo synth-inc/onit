@@ -164,8 +164,8 @@ struct PromptCore: View {
                 newListener
             }
         }
-        .onChange(of: currentPromptsCount) {
-            if let currentPromptsCount = currentPromptsCount {
+        .onChange(of: currentPromptsCount) { _, new in
+            if let currentPromptsCount = new {
                 isFocused = currentPromptsCount <= 0
             }
         }

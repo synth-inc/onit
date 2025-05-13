@@ -8,11 +8,9 @@
 import SwiftUI
 
 struct PromptCoreFooter: View {
-    @Environment(\.windowState) private var windowState
-    
     @Binding private var isPressedModelSelectionButton: Bool
-    @Binding var promptText: String
-    @Binding var cursorPosition: Int
+    @Binding private var promptText: String
+    @Binding private var cursorPosition: Int
     private let audioRecorder: AudioRecorder
     private let sendDisabled: Bool
     private let sendAction: () -> Void
