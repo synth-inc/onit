@@ -193,6 +193,20 @@ extension PromptCore {
                 onUnfocus()
             }
         }
+        // .padding(12)
+        // .background(.gray800)
+        // .addGradientBorder(
+        //     cornerRadius: 8,
+        //     lineWidth: 1.6,
+        //     gradientBorder:
+        //         !isFocused ? unfocusedBorder :
+        //         isRemote ? remoteBorder :
+        //         localBorder
+        // )
+        // .addAnimation(dependency: isRemote, duration: 0.3)
+        // .addAnimation(dependency: isFocused, duration: 0.3)
+        // .padding(.top, 8)
+        // .padding(.horizontal, 12)
     }
 }
 

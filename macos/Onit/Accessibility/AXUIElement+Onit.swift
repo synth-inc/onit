@@ -21,14 +21,14 @@ extension AXUIElement {
     }
 
     public func findTargetWindows() -> [AXUIElement] {
-        var toRet : [AXUIElement] = []
+        var targetWindows : [AXUIElement] = []
         let windows = self.getRootChildren()
         for window in windows {
             if window.isTargetWindow() {
-                toRet.append(window)
+                targetWindows.append(window)
             }
         }
-        return toRet
+        return targetWindows
     }
     
     public func isTargetWindow() -> Bool {

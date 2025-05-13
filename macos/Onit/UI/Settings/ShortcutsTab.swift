@@ -13,19 +13,13 @@ struct ShortcutsTab: View {
     @Default(.escapeShortcutDisabled) var escapeShortcutDisabled
 
     @ObservedObject private var featureFlagsManager = FeatureFlagManager.shared
-
-    private var accessibilityAutoContextEnabled: Bool {
-        featureFlagsManager.accessibilityAutoContext
-    }
-
+    
     var body: some View {
         Form {
             Section {
                 KeyboardShortcuts.Recorder(
                     "Launch Onit", name: .launch
-                ) {
-                    resetPrompt(empty: $0 == nil)
-                }
+                )
                 .padding()
 
 //                if accessibilityAutoContextEnabled {
@@ -37,11 +31,6 @@ struct ShortcutsTab: View {
 //
 //                KeyboardShortcuts.Recorder(
 //                    "New Chat", name: .newChat
-//                )
-//                .padding()
-//
-//                KeyboardShortcuts.Recorder(
-//                    "Resize Window", name: .resizeWindow
 //                )
 //                .padding()
 
@@ -63,11 +52,6 @@ struct ShortcutsTab: View {
             }
         }
         .padding()
-    }
-
-    func resetPrompt(empty: Bool) {
-        //let view = StaticPromptView().environment(model)
-        HighlightHintWindowController.shared.shortcutChanges(empty: empty)
     }
 }
 

@@ -29,7 +29,7 @@ struct ModelSelectionButton: View {
             text: text,
             action: { open.toggle() },
             gap: 0,
-            height: toolbarButtonHeight,
+            height: ToolbarButtonStyle.height,
             fillContainer: false,
             horizontalPadding: 4,
             cornerRadius: 4,

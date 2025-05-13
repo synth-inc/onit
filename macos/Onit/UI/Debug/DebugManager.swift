@@ -52,20 +52,23 @@ class DebugManager: ObservableObject {
         debugPanel.contentView = debugPanelContentView
         debugPanel.contentView?.setFrameOrigin(NSPoint(x: 0, y: 0))
 
-        if let screen = NSScreen.main {
-            let visibleFrame = screen.visibleFrame
-            let defaultPanelFrame = Defaults[.defaultPanelFrame]
-            let windowWidth = defaultPanelFrame.width
-            let windowHeight = defaultPanelFrame.height
+//        if let screen = NSScreen.main {
+//            let visibleFrame = screen.visibleFrame
+//            let defaultPanelFrame = NSRect(x: 0, y: 0, width: 400, height: 600)
+//            let windowWidth = defaultPanelFrame.width
+//            let windowHeight = defaultPanelFrame.height
+//
+//            let finalXPosition = visibleFrame.origin.x + visibleFrame.width - 16 - windowWidth
+//            let finalYPosition = visibleFrame.origin.y + visibleFrame.height - 16 - ContentView.bottomPadding
+//            debugPanel.setFrameOrigin(
+//                NSPoint(x: finalXPosition, y: finalYPosition - (windowHeight * 2.0) - 16))
+//            debugPanel.makeKeyAndOrderFront(nil)
+//            debugPanel.orderFrontRegardless()
+//        }
 
-            let finalXPosition = visibleFrame.origin.x + visibleFrame.width - 16 - windowWidth
-            let finalYPosition = visibleFrame.origin.y + visibleFrame.height - 16 - ContentView.bottomPadding
-            debugPanel.setFrameOrigin(
-                NSPoint(x: finalXPosition, y: finalYPosition - (windowHeight * 2.0) - 16))
-            debugPanel.makeKeyAndOrderFront(nil)
-            debugPanel.orderFrontRegardless()
-        }
-
+        debugPanel.makeKeyAndOrderFront(nil)
+        debugPanel.orderFrontRegardless()
+        
         self.debugPanel = debugPanel
     }
 
@@ -73,7 +76,6 @@ class DebugManager: ObservableObject {
         guard let panel = debugPanel else { return }
         
         panel.orderOut(nil)
-        HighlightHintWindowController.shared.adjustWindow()
         self.debugPanel = nil
     }
 }

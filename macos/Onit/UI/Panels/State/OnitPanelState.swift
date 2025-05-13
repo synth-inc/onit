@@ -12,6 +12,7 @@ import SwiftUI
 
 @MainActor protocol OnitPanelStateDelegate: AnyObject {
     func panelBecomeKey(state: OnitPanelState)
+    func panelResignKey(state: OnitPanelState)
     func panelStateDidChange(state: OnitPanelState)
     func userInputsDidChange(instruction: String, contexts: [Context], input: Input?)
 }
@@ -40,6 +41,7 @@ class OnitPanelState: NSObject {
     var promptSuggestionService: SystemPromptSuggestionService?
     
     var trackedWindow: TrackedWindow?
+    var trackedScreen: TrackedScreen?
     var isWindowDragging: Bool = false
     
     private var delegates = NSHashTable<AnyObject>.weakObjects()
@@ -112,16 +114,14 @@ class OnitPanelState: NSObject {
     var showHistory: Bool = false
     var historyIndex = -1
     
-    var headerHeight: CGFloat = 0
-    var inputHeight: CGFloat = 0
     var setUpHeight: CGFloat = 0
-    var systemPromptHeight: CGFloat = 0
     
     var generateTask: Task<Void, Never>? = nil
     var generatingPrompt: Prompt?
     var generatingPromptPriorState: GenerationState?
     
-    var streamedResponse: String = ""
+    /// Don't leave this text empty to ensure the first scroll works.
+    var streamedResponse: String = " "
     
     // Web search state
     var webSearchError: Error? = nil
@@ -134,6 +134,13 @@ class OnitPanelState: NSObject {
 
     init(trackedWindow: TrackedWindow?) {
         self.trackedWindow = trackedWindow
+        super.init()
+        
+        self.promptSuggestionService = SystemPromptSuggestionService(state: self)
+    }
+
+    init(trackedScreen: TrackedScreen?) {
+        self.trackedScreen = trackedScreen
         super.init()
         
         self.promptSuggestionService = SystemPromptSuggestionService(state: self)

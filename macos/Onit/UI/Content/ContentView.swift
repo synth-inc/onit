@@ -10,9 +10,8 @@ import SwiftUI
 
 struct ContentView: View {
     @Environment(\.windowState) private var state
-    
-    @Default(.panelWidth) var panelWidth
-    @Default(.isRegularApp) var isRegularApp
+    @ObservedObject private var accessibilityPermissionManager = AccessibilityPermissionManager.shared
+    @Default(.showOnboarding) var showOnboarding
     
     static let idealWidth: CGFloat = 400
     static let bottomPadding: CGFloat = 0
@@ -23,23 +22,40 @@ struct ContentView: View {
             set: { state.showFileImporter = $0 }
         )
     }
+    
+    private var shouldShowOnboarding: Bool {
+        let accessibilityPermissionGranted = accessibilityPermissionManager.accessibilityPermissionStatus == .granted
+        return !accessibilityPermissionGranted && showOnboarding
+    }
 
     var body: some View {
         HStack(spacing: -TetheredButton.width / 2) {
-            if isRegularApp { TetheredButton() }
+            TetheredButton()
             
             ZStack(alignment: .top) {
-                VStack(spacing: 0) {
-                    if !isRegularApp { Toolbar() }
-                    else { Spacer().frame(height: 38) }
-                    
-                    PromptDivider()
-                    
-                    if !isRegularApp { ChatView() }
-                    else if state.showChatView { ChatView().transition(.opacity) }
-                    else { Spacer() }
+                if shouldShowOnboarding {
+                    VStack(spacing: 0) {
+                        if state.showChatView {
+                            OnboardingAccessibility().transition(.opacity)
+                        } else {
+                            Spacer()
+                        }
+                    }
+                    .frame(width: TetherAppsManager.minOnitWidth)
+                    .frame(maxHeight: .infinity)
+                    .background(Color.black)
+                } else {
+                    VStack(spacing: 0) {
+                        Spacer().frame(height: 38)
+                        
+                        PromptDivider()
+                        
+                        if state.showChatView { ChatView().transition(.opacity) }
+                        else { Spacer() }
+                    }
                 }
             }
+
             .background(Color.black)
             .addBorder(
                 cornerRadius: 14,
@@ -50,30 +66,20 @@ struct ContentView: View {
         }
         .buttonStyle(PlainButtonStyle())
         .toolbar {
-            ToolbarItem(placement: .navigation) {
-                if isRegularApp { ToolbarAddButton() }
-                else { EmptyView() }
-            }
-            #if DEBUG
-            ToolbarItem(placement: .automatic) { TetheredToAppView() }
-            #endif
-            ToolbarItem(placement: .automatic) { Spacer() }
-            ToolbarItem(placement: .primaryAction) {
-                if isRegularApp { Toolbar() }
-                else { EmptyView() }
+            if !shouldShowOnboarding {
+                ToolbarItem(placement: .navigation) {
+                    ToolbarAddButton()
+                }
+                ToolbarItem(placement: .automatic) { TetheredToAppView() }
+                ToolbarItem(placement: .automatic) { Spacer() }
+                ToolbarItem(placement: .primaryAction) {
+                    Toolbar()
+                }
             }
         }
         .simultaneousGesture(
             TapGesture(count: 1)
                 .onEnded({ state.handlePanelClicked() })
-        )
-        .gesture(
-            DragGesture(minimumDistance: 1)
-                .onEnded { value in
-                    if let panel = state.panel {
-                        panelWidth = panel.frame.width
-                    }
-                }
         )
         .fileImporter(
             isPresented: showFileImporterBinding,

@@ -133,7 +133,7 @@ struct SystemPromptTab: View {
         )
         fetchDescriptor.fetchLimit = 1
         
-        for (_, state) in TetherAppsManager.shared.states {
+        for state in OnitPanelStateCoordinator.shared.states {
             if state.systemPromptId == deletedId {
                 do {
                     let modelContext = ModelContext(state.container)

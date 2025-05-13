@@ -7,6 +7,7 @@
 
 import ApplicationServices
 import AppKit
+import Defaults
 import PostHog
 
 struct AccessibilityAnalytics {
@@ -19,9 +20,8 @@ struct AccessibilityAnalytics {
             properties: [
                 "local_value": local.rawValue,
                 "is_trusted": AXIsProcessTrusted(),
-                "accessibility_enabled": FeatureFlagManager.shared.accessibility,
-                "input_enabled": FeatureFlagManager.shared.accessibilityInput,
-                "autocontext_enabled": FeatureFlagManager.shared.accessibilityAutoContext,
+                "input_enabled": Defaults[.autoContextFromHighlights],
+                "autocontext_enabled": Defaults[.autoContextFromCurrentWindow],
                 "app_version": AccessibilityAnalytics.appVersion,
                 "os_version": ProcessInfo.processInfo.operatingSystemVersionString
             ]
@@ -32,9 +32,8 @@ struct AccessibilityAnalytics {
         PostHogSDK.shared.capture("accessibility_flags_changes",
             properties: [
                 "is_trusted": AXIsProcessTrusted(),
-                "accessibility_enabled": FeatureFlagManager.shared.accessibility,
-                "input_enabled": FeatureFlagManager.shared.accessibilityInput,
-                "autocontext_enabled": FeatureFlagManager.shared.accessibilityAutoContext,
+                "input_enabled": Defaults[.autoContextFromHighlights],
+                "autocontext_enabled": Defaults[.autoContextFromCurrentWindow],
                 "app_version": AccessibilityAnalytics.appVersion,
                 "os_version": ProcessInfo.processInfo.operatingSystemVersionString
             ]
@@ -45,9 +44,8 @@ struct AccessibilityAnalytics {
         var properties: [String: Any] = [
             "error_code": errorCode,
             "is_trusted": AXIsProcessTrusted(),
-            "accessibility_enabled": FeatureFlagManager.shared.accessibility,
-            "input_enabled": FeatureFlagManager.shared.accessibilityInput,
-            "autocontext_enabled": FeatureFlagManager.shared.accessibilityAutoContext,
+            "input_enabled": Defaults[.autoContextFromHighlights],
+            "autocontext_enabled": Defaults[.autoContextFromCurrentWindow],
             "app_version": AccessibilityAnalytics.appVersion,
             "os_version": ProcessInfo.processInfo.operatingSystemVersionString
         ]

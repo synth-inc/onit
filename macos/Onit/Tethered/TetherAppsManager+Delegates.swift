@@ -77,6 +77,7 @@ extension TetherAppsManager: OnitPanelStateDelegate {
     func panelBecomeKey(state: OnitPanelState) {
         self.state = state
     }
+    func panelResignKey(state: OnitPanelState) { }
     func panelStateDidChange(state: OnitPanelState) {
         handlePanelStateChange(state: state, action: .undefined)
     }

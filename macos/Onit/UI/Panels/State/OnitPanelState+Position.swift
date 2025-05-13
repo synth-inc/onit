@@ -123,8 +123,10 @@ extension OnitPanelState {
                         width: newWidth,
                         height: curFrame.height
                     )
-                    TetherAppsManager.shared.targetInitialFrames.removeValue(forKey: window)
                 }
+                // We need to remove this everytime, to prevent saving old frames.
+                // If we have old frames, we won't save the new ones.
+                TetherAppsManager.shared.targetInitialFrames.removeValue(forKey: window)
             }
         
 
@@ -160,6 +162,41 @@ extension OnitPanelState {
             context.duration = animationDuration
             panel.animator().alphaValue = 1.0
         }
+    }
+    
+    func showPanelForScreen() {
+        guard let screen = trackedScreen,
+              let panel = self.panel,
+              !panel.isAnimating,
+              !panel.dragDetails.isDragging else {
+            return
+        }
+        
+        let fromFrame = NSRect(
+            x: screen.visibleFrame.maxX - 2,
+            y: screen.visibleFrame.minY,
+            width: 0,
+            height: screen.visibleFrame.height
+        )
+        let newFrame = NSRect(
+            x: screen.visibleFrame.maxX - TetherAppsManager.minOnitWidth,
+            y: screen.visibleFrame.minY,
+            width: TetherAppsManager.minOnitWidth,
+            height: screen.visibleFrame.height
+        )
+        
+        if panel.wasAnimated {
+            panel.setFrame(newFrame, display: false)
+        } else {
+            panel.resizedApplication = false
+            animateEnter(activeWindow: nil,
+                         fromActive: nil,
+                         toActive: nil,
+                         panel: panel,
+                         fromPanel: fromFrame,
+                         toPanel: newFrame)
+        }
+        
     }
     
     // MARK: - Layout
@@ -319,7 +356,7 @@ extension OnitPanelState {
         fromPanel: CGRect,
         toPanel: CGRect
     ) {
-        guard !panel.isAnimating, panel.frame != toPanel else { return }
+        guard !panel.isAnimating else { return }
         
         panel.isAnimating = true
         panel.setFrame(fromPanel, display: false)

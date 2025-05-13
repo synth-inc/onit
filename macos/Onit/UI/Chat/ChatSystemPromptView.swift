@@ -37,7 +37,7 @@ struct ChatSystemPromptView: View {
                     isExpanded.toggle()
                 }
             } label: {
-                HStack(alignment: .center, spacing: 6) {
+                HStack(alignment: .top, spacing: 6) {
                     Image(.chatSettings)
                         .renderingMode(.template)
                     Text(systemPrompt.name)
@@ -47,7 +47,8 @@ struct ChatSystemPromptView: View {
                         .renderingMode(.template)
                         .rotationEffect(.degrees(isExpanded ? 180 : 0))
                 }
-                .padding(.vertical, 2)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.vertical, 0)
                 .foregroundStyle(.blue300)
             }
             .buttonStyle(DarkerButtonStyle())
@@ -132,6 +133,7 @@ struct ChatSystemPromptView: View {
                     }
             }
         }
+        // .padding(.bottom, 0)
     }
 }
 

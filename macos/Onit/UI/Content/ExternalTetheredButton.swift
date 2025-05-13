@@ -15,7 +15,6 @@ struct ExternalTetheredButton: View {
     @Environment(\.openSettings) var openSettings
     
     @ObservedObject private var accessibilityPermissionManager = AccessibilityPermissionManager.shared
-    @ObservedObject private var featureFlagsManager = FeatureFlagManager.shared
     
     static let width: CGFloat = 19
     static let height: CGFloat = 53
@@ -29,25 +28,7 @@ struct ExternalTetheredButton: View {
     @State private var isDragging = false
     @State private var dragStartTime: Date?
     
-    private var isAccessibilityFlagsEnabled: Bool {
-        featureFlagsManager.accessibility && featureFlagsManager.accessibilityAutoContext
-    }
-    
-    private var isAccessibilityAuthorized: Bool {
-        accessibilityPermissionManager.accessibilityPermissionStatus == .granted
-    }
-    
     private var fitActiveWindowPrompt: String {
-        guard featureFlagsManager.accessibility else {
-            return "⚠ Enable Auto-Context in Settings"
-        }
-        guard featureFlagsManager.accessibilityAutoContext else {
-            return "⚠ Enable Current Window in Settings"
-        }
-        guard isAccessibilityAuthorized else {
-            return "⚠ Allow Onit application in \"Privacy & Security/Accessibility\""
-        }
-        
         return "Launch Onit"
     }
     
@@ -61,7 +42,6 @@ struct ExternalTetheredButton: View {
         } set: { _ in
             
         }
-
     }
     
     var body: some View {
@@ -75,23 +55,6 @@ struct ExternalTetheredButton: View {
                         .foregroundColor(.white)
                         .rotationEffect(.degrees(180))
                         .frame(width: Self.width, height: Self.height, alignment: .center)
-                        .overlay(
-                            Group {
-                                if !isAccessibilityFlagsEnabled || !isAccessibilityAuthorized {
-                                    Rectangle()
-                                        .fill(.black)
-                                        .frame(height: 2)
-                                        .rotationEffect(.degrees(45))
-                                        .offset(y: 0)
-                                    
-                                    Rectangle()
-                                        .fill(.gray200)
-                                        .frame(height: 1)
-                                        .rotationEffect(.degrees(45))
-                                        .offset(y: 0)
-                                }
-                            }
-                        )
                 }
                 .buttonStyle(
                     ExternalTetheredButtonStyle(
@@ -135,20 +98,10 @@ struct ExternalTetheredButton: View {
     private func tetherAction() {
         guard !isDragging else { return }
         
-        guard isAccessibilityFlagsEnabled else {
-            appState.setSettingsTab(tab: .accessibility)
-            openSettings()
-            return
-        }
-        guard isAccessibilityAuthorized else {
-            AccessibilityPermissionManager.shared.requestPermission()
-            return
-        }
-
-        if let state = TetherAppsManager.shared.tetherButtonPanelState {
+        if let state = OnitPanelStateCoordinator.shared.tetherButtonPanelState {
             state.launchPanel()
-        } else {    
-            print("Couldn't find activeTrackedWindow")
+        } else {
+            log.warning("Couldn't find panel state for tether button")
         }
     }
 }

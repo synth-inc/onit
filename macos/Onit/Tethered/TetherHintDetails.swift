@@ -11,6 +11,10 @@ struct TetherHintDetails {
     let tetherWindow: NSWindow
     
     var lastYComputed: CGFloat?
-    var showTetherDebounceTimer: Timer?
+    var showTetherDebounceTimer: Timer? {
+        willSet {
+            showTetherDebounceTimer?.invalidate()
+        }
+    }
     let showTetherDebounceDelay: TimeInterval = 0.1
 }

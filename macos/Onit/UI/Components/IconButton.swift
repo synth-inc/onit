@@ -21,7 +21,7 @@ struct IconButton: View {
     init(
         icon: ImageResource,
         iconSize: CGFloat = 20,
-        buttonSize: CGFloat = toolbarButtonHeight,
+        buttonSize: CGFloat = ToolbarButtonStyle.height,
         action: @escaping () -> Void,
         isActive: Bool = false,
         activeColor: Color? = nil,
@@ -114,7 +114,7 @@ extension IconButton {
 
 // MARK: - Extending View
 
-extension View {
+private extension View {
     func applySharedStyles(
         buttonSize: CGFloat,
         isHovered: Binding<Bool>,
@@ -126,7 +126,7 @@ extension View {
             .frame(width: buttonSize, height: buttonSize)
             .background((isHovered.wrappedValue || isActive) ? .gray800 : .clear)
             .addBorder(
-                cornerRadius: toolbarButtonCornerRadius,
+                cornerRadius: ToolbarButtonStyle.cornerRadius,
                 stroke: isActive ? .gray500 : .clear
             )
             .addAnimation(dependency: isHovered.wrappedValue)

@@ -279,7 +279,7 @@ extension OnitPanelState {
         let eventProperties: [String: Any] = [
             "prompt_mode": Defaults[.mode].rawValue,
             "prompt_model": modelName,
-            "accessibility_enabled": FeatureFlagManager.shared.accessibility
+            "accessibility_enabled": AccessibilityPermissionManager.shared.accessibilityPermissionStatus == .granted
         ]
         PostHogSDK.shared.capture(eventName, properties: eventProperties)
     }
