@@ -44,10 +44,10 @@ class AccessibilityWindowsManager {
             activeTrackedWindow = trackedWindow
             
             return trackedWindow
-        } else if element.isTargetWindow() {
+        } else if let window = element.findFirstTargetWindow() {
 
-            let title = element.title() ?? "NA"
-            let trackedWindow = TrackedWindow(element: element, pid: pid, hash: CFHash(element), title: title)
+            let title = window.title() ?? "NA"
+            let trackedWindow = TrackedWindow(element: window, pid: pid, hash: CFHash(window), title: title)
             
             if !trackedWindows.contains(trackedWindow) {
                 trackedWindows.append(trackedWindow)
