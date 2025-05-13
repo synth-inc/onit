@@ -1,35 +1,38 @@
 //
-//  PanelStatePinnedManager+Hint.swift
+//  PanelStateUntetheredManager+Hint.swift
 //  Onit
 //
-//  Created by Kévin Naudin on 12/05/2025.
+//  Created by Kévin Naudin on 13/05/2025.
 //
 
-import Foundation
+import AppKit
+import Defaults
 import SwiftUI
 
-extension PanelStatePinnedManager {
+extension PanelStateUntetheredManager {
     
-    func debouncedShowTetherWindow(activeScreen: NSScreen) {
+    private var shouldShowOnboarding: Bool {
+        let accessibilityPermissionGranted = AccessibilityPermissionManager.shared.accessibilityPermissionStatus == .granted
+        return !accessibilityPermissionGranted && Defaults[.showOnboarding]
+    }
+    
+    func debouncedShowTetherWindow(state: OnitPanelState, activeScreen: NSScreen) {
         hideTetherWindow()
+        let pendingTetherWindow = (state, activeScreen)
 
-        tetherHintDetails.showTetherDebounceTimer?.invalidate()
-        tetherHintDetails.showTetherDebounceTimer = Timer.scheduledTimer(
-            withTimeInterval: tetherHintDetails.showTetherDebounceDelay,
-            repeats: false
-        ) { [weak self] _ in
+        tetherHintDetails.showTetherDebounceTimer = Timer.scheduledTimer(withTimeInterval: tetherHintDetails.showTetherDebounceDelay, repeats: false) { [weak self] _ in
             guard let self = self else { return }
             
             DispatchQueue.main.async {
-                self.showTetherWindow(activeScreen: activeScreen)
+                self.showTetherWindow(state: pendingTetherWindow.0, activeScreen: pendingTetherWindow.1)
             }
         }
     }
 
-    private func showTetherWindow(activeScreen: NSScreen) {
+    private func showTetherWindow(state: OnitPanelState, activeScreen: NSScreen) {
          let tetherView = ExternalTetheredButton(
-            onClick: { [weak self] in
-                self?.tetherHintClicked(screen: activeScreen)
+            onClick: {
+                state.launchPanel()
             },
             onDrag: { [weak self] translation in
                 self?.tetheredWindowMoved(screen: activeScreen, y: translation)
@@ -41,23 +44,14 @@ extension PanelStatePinnedManager {
         tetherHintDetails.lastYComputed = nil
         tetherButtonPanelState = state
 
+        if shouldShowOnboarding {
+            let tutorialView = TetherTutorialOverlay()
+            tutorialWindow.contentView = NSHostingView(rootView: tutorialView)
+            tutorialWindow.orderFrontRegardless()
+        }
+
         updateTetherWindowPosition(for: activeScreen, lastYComputed: tetherHintDetails.lastYComputed)
         tetherHintDetails.tetherWindow.orderFrontRegardless()
-    }
-    
-    private func tetherHintClicked(screen: NSScreen) {
-        hideTetherWindow()
-        
-        if state.panelOpened {
-            resetFramesOnAppChange()
-            state.trackedScreen = screen
-            state.showPanelForScreen()
-        } else {
-            state.trackedScreen = screen
-            state.launchPanel()
-        }
-        
-        resizeWindows(for: screen)
     }
     
     private func updateTetherWindowPosition(for screen: NSScreen, lastYComputed: CGFloat? = nil) {
@@ -78,6 +72,16 @@ extension PanelStatePinnedManager {
             height: ExternalTetheredButton.containerHeight
         )
         tetherHintDetails.tetherWindow.setFrame(frame, display: false)
+        
+        if (shouldShowOnboarding) {
+            let tutorialFrame = NSRect(
+                x: positionX - (TetherTutorialOverlay.width) + (ExternalTetheredButton.containerWidth / 2),
+                y: positionY + (ExternalTetheredButton.containerHeight / 2) - ((TetherTutorialOverlay.height * 1.5) / 2),
+                width: (TetherTutorialOverlay.width * 1.5),
+                height: (TetherTutorialOverlay.height * 1.5)
+            )
+            tutorialWindow.setFrame(tutorialFrame, display: false)
+        }
     }
     
     private func computeHintYPosition(for screenVisibleFrame: CGRect, offset: CGFloat?) -> CGFloat {

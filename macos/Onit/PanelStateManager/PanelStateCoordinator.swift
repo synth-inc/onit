@@ -29,6 +29,7 @@ class PanelStateCoordinator {
     
     // MARK: - Public properties
     
+    var isPanelMovable: Bool { currentManager.isPanelMovable }
     var state: OnitPanelState { currentManager.state }
     var states: [OnitPanelState] { currentManager.states }
     

@@ -18,6 +18,7 @@ class PanelStateBaseManager: PanelStateManagerLogic {
     @Published var state: OnitPanelState
     @Published var tetherButtonPanelState: OnitPanelState?
     
+    var isPanelMovable: Bool { true }
     var states: [OnitPanelState]
     var tetherHintDetails: TetherHintDetails
     var targetInitialFrames: [AXUIElement: CGRect] = [:]

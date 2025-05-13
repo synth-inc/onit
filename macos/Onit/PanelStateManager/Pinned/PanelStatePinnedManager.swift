@@ -31,6 +31,8 @@ class PanelStatePinnedManager: PanelStateBaseManager, ObservableObject {
     }
 
     // MARK: - PanelStateManagerLogic
+    
+    override var isPanelMovable: Bool { false }
 
     override func start() {
         stop()
