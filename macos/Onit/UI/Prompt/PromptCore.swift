@@ -16,6 +16,8 @@ struct PromptCore: View {
     @Query(sort: \Chat.timestamp, order: .reverse) private var chats: [Chat]
     @Default(.mode) var mode
     
+    private let currentPromptsCount: Int?
+    
     private let placeholder: String?
     private let text: Binding<String>?
     private let onSubmit: (() -> Void)?
@@ -28,6 +30,8 @@ struct PromptCore: View {
     private let padding: CGFloat
     
     init(
+        currentPromptsCount: Int? = nil,
+        
         placeholder: String? = nil,
         text: Binding<String>? = nil,
         onSubmit: (() -> Void)? = nil,
@@ -39,6 +43,7 @@ struct PromptCore: View {
         
         padding: CGFloat = 12
     ) {
+        self.currentPromptsCount = currentPromptsCount
         self.placeholder = placeholder
         self.text = text
         self.onSubmit = onSubmit
@@ -159,6 +164,11 @@ struct PromptCore: View {
                 newListener
             }
         }
+        .onChange(of: currentPromptsCount) {
+            if let currentPromptsCount = currentPromptsCount {
+                isFocused = currentPromptsCount <= 0
+            }
+        }
     }
 }
 
@@ -194,20 +204,6 @@ extension PromptCore {
                 onUnfocus()
             }
         }
-        // .padding(12)
-        // .background(.gray800)
-        // .addGradientBorder(
-        //     cornerRadius: 8,
-        //     lineWidth: 1.6,
-        //     gradientBorder:
-        //         !isFocused ? unfocusedBorder :
-        //         isRemote ? remoteBorder :
-        //         localBorder
-        // )
-        // .addAnimation(dependency: isRemote, duration: 0.3)
-        // .addAnimation(dependency: isFocused, duration: 0.3)
-        // .padding(.top, 8)
-        // .padding(.horizontal, 12)
     }
 }
 

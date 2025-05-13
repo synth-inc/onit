@@ -54,7 +54,7 @@ struct ChatView: View {
                 systemPrompt
             }
             
-            PromptCore()
+            PromptCore(currentPromptsCount: currentPromptsCount)
             
             // Kept here for testing purposes. When testing, comment out `PromptCore()`.
             // This is effectively deprecated, so it should be deleted eventually.

@@ -77,7 +77,7 @@ extension FinalContextView {
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 13)
-        .padding(.horizontal, 8)
+        .padding(.horizontal, 12)
         .background(isHoveringInstruction ? .gray800 : .gray900)
         .addBorder(cornerRadius: 8, lineWidth: 1.3)
         .overlay(alignment: .topTrailing) {

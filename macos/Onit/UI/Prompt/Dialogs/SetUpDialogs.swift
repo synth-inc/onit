@@ -113,7 +113,7 @@ struct SetUpDialogs: View {
 //                expired(.openAI)
 //                expired(.anthropic)
 //            #endif
-//            
+            
             if availableRemoteModels.isEmpty && appState.remoteFetchFailed && !closedNoRemoteModels {
                 noRemote
             }
