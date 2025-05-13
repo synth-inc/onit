@@ -8,7 +8,7 @@
 @preconcurrency import ApplicationServices
 
 extension AXUIElement {
-    
+
     // We are currently using this but should instead use findTargetWindows with some logic to select to correct one. 
     public func findFirstTargetWindow() -> AXUIElement? {
         let windows = self.getRootChildren()
@@ -19,7 +19,7 @@ extension AXUIElement {
         }
         return nil
     }
-
+    
     public func findTargetWindows() -> [AXUIElement] {
         var targetWindows : [AXUIElement] = []
         let windows = self.getRootChildren()

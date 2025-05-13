@@ -47,7 +47,8 @@ class OnitRegularPanel: NSPanel {
         level = .floating
         titleVisibility = .hidden
         titlebarAppearsTransparent = true
-        isMovableByWindowBackground = true
+        isMovable = PanelStateCoordinator.shared.isPanelMovable
+        isMovableByWindowBackground = PanelStateCoordinator.shared.isPanelMovable
         delegate = state
         isFloatingPanel = false
         animationBehavior = .none
@@ -71,31 +72,33 @@ class OnitRegularPanel: NSPanel {
         self.contentView = hostingView
         self.contentView?.setFrameOrigin(NSPoint(x: 0, y: 0))
         
-        NotificationCenter.default.addObserver(
-            self,
-            selector: #selector(windowDidMove),
-            name: NSWindow.didMoveNotification,
-            object: self
-        )
-        
-        NotificationCenter.default.addObserver(
-            self,
-            selector: #selector(windowWillMove),
-            name: NSWindow.willMoveNotification,
-            object: self
-        )
-        
-        NSEvent.addLocalMonitorForEvents(matching: [.leftMouseDragged]) { [weak self] event in
-            if event.window === self {
-                self?.dragDetails.isDragging = true
+        if PanelStateCoordinator.shared.isPanelMovable {
+            NotificationCenter.default.addObserver(
+                self,
+                selector: #selector(windowDidMove),
+                name: NSWindow.didMoveNotification,
+                object: self
+            )
+            
+            NotificationCenter.default.addObserver(
+                self,
+                selector: #selector(windowWillMove),
+                name: NSWindow.willMoveNotification,
+                object: self
+            )
+            
+            NSEvent.addLocalMonitorForEvents(matching: [.leftMouseDragged]) { [weak self] event in
+                if event.window === self {
+                    self?.dragDetails.isDragging = true
+                }
+                return event
             }
-            return event
-        }
-        
-        NSEvent.addGlobalMonitorForEvents(matching: [.leftMouseUp]) { [weak self] _ in
-            if self?.dragDetails.isDragging == true {
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                    self?.dragDetails = .init()
+            
+            NSEvent.addGlobalMonitorForEvents(matching: [.leftMouseUp]) { [weak self] _ in
+                if self?.dragDetails.isDragging == true {
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                        self?.dragDetails = .init()
+                    }
                 }
             }
         }

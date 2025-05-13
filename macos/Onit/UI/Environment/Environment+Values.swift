@@ -10,9 +10,7 @@ import SwiftUI
 private struct OnitPanelStateKey: @preconcurrency EnvironmentKey {
     
     @MainActor
-    static let defaultValue: OnitPanelState = OnitPanelState(
-        trackedWindow: nil
-    )
+    static let defaultValue: OnitPanelState = OnitPanelState()
 }
 
 private struct OnitAppStateKey: @preconcurrency EnvironmentKey {

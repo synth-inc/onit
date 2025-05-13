@@ -41,8 +41,7 @@ struct ContentView: View {
                             Spacer()
                         }
                     }
-                    .frame(width: TetherAppsManager.minOnitWidth)
-                    .frame(maxHeight: .infinity)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
                     .background(Color.black)
                 } else {
                     VStack(spacing: 0) {

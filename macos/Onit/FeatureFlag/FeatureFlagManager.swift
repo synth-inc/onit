@@ -21,8 +21,7 @@ class FeatureFlagManager: ObservableObject {
     // MARK: - Feature Flags
 
     @Published private(set) var autocontextDemoVideoUrl: String? = nil
-    
-    private var wasAccessibilityInputEnabled: Bool = false
+    @Published private(set) var useScreenModeWithAccessibility: Bool = true
 
     // MARK: - Functions
 
@@ -46,6 +45,11 @@ class FeatureFlagManager: ObservableObject {
         PostHogSDK.shared.setup(config)
     }
 
+    func toggleScreenModeWithAccessibility(_ enabled: Bool) {
+        Defaults[.useScreenModeWithAccessibility] = enabled
+        useScreenModeWithAccessibility = enabled
+    }
+
     // MARK: - Objective-C Functions
 
     @objc private func receiveFeatureFlags() {
@@ -65,5 +69,7 @@ class FeatureFlagManager: ObservableObject {
         } else {
             autocontextDemoVideoUrl = nil
         }
+        
+        useScreenModeWithAccessibility = Defaults[.useScreenModeWithAccessibility] ?? false
     }
 }
