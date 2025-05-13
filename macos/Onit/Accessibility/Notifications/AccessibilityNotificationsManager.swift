@@ -65,6 +65,8 @@ class AccessibilityNotificationsManager: ObservableObject {
     #else
     private let ignoredAppNames : [String] = []
     #endif
+    
+    var isStarted = false
 
     // MARK: - Initializers
 
@@ -91,6 +93,9 @@ class AccessibilityNotificationsManager: ObservableObject {
     // MARK: Start / Stop
 
     func start(pid: pid_t?) {
+        guard !isStarted else { return }
+
+        isStarted = true
         startAppActivationObservers()
         
         guard let pid = pid else { return }
@@ -107,6 +112,7 @@ class AccessibilityNotificationsManager: ObservableObject {
     }
 
     func stop() {
+        isStarted = false
         for pid in observers.keys {
             stopAccessibilityObservers(for: pid)
         }
