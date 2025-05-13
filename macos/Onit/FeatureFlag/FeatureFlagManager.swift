@@ -21,7 +21,7 @@ class FeatureFlagManager: ObservableObject {
     // MARK: - Feature Flags
 
     @Published private(set) var autocontextDemoVideoUrl: String? = nil
-    @Published private(set) var useScreenModeWithAccessibility: Bool = false
+    @Published private(set) var useScreenModeWithAccessibility: Bool = true
 
     // MARK: - Functions
 

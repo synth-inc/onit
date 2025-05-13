@@ -157,22 +157,6 @@ struct AccessibilityTab: View {
                             )
                         }
                     }
-                    
-                    HStack {
-                        Text("Use screen mode instead of window mode")
-                            .font(.system(size: 13))
-                        Spacer()
-                        Toggle(
-                            "",
-                            isOn: Binding(
-                                get: { FeatureFlagManager.shared.useScreenModeWithAccessibility },
-                                set: { FeatureFlagManager.shared.toggleScreenModeWithAccessibility($0) }
-                            )
-                        )
-                        .toggleStyle(.switch)
-                        .controlSize(.small)
-                    }
-                    .padding(.top, 8)
                 }
             }
         }
