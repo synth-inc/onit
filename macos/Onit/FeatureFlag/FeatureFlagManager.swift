@@ -22,8 +22,6 @@ class FeatureFlagManager: ObservableObject {
 
     @Published private(set) var autocontextDemoVideoUrl: String? = nil
     @Published private(set) var useScreenModeWithAccessibility: Bool = false
-    
-    private var wasAccessibilityInputEnabled: Bool = false
 
     // MARK: - Functions
 
@@ -72,6 +70,6 @@ class FeatureFlagManager: ObservableObject {
             autocontextDemoVideoUrl = nil
         }
         
-        self.useScreenModeWithAccessibility = Defaults[.useScreenModeWithAccessibility] ?? false
+        useScreenModeWithAccessibility = Defaults[.useScreenModeWithAccessibility] ?? false
     }
 }

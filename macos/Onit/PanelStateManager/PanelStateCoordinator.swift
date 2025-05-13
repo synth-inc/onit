@@ -65,7 +65,6 @@ class PanelStateCoordinator {
     }
     
     private func handleStateChange(accessibilityPermission: AccessibilityPermissionStatus, pinnedModeEnabled: Bool) {
-        log.error("accessibilityPermission: \(accessibilityPermission), pinnedModeEnabled: \(pinnedModeEnabled)")
         AccessibilityAnalytics.logPermission(local: accessibilityPermission)
         
         let oldManager = currentManager

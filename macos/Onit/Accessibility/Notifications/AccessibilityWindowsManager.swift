@@ -72,8 +72,4 @@ class AccessibilityWindowsManager {
     func trackedWindows(for element: AXUIElement) -> [TrackedWindow] {
         return trackedWindows.filter { $0.hash == CFHash(element) }
     }
-    
-    func getAllTrackedWindows() -> [TrackedWindow] {
-        return trackedWindows
-    }
 }
