@@ -22,7 +22,7 @@ class PanelStateCoordinator {
     private let untetheredManager = PanelStateUntetheredManager.shared
     private let pinnedManager = PanelStatePinnedManager.shared
     
-    private var currentManager: PanelStateManagerLogic = PanelStateBaseManager()
+    var currentManager: PanelStateManagerLogic = PanelStateBaseManager()
     
     private var frontmostApplicationAtLaunch: NSRunningApplication?
     private var stateChangesCancellable: AnyCancellable?

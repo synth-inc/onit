@@ -56,8 +56,6 @@ extension PanelStatePinnedManager {
             state.trackedScreen = screen
             state.launchPanel()
         }
-        
-        resizeWindows(for: screen)
     }
     
     private func updateTetherWindowPosition(for screen: NSScreen, lastYComputed: CGFloat? = nil) {

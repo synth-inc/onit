@@ -625,7 +625,7 @@ class AccessibilityNotificationsManager: ObservableObject {
         self.showDebug()
         
         // Automatically add AutoContext is only available in Pinned mode.
-        if Defaults[.automaticallyAddAutoContext] && results != nil && !Defaults[.useScreenModeWithAccessibility] {
+        if Defaults[.automaticallyAddAutoContext] && results != nil && !FeatureFlagManager.shared.useScreenModeWithAccessibility {
             state.addAutoContext()
         }
     }

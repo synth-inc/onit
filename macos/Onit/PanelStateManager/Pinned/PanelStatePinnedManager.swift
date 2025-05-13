@@ -206,10 +206,7 @@ extension PanelStatePinnedManager: OnitPanelStateDelegate {
     
     func panelStateDidChange(state: OnitPanelState) {
         if !state.panelOpened {
-            resetFramesOnAppChange()
-            
             state.trackedScreen = nil
-            
             activateMouseScreen(forced: true)
         } else {
             state.panel?.setLevel(.floating)

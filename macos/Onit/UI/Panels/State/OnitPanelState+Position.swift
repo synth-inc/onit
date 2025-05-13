@@ -382,13 +382,17 @@ extension OnitPanelState {
         self.animateChatView = true
         self.showChatView = false
         
+        // Check if screen mode with accessibility is enabled
+        let useScreenWithAccess = FeatureFlagManager.shared.useScreenModeWithAccessibility
+        
         NSAnimationContext.runAnimationGroup { context in
             context.duration = animationDuration
             context.timingFunction = CAMediaTimingFunction(name: .easeOut)
             
             panel.animator().setFrame(toPanel, display: false)
 
-            if let activeWindow = activeWindow, let fromActive = fromActive, let toActive = toActive {
+            // Only animate other windows if not in accessibility mode
+            if !useScreenWithAccess, let activeWindow = activeWindow, let fromActive = fromActive, let toActive = toActive {
                 DispatchQueue.main.asyncAfter(deadline: .now() + (animationDuration / 2)) {
                     self.animation(for: activeWindow, from: fromActive, to: toActive)
                 }
@@ -399,6 +403,20 @@ extension OnitPanelState {
             panel.isAnimating = false
             panel.wasAnimated = true
             panel.animatedFromLeft = abs(fromPanel.maxX - toPanel.minX) <= abs(fromPanel.maxX - toPanel.maxX)
+            
+            // Call resizeWindows() AFTER panel animation is complete when in accessibility mode
+            if useScreenWithAccess, let screen = self.trackedScreen ?? NSScreen.mouse {
+                DispatchQueue.main.async {
+                    do {
+                        // Access PanelStateCoordinator and try to resize windows
+                        if let pinnedManager = PanelStateCoordinator.shared.currentManager as? PanelStatePinnedManager {
+                            pinnedManager.resizeWindows(for: screen)
+                        }
+                    } catch {
+                        print("Error trying to resize windows: \(error)")
+                    }
+                }
+            }
         }
     }
     
@@ -416,14 +434,22 @@ extension OnitPanelState {
         self.animateChatView = true
         self.showChatView = false
         
-        // Capture the window animation task (if applicable)
-        var windowAnimationTask: Task<Void, Never>? = nil
-        if let activeWindow = activeWindow, let fromActive = fromActive, let toActive = toActive {
-            windowAnimationTask = self.animation(for: activeWindow, from: fromActive, to: toActive)
-        }
+        // Check if screen mode with accessibility is enabled
+        let useScreenWithAccess = FeatureFlagManager.shared.useScreenModeWithAccessibility
         
         // Start an asynchronous block that waits for both animations to complete.
         Task { @MainActor in
+            // Reset frames BEFORE the animation starts when in accessibility mode
+            if useScreenWithAccess, let pinnedManager = PanelStateCoordinator.shared.currentManager as? PanelStatePinnedManager {
+                pinnedManager.resetFramesOnAppChange()
+            }
+                        
+            // Capture the window animation task (if applicable)
+            var windowAnimationTask: Task<Void, Never>? = nil
+            if !useScreenWithAccess, let activeWindow = activeWindow, let fromActive = fromActive, let toActive = toActive {
+                windowAnimationTask = self.animation(for: activeWindow, from: fromActive, to: toActive)
+            }
+            
             // Await the panel animation by wrapping it in a withCheckedContinuation.
             await withCheckedContinuation { (continuation: CheckedContinuation<Void, Never>) in
                 DispatchQueue.main.asyncAfter(deadline: .now() + animationDuration / 2) {
