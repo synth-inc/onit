@@ -88,6 +88,10 @@ class PanelStateBaseManager: PanelStateManagerLogic {
         targetInitialFrames.removeAll()
     }
     
+    func getState(for windowHash: UInt) -> OnitPanelState? {
+        return nil
+    }
+    
     func filterHistoryChats(_ chats: [Chat]) -> [Chat] {
         return chats
     }

@@ -67,7 +67,7 @@ class PanelStateUntetheredManager: PanelStateBaseManager, ObservableObject {
         super.init()
     }
 
-    // MARK: - Functions
+    // MARK: - PanelStateManagerLogic
 
     override func start() {
         stop()
@@ -109,6 +109,30 @@ class PanelStateUntetheredManager: PanelStateBaseManager, ObservableObject {
         statesByScreen = [:]
         tetherButtonVisibility = [:]
     }
+    
+    override func getState(for windowHash: UInt) -> OnitPanelState? {
+        return nil
+    }
+
+    override func filterHistoryChats(_ chats: [Chat]) -> [Chat] {
+        return super.filterHistoryChats(chats)
+    }
+    
+    override func filterPanelChats(_ chats: [Chat]) -> [Chat] {
+        return super.filterPanelChats(chats)
+    }
+    
+    // MARK: - PanelStateBaseManager
+    
+    override func hideTetherWindow() {
+        super.hideTetherWindow()
+        
+        // Remove the tutorial
+        tutorialWindow.orderOut(nil)
+        tutorialWindow.contentView = nil
+    }
+    
+    // MARK: - Functions
 
     private func handleMouseMoved(event: NSEvent) {
         if let mouseScreen = NSScreen.mouse {
@@ -177,14 +201,6 @@ class PanelStateUntetheredManager: PanelStateBaseManager, ObservableObject {
                 self.showTetherWindow(state: pendingTetherWindow.0, activeScreen: pendingTetherWindow.1)
             }
         }
-    }
-    
-    override func hideTetherWindow() {
-        super.hideTetherWindow()
-        
-        // Remove the tutorial
-        tutorialWindow.orderOut(nil)
-        tutorialWindow.contentView = nil
     }
 
     func showTetherWindow(state: OnitPanelState, activeScreen: NSScreen) {
@@ -285,14 +301,6 @@ class PanelStateUntetheredManager: PanelStateBaseManager, ObservableObject {
         )
         
         tetherHintDetails.tetherWindow.setFrame(frame, display: true)
-    }
-
-    override func filterHistoryChats(_ chats: [Chat]) -> [Chat] {
-        return super.filterHistoryChats(chats)
-    }
-    
-    override func filterPanelChats(_ chats: [Chat]) -> [Chat] {
-        return super.filterPanelChats(chats)
     }
 }
 

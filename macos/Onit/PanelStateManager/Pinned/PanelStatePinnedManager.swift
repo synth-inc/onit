@@ -22,38 +22,15 @@ class PanelStatePinnedManager: PanelStateBaseManager, ObservableObject {
     private var globalMouseMonitor: Any?
     private var localMouseMonitor: Any?
     
-    var tutorialWindow: NSWindow
-    
     // MARK: - Initializer
     
     private override init() {
-        tutorialWindow = NSWindow(
-            contentRect: NSRect(x: 0, y: 0, width: (TetherTutorialOverlay.width * 1.5), height: (TetherTutorialOverlay.height * 1.5)),
-            styleMask: [.borderless],
-            backing: .buffered,
-            defer: false
-        )
-        tutorialWindow.isOpaque = false
-        tutorialWindow.backgroundColor = NSColor.clear
-        tutorialWindow.level = .floating
-        tutorialWindow.hasShadow = false
-        tutorialWindow.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
-        tutorialWindow.isReleasedWhenClosed = false
-        tutorialWindow.titlebarAppearsTransparent = true
-        tutorialWindow.titleVisibility = .hidden
-        tutorialWindow.standardWindowButton(.closeButton)?.isHidden = true
-        tutorialWindow.standardWindowButton(.miniaturizeButton)?.isHidden = true
-        tutorialWindow.standardWindowButton(.zoomButton)?.isHidden = true
-        
-        let tutorialView = NSHostingView(rootView: TetherTutorialOverlay())
-        tutorialWindow.contentView = tutorialView
-        
         super.init()
         
         states = [defaultState]
     }
 
-    // MARK: - Functions
+    // MARK: - PanelStateManagerLogic
 
     override func start() {
         stop()
@@ -106,6 +83,20 @@ class PanelStatePinnedManager: PanelStateBaseManager, ObservableObject {
         
         super.stop()
     }
+    
+    override func getState(for windowHash: UInt) -> OnitPanelState? {
+        return state
+    }
+    
+    override func filterHistoryChats(_ chats: [Chat]) -> [Chat] {
+        return super.filterHistoryChats(chats)
+    }
+    
+    override func filterPanelChats(_ chats: [Chat]) -> [Chat] {
+        return super.filterPanelChats(chats)
+    }
+    
+    // MARK: - Functions
     
     @objc private func appLaunchedReceived(notification: Notification) {
         guard state.panelOpened, let screen = state.panel?.screen, let userInfo = notification.userInfo else { return }
@@ -184,21 +175,6 @@ class PanelStatePinnedManager: PanelStateBaseManager, ObservableObject {
                 _ = window.setFrame(newFrame)
             }
         }
-    }
-    
-    override func hideTetherWindow() {
-        super.hideTetherWindow()
-        
-        tutorialWindow.orderOut(nil)
-        tutorialWindow.contentView = nil
-    }
-
-    override func filterHistoryChats(_ chats: [Chat]) -> [Chat] {
-        return super.filterHistoryChats(chats)
-    }
-    
-    override func filterPanelChats(_ chats: [Chat]) -> [Chat] {
-        return super.filterPanelChats(chats)
     }
 }
 

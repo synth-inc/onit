@@ -36,7 +36,7 @@ class PanelStateTetheredManager: PanelStateBaseManager, ObservableObject {
         super.init()
     }
     
-    // MARK: - Functions
+    // MARK: - PanelStateManagerLogic
     
     override func start() {
         stop()
@@ -75,6 +75,34 @@ class PanelStateTetheredManager: PanelStateBaseManager, ObservableObject {
         
         statesByWindow = [:]
     }
+    
+    override func getState(for windowHash: UInt) -> OnitPanelState? {
+        guard let (_, state) = statesByWindow.first(where: { $0.key.hash == windowHash }) else { return nil }
+        
+        return state
+    }
+    
+    override func filterHistoryChats(_ chats: [Chat]) -> [Chat] {
+        guard let appBundleIdentifier = state.trackedWindow?.pid.bundleIdentifier else {
+            return super.filterHistoryChats(chats)
+        }
+        
+        return chats.filter { chat in
+            chat.appBundleIdentifier == appBundleIdentifier
+        }
+    }
+    
+    override func filterPanelChats(_ chats: [Chat]) -> [Chat] {
+        guard let windowHash = state.trackedWindow?.hash else {
+            return super.filterPanelChats(chats)
+        }
+        
+        return chats.filter { chat in
+            chat.windowHash == windowHash
+        }
+    }
+    
+    // MARK: - Functions
     
     @objc func appDidBecomeActive(_ notification: Notification) {
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
@@ -228,25 +256,5 @@ class PanelStateTetheredManager: PanelStateBaseManager, ObservableObject {
             }
         }
         handlePanelStateChange(state: state, action: .moveEnd)
-    }
-    
-    override func filterHistoryChats(_ chats: [Chat]) -> [Chat] {
-        guard let appBundleIdentifier = state.trackedWindow?.pid.bundleIdentifier else {
-            return super.filterHistoryChats(chats)
-        }
-        
-        return chats.filter { chat in
-            chat.appBundleIdentifier == appBundleIdentifier
-        }
-    }
-    
-    override func filterPanelChats(_ chats: [Chat]) -> [Chat] {
-        guard let windowHash = state.trackedWindow?.hash else {
-            return super.filterPanelChats(chats)
-        }
-        
-        return chats.filter { chat in
-            chat.windowHash == windowHash
-        }
     }
 }

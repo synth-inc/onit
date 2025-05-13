@@ -52,10 +52,14 @@ class PanelStateCoordinator {
         }
     }
     
-    func historyFilteredChats(_ allChats: [Chat]) -> [Chat] {
+    func getState(for windowHash: UInt) -> OnitPanelState? {
+        currentManager.getState(for: windowHash)
+    }
+    
+    func filterHistoryChats(_ allChats: [Chat]) -> [Chat] {
         currentManager.filterHistoryChats(allChats)
     }
-    func panelFilteredChats(_ allChats: [Chat]) -> [Chat] {
+    func filterPanelChats(_ allChats: [Chat]) -> [Chat] {
         currentManager.filterPanelChats(allChats)
     }
     

@@ -14,7 +14,7 @@ struct HistoryView: View {
     @State private var searchQuery: String = ""
     
     private var chats: [Chat] {
-        PanelStateCoordinator.shared.historyFilteredChats(allChats)
+        PanelStateCoordinator.shared.filterHistoryChats(allChats)
     }
     
     var filteredChats: [Chat] {

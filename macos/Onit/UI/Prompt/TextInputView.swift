@@ -19,7 +19,7 @@ struct TextInputView: View {
     @Query(sort: \Chat.timestamp, order: .reverse) private var allChats: [Chat]
     
     private var chats: [Chat] {
-        PanelStateCoordinator.shared.panelFilteredChats(allChats)
+        PanelStateCoordinator.shared.filterPanelChats(allChats)
     }
 
     @Default(.mode) var mode
