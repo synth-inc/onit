@@ -9,6 +9,7 @@ import Defaults
 import SwiftUI
 
 struct FinalContextView: View {
+    @Environment(\.appState) var appState
     @Environment(\.windowState) var windowState
     @State var isContextListExpanded: Bool = false
     @State private var isEditing: Bool = false
@@ -159,6 +160,16 @@ extension FinalContextView {
             RoundedRectangle(cornerRadius: 8)
                 .fill(.clear)
                 .strokeBorder(.gray700)
+        }
+    }
+}
+
+// MARK: - Private Functions
+
+extension FinalContextView {
+    private func handleSend() async {
+        await appState.checkSubscriptionAlerts {
+            windowState.generate(prompt)
         }
     }
 }

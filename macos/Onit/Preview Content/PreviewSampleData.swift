@@ -8,11 +8,6 @@
 import SwiftData
 
 actor PreviewSampleData {
-    
-    @MainActor
-    static var remoteModels: RemoteModelsState = {
-        RemoteModelsState()
-    }()
 
     @MainActor
     static var customProvider: CustomProvider = {

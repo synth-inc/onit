@@ -11,6 +11,7 @@ import SwiftData
 import SwiftUI
 
 struct PromptCore: View {
+    @Environment(\.appState) var appState
     @Environment(\.windowState) private var windowState
     @Query(sort: \Chat.timestamp, order: .reverse) private var chats: [Chat]
     @Default(.mode) var mode
@@ -282,6 +283,18 @@ extension PromptCore {
             }
         } else {
             "New instructions..."
+        }
+    }
+}
+
+// MARK: - Private Functions
+
+extension PromptCore {
+    private func handleSend() {
+        Task {
+            await appState.checkSubscriptionAlerts {
+                windowState.sendAction()
+            }
         }
     }
 }

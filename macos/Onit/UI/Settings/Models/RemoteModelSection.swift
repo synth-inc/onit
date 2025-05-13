@@ -9,7 +9,7 @@ import Defaults
 import SwiftUI
 
 struct RemoteModelSection: View {
-    @Environment(\.remoteModels) var remoteModels
+    @Environment(\.appState) var appState
 
     @State private var use = false
     @State private var key = ""
@@ -100,12 +100,12 @@ struct RemoteModelSection: View {
             save(use: use)
             save(validated: validated)
             // If we've turned off everything go into local mode.
-            if remoteModels.listedModels.isEmpty {
+            if appState.listedModels.isEmpty {
                 mode = .local
             } else {
                 // If it's our first time adding models, set the remoteModel
                 if remoteModel == nil {
-                    remoteModel = remoteModels.listedModels.first
+                    remoteModel = appState.listedModels.first
                 }
             }
         }
@@ -114,8 +114,10 @@ struct RemoteModelSection: View {
     // MARK: - Subviews
 
     var titleView: some View {
-        ModelTitle(title: provider.title, isOn: $use, showToggle: $validated)
-        // .disabled(!validated)
+        ModelTitle(title: provider.title, isOn: $use, showToggle: Binding(
+            get: { appState.subscriptionActive || validated },
+            set: { _ in }
+        ))
     }
 
     var textField: some View {
@@ -206,7 +208,7 @@ struct RemoteModelSection: View {
     
     @ViewBuilder
     var advancedSettings: some View {
-        if use {
+        if use && (appState.subscriptionActive || validated) {
             DisclosureGroup("Advanced", isExpanded: $showAdvanced) {
                 StreamingToggle(isOn: streamResponseBinding)
                     .padding(.leading, 8)
@@ -217,7 +219,7 @@ struct RemoteModelSection: View {
 
     @ViewBuilder
     var modelsView: some View {
-        if use {
+        if use && (appState.subscriptionActive || validated) {
             GroupBox {
                 VStack(alignment: .leading, spacing: 0) {
                     ForEach(models) { model in

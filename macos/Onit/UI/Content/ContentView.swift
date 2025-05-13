@@ -9,9 +9,14 @@ import Defaults
 import SwiftUI
 
 struct ContentView: View {
+    @Environment(\.appState) var appState
     @Environment(\.windowState) private var state
     @ObservedObject private var accessibilityPermissionManager = AccessibilityPermissionManager.shared
-    @Default(.showOnboarding) var showOnboarding
+    
+    @Default(.showOnboardingAccessibility) var showOnboardingAccessibility
+    @Default(.onboardingAuthState) var onboardingAuthState
+    @Default(.showTwoWeekProTrialEndedAlert) var showTwoWeekProTrialEndedAlert
+    @Default(.hasClosedTrialEndedAlert) var hasClosedTrialEndedAlert
     
     static let idealWidth: CGFloat = 400
     static let bottomPadding: CGFloat = 0
@@ -23,9 +28,15 @@ struct ContentView: View {
         )
     }
     
-    private var shouldShowOnboarding: Bool {
+    private var shouldShowOnboardingAccessibility: Bool {
         let accessibilityPermissionGranted = accessibilityPermissionManager.accessibilityPermissionStatus == .granted
-        return !accessibilityPermissionGranted && showOnboarding
+        return !accessibilityPermissionGranted && showOnboardingAccessibility
+    }
+    
+    private var shouldShowOnboardingAuth: Bool {
+        let loggedOut = appState.account == nil
+        let showOnboardingAuth = onboardingAuthState != .hideAuth
+        return loggedOut && showOnboardingAuth
     }
 
     var body: some View {
@@ -33,7 +44,7 @@ struct ContentView: View {
             TetheredButton()
             
             ZStack(alignment: .top) {
-                if shouldShowOnboarding {
+                if shouldShowOnboardingAccessibility {
                     VStack(spacing: 0) {
                         if state.showChatView {
                             OnboardingAccessibility().transition(.opacity)
@@ -44,18 +55,34 @@ struct ContentView: View {
                     .frame(width: TetherAppsManager.minOnitWidth)
                     .frame(maxHeight: .infinity)
                     .background(Color.black)
+                    .onDisappear {
+                        if appState.account == nil {
+                            onboardingAuthState = .showSignUp
+                        }
+                    }
+                } else if shouldShowOnboardingAuth {
+                    OnboardingAuth(isSignUp: onboardingAuthState == .showSignUp)
                 } else {
-                    VStack(spacing: 0) {
-                        Spacer().frame(height: 38)
+                    ZStack {
+                        VStack(spacing: 0) {
+                            Spacer().frame(height: 38)
+                            
+                            PromptDivider()
+                            
+                            if state.showChatView { ChatView().transition(.opacity) }
+                            else { Spacer() }
+                        }
                         
-                        PromptDivider()
-                        
-                        if state.showChatView { ChatView().transition(.opacity) }
-                        else { Spacer() }
+                        if showTwoWeekProTrialEndedAlert {
+                            TwoWeekProTrialEndedAlert()
+                        } else if appState.showFreeLimitAlert {
+                            FreeLimitAlert()
+                        } else if appState.showProLimitAlert {
+                            ProLimitAlert()
+                        }
                     }
                 }
             }
-
             .background(Color.black)
             .addBorder(
                 cornerRadius: 14,
@@ -66,7 +93,7 @@ struct ContentView: View {
         }
         .buttonStyle(PlainButtonStyle())
         .toolbar {
-            if !shouldShowOnboarding {
+            if !shouldShowOnboardingAccessibility {
                 ToolbarItem(placement: .navigation) {
                     ToolbarAddButton()
                 }
@@ -89,6 +116,24 @@ struct ContentView: View {
             handleFileImport(result)
         }
         .addAnimation(dependency: state.showChatView)
+        .onAppear {
+            if !hasClosedTrialEndedAlert {
+                if let subscriptionStatus = appState.subscription?.status{
+                    if subscriptionStatus == "active" {
+                        hasClosedTrialEndedAlert = true
+                    } else if subscriptionStatus == "canceled",
+                       let trialEndDate = appState.subscription?.trialEnd
+                    {
+                        let today = getTodayAsEpochDate()
+                        let trialExpired = today >= trialEndDate
+                        
+                        if trialExpired {
+                            showTwoWeekProTrialEndedAlert = true
+                        }
+                    }
+                }
+            }
+        }
     }
 
     private func handleFileImport(_ result: Result<[URL], any Error>) {
