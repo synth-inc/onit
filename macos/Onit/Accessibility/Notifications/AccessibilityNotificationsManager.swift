@@ -624,7 +624,8 @@ class AccessibilityNotificationsManager: ObservableObject {
         self.screenResult.errorMessage = nil
         self.showDebug()
         
-        if Defaults[.automaticallyAddAutoContext] && results != nil {
+        // Automatically add AutoContext is only available in Pinned mode.
+        if Defaults[.automaticallyAddAutoContext] && results != nil && !Defaults[.useScreenModeWithAccessibility] {
             state.addAutoContext()
         }
     }
