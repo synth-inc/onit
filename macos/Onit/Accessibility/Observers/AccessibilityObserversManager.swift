@@ -25,9 +25,7 @@ class AccessibilityObserversManager {
     private var observers: [pid_t: AXObserver] = [:]
     private var persistentObservers: [pid_t: AXObserver] = [:]
     
-    private let minimumStartInterval: TimeInterval = 0.5
-    private var lastStartTime: Date?
-    private var accessibilityPermissionRequested: Bool = false
+    private var isStarted = false
     
     enum ProcessAuthorizationState {
         case authorized
@@ -38,20 +36,9 @@ class AccessibilityObserversManager {
     // MARK: - Functions
     
     func start(pid: pid_t?) {
-        if !accessibilityPermissionRequested {
-            accessibilityPermissionRequested = true
-            AccessibilityPermissionManager.shared.requestPermission()
-        }
-        // Ensure we don't start twice too quickly
-        if let lastStartTime = lastStartTime,
-           Date().timeIntervalSince(lastStartTime) < minimumStartInterval {
-            log.error("Ignoring rapid consecutive start call")
-            return
-        }
+        guard !isStarted else { return }
         
-        lastStartTime = Date()
-        
-        stop()
+        isStarted = true
         
         startAppActivationObservers()
         
@@ -65,6 +52,8 @@ class AccessibilityObserversManager {
     }
     
     func stop() {
+        isStarted = false
+        
         stopAppActivationObservers()
         
         for pid in observers.keys {

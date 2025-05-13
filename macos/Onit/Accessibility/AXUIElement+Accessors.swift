@@ -22,40 +22,7 @@ extension AXUIElement {
     func value() -> String? {
         return self.attribute(forAttribute: kAXValueAttribute as CFString) as? String
     }
-        
-    // We should not use this function in most cases.
-    // kAXWindowsAttribute is OPTIONAL and may applications do not implement it, including Apple default apps like Notes
-    // Instead we should use getRootChildren() followed by filtering with isValidWindow().
-    func getWindows() -> [AXUIElement] {
-        var elementPid: pid_t = 0
-
-        guard AXUIElementGetPid(self, &elementPid) == .success, elementPid != getpid() else {
-            return []
-        }
-        
-        let appElement = AXUIElementCreateApplication(elementPid)
-        
-        var windowList: CFArray?
-        let result = AXUIElementCopyAttributeValues(appElement, kAXWindowsAttribute as CFString, 0, 1, &windowList)
-        
-        guard result == .success,
-              let windows = windowList as? [AXUIElement] else {
-            return [appElement]
-        }
-        
-        return windows
-    }
     
-    func getRootChildren() -> [AXUIElement] {
-        var elementPid: pid_t = 0
-        guard AXUIElementGetPid(self, &elementPid) == .success, elementPid != getpid() else {
-            return []
-        }
-        let appElement = AXUIElementCreateApplication(elementPid)
-        if let role = appElement.role() { print("Role: \(role)")}
-        return appElement.children() ?? []
-    }
-
     var isFinder: Bool {
         let runningApps = NSWorkspace.shared.runningApplications
 
@@ -67,15 +34,17 @@ extension AXUIElement {
     }
     
     var isDesktopFinder: Bool {
+        guard let pid = pid() else { return false }
+        
         let runningApps = NSWorkspace.shared.runningApplications
         
         guard let finderAppPid = runningApps.first(where: { $0.bundleIdentifier == "com.apple.finder" })?.processIdentifier,
-              pid() == finderAppPid else {
+              pid == finderAppPid else {
             
             return false
         }
         
-        return getWindows().first?.role() == "AXScrollArea"
+        return pid.getWindows().first?.role() == "AXScrollArea"
     }
     
     // MARK: - Private functions
@@ -270,6 +239,14 @@ extension AXUIElement {
             return (value as! AXUIElement)
         }
         return nil
+    }
+    
+    public func isTargetWindow() -> Bool {
+        guard subrole() == "AXStandardWindow" else {
+            return false
+        }
+        
+        return closeButton() != nil && minimizeButton() != nil && zoomButton() != nil
     }
     
     public func isModal() -> Bool? {
