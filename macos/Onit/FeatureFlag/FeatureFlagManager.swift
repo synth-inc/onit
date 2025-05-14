@@ -70,6 +70,6 @@ class FeatureFlagManager: ObservableObject {
             autocontextDemoVideoUrl = nil
         }
         
-        useScreenModeWithAccessibility = Defaults[.useScreenModeWithAccessibility] ?? false
+        useScreenModeWithAccessibility = Defaults[.useScreenModeWithAccessibility] ?? true
     }
 }
