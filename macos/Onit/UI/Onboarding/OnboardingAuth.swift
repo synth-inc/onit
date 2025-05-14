@@ -9,7 +9,6 @@ import AuthenticationServices
 import Defaults
 import GoogleSignIn
 import GoogleSignInSwift
-import Defaults
 import SwiftUI
 
 struct OnboardingAuth: View {
