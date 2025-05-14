@@ -126,7 +126,7 @@ struct ContentView: View {
         }
         .onAppear {
             if !hasClosedTrialEndedAlert {
-                if let subscriptionStatus = appState.subscription?.status{
+                if let subscriptionStatus = appState.subscription?.status {
                     if subscriptionStatus == "active" {
                         hasClosedTrialEndedAlert = true
                     } else if subscriptionStatus == "canceled",

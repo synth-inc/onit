@@ -26,6 +26,7 @@ struct OnboardingAuthButton: View {
         Image(icon)
             .frame(maxWidth: .infinity)
             .frame(height: 40)
+            .foregroundColor(Color.primary)
             .addBorder(cornerRadius: 9, stroke: .gray700)
             .addButtonEffects(
                 action: action,

@@ -115,8 +115,9 @@ class SignInWithAppleCoordinator:
         guard let window = NSApplication.shared.windows.first(
             where: { $0.isKeyWindow }
         ) ?? NSApplication.shared.windows.first else {
-            // TECHNICALLY, this should never happen in practice, but having a fallback is good practice.
-            fatalError("No window available for Apple authentication")
+            // TECHNICALLY, this should never happen, but having a fallback is good practice.
+            errorMessageAuth.wrappedValue = "Unable to present Apple authentication dialog."
+            return NSApplication.shared.mainWindow ?? NSWindow()
         }
         
         return window
