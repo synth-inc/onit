@@ -83,15 +83,9 @@ struct AccessibilityTab: View {
                             Text("Highlighted Text")
                                 .font(.system(size: 13))
                             Spacer()
-                            Toggle(
-                                "",
-                                isOn: Binding(
-                                    get: { autoContextFromHighlights },
-                                    set: { autoContextFromHighlights = $0 }
-                                )
-                            )
-                            .toggleStyle(.switch)
-                            .controlSize(.small)
+                            Toggle("", isOn: $autoContextFromHighlights)
+                                .toggleStyle(.switch)
+                                .controlSize(.small)
                             SettingInfoButton(
                                 title: "AutoContext from Highlighted Text",
                                 description:
@@ -112,15 +106,9 @@ struct AccessibilityTab: View {
                             Text("Current Window (Experimental)")
                                 .font(.system(size: 13))
                             Spacer()
-                            Toggle(
-                                "",
-                                isOn: Binding(
-                                    get: { autoContextFromCurrentWindow },
-                                    set: { autoContextFromCurrentWindow = $0 }
-                                )
-                            )
-                            .toggleStyle(.switch)
-                            .controlSize(.small)
+                            Toggle("", isOn: $autoContextFromCurrentWindow)
+                                .toggleStyle(.switch)
+                                .controlSize(.small)
                             SettingInfoButton(
                                 title: "AutoContext, Screen Reader Shortcut (Experimental)",
                                 description:
@@ -133,7 +121,6 @@ struct AccessibilityTab: View {
                             .font(.system(size: 12))
                             .foregroundStyle(.gray200)
                     }
-                    
                     if !featureFlagsManager.useScreenModeWithAccessibility {
                         VStack(alignment: .leading, spacing: 4) {
                             HStack {
