@@ -82,7 +82,7 @@ extension View {
     func styleText(
         size: CGFloat = 14,
         weight: Font.Weight = Font.Weight.medium,
-        color: Color = Color.white,
+        color: Color = Color.primary,
         align: TextAlignment = TextAlignment.leading
     ) -> some View {
         self
@@ -95,5 +95,44 @@ extension View {
     
     func truncateText() -> some View {
         self.lineLimit(1).truncationMode(.tail)
+    }
+}
+
+// MARK: - Button Styles
+
+extension View {
+    func addButtonEffects(
+        action: @escaping () -> Void,
+        background: Color = .clear,
+        hoverBackground: Color = .gray600,
+        cornerRadius: CGFloat = 8,
+        isHovered: Binding<Bool>,
+        isPressed: Binding<Bool>,
+        disabled: Bool = false
+    ) -> some View {
+        self
+            .background(isHovered.wrappedValue ? hoverBackground : background)
+            .cornerRadius(cornerRadius)
+            .scaleEffect(isPressed.wrappedValue ? 0.99 : 1)
+            .opacity(disabled ? 0.4 : isPressed.wrappedValue ? 0.7 : 1)
+            .disabled(disabled)
+            .onHover{ isHovering in
+                isHovered.wrappedValue = isHovering
+            }
+            .gesture(
+                DragGesture(minimumDistance: 0)
+                    .onChanged {_ in isPressed.wrappedValue = true }
+                    .onEnded{ _ in
+                        isPressed.wrappedValue = false
+                        action()
+                    }
+                )
+            .allowsHitTesting(!disabled)
+            .addAnimation(
+                dependency: [
+                    isHovered.wrappedValue,
+                    disabled
+                ]
+            )
     }
 }

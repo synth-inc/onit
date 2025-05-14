@@ -52,6 +52,36 @@ class AppState: NSObject {
         }
     }
     var subscriptionActive: Bool { subscription?.status == "active" || subscription?.status == "trialing" }
+    
+    var subscriptionCanceled: Bool {
+        if let canceled = subscription?.cancelAtPeriodEnd {
+            return canceled
+        } else {
+            return false
+        }
+    }
+    
+    var subscriptionStatus: String? {
+        if account != nil && subscription == nil {
+            return SubscriptionStatus.free
+        } else if let subscription = subscription {
+            switch subscription.status {
+            case "trialing":
+                return SubscriptionStatus.trialing
+            case "active":
+                return SubscriptionStatus.active
+            default:
+                // Stripe statuses: Canceled, Incomplete, Incomplete Expired, Past Due, Unpaid, and Paused
+                return SubscriptionStatus.free
+            }
+        } else {
+            return nil
+        }
+    }
+    
+    var showFreeLimitAlert: Bool = false
+    var showProLimitAlert: Bool = false
+    var subscriptionPlanError: String = ""
 
     // MARK: - Initializer
     
@@ -178,7 +208,7 @@ class AppState: NSObject {
             remoteFetchFailed = true
         }
     }
-
+    
     func handleTokenLogin(_ url: URL) {
         guard url.scheme == "onit" else {
             return
@@ -201,6 +231,94 @@ class AppState: NSObject {
                 account = loginResponse.account
             } catch {
                 print("Login by token failed with error: \(error)")
+            }
+        }
+    }
+    
+    // MARK: - Alert Functions
+    
+    func checkApiKeyExistsForCurrentModelProvider() -> Bool {
+        // Allow check to be bypassed for local models.
+        guard Defaults[.mode] == .remote else { return true }
+        
+        // Don't allow check to pass when a remote model isn't selected.
+        guard let currentModel = Defaults[.remoteModel] else { return false }
+        
+        switch currentModel.provider {
+        case .openAI:
+            return isOpenAITokenValidated
+        case .anthropic:
+            return isAnthropicTokenValidated
+        case .xAI:
+            return isXAITokenValidated
+        case .googleAI:
+            return isGoogleAITokenValidated
+        case .deepSeek:
+            return isDeepSeekTokenValidated
+        case .perplexity:
+            return isPerplexityTokenValidated
+        case .custom:
+            // Custom providers don't require subscription validation.
+            return true
+        }
+    }
+    
+    func checkSubscriptionAlerts(callback: @escaping () -> Void) async {
+        subscriptionPlanError = ""
+        Defaults[.showTwoWeekProTrialEndedAlert] = false
+        showFreeLimitAlert = false
+        showProLimitAlert = false
+        
+        let providerApiKeyExists = checkApiKeyExistsForCurrentModelProvider()
+        
+        if account == nil {
+            if !providerApiKeyExists {
+                subscriptionPlanError = "Add the provider API key to send a message."
+            } else {
+                callback()
+            }
+        } else {
+            Task {
+                do {
+                    let client = FetchingClient()
+                    let chatUsageResponse = try await client.getChatUsage()
+                    
+                    if let usage = chatUsageResponse?.usage,
+                       let quota = chatUsageResponse?.quota
+                    {
+                        let exceededPlanLimit = usage >= quota
+                        let showUpsaleAlert = exceededPlanLimit && !providerApiKeyExists
+                        
+                        // Pro Plan alert logic.
+                        if subscriptionStatus == SubscriptionStatus.active {
+                            if showUpsaleAlert {
+                                showProLimitAlert = true
+                            } else {
+                                callback()
+                            }
+                        }
+                        
+                        // Falling back to Free Plan alert logic.
+                        // Also handles the Stripe Incomplete, Incomplete Expired, Past Due, Unpaid, and Paused statuses.
+                        else {
+                            if let subscriptionStatusMessage = subscription?.statusMessage {
+                                subscriptionPlanError = subscriptionStatusMessage
+                            }
+                            
+                            if showUpsaleAlert {
+                                showFreeLimitAlert = true
+                            } else {
+                                callback()
+                            }
+                        }
+                    } else {
+                        // Stripe endpoint didn't return plan usage and quota. Sending another request should refresh this.
+                        // If problem persists, there might be something wrong with the Stripe API.
+                        subscriptionPlanError = "Please try again."
+                    }
+                } catch {
+                    subscriptionPlanError = error.localizedDescription
+                }
             }
         }
     }

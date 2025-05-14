@@ -61,11 +61,11 @@ struct SettingsView: View {
                     }
                     .tag(SettingsTab.debug)
             
-                AccountTab()
-                    .tabItem {
-                        Label("Account", systemImage: "person.crop.circle")
-                    }
-                    .tag(SettingsTab.account)
+//                AccountTab()
+//                    .tabItem {
+//                        Label("Account", systemImage: "person.crop.circle")
+//                    }
+//                    .tag(SettingsTab.account)
             #endif
 
             AboutTab()
