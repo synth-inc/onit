@@ -106,7 +106,6 @@ extension OnboardingAccessibility {
             }
         }
         .padding(.bottom, 43)
-        .underline(isHoveringSkipButton)
         .onHover { isHovering in
             isHoveringSkipButton = isHovering
         }
