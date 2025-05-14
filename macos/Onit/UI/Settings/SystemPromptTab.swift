@@ -133,7 +133,7 @@ struct SystemPromptTab: View {
         )
         fetchDescriptor.fetchLimit = 1
         
-        for state in OnitPanelStateCoordinator.shared.states {
+        for state in PanelStateCoordinator.shared.states {
             if state.systemPromptId == deletedId {
                 do {
                     let modelContext = ModelContext(state.container)

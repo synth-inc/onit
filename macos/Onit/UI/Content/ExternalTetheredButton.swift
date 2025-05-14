@@ -8,6 +8,7 @@
 
 import Defaults
 import SwiftUI
+import Foundation
 
 struct ExternalTetheredButton: View {
     @Environment(\.appState) var appState
@@ -22,6 +23,7 @@ struct ExternalTetheredButton: View {
     static let containerHeight: CGFloat = height * 2
     static let borderWidth: CGFloat = 1.5
     
+    var onClick: (() -> Void)
     var onDrag: ((CGFloat) -> Void)?
     
     @State private var hovering = false
@@ -98,14 +100,12 @@ struct ExternalTetheredButton: View {
     private func tetherAction() {
         guard !isDragging else { return }
         
-        if let state = OnitPanelStateCoordinator.shared.tetherButtonPanelState {
-            state.launchPanel()
-        } else {
-            log.warning("Couldn't find panel state for tether button")
-        }
+        onClick()
     }
 }
 
 #Preview {
-    ExternalTetheredButton()
+    ExternalTetheredButton {
+        
+    }
 }

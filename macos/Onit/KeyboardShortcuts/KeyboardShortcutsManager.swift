@@ -74,7 +74,7 @@ struct KeyboardShortcutsManager {
         
         KeyboardShortcuts.Name.allCases.forEach { name in
             KeyboardShortcuts.onKeyUp(for: name) {
-                let state = OnitPanelStateCoordinator.shared.state
+                let state = PanelStateCoordinator.shared.state
                 switch name {
                 case .launch:
                     let eventProperties: [String: Any] = [
@@ -129,7 +129,7 @@ struct KeyboardShortcutsManager {
         let name = KeyboardShortcuts.Name(systemPrompt.id)
         
         KeyboardShortcuts.onKeyUp(for: name) {
-            OnitPanelStateCoordinator.shared.state.systemPromptId = systemPrompt.id
+            PanelStateCoordinator.shared.state.systemPromptId = systemPrompt.id
         }
     }
 }

@@ -84,6 +84,7 @@ extension Defaults.Keys {
         "localEndpointURL", default: URL(string: "http://localhost:11434")!)
 
     // Feature flags
+    static let useScreenModeWithAccessibility = Key<Bool?>("use_screen_mode_with_accessibility", default: nil)
     
     static let autoContextFromCurrentWindow = Key<Bool>("autoContextFromCurrentWindow", default: true)
     static let autoContextFromHighlights = Key<Bool>("autoContextFromHighlights", default: true)
@@ -93,6 +94,9 @@ extension Defaults.Keys {
     static let webSearchEnabled = Key<Bool>("webSearchEnabled", default: false)
     static let tavilyAPIToken = Key<String>("tavilyAPIToken", default: "")
     static let isTavilyAPITokenValidated = Key<Bool>("tavilyAPITokenValidated", default: false)
+
+    // Window state
+    static let panelWidth = Key<Double>("panelWidth", default: 400)
 
     // General settings
     static let launchOnStartupRequested = Key<Bool>("launchOnStartupRequested", default: false)

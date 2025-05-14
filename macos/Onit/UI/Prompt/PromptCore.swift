@@ -13,7 +13,12 @@ import SwiftUI
 struct PromptCore: View {
     @Environment(\.appState) var appState
     @Environment(\.windowState) private var windowState
-    @Query(sort: \Chat.timestamp, order: .reverse) private var chats: [Chat]
+    @Query(sort: \Chat.timestamp, order: .reverse) private var allChats: [Chat]
+    
+    private var chats: [Chat] {
+        PanelStateCoordinator.shared.filterPanelChats(allChats)
+    }
+    
     @Default(.mode) var mode
     
     private let currentPromptsCount: Int?
