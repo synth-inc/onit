@@ -139,7 +139,7 @@ class PanelStatePinnedManager: PanelStateBaseManager, ObservableObject {
         }
     }
     
-    func resizeWindows(for screen: NSScreen) {
+    func resizeWindows(for screen: NSScreen, isResize: Bool = false) {
         let onitName = Bundle.main.object(forInfoDictionaryKey: "CFBundleName") as? String
         let appPids = NSWorkspace.shared.runningApplications
             .filter { $0.activationPolicy == .regular }
@@ -150,31 +150,46 @@ class PanelStatePinnedManager: PanelStateBaseManager, ObservableObject {
             let windows = pid.getWindows()
             
             for window in windows {
-                resizeWindow(for: screen, window: window)
+                resizeWindow(for: screen, window: window, isResize: isResize)
             }
         }
     }
     
-    private func resizeWindow(for screen: NSScreen, window: AXUIElement) {
-        guard !targetInitialFrames.keys.contains(window) else { return }
+    private func resizeWindow(for screen: NSScreen, window: AXUIElement, isResize: Bool = false) {
+        if !isResize { guard !targetInitialFrames.keys.contains(window) else { return } }
         
         if let windowFrameConverted = window.getFrame(convertedToGlobalCoordinateSpace: true),
            let windowScreen = windowFrameConverted.findScreen(),
            windowScreen == screen,
            let windowFrame = window.getFrame() {
             
-            let panelWidth = ContentView.idealWidth - (TetheredButton.width / 2)
+            let panelWidth = state.panelWidth - (TetheredButton.width / 2) + 1
             let screenFrame = screen.visibleFrame
             let availableSpace = screenFrame.maxX - windowFrame.maxX
             
-            if availableSpace < panelWidth {
-                targetInitialFrames[window] = windowFrame
+            if !isResize {
+                if availableSpace < panelWidth {
+                    targetInitialFrames[window] = windowFrame
+                    let overlapAmount = panelWidth - availableSpace
+                    let newWidth = windowFrame.width - overlapAmount
+                    let newFrame = CGRect(x: windowFrame.origin.x, y: windowFrame.origin.y, width: newWidth, height: windowFrame.height)
+                    _ = window.setFrame(newFrame)
+                }
+            } else {
+                // If we're already tracking it, then make it move.
+                if targetInitialFrames.keys.contains(window) {
+                    let newWidth = (screenFrame.maxX - windowFrame.origin.x) - panelWidth
+                    let newFrame = CGRect(x: windowFrame.origin.x, y:windowFrame.origin.y, width: newWidth, height: windowFrame.height)
+                    _ = window.setFrame(newFrame)
+                } else if availableSpace < panelWidth {
+                    // If we aren't already tracking it and it now needs to get resized, start tracking it.
+                    targetInitialFrames[window] = windowFrame
+                    let overlapAmount = panelWidth - availableSpace
+                    let newWidth = windowFrame.width - overlapAmount
+                    let newFrame = CGRect(x: windowFrame.origin.x, y: windowFrame.origin.y, width: newWidth, height: windowFrame.height)
+                    _ = window.setFrame(newFrame)
+                }
                 
-                let overlapAmount = panelWidth - availableSpace
-                let newWidth = windowFrame.width - overlapAmount
-                let newFrame = CGRect(x: windowFrame.origin.x, y: windowFrame.origin.y, width: newWidth, height: windowFrame.height)
-                
-                _ = window.setFrame(newFrame)
             }
         }
     }
@@ -206,7 +221,10 @@ extension PanelStatePinnedManager: OnitPanelStateDelegate {
     
     func panelStateDidChange(state: OnitPanelState) {
         if !state.panelOpened {
+            // resetFramesOnAppChange()
+            
             state.trackedScreen = nil
+            
             activateMouseScreen(forced: true)
         } else {
             state.panel?.setLevel(.floating)

@@ -8,6 +8,8 @@ struct GeneralTab: View {
     
     @Default(.fontSize) var fontSize
     @Default(.lineHeight) var lineHeight
+    @Default(.panelWidth) var panelWidth
+    
     @Default(.launchShortcutToggleEnabled) var launchShortcutToggleEnabled
     @Default(.createNewChatOnPanelOpen) var createNewChatOnPanelOpen
     @Default(.openOnMouseMonitor) var openOnMouseMonitor
@@ -153,6 +155,28 @@ struct GeneralTab: View {
     var appearanceSection: some View {
         Section {
             VStack(spacing: 16) {
+                VStack(spacing: 8) {
+                    HStack {
+                        Text("Panel Width")
+                        Slider(
+                            value: $panelWidth,
+                            in: 300...600,
+                            step: 10.0
+                        )
+                        Text("\(Int(panelWidth))px")
+                            .monospacedDigit()
+                            .frame(width: 40)
+                    }
+           
+                    HStack {
+                        Spacer()
+                        Button("Restore Default") {
+                            _panelWidth.reset()
+                        }
+                        .controlSize(.small)
+                    }   
+                }
+
                 VStack(spacing: 8) {
                     HStack {
                         Text("Font Size")
