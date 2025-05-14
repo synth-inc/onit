@@ -66,6 +66,12 @@ struct SettingsView: View {
 //                        Label("Account", systemImage: "person.crop.circle")
 //                    }
 //                    .tag(SettingsTab.account)
+
+                EmbeddingsTab()
+                    .tabItem {
+                        Label("Embeddings", systemImage: "text.book.closed")
+                    }
+                    .tag(SettingsTab.embeddings)
             #endif
 
             AboutTab()

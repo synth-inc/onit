@@ -11,5 +11,6 @@ enum SettingsTab: String {
     #if DEBUG
         case debug
         case account
+        case embeddings
     #endif
 }
