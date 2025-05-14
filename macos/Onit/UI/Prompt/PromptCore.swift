@@ -11,8 +11,14 @@ import SwiftData
 import SwiftUI
 
 struct PromptCore: View {
+    @Environment(\.appState) var appState
     @Environment(\.windowState) private var windowState
-    @Query(sort: \Chat.timestamp, order: .reverse) private var chats: [Chat]
+    @Query(sort: \Chat.timestamp, order: .reverse) private var allChats: [Chat]
+    
+    private var chats: [Chat] {
+        PanelStateCoordinator.shared.filterPanelChats(allChats)
+    }
+    
     @Default(.mode) var mode
     
     let isEditing: Bool
@@ -56,7 +62,10 @@ struct PromptCore: View {
             
             VStack(spacing: 6) {
                 contextAndInput
-                PromptCoreFooter(audioRecorder: audioRecorder)
+                PromptCoreFooter(
+                    audioRecorder: audioRecorder,
+                    handleSend: handleSend
+                )
             }
         }
         .background {
@@ -80,7 +89,7 @@ extension PromptCore {
             text: editingText ?? $windowState.pendingInstruction,
             cursorPosition: $windowState.pendingInstructionCursorPosition,
             dynamicHeight: $textHeight,
-            onSubmit: windowState.sendAction,
+            onSubmit: handleSend,
             maxHeight: maxHeightLimit,
             placeholder: placeholderText,
             audioRecorder: audioRecorder,
@@ -96,7 +105,16 @@ extension PromptCore {
     }
     
     private var contextAndInput: some View {
-        VStack(spacing: 8) {
+        VStack(alignment: .leading, spacing: 8) {
+            if !appState.subscriptionPlanError.isEmpty {
+                Text(appState.subscriptionPlanError)
+                    .styleText(
+                        size: 13,
+                        weight: .regular,
+                        color: .red
+                    )
+            }
+            
             FileRow(contextList: windowState.pendingContextList)
             textField
         }
@@ -189,6 +207,18 @@ extension PromptCore {
             }
         } else {
             "New instructions..."
+        }
+    }
+}
+
+// MARK: - Private Functions
+
+extension PromptCore {
+    private func handleSend() {
+        Task {
+            await appState.checkSubscriptionAlerts {
+                windowState.sendAction()
+            }
         }
     }
 }

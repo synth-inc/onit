@@ -9,6 +9,12 @@ import CoreGraphics
 import Defaults
 import Foundation
 
+enum OnboardingAuthState: String, Defaults.Serializable {
+    case hideAuth
+    case showSignUp
+    case showSignIn
+}
+
 extension Defaults.Keys {
     
     // Remote model tokens
@@ -59,6 +65,7 @@ extension Defaults.Keys {
     static let remoteModel = Key<AIModel?>("remoteModel", default: nil)
     static let localModel = Key<String?>("localModel", default: nil)
     static let mode = Key<InferenceMode>("mode", default: .remote)
+    static let useOnitChat = Key<Bool>("useOnitChat", default: false)
     static let availableLocalModels = Key<[String]>("availableLocalModels", default: [])
     static let availableRemoteModels = Key<[AIModel]>("availableRemoteModels", default: [])
     static let availableCustomProviders = Key<[CustomProvider]>(
@@ -77,6 +84,7 @@ extension Defaults.Keys {
         "localEndpointURL", default: URL(string: "http://localhost:11434")!)
 
     // Feature flags
+    static let useScreenModeWithAccessibility = Key<Bool?>("use_screen_mode_with_accessibility", default: nil)
     
     static let autoContextFromCurrentWindow = Key<Bool>("autoContextFromCurrentWindow", default: true)
     static let autoContextFromHighlights = Key<Bool>("autoContextFromHighlights", default: true)
@@ -86,6 +94,9 @@ extension Defaults.Keys {
     static let webSearchEnabled = Key<Bool>("webSearchEnabled", default: false)
     static let tavilyAPIToken = Key<String>("tavilyAPIToken", default: "")
     static let isTavilyAPITokenValidated = Key<Bool>("tavilyAPITokenValidated", default: false)
+
+    // Window state
+    static let panelWidth = Key<Double>("panelWidth", default: 400)
 
     // General settings
     static let launchOnStartupRequested = Key<Bool>("launchOnStartupRequested", default: false)
@@ -107,7 +118,12 @@ extension Defaults.Keys {
     static let openOnMouseMonitor = Key<Bool>("openOnMouseMonitor", default: false)
     
     // Onboarding
-    static let showOnboarding = Key<Bool>("showOnboarding", default: true)
+    static let showOnboardingAccessibility = Key<Bool>("showOnboardingAccessibility", default: true)
+    static let onboardingAuthState = Key<OnboardingAuthState>("onboardingAuthState", default: .hideAuth)
+    
+    // Alerts
+    static let showTwoWeekProTrialEndedAlert = Key<Bool>("showTwoWeekProTrialEndedAlert", default: false)
+    static let hasClosedTrialEndedAlert = Key<Bool>("hasClosedTrialEndedAlert", default: false)
 }
 
 extension NSRect: Defaults.Serializable {

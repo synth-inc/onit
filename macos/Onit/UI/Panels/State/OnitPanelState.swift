@@ -7,6 +7,7 @@
 
 import ApplicationServices
 import Combine
+import Defaults
 import SwiftData
 import SwiftUI
 
@@ -41,7 +42,7 @@ class OnitPanelState: NSObject {
     var promptSuggestionService: SystemPromptSuggestionService?
     
     var trackedWindow: TrackedWindow?
-    var trackedScreen: TrackedScreen?
+    var trackedScreen: NSScreen?
     var isWindowDragging: Bool = false
     
     private var delegates = NSHashTable<AnyObject>.weakObjects()
@@ -82,6 +83,8 @@ class OnitPanelState: NSObject {
     }
     
     var tetheredButtonYPosition: CGFloat?
+    
+    var panelWidth: CGFloat 
     
     var currentChat: Chat?
     var currentPrompts: [Prompt]?
@@ -131,16 +134,23 @@ class OnitPanelState: NSObject {
     var websiteUrlsScrapeQueue: [String: WebsiteUrlScrapeTask] = [:]
 
     var deleteChatFailed: Bool = false
+    
+    override init() {
+        self.panelWidth = Defaults[.panelWidth]
+        super.init()
+    }
 
-    init(trackedWindow: TrackedWindow?) {
+    init(trackedWindow: TrackedWindow) {
         self.trackedWindow = trackedWindow
+        self.panelWidth = Defaults[.panelWidth]
         super.init()
         
         self.promptSuggestionService = SystemPromptSuggestionService(state: self)
     }
 
-    init(trackedScreen: TrackedScreen?) {
-        self.trackedScreen = trackedScreen
+    init(screen: NSScreen) {
+        self.trackedScreen = screen
+        self.panelWidth = Defaults[.panelWidth]
         super.init()
         
         self.promptSuggestionService = SystemPromptSuggestionService(state: self)

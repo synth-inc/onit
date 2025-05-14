@@ -21,16 +21,24 @@
             <dict>
                 <key>CFBundleTypeRole</key>
                 <string>Editor</string>
-                <key>CFBundleURLName</key>
-                <string>onit</string>
                 <key>CFBundleURLSchemes</key>
                 <array>
                     <string>onit</string>
                 </array>
             </dict>
+            <dict>
+                <key>CFBundleTypeRole</key>
+                <string>Editor</string>
+                <key>CFBundleURLSchemes</key>
+                <array>
+                    <string>com.googleusercontent.apps.616960656741-mrmjdqm4dc7f1shifo91ic5palbr8pul</string>
+                </array>
+            </dict>
         </array>
         <key>CFBundleVersion</key>
         <string>$(CURRENT_PROJECT_VERSION)</string>
+        <key>GIDClientID</key>
+        <string>616960656741-mrmjdqm4dc7f1shifo91ic5palbr8pul.apps.googleusercontent.com</string>
         <key>LSApplicationCategoryType</key>
         <string>public.app-category.utilities</string>
         <key>NSApplicationCrashOnExceptions</key>

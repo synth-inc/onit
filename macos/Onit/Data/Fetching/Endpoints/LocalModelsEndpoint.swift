@@ -40,8 +40,6 @@ struct LocalModelsEndpoint: Endpoint {
     var timeout: TimeInterval? { nil }
 }
 
-struct EmptyRequest: Codable {}
-
 struct LocalModelsResponse: Codable {
     let models: [LocalModelResponse]
 }

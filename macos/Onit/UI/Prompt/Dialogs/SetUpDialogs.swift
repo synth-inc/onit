@@ -10,7 +10,6 @@ import SwiftUI
 
 struct SetUpDialogs: View {
     @Environment(\.appState) var appState
-    @Environment(\.remoteModels) var remoteModels
     @Environment(\.openSettings) var openSettings
     @Environment(\.windowState) private var state
 
@@ -118,7 +117,7 @@ struct SetUpDialogs: View {
             if availableRemoteModels.isEmpty && appState.remoteFetchFailed && !closedNoRemoteModels {
                 noRemote
             }
-            if remoteModels.remoteNeedsSetup && !closedRemote {
+            if appState.remoteNeedsSetup && !closedRemote {
                 remote
             }
             if availableRemoteModels.contains(where: {

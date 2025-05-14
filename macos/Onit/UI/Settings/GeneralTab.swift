@@ -8,29 +8,40 @@ struct GeneralTab: View {
     
     @Default(.fontSize) var fontSize
     @Default(.lineHeight) var lineHeight
+    @Default(.panelWidth) var panelWidth
+    
     @Default(.launchShortcutToggleEnabled) var launchShortcutToggleEnabled
     @Default(.createNewChatOnPanelOpen) var createNewChatOnPanelOpen
     @Default(.openOnMouseMonitor) var openOnMouseMonitor
     
     @State var isLaunchAtStartupEnabled: Bool = SMAppService.mainApp.status == .enabled
     @State var isAnalyticsEnabled: Bool = PostHogSDK.shared.isOptOut() == false
+    @State private var isPinnedMode: Bool = true
     
     var body: some View {
         Form {
+            GeneralTabPlanAndBilling()
+            
+            GeneralTabAccount()
+            
             launchOnStartupSection
             
-            analyticsSection
+            displayModeSection
             
+            analyticsSection
+                        
             appearanceSection
             
             // experimentalSection
         }
         .formStyle(.grouped)
-        .padding()
     }
     
     var launchOnStartupSection: some View {
-        Section {
+        SettingsSection(
+            iconSystem: "power",
+            title: "Auto start"
+        ) {
             VStack(alignment: .leading, spacing: 20) {
                 HStack {
                     Text("Run onit when my computer starts")
@@ -43,19 +54,84 @@ struct GeneralTab: View {
                         .controlSize(.small)
                 }
             }
-            .onChange(of: isLaunchAtStartupEnabled, initial: false) { old, new in
+            .onChange(of: isLaunchAtStartupEnabled, initial: false) { _, _ in
                 toggleLaunchAtStartup()
+            }
+        }
+    }
+
+    var displayModeSection: some View {
+        Section {
+            VStack(alignment: .leading, spacing: 16) {
+                HStack(spacing: 8) {
+                    Button {
+                        isPinnedMode = true
+                        FeatureFlagManager.shared.toggleScreenModeWithAccessibility(true)
+                    } label: {
+                        VStack(spacing: 4) {
+                            Image(systemName: "pin.fill")
+                                .font(.system(size: 16))
+                            Text("Pinned")
+                                .font(.system(size: 11))
+                            Text("Fixed position")
+                                .font(.system(size: 9))
+                                .foregroundStyle(.secondary)
+                        }
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 8)
+                        .background(isPinnedMode ? Color.accentColor : Color.clear)
+                        .clipShape(RoundedRectangle(cornerRadius: 6))
+                        .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                    
+                    Button {
+                        isPinnedMode = false
+                        FeatureFlagManager.shared.toggleScreenModeWithAccessibility(false)
+                    } label: {
+                        VStack(spacing: 4) {
+                            Image(systemName: "rectangle.split.2x1")
+                                .font(.system(size: 16))
+                            Text("Tethered")
+                                .font(.system(size: 11))
+                            Text("Attaches to apps")
+                                .font(.system(size: 9))
+                                .foregroundStyle(.secondary)
+                        }
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 8)
+                        .background(!isPinnedMode ? Color.accentColor : Color.clear)
+                        .clipShape(RoundedRectangle(cornerRadius: 6))
+                        .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                }
+                
+                VStack(alignment: .leading, spacing: 4) {
+                    if isPinnedMode {
+                        Text("Onit will always appear on the right side of your screen. You will only have one Onit panel at any given time. Other applications will be resized to make room for Onit.")
+                            .font(.system(size: 12))
+                            .foregroundStyle(.gray200)
+                    } else {
+                        Text("Onit will attach to your applications. There can be one Onit panel for each application window. If you move your app, Onit will move with it.")
+                            .font(.system(size: 12))
+                            .foregroundStyle(.gray200)
+                    }
+                }
             }
         } header: {
             HStack {
-                Image(systemName: "power")
-                Text("Auto start")
+                Image(systemName: "rectangle.on.rectangle")
+                Text("Display Mode")
             }
         }
     }
     
     var analyticsSection: some View {
-        Section {
+        SettingsSection(
+            iconSystem: "chart.bar.xaxis",
+            title: "Analytics"
+        ) {
             VStack(alignment: .leading, spacing: 4) {
                 HStack {
                     Text("Enable analytics")
@@ -72,17 +148,37 @@ struct GeneralTab: View {
             .onChange(of: isAnalyticsEnabled, initial: false) {
                 toggleAnalyticsOptOut()
             }
-        } header: {
-            HStack {
-                Image(systemName: "chart.bar.xaxis")
-                Text("Analytics")
-            }
         }
     }
 
     var appearanceSection: some View {
-        Section {
+        SettingsSection(
+            iconSystem: "paintbrush",
+            title: "Appearance"
+        ) {
             VStack(spacing: 16) {
+                VStack(spacing: 8) {
+                    HStack {
+                        Text("Panel Width")
+                        Slider(
+                            value: $panelWidth,
+                            in: 300...600,
+                            step: 10.0
+                        )
+                        Text("\(Int(panelWidth))px")
+                            .monospacedDigit()
+                            .frame(width: 40)
+                    }
+           
+                    HStack {
+                        Spacer()
+                        Button("Restore Default") {
+                            _panelWidth.reset()
+                        }
+                        .controlSize(.small)
+                    }   
+                }
+
                 VStack(spacing: 8) {
                     HStack {
                         Text("Font Size")
@@ -95,7 +191,7 @@ struct GeneralTab: View {
                             .monospacedDigit()
                             .frame(width: 40)
                     }
-
+                    
                     HStack {
                         Spacer()
                         Button("Restore Default") {
@@ -104,7 +200,7 @@ struct GeneralTab: View {
                         .controlSize(.small)
                     }
                 }
-
+                
                 VStack(spacing: 8) {
                     HStack {
                         Text("Line Height")
@@ -117,7 +213,7 @@ struct GeneralTab: View {
                             .monospacedDigit()
                             .frame(width: 40)
                     }
-
+                    
                     HStack {
                         Spacer()
                         Button("Restore Default") {
@@ -126,11 +222,32 @@ struct GeneralTab: View {
                         .controlSize(.small)
                     }
                 }
-            }
-        } header: {
-            HStack {
-                Image(systemName: "paintbrush")
-                Text("Appearance")
+                //                VStack(alignment: .leading, spacing: 8) {
+                //                    Text("Panel Position")
+                //                        .font(.system(size: 13))
+                //
+                //                    HStack(spacing: 8) {
+                //                        ForEach(PanelPosition.allCases, id: \.self) { position in
+                //                            Button {
+                //                                panelPosition = position
+                //                                state.panel?.updatePosition()
+                //                            } label: {
+                //                                VStack(spacing: 4) {
+                //                                    Image(systemName: position.systemImage)
+                //                                        .font(.system(size: 16))
+                //                                    Text(position.rawValue)
+                //                                        .font(.system(size: 11))
+                //                                }
+                //                                .frame(maxWidth: .infinity)
+                //                                .padding(.vertical, 8)
+                //                                .background(panelPosition == position ? Color.accentColor : Color.clear)
+                //                                .clipShape(RoundedRectangle(cornerRadius: 6))
+                //                                .contentShape(Rectangle())
+                //                            }
+                //                            .buttonStyle(.plain)
+                //                        }
+                //                    }
+                //                }
             }
         }
     }

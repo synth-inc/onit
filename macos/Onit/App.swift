@@ -19,6 +19,8 @@ let log = SwiftyBeaver.self
 @main
 struct App: SwiftUI.App {
     @Environment(\.appState) var appState
+    @Environment(\.dismissWindow) private var dismissWindow
+    
     @NSApplicationDelegateAdaptor(AppDelegate.self) var delegate
     @ObservedObject private var debugManager = DebugManager.shared
     @ObservedObject private var accessibilityPermissionManager = AccessibilityPermissionManager.shared
@@ -27,18 +29,21 @@ struct App: SwiftUI.App {
     @Default(.launchOnStartupRequested) var launchOnStartupRequested
     @Default(.autoContextFromCurrentWindow) var autoContextFromCurrentWindow
     @Default(.autoContextFromHighlights) var autoContextFromHighlights
+    @Default(.onboardingAuthState) var onboardingAuthState
     
     @State var accessibilityPermissionRequested = false
-    @State private var frontmostApplicationOnLaunch: NSRunningApplication?
 
     init() {
         configureSwiftBeaver()
-        frontmostApplicationOnLaunch = NSWorkspace.shared.frontmostApplication
         
         accessibilityPermissionManager.configure()
         
         KeyboardShortcutsManager.configure()
         featureFlagsManager.configure()
+        
+        PanelStateCoordinator.shared.configure(
+            frontmostApplication: NSWorkspace.shared.frontmostApplication
+        )
         
         // For testing new user experience
         // clearTokens()
@@ -53,21 +58,7 @@ struct App: SwiftUI.App {
             MenuIcon()
                 .onAppear {
                     checkLaunchOnStartup()
-                }
-                .onChange(of: accessibilityPermissionManager.accessibilityPermissionStatus, initial: true) {
-                    _, newValue in
-                    AccessibilityAnalytics.logPermission(local: newValue)
-                    switch newValue {
-                    case .granted:
-                        TetherAppsManager.shared.startObserving()
-                        AccessibilityNotificationsManager.shared.start(pid: frontmostApplicationOnLaunch?.processIdentifier)
-                        UntetheredScreenManager.shared.stopObserving()
-                        frontmostApplicationOnLaunch = nil
-                    case .denied, .notDetermined:
-                        TetherAppsManager.shared.stopObserving()
-                        AccessibilityNotificationsManager.shared.stop()
-                        UntetheredScreenManager.shared.startObserving()
-                    }
+                    restoreSession()
                 }
                 .onChange(of: [
                     autoContextFromCurrentWindow,
@@ -95,6 +86,55 @@ struct App: SwiftUI.App {
                     let settingsWindowLevel: NSWindow.Level = NSWindow.Level(rawValue: floatingLevel.rawValue + 1)
                     window.level = settingsWindowLevel
                 })
+        }
+
+        Window("URLHandler", id: "urlHandler") {
+            Color.clear
+                .frame(width: 0, height: 0)
+                .onAppear {
+                    if let window = NSApp.windows.first(where: { $0.title == "URLHandler" }) {
+                        window.setFrame(NSRect(x: 0, y: 0, width: 1, height: 1), display: false)
+                        window.isOpaque = false
+                        window.hasShadow = false
+                        window.backgroundColor = .clear
+                        window.isReleasedWhenClosed = false
+                        window.level = .floating
+                        window.ignoresMouseEvents = true
+                        window.styleMask = []
+                        window.orderOut(nil)
+                    }
+                }
+                .onOpenURL { url in
+                    appState.handleTokenLogin(url)
+                }
+        }
+        
+        Window("",id: windowOnboardingAuthId) {
+            if onboardingAuthState != .hideAuth && appState.account == nil {
+                VStack {
+                    OnboardingAuth(isSignUp: onboardingAuthState == .showSignUp)
+                }
+                .background(Color.black)
+                .frame(width: 400, height: 800)
+                .addBorder(
+                    cornerRadius: 14,
+                    lineWidth: 2,
+                    stroke: .gray600
+                )
+                .edgesIgnoringSafeArea(.top)
+            }
+        }
+        .windowResizability(.contentSize)
+        .defaultPosition(.center)
+        .onChange(of: appState.account) { _, new in
+            if new != nil {
+                dismissWindow(id: windowOnboardingAuthId)
+            }
+        }
+        .onChange(of: onboardingAuthState) { _, new in
+            if new == .hideAuth {
+                dismissWindow(id: windowOnboardingAuthId)
+            }
         }
     }
     
@@ -129,6 +169,15 @@ struct App: SwiftUI.App {
                 launchOnStartupRequested = true
             } catch {
                 print("Error: \(error)")
+            }
+        }
+    }
+
+    private func restoreSession() {
+        if TokenManager.token != nil && appState.account == nil {
+            Task {
+                let client = FetchingClient()
+                appState.account = try? await client.getAccount()
             }
         }
     }

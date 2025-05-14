@@ -23,6 +23,21 @@ extension pid_t {
         
         return nil
     }
+    
+    func getWindows() -> [AXUIElement] {
+        let appElement = getAXUIElement()
+        var windows: [AXUIElement] = []
+        
+        guard let children = appElement.children() else { return windows }
+        
+        for child in children {
+            if child.role() == kAXWindowRole {
+                windows.append(child)
+            }
+        }
+        
+        return windows
+    }
 
     func getAppName() -> String? {
         NSRunningApplication(processIdentifier: self)?.localizedName
