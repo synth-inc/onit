@@ -1,5 +1,5 @@
 //
-//  TetherAppsManager+Hint.swift
+//  PanelStateTetheredManager+Hint.swift
 //  Onit
 //
 //  Created by Kévin Naudin on 18/04/2025.
@@ -8,7 +8,7 @@
 @preconcurrency import ApplicationServices
 import SwiftUI
 
-extension TetherAppsManager {
+extension PanelStateTetheredManager {
     
     func debouncedShowTetherWindow(
         state: OnitPanelState,
@@ -27,19 +27,13 @@ extension TetherAppsManager {
         }
     }
     
-    func hideTetherWindow() {
-        tetherHintDetails.showTetherDebounceTimer = nil
-        tetherButtonPanelState = nil
-
-        tetherHintDetails.tetherWindow.orderOut(nil)
-        tetherHintDetails.tetherWindow.contentView = nil
-        tetherHintDetails.lastYComputed = nil
-    }
-    
     // MARK: - Private functions
     
-    func showTetherWindow(state: OnitPanelState, activeWindow: AXUIElement?, action: TrackedWindowAction) {
+    private func showTetherWindow(state: OnitPanelState, activeWindow: AXUIElement?, action: TrackedWindowAction) {
         let tetherView = ExternalTetheredButton(
+            onClick: {
+                state.launchPanel()
+            },
             onDrag: { [weak self] translation in
                 self?.tetheredWindowMoved(y: translation)
             }

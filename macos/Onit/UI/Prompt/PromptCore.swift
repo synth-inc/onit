@@ -13,22 +13,57 @@ import SwiftUI
 struct PromptCore: View {
     @Environment(\.appState) var appState
     @Environment(\.windowState) private var windowState
-    @Query(sort: \Chat.timestamp, order: .reverse) private var chats: [Chat]
+    @Query(sort: \Chat.timestamp, order: .reverse) private var allChats: [Chat]
+    
+    private var chats: [Chat] {
+        PanelStateCoordinator.shared.filterPanelChats(allChats)
+    }
+    
     @Default(.mode) var mode
     
-    let isEditing: Bool
-    let editingText: Binding<String>?
+    private let currentPromptsCount: Int?
+    
+    private let placeholder: String?
+    private let text: Binding<String>?
+    private let onSubmit: (() -> Void)?
+    private let onUnfocus: (() -> Void)?
+
+    private let cursorPosition: Binding<Int>?
+    private let detectLinks: Bool
+    private let isEditing: Bool
+
+    private let padding: CGFloat
     
     init(
+        currentPromptsCount: Int? = nil,
+        
+        placeholder: String? = nil,
+        text: Binding<String>? = nil,
+        onSubmit: (() -> Void)? = nil,
+        onUnfocus: (() -> Void)? = nil,
+        
+        cursorPosition: Binding<Int>? = nil,
+        detectLinks: Bool = true,
         isEditing: Bool = false,
-        editingText: Binding<String>? = nil
+        
+        padding: CGFloat = 12
     ) {
+        self.currentPromptsCount = currentPromptsCount
+        self.placeholder = placeholder
+        self.text = text
+        self.onSubmit = onSubmit
+        self.onUnfocus = onUnfocus
+        
+        self.cursorPosition = cursorPosition
+        self.detectLinks = detectLinks
         self.isEditing = isEditing
-        self.editingText = editingText
+        
+        self.padding = padding
     }
     
     @StateObject private var audioRecorder = AudioRecorder()
     
+    @State private var isPressedModelSelectionButton: Bool = false
     @State private var textHeight: CGFloat = 20
     private let maxHeightLimit: CGFloat = 100
     
@@ -49,6 +84,36 @@ struct PromptCore: View {
         colorTwo: Color(hex: "#4AA4BF") ?? .gray800
     )
     
+    private var sendDisabled: Bool {
+        if let text = text {
+            return text.wrappedValue.isEmpty
+        } else {
+            return windowState.pendingInstruction.isEmpty
+        }
+    }
+    
+    var textBinding: Binding<String> {
+        if let text = text {
+            return text
+        } else {
+            return Binding(
+                get: { windowState.pendingInstruction },
+                set: { windowState.pendingInstruction = $0 }
+            )
+        }
+    }
+    
+    var cursorPositionBinding: Binding<Int> {
+        if let cursorPosition = cursorPosition {
+            return cursorPosition
+        } else {
+            return Binding(
+                get: { windowState.pendingInstructionCursorPosition },
+                set: { windowState.pendingInstructionCursorPosition = $0 }
+            )
+        }
+    }
+    
     var body: some View {
         VStack(spacing: 0) {
             if let pendingInput = windowState.pendingInput {
@@ -56,10 +121,44 @@ struct PromptCore: View {
             }
             
             VStack(spacing: 6) {
-                contextAndInput
+                VStack(spacing: 8) {
+                    FileRow(contextList: windowState.pendingContextList)
+                    
+                    textField(
+                        text: textBinding,
+                        cursorPosition: cursorPositionBinding
+                    )
+                }
+                .padding(.top, 8)
+                .padding(.horizontal, 8)
+                .padding(.bottom, 16)
+                .background(.gray800)
+                .addGradientBorder(
+                    cornerRadius: 8,
+                    lineWidth: 1.6,
+                    gradientBorder:
+                        !isFocused ? unfocusedBorder :
+                        isRemote ? remoteBorder :
+                        localBorder
+                )
+                .addAnimation(dependency: isRemote, duration: 0.3)
+                .addAnimation(dependency: isFocused, duration: 0.3)
+                .padding(.top, padding)
+                .padding(.horizontal, padding)
+                
                 PromptCoreFooter(
+                    isPressedModelSelectionButton: $isPressedModelSelectionButton,
+                    promptText: textBinding,
+                    cursorPosition: cursorPositionBinding,
                     audioRecorder: audioRecorder,
-                    handleSend: handleSend
+                    sendDisabled: sendDisabled,
+                    sendAction: {
+                        if !sendDisabled {
+                            if let onSubmit = onSubmit { onSubmit() }
+                            else { windowState.sendAction() }
+                        }
+                    },
+                    isEditing: isEditing
                 )
             }
         }
@@ -70,6 +169,11 @@ struct PromptCore: View {
                 newListener
             }
         }
+        .onChange(of: currentPromptsCount) { _, new in
+            if let currentPromptsCount = new {
+                isFocused = currentPromptsCount <= 0
+            }
+        }
     }
 }
 
@@ -77,18 +181,19 @@ struct PromptCore: View {
 
 extension PromptCore {
     @ViewBuilder
-    private var textField: some View {
-        @Bindable var windowState = windowState
-        
+    private func textField(
+        text: Binding<String>,
+        cursorPosition: Binding<Int>
+    ) -> some View {
         TextViewWrapper(
-            text: editingText ?? $windowState.pendingInstruction,
-            cursorPosition: $windowState.pendingInstructionCursorPosition,
+            text: text,
+            cursorPosition: cursorPosition,
             dynamicHeight: $textHeight,
-            onSubmit: handleSend,
+            onSubmit: onSubmit ?? windowState.sendAction,
             maxHeight: maxHeightLimit,
-            placeholder: placeholderText,
+            placeholder: placeholder ?? placeholderTextFallback,
             audioRecorder: audioRecorder,
-            detectLinks: true
+            detectLinks: detectLinks
         )
         .frame(height: min(textHeight, maxHeightLimit))
         .appFont(.medium16)
@@ -97,36 +202,13 @@ extension PromptCore {
         .focused($isFocused)
         .onAppear { isFocused = true }
         .onChange(of: windowState.textFocusTrigger) { isFocused = true }
-    }
-    
-    private var contextAndInput: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            if !appState.subscriptionPlanError.isEmpty {
-                Text(appState.subscriptionPlanError)
-                    .styleText(
-                        size: 13,
-                        weight: .regular,
-                        color: .red
-                    )
+        .onChange(of: isFocused) {
+            if let onUnfocus = onUnfocus,
+                !isFocused && !isPressedModelSelectionButton
+            {
+                onUnfocus()
             }
-            
-            FileRow(contextList: windowState.pendingContextList)
-            textField
         }
-        .padding(12)
-        .background(.gray800)
-        .addGradientBorder(
-            cornerRadius: 8,
-            lineWidth: 1.6,
-            gradientBorder:
-                !isFocused ? unfocusedBorder :
-                isRemote ? remoteBorder :
-                localBorder
-        )
-        .addAnimation(dependency: isRemote, duration: 0.3)
-        .addAnimation(dependency: isFocused, duration: 0.3)
-        .padding(.top, 8)
-        .padding(.horizontal, 12)
     }
 }
 
@@ -185,7 +267,7 @@ extension PromptCore {
         }
     }
     
-    private var placeholderText: String {
+    private var placeholderTextFallback: String {
         if let currentChat = windowState.currentChat {
             if !currentChat.isEmpty {
 

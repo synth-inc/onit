@@ -14,9 +14,17 @@ struct MicrophoneButton: View {
     @Default(.openAIToken) var openAIToken
     @Default(.isOpenAITokenValidated) var isOpenAITokenValidated
     
+    @Binding var promptText: String
+    @Binding var cursorPosition: Int
     @ObservedObject private var audioRecorder: AudioRecorder
     
-    init(audioRecorder: AudioRecorder) {
+    init(
+        promptText: Binding<String>,
+        cursorPosition: Binding<Int>,
+        audioRecorder: AudioRecorder
+    ) {
+        self._promptText = promptText
+        self._cursorPosition = cursorPosition
         self.audioRecorder = audioRecorder
     }
     
@@ -160,15 +168,16 @@ extension MicrophoneButton {
                     DispatchQueue.main.async {
                         removeSpacesAtCursor()
                         
-                        let cursorPosition = windowState.pendingInstructionCursorPosition
-                        
-                        windowState.pendingInstruction.insert(
+                        promptText.insert(
                             contentsOf: transcription,
-                            at: windowState.pendingInstruction.index(
-                                windowState.pendingInstruction.startIndex,
+                            at: promptText.index(
+                                promptText.startIndex,
                                 offsetBy: cursorPosition
                             )
                         )
+                        
+                        // Properly updates cursor position to the end of the text.
+                        cursorPosition += transcription.count
                         
                         audioRecorder.isTranscribing = false
                     }
@@ -203,13 +212,12 @@ extension MicrophoneButton {
     private func addSpacesAtCursor() {
         guard !addedRecordingSpaces else { return }
         
-        let cursorPosition = windowState.pendingInstructionCursorPosition
         let spaces = String(repeating: " ", count: recordingSpacesCount)
         
-        windowState.pendingInstruction.insert(
+        promptText.insert(
             contentsOf: spaces,
-            at: windowState.pendingInstruction.index(
-                windowState.pendingInstruction.startIndex,
+            at: promptText.index(
+                promptText.startIndex,
                 offsetBy: cursorPosition
             )
         )
@@ -220,21 +228,20 @@ extension MicrophoneButton {
     private func removeSpacesAtCursor() {
         guard addedRecordingSpaces else { return }
         
-        let cursorPosition = windowState.pendingInstructionCursorPosition
         let startPosition = cursorPosition
         let endPosition = max(0, startPosition + recordingSpacesCount)
         
-        let startIndex = windowState.pendingInstruction.index(
-            windowState.pendingInstruction.startIndex,
+        let startIndex = promptText.index(
+            promptText.startIndex,
             offsetBy: startPosition
         )
         
-        let endIndex = windowState.pendingInstruction.index(
-            windowState.pendingInstruction.startIndex,
+        let endIndex = promptText.index(
+            promptText.startIndex,
             offsetBy: endPosition
         )
         
-        windowState.pendingInstruction.removeSubrange(startIndex..<endIndex)
+        promptText.removeSubrange(startIndex..<endIndex)
         
         addedRecordingSpaces = false
     }

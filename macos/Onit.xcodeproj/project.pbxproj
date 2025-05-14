@@ -378,7 +378,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 1.3;
+				MARKETING_VERSION = 2.0;
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_BUNDLE_IDENTIFIER = inc.synth.Onit.dev;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -414,7 +414,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 1.3;
+				MARKETING_VERSION = 2.0;
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_BUNDLE_IDENTIFIER = inc.synth.Onit;
 				PRODUCT_NAME = "$(TARGET_NAME)";

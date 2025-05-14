@@ -8,38 +8,60 @@
 import SwiftUI
 
 struct PromptCoreFooter: View {
-    @Environment(\.windowState) private var windowState
-    
+    @Binding private var isPressedModelSelectionButton: Bool
+    @Binding private var promptText: String
+    @Binding private var cursorPosition: Int
     private let audioRecorder: AudioRecorder
-    private let handleSend: () -> Void
+    private let sendDisabled: Bool
+    private let sendAction: () -> Void
+    private let isEditing: Bool
     
     init(
+        isPressedModelSelectionButton: Binding<Bool>,
+        promptText: Binding<String>,
+        cursorPosition: Binding<Int>,
         audioRecorder: AudioRecorder,
-        handleSend: @escaping () -> Void
+        sendDisabled: Bool = false,
+        sendAction: @escaping () -> Void,
+        isEditing: Bool
     ) {
+        self._isPressedModelSelectionButton = isPressedModelSelectionButton
+        self._promptText = promptText
+        self._cursorPosition = cursorPosition
         self.audioRecorder = audioRecorder
-        self.handleSend = handleSend
+        self.sendDisabled = sendDisabled
+        self.sendAction = sendAction
+        self.isEditing = isEditing
     }
     
     var body: some View {
         HStack(alignment: .center, spacing: 0) {
             HStack(spacing: 4) {
-                ModelSelectionButton()
+                ModelSelectionButton(
+                    isPressedModelSelectionButton: $isPressedModelSelectionButton
+                )
+                
                 WebSearchButton()
             }
             
             Spacer()
             
             HStack(spacing: 4) {
-                MicrophoneButton(audioRecorder: audioRecorder)
+                MicrophoneButton(
+                    promptText: $promptText,
+                    cursorPosition: $cursorPosition,
+                    audioRecorder: audioRecorder
+                )
+                
                 PromptCoreFooterButton(
                     text: "􀅇 Send",
-                    disabled: windowState.pendingInstruction.isEmpty,
-                    action: handleSend
+                    disabled: sendDisabled,
+                    action: sendAction
                 )
+                .allowsHitTesting(!sendDisabled)
             }
         }
-        .padding(.horizontal, 12)
-        .padding(.bottom, 12)
+        .padding(.horizontal, isEditing ? 0 : 12)
+        .padding(.bottom, isEditing ? 0 : 12)
     }
 }

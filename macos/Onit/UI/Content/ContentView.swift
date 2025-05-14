@@ -11,6 +11,8 @@ import SwiftUI
 struct ContentView: View {
     @Environment(\.appState) var appState
     @Environment(\.windowState) private var state
+    
+    @Default(.panelWidth) var panelWidth
     @ObservedObject private var accessibilityPermissionManager = AccessibilityPermissionManager.shared
     
     @Default(.showOnboardingAccessibility) var showOnboardingAccessibility
@@ -18,7 +20,6 @@ struct ContentView: View {
     @Default(.showTwoWeekProTrialEndedAlert) var showTwoWeekProTrialEndedAlert
     @Default(.hasClosedTrialEndedAlert) var hasClosedTrialEndedAlert
     
-    static let idealWidth: CGFloat = 400
     static let bottomPadding: CGFloat = 0
     
     private var showFileImporterBinding: Binding<Bool> {
@@ -52,8 +53,9 @@ struct ContentView: View {
                             Spacer()
                         }
                     }
-                    .frame(width: TetherAppsManager.minOnitWidth)
+                    .frame(width: panelWidth)
                     .frame(maxHeight: .infinity)
+                    // .frame(maxWidth: .infinity, maxHeight: .infinity)
                     .background(Color.black)
                     .onDisappear {
                         if appState.account == nil {

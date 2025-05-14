@@ -16,6 +16,12 @@ struct ModelSelectionButton: View {
     @Default(.remoteModel) var remoteModel
     @Default(.localModel) var localModel
     
+    @Binding private var isPressedModelSelectionButton: Bool
+    
+    init(isPressedModelSelectionButton: Binding<Bool>) {
+        self._isPressedModelSelectionButton = isPressedModelSelectionButton
+    }
+    
     @State private var open: Bool = false
     
     var body: some View {
@@ -41,6 +47,9 @@ struct ModelSelectionButton: View {
         .tooltip(prompt: "Change model")
         .popover(isPresented: $open)  {
             ModelSelectionView(open: $open)
+        }
+        .onChange(of: open) { _, isOpen in
+            isPressedModelSelectionButton = isOpen
         }
     }
 }

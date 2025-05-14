@@ -19,9 +19,7 @@ struct TextInputView: View {
     @Query(sort: \Chat.timestamp, order: .reverse) private var allChats: [Chat]
     
     private var chats: [Chat] {
-        return allChats.filter {
-            $0.windowHash == state.trackedWindow?.hash
-        }
+        PanelStateCoordinator.shared.filterPanelChats(allChats)
     }
 
     @Default(.mode) var mode

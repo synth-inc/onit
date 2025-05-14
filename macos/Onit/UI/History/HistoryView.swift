@@ -10,20 +10,18 @@ import SwiftUI
 
 struct HistoryView: View {
     @Environment(\.windowState) var windowState
-    @Query(sort: \Chat.timestamp, order: .reverse) private var chats: [Chat]
-
+    @Query(sort: \Chat.timestamp, order: .reverse) private var allChats: [Chat]
     @State private var searchQuery: String = ""
-
+    
+    private var chats: [Chat] {
+        PanelStateCoordinator.shared.filterHistoryChats(allChats)
+    }
+    
     var filteredChats: [Chat] {
-        let appBundleIdentifier = windowState.trackedWindow?.pid.bundleIdentifier
-        let bundleIdentifierChats = chats.filter {
-            $0.appBundleIdentifier == appBundleIdentifier
-        }
-        
         if searchQuery.isEmpty {
-            return bundleIdentifierChats
+            return chats
         } else {
-            return bundleIdentifierChats.filter {
+            return chats.filter {
                 $0.fullText.localizedCaseInsensitiveContains(searchQuery)
             }
         }

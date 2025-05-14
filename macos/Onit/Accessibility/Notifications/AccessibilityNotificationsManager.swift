@@ -65,6 +65,8 @@ class AccessibilityNotificationsManager: ObservableObject {
     #else
     private let ignoredAppNames : [String] = []
     #endif
+    
+    var isStarted = false
 
     // MARK: - Initializers
 
@@ -91,6 +93,9 @@ class AccessibilityNotificationsManager: ObservableObject {
     // MARK: Start / Stop
 
     func start(pid: pid_t?) {
+        guard !isStarted else { return }
+
+        isStarted = true
         startAppActivationObservers()
         
         guard let pid = pid else { return }
@@ -107,6 +112,7 @@ class AccessibilityNotificationsManager: ObservableObject {
     }
 
     func stop() {
+        isStarted = false
         for pid in observers.keys {
             stopAccessibilityObservers(for: pid)
         }
@@ -444,19 +450,17 @@ class AccessibilityNotificationsManager: ObservableObject {
     // MARK: Parsing
     
     private func retrieveWindowContent(for pid: pid_t) {
+        guard let focusedWindow = pid.getFocusedWindow(),
+              let state = PanelStateCoordinator.shared.getState(for: CFHash(focusedWindow)) else { return }
         
-        guard let focusedWindow = pid.getFocusedWindow() else { return }
-        
-        if let (_, state) = TetherAppsManager.shared.states.first(where: { $0.key.hash == CFHash(focusedWindow) }) {
-            Task { @MainActor in
-                if let documentInfo = findDocument(in: focusedWindow) {
-                    handleWindowContent(documentInfo, for: state)
-                    // TODO: KNA - uncomment this to use WebContentFetchService with AXURL
-                } /* else if let urlInfo = await findUrl(in: focusedWindow) {
-                    handleWindowContent(urlInfo, for: state)
-                } */ else {
-                    parseAccessibility(for: pid, in: focusedWindow, state: state)
-                }
+        Task { @MainActor in
+            if let documentInfo = findDocument(in: focusedWindow) {
+                handleWindowContent(documentInfo, for: state)
+                // TODO: KNA - uncomment this to use WebContentFetchService with AXURL
+            } /* else if let urlInfo = await findUrl(in: focusedWindow) {
+                handleWindowContent(urlInfo, for: state)
+            } */ else {
+                parseAccessibility(for: pid, in: focusedWindow, state: state)
             }
         }
     }
@@ -620,7 +624,8 @@ class AccessibilityNotificationsManager: ObservableObject {
         self.screenResult.errorMessage = nil
         self.showDebug()
         
-        if Defaults[.automaticallyAddAutoContext] && results != nil {
+        // Automatically add AutoContext is only available in Pinned mode.
+        if Defaults[.automaticallyAddAutoContext] && results != nil && !FeatureFlagManager.shared.useScreenModeWithAccessibility {
             state.addAutoContext()
         }
     }
@@ -664,13 +669,14 @@ class AccessibilityNotificationsManager: ObservableObject {
               let selectedText = text,
               HighlightedTextValidator.isValid(text: selectedText) else {
             
-            TetherAppsManager.shared.state.pendingInput = nil
+            PanelStateCoordinator.shared.state.pendingInput = nil
             return
         }
         
         screenResult.userInteraction.selectedText = selectedText
         
-        TetherAppsManager.shared.state.pendingInput = Input(selectedText: selectedText, application: currentSource ?? "")
+        let input = Input(selectedText: selectedText, application: currentSource ?? "")
+        PanelStateCoordinator.shared.state.pendingInput = input
     }
 
     /** Ensure the received `AXUIElement` is not from our process */

@@ -116,7 +116,7 @@ struct ChatSystemPromptView: View {
                 }
             }
         }
-        .padding(.top, 8)
+        .padding(.top, 12)
         .padding(.horizontal, 12)
         .padding(.bottom, 0)
     }
