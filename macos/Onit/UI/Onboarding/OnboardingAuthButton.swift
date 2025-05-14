@@ -26,19 +26,12 @@ struct OnboardingAuthButton: View {
         Image(icon)
             .frame(maxWidth: .infinity)
             .frame(height: 40)
-            .background(isHovered ? .gray800 : .gray900)
             .addBorder(cornerRadius: 9, stroke: .gray700)
-            .scaleEffect(isPressed ? 0.98 : 1)
-            .opacity(isPressed ? 0.7 : 1)
-            .addAnimation(dependency: isHovered)
-            .onHover{ isHovering in isHovered = isHovering }
-            .gesture(
-                DragGesture(minimumDistance: 0)
-                    .onChanged {_ in isPressed = true }
-                    .onEnded{ _ in
-                        isPressed = false
-                        action()
-                    }
+            .addButtonEffects(
+                action: action,
+                background: isHovered ? .gray800 : .gray900,
+                isHovered: $isHovered,
+                isPressed: $isPressed
             )
     }
 }

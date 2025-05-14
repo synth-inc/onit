@@ -107,7 +107,6 @@ struct SetUpDialogs: View {
         VStack(spacing: 0) {
 //            #if DEBUG
 //                noRemote
-//                remote
 //                local
 //                restartLocal
 //                expired(.openAI)
@@ -116,9 +115,6 @@ struct SetUpDialogs: View {
             
             if availableRemoteModels.isEmpty && appState.remoteFetchFailed && !closedNoRemoteModels {
                 noRemote
-            }
-            if appState.remoteNeedsSetup && !closedRemote {
-                remote
             }
             if availableRemoteModels.contains(where: {
                 $0.isDeprecated && !(closedDeprecatedRemote[$0.id] ?? false)
@@ -160,16 +156,6 @@ struct SetUpDialogs: View {
             if false && !closedPerplexity {
                 expired(.perplexity)
             }
-        }
-    }
-
-    var remote: some View {
-        SetUpDialog(title: "Set Up Remote Models") {
-            Text("Add API keys to connect to remote models for top performance.")
-        } action: {
-            settings()
-        } closeAction: {
-            closedRemote = true
         }
     }
 

@@ -13,6 +13,7 @@ struct ContentView: View {
     @Environment(\.windowState) private var state
     
     @Default(.panelWidth) var panelWidth
+    @Default(.mode) var mode
     @ObservedObject private var accessibilityPermissionManager = AccessibilityPermissionManager.shared
     
     @Default(.showOnboardingAccessibility) var showOnboardingAccessibility
@@ -95,7 +96,7 @@ struct ContentView: View {
         }
         .buttonStyle(PlainButtonStyle())
         .toolbar {
-            if !shouldShowOnboardingAccessibility {
+            if appState.account != nil && !shouldShowOnboardingAccessibility {
                 ToolbarItem(placement: .navigation) {
                     ToolbarAddButton()
                 }
@@ -118,6 +119,11 @@ struct ContentView: View {
             handleFileImport(result)
         }
         .addAnimation(dependency: state.showChatView)
+        .onChange(of: appState.account) {
+            if appState.account != nil {
+                mode = .remote
+            }
+        }
         .onAppear {
             if !hasClosedTrialEndedAlert {
                 if let subscriptionStatus = appState.subscription?.status{
