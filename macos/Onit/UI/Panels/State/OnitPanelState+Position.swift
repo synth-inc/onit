@@ -382,7 +382,7 @@ extension OnitPanelState {
         self.showChatView = false
         
         // Check if pinned mode is enabled
-        let useScreenWithAccess = FeatureFlagManager.shared.usePinnedMode
+        let usePinnedMode = FeatureFlagManager.shared.usePinnedMode
         
         NSAnimationContext.runAnimationGroup { context in
             context.duration = animationDuration
@@ -390,8 +390,8 @@ extension OnitPanelState {
             
             panel.animator().setFrame(toPanel, display: false)
 
-            // Only animate other windows if not in accessibility mode
-            if !useScreenWithAccess, let activeWindow = activeWindow, let fromActive = fromActive, let toActive = toActive {
+            // Only animate other windows if not in pinned mode
+            if !usePinnedMode, let activeWindow = activeWindow, let fromActive = fromActive, let toActive = toActive {
                 DispatchQueue.main.asyncAfter(deadline: .now() + (animationDuration / 2)) {
                     self.animation(for: activeWindow, from: fromActive, to: toActive)
                 }
@@ -403,8 +403,8 @@ extension OnitPanelState {
             panel.wasAnimated = true
             panel.animatedFromLeft = abs(fromPanel.maxX - toPanel.minX) <= abs(fromPanel.maxX - toPanel.maxX)
             
-            // Call resizeWindows() AFTER panel animation is complete when in accessibility mode
-            if useScreenWithAccess, let screen = self.trackedScreen ?? NSScreen.mouse {
+            // Call resizeWindows() AFTER panel animation is complete when in pinned mode
+            if usePinnedMode, let screen = self.trackedScreen ?? NSScreen.mouse {
                 DispatchQueue.main.async {
                     do {
                         // Access PanelStateCoordinator and try to resize windows
@@ -434,18 +434,18 @@ extension OnitPanelState {
         self.showChatView = false
         
         // Check if pinned mode is enabled
-        let useScreenWithAccess = FeatureFlagManager.shared.usePinnedMode
+        let usePinnedMode = FeatureFlagManager.shared.usePinnedMode
         
         // Start an asynchronous block that waits for both animations to complete.
         Task { @MainActor in
-            // Reset frames BEFORE the animation starts when in accessibility mode
-            if useScreenWithAccess, let pinnedManager = PanelStateCoordinator.shared.currentManager as? PanelStatePinnedManager {
+            // Reset frames BEFORE the animation starts when in pinned mode
+            if usePinnedMode, let pinnedManager = PanelStateCoordinator.shared.currentManager as? PanelStatePinnedManager {
                 pinnedManager.resetFramesOnAppChange()
             }
                         
             // Capture the window animation task (if applicable)
             var windowAnimationTask: Task<Void, Never>? = nil
-            if !useScreenWithAccess, let activeWindow = activeWindow, let fromActive = fromActive, let toActive = toActive {
+            if !usePinnedMode, let activeWindow = activeWindow, let fromActive = fromActive, let toActive = toActive {
                 windowAnimationTask = self.animation(for: activeWindow, from: fromActive, to: toActive)
             }
             

@@ -66,7 +66,7 @@ struct GeneralTab: View {
                 HStack(spacing: 8) {
                     Button {
                         isPinnedMode = true
-                        FeatureFlagManager.shared.toggleScreenModeWithAccessibility(true)
+                        FeatureFlagManager.shared.togglePinnedMode(true)
                     } label: {
                         VStack(spacing: 4) {
                             Image(systemName: "pin.fill")
@@ -87,7 +87,7 @@ struct GeneralTab: View {
                     
                     Button {
                         isPinnedMode = false
-                        FeatureFlagManager.shared.toggleScreenModeWithAccessibility(false)
+                        FeatureFlagManager.shared.togglePinnedMode(false)
                     } label: {
                         VStack(spacing: 4) {
                             Image(systemName: "rectangle.split.2x1")

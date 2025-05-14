@@ -45,7 +45,7 @@ class FeatureFlagManager: ObservableObject {
         PostHogSDK.shared.setup(config)
     }
 
-    func toggleScreenModeWithAccessibility(_ enabled: Bool) {
+    func togglePinnedMode(_ enabled: Bool) {
         Defaults[.usePinnedMode] = enabled
         usePinnedMode = enabled
     }
@@ -75,7 +75,7 @@ class FeatureFlagManager: ObservableObject {
         } else {
             let pinnedModeFlag = PostHogSDK.shared.isFeatureEnabled("pinned_mode")
             
-            toggleScreenModeWithAccessibility(pinnedModeFlag)
+            togglePinnedMode(pinnedModeFlag)
         }
     }
 }
