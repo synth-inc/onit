@@ -10,5 +10,6 @@ enum SettingsTab: String {
     case about
     #if DEBUG
         case debug
+        case account
     #endif
 }

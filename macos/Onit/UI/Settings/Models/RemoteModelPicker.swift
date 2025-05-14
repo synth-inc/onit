@@ -9,12 +9,12 @@ import Defaults
 import SwiftUI
 
 struct RemoteModelPicker: View {
-    @Environment(\.remoteModels) var remoteModels
+    @Environment(\.appState) var appState
     @Default(.remoteModel) var remoteModel
 
     var body: some View {
         Picker("Model", selection: $remoteModel) {
-            ForEach(remoteModels.listedModels) { aiModel in
+            ForEach(appState.listedModels) { aiModel in
                 Text(aiModel.displayName)
                     .tag(aiModel)
             }

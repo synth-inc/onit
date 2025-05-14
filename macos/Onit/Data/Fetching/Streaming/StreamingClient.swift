@@ -7,6 +7,7 @@
 
 import EventSource
 import Foundation
+import Defaults
 
 actor StreamingClient {
 
@@ -35,7 +36,7 @@ actor StreamingClient {
             userMessages: userMessages)
         var eventParser: EventParser?
         
-        if model.provider == .perplexity {
+        if !Defaults[.useOnitChat] && model.provider == .perplexity {
             eventParser = PerplexityEventParser(mode: .dataOnly)
         }
 

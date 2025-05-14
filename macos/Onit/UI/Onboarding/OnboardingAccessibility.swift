@@ -36,8 +36,8 @@ struct OnboardingAccessibility: View {
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .padding(22)
-        .padding(.top, 100)
+        .padding(40)
+        .padding(.top, 134)
     }
 }
 

@@ -27,10 +27,11 @@ struct OnboardingSkipAccessibility: View {
             HStack {
                 Spacer()
                 Button {
-                    Defaults[.showOnboarding] = false
+                    Defaults[.showOnboardingAccessibility] = false
                 } label: {
                     Text("Yes, continue →")
                 }
+                .buttonStyle(PlainButtonStyle())
             }
         }
         .frame(maxWidth: .infinity)
