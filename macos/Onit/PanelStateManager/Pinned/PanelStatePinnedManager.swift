@@ -19,6 +19,7 @@ class PanelStatePinnedManager: PanelStateBaseManager, ObservableObject {
     
     // MARK: - Properties
     
+    private var isResizingWindows: Bool = false
     private var lastScreenFrame = CGRect.zero
     private var globalMouseMonitor: Any?
     private var localMouseMonitor: Any?
@@ -57,6 +58,11 @@ class PanelStatePinnedManager: PanelStateBaseManager, ObservableObject {
             self,
             selector: #selector(appLaunchedReceived),
             name: NSWorkspace.didLaunchApplicationNotification,
+            object: nil)
+        NSWorkspace.shared.notificationCenter.addObserver(
+            self,
+            selector: #selector(spaceChangedReceived),
+            name: NSWorkspace.activeSpaceDidChangeNotification,
             object: nil)
         NotificationCenter.default.addObserver(
             self,
@@ -140,6 +146,15 @@ class PanelStatePinnedManager: PanelStateBaseManager, ObservableObject {
             }
         }
     }
+    
+    @objc private func spaceChangedReceived(notification: Notification) {
+        guard state.panelOpened, let panel = state.panel, let screen = panel.screen else { return }
+        
+        panel.orderFrontRegardless()
+        
+        resetFramesOnAppChange()
+        resizeWindows(for: screen)
+    }
 
     @objc private func applicationWillTerminate() {
         resetFramesOnAppChange()
@@ -166,6 +181,10 @@ class PanelStatePinnedManager: PanelStateBaseManager, ObservableObject {
     }
     
     func resizeWindows(for screen: NSScreen, isResize: Bool = false) {
+        guard !isResizingWindows else { return }
+        
+        isResizingWindows = true
+        
         let onitName = Bundle.main.object(forInfoDictionaryKey: "CFBundleName") as? String
         let appPids = NSWorkspace.shared.runningApplications
             .filter { $0.activationPolicy == .regular }
@@ -179,6 +198,8 @@ class PanelStatePinnedManager: PanelStateBaseManager, ObservableObject {
                 resizeWindow(for: screen, window: window, isResize: isResize)
             }
         }
+        
+        isResizingWindows = false
     }
     
     private func resizeWindow(for screen: NSScreen, window: AXUIElement, isResize: Bool = false) {
@@ -225,7 +246,12 @@ extension PanelStatePinnedManager: AccessibilityNotificationsDelegate {
     func accessibilityManager(_ manager: AccessibilityNotificationsManager, didActivateWindow window: TrackedWindow) {
         guard state.panelOpened, let screen = state.panel?.screen else { return }
         
-        resizeWindow(for: screen, window: window.element)
+        /// Introduce a delay, as changing spaces causes simultaneous resizing, resulting in a visual glitch:
+        /// 1. The app is resized first by this function from Accessibility
+        /// 2. Then by the NSWorkspace.activeSpaceDidChangeNotification
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { [weak self] in
+            self?.resizeWindow(for: screen, window: window.element)
+        }
     }
     func accessibilityManager(_ manager: AccessibilityNotificationsManager, didActivateIgnoredWindow window: TrackedWindow?) {}
     func accessibilityManager(_ manager: AccessibilityNotificationsManager, didMinimizeWindow window: TrackedWindow) {}
