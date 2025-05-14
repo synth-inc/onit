@@ -1,12 +1,13 @@
 //
-//  TetherAppsManager+Delegates.swift
+//  PanelStateTetheredManager+Delegates.swift
 //  Onit
 //
 //  Created by Kévin Naudin on 18/04/2025.
 //
 
 // MARK: - AccessibilityNotificationsDelegate
-extension TetherAppsManager: AccessibilityNotificationsDelegate {
+
+extension PanelStateTetheredManager: AccessibilityNotificationsDelegate {
     
     func accessibilityManager(_ manager: AccessibilityNotificationsManager, didActivateWindow window: TrackedWindow) {
         log.debug("activate window")
@@ -23,7 +24,7 @@ extension TetherAppsManager: AccessibilityNotificationsDelegate {
     
     func accessibilityManager(_ manager: AccessibilityNotificationsManager, didMinimizeWindow window: TrackedWindow) {
         log.debug("minimize window")
-        if let (_, state) = states.first(where: { (key: TrackedWindow, value: OnitPanelState) in
+        if let (_, state) = statesByWindow.first(where: { (key: TrackedWindow, value: OnitPanelState) in
             key == window
         }) {
             state.hidden = true
@@ -34,7 +35,7 @@ extension TetherAppsManager: AccessibilityNotificationsDelegate {
     
     func accessibilityManager(_ manager: AccessibilityNotificationsManager, didDeminimizeWindow window: TrackedWindow) {
         log.debug("deminimize window")
-        if let (_, state) = states.first(where: { (key: TrackedWindow, value: OnitPanelState) in
+        if let (_, state) = statesByWindow.first(where: { (key: TrackedWindow, value: OnitPanelState) in
             key == window
         }) {
             state.hidden = false
@@ -45,12 +46,12 @@ extension TetherAppsManager: AccessibilityNotificationsDelegate {
         
     func accessibilityManager(_ manager: AccessibilityNotificationsManager, didDestroyWindow window: TrackedWindow) {
         log.debug("destroy window")
-        if let (_, state) = states.first(where: { (key: TrackedWindow, value: OnitPanelState) in
+        if let (_, state) = statesByWindow.first(where: { (key: TrackedWindow, value: OnitPanelState) in
             key == window
         }) {
             state.closePanel()
             state.removeDelegate(self)
-            states.removeValue(forKey: window)
+            statesByWindow.removeValue(forKey: window)
         }
         
         hideTetherWindow()
@@ -73,7 +74,7 @@ extension TetherAppsManager: AccessibilityNotificationsDelegate {
 
 // MARK: - OnitPanelStateDelegate
 
-extension TetherAppsManager: OnitPanelStateDelegate {
+extension PanelStateTetheredManager: OnitPanelStateDelegate {
     func panelBecomeKey(state: OnitPanelState) {
         self.state = state
     }

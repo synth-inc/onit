@@ -21,6 +21,10 @@ extension OnitPanelState {
     }
     
     func repositionPanel(action: TrackedWindowAction) {
+        if isScreenMode {
+            return
+        }
+        
         guard let window = trackedWindow?.element,
               let panel = self.panel,
               !panel.isAnimating,
@@ -69,7 +73,7 @@ extension OnitPanelState {
         let onitY = visibleFrame.minY + (visibleFrame.height - windowFrame.height) - windowDistanceFromTop
         
         let spaceOnRight = screenFrame.maxX - (windowFrame.origin.x + windowFrame.width)
-        let hasEnoughSpace = spaceOnRight >= onitWidth + TetherAppsManager.spaceBetweenWindows
+        let hasEnoughSpace = spaceOnRight >= onitWidth + PanelStateBaseManager.spaceBetweenWindows
         
         let isOnRightmostScreen = screen == rightmostScreen
         
@@ -77,7 +81,7 @@ extension OnitPanelState {
             self.movePanel(screenFrame: screenFrame, onitWidth: onitWidth, onitHeight: onitHeight, onitY: onitY)
         } else {
             
-            let maxAvailableWidth = screenFrame.maxX - windowFrame.origin.x - onitWidth - TetherAppsManager.spaceBetweenWindows
+            let maxAvailableWidth = screenFrame.maxX - windowFrame.origin.x - onitWidth - PanelStateBaseManager.spaceBetweenWindows
             
             if maxAvailableWidth >= OnitRegularPanel.minAppWidth {
                 resizeWindowAndMovePanel(onitWidth: onitWidth, onitHeight: onitHeight, onitY: onitY, maxAvailableWidth: maxAvailableWidth)
@@ -91,6 +95,7 @@ extension OnitPanelState {
     func restoreWindowPosition() {
         var fromActive : NSRect? = nil
         var toActive: NSRect? = nil
+        
         if let panel = self.panel, !panel.isAnimating {
             
             if currentAnimationTask != nil {
@@ -98,7 +103,7 @@ extension OnitPanelState {
             }
             
             if let window = trackedWindow?.element,
-                let initialFrame = TetherAppsManager.shared.targetInitialFrames[window],
+                let initialFrame = PanelStateTetheredManager.shared.targetInitialFrames[window],
                 let curFrame = window.getFrame() {
 
                 // We only try to restore the window if it was resized
@@ -125,9 +130,8 @@ extension OnitPanelState {
                 }
                 // We need to remove this everytime, to prevent saving old frames.
                 // If we have old frames, we won't save the new ones.
-                TetherAppsManager.shared.targetInitialFrames.removeValue(forKey: window)
+                PanelStateTetheredManager.shared.targetInitialFrames.removeValue(forKey: window)
             }
-        
 
             let toPanel: NSRect
             if panel.animatedFromLeft {
@@ -201,6 +205,10 @@ extension OnitPanelState {
     // MARK: - Layout
     
     private func movePanel(screenFrame: CGRect, onitWidth: CGFloat, onitHeight: CGFloat, onitY: CGFloat) {
+        if isScreenMode {
+            return
+        }
+        
         guard let window = trackedWindow?.element,
               let windowFrame = window.getFrame(),
               let panel = panel else {
@@ -208,13 +216,13 @@ extension OnitPanelState {
         }
         
         let fromFrame = NSRect(
-            x: windowFrame.origin.x + windowFrame.width + TetherAppsManager.spaceBetweenWindows,
+            x: windowFrame.origin.x + windowFrame.width + PanelStateBaseManager.spaceBetweenWindows,
             y: onitY,
             width: 0,
             height: onitHeight
         )
         let newFrame = NSRect(
-            x: windowFrame.origin.x + windowFrame.width + TetherAppsManager.spaceBetweenWindows,
+            x: windowFrame.origin.x + windowFrame.width + PanelStateBaseManager.spaceBetweenWindows,
             y: onitY,
             width: onitWidth,
             height: onitHeight
@@ -235,13 +243,17 @@ extension OnitPanelState {
     }
     
     private func moveWindowAndPanel(screenFrame: CGRect, onitWidth: CGFloat, onitHeight: CGFloat, onitY: CGFloat) {
+        if isScreenMode {
+            return
+        }
+        
         guard let window = trackedWindow?.element,
               let windowFrame = window.getFrame(),
               let panel = panel else {
             return
         }
         
-        let newAppX = screenFrame.maxX - windowFrame.width - onitWidth - TetherAppsManager.spaceBetweenWindows
+        let newAppX = screenFrame.maxX - windowFrame.width - onitWidth - PanelStateBaseManager.spaceBetweenWindows
         let yOffset = calculateYOffset(screenFrame: screenFrame, onitY: onitY)
         
         let activeWindowTargetRect = CGRect(
@@ -252,7 +264,7 @@ extension OnitPanelState {
         )
         
         let newFrame = NSRect(
-            x: newAppX + windowFrame.width + TetherAppsManager.spaceBetweenWindows,
+            x: newAppX + windowFrame.width + PanelStateBaseManager.spaceBetweenWindows,
             y: onitY + yOffset,
             width: onitWidth,
             height: onitHeight
@@ -288,6 +300,10 @@ extension OnitPanelState {
     }
     
     private func resizeWindowAndMovePanel(onitWidth: CGFloat, onitHeight: CGFloat, onitY: CGFloat, maxAvailableWidth: CGFloat) {
+        if isScreenMode {
+            return
+        }
+        
         guard let window = trackedWindow?.element,
               let panel = panel,
               let windowFrame = window.getFrame() else {
@@ -302,7 +318,7 @@ extension OnitPanelState {
         )
         
         let newFrame = NSRect(
-            x: windowFrame.origin.x + maxAvailableWidth + TetherAppsManager.spaceBetweenWindows,
+            x: windowFrame.origin.x + maxAvailableWidth + PanelStateBaseManager.spaceBetweenWindows,
             y: onitY,
             width: onitWidth,
             height: onitHeight
@@ -365,13 +381,17 @@ extension OnitPanelState {
         self.animateChatView = true
         self.showChatView = false
         
+        // Check if screen mode with accessibility is enabled
+        let useScreenWithAccess = FeatureFlagManager.shared.useScreenModeWithAccessibility
+        
         NSAnimationContext.runAnimationGroup { context in
             context.duration = animationDuration
             context.timingFunction = CAMediaTimingFunction(name: .easeOut)
             
             panel.animator().setFrame(toPanel, display: false)
 
-            if let activeWindow = activeWindow, let fromActive = fromActive, let toActive = toActive {
+            // Only animate other windows if not in accessibility mode
+            if !useScreenWithAccess, let activeWindow = activeWindow, let fromActive = fromActive, let toActive = toActive {
                 DispatchQueue.main.asyncAfter(deadline: .now() + (animationDuration / 2)) {
                     self.animation(for: activeWindow, from: fromActive, to: toActive)
                 }
@@ -382,6 +402,20 @@ extension OnitPanelState {
             panel.isAnimating = false
             panel.wasAnimated = true
             panel.animatedFromLeft = abs(fromPanel.maxX - toPanel.minX) <= abs(fromPanel.maxX - toPanel.maxX)
+            
+            // Call resizeWindows() AFTER panel animation is complete when in accessibility mode
+            if useScreenWithAccess, let screen = self.trackedScreen ?? NSScreen.mouse {
+                DispatchQueue.main.async {
+                    do {
+                        // Access PanelStateCoordinator and try to resize windows
+                        if let pinnedManager = PanelStateCoordinator.shared.currentManager as? PanelStatePinnedManager {
+                            pinnedManager.resizeWindows(for: screen)
+                        }
+                    } catch {
+                        print("Error trying to resize windows: \(error)")
+                    }
+                }
+            }
         }
     }
     
@@ -399,14 +433,22 @@ extension OnitPanelState {
         self.animateChatView = true
         self.showChatView = false
         
-        // Capture the window animation task (if applicable)
-        var windowAnimationTask: Task<Void, Never>? = nil
-        if let activeWindow = activeWindow, let fromActive = fromActive, let toActive = toActive {
-            windowAnimationTask = self.animation(for: activeWindow, from: fromActive, to: toActive)
-        }
+        // Check if screen mode with accessibility is enabled
+        let useScreenWithAccess = FeatureFlagManager.shared.useScreenModeWithAccessibility
         
         // Start an asynchronous block that waits for both animations to complete.
         Task { @MainActor in
+            // Reset frames BEFORE the animation starts when in accessibility mode
+            if useScreenWithAccess, let pinnedManager = PanelStateCoordinator.shared.currentManager as? PanelStatePinnedManager {
+                pinnedManager.resetFramesOnAppChange()
+            }
+                        
+            // Capture the window animation task (if applicable)
+            var windowAnimationTask: Task<Void, Never>? = nil
+            if !useScreenWithAccess, let activeWindow = activeWindow, let fromActive = fromActive, let toActive = toActive {
+                windowAnimationTask = self.animation(for: activeWindow, from: fromActive, to: toActive)
+            }
+            
             // Await the panel animation by wrapping it in a withCheckedContinuation.
             await withCheckedContinuation { (continuation: CheckedContinuation<Void, Never>) in
                 DispatchQueue.main.asyncAfter(deadline: .now() + animationDuration / 2) {

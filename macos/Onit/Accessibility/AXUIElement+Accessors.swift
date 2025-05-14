@@ -48,15 +48,14 @@ extension AXUIElement {
     
     func getRootChildren() -> [AXUIElement] {
         var elementPid: pid_t = 0
-
         guard AXUIElementGetPid(self, &elementPid) == .success, elementPid != getpid() else {
             return []
         }
-        
         let appElement = AXUIElementCreateApplication(elementPid)
+        if let role = appElement.role() { print("Role: \(role)")}
         return appElement.children() ?? []
     }
-    
+
     var isFinder: Bool {
         let runningApps = NSWorkspace.shared.runningApplications
 

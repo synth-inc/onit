@@ -29,16 +29,18 @@ struct App: SwiftUI.App {
     @Default(.autoContextFromHighlights) var autoContextFromHighlights
     
     @State var accessibilityPermissionRequested = false
-    @State private var frontmostApplicationOnLaunch: NSRunningApplication?
 
     init() {
         configureSwiftBeaver()
-        frontmostApplicationOnLaunch = NSWorkspace.shared.frontmostApplication
         
         accessibilityPermissionManager.configure()
         
         KeyboardShortcutsManager.configure()
         featureFlagsManager.configure()
+        
+        PanelStateCoordinator.shared.configure(
+            frontmostApplication: NSWorkspace.shared.frontmostApplication
+        )
         
         // For testing new user experience
         // clearTokens()
@@ -53,21 +55,6 @@ struct App: SwiftUI.App {
             MenuIcon()
                 .onAppear {
                     checkLaunchOnStartup()
-                }
-                .onChange(of: accessibilityPermissionManager.accessibilityPermissionStatus, initial: true) {
-                    _, newValue in
-                    AccessibilityAnalytics.logPermission(local: newValue)
-                    switch newValue {
-                    case .granted:
-                        TetherAppsManager.shared.startObserving()
-                        AccessibilityNotificationsManager.shared.start(pid: frontmostApplicationOnLaunch?.processIdentifier)
-                        UntetheredScreenManager.shared.stopObserving()
-                        frontmostApplicationOnLaunch = nil
-                    case .denied, .notDetermined:
-                        TetherAppsManager.shared.stopObserving()
-                        AccessibilityNotificationsManager.shared.stop()
-                        UntetheredScreenManager.shared.startObserving()
-                    }
                 }
                 .onChange(of: [
                     autoContextFromCurrentWindow,
