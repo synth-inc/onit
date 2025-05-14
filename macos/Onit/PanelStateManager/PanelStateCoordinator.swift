@@ -44,7 +44,7 @@ class PanelStateCoordinator {
         
         stateChangesCancellable = Publishers.CombineLatest(
             AccessibilityPermissionManager.shared.$accessibilityPermissionStatus,
-            FeatureFlagManager.shared.$useScreenModeWithAccessibility
+            FeatureFlagManager.shared.$usePinnedMode
         )
         .filter { $0.0 != .notDetermined }
         .debounce(for: .milliseconds(300), scheduler: RunLoop.main)

@@ -381,8 +381,8 @@ extension OnitPanelState {
         self.animateChatView = true
         self.showChatView = false
         
-        // Check if screen mode with accessibility is enabled
-        let useScreenWithAccess = FeatureFlagManager.shared.useScreenModeWithAccessibility
+        // Check if pinned mode is enabled
+        let useScreenWithAccess = FeatureFlagManager.shared.usePinnedMode
         
         NSAnimationContext.runAnimationGroup { context in
             context.duration = animationDuration
@@ -433,8 +433,8 @@ extension OnitPanelState {
         self.animateChatView = true
         self.showChatView = false
         
-        // Check if screen mode with accessibility is enabled
-        let useScreenWithAccess = FeatureFlagManager.shared.useScreenModeWithAccessibility
+        // Check if pinned mode is enabled
+        let useScreenWithAccess = FeatureFlagManager.shared.usePinnedMode
         
         // Start an asynchronous block that waits for both animations to complete.
         Task { @MainActor in

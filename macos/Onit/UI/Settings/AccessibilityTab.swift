@@ -121,7 +121,7 @@ struct AccessibilityTab: View {
                             .font(.system(size: 12))
                             .foregroundStyle(.gray200)
                     }
-                    if !featureFlagsManager.useScreenModeWithAccessibility {
+                    if !featureFlagsManager.usePinnedMode {
                         VStack(alignment: .leading, spacing: 4) {
                             HStack {
                                 Text("Automatically Read Current Window")

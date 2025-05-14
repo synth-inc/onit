@@ -21,7 +21,7 @@ class FeatureFlagManager: ObservableObject {
     // MARK: - Feature Flags
 
     @Published private(set) var autocontextDemoVideoUrl: String? = nil
-    @Published private(set) var useScreenModeWithAccessibility: Bool = true
+    @Published private(set) var usePinnedMode: Bool = true
 
     // MARK: - Functions
 
@@ -46,8 +46,8 @@ class FeatureFlagManager: ObservableObject {
     }
 
     func toggleScreenModeWithAccessibility(_ enabled: Bool) {
-        Defaults[.useScreenModeWithAccessibility] = enabled
-        useScreenModeWithAccessibility = enabled
+        Defaults[.usePinnedMode] = enabled
+        usePinnedMode = enabled
     }
 
     // MARK: - Objective-C Functions
@@ -70,6 +70,12 @@ class FeatureFlagManager: ObservableObject {
             autocontextDemoVideoUrl = nil
         }
         
-        useScreenModeWithAccessibility = Defaults[.useScreenModeWithAccessibility] ?? true
+        if let pinnedModeEnabled = Defaults[.usePinnedMode] {
+            usePinnedMode = pinnedModeEnabled
+        } else {
+            let pinnedModeFlag = PostHogSDK.shared.isFeatureEnabled("pinned_mode")
+            
+            toggleScreenModeWithAccessibility(pinnedModeFlag)
+        }
     }
 }

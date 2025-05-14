@@ -54,11 +54,11 @@ extension OnitRegularPanel {
     func panelResizeEnded(originalPanelWidth: CGFloat) {
         guard wasAnimated, !isAnimating, !state.isWindowDragging else { return }
 
-        // Check if we're in screen mode with accessibility
-        let useScreenWithAccess = FeatureFlagManager.shared.useScreenModeWithAccessibility
+        // Check if pinned mode is enabled
+        let usePinnedMode = FeatureFlagManager.shared.usePinnedMode
         
-        if state.isScreenMode && useScreenWithAccess {
-            // In screen mode, we need to resize all windows that overlap with the panel
+        if state.isScreenMode && usePinnedMode {
+            // In pinned mode, we need to resize all windows that overlap with the panel
             if let screen = state.trackedScreen ?? NSScreen.mouse,
                let pinnedManager = PanelStateCoordinator.shared.currentManager as? PanelStatePinnedManager {
                 pinnedManager.resizeWindows(for: screen, isResize: true)
