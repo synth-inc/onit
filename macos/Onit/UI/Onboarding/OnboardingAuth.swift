@@ -6,6 +6,7 @@
 //
 
 import AuthenticationServices
+import Defaults
 import GoogleSignIn
 import GoogleSignInSwift
 import Defaults
@@ -17,26 +18,26 @@ struct OnboardingAuth: View {
     @Default(.onboardingAuthState) var onboardingAuthState
     
     private let isSignUp: Bool
-    init(isSignUp: Bool) { self.isSignUp = isSignUp }
     
-    @FocusState private var isFocusedInput: Bool
-    @State private var isHoveredInput: Bool = false
-    @State private var isPressedInput: Bool = false
+    init(isSignUp: Bool) {
+        self.isSignUp = isSignUp
+    }
+
+    @State private var isHoveredContinueWithEmailButton: Bool = false
+    @State private var isPressedContinueWithEmailButton: Bool = false
     
+    @State private var isHoveredRedirectButton: Bool = false
+    @State private var isHoveredSkipButton: Bool = false
+
+    @State private var isHoveredResendLinkButton: Bool = false
     @State private var isHoveredBackButton: Bool = false
     @State private var isPressedBackButton: Bool = false
     
     @State private var email: String = ""
-    @State private var loginPassword: String = ""
     @State private var requestedEmailLogin: Bool = false
-    @State private var emailLoginToken: String = ""
     
     @State private var errorMessageEmail: String = ""
-    @State private var errorMessageAuth: String? = nil
-    
-    var submitDisabled: Bool {
-        return email.isEmpty || !errorMessageEmail.isEmpty
-    }
+    @State private var errorMessageAuth: String = ""
     
     var body: some View {
         VStack(alignment: .center, spacing: 42) {
@@ -59,46 +60,20 @@ struct OnboardingAuth: View {
 extension OnboardingAuth {
     private var formAuthButtons: some View {
         VStack(spacing: 4) {
-//            HStack(spacing: 12) {
-//                OnboardingAuthButton(
-//                    icon: .logoGoogle,
-//                    action: handleGoogleSignInButton
-//                )
-//                
-//                OnboardingAuthButton(
-//                    icon: .logoApple,
-//                    action: { print("Apple Auth") }
-//                )
-//            }
-//            .frame(width: 188)
+            HStack(spacing: 12) {
+                OnboardingAuthButton(
+                    icon: .logoGoogle,
+                    action: handleGoogleSignInButton
+                )
+
+                OnboardingAuthApple(
+                    handleLogin: handleLogin,
+                    errorMessageAuth: $errorMessageAuth
+                )
+            }
+            .frame(width: 188)
             
-            OnboardingAuthButton(
-                icon: .logoGoogle,
-                action: handleGoogleSignInButton
-            )
-            
-            SignInWithAppleButton(
-                onRequest: { request in
-                    request.requestedScopes = [.email]
-                }) { result in
-                    switch result {
-                    case .success(let authResult):
-                        Task {
-                            do {
-                                try await handleAppleCredential(authResult)
-                            } catch {
-                                errorMessageAuth = error.localizedDescription
-                            }
-                        }
-                    case .failure(let error):
-                        errorMessageAuth = error.localizedDescription
-                    }
-                }
-                .frame(height: 40)
-                .styleText(size: 16)
-                .addBorder(cornerRadius: 9, stroke: .gray700)
-            
-            if let errorMessageAuth = errorMessageAuth {
+            if !errorMessageAuth.isEmpty {
                 Text(errorMessageAuth)
                     .styleText(size: 12, weight: .medium, color: .red, align: .center)
             }
@@ -112,32 +87,21 @@ extension OnboardingAuth {
             errorMessage: errorMessageEmail,
             onSubmit: requestEmailLoginLink
         )
-        .onChange(of: email) { _, currentEmail in
-            if currentEmail.isEmpty {
-                errorMessageEmail = "Please enter your email"
-            } else if !validateEmail(email: currentEmail) {
-                errorMessageEmail = "Invalid email format"
-            } else {
-                errorMessageEmail = ""
-            }
-        }
     }
     
     private var continueWithEmailButton: some View {
-        TextButton(
-            action: requestEmailLoginLink,
-            height: 40,
-            cornerRadius: 9,
-            background: .blue400,
-            hoverBackground: .blue350
-        ) {
-            Text("Continue with email")
-                .frame(maxWidth: .infinity, alignment: .center)
-                .styleText(weight: .regular)
-        }
-        .opacity(submitDisabled ? 0.5 : 1)
-        .allowsHitTesting(!submitDisabled)
-        .addAnimation(dependency: submitDisabled)
+        Text("Continue with email")
+            .frame(maxWidth: .infinity)
+            .frame(height: 40)
+            .styleText(align: .center)
+            .addButtonEffects(
+                action: requestEmailLoginLink,
+                background: .blue400,
+                hoverBackground: .blue350,
+                cornerRadius: 9,
+                isHovered: $isHoveredContinueWithEmailButton,
+                isPressed: $isPressedContinueWithEmailButton
+            )
     }
     
     private var form: some View {
@@ -183,9 +147,12 @@ extension OnboardingAuth {
                 }
             } label: {
                 Text(isSignUp ? "Sign In" : "Sign up")
-                    .styleText(size: 13, weight: .regular)
+                    .styleText(size: 13, weight: .regular, underline: isHoveredRedirectButton)
             }
             .buttonStyle(PlainButtonStyle())
+            .onHover { isHovering in
+                isHoveredRedirectButton = isHovering
+            }
         }
     }
     
@@ -193,17 +160,15 @@ extension OnboardingAuth {
         VStack(alignment: .center, spacing: 12) {
             redirectSection
             
-            HStack(spacing: 3) {
-                Text("or,")
-                    .styleText(size: 13, weight: .regular, color: .gray100)
-                
-                Button {
-                    onboardingAuthState = .hideAuth
-                } label: {
-                    Text("skip account creation & use own APIs →")
-                        .styleText(size: 13, weight: .regular)
-                }
-                .buttonStyle(PlainButtonStyle())
+            Button {
+                onboardingAuthState = .hideAuth
+            } label: {
+                Text(generateSkipText())
+                    .styleText(size: 13, weight: .regular, underline: isHoveredSkipButton)
+            }
+            .buttonStyle(PlainButtonStyle())
+            .onHover { isHovering in
+                isHoveredSkipButton = isHovering
             }
         }
     }
@@ -243,9 +208,12 @@ extension OnboardingAuth {
                             requestEmailLoginLink()
                         } label: {
                             Text("Resend Link")
-                                .styleText(size: 12)
+                                .styleText(size: 12, underline: isHoveredResendLinkButton)
                         }
                         .buttonStyle(PlainButtonStyle())
+                        .onHover { isHovering in
+                            isHoveredResendLinkButton = isHovering
+                        }
                     }
                 }
                 
@@ -301,6 +269,20 @@ extension OnboardingAuth {
         return agreementText
     }
     
+    private func generateSkipText() -> AttributedString {
+        var skipText = AttributedString("")
+        
+        var orText = AttributedString("or, ")
+        orText.foregroundColor = .gray100
+        skipText.append(orText)
+        
+        var mainText = AttributedString("skip account creation & use own APIs →")
+        mainText.foregroundColor = Color.primary
+        skipText.append(mainText)
+        
+        return skipText
+    }
+    
     @MainActor
     private func handleLogin(loginResponse: LoginResponse) {
         TokenManager.token = loginResponse.token
@@ -312,7 +294,7 @@ extension OnboardingAuth {
 // MARK: - Private Functions (email)
 
 extension OnboardingAuth {
-    private func validateEmail(email: String) -> Bool {
+    private func validateEmail() -> Bool {
         let emailRegex = "^[A-Z0-9a-z._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$"
         let emailTest = NSPredicate(format: "SELF MATCHES %@", emailRegex)
         let isValidEmailFormat = emailTest.evaluate(with: email)
@@ -321,7 +303,13 @@ extension OnboardingAuth {
     
     @MainActor
     private func requestEmailLoginLink() {
-        if !submitDisabled {
+        errorMessageEmail = ""
+
+        if email.isEmpty {
+            errorMessageEmail = "Please enter your email"
+        } else if !validateEmail() {
+            errorMessageEmail = "Invalid email format"
+        } else {
             let client = FetchingClient()
             
             Task {
@@ -340,7 +328,7 @@ extension OnboardingAuth {
 
 extension OnboardingAuth {
     private func handleGoogleSignInButton() {
-        errorMessageAuth = nil
+        errorMessageAuth = ""
         
         guard let window = NSApp.keyWindow else { return }
 

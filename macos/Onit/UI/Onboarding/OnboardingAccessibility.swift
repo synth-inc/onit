@@ -8,6 +8,7 @@
 import SwiftUI
 
 struct OnboardingAccessibility: View {
+    @State private var isHoveringSkipButton: Bool = false
     @State private var showSkipConfirmation: Bool = false
     
     private let instructionItems: [String] = [
@@ -36,7 +37,7 @@ struct OnboardingAccessibility: View {
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .padding(40)
+        .padding(.horizontal, 22)
         .padding(.top, 134)
     }
 }
@@ -96,15 +97,37 @@ extension OnboardingAccessibility {
     }
     
     private var skipAccessibilityButton: some View {
-        TextButton(
-            action: { showSkipConfirmation = true },
-            fillContainer: false
-        ) {
+        Button {
+            showSkipConfirmation = true
+        } label: {
             HStack(spacing: 0) {
-                Text("Or, ").styleText(size: 13, color: .gray100)
-                Text("use without accessibility →").styleText(size: 13)
+                Text(generateSkipText())
+                    .styleText(size: 13, underline: isHoveringSkipButton)
             }
         }
-        .padding(.bottom, 16)
+        .padding(.bottom, 43)
+        .underline(isHoveringSkipButton)
+        .onHover { isHovering in
+            isHoveringSkipButton = isHovering
+        }
+    }
+}
+
+
+// MARK: -  Private Functions
+
+extension OnboardingAccessibility {
+    private func generateSkipText() -> AttributedString {
+        var skipText = AttributedString("")
+        
+        var orText = AttributedString("Or, ")
+        orText.foregroundColor = .gray100
+        skipText.append(orText)
+        
+        var mainText = AttributedString("use without accessibility →")
+        mainText.foregroundColor = Color.primary
+        skipText.append(mainText)
+        
+        return skipText
     }
 }

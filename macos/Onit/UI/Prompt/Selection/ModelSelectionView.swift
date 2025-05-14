@@ -89,31 +89,14 @@ struct ModelSelectionView: View {
     }
 
     var remote: some View {
-        let noRemoteModels = !appState.remoteNeedsSetup && availableRemoteModels.isEmpty
-        
         return MenuSection(
-            titleIcon: appState.remoteNeedsSetup || noRemoteModels ? .warningSettings : nil,
-            titleIconColor: .orange,
             title: "Remote",
             showTopBorder: true,
             contentRightPadding: 0,
             contentBottomPadding: 0,
             contentLeftPadding: 0
         ) {
-            if appState.listedModels.isEmpty {
-                Button("Setup remote models") {
-                    appState.settingsTab = .models
-                    openSettings()
-                }
-                .buttonStyle(SetUpButtonStyle(showArrow: true))
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(.horizontal, 12)
-                .padding(.top, 6)
-                .padding(.bottom, 10)
-
-            } else {
-                remoteModelsView
-            }
+            remoteModelsView
         }
     }
     
