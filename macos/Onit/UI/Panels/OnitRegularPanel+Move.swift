@@ -61,7 +61,7 @@ extension OnitRegularPanel {
             // In pinned mode, we need to resize all windows that overlap with the panel
             if let screen = state.trackedScreen ?? NSScreen.mouse,
                let pinnedManager = PanelStateCoordinator.shared.currentManager as? PanelStatePinnedManager {
-                pinnedManager.resizeWindows(for: screen, isResize: true)
+                pinnedManager.resizeWindows(for: screen, isPanelResized: true)
             }
         } else {
             // Normal mode - adjust a single active window

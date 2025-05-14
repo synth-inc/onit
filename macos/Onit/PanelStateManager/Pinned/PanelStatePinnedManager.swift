@@ -179,67 +179,6 @@ class PanelStatePinnedManager: PanelStateBaseManager, ObservableObject {
             hideTetherWindow()
         }
     }
-    
-    func resizeWindows(for screen: NSScreen, isResize: Bool = false) {
-        guard !isResizingWindows else { return }
-        
-        isResizingWindows = true
-        
-        let onitName = Bundle.main.object(forInfoDictionaryKey: "CFBundleName") as? String
-        let appPids = NSWorkspace.shared.runningApplications
-            .filter { $0.activationPolicy == .regular }
-            .filter { $0.localizedName != onitName }
-            .map { $0.processIdentifier }
-         
-        for pid in appPids {
-            let windows = pid.getWindows()
-            
-            for window in windows {
-                resizeWindow(for: screen, window: window, isResize: isResize)
-            }
-        }
-        
-        isResizingWindows = false
-    }
-    
-    private func resizeWindow(for screen: NSScreen, window: AXUIElement, isResize: Bool = false) {
-        if !isResize { guard !targetInitialFrames.keys.contains(window) else { return } }
-        
-        if let windowFrameConverted = window.getFrame(convertedToGlobalCoordinateSpace: true),
-           let windowScreen = windowFrameConverted.findScreen(),
-           windowScreen == screen,
-           let windowFrame = window.getFrame() {
-            
-            let panelWidth = state.panelWidth - (TetheredButton.width / 2) + 1
-            let screenFrame = screen.visibleFrame
-            let availableSpace = screenFrame.maxX - windowFrame.maxX
-            
-            if !isResize {
-                if availableSpace < panelWidth {
-                    targetInitialFrames[window] = windowFrame
-                    let overlapAmount = panelWidth - availableSpace
-                    let newWidth = windowFrame.width - overlapAmount
-                    let newFrame = CGRect(x: windowFrame.origin.x, y: windowFrame.origin.y, width: newWidth, height: windowFrame.height)
-                    _ = window.setFrame(newFrame)
-                }
-            } else {
-                // If we're already tracking it, then make it move.
-                if targetInitialFrames.keys.contains(window) {
-                    let newWidth = (screenFrame.maxX - windowFrame.origin.x) - panelWidth
-                    let newFrame = CGRect(x: windowFrame.origin.x, y:windowFrame.origin.y, width: newWidth, height: windowFrame.height)
-                    _ = window.setFrame(newFrame)
-                } else if availableSpace < panelWidth {
-                    // If we aren't already tracking it and it now needs to get resized, start tracking it.
-                    targetInitialFrames[window] = windowFrame
-                    let overlapAmount = panelWidth - availableSpace
-                    let newWidth = windowFrame.width - overlapAmount
-                    let newFrame = CGRect(x: windowFrame.origin.x, y: windowFrame.origin.y, width: newWidth, height: windowFrame.height)
-                    _ = window.setFrame(newFrame)
-                }
-                
-            }
-        }
-    }
 }
 
 extension PanelStatePinnedManager: AccessibilityNotificationsDelegate {
@@ -257,8 +196,17 @@ extension PanelStatePinnedManager: AccessibilityNotificationsDelegate {
     func accessibilityManager(_ manager: AccessibilityNotificationsManager, didMinimizeWindow window: TrackedWindow) {}
     func accessibilityManager(_ manager: AccessibilityNotificationsManager, didDeminimizeWindow window: TrackedWindow) {}
     func accessibilityManager(_ manager: AccessibilityNotificationsManager, didDestroyWindow window: TrackedWindow) {}
-    func accessibilityManager(_ manager: AccessibilityNotificationsManager, didMoveWindow window: TrackedWindow) {}
-    func accessibilityManager(_ manager: AccessibilityNotificationsManager, didResizeWindow window: TrackedWindow) {}
+    func accessibilityManager(_ manager: AccessibilityNotificationsManager, didMoveWindow window: TrackedWindow) {
+        
+    }
+    func accessibilityManager(_ manager: AccessibilityNotificationsManager, didResizeWindow window: TrackedWindow) {
+        guard state.panelOpened, let screen = state.panel?.screen else { return }
+        
+        // This avoid simultaneous calls when closing the panel which restore the window's frame
+        guard state.panel?.isAnimating == false else { return }
+        
+        resizeWindow(for: screen, window: window.element, windowFrameChanged: true)
+    }
 }
 
 extension PanelStatePinnedManager: OnitPanelStateDelegate {
