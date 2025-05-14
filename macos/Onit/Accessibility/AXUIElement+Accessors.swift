@@ -287,6 +287,39 @@ extension AXUIElement {
     func bringToFront() {
         AXUIElementPerformAction(self, kAXRaiseAction as CFString)
     }
+
+    public func frontmost() -> AXUIElement? {
+        if let value = self.attribute(forAttribute: kAXFrontmostAttribute as CFString) {
+            return (value as! AXUIElement)
+        }
+        return nil
+    }
+
+    public func mainWindow() -> AXUIElement? {
+        if let value = self.attribute(forAttribute: kAXMainWindowAttribute as CFString) {
+            return (value as! AXUIElement)
+        }
+        return nil    
+    }
+
+    public func focusedWindow() -> AXUIElement? {
+        if let value = self.attribute(forAttribute: kAXFocusedWindowAttribute as CFString) {
+            return (value as! AXUIElement)
+        }
+        return nil
+    }
+
+    public func topLevelUIElement() -> AXUIElement? {
+        if let value = self.attribute(forAttribute: kAXTopLevelUIElementAttribute as CFString) {
+            return (value as! AXUIElement)
+        }
+        return nil
+    }
+
+    // This only returns true if it the element has the keyboard focus. 
+    public func focused() -> Bool? {
+        return self.attribute(forAttribute: kAXFocusedAttribute as CFString) as? Bool
+    }
 }
 
 //
