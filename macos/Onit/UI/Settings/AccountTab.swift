@@ -21,6 +21,7 @@ struct AccountTab: View {
     @State private var loginPassword: String = ""
 
     @Default(.useOnitChat) var useOnitChat
+    @Default(.webSearchEnabled) var webSearchEnabled
     @State private var freeTrialAvailable: Bool?
     @State private var features: [SubscriptionFeature]?
     @State private var setPassword: String = ""
@@ -41,6 +42,7 @@ struct AccountTab: View {
                 apple
             } else {
                 useOnitChatSection
+                webSearchEnabledSection
                 subscriptionSection
                 subscriptionFreeTrialAvailableSection
                 subscriptionFeaturesSection
@@ -215,6 +217,17 @@ struct AccountTab: View {
                 .font(.system(size: 13))
             Spacer()
             Toggle("", isOn: $useOnitChat)
+                .toggleStyle(.switch)
+                .controlSize(.small)
+        }
+    }
+
+    var webSearchEnabledSection: some View {
+        HStack {
+            Text("Web Search Enabled")
+                .font(.system(size: 13))
+            Spacer()
+            Toggle("", isOn: $webSearchEnabled)
                 .toggleStyle(.switch)
                 .controlSize(.small)
         }

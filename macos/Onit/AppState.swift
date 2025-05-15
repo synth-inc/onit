@@ -48,7 +48,6 @@ class AppState: NSObject {
             }
             // If they don't have a subscription and don't have a key for their current remote model, set to nil
             invalidateRemoteModel()
-            Defaults[.useOnitChat] = false
         }
     }
     var subscriptionActive: Bool { subscription?.status == "active" || subscription?.status == "trialing" }

@@ -144,11 +144,11 @@ extension OnitPanelState {
                         var updatedContextList = prompt.contextList
                         // Convert each WebSearchResult to a Context.webSearch object and add to pendingContextList
                         for searchResult in searchResults {
-                            let searchResultURL = URL(string: searchResult.url)
+                            let searchResultURL = URL(string: searchResult.url ?? "")
                             // Check if the URL already exists in the contextList
                             if !updatedContextList.contains(where: { $0.url == searchResultURL }) {
                                 updatedContextList.append(searchResult.toContext())
-                                let webContext = (searchResult.title, searchResult.fullContent, searchResult.source, searchResultURL)
+                                let webContext = (searchResult.title ?? "Unknown Title", searchResult.fullContent, searchResult.source, searchResultURL)
                                 webSearchContextsHistory[webSearchContextsHistory.count - 1].append(webContext)
                             } else {
                                 print("removing duplicate!")

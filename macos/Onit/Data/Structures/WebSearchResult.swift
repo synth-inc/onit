@@ -2,11 +2,11 @@ import Foundation
 
 struct WebSearchResult: Identifiable, Codable {
     var id: UUID = UUID()
-    var title: String
-    var url: String
-    var content: String
-    var rawContent: String
-    var score: Double
+    var title: String?
+    var url: String?
+    var content: String?
+    var rawContent: String?
+    var score: Double?
     
     init(title: String, url: String, content: String, rawContent: String, score: Double) {
         self.title = title
@@ -16,26 +16,34 @@ struct WebSearchResult: Identifiable, Codable {
         self.score = score
     }
     
+    enum CodingKeys: String, CodingKey {
+        case title
+        case url
+        case content
+        case rawContent = "raw_content"
+        case score
+    }
+    
     // Initialize from Tavily API response
     init(from tavilyResult: [String: Any]) {
-        self.title = tavilyResult["title"] as? String ?? "Unknown Title"
-        self.url = tavilyResult["url"] as? String ?? ""
-        self.content = tavilyResult["content"] as? String ?? ""
-        self.rawContent = tavilyResult["rawContent"] as? String ?? ""
-        self.score = tavilyResult["score"] as? Double ?? 0.0
+        self.title = tavilyResult["title"] as? String
+        self.url = tavilyResult["url"] as? String
+        self.content = tavilyResult["content"] as? String
+        self.rawContent = tavilyResult["rawContent"] as? String
+        self.score = tavilyResult["score"] as? Double
     }
     
     public var fullContent: String {
-        return content + " " + rawContent
+        return (content ?? "") + " " + (rawContent ?? "")
     }
     
     // Convert to Context
     func toContext() -> Context {
         return Context(
-            title: title,
+            title: title ?? "Unknown Title",
             content: fullContent,
             source: source,
-            url: URL(string: url)
+            url: URL(string: url ?? "")
         )
     }
     
@@ -48,6 +56,6 @@ struct WebSearchResult: Identifiable, Codable {
     }
     
     public var source : String {
-        return extractRootDomain(from: url)
+        return extractRootDomain(from: url ?? "")
     }
 }

@@ -9,6 +9,7 @@ struct WebSearchButton: View {
     @Default(.tavilyAPIToken) var tavilyAPIToken
     @Default(.isTavilyAPITokenValidated) var isTavilyAPITokenValidated
     @Default(.webSearchEnabled) var webSearchEnabled
+    @Default(.useOnitChat) var useOnitChat
     
     var body: some View {
         IconButton(
@@ -17,7 +18,7 @@ struct WebSearchButton: View {
             action: { toggleWebSearch() },
             inactiveColor:
                 webSearchEnabled ? .blue400 :
-                !isTavilyAPITokenValidated ? .gray700 :
+                (!isTavilyAPITokenValidated && !useOnitChat) ? .gray700 :
                 nil
         )
         .help(webSearchButtonHelpText)
@@ -34,14 +35,15 @@ struct WebSearchButton: View {
     
     private var webSearchButtonHelpText: String {
         @Default(.isTavilyAPITokenValidated) var isTavilyAPITokenValidated
-        if !isTavilyAPITokenValidated {
+        @Default(.useOnitChat) var useOnitChat
+        if !isTavilyAPITokenValidated && !useOnitChat {
             return "Add a Tavily API key in Settings > Web Search to enable web search"
         }
         return Defaults[.webSearchEnabled] ? "Web search enabled" : "Enable web search"
     }
     
     private func toggleWebSearch() {
-        if !isTavilyAPITokenValidated || tavilyAPIToken.isEmpty {
+        if !isTavilyAPITokenValidated && !useOnitChat {
             showingWebSearchAPIKeyAlert = true
             return
         }
