@@ -40,6 +40,7 @@ class AppState: NSObject {
         }
     }
     private var fetchSubscriptionTask: Task<Void, Never>?
+    private var chatGenerationLimitTask: Task<Void, Never>? = nil
     
     var subscription: Subscription? {
         didSet {
@@ -78,7 +79,6 @@ class AppState: NSObject {
             return nil
         }
     }
-    
     var showFreeLimitAlert: Bool = false
     var showProLimitAlert: Bool = false
     var subscriptionPlanError: String = ""
@@ -333,7 +333,11 @@ class AppState: NSObject {
         //   Otherwise, let them send messages or update past prompts as much as they want.
         else {
             if !providerApiKeyExists {
-                Task { await checkChatGenerationLimit(callback) }
+                chatGenerationLimitTask?.cancel()
+                chatGenerationLimitTask = Task {
+                    await checkChatGenerationLimit(callback)
+                    chatGenerationLimitTask = nil
+                }
             } else {
                 callback()
             }
