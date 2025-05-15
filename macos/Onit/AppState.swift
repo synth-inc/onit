@@ -230,17 +230,13 @@ class AppState: NSObject {
                 TokenManager.token = loginResponse.token
                 account = loginResponse.account
 
-                let shouldSetModelSettingsProvidersToOn = !newUserDidResetProviderToggleUse && loginResponse.isNewAccount
-                
-                if shouldSetModelSettingsProvidersToOn {
+                if loginResponse.isNewAccount {
                     useOpenAI = true
                     useAnthropic = true
                     useXAI = true
                     useGoogleAI = true
                     useDeepSeek = true
                     usePerplexity = true
-                    
-                    newUserDidResetProviderToggleUse = true
                 }
             } catch {
                 print("Login by token failed with error: \(error)")
@@ -362,10 +358,6 @@ class AppState: NSObject {
     }
 
     // MARK: - Remote Models
-    
-    @ObservableDefault(.newUserDidResetProviderToggleUse)
-    @ObservationIgnored
-    var newUserDidResetProviderToggleUse: Bool
 
     @ObservableDefault(.availableRemoteModels)
     @ObservationIgnored
