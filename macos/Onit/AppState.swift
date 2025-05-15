@@ -40,6 +40,7 @@ class AppState: NSObject {
         }
     }
     private var fetchSubscriptionTask: Task<Void, Never>?
+    private var chatGenerationLimitTask: Task<Void, Never>? = nil
     
     var subscription: Subscription? {
         didSet {
@@ -78,7 +79,6 @@ class AppState: NSObject {
             return nil
         }
     }
-    
     var showFreeLimitAlert: Bool = false
     var showProLimitAlert: Bool = false
     var subscriptionPlanError: String = ""
@@ -229,6 +229,15 @@ class AppState: NSObject {
                 let loginResponse = try await FetchingClient().loginToken(loginToken: token)
                 TokenManager.token = loginResponse.token
                 account = loginResponse.account
+
+                if loginResponse.isNewAccount {
+                    useOpenAI = true
+                    useAnthropic = true
+                    useXAI = true
+                    useGoogleAI = true
+                    useDeepSeek = true
+                    usePerplexity = true
+                }
             } catch {
                 print("Login by token failed with error: \(error)")
             }
@@ -263,6 +272,48 @@ class AppState: NSObject {
         }
     }
     
+    func checkChatGenerationLimit(_ callback: @escaping () -> Void) async {
+        do {
+            let client = FetchingClient()
+            let chatUsageResponse = try await client.getChatUsage()
+            
+            if let usage = chatUsageResponse?.usage,
+               let quota = chatUsageResponse?.quota
+            {
+                let exceededPlanLimit = usage >= quota
+                
+                // Pro Plan alert logic.
+                if subscriptionStatus == SubscriptionStatus.active {
+                    if exceededPlanLimit {
+                        showProLimitAlert = true
+                    } else {
+                        callback()
+                    }
+                }
+                
+                // Falling back to Free Plan alert logic.
+                // Also handles the Stripe Incomplete, Incomplete Expired, Past Due, Unpaid, and Paused statuses.
+                else {
+                    if let subscriptionStatusMessage = subscription?.statusMessage {
+                        subscriptionPlanError = subscriptionStatusMessage
+                    }
+                    
+                    if exceededPlanLimit {
+                        showFreeLimitAlert = true
+                    } else {
+                        callback()
+                    }
+                }
+            } else {
+                // Stripe endpoint didn't return plan usage and quota. Sending another request should refresh this.
+                // If problem persists, there might be something wrong with the Stripe API.
+                subscriptionPlanError = "Please try again."
+            }
+        } catch {
+            subscriptionPlanError = error.localizedDescription
+        }
+    }
+    
     func checkSubscriptionAlerts(callback: @escaping () -> Void) async {
         subscriptionPlanError = ""
         Defaults[.showTwoWeekProTrialEndedAlert] = false
@@ -271,54 +322,37 @@ class AppState: NSObject {
         
         let providerApiKeyExists = checkApiKeyExistsForCurrentModelProvider()
         
+        // If the user is logged out...
+        //   Prevent the user from sending any messages or updating any past prompts
+        //   if they haven't provided an API key for the current model.
         if account == nil {
+            Defaults[.useOnitChat] = false
+            
             if !providerApiKeyExists {
                 subscriptionPlanError = "Add the provider API key to send a message."
             } else {
                 callback()
             }
-        } else {
-            Task {
-                do {
-                    let client = FetchingClient()
-                    let chatUsageResponse = try await client.getChatUsage()
-                    
-                    if let usage = chatUsageResponse?.usage,
-                       let quota = chatUsageResponse?.quota
-                    {
-                        let exceededPlanLimit = usage >= quota
-                        let showUpsaleAlert = exceededPlanLimit && !providerApiKeyExists
-                        
-                        // Pro Plan alert logic.
-                        if subscriptionStatus == SubscriptionStatus.active {
-                            if showUpsaleAlert {
-                                showProLimitAlert = true
-                            } else {
-                                callback()
-                            }
-                        }
-                        
-                        // Falling back to Free Plan alert logic.
-                        // Also handles the Stripe Incomplete, Incomplete Expired, Past Due, Unpaid, and Paused statuses.
-                        else {
-                            if let subscriptionStatusMessage = subscription?.statusMessage {
-                                subscriptionPlanError = subscriptionStatusMessage
-                            }
-                            
-                            if showUpsaleAlert {
-                                showFreeLimitAlert = true
-                            } else {
-                                callback()
-                            }
-                        }
-                    } else {
-                        // Stripe endpoint didn't return plan usage and quota. Sending another request should refresh this.
-                        // If problem persists, there might be something wrong with the Stripe API.
-                        subscriptionPlanError = "Please try again."
-                    }
-                } catch {
-                    subscriptionPlanError = error.localizedDescription
+        }
+        // Otherwise, if the user is logged in...
+        //   Check the user's plan's generation limit and show relevant alert if
+        //     they haven't provided a valid provider API key for their currently-selected model.
+        //   Otherwise, let them send messages or update past prompts as much as they want.
+        else {
+            if !providerApiKeyExists {
+                // FOR LATER: Logic for when this value is set to true/false should be
+                //            improved when implementing user-added custom remote models.
+                Defaults[.useOnitChat] = true
+                
+                chatGenerationLimitTask?.cancel()
+                
+                chatGenerationLimitTask = Task {
+                    await checkChatGenerationLimit(callback)
+                    chatGenerationLimitTask = nil
                 }
+            } else {
+                Defaults[.useOnitChat] = false
+                callback()
             }
         }
     }
@@ -385,25 +419,44 @@ class AppState: NSObject {
         var models = availableRemoteModels.filter {
             Defaults[.visibleModelIds].contains($0.uniqueId)
         }
-
-        if !useOpenAI || (!subscriptionActive && !isOpenAITokenValidated) {
+        
+        if !useOpenAI {
             models = models.filter { $0.provider != .openAI }
         }
-        if !useAnthropic || (!subscriptionActive && !isAnthropicTokenValidated) {
+        if !useAnthropic {
             models = models.filter { $0.provider != .anthropic }
         }
-        if !useXAI || (!subscriptionActive && !isXAITokenValidated) {
+        if !useXAI {
             models = models.filter { $0.provider != .xAI }
         }
-        if !useGoogleAI || (!subscriptionActive && !isGoogleAITokenValidated) {
+        if !useGoogleAI {
             models = models.filter { $0.provider != .googleAI }
         }
-        if !useDeepSeek || (!subscriptionActive && !isDeepSeekTokenValidated) {
+        if !useDeepSeek {
             models = models.filter { $0.provider != .deepSeek }
         }
-        if !usePerplexity || (!subscriptionActive && !isPerplexityTokenValidated) {
+        if !usePerplexity {
             models = models.filter { $0.provider != .perplexity }
         }
+
+//        if !useOpenAI || (!subscriptionActive && !isOpenAITokenValidated) {
+//            models = models.filter { $0.provider != .openAI }
+//        }
+//        if !useAnthropic || (!subscriptionActive && !isAnthropicTokenValidated) {
+//            models = models.filter { $0.provider != .anthropic }
+//        }
+//        if !useXAI || (!subscriptionActive && !isXAITokenValidated) {
+//            models = models.filter { $0.provider != .xAI }
+//        }
+//        if !useGoogleAI || (!subscriptionActive && !isGoogleAITokenValidated) {
+//            models = models.filter { $0.provider != .googleAI }
+//        }
+//        if !useDeepSeek || (!subscriptionActive && !isDeepSeekTokenValidated) {
+//            models = models.filter { $0.provider != .deepSeek }
+//        }
+//        if !usePerplexity || (!subscriptionActive && !isPerplexityTokenValidated) {
+//            models = models.filter { $0.provider != .perplexity }
+//        }
 
         // Filter out models from disabled custom providers
         for customProvider in availableCustomProvider {

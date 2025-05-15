@@ -8,4 +8,5 @@
 struct LoginResponse: Codable {
     let token: String
     let account: Account
+    let isNewAccount: Bool
 }
