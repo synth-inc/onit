@@ -10,7 +10,7 @@ import SwiftUI
 struct ModelTitle: View {
     var title: String
     @Binding var isOn: Bool
-    @Binding var showToggle: Bool
+    var showToggle: Bool = true
 
     var body: some View {
         HStack {

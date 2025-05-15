@@ -229,6 +229,19 @@ class AppState: NSObject {
                 let loginResponse = try await FetchingClient().loginToken(loginToken: token)
                 TokenManager.token = loginResponse.token
                 account = loginResponse.account
+
+                let shouldSetModelSettingsProvidersToOn = !newUserDidResetProviderToggleUse && loginResponse.isNewAccount
+                
+                if shouldSetModelSettingsProvidersToOn {
+                    useOpenAI = true
+                    useAnthropic = true
+                    useXAI = true
+                    useGoogleAI = true
+                    useDeepSeek = true
+                    usePerplexity = true
+                    
+                    newUserDidResetProviderToggleUse = true
+                }
             } catch {
                 print("Login by token failed with error: \(error)")
             }
@@ -311,16 +324,14 @@ class AppState: NSObject {
         showFreeLimitAlert = false
         showProLimitAlert = false
         
-        // FOR LATER: Logic for when this value is set to true/false should be
-        //            improved when implementing user-added custom remote models.
-        Defaults[.useOnitChat] = true
-        
         let providerApiKeyExists = checkApiKeyExistsForCurrentModelProvider()
         
         // If the user is logged out...
         //   Prevent the user from sending any messages or updating any past prompts
         //   if they haven't provided an API key for the current model.
         if account == nil {
+            Defaults[.useOnitChat] = false
+            
             if !providerApiKeyExists {
                 subscriptionPlanError = "Add the provider API key to send a message."
             } else {
@@ -333,18 +344,28 @@ class AppState: NSObject {
         //   Otherwise, let them send messages or update past prompts as much as they want.
         else {
             if !providerApiKeyExists {
+                // FOR LATER: Logic for when this value is set to true/false should be
+                //            improved when implementing user-added custom remote models.
+                Defaults[.useOnitChat] = true
+                
                 chatGenerationLimitTask?.cancel()
+                
                 chatGenerationLimitTask = Task {
                     await checkChatGenerationLimit(callback)
                     chatGenerationLimitTask = nil
                 }
             } else {
+                Defaults[.useOnitChat] = false
                 callback()
             }
         }
     }
 
     // MARK: - Remote Models
+    
+    @ObservableDefault(.newUserDidResetProviderToggleUse)
+    @ObservationIgnored
+    var newUserDidResetProviderToggleUse: Bool
 
     @ObservableDefault(.availableRemoteModels)
     @ObservationIgnored
