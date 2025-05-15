@@ -24,7 +24,7 @@ actor HighlightedTextCoordinator {
     ) {
         stopPolling(pid: pid)
 
-        guard let appName = pid.getAppName(), Self.appNames.contains(appName) else {
+        guard let appName = pid.appName, Self.appNames.contains(appName) else {
             return
         }
         
@@ -41,5 +41,13 @@ actor HighlightedTextCoordinator {
     func stopPolling(pid: pid_t) {
         workerByPID[pid]?.stop()
         workerByPID[pid] = nil
+    }
+    
+    func reset() {
+        for (_, worker) in workerByPID {
+            worker.stop()
+        }
+        
+        workerByPID.removeAll()
     }
 }

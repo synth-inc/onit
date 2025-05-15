@@ -23,27 +23,20 @@ struct App: SwiftUI.App {
     
     @NSApplicationDelegateAdaptor(AppDelegate.self) var delegate
     @ObservedObject private var debugManager = DebugManager.shared
-    @ObservedObject private var accessibilityPermissionManager = AccessibilityPermissionManager.shared
-    @ObservedObject private var featureFlagsManager = FeatureFlagManager.shared
 
     @Default(.launchOnStartupRequested) var launchOnStartupRequested
     @Default(.autoContextFromCurrentWindow) var autoContextFromCurrentWindow
     @Default(.autoContextFromHighlights) var autoContextFromHighlights
     @Default(.onboardingAuthState) var onboardingAuthState
     
-    @State var accessibilityPermissionRequested = false
+    private let appCoordinator: AppCoordinator
 
     init() {
-        configureSwiftBeaver()
+        // Always configure SwiftBeaver first to have logger working in initializers
+        Self.configureSwiftBeaver()
         
-        accessibilityPermissionManager.configure()
-        
-        KeyboardShortcutsManager.configure()
-        featureFlagsManager.configure()
-        
-        PanelStateCoordinator.shared.configure(
-            frontmostApplication: NSWorkspace.shared.frontmostApplication
-        )
+        let pid = NSWorkspace.shared.frontmostApplication?.processIdentifier
+        appCoordinator = AppCoordinator(frontmostPidAtLaunch: pid)
         
         // For testing new user experience
         // clearTokens()
@@ -138,7 +131,7 @@ struct App: SwiftUI.App {
         }
     }
     
-    private func configureSwiftBeaver() {
+    private static func configureSwiftBeaver() {
         #if DEBUG
         let logFileURL = URL(fileURLWithPath: "/tmp/Onit.log")
         

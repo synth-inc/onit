@@ -70,6 +70,8 @@ class PanelStateTetheredManager: PanelStateBaseManager, ObservableObject {
         AccessibilityNotificationsManager.shared.removeDelegate(self)
         NotificationCenter.default.removeObserver(self)
         dragManager.stopMonitoring()
+        dragManagerCancellable?.cancel()
+        draggingState = nil
         
         super.stop()
         

@@ -23,6 +23,10 @@ class FeatureFlagManager: ObservableObject {
     @Published private(set) var autocontextDemoVideoUrl: String? = nil
     @Published private(set) var useScreenModeWithAccessibility: Bool = true
 
+    // MARK: - Private initializer
+    
+    private init() { }
+    
     // MARK: - Functions
 
     /** Configure the SDK */

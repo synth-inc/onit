@@ -17,14 +17,8 @@ class AccessibilityNotificationsManager: ObservableObject {
     // MARK: - Singleton instance
 
     static let shared = AccessibilityNotificationsManager()
-
-    let windowsManager = AccessibilityWindowsManager()
-    
-    private var delegates = NSHashTable<AnyObject>.weakObjects()
     
     // MARK: - ScreenResult
-
-    @Published private(set) var screenResult: ScreenResult = .init()
 
     struct ScreenResult {
         struct UserInteractions {
@@ -42,16 +36,14 @@ class AccessibilityNotificationsManager: ObservableObject {
 
     // MARK: - Properties
     
+    @Published private(set) var screenResult: ScreenResult = .init()
+    
+    let windowsManager = AccessibilityWindowsManager()
+    
     private let highlightedTextCoordinator = HighlightedTextCoordinator()
 
     private var currentSource: String?
 
-    // Transient observers that are started and stopped on app activation/deactivation.
-    private var observers: [pid_t: AXObserver] = [:]
-    
-    // Persistent observers that are started once per pid and remain until the app quits.
-    private var persistentObservers: [pid_t: AXObserver] = [:]
-    
     private var lastHighlightingProcessedAt: Date?
 
     private var valueDebounceWorkItem: DispatchWorkItem?
@@ -60,19 +52,13 @@ class AccessibilityNotificationsManager: ObservableObject {
 
     private var timedOutWindowHash: Set<UInt> = []  // Track window's hash that have timed out
 
-    #if DEBUG
-    private let ignoredAppNames : [String] = ["Xcode"]
-    #else
-    private let ignoredAppNames : [String] = []
-    #endif
-    
-    var isStarted = false
-
-    // MARK: - Initializers
+    // MARK: - Private initializer
 
     private init() { }
     
     // MARK: - Delegates
+    
+    private var delegates = NSHashTable<AnyObject>.weakObjects()
     
     func addDelegate(_ delegate: AccessibilityNotificationsDelegate) {
         delegates.add(delegate)
@@ -89,183 +75,23 @@ class AccessibilityNotificationsManager: ObservableObject {
     }
 
     // MARK: - Functions
-
-    // MARK: Start / Stop
-
-    func start(pid: pid_t?) {
-        guard !isStarted else { return }
-
-        isStarted = true
-        startAppActivationObservers()
-        
-        guard let pid = pid else { return }
-        
-        // Ensure we're listening the active app on Onit launch
-        let appName = Bundle.main.object(forInfoDictionaryKey: "CFBundleName") as? String
-        if pid == getpid() || pid.getAppName() == appName {
-            print("Accessibility started with Onit process identifier")
-        } else {
-            handleAppActivation(appName: pid.getAppName(), processID: pid)
-            startAccessibilityObservers(for: pid)
-            startPersistentAccessibilityObservers(for: pid) // Start persistent observer
-        }
-    }
-
-    func stop() {
-        isStarted = false
-        for pid in observers.keys {
-            stopAccessibilityObservers(for: pid)
-        }
-
-        stopAppActivationObservers()
-
-        currentSource = nil
-        observers.removeAll()
-        // Note: Persistent observers are kept until app quits. Optionally, uncomment the following if a cleanup is desired.
-        // stopPersistentAccessibilityObservers()
-    }
-
-    private func startAppActivationObservers() {
-        // Observe when any application is activated
-        NSWorkspace.shared.notificationCenter.addObserver(
-            self,
-            selector: #selector(appActivationReceived),
-            name: NSWorkspace.didActivateApplicationNotification,
-            object: nil)
-
-        // Observe when any application is deactivated
-        NSWorkspace.shared.notificationCenter.addObserver(
-            self,
-            selector: #selector(appDeactivationReceived),
-            name: NSWorkspace.didDeactivateApplicationNotification,
-            object: nil)
-    }
-
-    private func stopAppActivationObservers() {
-        NSWorkspace.shared.notificationCenter.removeObserver(self)
-    }
-
-    private func startAccessibilityObservers(for pid: pid_t) {
-        guard Thread.isMainThread else {
-            DispatchQueue.main.async {
-                self.startAccessibilityObservers(for: pid)
-            }
-            return
-        }
-        
-        // Skip if the PID is our own process or an ignored app
-        if pid == getpid() {
-            print("Not setting up observer for our own process")
-        } else if ignoredAppNames.contains(pid.getAppName() ?? "") {
-            print("Not setting up observer for ignored app: \(pid.getAppName() ?? "Unknown")")
-            notifyDelegates { delegate in
-                delegate.accessibilityManager(self, didActivateIgnoredWindow: nil)
-            }
-            return
-        }
-        
-        print("Start accessibility observers for PID: \(pid)")
-        var observer: AXObserver?
-
-        let observerCallback: AXObserverCallbackWithInfo = {
-            observer, element, notification, userInfo, refcon in
-            // Dispatch to main thread immediately
-            DispatchQueue.main.async {
-                let accessibilityInstance = Unmanaged<AccessibilityNotificationsManager>
-                    .fromOpaque(
-                        refcon!
-                    ).takeUnretainedValue()
-                accessibilityInstance.handleAccessibilityNotifications(
-                    notification as String, info: userInfo as! [String: Any] as Dictionary,
-                    element: element, observer: observer)
-            }
-        }
-
-        let result = AXObserverCreateWithInfoCallback(pid, observerCallback, &observer)
-
-        if result == .success, let observer = observer {
-            // Release the previous observer if it exists
-            self.observers[pid] = observer
-            let refCon = Unmanaged.passUnretained(self).toOpaque()
-            
-            var notifications = Config.notifications
-            
-            if HighlightedTextCoordinator.appNames.contains(pid.getAppName() ?? "") {
-                notifications.removeAll(where: { $0 == kAXSelectedTextChangedNotification })
-            }
-            
-            for notification in notifications {
-                AXObserverAddNotification(
-                    observer, pid.getAXUIElement(), notification as CFString, refCon)
-            }
-            // Add the observer to the main run loop
-            CFRunLoopAddSource(
-                CFRunLoopGetMain(), AXObserverGetRunLoopSource(observer), .defaultMode)
-            print("Observer registered for PID: \(pid)")
-
-        } else {
-            AccessibilityAnalytics.logObserverError(
-                errorCode: result.rawValue,
-                pid: pid
-            )
-        }
-    }
-
-    private func stopAccessibilityObservers(for pid: pid_t) {
-        // Check if the process ID is already in self.observers
-        guard let existingObserver = self.observers[pid] else { return }
-
-        let runLoopSource = AXObserverGetRunLoopSource(existingObserver)
-        CFRunLoopRemoveSource(CFRunLoopGetMain(), runLoopSource, .defaultMode)
-
-        for notification in Config.notifications {
-            AXObserverRemoveNotification(existingObserver, pid.getAXUIElement(), notification as CFString)
-        }
-
-        self.observers.removeValue(forKey: pid)
-        print("Stop accessibility observers for PID: \(pid).")
-    }
-
-    // MARK: Notifications handling
-
-    @objc private func appActivationReceived(notification: Notification) {
-        if let app = notification.userInfo?[NSWorkspace.applicationUserInfoKey]
-            as? NSRunningApplication
-        {
-            Task { @MainActor in
-                // TODO: KNA - Investigate on this
-                // Skip if the activated app is our own app
-                // There's an edge case where the panel somehow has a different processId.
-                // I'm also added ignore logic for Xcode because it makes it hard to debug if the process changes everytime a breakpoint is hit. 
-                let appName = Bundle.main.object(forInfoDictionaryKey: "CFBundleName") as? String
-                if app.processIdentifier == getpid() || 
-                    app.localizedName == appName {
-                    print("Ignoring activation of our own app")
-                    return
-                } else if ignoredAppNames.contains(app.localizedName ?? "") {
-                    print("Ignoring activation of ignored app: \(app.localizedName ?? "Unknown")")
-                    notifyDelegates { delegate in
-                        delegate.accessibilityManager(self, didActivateIgnoredWindow: nil)
-                    }
-                    return
-                }
-
-                self.stopAccessibilityObservers(for: app.processIdentifier)
-
-                self.handleAppActivation(appName: app.localizedName, processID: app.processIdentifier)
-                self.startAccessibilityObservers(for: app.processIdentifier)
-                self.startPersistentAccessibilityObservers(for: app.processIdentifier) // Start persistent observer on activation
-            }
-        }
-    }
     
-    @objc private func appDeactivationReceived(notification: Notification) {
-        if let app = notification.userInfo?[NSWorkspace.applicationUserInfoKey]
-            as? NSRunningApplication
-        {
-            self.handleAppDeactivation(appName: app.localizedName, processID: app.processIdentifier)
-            self.stopAccessibilityObservers(for: app.processIdentifier)
+    func reset() {
+        windowsManager.reset()
+        screenResult = .init()
+        
+        Task.detached {
+            await self.highlightedTextCoordinator.reset()
         }
+        
+        currentSource = nil
+        lastHighlightingProcessedAt = nil
+        valueDebounceWorkItem?.cancel()
+        selectionDebounceWorkItem?.cancel()
+        parseDebounceWorkItem?.cancel()
+        
+        /// I (Kevin) don't think we should reset the timed out windows
+        // timedOutWindowHash.removeAll()
     }
 
     // MARK: Handling app activated/deactived
@@ -286,7 +112,7 @@ class AccessibilityNotificationsManager: ObservableObject {
         currentSource = appName
         
         if let focusedWindow = processID.getFocusedWindow() {
-            handleWindowBounds(for: focusedWindow)
+            handleWindowBounds(for: focusedWindow, elementPid: processID)
         }
         
         retrieveWindowContent(for: processID)
@@ -300,91 +126,75 @@ class AccessibilityNotificationsManager: ObservableObject {
         }
     }
 
-    private func handleAccessibilityNotifications(
-        _ notification: String, info: [String: Any], element: AXUIElement, observer: AXObserver
+    func handleAccessibilityNotifications(
+        _ notification: String, info: [String: Any], element: AXUIElement, elementPid: pid_t
     ) {
         dispatchPrecondition(condition: .onQueue(.main))
-
-        handleExternalElement(element) { [weak self] elementPid in
-            guard let self = self else { return }
-            
-            log.debug("Received notification: \(notification) \(element.role() ?? "") \(element.title() ?? "")")
-            switch notification {
-            case kAXFocusedWindowChangedNotification, kAXMainWindowChangedNotification:
-                self.handleWindowBounds(for: element)
-            case kAXFocusedUIElementChangedNotification, kAXSelectedColumnsChangedNotification, kAXSelectedRowsChangedNotification:
-                self.handleFocusChange(for: element)
-            case kAXSelectedTextChangedNotification:
-                self.handleSelectionChange(for: element)
-            case kAXValueChangedNotification:
-                self.handleValueChanged(for: element)
-            case kAXWindowMovedNotification:
-                self.handleWindowMoved(for: element)
-            case kAXWindowResizedNotification:
-                self.handleWindowResized(for: element)
-            case kAXWindowCreatedNotification:
-                self.handleCreatedWindowElement(for: element)
-            case kAXUIElementDestroyedNotification:
-                self.handleDetroyedElement(for: element)
-            default:
-                break
+        
+        log.debug("Received notification: \(notification) \(element.role() ?? "") \(element.title() ?? "")")
+        switch notification {
+        case kAXFocusedWindowChangedNotification, kAXMainWindowChangedNotification:
+            self.handleWindowBounds(for: element, elementPid: elementPid)
+        case kAXFocusedUIElementChangedNotification, kAXSelectedColumnsChangedNotification, kAXSelectedRowsChangedNotification:
+            self.handleFocusChange(elementPid: elementPid)
+        case kAXSelectedTextChangedNotification:
+            self.handleSelectionChange(for: element)
+        case kAXValueChangedNotification:
+            self.handleValueChanged(for: element)
+        case kAXWindowMovedNotification:
+            self.handleWindowMoved(for: element, elementPid: elementPid)
+        case kAXWindowResizedNotification:
+            self.handleWindowResized(for: element, elementPid: elementPid)
+        case kAXWindowCreatedNotification:
+            self.handleCreatedWindowElement(for: element, elementPid: elementPid)
+        case kAXUIElementDestroyedNotification:
+            self.handleDetroyedElement(for: element)
+        case kAXWindowMiniaturizedNotification:
+            self.handleMinimizedElement(for: element)
+        case kAXWindowDeminiaturizedNotification:
+            self.handleDeminimizedElement(for: element)
+        default:
+            break
+        }
+    }
+    
+    private func handleWindowMoved(for element: AXUIElement, elementPid: pid_t) {
+        guard let trackedWindow = self.windowsManager.append(element, pid: elementPid) else { return }
+        
+        notifyDelegates { $0.accessibilityManager(self, didMoveWindow: trackedWindow) }
+    }
+    
+    private func handleWindowResized(for element: AXUIElement, elementPid: pid_t) {
+        guard let trackedWindow = self.windowsManager.append(element, pid: elementPid) else { return }
+        
+        notifyDelegates { $0.accessibilityManager(self, didResizeWindow: trackedWindow) }
+    }
+    
+    private func handleWindowBounds(for element: AXUIElement, elementPid: pid_t) {
+        guard let trackedWindow = self.windowsManager.append(element, pid: elementPid) else { return }
+        
+        notifyDelegates { $0.accessibilityManager(self, didActivateWindow: trackedWindow) }
+    }
+    
+    private func handleCreatedWindowElement(for element: AXUIElement, elementPid: pid_t) {
+        guard let trackedWindow = self.windowsManager.append(element, pid: elementPid) else { return }
+        
+        self.notifyDelegates { $0.accessibilityManager(self, didActivateWindow: trackedWindow) }
+    }
+    
+    private func handleDetroyedElement(for element: AXUIElement) {
+        let foundWindows = self.windowsManager.trackedWindows(for: element)
+        
+        for foundWindow in foundWindows {
+            if foundWindow.element.role() == nil {
+                guard let trackedWindow = self.windowsManager.remove(foundWindow) else { return }
+                
+                notifyDelegates { $0.accessibilityManager(self, didDestroyWindow: trackedWindow) }
             }
         }
     }
     
-    private func handleWindowMoved(for element: AXUIElement) {
-        handleExternalElement(element) { [weak self] elementPid in
-            guard let self = self,
-                  let trackedWindow = self.windowsManager.append(element, pid: elementPid) else { return }
-            
-            notifyDelegates { $0.accessibilityManager(self, didMoveWindow: trackedWindow) }
-        }
-    }
-    
-    private func handleWindowResized(for element: AXUIElement) {
-        handleExternalElement(element) { [weak self] elementPid in
-            guard let self = self,
-                  let trackedWindow = self.windowsManager.append(element, pid: elementPid) else { return }
-            
-            notifyDelegates { $0.accessibilityManager(self, didResizeWindow: trackedWindow) }
-        }
-    }
-    
-    private func handleWindowBounds(for element: AXUIElement) {
-        handleExternalElement(element) { [weak self] elementPid in
-            guard let self = self,
-                  let trackedWindow = self.windowsManager.append(element, pid: elementPid) else { return }
-            
-            notifyDelegates { $0.accessibilityManager(self, didActivateWindow: trackedWindow) }
-        }
-    }
-    
-    func handleCreatedWindowElement(for element: AXUIElement) {
-        handleExternalElement(element) { [weak self] elementPid in
-            guard let self = self,
-                  let trackedWindow = self.windowsManager.append(element, pid: elementPid) else { return }
-            
-            self.notifyDelegates { $0.accessibilityManager(self, didActivateWindow: trackedWindow) }
-        }
-    }
-    
-    func handleDetroyedElement(for element: AXUIElement) {
-        handleExternalElement(element) { [weak self] elementPid in
-            guard let self = self else { return }
-            
-            let foundWindows = self.windowsManager.trackedWindows(for: element)
-            
-            for foundWindow in foundWindows {
-                if foundWindow.element.role() == nil {
-                    guard let trackedWindow = self.windowsManager.remove(foundWindow) else { return }
-                    
-                    notifyDelegates { $0.accessibilityManager(self, didDestroyWindow: trackedWindow) }
-                }
-            }
-        }
-    }
-    
-    func handleMinimizedElement(for element: AXUIElement) {
+    private func handleMinimizedElement(for element: AXUIElement) {
         let trackedWindows = self.windowsManager.trackedWindows(for: element)
         if let firstTrackedWindow = trackedWindows.first {
             notifyDelegates { delegate in
@@ -393,7 +203,7 @@ class AccessibilityNotificationsManager: ObservableObject {
         }
     }
     
-    func handleDeminimizedElement(for element: AXUIElement) {
+    private func handleDeminimizedElement(for element: AXUIElement) {
         let trackedWindows = self.windowsManager.trackedWindows(for: element)
         if let firstTrackedWindow = trackedWindows.first {
             notifyDelegates { delegate in
@@ -402,15 +212,13 @@ class AccessibilityNotificationsManager: ObservableObject {
         }
     }
 
-    func handleFocusChange(for element: AXUIElement) {
-        handleExternalElement(element) { [weak self] elementPid in
-            print("Focus change from pid: \(elementPid)")
-            
-            self?.retrieveWindowContent(for: elementPid)
-        }
+    private func handleFocusChange(elementPid: pid_t) {
+        print("Focus change from pid: \(elementPid)")
+        
+        retrieveWindowContent(for: elementPid)
     }
 
-    func handleValueChanged(for element: AXUIElement) {
+    private func handleValueChanged(for element: AXUIElement) {
         // Filter on text area or textfield
         guard let role = element.role(), [kAXTextFieldRole, kAXTextAreaRole].contains(role) else {
             return
@@ -636,17 +444,14 @@ class AccessibilityNotificationsManager: ObservableObject {
         // Ensure we're on the main thread
         dispatchPrecondition(condition: .onQueue(.main))
 
-        handleExternalElement(element) { [weak self] _ in
-            guard let value = element.value() else {
-                self?.screenResult.userInteraction.input = nil
-                self?.showDebug()
-                return
-            }
-
-            self?.screenResult.userInteraction.input = value
-
-            self?.showDebug()
+        guard let value = element.value() else {
+            screenResult.userInteraction.input = nil
+            showDebug()
+            return
         }
+
+        screenResult.userInteraction.input = value
+        showDebug()
     }
 
     // MARK: Text Selection
@@ -655,13 +460,11 @@ class AccessibilityNotificationsManager: ObservableObject {
         // Ensure we're on the main thread
         dispatchPrecondition(condition: .onQueue(.main))
 
-        handleExternalElement(element) { [weak self] pid in
-            let selectedTextExtracted = element.selectedText()
-            let elementBounds = element.selectedTextBound()
-            
-            self?.processSelectedText(selectedTextExtracted, elementFrame: elementBounds)
-            self?.showDebug()
-        }
+        let selectedTextExtracted = element.selectedText()
+        let elementBounds = element.selectedTextBound()
+        
+        processSelectedText(selectedTextExtracted, elementFrame: elementBounds)
+        showDebug()
     }
 
     private func processSelectedText(_ text: String?, elementFrame: CGRect?) {
@@ -677,17 +480,6 @@ class AccessibilityNotificationsManager: ObservableObject {
         
         let input = Input(selectedText: selectedText, application: currentSource ?? "")
         PanelStateCoordinator.shared.state.pendingInput = input
-    }
-
-    /** Ensure the received `AXUIElement` is not from our process */
-    private func handleExternalElement(_ element: AXUIElement, callback: @escaping (pid_t) -> Void) {
-        var elementPid: pid_t = 0
-
-        guard AXUIElementGetPid(element, &elementPid) == .success, elementPid != getpid() else {
-            return
-        }
-        
-        callback(elementPid)
     }
 
     // MARK: Debug
@@ -730,88 +522,26 @@ class AccessibilityNotificationsManager: ObservableObject {
 
         DebugManager.shared.debugText = debugText
     }
+}
 
-    // MARK: - Persistent Observer Methods
+// MARK: - AccessibilityObserversDelegate
 
-    /// Starts a persistent AXObserver for the given process identifier that listens for persistentNotifications.
-    private func startPersistentAccessibilityObservers(for pid: pid_t) {
-        guard Thread.isMainThread else {
-            DispatchQueue.main.async {
-                self.startPersistentAccessibilityObservers(for: pid)
-            }
-            return
-        }
-        // Skip if observer already exists.
-        if persistentObservers[pid] != nil {
-            return
-        }
-        if pid == getpid() {
-            print("Not setting up persistent observer for our own process")
-            return
-        }
-        
-        print("Start persistent observer for PID: \(pid)")
-        var observer: AXObserver?
-        let persistentObserverCallback: AXObserverCallbackWithInfo = { observer, element, notification, userInfo, refcon in
-            DispatchQueue.main.async {
-                let instance = Unmanaged<AccessibilityNotificationsManager>.fromOpaque(refcon!).takeUnretainedValue()
-                instance.handlePersistentAccessibilityNotifications(notification as String, info: userInfo as! [String: Any], element: element, observer: observer)
-            }
-        }
-        let result = AXObserverCreateWithInfoCallback(pid, persistentObserverCallback, &observer)
-        if result == .success, let observer = observer {
-            persistentObservers[pid] = observer
-            let refCon = Unmanaged.passUnretained(self).toOpaque()
-            for notification in Config.persistentNotifications {
-                AXObserverAddNotification(
-                    observer,
-                    pid.getAXUIElement(),
-                    notification as CFString,
-                    refCon)
-            }
-            CFRunLoopAddSource(CFRunLoopGetMain(), AXObserverGetRunLoopSource(observer), .defaultMode)
-            print("Persistent observer registered for PID: \(pid)")
-        } else {
-            AccessibilityAnalytics.logObserverError(
-                errorCode: result.rawValue,
-                pid: pid
-            )
+extension AccessibilityNotificationsManager: AccessibilityObserversDelegate {
+    func accessibilityObserversManager(didActivateApplication appName: String?, processID: pid_t) {
+        handleAppActivation(appName: appName, processID: processID)
+    }
+    
+    func accessibilityObserversManager(didActivateIgnoredApplication appName: String?) {
+        notifyDelegates { delegate in
+            delegate.accessibilityManager(self, didActivateIgnoredWindow: nil)
         }
     }
     
-    /// Handles the notifications received by the persistent observer.
-    private func handlePersistentAccessibilityNotifications(
-        _ notification: String, info: [String: Any], element: AXUIElement, observer: AXObserver
-    ) {
-        // Handle persistent notifications as needed.
-        // For now, we simply log them. You could also notify a different delegate method if required.
-        handleExternalElement(element) { [weak self] elementPid in
-            guard let self = self else { return }
-            print("Received Persistent notification: \(notification)")
-            switch notification {
-            case kAXWindowMiniaturizedNotification:
-                handleMinimizedElement(for: element)
-            case kAXWindowDeminiaturizedNotification:
-                handleDeminimizedElement(for: element)
-            default:
-                break
-            }
-        }
+    func accessibilityObserversManager(didReceiveNotification notification: String, element: AXUIElement, elementPid: pid_t, info: [String: Any]) {
+        handleAccessibilityNotifications(notification, info: info, element: element, elementPid: elementPid)
     }
     
-    /// Optionally, stops all persistent observers (for example, when the app is quitting).
-    private func stopPersistentAccessibilityObservers() {
-        for (pid, observer) in persistentObservers {
-            let runLoopSource = AXObserverGetRunLoopSource(observer)
-            CFRunLoopRemoveSource(CFRunLoopGetMain(), runLoopSource, .defaultMode)
-            for notification in Config.persistentNotifications {
-                AXObserverRemoveNotification(observer, pid.getAXUIElement(), notification as CFString)
-            }
-        }
-        persistentObservers.removeAll()
-    }
-    
-    deinit {
-//        stopPersistentAccessibilityObservers()
+    func accessibilityObserversManager(didDeactivateApplication appName: String?, processID: pid_t) {
+        handleAppDeactivation(appName: appName, processID: processID)
     }
 }
