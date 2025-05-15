@@ -13,10 +13,14 @@ struct GeneralTab: View {
     @Default(.launchShortcutToggleEnabled) var launchShortcutToggleEnabled
     @Default(.createNewChatOnPanelOpen) var createNewChatOnPanelOpen
     @Default(.openOnMouseMonitor) var openOnMouseMonitor
+    @Default(.usePinnedMode) var usePinnedMode
     
     @State var isLaunchAtStartupEnabled: Bool = SMAppService.mainApp.status == .enabled
     @State var isAnalyticsEnabled: Bool = PostHogSDK.shared.isOptOut() == false
-    @State private var isPinnedMode: Bool = true
+    
+    var isPinnedMode: Bool {
+        usePinnedMode ?? true
+    }
     
     var body: some View {
         Form {
@@ -65,7 +69,6 @@ struct GeneralTab: View {
             VStack(alignment: .leading, spacing: 16) {
                 HStack(spacing: 8) {
                     Button {
-                        isPinnedMode = true
                         FeatureFlagManager.shared.togglePinnedMode(true)
                     } label: {
                         VStack(spacing: 4) {
@@ -86,7 +89,6 @@ struct GeneralTab: View {
                     .buttonStyle(.plain)
                     
                     Button {
-                        isPinnedMode = false
                         FeatureFlagManager.shared.togglePinnedMode(false)
                     } label: {
                         VStack(spacing: 4) {
