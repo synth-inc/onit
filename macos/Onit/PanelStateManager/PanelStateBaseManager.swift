@@ -101,6 +101,10 @@ class PanelStateBaseManager: PanelStateManagerLogic {
         return chats
     }
     
+    func fetchWindowContext() {
+        
+    }
+    
     // MARK: - Private functions
     
     private func closePanels() {

@@ -69,6 +69,11 @@ struct PaperclipButton: View {
 
     private func handleAddContext() {
         if accessibilityAutoContextEnabled {
+            if let panel = state.panel {
+                if !panel.isKeyWindow {
+                    panel.makeKey()
+                }
+            }
             OverlayManager.shared.captureClickPosition()
             let view = ContextPickerView()
                 .environment(\.appState, appState)

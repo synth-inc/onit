@@ -51,6 +51,8 @@ class AccessibilityNotificationsManager: ObservableObject {
     private var parseDebounceWorkItem: DispatchWorkItem?
 
     private var timedOutWindowHash: Set<UInt> = []  // Track window's hash that have timed out
+    
+    private var lastActiveWindowPid: pid_t?
 
     // MARK: - Private initializer
 
@@ -92,6 +94,16 @@ class AccessibilityNotificationsManager: ObservableObject {
         
         /// I (Kevin) don't think we should reset the timed out windows
         // timedOutWindowHash.removeAll()
+        
+        lastActiveWindowPid = nil
+    }
+    
+    func fetchAutoContext(pid: pid_t? = nil) {
+        if let pid = pid {
+            retrieveWindowContent(for: pid)
+        } else if let pid = lastActiveWindowPid {
+            retrieveWindowContent(for: pid)
+        }
     }
 
     // MARK: Handling app activated/deactived
@@ -110,12 +122,11 @@ class AccessibilityNotificationsManager: ObservableObject {
         }
 
         currentSource = appName
+        lastActiveWindowPid = processID
         
         if let focusedWindow = processID.getFocusedWindow() {
             handleWindowBounds(for: focusedWindow, elementPid: processID)
         }
-        
-        retrieveWindowContent(for: processID)
     }
     
     private func handleAppDeactivation(appName: String?, processID: pid_t) {
@@ -135,8 +146,6 @@ class AccessibilityNotificationsManager: ObservableObject {
         switch notification {
         case kAXFocusedWindowChangedNotification, kAXMainWindowChangedNotification:
             self.handleWindowBounds(for: element, elementPid: elementPid)
-        case kAXFocusedUIElementChangedNotification, kAXSelectedColumnsChangedNotification, kAXSelectedRowsChangedNotification:
-            self.handleFocusChange(elementPid: elementPid)
         case kAXSelectedTextChangedNotification:
             self.handleSelectionChange(for: element)
         case kAXValueChangedNotification:
@@ -210,12 +219,6 @@ class AccessibilityNotificationsManager: ObservableObject {
                 delegate.accessibilityManager(self, didDeminimizeWindow: firstTrackedWindow)
             }
         }
-    }
-
-    private func handleFocusChange(elementPid: pid_t) {
-        print("Focus change from pid: \(elementPid)")
-        
-        retrieveWindowContent(for: elementPid)
     }
 
     private func handleValueChanged(for element: AXUIElement) {
@@ -432,10 +435,7 @@ class AccessibilityNotificationsManager: ObservableObject {
         self.screenResult.errorMessage = nil
         self.showDebug()
         
-        // Automatically add AutoContext is only available in Pinned mode.
-        if Defaults[.automaticallyAddAutoContext] && results != nil && !FeatureFlagManager.shared.useScreenModeWithAccessibility {
-            state.addAutoContext()
-        }
+        state.addAutoContext()
     }
 
     // MARK: Value Changed
