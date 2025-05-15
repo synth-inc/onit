@@ -24,7 +24,7 @@ struct ContextPickerView: View {
 
             Button(action: {
                 OverlayManager.shared.dismissOverlay()
-                state.addAutoContext()
+                PanelStateCoordinator.shared.fetchWindowContext()
             }) {
                 ContextPickerItemView(
                     imageRes: .stars, title: "AutoContext", subtitle: "Current window activity")

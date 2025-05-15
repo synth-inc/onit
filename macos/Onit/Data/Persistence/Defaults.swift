@@ -88,7 +88,6 @@ extension Defaults.Keys {
     
     static let autoContextFromCurrentWindow = Key<Bool>("autoContextFromCurrentWindow", default: true)
     static let autoContextFromHighlights = Key<Bool>("autoContextFromHighlights", default: true)
-    static let automaticallyAddAutoContext = Key<Bool>("automaticallyAddAutoContext", default: false)
 
     // Web search
     static let webSearchEnabled = Key<Bool>("webSearchEnabled", default: false)

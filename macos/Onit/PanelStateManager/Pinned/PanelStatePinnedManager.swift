@@ -98,6 +98,10 @@ class PanelStatePinnedManager: PanelStateBaseManager, ObservableObject {
         return super.filterPanelChats(chats)
     }
     
+    override func fetchWindowContext() {
+        AccessibilityNotificationsManager.shared.fetchAutoContext()
+    }
+    
     // MARK: - Functions
     
     @objc private func appLaunchedReceived(notification: Notification) {

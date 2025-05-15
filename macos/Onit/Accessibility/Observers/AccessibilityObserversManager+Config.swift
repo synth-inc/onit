@@ -14,15 +14,15 @@ extension AccessibilityObserversManager {
         static let notifications: [String] = [
             kAXFocusedWindowChangedNotification,
             kAXMainWindowChangedNotification,
-            kAXFocusedUIElementChangedNotification,
             kAXSelectedTextChangedNotification,
             kAXValueChangedNotification,
-            kAXSelectedColumnsChangedNotification,
-            kAXSelectedRowsChangedNotification,
             kAXWindowMovedNotification,
             kAXWindowResizedNotification,
             kAXWindowCreatedNotification,
             kAXUIElementDestroyedNotification
+            //            kAXFocusedUIElementChangedNotification,
+            //            kAXSelectedColumnsChangedNotification,
+            //            kAXSelectedRowsChangedNotification,
 
             //            kAXAnnouncementRequestedNotification,
             //            kAXApplicationActivatedNotification,

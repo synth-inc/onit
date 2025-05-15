@@ -25,4 +25,6 @@ protocol PanelStateManagerLogic {
 
     func filterHistoryChats(_ chats: [Chat]) -> [Chat]
     func filterPanelChats(_ chats: [Chat]) -> [Chat]
+    
+    func fetchWindowContext()
 }
