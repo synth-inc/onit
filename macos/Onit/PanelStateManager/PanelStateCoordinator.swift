@@ -18,17 +18,13 @@ class PanelStateCoordinator {
     
     // MARK: - Private properties
     
-    private let tetheredManager = PanelStateTetheredManager.shared
-    private let untetheredManager = PanelStateUntetheredManager.shared
-    private let pinnedManager = PanelStatePinnedManager.shared
-    
-    var currentManager: PanelStateManagerLogic = PanelStateBaseManager()
-    
-    private var frontmostApplicationAtLaunch: NSRunningApplication?
     private var stateChangesCancellable: AnyCancellable?
+    private var isFirstPermissionReceived = true
+    private var frontmostPidAtLaunch: pid_t?
     
     // MARK: - Public properties
     
+    var currentManager: PanelStateManagerLogic = PanelStateBaseManager()
     var isPanelMovable: Bool { currentManager.isPanelMovable }
     var state: OnitPanelState { currentManager.state }
     var states: [OnitPanelState] { currentManager.states }
@@ -39,8 +35,8 @@ class PanelStateCoordinator {
     
     // MARK: - Functions
     
-    func configure(frontmostApplication: NSRunningApplication?) {
-        frontmostApplicationAtLaunch = frontmostApplication
+    func configure(frontmostPidAtLaunch: pid_t?) {
+        self.frontmostPidAtLaunch = frontmostPidAtLaunch
         
         stateChangesCancellable = Publishers.CombineLatest(
             AccessibilityPermissionManager.shared.$accessibilityPermissionStatus,
@@ -71,28 +67,42 @@ class PanelStateCoordinator {
         
         switch accessibilityPermission {
         case .granted:
-            AccessibilityNotificationsManager.shared.start(pid: frontmostApplicationAtLaunch?.processIdentifier)
-            frontmostApplicationAtLaunch = nil
-            
             if pinnedModeEnabled {
-                currentManager = pinnedManager
+                currentManager = PanelStatePinnedManager.shared
             } else {
-                currentManager = tetheredManager
+                currentManager = PanelStateTetheredManager.shared
             }
         case .denied, .notDetermined:
-            AccessibilityNotificationsManager.shared.stop()
-            currentManager = untetheredManager
+            currentManager = PanelStateUntetheredManager.shared
         }
         
         if (oldManager as AnyObject) !== (currentManager as AnyObject) {
             stopAllManagers()
             currentManager.start()
         }
+        
+        if accessibilityPermission == .granted {
+            tryToActivateObserverAtLaunch()
+        }
+        
+        isFirstPermissionReceived = false
     }
     
     private func stopAllManagers() {
-        tetheredManager.stop()
-        untetheredManager.stop()
-        pinnedManager.stop()
+        PanelStateTetheredManager.shared.stop()
+        PanelStateUntetheredManager.shared.stop()
+        PanelStatePinnedManager.shared.stop()
+    }
+    
+    /**
+     * When launching Onit with accessibility granted
+     * We don't receive the `NSWorkspace.didActivateApplicationNotification` for the active window
+     * This is a workaround to activate it and display the hint correctly
+     */
+    private func tryToActivateObserverAtLaunch() {
+        guard let pid = frontmostPidAtLaunch, isFirstPermissionReceived else { return }
+        
+        AccessibilityObserversManager.shared.appLaunched(with: pid)
+        frontmostPidAtLaunch = nil
     }
 }

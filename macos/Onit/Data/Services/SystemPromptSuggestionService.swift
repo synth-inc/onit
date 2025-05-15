@@ -34,7 +34,7 @@ class SystemPromptSuggestionService {
         state.addDelegate(self)
         
         if let trackedWindow = state.trackedWindow {
-            frontmostApplicationName = trackedWindow.pid.getAppName()
+            frontmostApplicationName = trackedWindow.pid.appName
         } else if state.trackedScreen != nil {
             NSWorkspace.shared.publisher(for: \.frontmostApplication)
                 .filter { $0?.processIdentifier != getpid() }

@@ -114,10 +114,7 @@ struct RemoteModelSection: View {
     // MARK: - Subviews
 
     var titleView: some View {
-        ModelTitle(title: provider.title, isOn: $use, showToggle: Binding(
-            get: { appState.subscriptionActive || validated },
-            set: { _ in }
-        ))
+        ModelTitle(title: provider.title, isOn: $use)
     }
 
     var textField: some View {
@@ -208,7 +205,8 @@ struct RemoteModelSection: View {
     
     @ViewBuilder
     var advancedSettings: some View {
-        if use && (appState.subscriptionActive || validated) {
+        // We only support streaming vs. non-streaming for direct-requests
+        if use && validated {
             DisclosureGroup("Advanced", isExpanded: $showAdvanced) {
                 StreamingToggle(isOn: streamResponseBinding)
                     .padding(.leading, 8)
@@ -219,7 +217,8 @@ struct RemoteModelSection: View {
 
     @ViewBuilder
     var modelsView: some View {
-        if use && (appState.subscriptionActive || validated) {
+        // If their logged in, we shoudl show these since they can always use them through the free plan.
+        if use && (appState.account != nil || validated) {
             GroupBox {
                 VStack(alignment: .leading, spacing: 0) {
                     ForEach(models) { model in
