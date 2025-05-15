@@ -59,18 +59,10 @@ struct OnboardingAuth: View {
 extension OnboardingAuth {
     private var formAuthButtons: some View {
         VStack(spacing: 4) {
-            HStack(spacing: 12) {
-                OnboardingAuthButton(
-                    icon: .logoGoogle,
-                    action: handleGoogleSignInButton
-                )
-
-                OnboardingAuthApple(
-                    handleLogin: handleLogin,
-                    errorMessageAuth: $errorMessageAuth
-                )
-            }
-            .frame(width: 188)
+            OnboardingAuthButton(
+                icon: .logoGoogle,
+                action: handleGoogleSignInButton
+            )
             
             if !errorMessageAuth.isEmpty {
                 Text(errorMessageAuth)
