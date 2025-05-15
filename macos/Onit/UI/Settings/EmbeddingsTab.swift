@@ -20,16 +20,19 @@ struct EmbeddingsTab: View {
     var body: some View {
         VStack {
             TextField("Search Your Test Data", text: $searchText)
-                .onSubmit {
-                    handleSearch()
+            HStack {
+                Button("Search Documents") {
+                    handleSearch(.document)
                 }
-            Button("Search") {
-                handleSearch()
+                Button("Search Paragraphs") {
+                    handleSearch(.paragraph)
+                }
+                Button("Search Sentences") {
+                    handleSearch(.sentence)
+                }
             }
+
             TextField("Input Some Test Data", text: $testData)
-                .onSubmit {
-                    handleEmbed()
-                }
             Button("Embed") {
                 handleEmbed()
             }
@@ -43,7 +46,7 @@ struct EmbeddingsTab: View {
                         }
                     }
                 } else {
-                    ForEach(embeddingsService.embeddings, id: \.id) { embedding in
+                    ForEach(embeddingsService.sentences, id: \.id) { embedding in
                         VStack(alignment: .leading) {
                             Text(embedding.text)
                             Text("[\(embedding.embeddingString.prefix(60))...")
@@ -54,7 +57,7 @@ struct EmbeddingsTab: View {
         }
     }
     
-    func handleSearch() {
+    func handleSearch(_ unit: EmbeddingsService.Unit) {
         if searchText.isEmpty {
             return
         }
@@ -62,7 +65,7 @@ struct EmbeddingsTab: View {
         if #available(macOS 15.0, *) {
             Task {
                 do {
-                    searchResults = try await embeddingsService.searchSimilarTexts(query: searchText, limit: 10)
+                    searchResults = try await embeddingsService.searchSimilarTexts(query: searchText, unit: unit, limit: 10)
                 } catch {
                     errorMessage = error.localizedDescription
                 }
@@ -74,6 +77,8 @@ struct EmbeddingsTab: View {
         if testData.isEmpty {
             return
         }
+        
+        searchResults = nil
         
         if #available(macOS 15.0, *) {
             let text = testData
