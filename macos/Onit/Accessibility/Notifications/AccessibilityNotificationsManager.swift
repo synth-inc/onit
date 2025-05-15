@@ -149,6 +149,10 @@ class AccessibilityNotificationsManager: ObservableObject {
             self.handleCreatedWindowElement(for: element, elementPid: elementPid)
         case kAXUIElementDestroyedNotification:
             self.handleDetroyedElement(for: element)
+        case kAXWindowMiniaturizedNotification:
+            self.handleMinimizedElement(for: element)
+        case kAXWindowDeminiaturizedNotification:
+            self.handleDeminimizedElement(for: element)
         default:
             break
         }
@@ -172,13 +176,13 @@ class AccessibilityNotificationsManager: ObservableObject {
         notifyDelegates { $0.accessibilityManager(self, didActivateWindow: trackedWindow) }
     }
     
-    func handleCreatedWindowElement(for element: AXUIElement, elementPid: pid_t) {
+    private func handleCreatedWindowElement(for element: AXUIElement, elementPid: pid_t) {
         guard let trackedWindow = self.windowsManager.append(element, pid: elementPid) else { return }
         
         self.notifyDelegates { $0.accessibilityManager(self, didActivateWindow: trackedWindow) }
     }
     
-    func handleDetroyedElement(for element: AXUIElement) {
+    private func handleDetroyedElement(for element: AXUIElement) {
         let foundWindows = self.windowsManager.trackedWindows(for: element)
         
         for foundWindow in foundWindows {
@@ -190,7 +194,7 @@ class AccessibilityNotificationsManager: ObservableObject {
         }
     }
     
-    func handleMinimizedElement(for element: AXUIElement) {
+    private func handleMinimizedElement(for element: AXUIElement) {
         let trackedWindows = self.windowsManager.trackedWindows(for: element)
         if let firstTrackedWindow = trackedWindows.first {
             notifyDelegates { delegate in
@@ -199,7 +203,7 @@ class AccessibilityNotificationsManager: ObservableObject {
         }
     }
     
-    func handleDeminimizedElement(for element: AXUIElement) {
+    private func handleDeminimizedElement(for element: AXUIElement) {
         let trackedWindows = self.windowsManager.trackedWindows(for: element)
         if let firstTrackedWindow = trackedWindows.first {
             notifyDelegates { delegate in
@@ -208,13 +212,13 @@ class AccessibilityNotificationsManager: ObservableObject {
         }
     }
 
-    func handleFocusChange(elementPid: pid_t) {
+    private func handleFocusChange(elementPid: pid_t) {
         print("Focus change from pid: \(elementPid)")
         
         retrieveWindowContent(for: elementPid)
     }
 
-    func handleValueChanged(for element: AXUIElement) {
+    private func handleValueChanged(for element: AXUIElement) {
         // Filter on text area or textfield
         guard let role = element.role(), [kAXTextFieldRole, kAXTextAreaRole].contains(role) else {
             return
