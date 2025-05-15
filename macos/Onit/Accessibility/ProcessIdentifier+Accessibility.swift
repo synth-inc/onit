@@ -35,6 +35,11 @@ extension pid_t {
         return targetWindows
     }
     
+    // We are currently using this but should instead use findTargetWindows with some logic to select to correct one.
+    func findFirstTargetWindow() -> AXUIElement? {
+        return self.findTargetWindows().first
+    }
+    
     // We should not use this function in most cases.
     // kAXWindowsAttribute is OPTIONAL and may applications do not implement it, including Apple default apps like Notes
     // Instead we should use getRootChildren() followed by filtering with isValidWindow().

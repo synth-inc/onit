@@ -42,4 +42,12 @@ actor HighlightedTextCoordinator {
         workerByPID[pid]?.stop()
         workerByPID[pid] = nil
     }
+    
+    func reset() {
+        for (_, worker) in workerByPID {
+            worker.stop()
+        }
+        
+        workerByPID.removeAll()
+    }
 }

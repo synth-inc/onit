@@ -17,12 +17,8 @@ class AccessibilityNotificationsManager: ObservableObject {
     // MARK: - Singleton instance
 
     static let shared = AccessibilityNotificationsManager()
-
-    let windowsManager = AccessibilityWindowsManager()
     
     // MARK: - ScreenResult
-
-    @Published private(set) var screenResult: ScreenResult = .init()
 
     struct ScreenResult {
         struct UserInteractions {
@@ -40,7 +36,9 @@ class AccessibilityNotificationsManager: ObservableObject {
 
     // MARK: - Properties
     
-    private let observersManager = AccessibilityObserversManager()
+    @Published private(set) var screenResult: ScreenResult = .init()
+    
+    let windowsManager = AccessibilityWindowsManager()
     
     private let highlightedTextCoordinator = HighlightedTextCoordinator()
 
@@ -54,11 +52,9 @@ class AccessibilityNotificationsManager: ObservableObject {
 
     private var timedOutWindowHash: Set<UInt> = []  // Track window's hash that have timed out
 
-    // MARK: - Initializers
+    // MARK: - Private initializer
 
-    private init() {
-        observersManager.delegate = self
-    }
+    private init() { }
     
     // MARK: - Delegates
     
@@ -79,16 +75,23 @@ class AccessibilityNotificationsManager: ObservableObject {
     }
 
     // MARK: - Functions
-
-    // MARK: Start / Stop
-
-    func start(pid: pid_t?) {
-        observersManager.start(pid: pid)
-    }
-
-    func stop() {
-        observersManager.stop()
+    
+    func reset() {
+        windowsManager.reset()
+        screenResult = .init()
+        
+        Task.detached {
+            await self.highlightedTextCoordinator.reset()
+        }
+        
         currentSource = nil
+        lastHighlightingProcessedAt = nil
+        valueDebounceWorkItem?.cancel()
+        selectionDebounceWorkItem?.cancel()
+        parseDebounceWorkItem?.cancel()
+        
+        /// I (Kevin) don't think we should reset the timed out windows
+        // timedOutWindowHash.removeAll()
     }
 
     // MARK: Handling app activated/deactived

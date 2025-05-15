@@ -12,6 +12,10 @@ import SwiftUI
 @MainActor
 class AccessibilityObserversManager {
     
+    // MARK: - Singleton
+    
+    static let shared = AccessibilityObserversManager()
+    
     // MARK: - Properties
     
     weak var delegate: AccessibilityObserversDelegate?
@@ -33,22 +37,18 @@ class AccessibilityObserversManager {
         case current
     }
     
+    // MARK: - Private initializer
+    
+    private init() { }
+    
     // MARK: - Functions
     
-    func start(pid: pid_t?) {
+    func start() {
         guard !isStarted else { return }
         
         isStarted = true
         
         startAppActivationObservers()
-        
-        guard let pid = pid, authorizationState(for: pid) == .authorized else { return }
-        
-        let appName = pid.getAppName() ?? "Unknown"
-        log.info("Observers automatically started for `\(appName)` (\(pid))")
-        delegate?.accessibilityObserversManager(didActivateApplication: pid.getAppName(), processID: pid)
-        startNotificationsObserver(for: pid)
-        startPersistentNotificationsObserver(for: pid)
     }
     
     func stop() {
@@ -63,6 +63,16 @@ class AccessibilityObserversManager {
         for pid in persistentObservers.keys {
             stopPersistentNotificationsObserver(for: pid)
         }
+    }
+    
+    func appLaunched(with pid: pid_t) {
+        guard authorizationState(for: pid) == .authorized else { return }
+        
+        let appName = pid.getAppName() ?? "Unknown"
+        log.info("Observers automatically started for `\(appName)` (\(pid))")
+        delegate?.accessibilityObserversManager(didActivateApplication: pid.getAppName(), processID: pid)
+        startNotificationsObserver(for: pid)
+        startPersistentNotificationsObserver(for: pid)
     }
     
     private func startAppActivationObservers() {
@@ -128,12 +138,7 @@ class AccessibilityObserversManager {
             return
         }
         
-        switch authorizationState(for: app.processIdentifier) {
-        case .current:
-            log.info("Ignoring deactivation of Onit (\(app.processIdentifier))")
-        case .ignored:
-            log.info("Ignoring deactivation of `\(app.localizedName ?? "Unknown")` (\(app.processIdentifier))")
-        case .authorized:
+        if authorizationState(for: app.processIdentifier) == .authorized {
             log.info("Application `\(app.localizedName ?? "Unknown")` (\(app.processIdentifier)) deactivated")
             delegate?.accessibilityObserversManager(
                 didDeactivateApplication: app.localizedName,

@@ -44,7 +44,7 @@ class AccessibilityWindowsManager {
             activeTrackedWindow = trackedWindow
             
             return trackedWindow
-        } else if let window = element.findFirstTargetWindow() {
+        } else if let window = pid.findFirstTargetWindow() {
 
             let title = window.title() ?? "NA"
             let trackedWindow = TrackedWindow(element: window, pid: pid, hash: CFHash(window), title: title)
@@ -71,5 +71,10 @@ class AccessibilityWindowsManager {
     
     func trackedWindows(for element: AXUIElement) -> [TrackedWindow] {
         return trackedWindows.filter { $0.hash == CFHash(element) }
+    }
+    
+    func reset() {
+        activeTrackedWindow = nil
+        trackedWindows.removeAll()
     }
 }
