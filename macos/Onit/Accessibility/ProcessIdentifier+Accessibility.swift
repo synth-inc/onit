@@ -22,7 +22,7 @@ extension pid_t {
         return getAXUIElement().children() ?? []
     }
     
-    func findTargetWindows() -> [AXUIElement] {
+    private func findTargetWindows() -> [AXUIElement] {
         let windows = self.getRootChildren()
         var targetWindows : [AXUIElement] = []
         
@@ -35,9 +35,38 @@ extension pid_t {
         return targetWindows
     }
     
-    // We are currently using this but should instead use findTargetWindows with some logic to select to correct one.
     func findFirstTargetWindow() -> AXUIElement? {
-        return self.findTargetWindows().first
+        let windows = findTargetWindows()
+
+        // Try to find a suitable window in this priority order:
+        // 1. A single main window from target windows
+        // 2. The application's mainWindow if it's in our target windows
+        // 3. The application's focusedWindow if it's in our target windows
+
+        // First, check if there's exactly one main window in the target windows
+        let mainWindows = windows.filter { $0.isMain() == true }
+        
+        if mainWindows.count == 1 {
+            return mainWindows.first
+        }
+
+        let application = getAXUIElement()
+        
+        // If no single main window, try the application's mainWindow
+        if let mainWindow = application.mainWindow(), windows.contains(where: {
+            CFHash($0) == CFHash(mainWindow)
+        }) {
+            return mainWindow
+        }
+
+        // If no main window, try the application's focusedWindow
+        if let focusedWindow = application.focusedWindow(), windows.contains(where: {
+            CFHash($0) == CFHash(focusedWindow)
+        }) {
+            return focusedWindow
+        }
+
+        return nil
     }
     
     // We should not use this function in most cases.
