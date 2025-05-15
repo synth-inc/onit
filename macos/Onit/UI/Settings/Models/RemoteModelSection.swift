@@ -114,10 +114,7 @@ struct RemoteModelSection: View {
     // MARK: - Subviews
 
     var titleView: some View {
-        ModelTitle(title: provider.title, isOn: $use, showToggle: Binding(
-            get: { appState.subscriptionActive || validated },
-            set: { _ in }
-        ))
+        ModelTitle(title: provider.title, isOn: $use)
     }
 
     var textField: some View {

@@ -81,7 +81,7 @@ struct LocalModelsSection: View {
     var title: some View {
         VStack(alignment: .leading, spacing: 8) {
             // The implementation to turn off local models doesn't exist, so we never show the toggle.
-            ModelTitle(title: "Ollama", isOn: $isOn, showToggle: .constant(false))
+            ModelTitle(title: "Ollama", isOn: $isOn, showToggle: false)
 
             HStack {
                 Text("Endpoint URL:")

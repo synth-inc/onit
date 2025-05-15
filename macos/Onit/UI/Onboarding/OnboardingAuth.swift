@@ -16,6 +16,14 @@ struct OnboardingAuth: View {
     
     @Default(.onboardingAuthState) var onboardingAuthState
     
+    @Default(.useOpenAI) var useOpenAI
+    @Default(.useAnthropic) var useAnthropic
+    @Default(.useXAI) var useXAI
+    @Default(.useGoogleAI) var useGoogleAI
+    @Default(.useDeepSeek) var useDeepSeek
+    @Default(.usePerplexity) var usePerplexity
+    @Default(.newUserDidResetProviderToggleUse) var newUserDidResetProviderToggleUse
+    
     private let isSignUp: Bool
     init(isSignUp: Bool) { self.isSignUp = isSignUp }
     
@@ -305,6 +313,20 @@ extension OnboardingAuth {
     private func handleLogin(loginResponse: LoginResponse) {
         TokenManager.token = loginResponse.token
         appState.account = loginResponse.account
+        
+        let shouldSetModelSettingsProvidersToOn = !newUserDidResetProviderToggleUse && loginResponse.isNewAccount
+        
+        if shouldSetModelSettingsProvidersToOn {
+            useOpenAI = true
+            useAnthropic = true
+            useXAI = true
+            useGoogleAI = true
+            useDeepSeek = true
+            usePerplexity = true
+            
+            newUserDidResetProviderToggleUse = true
+        }
+        
         onboardingAuthState = .hideAuth
     }
 }
