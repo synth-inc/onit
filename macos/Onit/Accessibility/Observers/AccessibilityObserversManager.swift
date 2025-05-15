@@ -68,9 +68,9 @@ class AccessibilityObserversManager {
     func appLaunched(with pid: pid_t) {
         guard authorizationState(for: pid) == .authorized else { return }
         
-        let appName = pid.getAppName() ?? "Unknown"
+        let appName = pid.appName ?? "Unknown"
         log.info("Observers automatically started for `\(appName)` (\(pid))")
-        delegate?.accessibilityObserversManager(didActivateApplication: pid.getAppName(), processID: pid)
+        delegate?.accessibilityObserversManager(didActivateApplication: pid.appName, processID: pid)
         startNotificationsObserver(for: pid)
         startPersistentNotificationsObserver(for: pid)
     }
@@ -157,7 +157,7 @@ class AccessibilityObserversManager {
         }
         stopNotificationsObserver(for: pid)
         
-        let appName = pid.getAppName() ?? "Unknown"
+        let appName = pid.appName ?? "Unknown"
         log.info("Registering observers for `\(appName)` (\(pid))")
         
         var observer: AXObserver?
@@ -169,7 +169,7 @@ class AccessibilityObserversManager {
                 let accessibilityInstance = Unmanaged<AccessibilityObserversManager>
                     .fromOpaque(refcon!)
                     .takeUnretainedValue()
-                let userInfo = userInfo as! [String: Any] as Dictionary
+                let userInfo: [String: Any] = (userInfo as? [String: Any]) ?? [:]
                 
                 accessibilityInstance.handleAccessibilityNotifications(
                     notification as String, element: element, info: userInfo, observer: observer)
@@ -185,7 +185,7 @@ class AccessibilityObserversManager {
             
             var notifications = Config.notifications
             
-            if HighlightedTextCoordinator.appNames.contains(pid.getAppName() ?? "") {
+            if HighlightedTextCoordinator.appNames.contains(pid.appName ?? "") {
                 notifications.removeAll(where: { $0 == kAXSelectedTextChangedNotification })
             }
             
@@ -211,7 +211,7 @@ class AccessibilityObserversManager {
     }
     
     private func startPersistentNotificationsObserver(for pid: pid_t) {
-        let appName = pid.getAppName() ?? "Unknown"
+        let appName = pid.appName ?? "Unknown"
         guard persistentObservers[pid] == nil else {
             log.debug("Persistent observer already registered for `\(appName)` (\(pid))")
             return
@@ -227,7 +227,7 @@ class AccessibilityObserversManager {
                 let accessibilityInstance = Unmanaged<AccessibilityObserversManager>
                     .fromOpaque(refcon!)
                     .takeUnretainedValue()
-                let userInfo = userInfo as! [String: Any] as Dictionary
+                let userInfo: [String: Any] = (userInfo as? [String: Any]) ?? [:]
                 
                 accessibilityInstance.handlePersistentAccessibilityNotifications(
                     notification as String, element: element, info: userInfo)
@@ -276,7 +276,7 @@ class AccessibilityObserversManager {
         }
 
         observers.removeValue(forKey: pid)
-        log.info("Stopped observing notifications for `\(pid.getAppName() ?? "Unknown")` (\(pid))")
+        log.info("Stopped observing notifications for `\(pid.appName ?? "Unknown")` (\(pid))")
     }
     
     private func stopPersistentNotificationsObserver(for pid: pid_t) {
@@ -294,7 +294,7 @@ class AccessibilityObserversManager {
         }
         
         persistentObservers.removeValue(forKey: pid)
-        log.info("Stopped observing persistent notifications for `\(pid.getAppName() ?? "Unknown")` (\(pid))")
+        log.info("Stopped observing persistent notifications for `\(pid.appName ?? "Unknown")` (\(pid))")
     }
     
     // MARK: - Notifications handling
@@ -328,7 +328,7 @@ class AccessibilityObserversManager {
     }
     
     private func authorizationState(for pid: pid_t) -> ProcessAuthorizationState {
-        let appName = pid.getAppName()
+        let appName = pid.appName
         let onitName = Bundle.main.object(forInfoDictionaryKey: "CFBundleName") as? String
         
         if pid == getpid() || appName == onitName {
@@ -358,9 +358,6 @@ class AccessibilityObserversManager {
             if result == .success {
                 return true
             } else {
-                if result == .cannotComplete {
-                    log.error("We're stuck with Accessibility")
-                }
                 return false
             }
         }

@@ -8,7 +8,7 @@
 import AppKit
 
 extension pid_t {
-    func getAppName() -> String? {
+    var appName: String? {
         NSRunningApplication(processIdentifier: self)?.localizedName
     }
     

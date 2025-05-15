@@ -12,7 +12,7 @@ extension pid_t {
     func getAXUIElement() -> AXUIElement {
         let appElement = AXUIElementCreateApplication(self)
         
-        // This make sure the AX server is fully initialized
+        // This makes sure the AX server is fully initialized
         _ = appElement.role()
         
         return appElement

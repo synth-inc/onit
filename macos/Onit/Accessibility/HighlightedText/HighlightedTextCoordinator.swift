@@ -24,7 +24,7 @@ actor HighlightedTextCoordinator {
     ) {
         stopPolling(pid: pid)
 
-        guard let appName = pid.getAppName(), Self.appNames.contains(appName) else {
+        guard let appName = pid.appName, Self.appNames.contains(appName) else {
             return
         }
         
