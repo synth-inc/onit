@@ -432,8 +432,8 @@ class AccessibilityNotificationsManager: ObservableObject {
         self.screenResult.errorMessage = nil
         self.showDebug()
         
-        // Automatically add AutoContext is only available in Pinned mode.
-        if Defaults[.automaticallyAddAutoContext] && results != nil && !FeatureFlagManager.shared.useScreenModeWithAccessibility {
+        // Automatically add AutoContext is only available in tethered mode.
+        if Defaults[.automaticallyAddAutoContext] && results != nil && !FeatureFlagManager.shared.usePinnedMode {
             state.addAutoContext()
         }
     }
