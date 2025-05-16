@@ -19,7 +19,7 @@ class PanelStateCoordinator {
     // MARK: - Private properties
     
     private var stateChangesCancellable: AnyCancellable?
-    private var isFirstPermissionReceived = true
+    private var hasReceivedFirstPermission = false
     private var frontmostPidAtLaunch: pid_t?
     
     // MARK: - Public properties
@@ -85,7 +85,7 @@ class PanelStateCoordinator {
             tryToActivateObserverAtLaunch()
         }
         
-        isFirstPermissionReceived = false
+        hasReceivedFirstPermission = true
     }
     
     private func stopAllManagers() {
@@ -100,9 +100,9 @@ class PanelStateCoordinator {
      * This is a workaround to activate it and display the hint correctly
      */
     private func tryToActivateObserverAtLaunch() {
-        guard let pid = frontmostPidAtLaunch, isFirstPermissionReceived else { return }
+        guard let pid = frontmostPidAtLaunch, !hasReceivedFirstPermission else { return }
         
-        AccessibilityObserversManager.shared.appLaunched(with: pid)
+        AccessibilityObserversManager.shared.startAccessibilityObserversOnFirstLaunch(with: pid)
         frontmostPidAtLaunch = nil
     }
 }

@@ -31,10 +31,10 @@ class AccessibilityObserversManager {
     
     private var isStarted = false
     
-    enum ProcessAuthorizationState {
-        case authorized
-        case ignored
-        case current
+    enum ProcessObservationEligibility {
+        case eligible
+        case ignoreProcess
+        case ownProcess
     }
     
     // MARK: - Private initializer
@@ -65,8 +65,13 @@ class AccessibilityObserversManager {
         }
     }
     
-    func appLaunched(with pid: pid_t) {
-        guard authorizationState(for: pid) == .authorized else { return }
+    /**
+     * Called once at app launch if accessibility permission is granted.
+     * Needed to start monitoring the foreground app manually since
+     * app activation notifications aren’t delivered at launch.
+     */
+    func startAccessibilityObserversOnFirstLaunch(with pid: pid_t) {
+        guard authorizationState(for: pid) == .eligible else { return }
         
         let appName = pid.appName ?? "Unknown"
         log.info("Observers automatically started for `\(appName)` (\(pid))")
@@ -101,12 +106,12 @@ class AccessibilityObserversManager {
         }
         
         switch authorizationState(for: app.processIdentifier) {
-        case .current:
+        case .ownProcess:
             log.debug("Ignoring activation of Onit (\(app.processIdentifier))")
-        case .ignored:
+        case .ignoreProcess:
             log.debug("Ignoring activation of `\(app.localizedName ?? "Unknown")` (\(app.processIdentifier))")
             delegate?.accessibilityObserversManager(didActivateIgnoredApplication: app.localizedName)
-        case .authorized:
+        case .eligible:
             log.info("Application `\(app.localizedName ?? "Unknown")` (\(app.processIdentifier)) activated")
             
             if !isAXServerInitialized(pid: app.processIdentifier) {
@@ -133,12 +138,12 @@ class AccessibilityObserversManager {
         
         // Check if Onit is activated so we don't deactivate the active app
         if let activeApp = NSWorkspace.shared.frontmostApplication,
-           authorizationState(for: activeApp.processIdentifier) == .current {
+           authorizationState(for: activeApp.processIdentifier) == .ownProcess {
             log.debug("Onit is active, ignoring deactivation of `\(app.localizedName ?? "Unknown")` (\(app.processIdentifier))")
             return
         }
         
-        if authorizationState(for: app.processIdentifier) == .authorized {
+        if authorizationState(for: app.processIdentifier) == .eligible {
             log.info("Application `\(app.localizedName ?? "Unknown")` (\(app.processIdentifier)) deactivated")
             delegate?.accessibilityObserversManager(
                 didDeactivateApplication: app.localizedName,
@@ -327,17 +332,17 @@ class AccessibilityObserversManager {
         }
     }
     
-    private func authorizationState(for pid: pid_t) -> ProcessAuthorizationState {
+    private func authorizationState(for pid: pid_t) -> ProcessObservationEligibility {
         let appName = pid.appName
         let onitName = Bundle.main.object(forInfoDictionaryKey: "CFBundleName") as? String
         
         if pid == getpid() || appName == onitName {
-            return .current
+            return .ownProcess
         } else if ignoredAppNames.contains(appName ?? "") {
-            return .ignored
+            return .ignoreProcess
         }
         
-        return .authorized
+        return .eligible
     }
     
     private func isAXServerInitialized(pid: pid_t) -> Bool {
