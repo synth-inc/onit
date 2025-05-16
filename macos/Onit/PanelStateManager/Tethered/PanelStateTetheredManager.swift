@@ -8,6 +8,7 @@
 @preconcurrency import AppKit
 import Combine
 import Defaults
+import PostHog
 import SwiftUI
 
 @MainActor
@@ -105,13 +106,25 @@ class PanelStateTetheredManager: PanelStateBaseManager, ObservableObject {
     }
     
     override func launchPanel(for state: OnitPanelState) {
-        // TODO: KNA - Stick with the old code for now to allow a gradual refactor without breaking everything.
-        state.launchPanel()
+        var applicationName = "N/A"
+        if let (trackedWindow, _) = statesByWindow.first(where: { $1 === state }) {
+            applicationName = trackedWindow.element.appName() ?? "N/A"
+        }
+        let properties = [
+            "displayMode": "tethered",
+            "applicationName": applicationName
+        ]
+        PostHogSDK.shared.capture("launch_panel", properties: properties)
+        
+        super.launchPanel(for: state)
+        
+        showPanel(for: state)
     }
     
     override func closePanel(for state: OnitPanelState) {
-        // TODO: KNA - Stick with the old code for now to allow a gradual refactor without breaking everything.
-        state.closePanel()
+        hidePanel(for: state)
+        
+        super.closePanel(for: state)
     }
 
     override func fetchWindowContext() {
