@@ -79,25 +79,14 @@ extension OnitPanelState: NSWindowDelegate {
     
     func handlePanelClicked() {
         textFocusTrigger.toggle()
-        foregroundTrackedWindowIfNeeded()
+        
+        notifyDelegates { $0.panelBecomeKey(state: self) }
     }
-    
-    private func foregroundTrackedWindowIfNeeded() {
-        guard let panel = panel, panel.level != .floating,
-              let window = trackedWindow?.element else { return }
-        
-        window.bringToFront()
-        
-        notifyDelegates { delegate in
-            delegate.panelStateDidChange(state: self)
-        }
-    }
-        
+
     // MARK: - NSWindowDelegate
     
     func windowDidBecomeKey(_ notification: Notification) {
         notifyDelegates { $0.panelBecomeKey(state: self) }
-        foregroundTrackedWindowIfNeeded()
     }
 
     func windowDidResignKey(_ notification: Notification) {
