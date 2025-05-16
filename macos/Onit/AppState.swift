@@ -247,53 +247,53 @@ class AppState: NSObject {
     // MARK: - Alert Functions
     
     func checkApiKeyExistsForCurrentModelProvider() -> Bool {
-         // Allow check to be bypassed for local models.
-         guard Defaults[.mode] == .remote else { return true }
+        // Allow check to be bypassed for local models.
+        guard Defaults[.mode] == .remote else { return true }
          
-         // Don't allow check to pass when a remote model isn't selected.
-         guard let currentModel = Defaults[.remoteModel] else { return false }
+        // Don't allow check to pass when a remote model isn't selected.
+        guard let currentModel = Defaults[.remoteModel] else { return false }
          
-         switch currentModel.provider {
-         case .openAI:
-             if Defaults[.openAIToken] != nil {
-                 return isOpenAITokenValidated
-             } else {
-                 return false
-             }
-         case .anthropic:
-             if Defaults[.anthropicToken] != nil {
-                 return isAnthropicTokenValidated
-             } else {
-                 return false
-             }
-         case .xAI:
-             if Defaults[.xAIToken] != nil {
-                 return isXAITokenValidated
-             } else {
-                 return false
-             }
-         case .googleAI:
-             if Defaults[.googleAIToken] != nil {
-                 return isGoogleAITokenValidated
-             } else {
-                 return false
-             }
-         case .deepSeek:
-             if Defaults[.deepSeekToken] != nil {
-                 return isDeepSeekTokenValidated
-             } else {
-                 return false
-             }
-         case .perplexity:
-             if Defaults[.perplexityToken] != nil {
-                 return isPerplexityTokenValidated
-             } else {
-                 return false
-             }
-         case .custom:
-             // Custom providers don't require subscription validation.
-             return true
-         }
+        switch currentModel.provider {
+        case .openAI:
+            if Defaults[.openAIToken] != nil {
+                return isOpenAITokenValidated
+            } else {
+                return false
+            }
+        case .anthropic:
+            if Defaults[.anthropicToken] != nil {
+                return isAnthropicTokenValidated
+            } else {
+                return false
+            }
+        case .xAI:
+            if Defaults[.xAIToken] != nil {
+                return isXAITokenValidated
+            } else {
+                return false
+            }
+        case .googleAI:
+            if Defaults[.googleAIToken] != nil {
+                return isGoogleAITokenValidated
+            } else {
+                return false
+            }
+        case .deepSeek:
+            if Defaults[.deepSeekToken] != nil {
+                return isDeepSeekTokenValidated
+            } else {
+                return false
+            }
+        case .perplexity:
+            if Defaults[.perplexityToken] != nil {
+                return isPerplexityTokenValidated
+            } else {
+                return false
+            }
+        case .custom:
+            // Custom providers don't require subscription validation.
+            return true
+        }
      }
     
     func checkChatGenerationLimit(_ callback: @escaping () -> Void) async {
