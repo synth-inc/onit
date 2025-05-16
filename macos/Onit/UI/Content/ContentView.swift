@@ -34,6 +34,8 @@ struct ContentView: View {
             ZStack(alignment: .top) {
                 if showOnboarding {
                     Onboarding()
+                } else if appState.account == nil {
+                    AuthFlow()
                 } else {
                     ZStack {
                         VStack(spacing: 0) {
