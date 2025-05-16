@@ -1,5 +1,5 @@
 //
-//  OnboardingAuth.swift
+//  AuthFlow.swift
 //  Onit
 //
 //  Created by Loyd Kim on 4/30/25.
@@ -11,10 +11,11 @@ import GoogleSignIn
 import GoogleSignInSwift
 import SwiftUI
 
-struct OnboardingAuth: View {
+struct AuthFlow: View {
     @Environment(\.appState) var appState
     
-    @Default(.onboardingAuthState) var onboardingAuthState
+    @Default(.authFlowStatus) var authFlowStatus
+    @Default(.showOnboarding) var showOnboarding
     
     @Default(.useOpenAI) var useOpenAI
     @Default(.useAnthropic) var useAnthropic
@@ -22,12 +23,6 @@ struct OnboardingAuth: View {
     @Default(.useGoogleAI) var useGoogleAI
     @Default(.useDeepSeek) var useDeepSeek
     @Default(.usePerplexity) var usePerplexity
-    
-    private let isSignUp: Bool
-    
-    init(isSignUp: Bool) {
-        self.isSignUp = isSignUp
-    }
 
     @State private var isHoveredContinueWithEmailButton: Bool = false
     @State private var isPressedContinueWithEmailButton: Bool = false
@@ -44,6 +39,10 @@ struct OnboardingAuth: View {
     
     @State private var errorMessageEmail: String = ""
     @State private var errorMessageAuth: String = ""
+    
+    private var isSignUp: Bool {
+        return authFlowStatus == .showSignUp
+    }
     
     var body: some View {
         VStack(alignment: .center, spacing: 42) {
@@ -63,7 +62,7 @@ struct OnboardingAuth: View {
 
 // MARK: - Child Components
 
-extension OnboardingAuth {
+extension AuthFlow {
     private var formAuthButtons: some View {
         VStack(spacing: 4) {
             OnboardingAuthButton(
@@ -139,9 +138,9 @@ extension OnboardingAuth {
             
             Button {
                 if isSignUp {
-                    onboardingAuthState = .showSignIn
+                    authFlowStatus = .showSignIn
                 } else {
-                    onboardingAuthState = .showSignUp
+                    authFlowStatus = .showSignUp
                 }
             } label: {
                 Text(isSignUp ? "Sign In" : "Sign up")
@@ -159,7 +158,8 @@ extension OnboardingAuth {
             redirectSection
             
             Button {
-                onboardingAuthState = .hideAuth
+                authFlowStatus = .hideAuth
+                showOnboarding = false
             } label: {
                 Text(generateSkipText())
                     .styleText(size: 13, weight: .regular, underline: isHoveredSkipButton)
@@ -241,7 +241,7 @@ extension OnboardingAuth {
 
 // MARK: - Private Functions (UI)
 
-extension OnboardingAuth {
+extension AuthFlow {
     private func generateAgreementText() -> AttributedString {
         var agreementText = AttributedString("By continuing with Google or email, you agree to our ")
         agreementText.foregroundColor = .gray300
@@ -295,13 +295,14 @@ extension OnboardingAuth {
             usePerplexity = true
         }
         
-        onboardingAuthState = .hideAuth
+        authFlowStatus = .hideAuth
+        showOnboarding = false
     }
 }
 
 // MARK: - Private Functions (email)
 
-extension OnboardingAuth {
+extension AuthFlow {
     private func validateEmail() -> Bool {
         let emailRegex = "^[A-Z0-9a-z._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$"
         let emailTest = NSPredicate(format: "SELF MATCHES %@", emailRegex)
@@ -334,7 +335,7 @@ extension OnboardingAuth {
 
 // MARK: - Private Functions (Google, Apple)
 
-extension OnboardingAuth {
+extension AuthFlow {
     private func handleGoogleSignInButton() {
         errorMessageAuth = ""
         

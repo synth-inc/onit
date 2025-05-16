@@ -27,7 +27,7 @@ struct App: SwiftUI.App {
     @Default(.launchOnStartupRequested) var launchOnStartupRequested
     @Default(.autoContextFromCurrentWindow) var autoContextFromCurrentWindow
     @Default(.autoContextFromHighlights) var autoContextFromHighlights
-    @Default(.onboardingAuthState) var onboardingAuthState
+    @Default(.authFlowStatus) var authFlowStatus
     
     private let appCoordinator: AppCoordinator
 
@@ -103,9 +103,9 @@ struct App: SwiftUI.App {
         }
         
         Window("",id: windowOnboardingAuthId) {
-            if onboardingAuthState != .hideAuth && appState.account == nil {
+            if authFlowStatus != .hideAuth && appState.account == nil {
                 VStack {
-                    OnboardingAuth(isSignUp: onboardingAuthState == .showSignUp)
+                    AuthFlow()
                 }
                 .background(Color.black)
                 .frame(width: 400, height: 800)
@@ -124,7 +124,7 @@ struct App: SwiftUI.App {
                 dismissWindow(id: windowOnboardingAuthId)
             }
         }
-        .onChange(of: onboardingAuthState) { _, new in
+        .onChange(of: authFlowStatus) { _, new in
             if new == .hideAuth {
                 dismissWindow(id: windowOnboardingAuthId)
             }

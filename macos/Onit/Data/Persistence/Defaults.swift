@@ -9,7 +9,7 @@ import CoreGraphics
 import Defaults
 import Foundation
 
-enum OnboardingAuthState: String, Defaults.Serializable {
+enum AuthFlowStatus: String, Defaults.Serializable {
     case hideAuth
     case showSignUp
     case showSignIn
@@ -118,8 +118,8 @@ extension Defaults.Keys {
     static let openOnMouseMonitor = Key<Bool>("openOnMouseMonitor", default: false)
     
     // Onboarding
-    static let showOnboardingAccessibility = Key<Bool>("showOnboardingAccessibility", default: true)
-    static let onboardingAuthState = Key<OnboardingAuthState>("onboardingAuthState", default: .hideAuth)
+    static let showOnboarding = Key<Bool>("showOnboarding", default: true)
+    static let authFlowStatus = Key<AuthFlowStatus>("authFlowStatus", default: .hideAuth)
     
     // Alerts
     static let showTwoWeekProTrialEndedAlert = Key<Bool>("showTwoWeekProTrialEndedAlert", default: false)

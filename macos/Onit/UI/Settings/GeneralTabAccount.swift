@@ -12,7 +12,7 @@ struct GeneralTabAccount: View {
     @Environment(\.appState) var appState
     @Environment(\.openWindow) private var openWindow
     
-    @Default(.onboardingAuthState) var onboardingAuthState
+    @Default(.authFlowStatus) var authFlowStatus
     
     @State private var showDeleteAccountAlert: Bool = false
     @State private var accountDeleteError: String = ""
@@ -83,7 +83,7 @@ extension GeneralTabAccount {
             iconText: "👤",
             text: "Create an account",
             action: {
-                onboardingAuthState = .showSignUp
+                authFlowStatus = .showSignUp
                 openWindow(id: windowOnboardingAuthId)
                 setOnboardingAuthWindowToFloat()
             },
@@ -95,7 +95,7 @@ extension GeneralTabAccount {
         SimpleButton(
             text: "Sign in",
             action: {
-                onboardingAuthState = .showSignIn
+                authFlowStatus = .showSignIn
                 openWindow(id: windowOnboardingAuthId)
                 setOnboardingAuthWindowToFloat()
             }
@@ -132,6 +132,6 @@ extension GeneralTabAccount {
     private func logout() {
         TokenManager.token = nil
         appState.account = nil
-        Defaults[.onboardingAuthState] = .showSignIn
+        Defaults[.authFlowStatus] = .showSignIn
     }
 }
