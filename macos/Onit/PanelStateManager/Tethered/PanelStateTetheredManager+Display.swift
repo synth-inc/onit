@@ -154,6 +154,24 @@ extension PanelStateTetheredManager {
         )
     }
     
+    func tempHidePanel(state: OnitPanelState) {
+        guard let panel = state.panel else { return }
+        
+        NSAnimationContext.runAnimationGroup { context in
+            context.duration = animationDuration
+            panel.animator().alphaValue = 0.0
+        }
+    }
+
+    func tempShowPanel(state: OnitPanelState) {
+        guard let panel = state.panel else { return }
+        
+        NSAnimationContext.runAnimationGroup { context in
+            context.duration = animationDuration
+            panel.animator().alphaValue = 1.0
+        }
+    }
+    
     private func movePanel(
         state: OnitPanelState,
         window: AXUIElement,

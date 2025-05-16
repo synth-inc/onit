@@ -80,7 +80,7 @@ struct ContentView: View {
         }
         .simultaneousGesture(
             TapGesture(count: 1)
-                .onEnded({ state.handlePanelClicked() })
+                .onEnded({ handleViewClicked() })
         )
         .fileImporter(
             isPresented: showFileImporterBinding,
@@ -108,6 +108,12 @@ struct ContentView: View {
                 }
             }
         }
+    }
+    
+    private func handleViewClicked() {
+        state.textFocusTrigger.toggle()
+        
+        state.notifyDelegates { $0.panelBecomeKey(state: state) }
     }
 
     private func handleFileImport(_ result: Result<[URL], any Error>) {

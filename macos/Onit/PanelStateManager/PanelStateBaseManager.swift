@@ -5,6 +5,7 @@
 //  Created by Kévin Naudin on 07/05/2025.
 //
 
+import Defaults
 import Foundation
 import SwiftUI
 
@@ -102,7 +103,7 @@ class PanelStateBaseManager: PanelStateManagerLogic {
     }
     
     func launchPanel(for state: OnitPanelState) {
-        state.buildPanelIfNeeded()
+        buildPanelIfNeeded(for: state)
     }
     
     func closePanel(for state: OnitPanelState) {
@@ -115,6 +116,25 @@ class PanelStateBaseManager: PanelStateManagerLogic {
     }
     
     // MARK: - Private functions
+    
+    private func buildPanelIfNeeded(for state: OnitPanelState) {
+        if let existingPanel = state.panel, existingPanel.isVisible {
+            existingPanel.makeKeyAndOrderFront(nil)
+            existingPanel.orderFrontRegardless()
+            // Focus the text input when we're activating the panel
+            state.textFocusTrigger.toggle()
+            
+            return
+        }
+
+        // Create a new chat when creating a new panel if the setting is enabled
+        // But we don't want to clear out the context, so that autocontext still works.
+        if Defaults[.createNewChatOnPanelOpen] {
+            state.newChat(clearContext: false)
+        }
+
+        state.panel = OnitRegularPanel(state: state)
+    }
     
     private func closePanels() {
         // Close all panels without animations

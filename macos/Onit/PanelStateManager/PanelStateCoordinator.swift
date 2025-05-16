@@ -62,10 +62,9 @@ class PanelStateCoordinator {
     }
     
     func launchPanel(for state: OnitPanelState? = nil) {
-        log.error("")
         let targetState = state ?? self.state
+        
         guard let panel = targetState.panel else {
-//            PostHogSDK.shared.capture("launch_panel", properties:  ["applicationName": trackedWindow?.element.appName() ?? "N/A"])
             currentManager.launchPanel(for: targetState)
             return
         }
@@ -80,7 +79,6 @@ class PanelStateCoordinator {
     }
     
     func closePanel(for state: OnitPanelState? = nil) {
-        log.error("")
         let targetState = state ?? self.state
         
         guard let _ = targetState.panel else { return }
