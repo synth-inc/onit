@@ -2,6 +2,7 @@ import Defaults
 import PostHog
 import ServiceManagement
 import SwiftUI
+import AppKit
 
 struct GeneralTab: View {
     @Environment(\.windowState) private var state
@@ -17,6 +18,8 @@ struct GeneralTab: View {
     
     @State var isLaunchAtStartupEnabled: Bool = SMAppService.mainApp.status == .enabled
     @State var isAnalyticsEnabled: Bool = PostHogSDK.shared.isOptOut() == false
+    
+    @ObservedObject private var accessibilityPermissionManager = AccessibilityPermissionManager.shared
     
     var isPinnedMode: Bool {
         usePinnedMode ?? true
@@ -65,11 +68,14 @@ struct GeneralTab: View {
     }
 
     var displayModeSection: some View {
-        Section {
+        let accessibilityGranted = accessibilityPermissionManager.accessibilityPermissionStatus == .granted
+        return Section {
             VStack(alignment: .leading, spacing: 16) {
                 HStack(spacing: 8) {
                     Button {
-                        FeatureFlagManager.shared.togglePinnedMode(true)
+                        if accessibilityGranted {
+                            FeatureFlagManager.shared.togglePinnedMode(true)
+                        }
                     } label: {
                         VStack(spacing: 4) {
                             Image(systemName: "pin.fill")
@@ -85,11 +91,15 @@ struct GeneralTab: View {
                         .background(isPinnedMode ? Color.accentColor : Color.clear)
                         .clipShape(RoundedRectangle(cornerRadius: 6))
                         .contentShape(Rectangle())
+                        .opacity(accessibilityGranted ? 1.0 : 0.5)
                     }
                     .buttonStyle(.plain)
+                    .disabled(!accessibilityGranted)
                     
                     Button {
-                        FeatureFlagManager.shared.togglePinnedMode(false)
+                        if accessibilityGranted {
+                            FeatureFlagManager.shared.togglePinnedMode(false)
+                        }
                     } label: {
                         VStack(spacing: 4) {
                             Image(systemName: "rectangle.split.2x1")
@@ -105,19 +115,46 @@ struct GeneralTab: View {
                         .background(!isPinnedMode ? Color.accentColor : Color.clear)
                         .clipShape(RoundedRectangle(cornerRadius: 6))
                         .contentShape(Rectangle())
+                        .opacity(accessibilityGranted ? 1.0 : 0.5)
                     }
                     .buttonStyle(.plain)
+                    .disabled(!accessibilityGranted)
                 }
                 
-                VStack(alignment: .leading, spacing: 4) {
-                    if isPinnedMode {
-                        Text("Onit will always appear on the right side of your screen. You will only have one Onit panel at any given time. Other applications will be resized to make room for Onit.")
+                if !accessibilityGranted {
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("To use Pinned or Tethered mode, enable Accessibility permission for Onit.")
                             .font(.system(size: 12))
                             .foregroundStyle(.gray200)
-                    } else {
-                        Text("Onit will attach to your applications. There can be one Onit panel for each application window. If you move your app, Onit will move with it.")
-                            .font(.system(size: 12))
-                            .foregroundStyle(.gray200)
+                        Button(action: {
+                            if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility") {
+                                NSWorkspace.shared.open(url)
+                            }
+                        }) {
+                            HStack(spacing: 6) {
+                                Image(systemName: "lock.open")
+                                Text("Enable Accessibility Permission")
+                            }
+                            .font(.system(size: 13, weight: .medium))
+                            .padding(.vertical, 6)
+                            .padding(.horizontal, 12)
+                            .background(Color.accentColor)
+                            .foregroundColor(.white)
+                            .clipShape(RoundedRectangle(cornerRadius: 6))
+                        }
+                        .buttonStyle(.plain)
+                    }
+                } else {
+                    VStack(alignment: .leading, spacing: 4) {
+                        if isPinnedMode {
+                            Text("Onit will always appear on the right side of your screen. You will only have one Onit panel at any given time. Other applications will be resized to make room for Onit.")
+                                .font(.system(size: 12))
+                                .foregroundStyle(.gray200)
+                        } else {
+                            Text("Onit will attach to your applications. There can be one Onit panel for each application window. If you move your app, Onit will move with it.")
+                                .font(.system(size: 12))
+                                .foregroundStyle(.gray200)
+                        }
                     }
                 }
             }
