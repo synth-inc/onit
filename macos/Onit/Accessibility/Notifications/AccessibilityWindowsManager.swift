@@ -44,7 +44,7 @@ class AccessibilityWindowsManager {
             activeTrackedWindow = trackedWindow
             
             return trackedWindow
-        } else if let window = pid.findFirstTargetWindow() {
+        } else if let window = pid.firstMainWindow {
 
             let title = window.title() ?? "NA"
             let trackedWindow = TrackedWindow(element: window, pid: pid, hash: CFHash(window), title: title)

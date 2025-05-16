@@ -17,7 +17,7 @@ actor HighlightedTextCoordinator {
     
     private var workerByPID: [pid_t: HighlightedTextWorker] = [:]
 
-    func startPolling(
+    func startPollingIfNeeded(
         pid: pid_t,
         interval: TimeInterval = 0.5,
         selectionChangedHandler: @escaping @Sendable (String?, CGRect?) -> Void

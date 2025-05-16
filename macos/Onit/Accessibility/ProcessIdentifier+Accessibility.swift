@@ -35,7 +35,7 @@ extension pid_t {
         return targetWindows
     }
     
-    func findFirstTargetWindow() -> AXUIElement? {
+    var firstMainWindow: AXUIElement? {
         let windows = findTargetWindows()
 
         // Try to find a suitable window in this priority order:
