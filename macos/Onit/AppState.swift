@@ -122,9 +122,6 @@ class AppState: NSObject {
             } else if localModel == nil || !models.contains(localModel!) {
                 Defaults[.localModel] = models[0]
             }
-            if listedModels.isEmpty {
-                Defaults[.mode] = .local
-            }
             localFetchFailed = false
 
             // Reset the closedNoLocalModels flag when local models are successfully fetched.
