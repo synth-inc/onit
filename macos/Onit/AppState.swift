@@ -249,10 +249,10 @@ class AppState: NSObject {
     func checkApiKeyExistsForCurrentModelProvider() -> Bool {
         // Allow check to be bypassed for local models.
         guard Defaults[.mode] == .remote else { return true }
-         
+        
         // Don't allow check to pass when a remote model isn't selected.
         guard let currentModel = Defaults[.remoteModel] else { return false }
-         
+        
         switch currentModel.provider {
         case .openAI:
             if Defaults[.openAIToken] != nil {
@@ -294,7 +294,7 @@ class AppState: NSObject {
             // Custom providers don't require subscription validation.
             return true
         }
-     }
+    }
     
     func checkChatGenerationLimit(_ callback: @escaping () -> Void) async {
         do {
