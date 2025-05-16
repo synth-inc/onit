@@ -43,10 +43,6 @@ extension PanelStateUntetheredManager {
     
     func hidePanel(for state: OnitPanelState) {
         if let panel = state.panel, !panel.isAnimating {
-            if state.currentAnimationTask != nil {
-                state.cancelCurrentAnimation()
-            }
-            
             let toPanelX = panel.frame.maxX - 2
             let toPanel = NSRect(origin: NSPoint(x: toPanelX, y: panel.frame.minY), size: NSSize(width: 1, height: panel.frame.height))
             
