@@ -40,9 +40,11 @@ struct Onboarding: View {
             .frame(maxHeight: .infinity)
             // .frame(maxWidth: .infinity, maxHeight: .infinity)
             .background(Color.black)
-            .onDisappear {
+            .onAppear {
                 if appState.account == nil {
                     authFlowStatus = .showSignUp
+                } else {
+                    authFlowStatus = .hideAuth
                 }
             }
         } else  {

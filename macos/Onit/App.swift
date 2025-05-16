@@ -102,7 +102,7 @@ struct App: SwiftUI.App {
                 }
         }
         
-        Window("",id: windowOnboardingAuthId) {
+        Window("Create an Account or Log In",id: windowOnboardingAuthId) {
             if authFlowStatus != .hideAuth && appState.account == nil {
                 VStack {
                     AuthFlow()
