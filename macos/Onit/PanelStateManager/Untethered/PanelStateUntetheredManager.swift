@@ -162,7 +162,7 @@ class PanelStateUntetheredManager: PanelStateBaseManager, ObservableObject {
             if state.panelOpened {
                 hideTetherWindow()
                 if state.currentAnimationTask == nil {
-                    state.repositionPanel(action: .undefined)
+                    showPanel(for: state)
                 }
             } else {
                 debouncedShowTetherWindow(state: state, activeScreen: screen)

@@ -158,6 +158,13 @@ class OnitPanelState: NSObject {
         self.promptSuggestionService = SystemPromptSuggestionService(state: self)
     }
     
+    // MARK: - Functions
+    
+    func cancelCurrentAnimation() {
+        currentAnimationTask?.cancel()
+        currentAnimationTask = nil
+    }
+    
     // MARK: - Delegates
     
     func addDelegate(_ delegate: OnitPanelStateDelegate) {
