@@ -198,8 +198,14 @@ struct TextViewWrapper: NSViewRepresentable {
         
         func textView(_ textView: NSTextView, doCommandBy commandSelector: Selector) -> Bool {
             if commandSelector == #selector(NSResponder.insertNewline(_:)) {
-                parent.onSubmit?()
-                return true
+                // Insert new line on shift+enter.
+                if let event = NSApp.currentEvent, event.modifierFlags.contains(.shift) {
+                    textView.insertText("\n", replacementRange: textView.selectedRange())
+                    return true
+                } else {
+                    parent.onSubmit?()
+                    return true
+                }
             }
             return false
         }
