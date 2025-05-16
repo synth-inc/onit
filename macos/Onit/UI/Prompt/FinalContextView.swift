@@ -17,6 +17,7 @@ struct FinalContextView: View {
     @State private var isHoveringInstruction: Bool = false
     @FocusState private var isTextFieldFocused: Bool
     
+    @State private var cursorPosition: Int = 0
     @State private var textHeight: CGFloat = 20
     private let maxHeightLimit: CGFloat = 100
     @StateObject private var audioRecorder = AudioRecorder()
@@ -41,9 +42,12 @@ struct FinalContextView: View {
                 TextViewWrapper(
                     text: Binding(
                         get: { prompt.instruction },
-                        set: { prompt.instruction = $0 }
+                        set: {
+                            prompt.instruction = $0
+                            windowState.detectIsTyping()
+                        }
                     ),
-                    cursorPosition: .constant(prompt.instruction.count),
+                    cursorPosition: $cursorPosition,
                     dynamicHeight: $textHeight,
                     onSubmit: {
                         if isEditing {
@@ -68,6 +72,9 @@ struct FinalContextView: View {
                 .scrollContentBackground(.hidden)
                 .background(.gray800) // To match the TextField style
                 .padding(0) // To match the TextField padding
+                .onChange(of: cursorPosition) {
+                    windowState.detectIsTyping()
+                }
 
                 if isEditing {
                     HStack {

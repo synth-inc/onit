@@ -70,9 +70,20 @@ struct PromptCore: View {
         }
         .background {
             if !isEditing {
-                upListener
-                downListener
+                if !windowState.isTyping {
+                    upListener
+                    downListener
+                }
+                
                 newListener
+            }
+        }
+        .onChange(of: editingText?.wrappedValue ?? windowState.pendingInstruction) { _, _ in
+            windowState.detectIsTyping()
+        }
+        .onChange(of: windowState.pendingInstructionCursorPosition) {
+            if !isEditing {
+                windowState.detectIsTyping()
             }
         }
     }

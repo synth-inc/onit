@@ -8,6 +8,8 @@
 import SwiftUI
 
 struct ToggleOutputsView: View {
+    @Environment(\.windowState) var windowState
+    
     var prompt: Prompt
 
     var body: some View {
@@ -21,7 +23,7 @@ struct ToggleOutputsView: View {
 
     var left: some View {
         Button {
-            prompt.updateGenerationIndex(prompt.generationIndex - 1)
+            decrementGenerationIndex()
         } label: {
             Color.clear
                 .frame(width: 20, height: 20)
@@ -29,9 +31,15 @@ struct ToggleOutputsView: View {
                     Image(.chevLeft)
                 }
         }
-        .keyboardShortcut(.leftArrow, modifiers: [])
         .foregroundStyle(prompt.canDecrementGeneration ? .FG : .gray300)
         .disabled(!prompt.canDecrementGeneration)
+        .background {
+            if !windowState.isTyping {
+                Button { decrementGenerationIndex() }
+                label: { EmptyView() }
+                    .keyboardShortcut(.leftArrow, modifiers: [])
+            }
+        }
     }
 
     @ViewBuilder
@@ -45,7 +53,7 @@ struct ToggleOutputsView: View {
 
     var right: some View {
         Button {
-            prompt.updateGenerationIndex(prompt.generationIndex + 1)
+            incrementGenerationIndex()
         } label: {
             Color.clear
                 .frame(width: 20, height: 20)
@@ -53,9 +61,33 @@ struct ToggleOutputsView: View {
                     Image(.chevRight)
                 }
         }
-        .keyboardShortcut(.rightArrow, modifiers: [])
         .foregroundStyle(prompt.canIncrementGeneration ? .FG : .gray300)
         .disabled(!prompt.canIncrementGeneration)
+        .background {
+            if !windowState.isTyping {
+                Button { incrementGenerationIndex() }
+                label: { EmptyView() }
+                    .keyboardShortcut(.rightArrow, modifiers: [])
+            }
+        }
+    }
+}
+
+// MARK: - Private Functions
+
+extension ToggleOutputsView {
+    private func decrementGenerationIndex() {
+        if prompt.generationIndex > 0 {
+            prompt.updateGenerationIndex(prompt.generationIndex - 1)
+        }
+    }
+    
+    private func incrementGenerationIndex() {
+        if let total = prompt.generationCount,
+           prompt.generationIndex + 1 < total
+        {
+            prompt.updateGenerationIndex(prompt.generationIndex + 1)
+        }
     }
 }
 
