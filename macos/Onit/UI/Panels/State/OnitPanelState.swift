@@ -192,7 +192,7 @@ class OnitPanelState: NSObject {
         isTypingDebounceTask?.cancel()
         
         isTypingDebounceTask = Task {
-            try? await Task.sleep(for: .milliseconds(1000))
+            try? await Task.sleep(for: .milliseconds(2500))
             
             if !Task.isCancelled {
                 await MainActor.run { self.isTyping = false }
