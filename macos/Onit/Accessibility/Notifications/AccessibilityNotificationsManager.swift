@@ -100,7 +100,7 @@ class AccessibilityNotificationsManager: ObservableObject {
         print("Application activated: \(appName ?? "Unknown") \(processID)")
          
         Task.detached {
-            await self.highlightedTextCoordinator.startPolling(pid: processID, selectionChangedHandler: { [weak self] text, frame in
+            await self.highlightedTextCoordinator.startPollingIfNeeded(pid: processID, selectionChangedHandler: { [weak self] text, frame in
                 guard let self = self else { return }
                 
                 Task { @MainActor in
