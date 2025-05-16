@@ -64,7 +64,8 @@ extension PanelStatePinnedManager {
         state: OnitPanelState,
         panel: OnitPanel,
         fromPanel: CGRect,
-        toPanel: CGRect
+        toPanel: CGRect,
+        animationDuration: TimeInterval = 0.2
     ) {
         guard !panel.isAnimating else { return }
         
@@ -98,7 +99,6 @@ extension PanelStatePinnedManager {
         state: OnitPanelState,
         panel: OnitPanel,
         toPanel: CGRect,
-        steps: Int = 10,
         animationDuration: TimeInterval = 0.2
     ) {
         guard !panel.isAnimating, panel.frame != toPanel else { return }
