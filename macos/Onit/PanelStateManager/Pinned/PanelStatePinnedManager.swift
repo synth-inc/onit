@@ -7,6 +7,7 @@
 
 import AppKit
 import Defaults
+import PostHog
 import SwiftUI
 
 @MainActor
@@ -21,6 +22,8 @@ class PanelStatePinnedManager: PanelStateBaseManager, ObservableObject {
     private var lastScreenFrame = CGRect.zero
     private var globalMouseMonitor: Any?
     private var localMouseMonitor: Any?
+    
+    var attachedScreen: NSScreen?
     
     // MARK: - Initializer
     
@@ -99,13 +102,22 @@ class PanelStatePinnedManager: PanelStateBaseManager, ObservableObject {
     }
     
     override func launchPanel(for state: OnitPanelState) {
-        // TODO: KNA - Stick with the old code for now to allow a gradual refactor without breaking everything.
-        state.launchPanel()
+        PostHogSDK.shared.capture("launch_panel", properties: ["displayMode": "pinned"])
+        
+        super.launchPanel(for: state)
+        
+        hideTetherWindow()
+        resetFramesOnAppChange()
+        
+        attachedScreen = NSScreen.mouse
+        
+        showPanel(for: state)
     }
     
     override func closePanel(for state: OnitPanelState) {
-        // TODO: KNA - Stick with the old code for now to allow a gradual refactor without breaking everything.
-        state.closePanel()
+        hidePanel(for: state)
+        
+        super.closePanel(for: state)
     }
 
     override func fetchWindowContext() {
@@ -146,7 +158,7 @@ class PanelStatePinnedManager: PanelStateBaseManager, ObservableObject {
     }
     
     private func handleActivation(of screen: NSScreen) {
-        if state.trackedScreen != screen {
+        if attachedScreen != screen {
             debouncedShowTetherWindow(activeScreen: screen)
         } else {
             hideTetherWindow()
