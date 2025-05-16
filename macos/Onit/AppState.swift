@@ -255,17 +255,41 @@ class AppState: NSObject {
         
         switch currentModel.provider {
         case .openAI:
-            return isOpenAITokenValidated
+            if Defaults[.openAIToken] != nil {
+                return isOpenAITokenValidated
+            } else {
+                return false
+            }
         case .anthropic:
-            return isAnthropicTokenValidated
+            if Defaults[.anthropicToken] != nil {
+                return isAnthropicTokenValidated
+            } else {
+                return false
+            }
         case .xAI:
-            return isXAITokenValidated
+            if Defaults[.xAIToken] != nil {
+                return isXAITokenValidated
+            } else {
+                return false
+            }
         case .googleAI:
-            return isGoogleAITokenValidated
+            if Defaults[.googleAIToken] != nil {
+                return isGoogleAITokenValidated
+            } else {
+                return false
+            }
         case .deepSeek:
-            return isDeepSeekTokenValidated
+            if Defaults[.deepSeekToken] != nil {
+                return isDeepSeekTokenValidated
+            } else {
+                return false
+            }
         case .perplexity:
-            return isPerplexityTokenValidated
+            if Defaults[.perplexityToken] != nil {
+                return isPerplexityTokenValidated
+            } else {
+                return false
+            }
         case .custom:
             // Custom providers don't require subscription validation.
             return true
