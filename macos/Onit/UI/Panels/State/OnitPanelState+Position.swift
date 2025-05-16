@@ -167,6 +167,7 @@ extension OnitPanelState {
         }
     }
     
+    // TODO: KNA - Refacto: Should be removed at the end
     func showPanelForScreen() {
         guard let screen = trackedScreen,
               let panel = self.panel,

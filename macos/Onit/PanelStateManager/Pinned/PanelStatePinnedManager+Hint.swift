@@ -46,18 +46,9 @@ extension PanelStatePinnedManager {
     }
     
     private func tetherHintClicked(screen: NSScreen) {
-        hideTetherWindow()
         
-        if state.panelOpened {
-            resetFramesOnAppChange()
-            state.trackedScreen = screen
-            // TODO: KNA - Stick with the old code for now to allow a gradual refactor without breaking everything.
-            state.showPanelForScreen()
-        } else {
-            state.trackedScreen = screen
-            // TODO: KNA - Stick with the old code for now to allow a gradual refactor without breaking everything.
-            state.launchPanel()
-        }
+        state.trackedScreen = screen
+        launchPanel(for: state)
     }
     
     private func updateTetherWindowPosition(for screen: NSScreen, lastYComputed: CGFloat? = nil) {
