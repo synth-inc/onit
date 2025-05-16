@@ -423,25 +423,6 @@ class AppState: NSObject {
             models = models.filter { $0.provider != .perplexity }
         }
 
-//        if !useOpenAI || (!subscriptionActive && !isOpenAITokenValidated) {
-//            models = models.filter { $0.provider != .openAI }
-//        }
-//        if !useAnthropic || (!subscriptionActive && !isAnthropicTokenValidated) {
-//            models = models.filter { $0.provider != .anthropic }
-//        }
-//        if !useXAI || (!subscriptionActive && !isXAITokenValidated) {
-//            models = models.filter { $0.provider != .xAI }
-//        }
-//        if !useGoogleAI || (!subscriptionActive && !isGoogleAITokenValidated) {
-//            models = models.filter { $0.provider != .googleAI }
-//        }
-//        if !useDeepSeek || (!subscriptionActive && !isDeepSeekTokenValidated) {
-//            models = models.filter { $0.provider != .deepSeek }
-//        }
-//        if !usePerplexity || (!subscriptionActive && !isPerplexityTokenValidated) {
-//            models = models.filter { $0.provider != .perplexity }
-//        }
-
         // Filter out models from disabled custom providers
         for customProvider in availableCustomProvider {
             models = models.filter { model in
