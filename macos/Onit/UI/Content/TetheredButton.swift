@@ -37,7 +37,7 @@ struct TetheredButton: View {
             }
             
             Button(action: {
-                state.closePanel()
+                PanelStateCoordinator.shared.closePanel(for: state)
             }) {
                 Image(.smallChevRight)
                     .renderingMode(.template)

@@ -49,7 +49,7 @@ extension PanelStateTetheredManager: AccessibilityNotificationsDelegate {
         if let (_, state) = statesByWindow.first(where: { (key: TrackedWindow, value: OnitPanelState) in
             key == window
         }) {
-            state.closePanel()
+            PanelStateCoordinator.shared.closePanel(for: state)
             state.removeDelegate(self)
             statesByWindow.removeValue(forKey: window)
         }
@@ -75,8 +75,20 @@ extension PanelStateTetheredManager: AccessibilityNotificationsDelegate {
 // MARK: - OnitPanelStateDelegate
 
 extension PanelStateTetheredManager: OnitPanelStateDelegate {
+    
     func panelBecomeKey(state: OnitPanelState) {
+        func foregroundTrackedWindowIfNeeded(state: OnitPanelState) {
+            guard let panel = state.panel, panel.level != .floating else { return }
+            guard let (trackedWindow, _) = statesByWindow.first(where: { $0.value === state }) else {
+                return
+            }
+            
+            trackedWindow.element.bringToFront()
+            handlePanelStateChange(state: state, action: .undefined)
+        }
+        
         self.state = state
+        foregroundTrackedWindowIfNeeded(state: state)
     }
     func panelResignKey(state: OnitPanelState) { }
     func panelStateDidChange(state: OnitPanelState) {

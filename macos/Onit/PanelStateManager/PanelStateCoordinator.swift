@@ -6,6 +6,7 @@
 //
 
 import Combine
+import Defaults
 import Foundation
 import SwiftUI
 
@@ -59,6 +60,33 @@ class PanelStateCoordinator {
     func filterPanelChats(_ allChats: [Chat]) -> [Chat] {
         currentManager.filterPanelChats(allChats)
     }
+    
+    func launchPanel(for state: OnitPanelState? = nil) {
+        let targetState = state ?? self.state
+        
+        guard let panel = targetState.panel else {
+            currentManager.launchPanel(for: targetState)
+            return
+        }
+
+        // If we're using the shortcut as a Toggle, dismiss the panel.
+        if Defaults[.launchShortcutToggleEnabled] {
+            closePanel(for: targetState)
+        } else {
+            panel.show()
+            targetState.textFocusTrigger.toggle()
+        }
+    }
+    
+    func closePanel(for state: OnitPanelState? = nil) {
+        let targetState = state ?? self.state
+        
+        guard let _ = targetState.panel else { return }
+        
+        currentManager.closePanel(for: targetState)
+    }
+    
+    // MARK: - Private functions
     
     private func handleStateChange(accessibilityPermission: AccessibilityPermissionStatus, pinnedModeEnabled: Bool) {
         AccessibilityAnalytics.logPermission(local: accessibilityPermission)
