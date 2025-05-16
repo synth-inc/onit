@@ -31,6 +31,8 @@ class OnitPanelState: NSObject {
     
     /// States
     let systemPromptState: SystemPromptState = .init()
+    var isTyping: Bool = false
+    var isTypingDebounceTask: Task<Void, Never>? = nil
     
     /// ChatView visibility.
     /// When `showChatView` is true the ChatView is rendered;
@@ -179,6 +181,22 @@ class OnitPanelState: NSObject {
                 contexts: pendingContextList,
                 input: pendingInput
             )
+        }
+    }
+    
+    // MARK: - Functions
+    
+    func detectIsTyping() {
+        isTyping = true
+        
+        isTypingDebounceTask?.cancel()
+        
+        isTypingDebounceTask = Task {
+            try? await Task.sleep(for: .milliseconds(1000))
+            
+            if !Task.isCancelled {
+                await MainActor.run { self.isTyping = false }
+            }
         }
     }
 }
