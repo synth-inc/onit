@@ -32,7 +32,7 @@ class OnitPanelState: NSObject {
     /// States
     let systemPromptState: SystemPromptState = .init()
     var isTyping: Bool = false
-    var isTypingDebounceTask: Task<Void, Never>? = nil
+    private var isTypingDebounceTask: Task<Void, Never>? = nil
     
     /// ChatView visibility.
     /// When `showChatView` is true the ChatView is rendered;
