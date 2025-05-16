@@ -6,6 +6,7 @@
 //
 
 import Combine
+import Defaults
 import Foundation
 import SwiftUI
 
@@ -60,9 +61,38 @@ class PanelStateCoordinator {
         currentManager.filterPanelChats(allChats)
     }
     
+    func launchPanel(for state: OnitPanelState? = nil) {
+        log.error("")
+        let targetState = state ?? self.state
+        guard let panel = targetState.panel else {
+//            PostHogSDK.shared.capture("launch_panel", properties:  ["applicationName": trackedWindow?.element.appName() ?? "N/A"])
+            currentManager.launchPanel(for: targetState)
+            return
+        }
+
+        // If we're using the shortcut as a Toggle, dismiss the panel.
+        if Defaults[.launchShortcutToggleEnabled] {
+            closePanel(for: targetState)
+        } else {
+            panel.show()
+            targetState.textFocusTrigger.toggle()
+        }
+    }
+    
+    func closePanel(for state: OnitPanelState? = nil) {
+        log.error("")
+        let targetState = state ?? self.state
+        
+        guard let _ = targetState.panel else { return }
+        
+        currentManager.closePanel(for: targetState)
+    }
+
     func fetchWindowContext() {
         currentManager.fetchWindowContext()
     }
+    
+    // MARK: - Private functions
     
     private func handleStateChange(accessibilityPermission: AccessibilityPermissionStatus, pinnedModeEnabled: Bool) {
         AccessibilityAnalytics.logPermission(local: accessibilityPermission)

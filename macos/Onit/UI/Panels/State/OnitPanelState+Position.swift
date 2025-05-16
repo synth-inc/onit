@@ -15,7 +15,7 @@ extension OnitPanelState {
     
     private var animationDuration: TimeInterval { 0.2 }
     
-    @MainActor private func cancelCurrentAnimation() {
+    @MainActor func cancelCurrentAnimation() {
         currentAnimationTask?.cancel()
         currentAnimationTask = nil
     }
@@ -406,13 +406,9 @@ extension OnitPanelState {
             // Call resizeWindows() AFTER panel animation is complete when in pinned mode
             if usePinnedMode, let screen = self.trackedScreen ?? NSScreen.mouse {
                 DispatchQueue.main.async {
-                    do {
-                        // Access PanelStateCoordinator and try to resize windows
-                        if let pinnedManager = PanelStateCoordinator.shared.currentManager as? PanelStatePinnedManager {
-                            pinnedManager.resizeWindows(for: screen)
-                        }
-                    } catch {
-                        print("Error trying to resize windows: \(error)")
+                    // Access PanelStateCoordinator and try to resize windows
+                    if let pinnedManager = PanelStateCoordinator.shared.currentManager as? PanelStatePinnedManager {
+                        pinnedManager.resizeWindows(for: screen)
                     }
                 }
             }
@@ -514,25 +510,5 @@ extension OnitPanelState {
         
         currentAnimationTask = task
         return task
-    }
-    
-    
-    // MARK: - Thread-safe counter
-    
-    @preconcurrency
-    private final class AtomicInt: @unchecked Sendable {
-        private let lock = NSLock()
-        private var value: Int
-        
-        init(_ initialValue: Int) {
-            self.value = initialValue
-        }
-        
-        func increment() -> Int {
-            lock.lock()
-            defer { lock.unlock() }
-            value += 1
-            return value
-        }
     }
 }          

@@ -8,8 +8,4 @@ extension OnitPanelState {
     var isScreenMode: Bool {
         return trackedWindow == nil && trackedScreen != nil
     }
-    
-    func shouldRepositionPanel(action: TrackedWindowAction) -> Bool {
-        return !isScreenMode
-    }
 }

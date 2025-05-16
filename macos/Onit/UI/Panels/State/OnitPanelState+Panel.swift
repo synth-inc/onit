@@ -11,6 +11,26 @@ import PostHog
 
 extension OnitPanelState: NSWindowDelegate {
     
+    func buildPanelIfNeeded() {
+        if let existingPanel = panel, existingPanel.isVisible {
+            existingPanel.makeKeyAndOrderFront(nil)
+            existingPanel.orderFrontRegardless()
+            // Focus the text input when we're activating the panel
+            textFocusTrigger.toggle()
+            
+            return
+        }
+
+        // Create a new chat when creating a new panel if the setting is enabled
+        // But we don't want to clear out the context, so that autocontext still works.
+        if Defaults[.createNewChatOnPanelOpen] {
+            newChat(clearContext: false)
+        }
+
+        panel = OnitRegularPanel(state: self)
+    }
+    
+    // TODO: KNA - Refacto: Should be removed at the end
     @MainActor
     func showPanel() {
         if let existingPanel = panel, existingPanel.isVisible {
@@ -42,6 +62,7 @@ extension OnitPanelState: NSWindowDelegate {
         textFocusTrigger.toggle()
     }
 
+    // TODO: KNA - Refacto: Should be removed at the end
     func closePanel() {
         guard let panel = panel else { return }
         
@@ -51,6 +72,7 @@ extension OnitPanelState: NSWindowDelegate {
         restoreWindowPosition()
     }
     
+    // TODO: KNA - Refacto: Should be removed at the end
     func launchPanel() {
         guard let panel = panel else {
             PostHogSDK.shared.capture("launch_panel", properties:  ["applicationName": trackedWindow?.element.appName() ?? "N/A"])
@@ -64,16 +86,6 @@ extension OnitPanelState: NSWindowDelegate {
         } else {
             panel.show()
             textFocusTrigger.toggle()
-        }
-    }
-
-    func escapeAction() {
-        if panel != nil {
-            if pendingInput != nil {
-                pendingInput = nil
-            } else {
-                closePanel()
-            }
         }
     }
     

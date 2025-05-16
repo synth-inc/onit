@@ -101,6 +101,15 @@ class PanelStateBaseManager: PanelStateManagerLogic {
         return chats
     }
     
+    func launchPanel(for state: OnitPanelState) {
+        state.buildPanelIfNeeded()
+    }
+    
+    func closePanel(for state: OnitPanelState) {
+        state.systemPromptState.shouldShowSelection = false
+        state.systemPromptState.shouldShowSystemPrompt = false
+    }
+
     func fetchWindowContext() {
         
     }

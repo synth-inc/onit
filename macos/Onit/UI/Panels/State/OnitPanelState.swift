@@ -43,7 +43,9 @@ class OnitPanelState: NSObject {
     /// Services
     var promptSuggestionService: SystemPromptSuggestionService?
     
+    // TODO: KNA - Refacto: Should be removed at the end
     var trackedWindow: TrackedWindow?
+    // TODO: KNA - Refacto: Should be removed at the end
     var trackedScreen: NSScreen?
     var isWindowDragging: Bool = false
     
