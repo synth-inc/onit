@@ -60,6 +60,10 @@ class PanelStateCoordinator {
         currentManager.filterPanelChats(allChats)
     }
     
+    func fetchWindowContext() {
+        currentManager.fetchWindowContext()
+    }
+    
     private func handleStateChange(accessibilityPermission: AccessibilityPermissionStatus, pinnedModeEnabled: Bool) {
         AccessibilityAnalytics.logPermission(local: accessibilityPermission)
         

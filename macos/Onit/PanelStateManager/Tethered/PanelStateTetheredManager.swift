@@ -104,6 +104,14 @@ class PanelStateTetheredManager: PanelStateBaseManager, ObservableObject {
         }
     }
     
+    override func fetchWindowContext() {
+        guard let (trackedWindow, _) = statesByWindow.first(where: {
+            $0.1 === self.state
+        }) else { return }
+        
+        AccessibilityNotificationsManager.shared.fetchAutoContext(pid: trackedWindow.pid)
+    }
+    
     // MARK: - Functions
     
     @objc func appDidBecomeActive(_ notification: Notification) {
