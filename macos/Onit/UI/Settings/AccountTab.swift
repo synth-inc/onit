@@ -20,7 +20,6 @@ struct AccountTab: View {
     @State private var token: String = ""
     @State private var loginPassword: String = ""
 
-    @Default(.useOnitChat) var useOnitChat
     @State private var freeTrialAvailable: Bool?
     @State private var features: [SubscriptionFeature]?
     @State private var setPassword: String = ""
@@ -40,7 +39,6 @@ struct AccountTab: View {
                 google
                 apple
             } else {
-                useOnitChatSection
                 subscriptionSection
                 subscriptionFreeTrialAvailableSection
                 subscriptionFeaturesSection
@@ -207,17 +205,6 @@ struct AccountTab: View {
     func handleLogin(loginResponse: LoginResponse) {
         TokenManager.token = loginResponse.token
         appState.account = loginResponse.account
-    }
-    
-    var useOnitChatSection: some View {
-        HStack {
-            Text("Use Onit Chat")
-                .font(.system(size: 13))
-            Spacer()
-            Toggle("", isOn: $useOnitChat)
-                .toggleStyle(.switch)
-                .controlSize(.small)
-        }
     }
 
     var subscriptionSection: some View {

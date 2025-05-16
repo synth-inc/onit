@@ -65,7 +65,6 @@ extension Defaults.Keys {
     static let remoteModel = Key<AIModel?>("remoteModel", default: nil)
     static let localModel = Key<String?>("localModel", default: nil)
     static let mode = Key<InferenceMode>("mode", default: .remote)
-    static let useOnitChat = Key<Bool>("useOnitChat", default: false)
     static let availableLocalModels = Key<[String]>("availableLocalModels", default: [])
     static let availableRemoteModels = Key<[AIModel]>("availableRemoteModels", default: [])
     static let availableCustomProviders = Key<[CustomProvider]>(

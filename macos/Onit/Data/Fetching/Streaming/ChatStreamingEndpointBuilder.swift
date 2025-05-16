@@ -12,6 +12,7 @@ import Foundation
 struct ChatStreamingEndpointBuilder {
 
     static func build(
+        useOnitServer: Bool,
         model: AIModel,
         images: [[URL]],
         responses: [String],
@@ -19,7 +20,7 @@ struct ChatStreamingEndpointBuilder {
         systemMessage: String,
         userMessages: [String]
     ) throws -> any StreamingEndpoint {
-        if Defaults[.useOnitChat] {
+        if useOnitServer {
             return ChatStreamingEndpointBuilder.onit(
                 model: model,
                 images: images,

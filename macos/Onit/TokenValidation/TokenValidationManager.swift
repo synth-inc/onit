@@ -115,17 +115,17 @@ class TokenValidationManager {
         if let provider = model?.provider {
             switch provider {
             case .openAI:
-                return Defaults[.openAIToken]
+                return Defaults[.isOpenAITokenValidated] ? Defaults[.openAIToken] : nil
             case .anthropic:
-                return Defaults[.anthropicToken]
+                return Defaults[.isAnthropicTokenValidated] ? Defaults[.anthropicToken] : nil
             case .xAI:
-                return Defaults[.xAIToken]
+                return Defaults[.isXAITokenValidated] ? Defaults[.xAIToken] : nil
             case .googleAI:
-                return Defaults[.googleAIToken]
+                return Defaults[.isGoogleAITokenValidated] ? Defaults[.googleAIToken] : nil
             case .deepSeek:
-                return Defaults[.deepSeekToken]
+                return Defaults[.isDeepSeekTokenValidated] ? Defaults[.deepSeekToken] : nil
             case .perplexity:
-                return Defaults[.perplexityToken]
+                return Defaults[.isPerplexityTokenValidated] ? Defaults[.perplexityToken] : nil
             case .custom:
                 return nil
             }
