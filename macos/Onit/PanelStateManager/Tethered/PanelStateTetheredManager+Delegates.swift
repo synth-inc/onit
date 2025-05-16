@@ -49,7 +49,7 @@ extension PanelStateTetheredManager: AccessibilityNotificationsDelegate {
         if let (_, state) = statesByWindow.first(where: { (key: TrackedWindow, value: OnitPanelState) in
             key == window
         }) {
-            state.closePanel()
+            PanelStateCoordinator.shared.closePanel(for: state)
             state.removeDelegate(self)
             statesByWindow.removeValue(forKey: window)
         }

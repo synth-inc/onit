@@ -104,6 +104,16 @@ class PanelStateTetheredManager: PanelStateBaseManager, ObservableObject {
         }
     }
     
+    override func launchPanel(for state: OnitPanelState) {
+        // TODO: KNA - Stick with the old code for now to allow a gradual refactor without breaking everything.
+        state.launchPanel()
+    }
+    
+    override func closePanel(for state: OnitPanelState) {
+        // TODO: KNA - Stick with the old code for now to allow a gradual refactor without breaking everything.
+        state.closePanel()
+    }
+    
     // MARK: - Functions
     
     @objc func appDidBecomeActive(_ notification: Notification) {

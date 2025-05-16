@@ -7,6 +7,7 @@
 
 import AppKit
 import Defaults
+import PostHog
 import SwiftUI
 
 @MainActor
@@ -110,6 +111,20 @@ class PanelStateUntetheredManager: PanelStateBaseManager, ObservableObject {
     
     override func filterPanelChats(_ chats: [Chat]) -> [Chat] {
         return super.filterPanelChats(chats)
+    }
+    
+    override func launchPanel(for state: OnitPanelState) {
+        PostHogSDK.shared.capture("launch_panel", properties: ["displayMode": "untethered"])
+        
+        super.launchPanel(for: state)
+        
+        showPanel(for: state)
+    }
+    
+    override func closePanel(for state: OnitPanelState) {
+        hidePanel(for: state)
+        
+        super.closePanel(for: state)
     }
     
     // MARK: - PanelStateBaseManager

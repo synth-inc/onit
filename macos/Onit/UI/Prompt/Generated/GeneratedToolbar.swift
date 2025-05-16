@@ -74,7 +74,7 @@ struct GeneratedToolbar: View {
             if prompt.generationIndex != -1 && !prompt.responses.isEmpty {
                 let text = prompt.sortedResponses[prompt.generationIndex].text
                 
-                state.closePanel()
+                PanelStateCoordinator.shared.closePanel(for: state)
             } else {
                 print("Not generated: \(prompt.generationState ?? .done)")
             }
