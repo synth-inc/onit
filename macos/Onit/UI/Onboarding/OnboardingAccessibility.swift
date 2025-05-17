@@ -8,6 +8,8 @@
 import SwiftUI
 
 struct OnboardingAccessibility: View {
+    var skippedAccessibility: Binding<Bool>
+    
     @State private var isHoveringSkipButton: Bool = false
     @State private var showSkipConfirmation: Bool = false
     
@@ -31,7 +33,10 @@ struct OnboardingAccessibility: View {
             Spacer()
             
             if showSkipConfirmation {
-                OnboardingSkipAccessibility(showSkipConfirmation: $showSkipConfirmation)
+                OnboardingSkipAccessibility(
+                    skippedAccessibility: skippedAccessibility,
+                    showSkipConfirmation: $showSkipConfirmation
+                )
             } else {
                 skipAccessibilityButton
             }

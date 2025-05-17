@@ -12,8 +12,7 @@ import SwiftUI
 extension PanelStateUntetheredManager {
     
     private var shouldShowOnboarding: Bool {
-        let accessibilityPermissionGranted = AccessibilityPermissionManager.shared.accessibilityPermissionStatus == .granted
-        return !accessibilityPermissionGranted && Defaults[.showOnboardingAccessibility]
+        return Defaults[.showOnboarding]
     }
     
     func debouncedShowTetherWindow(state: OnitPanelState, activeScreen: NSScreen) {
