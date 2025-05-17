@@ -12,8 +12,6 @@ struct ContentView: View {
     @Environment(\.appState) var appState
     @Environment(\.windowState) private var state
     
-    @ObservedObject private var accessibilityPermissionManager = AccessibilityPermissionManager.shared
-    
     @Default(.panelWidth) var panelWidth
     @Default(.showOnboardingAccessibility) var showOnboardingAccessibility
     @Default(.onboardingAuthState) var onboardingAuthState
@@ -28,42 +26,16 @@ struct ContentView: View {
             set: { state.showFileImporter = $0 }
         )
     }
-    
-    private var shouldShowOnboardingAccessibility: Bool {
-        let accessibilityPermissionGranted = accessibilityPermissionManager.accessibilityPermissionStatus == .granted
-        return !accessibilityPermissionGranted && showOnboardingAccessibility
-    }
-    
-    private var shouldShowOnboardingAuth: Bool {
-        let loggedOut = appState.account == nil
-        let showOnboardingAuth = onboardingAuthState != .hideAuth
-        return loggedOut && showOnboardingAuth
-    }
 
     var body: some View {
         HStack(spacing: -TetheredButton.width / 2) {
             TetheredButton()
             
             ZStack(alignment: .top) {
-                if shouldShowOnboardingAccessibility {
-                    VStack(spacing: 0) {
-                        if state.showChatView {
-                            OnboardingAccessibility().transition(.opacity)
-                        } else {
-                            Spacer()
-                        }
-                    }
-                    .frame(width: panelWidth)
-                    .frame(maxHeight: .infinity)
-                    // .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .background(Color.black)
-                    .onDisappear {
-                        if appState.account == nil {
-                            onboardingAuthState = .showSignUp
-                        }
-                    }
-                } else if shouldShowOnboardingAuth {
-                    OnboardingAuth(isSignUp: onboardingAuthState == .showSignUp)
+                if showOnboarding {
+                    Onboarding()
+                } else if appState.account == nil {
+                    AuthFlow()
                 } else {
                     ZStack {
                         VStack(spacing: 0) {
@@ -95,7 +67,7 @@ struct ContentView: View {
         }
         .buttonStyle(PlainButtonStyle())
         .toolbar {
-            if !shouldShowOnboardingAccessibility {
+            if !showOnboarding && appState.account != nil {
                 ToolbarItem(placement: .navigation) {
                     ToolbarAddButton()
                 }

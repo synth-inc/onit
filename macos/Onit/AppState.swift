@@ -113,9 +113,6 @@ class AppState: NSObject {
             } else if localModel == nil || !models.contains(localModel!) {
                 Defaults[.localModel] = models[0]
             }
-            if listedModels.isEmpty {
-                Defaults[.mode] = .local
-            }
             localFetchFailed = false
 
             // Reset the closedNoLocalModels flag when local models are successfully fetched.
@@ -229,6 +226,8 @@ class AppState: NSObject {
                     useDeepSeek = true
                     usePerplexity = true
                 }
+                
+                Defaults[.showOnboarding] = false
             } catch {
                 print("Login by token failed with error: \(error)")
             }
