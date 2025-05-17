@@ -15,7 +15,6 @@ struct ContentView: View {
     @ObservedObject private var accessibilityPermissionManager = AccessibilityPermissionManager.shared
     
     @Default(.panelWidth) var panelWidth
-    @Default(.mode) var mode
     @Default(.showOnboardingAccessibility) var showOnboardingAccessibility
     @Default(.onboardingAuthState) var onboardingAuthState
     @Default(.showTwoWeekProTrialEndedAlert) var showTwoWeekProTrialEndedAlert
@@ -119,11 +118,6 @@ struct ContentView: View {
             handleFileImport(result)
         }
         .addAnimation(dependency: state.showChatView)
-        .onChange(of: appState.account) {
-            if appState.account != nil {
-                mode = .remote
-            }
-        }
         .onAppear {
             if !hasClosedTrialEndedAlert {
                 if let subscriptionStatus = appState.subscription?.status {
