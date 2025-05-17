@@ -12,7 +12,7 @@ struct GeneralTabAccount: View {
     @Environment(\.appState) var appState
     @Environment(\.openWindow) private var openWindow
     
-    @Default(.onboardingAuthState) var onboardingAuthState
+    @Default(.authFlowStatus) var authFlowStatus
     
     @State private var showDeleteAccountAlert: Bool = false
     @State private var accountDeleteError: String = ""
@@ -83,9 +83,8 @@ extension GeneralTabAccount {
             iconText: "👤",
             text: "Create an account",
             action: {
-                onboardingAuthState = .showSignUp
-                openWindow(id: windowOnboardingAuthId)
-                setOnboardingAuthWindowToFloat()
+                authFlowStatus = .showSignUp
+                openPanel()
             },
             background: .blue
         )
@@ -95,9 +94,8 @@ extension GeneralTabAccount {
         SimpleButton(
             text: "Sign in",
             action: {
-                onboardingAuthState = .showSignIn
-                openWindow(id: windowOnboardingAuthId)
-                setOnboardingAuthWindowToFloat()
+                authFlowStatus = .showSignIn
+                openPanel()
             }
         )
     }
@@ -132,6 +130,21 @@ extension GeneralTabAccount {
     private func logout() {
         TokenManager.token = nil
         appState.account = nil
-        Defaults[.onboardingAuthState] = .showSignIn
+        Defaults[.authFlowStatus] = .showSignIn
+    }
+    
+    private func openPanel() {
+        let coordinator = PanelStateCoordinator.shared
+        
+        // Open the pinned panel, if it isn't already open, so that the user can see the auth flow forms.
+        if coordinator.state.panel == nil {
+            if let currentScreen = NSScreen.main ?? NSScreen.mouse {
+                let manager = PanelStatePinnedManager.shared
+                
+                manager.hideTetherWindow()
+                coordinator.state.trackedScreen = currentScreen
+                coordinator.state.launchPanel()
+            }
+        }
     }
 }

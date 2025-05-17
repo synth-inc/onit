@@ -42,16 +42,7 @@ class AppState: NSObject {
     private var fetchSubscriptionTask: Task<Void, Never>?
     private var chatGenerationLimitTask: Task<Void, Never>? = nil
     
-    var subscription: Subscription? {
-        didSet {
-            if subscriptionActive {
-                return
-            }
-            // If they don't have a subscription and don't have a key for their current remote model, set to nil
-            invalidateRemoteModel()
-            Defaults[.useOnitChat] = false
-        }
-    }
+    var subscription: Subscription?
     var subscriptionActive: Bool { subscription?.status == "active" || subscription?.status == "trialing" }
     
     var subscriptionCanceled: Bool {
@@ -121,9 +112,6 @@ class AppState: NSObject {
                 Defaults[.localModel] = nil
             } else if localModel == nil || !models.contains(localModel!) {
                 Defaults[.localModel] = models[0]
-            }
-            if listedModels.isEmpty {
-                Defaults[.mode] = .local
             }
             localFetchFailed = false
 
@@ -238,6 +226,8 @@ class AppState: NSObject {
                     useDeepSeek = true
                     usePerplexity = true
                 }
+                
+                Defaults[.showOnboarding] = false
             } catch {
                 print("Login by token failed with error: \(error)")
             }
@@ -350,8 +340,6 @@ class AppState: NSObject {
         //   Prevent the user from sending any messages or updating any past prompts
         //   if they haven't provided an API key for the current model.
         if account == nil {
-            Defaults[.useOnitChat] = false
-            
             if !providerApiKeyExists {
                 subscriptionPlanError = "Add the provider API key to send a message."
             } else {
@@ -364,10 +352,6 @@ class AppState: NSObject {
         //   Otherwise, let them send messages or update past prompts as much as they want.
         else {
             if !providerApiKeyExists {
-                // FOR LATER: Logic for when this value is set to true/false should be
-                //            improved when implementing user-added custom remote models.
-                Defaults[.useOnitChat] = true
-                
                 chatGenerationLimitTask?.cancel()
                 
                 chatGenerationLimitTask = Task {
@@ -375,7 +359,6 @@ class AppState: NSObject {
                     chatGenerationLimitTask = nil
                 }
             } else {
-                Defaults[.useOnitChat] = false
                 callback()
             }
         }
@@ -463,25 +446,6 @@ class AppState: NSObject {
             models = models.filter { $0.provider != .perplexity }
         }
 
-//        if !useOpenAI || (!subscriptionActive && !isOpenAITokenValidated) {
-//            models = models.filter { $0.provider != .openAI }
-//        }
-//        if !useAnthropic || (!subscriptionActive && !isAnthropicTokenValidated) {
-//            models = models.filter { $0.provider != .anthropic }
-//        }
-//        if !useXAI || (!subscriptionActive && !isXAITokenValidated) {
-//            models = models.filter { $0.provider != .xAI }
-//        }
-//        if !useGoogleAI || (!subscriptionActive && !isGoogleAITokenValidated) {
-//            models = models.filter { $0.provider != .googleAI }
-//        }
-//        if !useDeepSeek || (!subscriptionActive && !isDeepSeekTokenValidated) {
-//            models = models.filter { $0.provider != .deepSeek }
-//        }
-//        if !usePerplexity || (!subscriptionActive && !isPerplexityTokenValidated) {
-//            models = models.filter { $0.provider != .perplexity }
-//        }
-
         // Filter out models from disabled custom providers
         for customProvider in availableCustomProvider {
             models = models.filter { model in
@@ -497,32 +461,5 @@ class AppState: NSObject {
 
     var remoteNeedsSetup: Bool {
         listedModels.isEmpty
-    }
-
-    func invalidateRemoteModel() {
-        guard let provider = Defaults[.remoteModel]?.provider else { return }
-
-        var isValid: Bool
-
-        switch provider {
-        case .openAI:
-            isValid = isOpenAITokenValidated
-        case .anthropic:
-            isValid = isAnthropicTokenValidated
-        case .xAI:
-            isValid = isXAITokenValidated
-        case .googleAI:
-            isValid = isGoogleAITokenValidated
-        case .deepSeek:
-            isValid = isDeepSeekTokenValidated
-        case .perplexity:
-            isValid = isPerplexityTokenValidated
-        case .custom:
-            isValid = true
-        }
-
-        if !isValid {
-            Defaults[.remoteModel] = nil
-        }
     }
 }

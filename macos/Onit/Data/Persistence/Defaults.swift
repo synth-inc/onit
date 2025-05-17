@@ -9,7 +9,7 @@ import CoreGraphics
 import Defaults
 import Foundation
 
-enum OnboardingAuthState: String, Defaults.Serializable {
+enum AuthFlowStatus: String, Defaults.Serializable {
     case hideAuth
     case showSignUp
     case showSignIn
@@ -34,13 +34,13 @@ extension Defaults.Keys {
     static let isPerplexityTokenValidated = Key<Bool>("perplexityTokenValidated", default: false)
     
     // Remote model usage
-    static let useOpenAI = Key<Bool>("useOpenAI", default: false)
-    static let useAnthropic = Key<Bool>("useAnthropic", default: false)
-    static let useXAI = Key<Bool>("useXAI", default: false)
-    static let useGoogleAI = Key<Bool>("useGoogleAI", default: false)
-    static let useDeepSeek = Key<Bool>("useDeepSeek", default: false)
-    static let usePerplexity = Key<Bool>("usePerplexity", default: false)
-    static let useLocal = Key<Bool>("useLocalModel", default: false)
+    static let useOpenAI = Key<Bool>("useOpenAI", default: true)
+    static let useAnthropic = Key<Bool>("useAnthropic", default: true)
+    static let useXAI = Key<Bool>("useXAI", default: true)
+    static let useGoogleAI = Key<Bool>("useGoogleAI", default: true)
+    static let useDeepSeek = Key<Bool>("useDeepSeek", default: true)
+    static let usePerplexity = Key<Bool>("usePerplexity", default: true)
+    static let useLocal = Key<Bool>("useLocalModel", default: true)
     
     static let streamResponse = Key<StreamResponseConfig>("streamResponse", default: StreamResponseConfig.default)
 
@@ -65,7 +65,6 @@ extension Defaults.Keys {
     static let remoteModel = Key<AIModel?>("remoteModel", default: nil)
     static let localModel = Key<String?>("localModel", default: nil)
     static let mode = Key<InferenceMode>("mode", default: .remote)
-    static let useOnitChat = Key<Bool>("useOnitChat", default: false)
     static let availableLocalModels = Key<[String]>("availableLocalModels", default: [])
     static let availableRemoteModels = Key<[AIModel]>("availableRemoteModels", default: [])
     static let availableCustomProviders = Key<[CustomProvider]>(
@@ -117,8 +116,8 @@ extension Defaults.Keys {
     static let openOnMouseMonitor = Key<Bool>("openOnMouseMonitor", default: false)
     
     // Onboarding
-    static let showOnboardingAccessibility = Key<Bool>("showOnboardingAccessibility", default: true)
-    static let onboardingAuthState = Key<OnboardingAuthState>("onboardingAuthState", default: .hideAuth)
+    static let showOnboarding = Key<Bool>("showOnboarding", default: true)
+    static let authFlowStatus = Key<AuthFlowStatus>("authFlowStatus", default: .hideAuth)
     
     // Alerts
     static let showTwoWeekProTrialEndedAlert = Key<Bool>("showTwoWeekProTrialEndedAlert", default: false)

@@ -9,13 +9,19 @@ import Defaults
 import SwiftUI
 
 struct OnboardingSkipAccessibility: View {
+    private var skippedAccessibility: Binding<Bool>
     private var showSkipConfirmation: Binding<Bool>
     
-    init(showSkipConfirmation: Binding<Bool>) {
+    init(
+        skippedAccessibility: Binding<Bool>,
+        showSkipConfirmation: Binding<Bool>
+    ) {
+        self.skippedAccessibility = skippedAccessibility
         self.showSkipConfirmation = showSkipConfirmation
     }
     
     @State private var isHoveringClose = false
+    @State private var isHoveringContinueButton = false
     
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
@@ -27,17 +33,23 @@ struct OnboardingSkipAccessibility: View {
             HStack {
                 Spacer()
                 Button {
-                    Defaults[.showOnboardingAccessibility] = false
+                    Defaults[.authFlowStatus] = .showSignUp
+                    skippedAccessibility.wrappedValue = true
                 } label: {
                     Text("Yes, continue →")
+                        .styleText(size: 13, underline: isHoveringContinueButton)
                 }
                 .buttonStyle(PlainButtonStyle())
+                .onHover { isHovering in
+                    isHoveringContinueButton = isHovering
+                }
             }
         }
         .frame(maxWidth: .infinity)
         .padding(16)
         .background(.gray900)
         .addBorder()
+        .padding(.bottom, 27)
     }
 }
 
@@ -71,5 +83,8 @@ extension OnboardingSkipAccessibility {
 
 
 #Preview {
-    OnboardingSkipAccessibility(showSkipConfirmation: .constant(true))
+    OnboardingSkipAccessibility(
+        skippedAccessibility: .constant(false),
+        showSkipConfirmation: .constant(true)
+    )
 }
