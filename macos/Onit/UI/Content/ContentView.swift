@@ -13,8 +13,8 @@ struct ContentView: View {
     @Environment(\.windowState) private var state
     
     @Default(.panelWidth) var panelWidth
-    @Default(.mode) var mode
-    @Default(.showOnboarding) var showOnboarding
+    @Default(.showOnboardingAccessibility) var showOnboardingAccessibility
+    @Default(.onboardingAuthState) var onboardingAuthState
     @Default(.showTwoWeekProTrialEndedAlert) var showTwoWeekProTrialEndedAlert
     @Default(.hasClosedTrialEndedAlert) var hasClosedTrialEndedAlert
     
@@ -90,11 +90,6 @@ struct ContentView: View {
             handleFileImport(result)
         }
         .addAnimation(dependency: state.showChatView)
-        .onChange(of: appState.account) {
-            if appState.account != nil {
-                mode = .remote
-            }
-        }
         .onAppear {
             if !hasClosedTrialEndedAlert {
                 if let subscriptionStatus = appState.subscription?.status {
