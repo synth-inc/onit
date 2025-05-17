@@ -16,6 +16,7 @@ struct OnboardingSkipAccessibility: View {
     }
     
     @State private var isHoveringClose = false
+    @State private var isHoveringContinueButton = false
     
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
@@ -30,14 +31,19 @@ struct OnboardingSkipAccessibility: View {
                     Defaults[.showOnboardingAccessibility] = false
                 } label: {
                     Text("Yes, continue →")
+                        .styleText(size: 13, underline: isHoveringContinueButton)
                 }
                 .buttonStyle(PlainButtonStyle())
+                .onHover { isHovering in
+                    isHoveringContinueButton = isHovering
+                }
             }
         }
         .frame(maxWidth: .infinity)
         .padding(16)
         .background(.gray900)
         .addBorder()
+        .padding(.bottom, 27)
     }
 }
 

@@ -83,7 +83,8 @@ extension View {
         size: CGFloat = 14,
         weight: Font.Weight = Font.Weight.medium,
         color: Color = Color.primary,
-        align: TextAlignment = TextAlignment.leading
+        align: TextAlignment = TextAlignment.leading,
+        underline: Bool = false
     ) -> some View {
         self
             .font(.system(
@@ -91,6 +92,7 @@ extension View {
             ))
             .foregroundColor(color)
             .multilineTextAlignment(align)
+            .underline(underline)
     }
     
     func truncateText() -> some View {
