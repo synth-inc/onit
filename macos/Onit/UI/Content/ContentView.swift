@@ -13,8 +13,8 @@ struct ContentView: View {
     @Environment(\.windowState) private var state
     
     @Default(.panelWidth) var panelWidth
-    @Default(.showOnboardingAccessibility) var showOnboardingAccessibility
-    @Default(.onboardingAuthState) var onboardingAuthState
+    @Default(.authFlowStatus) var authFlowStatus
+    @Default(.showOnboarding) var showOnboarding
     @Default(.showTwoWeekProTrialEndedAlert) var showTwoWeekProTrialEndedAlert
     @Default(.hasClosedTrialEndedAlert) var hasClosedTrialEndedAlert
     
