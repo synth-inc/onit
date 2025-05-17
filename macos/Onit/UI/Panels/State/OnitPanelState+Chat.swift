@@ -167,8 +167,9 @@ extension OnitPanelState {
                         throw FetchingError.invalidRequest(message: "Model is required")
                     }
                     let apiToken = TokenValidationManager.getTokenForModel(model)
+                    let useOnitChat = apiToken == nil || apiToken == ""
                     
-                    if Defaults[.useOnitChat] || shouldUseStream(model) {
+                    if useOnitChat || shouldUseStream(model) {
                         prompt.generationState = .streaming
                         let asyncText = try await streamingClient.chat(
                             systemMessage: systemPrompt.prompt,
@@ -179,6 +180,7 @@ extension OnitPanelState {
                             autoContexts: autoContextsHistory,
                             webSearchContexts: webSearchContextsHistory,
                             responses: responsesHistory,
+                            useOnitServer: useOnitChat,
                             model: model,
                             apiToken: apiToken)
                         for try await response in asyncText {
