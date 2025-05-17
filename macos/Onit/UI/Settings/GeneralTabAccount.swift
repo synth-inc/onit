@@ -84,8 +84,7 @@ extension GeneralTabAccount {
             text: "Create an account",
             action: {
                 authFlowStatus = .showSignUp
-                openWindow(id: windowOnboardingAuthId)
-                setOnboardingAuthWindowToFloat()
+                openPanel()
             },
             background: .blue
         )
@@ -96,8 +95,7 @@ extension GeneralTabAccount {
             text: "Sign in",
             action: {
                 authFlowStatus = .showSignIn
-                openWindow(id: windowOnboardingAuthId)
-                setOnboardingAuthWindowToFloat()
+                openPanel()
             }
         )
     }
@@ -133,5 +131,20 @@ extension GeneralTabAccount {
         TokenManager.token = nil
         appState.account = nil
         Defaults[.authFlowStatus] = .showSignIn
+    }
+    
+    private func openPanel() {
+        let coordinator = PanelStateCoordinator.shared
+        
+        // Open the pinned panel, if it isn't already open, so that the user can see the auth flow forms.
+        if coordinator.state.panel == nil {
+            if let currentScreen = NSScreen.main ?? NSScreen.mouse {
+                let manager = PanelStatePinnedManager.shared
+                
+                manager.hideTetherWindow()
+                coordinator.state.trackedScreen = currentScreen
+                coordinator.state.launchPanel()
+            }
+        }
     }
 }
