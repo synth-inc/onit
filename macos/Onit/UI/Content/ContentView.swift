@@ -67,7 +67,7 @@ struct ContentView: View {
         }
         .buttonStyle(PlainButtonStyle())
         .toolbar {
-            if !showOnboarding {
+            if !showOnboarding && appState.account != nil {
                 ToolbarItem(placement: .navigation) {
                     ToolbarAddButton()
                 }

@@ -50,8 +50,7 @@ struct AuthFlow: View {
                 emailAuthTokenForm
             } else {
                 form
-                if isSignUp { signUpRedirect }
-                else { redirectSection }
+                redirectSection
                 Spacer()
             }
         }
