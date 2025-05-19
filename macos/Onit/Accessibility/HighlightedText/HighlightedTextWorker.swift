@@ -38,17 +38,17 @@ final class HighlightedTextWorker {
         timer.setEventHandler { [weak self] in
             guard let self = self,
                   Defaults[.autoContextFromHighlights],
-                  let focusedWindow = self.pid.getFocusedWindow() else {
+                  let mainWindow = self.pid.firstMainWindow else {
                 return
             }
 
             self.foundSelectedText = false
 
-            guard !self.highlightedTextFound(for: focusedWindow) else {
+            guard !self.highlightedTextFound(for: mainWindow) else {
                 return
             }
 
-            self.scanElementHierarchyForSelectedText(focusedWindow: focusedWindow)
+            self.scanElementHierarchyForSelectedText(focusedWindow: mainWindow)
 
             if !self.foundSelectedText && self.lastSelectedText != nil {
                 self.lastSelectedText = nil
