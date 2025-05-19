@@ -11,7 +11,9 @@ import SwiftData
 import SwiftUI
 import Combine
 
+// Deprecated
 struct TextInputView: View {
+    @Environment(\.appState) private var appState
     @Environment(\.windowState) private var state
 
     @FocusState var focused: Bool
@@ -19,7 +21,10 @@ struct TextInputView: View {
     @Query(sort: \Chat.timestamp, order: .reverse) private var allChats: [Chat]
     
     private var chats: [Chat] {
-        PanelStateCoordinator.shared.filterPanelChats(allChats)
+        let chatsFilteredByAccount = allChats
+            .filter { $0.accountId == appState.account?.id }
+        
+        return PanelStateCoordinator.shared.filterPanelChats(chatsFilteredByAccount)
     }
 
     @Default(.mode) var mode
@@ -285,7 +290,7 @@ struct TextInputView: View {
         if state.websiteUrlsScrapeQueue.isEmpty {
             let inputText = state.pendingInstruction.trimmingCharacters(in: .whitespacesAndNewlines)
             guard !inputText.isEmpty else { return }   
-            state.createAndSavePrompt()
+            state.createAndSavePrompt(accountId: appState.account?.id)
         }
     }
 

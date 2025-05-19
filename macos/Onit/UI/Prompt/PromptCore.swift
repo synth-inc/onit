@@ -16,7 +16,10 @@ struct PromptCore: View {
     @Query(sort: \Chat.timestamp, order: .reverse) private var allChats: [Chat]
     
     private var chats: [Chat] {
-        PanelStateCoordinator.shared.filterPanelChats(allChats)
+        let chatsFilteredByAccount = allChats
+            .filter { $0.accountId == appState.account?.id }
+        
+        return PanelStateCoordinator.shared.filterPanelChats(chatsFilteredByAccount)
     }
     
     @Default(.mode) var mode
@@ -228,7 +231,7 @@ extension PromptCore {
     private func handleSend() {
         Task {
             await appState.checkSubscriptionAlerts {
-                windowState.sendAction()
+                windowState.sendAction(accountId: appState.account?.id)
             }
         }
     }
