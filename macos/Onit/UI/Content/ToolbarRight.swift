@@ -1,5 +1,5 @@
 //
-//  Toolbar.swift
+//  ToolbarRight.swift
 //  Onit
 //
 //  Created by Benjamin Sage on 9/20/24.
@@ -9,7 +9,7 @@ import Defaults
 import KeyboardShortcuts
 import SwiftUI
 
-struct Toolbar: View {
+struct ToolbarRight: View {
     @Environment(\.appState) private var appState
     @Environment(\.openSettings) var openSettings
     @Environment(\.windowState) private var state
@@ -124,5 +124,5 @@ struct Toolbar: View {
 }
 
 #Preview {
-    Toolbar()
+    ToolbarRight()
 }
