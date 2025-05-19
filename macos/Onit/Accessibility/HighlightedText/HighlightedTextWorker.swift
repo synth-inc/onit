@@ -48,7 +48,7 @@ final class HighlightedTextWorker {
                 return
             }
 
-            self.scanElementHierarchyForSelectedText(focusedWindow: mainWindow)
+            self.scanElementHierarchyForSelectedText(window: mainWindow)
 
             if !self.foundSelectedText && self.lastSelectedText != nil {
                 self.lastSelectedText = nil
@@ -79,9 +79,9 @@ final class HighlightedTextWorker {
         return false
     }
 
-    private func scanElementHierarchyForSelectedText(focusedWindow: AXUIElement) {
+    private func scanElementHierarchyForSelectedText(window: AXUIElement) {
         var documentValue: AnyObject?
-        let error = AXUIElementCopyAttributeValue(focusedWindow, kAXDocumentAttribute as CFString, &documentValue)
+        let error = AXUIElementCopyAttributeValue(window, kAXDocumentAttribute as CFString, &documentValue)
         
         if error == .success, let document = documentValue {
             if highlightedTextFound(for: document as! AXUIElement) {
@@ -89,7 +89,7 @@ final class HighlightedTextWorker {
             }
         }
 
-        _ = highlightedTextFound(in: focusedWindow, element: focusedWindow)
+        _ = highlightedTextFound(in: window, element: window)
     }
     
     private func highlightedTextFound(in focusedWindow: AXUIElement, element: AXUIElement, depth: Int = 0) -> Bool {
