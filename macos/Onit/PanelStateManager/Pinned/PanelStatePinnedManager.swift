@@ -61,9 +61,9 @@ class PanelStatePinnedManager: PanelStateBaseManager, ObservableObject {
         AccessibilityNotificationsManager.shared.addDelegate(self)
         
         dragManagerCancellable = dragManager.$isDragging
-            .sink { isDragging in
+            .sink { [weak self] isDragging in
                 if !isDragging {
-                    self.onActiveWindowDragEnded()
+                    self?.onActiveWindowDragEnded()
                 }
             }
         
@@ -212,7 +212,6 @@ class PanelStatePinnedManager: PanelStateBaseManager, ObservableObject {
         guard let mouseScreen = NSScreen.mouse,
               let panelScreen = state.panel?.screen else { return }
         
-        log.error("same screen: \(mouseScreen === panelScreen)")
         if mouseScreen === panelScreen {
             resizeWindow(for: panelScreen, window: window, windowFrameChanged: true)
         } else {
