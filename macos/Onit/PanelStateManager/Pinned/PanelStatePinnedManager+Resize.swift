@@ -17,7 +17,7 @@ extension PanelStatePinnedManager {
             .map { $0.processIdentifier }
          
         for pid in appPids {
-            let windows = pid.getWindows()
+            let windows = pid.findTargetWindows()
             
             for window in windows {
                 resizeWindow(for: screen, window: window, isPanelResized: isPanelResized)
@@ -46,11 +46,21 @@ extension PanelStatePinnedManager {
                 if availableSpace < panelWidth {
                     if !windowFrameChanged {
                         targetInitialFrames[window] = windowFrame
+                    } else if targetInitialFrames[window] == nil {
+                        // The user resize the window, we should store the initial frame containing the panel space.
+                        let newWidth = windowFrame.width + panelWidth
+                        let newFrame = NSRect(origin: windowFrame.origin,
+                                              size: NSSize(width: newWidth, height: windowFrame.height))
+                        
+                        targetInitialFrames[window] = newFrame
                     }
                     let overlapAmount = panelWidth - availableSpace
                     let newWidth = windowFrame.width - overlapAmount
                     let newFrame = CGRect(x: windowFrame.origin.x, y: windowFrame.origin.y, width: newWidth, height: windowFrame.height)
                     _ = window.setFrame(newFrame)
+                } else if availableSpace > panelWidth, windowFrameChanged {
+                    // The user reduced the window, we should remove the initial frame
+                    targetInitialFrames.removeValue(forKey: window)
                 }
             } else {
                 // If we're already tracking it, then make it move.

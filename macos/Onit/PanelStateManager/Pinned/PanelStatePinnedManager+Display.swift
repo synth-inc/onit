@@ -32,8 +32,7 @@ extension PanelStatePinnedManager {
         
         if panel.wasAnimated {
             panel.setFrame(newFrame, display: false)
-            /// TODO: KNA - Pinned mode fixes
-            /// Add some logic here to resize the windows when panel is opened on another screen
+            resizeWindows(for: screen)
         } else {
             panel.resizedApplication = false
             animateEnter(state: state,

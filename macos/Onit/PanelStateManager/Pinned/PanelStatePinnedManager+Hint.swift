@@ -46,7 +46,6 @@ extension PanelStatePinnedManager {
     }
     
     private func tetherHintClicked(screen: NSScreen) {
-        
         state.trackedScreen = screen
         launchPanel(for: state)
     }

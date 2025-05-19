@@ -22,7 +22,7 @@ extension pid_t {
         return getAXUIElement().children() ?? []
     }
     
-    private func findTargetWindows() -> [AXUIElement] {
+    func findTargetWindows() -> [AXUIElement] {
         let windows = self.getRootChildren()
         var targetWindows : [AXUIElement] = []
         
