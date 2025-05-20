@@ -372,8 +372,7 @@ extension PanelStateTetheredManager {
         toActive: CGRect?,
         panel: OnitPanel,
         toPanel: CGRect,
-        steps: Int = 10,
-        animationDuration: TimeInterval = 0.2
+        steps: Int = 10
     ) {
         guard !panel.isAnimating, panel.frame != toPanel else { return }
         
@@ -393,7 +392,7 @@ extension PanelStateTetheredManager {
             await withCheckedContinuation { (continuation: CheckedContinuation<Void, Never>) in
                 DispatchQueue.main.asyncAfter(deadline: .now() + animationDuration / 2) {
                     NSAnimationContext.runAnimationGroup { context in
-                        context.duration = animationDuration
+                        context.duration = self.animationDuration
                         context.timingFunction = CAMediaTimingFunction(name: .easeIn)
                         panel.animator().setFrame(toPanel, display: false)
                     } completionHandler: {

@@ -58,8 +58,7 @@ extension PanelStateUntetheredManager {
         state: OnitPanelState,
         panel: OnitPanel,
         fromPanel: CGRect,
-        toPanel: CGRect,
-        animationDuration: TimeInterval = 0.2
+        toPanel: CGRect
     ) {
         guard !panel.isAnimating else { return }
         
@@ -87,8 +86,7 @@ extension PanelStateUntetheredManager {
         state: OnitPanelState,
         panel: OnitPanel,
         toPanel: CGRect,
-        steps: Int = 10,
-        animationDuration: TimeInterval = 0.2
+        steps: Int = 10
     ) {
         guard !panel.isAnimating, panel.frame != toPanel else { return }
         

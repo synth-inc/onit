@@ -116,8 +116,7 @@ class PanelStateTetheredManager: PanelStateBaseManager, ObservableObject {
         ]
         PostHogSDK.shared.capture("launch_panel", properties: properties)
         
-        super.launchPanel(for: state)
-        
+        buildPanelIfNeeded(for: state)
         showPanel(for: state)
     }
     

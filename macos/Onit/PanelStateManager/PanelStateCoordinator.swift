@@ -68,6 +68,13 @@ class PanelStateCoordinator {
             currentManager.launchPanel(for: targetState)
             return
         }
+        
+        // This workaround will make the pannel jump on another screen
+        if currentManager is PanelStatePinnedManager,
+            let mouseScreen = NSScreen.mouse, panel.screen != mouseScreen {
+            currentManager.launchPanel(for: targetState)
+            return
+        }
 
         // If we're using the shortcut as a Toggle, dismiss the panel.
         if Defaults[.launchShortcutToggleEnabled] {

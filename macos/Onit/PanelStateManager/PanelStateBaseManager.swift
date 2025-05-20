@@ -15,6 +15,7 @@ class PanelStateBaseManager: PanelStateManagerLogic {
     // MARK: - Properties
     
     let defaultState = OnitPanelState()
+    let animationDuration: TimeInterval = 0.2
     
     @Published var state: OnitPanelState
     @Published var tetherButtonPanelState: OnitPanelState?
@@ -59,7 +60,7 @@ class PanelStateBaseManager: PanelStateManagerLogic {
     // MARK: - Functions
     
     func start() {
-        
+        // Implemented by children
     }
     
     func stop() {
@@ -103,7 +104,7 @@ class PanelStateBaseManager: PanelStateManagerLogic {
     }
     
     func launchPanel(for state: OnitPanelState) {
-        buildPanelIfNeeded(for: state)
+        // Implemented by children
     }
     
     func closePanel(for state: OnitPanelState) {
@@ -112,12 +113,12 @@ class PanelStateBaseManager: PanelStateManagerLogic {
     }
 
     func fetchWindowContext() {
-        
+        // Implemented by children
     }
     
     // MARK: - Private functions
     
-    private func buildPanelIfNeeded(for state: OnitPanelState) {
+    func buildPanelIfNeeded(for state: OnitPanelState) {
         if let existingPanel = state.panel, existingPanel.isVisible {
             existingPanel.makeKeyAndOrderFront(nil)
             existingPanel.orderFrontRegardless()
