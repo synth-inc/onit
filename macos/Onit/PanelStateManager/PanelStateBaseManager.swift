@@ -5,6 +5,7 @@
 //  Created by Kévin Naudin on 07/05/2025.
 //
 
+import Defaults
 import Foundation
 import SwiftUI
 
@@ -14,6 +15,7 @@ class PanelStateBaseManager: PanelStateManagerLogic {
     // MARK: - Properties
     
     let defaultState = OnitPanelState()
+    let animationDuration: TimeInterval = 0.2
     
     @Published var state: OnitPanelState
     @Published var tetherButtonPanelState: OnitPanelState?
@@ -58,7 +60,7 @@ class PanelStateBaseManager: PanelStateManagerLogic {
     // MARK: - Functions
     
     func start() {
-        
+        // Implemented by children
     }
     
     func stop() {
@@ -101,11 +103,39 @@ class PanelStateBaseManager: PanelStateManagerLogic {
         return chats
     }
     
+    func launchPanel(for state: OnitPanelState) {
+        // Implemented by children
+    }
+    
+    func closePanel(for state: OnitPanelState) {
+        state.systemPromptState.shouldShowSelection = false
+        state.systemPromptState.shouldShowSystemPrompt = false
+    }
+
     func fetchWindowContext() {
-        
+        // Implemented by children
     }
     
     // MARK: - Private functions
+    
+    func buildPanelIfNeeded(for state: OnitPanelState) {
+        if let existingPanel = state.panel, existingPanel.isVisible {
+            existingPanel.makeKeyAndOrderFront(nil)
+            existingPanel.orderFrontRegardless()
+            // Focus the text input when we're activating the panel
+            state.textFocusTrigger.toggle()
+            
+            return
+        }
+
+        // Create a new chat when creating a new panel if the setting is enabled
+        // But we don't want to clear out the context, so that autocontext still works.
+        if Defaults[.createNewChatOnPanelOpen] {
+            state.newChat(clearContext: false)
+        }
+
+        state.panel = OnitRegularPanel(state: state)
+    }
     
     private func closePanels() {
         // Close all panels without animations

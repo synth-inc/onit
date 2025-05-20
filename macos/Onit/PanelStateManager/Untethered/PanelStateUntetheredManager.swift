@@ -7,6 +7,7 @@
 
 import AppKit
 import Defaults
+import PostHog
 import SwiftUI
 
 @MainActor
@@ -112,6 +113,19 @@ class PanelStateUntetheredManager: PanelStateBaseManager, ObservableObject {
         return super.filterPanelChats(chats)
     }
     
+    override func launchPanel(for state: OnitPanelState) {
+        PostHogSDK.shared.capture("launch_panel", properties: ["displayMode": "untethered"])
+        
+        buildPanelIfNeeded(for: state)
+        showPanel(for: state)
+    }
+    
+    override func closePanel(for state: OnitPanelState) {
+        hidePanel(for: state)
+        
+        super.closePanel(for: state)
+    }
+    
     // MARK: - PanelStateBaseManager
     
     override func hideTetherWindow() {
@@ -147,7 +161,7 @@ class PanelStateUntetheredManager: PanelStateBaseManager, ObservableObject {
             if state.panelOpened {
                 hideTetherWindow()
                 if state.currentAnimationTask == nil {
-                    state.repositionPanel(action: .undefined)
+                    showPanel(for: state)
                 }
             } else {
                 debouncedShowTetherWindow(state: state, activeScreen: screen)

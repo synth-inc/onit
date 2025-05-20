@@ -13,7 +13,6 @@ extension PanelStatePinnedManager {
     func debouncedShowTetherWindow(activeScreen: NSScreen) {
         hideTetherWindow()
 
-        tetherHintDetails.showTetherDebounceTimer?.invalidate()
         tetherHintDetails.showTetherDebounceTimer = Timer.scheduledTimer(
             withTimeInterval: tetherHintDetails.showTetherDebounceDelay,
             repeats: false
@@ -46,16 +45,8 @@ extension PanelStatePinnedManager {
     }
     
     private func tetherHintClicked(screen: NSScreen) {
-        hideTetherWindow()
-        
-        if state.panelOpened {
-            resetFramesOnAppChange()
-            state.trackedScreen = screen
-            state.showPanelForScreen()
-        } else {
-            state.trackedScreen = screen
-            state.launchPanel()
-        }
+        state.trackedScreen = screen
+        launchPanel(for: state)
     }
     
     private func updateTetherWindowPosition(for screen: NSScreen, lastYComputed: CGFloat? = nil) {
