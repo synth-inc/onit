@@ -26,4 +26,14 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationWillTerminate(_ notification: Notification) {
         PostHogSDK.shared.capture("app_quit")
     }
+    
+    func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
+        Task { @MainActor in
+            // Only launch the panel if it's not already visible
+            if !PanelStateCoordinator.shared.state.panelOpened {
+                PanelStateCoordinator.shared.launchPanel()
+            }
+        }
+        return true
+    }
 }
