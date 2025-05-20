@@ -21,7 +21,11 @@ struct GeneralTab: View {
     
     @ObservedObject private var accessibilityPermissionManager = AccessibilityPermissionManager.shared
     
-    var isPinnedMode: Bool {
+    private var accessibilityGranted: Bool {
+        accessibilityPermissionManager.accessibilityPermissionStatus == .granted
+    }
+    
+    private var isPinnedMode: Bool {
         usePinnedMode ?? true
     }
     
@@ -68,14 +72,11 @@ struct GeneralTab: View {
     }
 
     var displayModeSection: some View {
-        let accessibilityGranted = accessibilityPermissionManager.accessibilityPermissionStatus == .granted
-        return Section {
+        Section {
             VStack(alignment: .leading, spacing: 16) {
                 HStack(spacing: 8) {
                     Button {
-                        if accessibilityGranted {
-                            FeatureFlagManager.shared.togglePinnedMode(true)
-                        }
+                        FeatureFlagManager.shared.togglePinnedMode(true)
                     } label: {
                         VStack(spacing: 4) {
                             Image(systemName: "pin.fill")
@@ -97,9 +98,7 @@ struct GeneralTab: View {
                     .disabled(!accessibilityGranted)
                     
                     Button {
-                        if accessibilityGranted {
-                            FeatureFlagManager.shared.togglePinnedMode(false)
-                        }
+                        FeatureFlagManager.shared.togglePinnedMode(false)
                     } label: {
                         VStack(spacing: 4) {
                             Image(systemName: "rectangle.split.2x1")
@@ -127,7 +126,7 @@ struct GeneralTab: View {
                             .font(.system(size: 12))
                             .foregroundStyle(.gray200)
                         Button(action: {
-                            if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility") {
+                            if let url = URL(string: MenuCheckForPermissions.link) {
                                 NSWorkspace.shared.open(url)
                             }
                         }) {
