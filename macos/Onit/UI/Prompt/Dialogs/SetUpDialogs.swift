@@ -17,14 +17,9 @@ struct SetUpDialogs: View {
     @State private var fetchingLocal = false
     @State private var debounceTask: DispatchWorkItem?
 
+    @Default(.mode) var mode
     @Default(.closedRemote) var closedRemote
     @Default(.closedLocal) var closedLocal
-    @Default(.closedOpenAI) var closedOpenAI
-    @Default(.closedAnthropic) var closedAnthropic
-    @Default(.closedXAI) var closedXAI
-    @Default(.closedGoogleAI) var closedGoogleAI
-    @Default(.closedDeepSeek) var closedDeepSeek
-    @Default(.closedPerplexity) var closedPerplexity
     @Default(.closedNoLocalModels) var closedNoLocalModels
     @Default(.closedNoRemoteModels) var closedNoRemoteModels
     @Default(.seenLocal) var seenLocal
@@ -109,8 +104,6 @@ struct SetUpDialogs: View {
 //                noRemote
 //                local
 //                restartLocal
-//                expired(.openAI)
-//                expired(.anthropic)
 //            #endif
             
             if availableRemoteModels.isEmpty && appState.remoteFetchFailed && !closedNoRemoteModels {
@@ -132,29 +125,11 @@ struct SetUpDialogs: View {
                 }
                 newRemote(models: newModels)
             }
-            if !closedLocal && availableLocalModels.isEmpty && !seenLocal {
+            if mode == .local && !closedLocal && availableLocalModels.isEmpty && !seenLocal {
                 local
             }
-            if !closedNoLocalModels && availableLocalModels.isEmpty && seenLocal {
+            if mode == .local && !closedNoLocalModels && availableLocalModels.isEmpty && seenLocal {
                 restartLocal
-            }
-            if false && !closedOpenAI {
-                expired(.openAI)
-            }
-            if false && !closedAnthropic {
-                expired(.anthropic)
-            }
-            if false && !closedXAI {
-                expired(.xAI)
-            }
-            if false && !closedGoogleAI {
-                expired(.googleAI)
-            }
-            if false && !closedDeepSeek {
-                expired(.deepSeek)
-            }
-            if false && !closedPerplexity {
-                expired(.perplexity)
             }
         }
     }
@@ -278,38 +253,8 @@ struct SetUpDialogs: View {
         }
     }
 
-    func expired(_ provider: AIModel.ModelProvider) -> some View {
-        SetUpDialog(title: "Couldn't connect to \(provider.title)", buttonText: "Go to Settings") {
-            Text("Onit couldn't connect to remote API providers - your tokens may have expired.")
-        } action: {
-            settings()
-        } closeAction: {
-            switch provider {
-            case .openAI:
-                closedOpenAI = true
-            case .anthropic:
-                closedAnthropic = true
-            case .xAI:
-                closedXAI = true
-            case .googleAI:
-                closedGoogleAI = true
-            case .deepSeek:
-                closedDeepSeek = true
-            case .perplexity:
-                closedPerplexity = true
-            case .custom:
-                break  // TODO: KNA -
-            }
-        }
-    }
-
     func resetAppStorageFlags() {
         closedRemote = false
         closedLocal = false
-        closedOpenAI = false
-        closedAnthropic = false
-        closedXAI = false
-        closedGoogleAI = false
-        closedDeepSeek = false
     }
 }
