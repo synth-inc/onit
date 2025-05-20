@@ -19,9 +19,14 @@ struct PaperclipButton: View {
     @Default(.closedAutoContextTag) var closedAutoContextTag
     
     private let currentWindowIcon: NSImage?
+    private let shouldShowAddContextButton: Bool
     
-    init(currentWindowIcon: NSImage? = nil) {
+    init(
+        currentWindowIcon: NSImage? = nil,
+        shouldShowAddContextButton: Bool = false
+    ) {
         self.currentWindowIcon = currentWindowIcon
+        self.shouldShowAddContextButton = shouldShowAddContextButton
     }
     
     var accessibilityAutoContextEnabled: Bool {
@@ -40,6 +45,19 @@ struct PaperclipButton: View {
             if state.pendingContextList.isEmpty {
                 if !accessibilityAutoContextEnabled && !closedAutoContextTag {
                     EnableAutocontextTag()
+                }
+            }
+            
+            if shouldShowAddContextButton {
+                Button {
+                    handleAddContext()
+                } label: {
+                    Text("Add context")
+                        .styleText(
+                            size: 13,
+                            weight: .medium,
+                            color: .gray200
+                        )
                 }
             }
         }

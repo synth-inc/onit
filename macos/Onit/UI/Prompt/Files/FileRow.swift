@@ -18,36 +18,45 @@ struct FileRow: View {
         accessibilityPermissionManager.accessibilityPermissionStatus == .granted
     }
     
+    var windowName: String? {
+        if accessibilityEnabled,
+           !windowAlreadyInContext,
+           let windowName = currentWindowInfo.name
+        {
+            return windowName
+        } else {
+            return nil
+        }
+    }
+    
     var contextList: [Context]
 
     var body: some View {
-        HStack(spacing: 6) {
-            PaperclipButton(
-                currentWindowIcon: currentWindowInfo.icon
-            )
-            
-            ScrollView(.horizontal) {
-                HStack(spacing: 6) {
-                    if accessibilityEnabled,
-                       !windowAlreadyInContext,
-                       let windowName = currentWindowInfo.name
-                    {
-                        AutoContextButton(
-                            icon: currentWindowInfo.icon,
-                            text: windowName,
-                            action: addWindowToContext,
-                            isAdd: true
-                        )
-                    }
-                    
-                    if contextList.isEmpty {
-                        Spacer()
-                    } else {
-                        ContextList(contextList: contextList, hasHorizontalScroll: false)
+        VStack(alignment: .leading, spacing: 6) {
+            HStack(spacing: 6) {
+                PaperclipButton(
+                    currentWindowIcon: currentWindowInfo.icon,
+                    shouldShowAddContextButton: windowName == nil
+                )
+                
+                ScrollView(.horizontal) {
+                    HStack(spacing: 6) {
+                        if let windowName = windowName {
+                            AutoContextButton(
+                                icon: currentWindowInfo.icon,
+                                text: windowName,
+                                action: addWindowToContext,
+                                isAdd: true
+                            )
+                        }
                     }
                 }
+                .scrollIndicators(.hidden)
             }
-            .scrollIndicators(.hidden)
+            
+            if !contextList.isEmpty {
+                ContextList(contextList: contextList)
+            }
         }
         .onAppear {
             currentWindowInfo = initializeCurrentWindowInfo()
