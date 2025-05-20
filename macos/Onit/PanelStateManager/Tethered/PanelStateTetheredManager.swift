@@ -8,6 +8,7 @@
 @preconcurrency import AppKit
 import Combine
 import Defaults
+import PostHog
 import SwiftUI
 
 @MainActor
@@ -104,6 +105,28 @@ class PanelStateTetheredManager: PanelStateBaseManager, ObservableObject {
         }
     }
     
+    override func launchPanel(for state: OnitPanelState) {
+        var applicationName = "N/A"
+        if let (trackedWindow, _) = statesByWindow.first(where: { $1 === state }) {
+            applicationName = trackedWindow.element.appName() ?? "N/A"
+        }
+        let properties = [
+            "displayMode": "tethered",
+            "applicationName": applicationName
+        ]
+        PostHogSDK.shared.capture("launch_panel", properties: properties)
+        
+        super.launchPanel(for: state)
+        
+        showPanel(for: state)
+    }
+    
+    override func closePanel(for state: OnitPanelState) {
+        hidePanel(for: state)
+        
+        super.closePanel(for: state)
+    }
+
     override func fetchWindowContext() {
         guard let (trackedWindow, _) = statesByWindow.first(where: {
             $0.1 === self.state
@@ -143,7 +166,7 @@ class PanelStateTetheredManager: PanelStateBaseManager, ObservableObject {
                 var action = action
                 
                 if state.panelWasHidden {
-                    state.tempShowPanel()
+                    tempShowPanel(state: state)
                 }
                 
                 // TODO: KNA - We need to store the frame used to calculate the tetheredButtonYPosition and apply a diff
@@ -159,7 +182,7 @@ class PanelStateTetheredManager: PanelStateBaseManager, ObservableObject {
                 hideTetherWindow()
 
                 if state.currentAnimationTask == nil {
-                    state.repositionPanel(action: action)
+                    showPanel(for: state, action: action)
                 }
             } else {
                 // Panel closed
@@ -169,7 +192,7 @@ class PanelStateTetheredManager: PanelStateBaseManager, ObservableObject {
         } else {
             // If it's hidden, we want to hide the tether window and potentially animate out the panel.
             if (state.panelOpened && !state.panelWasHidden) {
-                state.tempHidePanel()
+                tempHidePanel(state: state)
             }
             hideTetherWindow()
         }

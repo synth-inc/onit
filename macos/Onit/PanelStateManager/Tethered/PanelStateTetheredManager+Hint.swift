@@ -32,7 +32,7 @@ extension PanelStateTetheredManager {
     private func showTetherWindow(state: OnitPanelState, activeWindow: AXUIElement?, action: TrackedWindowAction) {
         let tetherView = ExternalTetheredButton(
             onClick: {
-                state.launchPanel()
+                PanelStateCoordinator.shared.launchPanel(for: state)
             },
             onDrag: { [weak self] translation in
                 self?.tetheredWindowMoved(y: translation)

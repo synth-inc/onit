@@ -81,7 +81,7 @@ struct KeyboardShortcutsManager {
                         "app_hidden": state.panel == nil
                     ]
                     PostHogSDK.shared.capture("shortcut_launch", properties: eventProperties)
-                    state.launchPanel()
+                    PanelStateCoordinator.shared.launchPanel()
                 case .launchWithAutoContext:
                     let eventProperties: [String: Any] = [
                         "app_hidden": state.panel == nil
@@ -89,9 +89,15 @@ struct KeyboardShortcutsManager {
                     PostHogSDK.shared.capture(
                         "shortcut_launch_with_auto_context", properties: eventProperties)
                     state.addAutoContext()
-                    state.launchPanel()
+                    PanelStateCoordinator.shared.launchPanel()
                 case .escape:
-                    state.escapeAction()
+                    if state.panel != nil {
+                        if state.pendingInput != nil {
+                            state.pendingInput = nil
+                        } else {
+                            PanelStateCoordinator.shared.closePanel()
+                        }
+                    }
                 case .newChat:
                     state.newChat()
                 case .toggleLocalMode:
