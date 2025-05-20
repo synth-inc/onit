@@ -33,20 +33,16 @@ struct ContextList: View {
             .scrollTargetBehavior(.viewAligned)
             .scrollIndicators(.visible)
         } else {
-            ScrollView(.horizontal) {
-                HStack(spacing: 6) {
-                    ForEach(contextList, id: \.self) { context in
-                        ContextItem(item: context, isEditing: true)
-                            .scrollTargetLayout()
-                            .contentShape(Rectangle())
-                            .onTapGesture {
-                                onItemTap?(context)
-                            }
-                    }
+            HStack(spacing: 6) {
+                ForEach(contextList, id: \.self) { context in
+                    ContextItem(item: context, isEditing: true)
+                        .scrollTargetLayout()
+                        .contentShape(Rectangle())
+                        .onTapGesture {
+                            onItemTap?(context)
+                        }
                 }
             }
-            .scrollTargetBehavior(.viewAligned)
-            .scrollIndicators(.hidden)
         }
     }
 }

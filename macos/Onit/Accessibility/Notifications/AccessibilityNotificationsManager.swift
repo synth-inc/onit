@@ -414,6 +414,13 @@ class AccessibilityNotificationsManager: ObservableObject {
     }
     
     private func handleWindowContent(_ results: [String: String]?, for state: OnitPanelState) {
+        var appIcon: NSImage? = nil
+        if let pid = lastActiveWindowPid,
+           let app = NSRunningApplication(processIdentifier: pid)
+        {
+            appIcon = app.icon
+        }
+        
         let elapsedTime = results?[AccessibilityParsedElements.elapsedTime]
         let appName = results?[AccessibilityParsedElements.applicationName]
         let appTitle = results?[AccessibilityParsedElements.applicationTitle]
@@ -435,7 +442,7 @@ class AccessibilityNotificationsManager: ObservableObject {
         self.screenResult.errorMessage = nil
         self.showDebug()
         
-        state.addAutoContext()
+        state.addAutoContext(appIcon)
     }
 
     // MARK: Value Changed

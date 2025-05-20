@@ -51,7 +51,7 @@ struct TagButton: View {
     
     @State private var isHovered: Bool = false
     @State private var isPressed: Bool = false
-    @State private var closeIsHovered: Bool = false
+    @State private var isHoveredClose: Bool = false
     
     var body: some View {
         HStack(alignment: .center, spacing: 3) {
@@ -76,11 +76,11 @@ struct TagButton: View {
                 label: {
                     Image(.smallCross)
                         .addIconStyles(
-                            foregroundColor: closeIsHovered ? .white : .gray100
+                            foregroundColor: isHoveredClose ? .white : .gray100
                         )
-                        .addAnimation(dependency: $closeIsHovered.wrappedValue)
+                        .addAnimation(dependency: isHoveredClose)
                 }
-                .onHover{ isHovering in closeIsHovered = isHovering }
+                .onHover{ isHovering in isHoveredClose = isHovering }
             }
         }
         .padding(.horizontal, 3)
@@ -88,7 +88,7 @@ struct TagButton: View {
             maxWidth: maxWidth > 0 ? maxWidth : fill ? .infinity : nil,
             alignment: .leading
         )
-        .frame(height: 22)
+        .frame(height: 24)
         .background(setBackground())
         .scaleEffect(setScale())
         .opacity(setOpacity())

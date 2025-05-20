@@ -10,6 +10,12 @@ import SwiftUI
 struct ContextPickerView: View {
     @Environment(\.windowState) private var state
 
+    private let currentWindowIcon: NSImage?
+    
+    init(currentWindowIcon: NSImage? = nil) {
+        self.currentWindowIcon = currentWindowIcon
+    }
+    
     var body: some View {
         VStack(spacing: 4) {
             Button(action: {
@@ -17,7 +23,11 @@ struct ContextPickerView: View {
                 state.showFileImporter = true
             }) {
                 ContextPickerItemView(
-                    imageRes: .file, title: "Upload file", subtitle: "Choose from computer")
+                    currentWindowIcon: nil,
+                    imageRes: .file,
+                    title: "Upload file",
+                    subtitle: "Choose from computer"
+                )
             }
             .padding(.top, 6)
             .buttonStyle(.plain)
@@ -27,7 +37,11 @@ struct ContextPickerView: View {
                 PanelStateCoordinator.shared.fetchWindowContext()
             }) {
                 ContextPickerItemView(
-                    imageRes: .stars, title: "AutoContext", subtitle: "Current window activity")
+                    currentWindowIcon: currentWindowIcon,
+                    imageRes: .stars,
+                    title: "AutoContext",
+                    subtitle: "Current window"
+                )
             }
             .buttonStyle(.plain)
             .foregroundColor(.gray200)

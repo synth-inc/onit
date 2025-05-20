@@ -9,16 +9,25 @@ import SwiftUI
 
 struct ContextPickerItemView: View {
 
+    let currentWindowIcon: NSImage?
     let imageRes: ImageResource
     let title: String
     let subtitle: String
 
     var body: some View {
         HStack(spacing: 0) {
-            Image(imageRes)
-                .resizable()
-                .frame(width: 20, height: 20)
-                .padding(.leading, 12)
+            if let currentWindowIcon = currentWindowIcon {
+                Image(nsImage: currentWindowIcon)
+                    .resizable()
+                    .frame(width: 20, height: 20)
+                    .cornerRadius(4.5)
+                    .padding(.leading, 12)
+            } else {
+                Image(imageRes)
+                    .resizable()
+                    .frame(width: 20, height: 20)
+                    .padding(.leading, 12)
+            }
 
             VStack(alignment: .leading, spacing: 4) {
                 Text(title)
@@ -36,5 +45,5 @@ struct ContextPickerItemView: View {
 }
 
 #Preview {
-    ContextPickerItemView(imageRes: .arrowsSpin, title: "", subtitle: "")
+    ContextPickerItemView(currentWindowIcon: nil, imageRes: .arrowsSpin, title: "", subtitle: "")
 }

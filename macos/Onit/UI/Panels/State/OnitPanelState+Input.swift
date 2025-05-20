@@ -9,10 +9,10 @@ import AppKit
 import Defaults
 
 extension OnitPanelState {
-    func addAutoContext() {
+    func addAutoContext(_ appIcon: NSImage? = nil) {
         guard Defaults[.autoContextFromCurrentWindow] else { return }
 
-        let appName = AccessibilityNotificationsManager.shared.screenResult.applicationName ?? "AutoContext"
+        let appName = AccessibilityNotificationsManager.shared.screenResult.applicationTitle ?? "AutoContext"
         if let errorMessage = AccessibilityNotificationsManager.shared.screenResult.errorMessage {
             let errorContext = Context(appName: "Unable to add \(appName)", appHash: 0, appTitle: "", appContent: ["error": errorMessage])
             pendingContextList.insert(errorContext, at: 0)
@@ -68,7 +68,7 @@ extension OnitPanelState {
 //            }
         }
 
-        let autoContext = Context(appName: appName, appHash: appHash, appTitle: appTitle, appContent: appContent)
+        let autoContext = Context(appIcon: appIcon, appName: appName, appHash: appHash, appTitle: appTitle, appContent: appContent)
         pendingContextList.insert(autoContext, at: 0)
     }
     

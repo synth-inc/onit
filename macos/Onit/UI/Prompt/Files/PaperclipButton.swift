@@ -18,6 +18,12 @@ struct PaperclipButton: View {
 
     @Default(.closedAutoContextTag) var closedAutoContextTag
     
+    private let currentWindowIcon: NSImage?
+    
+    init(currentWindowIcon: NSImage? = nil) {
+        self.currentWindowIcon = currentWindowIcon
+    }
+    
     var accessibilityAutoContextEnabled: Bool {
         accessibilityPermissionManager.accessibilityPermissionStatus == .granted
     }
@@ -34,27 +40,6 @@ struct PaperclipButton: View {
             if state.pendingContextList.isEmpty {
                 if !accessibilityAutoContextEnabled && !closedAutoContextTag {
                     EnableAutocontextTag()
-                } else if accessibilityAutoContextEnabled {
-                    Button {
-                        handleAddContext()
-                    } label: {
-                        Text("Add context")
-                            .styleText(
-                                size: 13,
-                                weight: .medium,
-                                color: .gray200
-                            )
-                    }
-                } else {
-                    Button {
-                        handleAddContext()
-                    } label: {
-
-                        Text("Add context")
-                            .foregroundStyle(.gray200)
-                            .appFont(.medium13)
-
-                    }
                 }
             }
         }
@@ -75,7 +60,7 @@ struct PaperclipButton: View {
                 }
             }
             OverlayManager.shared.captureClickPosition()
-            let view = ContextPickerView()
+            let view = ContextPickerView(currentWindowIcon: currentWindowIcon)
                 .environment(\.appState, appState)
                 .environment(\.windowState, state)
             OverlayManager.shared.showOverlay(content: view)

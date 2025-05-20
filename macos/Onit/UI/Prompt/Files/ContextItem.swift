@@ -25,17 +25,26 @@ struct ContextItem: View {
                     showContextWindow: showContextWindow,
                     removeContextItem: removeContextItem
                 )
-            case .auto:
-                TagButton(
-                    child: ContextImage(context: item),
-                    text: name,
-                    caption: item.fileType,
-                    tooltip: "View auto-context file",
-                    action: showContextWindow,
-                    closeAction: inList ? nil : { removeContextItem() },
-                    fill: inList,
-                    isTransparent: inList
-                )
+            case .auto(let autoContext):
+                if isEditing {
+                    AutoContextButton(
+                        icon: autoContext.appIcon,
+                        text: name,
+                        action: showContextWindow,
+                        removeAction: inList ? nil : { removeContextItem() }
+                    )
+                } else {
+                    TagButton(
+                        child: ContextImage(context: item),
+                        text: name,
+                        caption: item.fileType,
+                        tooltip: "View auto-context file",
+                        action: showContextWindow,
+                        closeAction: inList ? nil : { removeContextItem() },
+                        fill: inList,
+                        isTransparent: inList
+                    )
+                }
             default:
                 TagButton(
                     child: ContextImage(context: item),

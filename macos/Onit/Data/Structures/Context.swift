@@ -5,13 +5,65 @@
 //  Created by Benjamin Sage on 10/23/24.
 //
 
+import AppKit
 import Foundation
 
 struct AutoContext: Codable, Hashable {
+    let appIcon: NSImage?
     let appName: String
     let appHash: UInt
     let appTitle: String
     let appContent: [String: String]
+    
+    init(
+        appIcon: NSImage? = nil,
+        appName: String,
+        appHash: UInt,
+        appTitle: String,
+        appContent: [String: String]
+    ) {
+        self.appIcon = appIcon
+        self.appName = appName
+        self.appHash = appHash
+        self.appTitle = appTitle
+        self.appContent = appContent
+    }
+    
+    enum CodingKeys: String, CodingKey {
+        case appName, appHash, appTitle, appContent
+    }
+    
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(appName, forKey: .appName)
+        try container.encode(appHash, forKey: .appHash)
+        try container.encode(appTitle, forKey: .appTitle)
+        try container.encode(appContent, forKey: .appContent)
+    }
+    
+    init(from decoder: Decoder) throws {
+        appIcon = nil
+        
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        appName = try container.decode(String.self, forKey: .appName)
+        appHash = try container.decode(UInt.self, forKey: .appHash)
+        appTitle = try container.decode(String.self, forKey: .appTitle)
+        appContent = try container.decode([String: String].self, forKey: .appContent)
+    }
+    
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(appName)
+        hasher.combine(appHash)
+        hasher.combine(appTitle)
+        hasher.combine(appContent)
+    }
+
+    static func == (lhs: AutoContext, rhs: AutoContext) -> Bool {
+        return lhs.appName == rhs.appName &&
+               lhs.appHash == rhs.appHash &&
+               lhs.appTitle == rhs.appTitle &&
+               lhs.appContent == rhs.appContent
+    }
 }
 
 enum Context {
@@ -89,8 +141,22 @@ enum Context {
 }
 
 extension Context {
-    init(appName: String, appHash: UInt, appTitle: String, appContent: [String: String]) {
-        self = .auto(AutoContext(appName: appName, appHash: appHash, appTitle: appTitle, appContent: appContent))
+    init(
+        appIcon: NSImage? = nil,
+        appName: String,
+        appHash: UInt,
+        appTitle: String,
+        appContent: [String: String]
+    ) {
+        self = .auto(
+            AutoContext(
+                appIcon: appIcon,
+                appName: appName,
+                appHash: appHash,
+                appTitle: appTitle,
+                appContent: appContent
+            )
+        )
     }
     
     init(title: String, content: String, source: String, url: URL? = nil) {

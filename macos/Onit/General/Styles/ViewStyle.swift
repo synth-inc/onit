@@ -104,19 +104,24 @@ extension View {
 
 extension View {
     func addButtonEffects(
-        action: @escaping () -> Void,
+        action: (() -> Void)?,
         background: Color = .clear,
         hoverBackground: Color = .gray600,
         cornerRadius: CGFloat = 8,
         isHovered: Binding<Bool>,
         isPressed: Binding<Bool>,
-        disabled: Bool = false
+        disabled: Bool = false,
+        shouldFadeOnClick: Bool = true
     ) -> some View {
         self
             .background(isHovered.wrappedValue ? hoverBackground : background)
             .cornerRadius(cornerRadius)
             .scaleEffect(isPressed.wrappedValue ? 0.99 : 1)
-            .opacity(disabled ? 0.4 : isPressed.wrappedValue ? 0.7 : 1)
+            .opacity(
+                disabled ? 0.4
+                    : (isPressed.wrappedValue && shouldFadeOnClick) ? 0.7
+                    : 1
+            )
             .disabled(disabled)
             .onHover{ isHovering in
                 isHovered.wrappedValue = isHovering
@@ -126,7 +131,10 @@ extension View {
                     .onChanged {_ in isPressed.wrappedValue = true }
                     .onEnded{ _ in
                         isPressed.wrappedValue = false
-                        action()
+                        
+                        if let action = action {
+                            action()
+                        }
                     }
                 )
             .allowsHitTesting(!disabled)
