@@ -25,7 +25,12 @@ extension PanelStatePinnedManager: AccessibilityNotificationsDelegate {
     func accessibilityManager(_ manager: AccessibilityNotificationsManager, didMoveWindow window: TrackedWindow) {
         guard state.panelOpened else { return }
 
-        checkIfDragStarted(window: window.element)
+        let isDragging = checkIfDragStarted(window: window.element)
+        
+        // Workaround to handle app which reposition automatically the window (Spectacle, Rectangle, ...)
+        if !isDragging, let panelScreen = state.panel?.screen {
+            resizeWindow(for: panelScreen, window: window.element)
+        }
     }
     func accessibilityManager(_ manager: AccessibilityNotificationsManager, didResizeWindow window: TrackedWindow) {
         guard state.panelOpened, let screen = state.panel?.screen else { return }

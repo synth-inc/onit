@@ -70,7 +70,8 @@ class PanelStateCoordinator {
         }
         
         // This workaround will make the pannel jump on another screen
-        if currentManager is PanelStatePinnedManager, let mouseScreen = NSScreen.mouse, panel.screen != mouseScreen {
+        if currentManager is PanelStatePinnedManager,
+            let mouseScreen = NSScreen.mouse, panel.screen != mouseScreen {
             currentManager.launchPanel(for: targetState)
             return
         }

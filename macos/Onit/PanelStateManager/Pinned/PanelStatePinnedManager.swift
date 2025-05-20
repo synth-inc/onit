@@ -197,11 +197,13 @@ class PanelStatePinnedManager: PanelStateBaseManager, ObservableObject {
         }
     }
     
-    func checkIfDragStarted(window: AXUIElement) {
-        guard dragManager.isDragging else { return }
-        guard draggingWindow == nil else { return }
+    func checkIfDragStarted(window: AXUIElement) -> Bool {
+        guard dragManager.isDragging else { return false }
+        guard draggingWindow == nil else { return true }
         
         draggingWindow = window
+        
+        return true
     }
     
     private func onActiveWindowDragEnded() {
