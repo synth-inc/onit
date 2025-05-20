@@ -50,8 +50,8 @@ class PanelStateCoordinator {
         }
     }
     
-    func getState(for windowHash: UInt) -> OnitPanelState? {
-        currentManager.getState(for: windowHash)
+    func getState(for window: AXUIElement) -> OnitPanelState? {
+        currentManager.getState(for: window)
     }
     
     func filterHistoryChats(_ allChats: [Chat]) -> [Chat] {
@@ -65,13 +65,6 @@ class PanelStateCoordinator {
         let targetState = state ?? self.state
         
         guard let panel = targetState.panel else {
-            currentManager.launchPanel(for: targetState)
-            return
-        }
-        
-        // This workaround will make the pannel jump on another screen
-        if currentManager is PanelStatePinnedManager,
-            let mouseScreen = NSScreen.mouse, panel.screen != mouseScreen {
             currentManager.launchPanel(for: targetState)
             return
         }

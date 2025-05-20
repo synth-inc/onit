@@ -6,6 +6,7 @@
 //
 
 import AppKit
+import ApplicationServices
 import Defaults
 import PostHog
 import SwiftUI
@@ -101,7 +102,7 @@ class PanelStateUntetheredManager: PanelStateBaseManager, ObservableObject {
         statesByScreen = [:]
     }
     
-    override func getState(for windowHash: UInt) -> OnitPanelState? {
+    override func getState(for window: AXUIElement) -> OnitPanelState? {
         return nil
     }
 
@@ -116,7 +117,7 @@ class PanelStateUntetheredManager: PanelStateBaseManager, ObservableObject {
     override func launchPanel(for state: OnitPanelState) {
         PostHogSDK.shared.capture("launch_panel", properties: ["displayMode": "untethered"])
         
-        buildPanelIfNeeded(for: state)
+        buildPanel(for: state)
         showPanel(for: state)
     }
     
@@ -148,12 +149,25 @@ class PanelStateUntetheredManager: PanelStateBaseManager, ObservableObject {
     }
     
     private func handleActivation(of screen: NSScreen) {
-        let panelState = getState(for: screen)
+        let panelState: OnitPanelState
+
+        if let (_, activeState) = statesByScreen.first(where: { $0.key === screen} ) {
+            activeState.trackedScreen = screen
+            panelState = activeState
+        } else {
+            panelState = OnitPanelState(screen: screen)
+            
+            statesByScreen[screen] = panelState
+        }
+
+        panelState.addDelegate(self)
+        state = panelState
+            
         handlePanelStateChange(state: panelState)
     }
     
     func handlePanelStateChange(state: OnitPanelState) {
-        guard let screen = state.trackedScreen else {
+        guard let (screen, state) = statesByScreen.first(where: { $0.value === state }) else {
             return
         }
 
@@ -171,26 +185,6 @@ class PanelStateUntetheredManager: PanelStateBaseManager, ObservableObject {
         }
 
         state.panel?.setLevel(.floating)
-    }
-
-
-    func getState(for screen: NSScreen) -> OnitPanelState {
-        let panelState: OnitPanelState
-
-        if let (_, activeState) = statesByScreen.first(where: { (key: NSScreen, value: OnitPanelState) in
-            key == screen
-        }) {
-            activeState.trackedScreen = screen
-            panelState = activeState
-        } else {
-            panelState = OnitPanelState(screen: screen)
-            
-            statesByScreen[screen] = panelState
-        }
-
-        panelState.addDelegate(self)
-        state = panelState
-        return panelState
     }
 }
 

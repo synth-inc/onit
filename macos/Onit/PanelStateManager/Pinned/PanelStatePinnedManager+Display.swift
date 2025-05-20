@@ -10,8 +10,11 @@ import Foundation
 
 extension PanelStatePinnedManager {
     func showPanel(for state: OnitPanelState) {
-        guard let screen = attachedScreen,
-              let panel = state.panel,
+        guard let (screen, state) = statesByScreen.first(where: { $0.value === state }) else {
+            return
+        }
+        
+        guard let panel = state.panel,
               !panel.isAnimating,
               !panel.dragDetails.isDragging else {
             return
@@ -32,7 +35,7 @@ extension PanelStatePinnedManager {
         
         if panel.wasAnimated {
             panel.setFrame(newFrame, display: false)
-            resizeWindows(for: screen)
+            resizeWindows(for: state)
         } else {
             panel.resizedApplication = false
             animateEnter(state: state,
@@ -81,11 +84,7 @@ extension PanelStatePinnedManager {
             panel.isAnimating = false
             panel.wasAnimated = true
             
-            if let screen = self.attachedScreen ?? NSScreen.mouse {
-                DispatchQueue.main.async {
-                    self.resizeWindows(for: screen)
-                }
-            }
+            self.resizeWindows(for: state)
         }
     }
     
@@ -100,22 +99,36 @@ extension PanelStatePinnedManager {
         state.animateChatView = true
         state.showChatView = false
         
-        resetFramesOnAppChange()
+        restoreFrames(for: state)
         
         NSAnimationContext.runAnimationGroup { context in
             context.duration = animationDuration
             context.timingFunction = CAMediaTimingFunction(name: .easeIn)
             panel.animator().setFrame(toPanel, display: false)
         } completionHandler: {
+            self.preventOthersPanelsToBecomeKey(closingPanel: panel)
+            
             panel.hide()
             panel.isAnimating = false
             panel.alphaValue = 0
             state.panel = nil
             
-            // Once the panel is hidden, we should show the hint
-            if let screen = self.attachedScreen {
-                self.attachedScreen = nil
-                self.debouncedShowTetherWindow(activeScreen: screen)
+            self.allowOthersPanelsToBecomeKey(closingPanel: panel)
+        }
+    }
+    
+    private func preventOthersPanelsToBecomeKey(closingPanel: OnitPanel) {
+        for panel in statesByScreen.values.map(\.panel) {
+            if panel !== closingPanel {
+                panel?.setLevel(.normal)
+            }
+        }
+    }
+    
+    private func allowOthersPanelsToBecomeKey(closingPanel: OnitPanel) {
+        for panel in statesByScreen.values.map(\.panel) {
+            if panel !== closingPanel {
+                panel?.setLevel(.floating)
             }
         }
     }

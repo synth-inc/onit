@@ -10,9 +10,10 @@ import SwiftUI
 
 extension PanelStatePinnedManager {
     
-    func debouncedShowTetherWindow(activeScreen: NSScreen) {
+    func debouncedShowTetherWindow(state: OnitPanelState, activeScreen: NSScreen) {
         hideTetherWindow()
-
+        let pendingTetherWindow = (state, activeScreen)
+        
         tetherHintDetails.showTetherDebounceTimer = Timer.scheduledTimer(
             withTimeInterval: tetherHintDetails.showTetherDebounceDelay,
             repeats: false
@@ -20,15 +21,15 @@ extension PanelStatePinnedManager {
             guard let self = self else { return }
             
             DispatchQueue.main.async {
-                self.showTetherWindow(activeScreen: activeScreen)
+                self.showTetherWindow(state: pendingTetherWindow.0, activeScreen: pendingTetherWindow.1)
             }
         }
     }
 
-    private func showTetherWindow(activeScreen: NSScreen) {
+    private func showTetherWindow(state: OnitPanelState, activeScreen: NSScreen) {
          let tetherView = ExternalTetheredButton(
-            onClick: { [weak self] in
-                self?.tetherHintClicked(screen: activeScreen)
+            onClick: {
+                PanelStateCoordinator.shared.launchPanel(for: state)
             },
             onDrag: { [weak self] translation in
                 self?.tetheredWindowMoved(screen: activeScreen, y: translation)
@@ -42,11 +43,6 @@ extension PanelStatePinnedManager {
 
         updateTetherWindowPosition(for: activeScreen, lastYComputed: tetherHintDetails.lastYComputed)
         tetherHintDetails.tetherWindow.orderFrontRegardless()
-    }
-    
-    private func tetherHintClicked(screen: NSScreen) {
-        state.trackedScreen = screen
-        launchPanel(for: state)
     }
     
     private func updateTetherWindowPosition(for screen: NSScreen, lastYComputed: CGFloat? = nil) {

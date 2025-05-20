@@ -9,7 +9,9 @@ import AppKit
 
 extension PanelStatePinnedManager {
     
-    func resizeWindows(for screen: NSScreen, isPanelResized: Bool = false) {
+    private var resizeTolerance: CGFloat { 1.0 } // Tolerance in pixels for resize operations
+    
+    func resizeWindows(for state: OnitPanelState, isPanelResized: Bool = false) {
         guard !isResizingWindows else { return }
 
         isResizingWindows = true
@@ -24,7 +26,7 @@ extension PanelStatePinnedManager {
             let windows = pid.findTargetWindows()
             
             for window in windows {
-                resizeWindow(for: screen, window: window, isPanelResized: isPanelResized)
+                resizeWindow(for: state, window: window, isPanelResized: isPanelResized)
             }
         }
         
@@ -32,11 +34,15 @@ extension PanelStatePinnedManager {
     }
     
     func resizeWindow(
-        for screen: NSScreen,
+        for state: OnitPanelState,
         window: AXUIElement,
         windowFrameChanged: Bool = false,
         isPanelResized: Bool = false
     ) {
+        guard let (screen, state) = statesByScreen.first(where: { $0.value === state }) else {
+            return
+        }
+        
         if !windowFrameChanged, !isPanelResized { guard !targetInitialFrames.keys.contains(window) else { return } }
         
         if let windowFrameConverted = window.getFrame(convertedToGlobalCoordinateSpace: true),
@@ -44,7 +50,7 @@ extension PanelStatePinnedManager {
            windowScreen == screen,
            let windowFrame = window.getFrame() {
             
-            let panelWidth = state.panelWidth - (TetheredButton.width / 2) + 1
+            let panelWidth = round(state.panelWidth - (TetheredButton.width / 2))
             let screenFrame = screen.visibleFrame
             let availableSpace = screenFrame.maxX - windowFrame.maxX
             
@@ -64,7 +70,7 @@ extension PanelStatePinnedManager {
                     let newWidth = windowFrame.width - overlapAmount
                     let newFrame = CGRect(x: windowFrame.origin.x, y: windowFrame.origin.y, width: newWidth, height: windowFrame.height)
                     _ = window.setFrame(newFrame)
-                } else if availableSpace > panelWidth, windowFrameChanged {
+                } else if availableSpace > (panelWidth + resizeTolerance), windowFrameChanged {
                     // The user reduced the window, we should remove the initial frame
                     targetInitialFrames.removeValue(forKey: window)
                 }
@@ -74,7 +80,7 @@ extension PanelStatePinnedManager {
                     let newWidth = (screenFrame.maxX - windowFrame.origin.x) - panelWidth
                     let newFrame = CGRect(x: windowFrame.origin.x, y:windowFrame.origin.y, width: newWidth, height: windowFrame.height)
                     _ = window.setFrame(newFrame)
-                } else if availableSpace < panelWidth {
+                } else if availableSpace < (panelWidth - resizeTolerance) {
                     // If we aren't already tracking it and it now needs to get resized, start tracking it.
                     targetInitialFrames[window] = windowFrame
                     let overlapAmount = panelWidth - availableSpace
@@ -82,7 +88,20 @@ extension PanelStatePinnedManager {
                     let newFrame = CGRect(x: windowFrame.origin.x, y: windowFrame.origin.y, width: newWidth, height: windowFrame.height)
                     _ = window.setFrame(newFrame)
                 }
-                
+            }
+        }
+    }
+    
+    func restoreFrames(for state: OnitPanelState) {
+        guard let (screen, _) = statesByScreen.first(where: { $0.value === state }) else {
+            return
+        }
+        
+        targetInitialFrames.forEach { element, initialFrame in
+            if let frame = element.getFrame(convertedToGlobalCoordinateSpace: true),
+               frame.findScreen() === screen {
+                _ = element.setFrame(initialFrame)
+                targetInitialFrames.removeValue(forKey: element)
             }
         }
     }
