@@ -5,6 +5,7 @@
 //  Created by Kévin Naudin on 11/02/2025.
 //
 
+@preconcurrency import AppKit
 import Defaults
 import KeyboardShortcuts
 import PostHog
@@ -13,10 +14,12 @@ import SwiftData
 @MainActor
 struct KeyboardShortcutsManager {
     
+    private static var didObserveAppActiveNotifications = false
+    
     static func configure() {
         registerSettingsShortcuts()
-        
         registerSystemPromptsShortcuts()
+        observeAppActiveNotificationsIfNeeded()
     }
     
     static func register(systemPrompt: SystemPrompt) {
@@ -33,21 +36,30 @@ struct KeyboardShortcutsManager {
         var names = KeyboardShortcuts.Name.allCases
             .filter { ![.launch, .launchWithAutoContext].contains($0) }
         
-        if Defaults[.escapeShortcutDisabled] {
-            names.removeAll { $0 == .escape }
+        // Remove ESC if needed for pinned mode
+        let isPinned = FeatureFlagManager.shared.usePinnedMode
+        let isForeground = NSApp.isActive
+        let escDisabled = Defaults[.escapeShortcutDisabled]
+        if isPinned {
+            if !isForeground || escDisabled {
+                names.removeAll { $0 == .escape }
+            }
+        } else {
+            if escDisabled {
+                names.removeAll { $0 == .escape }
+            }
         }
         
         do {
             let storedPrompts = try modelContainer.mainContext.fetch(FetchDescriptor<SystemPrompt>())
-            
             for systemPrompt in storedPrompts {
                 names.append(KeyboardShortcuts.Name(systemPrompt.id))
             }
         } catch {
             print("Enabling keyboard shortcuts - Can't fetch local system prompts: \(error)")
         }
-        
         KeyboardShortcuts.enable(names)
+        reevaluateEscShortcut()
     }
 
     static func disable(modelContainer: ModelContainer) {
@@ -136,6 +148,49 @@ struct KeyboardShortcutsManager {
         
         KeyboardShortcuts.onKeyUp(for: name) {
             PanelStateCoordinator.shared.state.systemPromptId = systemPrompt.id
+        }
+    }
+    
+    private static func observeAppActiveNotificationsIfNeeded() {
+        guard !didObserveAppActiveNotifications else { return }
+        didObserveAppActiveNotifications = true
+        NotificationCenter.default.addObserver(
+            forName: NSApplication.didBecomeActiveNotification,
+            object: nil,
+            queue: .main
+        ) { notification in
+            DispatchQueue.main.async {
+                reevaluateEscShortcut()
+            }
+        }
+        NotificationCenter.default.addObserver(
+            forName: NSApplication.didResignActiveNotification,
+            object: nil,
+            queue: .main
+        ) { notification in
+            DispatchQueue.main.async {
+                reevaluateEscShortcut()
+            }
+        }
+    }
+    
+    private static func reevaluateEscShortcut() {
+        let isPinned = FeatureFlagManager.shared.usePinnedMode
+        let isForeground = NSApp.isActive
+        let escDisabled = Defaults[.escapeShortcutDisabled]
+        if isPinned {
+            if isForeground && !escDisabled {
+                KeyboardShortcuts.enable(.escape)
+            } else {
+                KeyboardShortcuts.disable(.escape)
+            }
+        } else {
+            // In non-pinned mode, follow the normal toggle
+            if !escDisabled {
+                KeyboardShortcuts.enable(.escape)
+            } else {
+                KeyboardShortcuts.disable(.escape)
+            }
         }
     }
 }
