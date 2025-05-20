@@ -23,7 +23,7 @@ struct ToolbarLeft: View {
             state.closePanel()
         } label: {
             Text("ESC")
-                .appFont(.medium13)
+                .appFont(.medium11)
                 .foregroundStyle(.gray200)
                 .padding(4)
         }
