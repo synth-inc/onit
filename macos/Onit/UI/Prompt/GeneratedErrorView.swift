@@ -17,6 +17,7 @@ struct GeneratedErrorView: View {
                 Text(errorDescription)
                     .appFont(.medium14)
                     .foregroundStyle(.warning)
+                    .textSelection(.enabled)
             }
             Spacer()
         }
