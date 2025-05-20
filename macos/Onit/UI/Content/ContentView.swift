@@ -69,12 +69,12 @@ struct ContentView: View {
         .toolbar {
             if !showOnboarding && appState.account != nil {
                 ToolbarItem(placement: .navigation) {
-                    ToolbarAddButton()
+                    ToolbarLeft()
                 }
                 ToolbarItem(placement: .automatic) { TetheredToAppView() }
                 ToolbarItem(placement: .automatic) { Spacer() }
                 ToolbarItem(placement: .primaryAction) {
-                    Toolbar()
+                    ToolbarRight()
                 }
             }
         }

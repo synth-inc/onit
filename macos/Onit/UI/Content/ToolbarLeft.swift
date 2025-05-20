@@ -1,5 +1,5 @@
 //
-//  ToolbarAddButton.swift
+//  ToolbarLeft.swift
 //  Onit
 //
 //  Created by Kévin Naudin on 25/03/2025.
@@ -7,20 +7,29 @@
 
 import SwiftUI
 
-struct ToolbarAddButton: View {
+struct ToolbarLeft: View {
     @Environment(\.windowState) private var state
     
     var body: some View {
         HStack(spacing: 0) {
+            esc
             newChatButton
             systemPromptsButton
         }
     }
-}
-
-// MARK: - Child Components
-
-extension ToolbarAddButton {
+    
+    private var esc: some View {
+        Button {
+            state.closePanel()
+        } label: {
+            Text("ESC")
+                .appFont(.medium11)
+                .foregroundStyle(.gray200)
+                .padding(4)
+        }
+        .tooltip(prompt: "Close Onit", shortcut: .keyboardShortcuts(.escape))
+    }
+    
     private var newChatButton: some View {
         IconButton(
             icon: .circlePlus,
@@ -36,7 +45,6 @@ extension ToolbarAddButton {
             icon: .smallChevDown,
             action: {
                 state.newChat()
-                
                 state.systemPromptState.shouldShowSelection = true
                 state.systemPromptState.shouldShowSystemPrompt = true
             },
@@ -53,5 +61,5 @@ extension ToolbarAddButton {
 // MARK: - Preview
 
 #Preview {
-    ToolbarAddButton()
+    ToolbarLeft()
 }
