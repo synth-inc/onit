@@ -20,7 +20,7 @@ struct ToolbarLeft: View {
     
     private var esc: some View {
         Button {
-            state.closePanel()
+            PanelStateCoordinator.shared.closePanel()
         } label: {
             Text("ESC")
                 .appFont(.medium11)
