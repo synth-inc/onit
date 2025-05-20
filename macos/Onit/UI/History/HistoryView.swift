@@ -9,12 +9,16 @@ import SwiftData
 import SwiftUI
 
 struct HistoryView: View {
+    @Environment(\.appState) var appState
     @Environment(\.windowState) var windowState
     @Query(sort: \Chat.timestamp, order: .reverse) private var allChats: [Chat]
     @State private var searchQuery: String = ""
     
     private var chats: [Chat] {
-        PanelStateCoordinator.shared.filterHistoryChats(allChats)
+        let chatsFilteredByAccount = allChats
+            .filter { $0.accountId == appState.account?.id }
+        
+        return PanelStateCoordinator.shared.filterHistoryChats(chatsFilteredByAccount)
     }
     
     var filteredChats: [Chat] {

@@ -9,13 +9,21 @@ final class Chat {
     
     var appBundleIdentifier: String?
     var windowHash: UInt?
+    var accountId: Int?
 
-    init(systemPrompt: SystemPrompt, prompts: [Prompt] = [], timestamp: Date = Date(), trackedWindow: TrackedWindow? = nil) {
+    init(
+        systemPrompt: SystemPrompt,
+        prompts: [Prompt] = [],
+        timestamp: Date = Date(),
+        trackedWindow: TrackedWindow? = nil,
+        accountId: Int?
+    ) {
         self.systemPrompt = systemPrompt
         self.prompts = prompts
         self.timestamp = timestamp
         self.appBundleIdentifier = trackedWindow?.pid.bundleIdentifier
         self.windowHash = trackedWindow?.hash
+        self.accountId = accountId
     }
 
     var isEmpty: Bool {
@@ -32,5 +40,5 @@ final class Chat {
 }
 
 extension Chat {
-    @MainActor static let sample = Chat(systemPrompt: .outputOnly, prompts: [Prompt.sample])
+    @MainActor static let sample = Chat(systemPrompt: .outputOnly, prompts: [Prompt.sample], accountId: nil)
 }

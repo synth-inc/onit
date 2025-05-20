@@ -13,7 +13,7 @@ import SwiftData
 
 extension OnitPanelState {
     
-    func createAndSavePrompt() {
+    func createAndSavePrompt(accountId: Int?) {
         let prompt = Prompt(
             instruction: pendingInstruction,
             timestamp: .now,
@@ -37,7 +37,8 @@ extension OnitPanelState {
                     systemPrompt: systemPromptCopy,
                     prompts: [],
                     timestamp: .now,
-                    trackedWindow: trackedWindow
+                    trackedWindow: trackedWindow,
+                    accountId: accountId
                 )
                 currentPrompts = []
                 systemPromptState.shouldShowSystemPrompt = false
@@ -331,11 +332,11 @@ extension OnitPanelState {
         prompt.generationState = .done
     }
     
-    func sendAction() {
+    func sendAction(accountId: Int?) {
         if websiteUrlsScrapeQueue.isEmpty {
             let inputText = (pendingInstruction).trimmingCharacters(in: .whitespacesAndNewlines)
             guard !inputText.isEmpty else { return }
-            createAndSavePrompt()
+            createAndSavePrompt(accountId: accountId)
         }
     }
 }
