@@ -128,13 +128,12 @@ class PanelStatePinnedManager: PanelStateBaseManager, ObservableObject {
     override func launchPanel(for state: OnitPanelState) {
         PostHogSDK.shared.capture("launch_panel", properties: ["displayMode": "pinned"])
         
-        super.launchPanel(for: state)
-        
         hideTetherWindow()
         resetFramesOnAppChange()
         
         attachedScreen = NSScreen.mouse
         
+        buildPanelIfNeeded(for: state)
         showPanel(for: state)
     }
     

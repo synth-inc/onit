@@ -13,7 +13,6 @@ extension PanelStatePinnedManager {
     func debouncedShowTetherWindow(activeScreen: NSScreen) {
         hideTetherWindow()
 
-        tetherHintDetails.showTetherDebounceTimer?.invalidate()
         tetherHintDetails.showTetherDebounceTimer = Timer.scheduledTimer(
             withTimeInterval: tetherHintDetails.showTetherDebounceDelay,
             repeats: false
