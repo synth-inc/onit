@@ -20,7 +20,8 @@ class PanelStatePinnedManager: PanelStateBaseManager, ObservableObject {
     
     // MARK: - Properties
     
-    private var isResizingWindows: Bool = false
+    var isResizingWindows: Bool = false
+    
     private var lastScreenFrame = CGRect.zero
     private var globalMouseMonitor: Any?
     private var localMouseMonitor: Any?

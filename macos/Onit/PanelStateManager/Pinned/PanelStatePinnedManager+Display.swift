@@ -44,10 +44,6 @@ extension PanelStatePinnedManager {
     
     func hidePanel(for state: OnitPanelState) {
         guard let panel = state.panel, !panel.isAnimating else { return }
-        
-        if state.currentAnimationTask != nil {
-            state.cancelCurrentAnimation()
-        }
 
         let toPanelX = panel.frame.maxX - 2
         let toPanel = NSRect(origin: NSPoint(x: toPanelX, y: panel.frame.minY), size: NSSize(width: 1, height: panel.frame.height))
@@ -63,8 +59,7 @@ extension PanelStatePinnedManager {
         state: OnitPanelState,
         panel: OnitPanel,
         fromPanel: CGRect,
-        toPanel: CGRect,
-        animationDuration: TimeInterval = 0.2
+        toPanel: CGRect
     ) {
         guard !panel.isAnimating else { return }
         
@@ -97,8 +92,7 @@ extension PanelStatePinnedManager {
     private func animateExit(
         state: OnitPanelState,
         panel: OnitPanel,
-        toPanel: CGRect,
-        animationDuration: TimeInterval = 0.2
+        toPanel: CGRect
     ) {
         guard !panel.isAnimating, panel.frame != toPanel else { return }
         

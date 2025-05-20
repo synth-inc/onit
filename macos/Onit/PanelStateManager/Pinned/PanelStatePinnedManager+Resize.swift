@@ -10,6 +10,10 @@ import AppKit
 extension PanelStatePinnedManager {
     
     func resizeWindows(for screen: NSScreen, isPanelResized: Bool = false) {
+        guard !isResizingWindows else { return }
+
+        isResizingWindows = true
+        
         let onitName = Bundle.main.object(forInfoDictionaryKey: "CFBundleName") as? String
         let appPids = NSWorkspace.shared.runningApplications
             .filter { $0.activationPolicy == .regular }
@@ -23,6 +27,8 @@ extension PanelStatePinnedManager {
                 resizeWindow(for: screen, window: window, isPanelResized: isPanelResized)
             }
         }
+        
+        isResizingWindows = false
     }
     
     func resizeWindow(

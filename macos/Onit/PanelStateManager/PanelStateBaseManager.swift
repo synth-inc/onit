@@ -15,6 +15,7 @@ class PanelStateBaseManager: PanelStateManagerLogic {
     // MARK: - Properties
     
     let defaultState = OnitPanelState()
+    let animationDuration: TimeInterval = 0.2
     
     @Published var state: OnitPanelState
     @Published var tetherButtonPanelState: OnitPanelState?
