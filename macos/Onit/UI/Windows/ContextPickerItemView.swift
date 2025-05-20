@@ -8,11 +8,22 @@
 import SwiftUI
 
 struct ContextPickerItemView: View {
-
-    let currentWindowIcon: NSImage?
-    let imageRes: ImageResource
-    let title: String
-    let subtitle: String
+    private let currentWindowIcon: NSImage?
+    private let imageRes: ImageResource
+    private let title: String
+    private let subtitle: String
+    
+    init(
+        currentWindowIcon: NSImage? = nil,
+        imageRes: ImageResource,
+        title: String,
+        subtitle: String
+    ) {
+        self.currentWindowIcon = currentWindowIcon
+        self.imageRes = imageRes
+        self.title = title
+        self.subtitle = subtitle
+    }
 
     var body: some View {
         HStack(spacing: 0) {

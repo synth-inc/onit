@@ -43,7 +43,7 @@ struct AutoContextButton: View {
     }
     
     var body: some View {
-        ZStack(alignment: .trailing) {
+        ZStack(alignment: .leading) {
             HStack(alignment: .center, spacing: 6) {
                 if let icon = icon {
                     Image(nsImage: icon)
@@ -59,6 +59,8 @@ struct AutoContextButton: View {
             }
             
             HStack(spacing: 0) {
+                Spacer()
+                
                 if isAdd {
                     fade
                     plusIcon

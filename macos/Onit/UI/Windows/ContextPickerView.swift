@@ -23,7 +23,6 @@ struct ContextPickerView: View {
                 state.showFileImporter = true
             }) {
                 ContextPickerItemView(
-                    currentWindowIcon: nil,
                     imageRes: .file,
                     title: "Upload file",
                     subtitle: "Choose from computer"

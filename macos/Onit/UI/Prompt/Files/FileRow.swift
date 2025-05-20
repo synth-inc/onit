@@ -43,7 +43,7 @@ struct FileRow: View {
                     if contextList.isEmpty {
                         Spacer()
                     } else {
-                        ContextList(contextList: contextList)
+                        ContextList(contextList: contextList, hasHorizontalScroll: false)
                     }
                 }
             }
