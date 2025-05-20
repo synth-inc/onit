@@ -131,6 +131,11 @@ extension GeneralTabAccount {
         TokenManager.token = nil
         appState.account = nil
         Defaults[.authFlowStatus] = .showSignIn
+        
+        // Reset all chat state
+        for windowState in PanelStateCoordinator.shared.states {
+            windowState.newChat(clearContext: true)
+        }
     }
     
     private func openPanel() {

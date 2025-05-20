@@ -364,5 +364,10 @@ struct AccountTab: View {
     func handleLogout() {
         TokenManager.token = nil
         appState.account = nil
+
+        // Reset all chat state
+        for windowState in PanelStateCoordinator.shared.states {
+            windowState.newChat(clearContext: true)
+        }
     }
 }
