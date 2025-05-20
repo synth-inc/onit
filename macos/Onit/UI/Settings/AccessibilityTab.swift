@@ -116,7 +116,7 @@ struct AccessibilityTab: View {
                                 valueType: "Bool"
                             )
                         }
-                        Text("Loads context from the active window. Warning: If you notice the application freeze after enabling this, please disable it.")
+                        Text("Loads context from the active window. Note: this feature may not work in every application. ")
                             .font(.system(size: 12))
                             .foregroundStyle(.gray200)
                     }
