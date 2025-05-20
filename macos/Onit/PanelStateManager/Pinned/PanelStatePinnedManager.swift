@@ -115,12 +115,12 @@ class PanelStatePinnedManager: PanelStateBaseManager, ObservableObject {
     }
     
     override func getState(for window: AXUIElement) -> OnitPanelState? {
-        guard let windowFrameConverted = window.getFrame(convertedToGlobalCoordinateSpace: true),
-              let windowScreen = windowFrameConverted.findScreen() else { return nil }
-        
-        guard let (_, state) = statesByScreen.first(where: { $0.key === windowScreen }) else {
-            return nil
-        }
+//        guard let windowFrameConverted = window.getFrame(convertedToGlobalCoordinateSpace: true),
+//              let windowScreen = windowFrameConverted.findScreen() else { return nil }
+//        
+//        guard let (_, state) = statesByScreen.first(where: { $0.key === windowScreen }) else {
+//            return nil
+//        }
         
         return state
     }
