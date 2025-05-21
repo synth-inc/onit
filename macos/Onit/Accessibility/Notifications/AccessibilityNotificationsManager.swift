@@ -162,9 +162,17 @@ class AccessibilityNotificationsManager: ObservableObject {
             self.handleMinimizedElement(for: element)
         case kAXWindowDeminiaturizedNotification:
             self.handleDeminimizedElement(for: element)
+        case kAXTitleChangedNotification:
+            self.handleTitleChanged(for: element, elementPid: elementPid)
         default:
             break
         }
+    }
+    
+    private func handleTitleChanged(for element: AXUIElement, elementPid: pid_t) {
+        guard let trackedWindow = self.windowsManager.append(element, pid: elementPid) else { return }
+        
+        notifyDelegates { $0.accessibilityManager(self, didChangeWindowTitle: trackedWindow) }
     }
     
     private func handleWindowMoved(for element: AXUIElement, elementPid: pid_t) {

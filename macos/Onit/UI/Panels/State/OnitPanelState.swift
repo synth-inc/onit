@@ -134,6 +134,9 @@ class OnitPanelState: NSObject {
 
     typealias WebsiteUrlScrapeTask = Task<Void, Never>
     var websiteUrlsScrapeQueue: [String: WebsiteUrlScrapeTask] = [:]
+    
+    typealias TaskWindowName = String
+    var addAutoContextTasks: [TaskWindowName: Task<Void, Never>] = [:]
 
     var deleteChatFailed: Bool = false
     

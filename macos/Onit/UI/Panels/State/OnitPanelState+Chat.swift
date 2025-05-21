@@ -332,7 +332,7 @@ extension OnitPanelState {
     }
     
     func sendAction() {
-        if websiteUrlsScrapeQueue.isEmpty {
+        if websiteUrlsScrapeQueue.isEmpty && addAutoContextTasks.isEmpty {
             let inputText = (pendingInstruction).trimmingCharacters(in: .whitespacesAndNewlines)
             guard !inputText.isEmpty else { return }
             createAndSavePrompt()

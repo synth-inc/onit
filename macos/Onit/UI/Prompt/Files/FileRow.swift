@@ -8,11 +8,14 @@
 import SwiftUI
 
 struct FileRow: View {
+    @Environment(\.windowState) var windowState
     @ObservedObject private var accessibilityPermissionManager = AccessibilityPermissionManager.shared
     
     @State private var currentWindowInfo: (icon: NSImage?, name: String?) = (nil, nil)
     @State private var windowDelegate: WindowChangeDelegate? = nil
     @State private var windowAlreadyInContext: Bool = false
+    
+    @State private var addingAutoContext: Bool = false
     
     var accessibilityEnabled: Bool {
         accessibilityPermissionManager.accessibilityPermissionStatus == .granted
@@ -54,8 +57,14 @@ struct FileRow: View {
                 .scrollIndicators(.hidden)
             }
             
-            if !contextList.isEmpty {
-                ContextList(contextList: contextList)
+            HStack(spacing: 6) {
+                if addingAutoContext {
+                    Loader()
+                }
+                
+                if !contextList.isEmpty {
+                    ContextList(contextList: contextList)
+                }
             }
         }
         .onAppear {
@@ -70,15 +79,23 @@ struct FileRow: View {
             AccessibilityNotificationsManager.shared.addDelegate(delegate)
         }
         .onDisappear {
-            if let delegate = windowDelegate {
-                AccessibilityNotificationsManager.shared.removeDelegate(delegate)
-            }
+            cleanUpPendingAutoContextTasks()
+            cleanUpWindowDelegateIfExists()
         }
         .onChange(of: currentWindowInfo.name) { _, _ in
-            windowAlreadyInContext = detectAlreadyAddedToContext()
+            windowAlreadyInContext = detectCurrentWindowAlreadyInContext()
         }
         .onChange(of: contextList) { _, _ in
-            windowAlreadyInContext = detectAlreadyAddedToContext()
+            windowAlreadyInContext = detectCurrentWindowAlreadyInContext()
+        }
+        .onChange(of: windowState.addAutoContextTasks) { _, _ in
+            if let windowName = currentWindowInfo.name,
+               let _ = windowState.addAutoContextTasks[windowName]
+            {
+                windowAlreadyInContext = true
+            }
+            
+            addingAutoContext = !windowState.addAutoContextTasks.isEmpty
         }
     }
 }
@@ -105,13 +122,14 @@ extension FileRow {
         return FileRow.getWindowIconAndName(windowsManager.activeTrackedWindow)
     }
     
-    private func detectAlreadyAddedToContext() -> Bool {
-        if let windowName = currentWindowInfo.name,
-            !contextList.isEmpty
-        {
+    private func detectCurrentWindowAlreadyInContext() -> Bool {
+        if let windowName = currentWindowInfo.name, !contextList.isEmpty {
             for context in contextList {
                 if case .auto(let autoContext) = context {
-                    if windowName == autoContext.appName { return true }
+                    if windowName == autoContext.appName {
+                        deleteAutoContextTask(windowName)
+                        return true
+                    }
                 }
             }
             
@@ -122,7 +140,32 @@ extension FileRow {
     }
     
     private func addWindowToContext() {
-        PanelStateCoordinator.shared.fetchWindowContext()
+        if let windowName = currentWindowInfo.name {
+            windowState.addAutoContextTasks[windowName]?.cancel()
+            
+            windowState.addAutoContextTasks[windowName] = Task {
+                PanelStateCoordinator.shared.fetchWindowContext()
+            }
+        }
+    }
+    
+    private func deleteAutoContextTask(_ windowName: String) {
+        windowState.addAutoContextTasks[windowName]?.cancel()
+        windowState.addAutoContextTasks.removeValue(forKey: windowName)
+    }
+    
+    private func cleanUpPendingAutoContextTasks() {
+        for (_, task) in windowState.addAutoContextTasks {
+            task.cancel()
+        }
+        
+        windowState.addAutoContextTasks = [:]
+    }
+    
+    private func cleanUpWindowDelegateIfExists() {
+        if let delegate = windowDelegate {
+            AccessibilityNotificationsManager.shared.removeDelegate(delegate)
+        }
     }
 }
 
@@ -135,9 +178,20 @@ private final class WindowChangeDelegate: AccessibilityNotificationsDelegate {
         self.onWindowChange = onWindowChange
     }
     
+    // Tracks when changing focused window.
     func accessibilityManager(
         _ manager: AccessibilityNotificationsManager,
         didActivateWindow trackedWindow: TrackedWindow
+    ) {
+        let (windowIcon, windowName) = FileRow.getWindowIconAndName(trackedWindow)
+        onWindowChange((windowIcon, windowName))
+    }
+    
+    // Tracks when changing focused sub-window in the current window.
+    // For example, switching browser tabs.
+    func accessibilityManager(
+        _ manager: AccessibilityNotificationsManager,
+        didChangeWindowTitle trackedWindow: TrackedWindow
     ) {
         let (windowIcon, windowName) = FileRow.getWindowIconAndName(trackedWindow)
         onWindowChange((windowIcon, windowName))
