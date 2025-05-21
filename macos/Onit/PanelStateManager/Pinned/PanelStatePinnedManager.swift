@@ -126,7 +126,7 @@ class PanelStatePinnedManager: PanelStateBaseManager, ObservableObject {
     }
     
     override func launchPanel(for state: OnitPanelState) {
-        PostHogSDK.shared.capture("launch_panel", properties: ["displayMode": "pinned"])
+        AnalyticsManager.Panel.opened(displayMode: "pinned")
         
         hideTetherWindow()
         resetFramesOnAppChange()
@@ -138,6 +138,8 @@ class PanelStatePinnedManager: PanelStateBaseManager, ObservableObject {
     }
     
     override func closePanel(for state: OnitPanelState) {
+        AnalyticsManager.Panel.closed(displayMode: "pinned")
+        
         hidePanel(for: state)
         
         super.closePanel(for: state)

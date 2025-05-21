@@ -29,17 +29,6 @@ struct ToolbarRight: View {
         .background { escListener }
     }
 
-    var esc: some View {
-        Button {
-            PanelStateCoordinator.shared.closePanel(for: state)
-        } label: {
-            Text("ESC")
-                .appFont(.medium13)
-                .padding(4)
-        }
-        .tooltip(prompt: "Close Onit", shortcut: .keyboardShortcuts(.escape))
-    }
-
     // Empty view for layout purposes
     var escListener: some View {
         EmptyView()
@@ -70,8 +59,13 @@ struct ToolbarRight: View {
     }
 
     func toggleMode() {
+        let oldMode = mode.rawValue
+        
         mode = mode == .local ? .remote : .local
+        
+        AnalyticsManager.Toolbar.llmModeToggled(oldValue: oldMode, newValue: mode.rawValue)
     }
+    
     var localMode: some View {
         IconButton(
             icon: mode == .local ? .localModeActive : .localMode,
@@ -94,7 +88,10 @@ struct ToolbarRight: View {
         IconButton(
             icon: .history,
             iconSize: 22,
-            action: { state.showHistory.toggle() },
+            action: {
+                AnalyticsManager.Toolbar.historyPressed(displayed: state.showHistory)
+                state.showHistory.toggle()
+            },
             isActive: state.showHistory,
             tooltipPrompt: "History"
         )
@@ -107,6 +104,8 @@ struct ToolbarRight: View {
     }
 
     func openSettingsWindow() {
+        AnalyticsManager.Toolbar.settingsPressed()
+        
         NSApp.activate()
         if NSApp.isActive {
             appState.setSettingsTab(tab: .general)

@@ -100,7 +100,7 @@ class PanelStateCoordinator {
     // MARK: - Private functions
     
     private func handleStateChange(accessibilityPermission: AccessibilityPermissionStatus, pinnedModeEnabled: Bool) {
-        AccessibilityAnalytics.logPermission(local: accessibilityPermission)
+        AnalyticsManager.logAXPermission(local: accessibilityPermission)
         
         let oldManager = currentManager
         

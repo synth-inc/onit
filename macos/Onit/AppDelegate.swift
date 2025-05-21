@@ -24,6 +24,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     func applicationWillTerminate(_ notification: Notification) {
-        PostHogSDK.shared.capture("app_quit")
+        AnalyticsManager.appQuit()
     }
 }
