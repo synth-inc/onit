@@ -96,7 +96,7 @@ extension Context {
         appHash: UInt,
         appTitle: String,
         appContent: [String: String],
-        appIconUrl: URL? = nil,
+        appIconUrl: URL? = nil
     ) {
         self = .auto(
             AutoContext(
