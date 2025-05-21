@@ -79,8 +79,8 @@ class PanelStateTetheredManager: PanelStateBaseManager, ObservableObject {
         statesByWindow = [:]
     }
     
-    override func getState(for windowHash: UInt) -> OnitPanelState? {
-        guard let (_, state) = statesByWindow.first(where: { $0.key.hash == windowHash }) else { return nil }
+    override func getState(for window: AXUIElement) -> OnitPanelState? {
+        guard let (_, state) = statesByWindow.first(where: { $0.key.hash == CFHash(window) }) else { return nil }
         
         return state
     }
@@ -116,7 +116,7 @@ class PanelStateTetheredManager: PanelStateBaseManager, ObservableObject {
         ]
         PostHogSDK.shared.capture("launch_panel", properties: properties)
         
-        buildPanelIfNeeded(for: state)
+        buildPanel(for: state)
         showPanel(for: state)
     }
     
@@ -148,7 +148,7 @@ class PanelStateTetheredManager: PanelStateBaseManager, ObservableObject {
     }
     
     @objc private func applicationWillTerminate() {
-        resetFramesOnAppChange()
+        restoreAllFrames()
     }
     
     // MARK: - Handling panel state changes

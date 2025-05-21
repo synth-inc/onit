@@ -87,7 +87,7 @@ class OnitRegularPanel: NSPanel {
                         self.isResizing = true
                         if self.originalFrame == .zero {
                             self.originalFrame = NSRect(origin: frame.origin, size: frame.size)
-                            }
+                        }
                         self.resizePanel(byWidth: deltaX)
                     },
                     onDragEnded: { [weak self] in
@@ -200,7 +200,7 @@ extension OnitRegularPanel: OnitPanel {
     func resizePanel(byWidth deltaWidth: CGFloat) {
         guard !isAnimating else { return }
         
-        let newWidth = width - deltaWidth
+        let newWidth = round(width - deltaWidth)
         
         if (newWidth >= OnitRegularPanel.minWidth) {
             width = newWidth

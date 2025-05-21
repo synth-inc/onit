@@ -262,7 +262,7 @@ class AccessibilityNotificationsManager: ObservableObject {
     
     private func retrieveWindowContent(for pid: pid_t) {
         guard let mainWindow = pid.firstMainWindow,
-              let state = PanelStateCoordinator.shared.getState(for: CFHash(mainWindow)) else { return }
+              let state = PanelStateCoordinator.shared.getState(for: mainWindow) else { return }
         
         Task { @MainActor in
             if let documentInfo = findDocument(in: mainWindow) {

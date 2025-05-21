@@ -5,6 +5,8 @@
 //  Created by Kévin Naudin on 07/05/2025.
 //
 
+import ApplicationServices
+
 @MainActor
 protocol PanelStateManagerLogic {
     
@@ -21,7 +23,7 @@ protocol PanelStateManagerLogic {
     func start()
     func stop()
     
-    func getState(for windowHash: UInt) -> OnitPanelState?
+    func getState(for window: AXUIElement) -> OnitPanelState?
 
     func filterHistoryChats(_ chats: [Chat]) -> [Chat]
     func filterPanelChats(_ chats: [Chat]) -> [Chat]
