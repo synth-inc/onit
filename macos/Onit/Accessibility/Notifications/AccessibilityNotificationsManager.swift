@@ -32,6 +32,7 @@ class AccessibilityNotificationsManager: ObservableObject {
         var userInteraction: UserInteractions = .init()
         var others: [String: String]?
         var errorMessage: String?  // Renamed field for error message
+        var appIconUrl: URL?
     }
 
     // MARK: - Properties
@@ -422,11 +423,12 @@ class AccessibilityNotificationsManager: ObservableObject {
     }
     
     private func handleWindowContent(_ results: [String: String]?, for state: OnitPanelState) {
-        var appIcon: NSImage? = nil
+        var appIconUrl: URL? = nil
+        
         if let pid = lastActiveWindowPid,
            let app = NSRunningApplication(processIdentifier: pid)
         {
-            appIcon = app.icon
+            appIconUrl = app.bundleURL
         }
         
         let elapsedTime = results?[AccessibilityParsedElements.elapsedTime]
@@ -448,9 +450,10 @@ class AccessibilityNotificationsManager: ObservableObject {
         self.screenResult.applicationTitle = appTitle
         self.screenResult.others = results
         self.screenResult.errorMessage = nil
+        self.screenResult.appIconUrl = appIconUrl
         self.showDebug()
         
-        state.addAutoContext(appIcon)
+        state.addAutoContext()
     }
 
     // MARK: Value Changed

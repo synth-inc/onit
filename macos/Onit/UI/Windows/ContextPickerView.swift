@@ -10,10 +10,10 @@ import SwiftUI
 struct ContextPickerView: View {
     @Environment(\.windowState) private var state
 
-    private let currentWindowIcon: NSImage?
+    private let currentWindowIconUrl: URL?
     
-    init(currentWindowIcon: NSImage? = nil) {
-        self.currentWindowIcon = currentWindowIcon
+    init(currentWindowIconUrl: URL? = nil) {
+        self.currentWindowIconUrl = currentWindowIconUrl
     }
     
     var body: some View {
@@ -36,7 +36,7 @@ struct ContextPickerView: View {
                 PanelStateCoordinator.shared.fetchWindowContext()
             }) {
                 ContextPickerItemView(
-                    currentWindowIcon: currentWindowIcon,
+                    currentWindowIconUrl: currentWindowIconUrl,
                     imageRes: .stars,
                     title: "AutoContext",
                     subtitle: "Current window"

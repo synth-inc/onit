@@ -28,11 +28,13 @@ struct ContextItem: View {
             case .auto(let autoContext):
                 if isEditing {
                     AutoContextButton(
-                        icon: autoContext.appIcon,
                         text: name,
-                        action: showContextWindow,
-                        removeAction: inList ? nil : { removeContextItem() }
-                    )
+                        appIconUrl: autoContext.appIconUrl
+                    ) {
+                        showContextWindow()
+                    } removeAction: {
+                        removeContextItem()
+                    }
                 } else {
                     TagButton(
                         child: ContextImage(context: item),
@@ -61,7 +63,7 @@ struct ContextItem: View {
     var name: String {
         switch item {
         case .auto(let autoContext):
-            autoContext.appName
+            autoContext.appTitle
         case .file(let url), .image(let url):
             url.lastPathComponent
         case .error(_, let error):

@@ -11,7 +11,7 @@ struct FileRow: View {
     @Environment(\.windowState) var windowState
     @ObservedObject private var accessibilityPermissionManager = AccessibilityPermissionManager.shared
     
-    @State private var currentWindowInfo: (icon: NSImage?, name: String?) = (nil, nil)
+    @State private var currentWindowInfo: (appIconUrl: URL?, name: String?) = (nil, nil)
     @State private var windowDelegate: WindowChangeDelegate? = nil
     @State private var windowAlreadyInContext: Bool = false
     
@@ -35,41 +35,10 @@ struct FileRow: View {
     var contextList: [Context]
 
     var body: some View {
+
         VStack(alignment: .leading, spacing: 6) {
-            HStack(spacing: 6) {
-                PaperclipButton(
-                    currentWindowIcon: currentWindowInfo.icon,
-                    shouldShowAddContextButton: windowName == nil
-                )
-                
-                ScrollView(.horizontal) {
-                    HStack(spacing: 6) {
-                        if let windowName = windowName {
-                            AutoContextButton(
-                                icon: currentWindowInfo.icon,
-                                text: windowName,
-                                action: addWindowToContext,
-                                isAdd: true
-                            )
-                        }
-                    }
-                }
-                .scrollIndicators(.hidden)
-            }
-            
-            FlowLayout(spacing: 6) {
-                if addingAutoContext {
-                    Loader()
-                }
-                
-                if !contextList.isEmpty {
-                    ForEach(contextList, id: \.self) { context in
-                        ContextItem(item: context, isEditing: true)
-                            .scrollTargetLayout()
-                            .contentShape(Rectangle())
-                    }
-                }
-            }
+            fileRowHeader
+            fileRowContextList
         }
         .onAppear {
             currentWindowInfo = initializeCurrentWindowInfo()
@@ -104,24 +73,68 @@ struct FileRow: View {
     }
 }
 
+// MARK: - Child Components
+
+extension FileRow {
+    private var fileRowHeader: some View {
+        HStack(spacing: 6) {
+            PaperclipButton(
+                currentWindowIconUrl: currentWindowInfo.appIconUrl,
+                shouldShowAddContextButton: windowName == nil
+            )
+            
+            ScrollView(.horizontal) {
+                HStack(spacing: 6) {
+                    if let windowName = windowName {
+                        AutoContextButton(
+                            text: windowName,
+                            isAdd: true,
+                            appIconUrl: currentWindowInfo.appIconUrl
+                        ) {
+                            addWindowToContext()
+                        }
+                    }
+                }
+            }
+            .scrollIndicators(.hidden)
+        }
+    }
+    
+    private var fileRowContextList: some View {
+        FlowLayout(spacing: 6) {
+            if addingAutoContext {
+                Loader()
+            }
+            
+            if !contextList.isEmpty {
+                ForEach(contextList, id: \.self) { context in
+                    ContextItem(item: context, isEditing: true)
+                        .scrollTargetLayout()
+                        .contentShape(Rectangle())
+                }
+            }
+        }
+    }
+}
+
 // MARK: - Private Functions
 
 extension FileRow {
-    static func getWindowIconAndName(_ trackedWindow: TrackedWindow?) -> (NSImage?, String?) {
+    static func getWindowIconAndName(_ trackedWindow: TrackedWindow?) -> (URL?, String?) {
         if let trackedWindow = trackedWindow,
            let pid = trackedWindow.element.pid(),
            let windowApp = NSRunningApplication(processIdentifier: pid)
         {
-            let windowIcon = windowApp.icon
+            let windowAppIconUrl = windowApp.bundleURL
             let windowName = trackedWindow.element.title() ?? trackedWindow.element.appName() ?? nil
             
-            return (windowIcon, windowName)
+            return (windowAppIconUrl, windowName)
         } else {
             return (nil, nil)
         }
     }
     
-    private func initializeCurrentWindowInfo() -> (NSImage?, String?) {
+    private func initializeCurrentWindowInfo() -> (URL?, String?) {
         let windowsManager = AccessibilityNotificationsManager.shared.windowsManager
         return FileRow.getWindowIconAndName(windowsManager.activeTrackedWindow)
     }
@@ -130,7 +143,7 @@ extension FileRow {
         if let windowName = currentWindowInfo.name, !contextList.isEmpty {
             for context in contextList {
                 if case .auto(let autoContext) = context {
-                    if windowName == autoContext.appName {
+                    if windowName == autoContext.appTitle {
                         deleteAutoContextTask(windowName)
                         return true
                     }
@@ -176,9 +189,11 @@ extension FileRow {
 // MARK: - Window Change Delegate (to track window changes)
 
 private final class WindowChangeDelegate: AccessibilityNotificationsDelegate {
-    private let onWindowChange: ((NSImage?, String?)) -> Void
+    private var currentlyTrackedWindow: TrackedWindow? = nil
     
-    init(onWindowChange: @escaping ((NSImage?, String?)) -> Void) {
+    private let onWindowChange: ((URL?, String?)) -> Void
+    
+    init(onWindowChange: @escaping ((URL?, String?)) -> Void) {
         self.onWindowChange = onWindowChange
     }
     
@@ -187,8 +202,9 @@ private final class WindowChangeDelegate: AccessibilityNotificationsDelegate {
         _ manager: AccessibilityNotificationsManager,
         didActivateWindow trackedWindow: TrackedWindow
     ) {
-        let (windowIcon, windowName) = FileRow.getWindowIconAndName(trackedWindow)
-        onWindowChange((windowIcon, windowName))
+        currentlyTrackedWindow = trackedWindow
+        let (windowIconAppUrl, windowName) = FileRow.getWindowIconAndName(trackedWindow)
+        onWindowChange((windowIconAppUrl, windowName))
     }
     
     // Tracks when changing focused sub-window in the current window.
@@ -197,12 +213,29 @@ private final class WindowChangeDelegate: AccessibilityNotificationsDelegate {
         _ manager: AccessibilityNotificationsManager,
         didChangeWindowTitle trackedWindow: TrackedWindow
     ) {
-        let (windowIcon, windowName) = FileRow.getWindowIconAndName(trackedWindow)
-        onWindowChange((windowIcon, windowName))
+        currentlyTrackedWindow = trackedWindow
+        let (windowIconAppUrl, windowName) = FileRow.getWindowIconAndName(trackedWindow)
+        onWindowChange((windowIconAppUrl, windowName))
+    }
+    
+    // Cleaning up tracked windows.
+    func accessibilityManager(
+        _ manager: AccessibilityNotificationsManager,
+        didDestroyWindow window: TrackedWindow
+    ) {
+        let (_, currentlyTrackWindowName) = FileRow.getWindowIconAndName(currentlyTrackedWindow)
+        let (_, recentlyTrackedWindowName) = FileRow.getWindowIconAndName(window)
+        
+        if let currentlyTrackWindowName = currentlyTrackWindowName,
+           let recentlyTrackedWindowName = recentlyTrackedWindowName,
+           currentlyTrackWindowName == recentlyTrackedWindowName
+        {
+            currentlyTrackedWindow = nil
+            onWindowChange((nil, nil))
+        }
     }
     
     // Below is required to conform to AccessibilityNotificationsDelegate protocol but aren't needed in this implementation.
-    func accessibilityManager(_ manager: AccessibilityNotificationsManager, didDestroyWindow window: TrackedWindow) {}
     func accessibilityManager(_ manager: AccessibilityNotificationsManager, didMoveWindow window: TrackedWindow) {}
     func accessibilityManager(_ manager: AccessibilityNotificationsManager, didResizeWindow window: TrackedWindow) {}
     func accessibilityManager(_ manager: AccessibilityNotificationsManager, didMinimizeWindow window: TrackedWindow) {}

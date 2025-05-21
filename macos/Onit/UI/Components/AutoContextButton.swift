@@ -8,24 +8,24 @@
 import SwiftUI
 
 struct AutoContextButton: View {
-    private let icon: NSImage?
     private let text: String
+    private let isAdd: Bool
+    private let appIconUrl: URL?
     private let action: () -> Void
     private let removeAction: (() -> Void)?
-    private let isAdd: Bool
     
     init(
-        icon: NSImage? = nil,
         text: String,
+        isAdd: Bool = false,
+        appIconUrl: URL? = nil,
         action: @escaping () -> Void,
-        removeAction: (() -> Void)? = nil,
-        isAdd: Bool = false
+        removeAction: (() -> Void)? = nil
     ) {
-        self.icon = icon
         self.text = text
+        self.isAdd = isAdd
+        self.appIconUrl = appIconUrl
         self.action = action
         self.removeAction = removeAction
-        self.isAdd = isAdd
     }
     
     @State private var isHoveredBody: Bool = false
@@ -34,19 +34,20 @@ struct AutoContextButton: View {
     
     private let height: CGFloat = 24
     
-    private let textColorNotAdded = Color(hex: "#90939A") ?? .gray400
-    private let textColorT2 = Color(hex: "#CDD0D9") ?? .gray100
-    private let textColorT3 = Color(hex: "#AEB3BF") ?? .gray100
-    
     private var hoverBackground: Color {
         return isAdd ? .gray500 : .gray400
+    }
+    
+    private var appIcon: NSImage? {
+        guard let url = appIconUrl else { return nil }
+        return NSWorkspace.shared.icon(forFile: url.path)
     }
     
     var body: some View {
         ZStack(alignment: .leading) {
             HStack(alignment: .center, spacing: 6) {
-                if let icon = icon {
-                    Image(nsImage: icon)
+                if let appIcon = appIcon {
+                    Image(nsImage: appIcon)
                         .resizable()
                         .frame(width: 16, height: 16)
                         .cornerRadius(4)
@@ -135,17 +136,17 @@ extension AutoContextButton {
     private func setTextColor() -> Color {
         if isAdd {
             if isHoveredBody {
-                return textColorT2
+                return .T_2
             } else {
-                return textColorNotAdded
+                return .autoContextTextNotAdded
             }
         } else {
             if isHoveredRemove {
-                return textColorT3
+                return .T_3
             } else if isHoveredBody {
                 return .white
             } else {
-                return textColorT2
+                return .T_2
             }
         }
     }

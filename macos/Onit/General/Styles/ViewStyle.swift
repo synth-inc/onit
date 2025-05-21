@@ -131,10 +131,7 @@ extension View {
                     .onChanged {_ in isPressed.wrappedValue = true }
                     .onEnded{ _ in
                         isPressed.wrappedValue = false
-                        
-                        if let action = action {
-                            action()
-                        }
+                        action?()
                     }
                 )
             .allowsHitTesting(!disabled)

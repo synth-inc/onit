@@ -8,27 +8,32 @@
 import SwiftUI
 
 struct ContextPickerItemView: View {
-    private let currentWindowIcon: NSImage?
+    private let currentWindowIconUrl: URL?
     private let imageRes: ImageResource
     private let title: String
     private let subtitle: String
     
     init(
-        currentWindowIcon: NSImage? = nil,
+        currentWindowIconUrl: URL? = nil,
         imageRes: ImageResource,
         title: String,
         subtitle: String
     ) {
-        self.currentWindowIcon = currentWindowIcon
+        self.currentWindowIconUrl = currentWindowIconUrl
         self.imageRes = imageRes
         self.title = title
         self.subtitle = subtitle
     }
+    
+    private var windowIcon: NSImage? {
+        guard let url = currentWindowIconUrl else { return nil }
+        return NSWorkspace.shared.icon(forFile: url.path)
+    }
 
     var body: some View {
         HStack(spacing: 0) {
-            if let currentWindowIcon = currentWindowIcon {
-                Image(nsImage: currentWindowIcon)
+            if let windowIcon = windowIcon {
+                Image(nsImage: windowIcon)
                     .resizable()
                     .frame(width: 20, height: 20)
                     .cornerRadius(4.5)
@@ -56,5 +61,5 @@ struct ContextPickerItemView: View {
 }
 
 #Preview {
-    ContextPickerItemView(currentWindowIcon: nil, imageRes: .arrowsSpin, title: "", subtitle: "")
+    ContextPickerItemView(currentWindowIconUrl: nil, imageRes: .arrowsSpin, title: "", subtitle: "")
 }

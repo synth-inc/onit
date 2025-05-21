@@ -2,8 +2,7 @@
   "images" : [
     {
       "filename" : "cross.svg",
-      "idiom" : "universal",
-      "scale" : "1x"
+      "idiom" : "universal"
     }
   ],
   "info" : {

@@ -18,14 +18,14 @@ struct PaperclipButton: View {
 
     @Default(.closedAutoContextTag) var closedAutoContextTag
     
-    private let currentWindowIcon: NSImage?
+    private let currentWindowIconUrl: URL?
     private let shouldShowAddContextButton: Bool
     
     init(
-        currentWindowIcon: NSImage? = nil,
+        currentWindowIconUrl: URL? = nil,
         shouldShowAddContextButton: Bool = false
     ) {
-        self.currentWindowIcon = currentWindowIcon
+        self.currentWindowIconUrl = currentWindowIconUrl
         self.shouldShowAddContextButton = shouldShowAddContextButton
     }
     
@@ -78,7 +78,7 @@ struct PaperclipButton: View {
                 }
             }
             OverlayManager.shared.captureClickPosition()
-            let view = ContextPickerView(currentWindowIcon: currentWindowIcon)
+            let view = ContextPickerView(currentWindowIconUrl: currentWindowIconUrl)
                 .environment(\.appState, appState)
                 .environment(\.windowState, state)
             OverlayManager.shared.showOverlay(content: view)

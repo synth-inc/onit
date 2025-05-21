@@ -2,8 +2,7 @@
   "images" : [
     {
       "filename" : "Logo.svg",
-      "idiom" : "universal",
-      "scale" : "1x"
+      "idiom" : "universal"
     }
   ],
   "info" : {
