@@ -11,6 +11,7 @@ import SwiftUI
 @MainActor
 enum AppFont {
     case medium10
+    case medium11
     case medium12
     case medium13
     case medium14
@@ -34,6 +35,8 @@ enum AppFont {
         switch self {
         case .medium10:
             return baseFontSize - 4
+        case .medium11:
+            return baseFontSize - 3
         case .medium12:
             return baseFontSize - 2
         case .medium13:
@@ -75,6 +78,8 @@ enum AppFont {
         switch self {
         case .medium10:
             return 10
+        case .medium11:
+            return 11
         case .medium12:
             return 12
         case .medium13:
@@ -92,6 +97,8 @@ enum AppFont {
         switch self {
         case .medium10:
             return 1
+        case .medium11:
+            return 1.25
         case .medium12:
             return 1.5
         case .medium13:

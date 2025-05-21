@@ -17,16 +17,10 @@ struct ChatEndpointMessagesBuilder {
         for (index, instruction) in instructions.enumerated() {
             var message = ""
             
-            if let input = inputs[index], !input.selectedText.isEmpty {
-                if let application = input.application {
-                    message += "\n\nSelected Text from \(application): \(input.selectedText)"
-                } else {
-                    message += "\n\nSelected Text: \(input.selectedText)"
-                }
-            }
-            
+     
             // TODO: add error handling for contexts too long & incorrect file types
             if !files[index].isEmpty {
+                message += "\n\nUse the following files as context:"
                 for file in files[index] {
                     if let fileContent = try? String(contentsOf: file, encoding: .utf8) {
                         message += "\n\nFile: \(file.lastPathComponent)\nContent:\n\(fileContent)"
@@ -35,6 +29,7 @@ struct ChatEndpointMessagesBuilder {
             }
             
             if !autoContexts[index].isEmpty {
+                message += "\n\nUse the following application content as context:"
                 for (appName, appContent) in autoContexts[index] {
                     message += "\n\nContent from application \(appName):\n\(appContent)"
                 }
@@ -42,6 +37,7 @@ struct ChatEndpointMessagesBuilder {
             
             // Add web contexts
             if index < webSearchContexts.count && !webSearchContexts[index].isEmpty {
+                message += "\n\nUse the following web search results as context:"
                 for webSearchContext in webSearchContexts[index] {
                     message += "\n\nWeb Search Result: \(webSearchContext.title)"
                     if !webSearchContext.source.isEmpty {
@@ -50,6 +46,16 @@ struct ChatEndpointMessagesBuilder {
                     message += "\n\(webSearchContext.content)"
                 }
             }
+
+           if let input = inputs[index], !input.selectedText.isEmpty { 
+                message += "\n\nUse the following selected text as context. When present, selected text should take priority over other context."
+                if let application = input.application {
+                    message += "\n\nSelected Text from \(application): \(input.selectedText)"
+                } else {
+                    message += "\n\nSelected Text: \(input.selectedText)"
+                }
+            }
+            
 
             // Intuitively, I (tim) think the message should be the last thing.
             // TODO: evaluate this

@@ -125,8 +125,8 @@ class AccessibilityNotificationsManager: ObservableObject {
         currentSource = appName
         lastActiveWindowPid = processID
         
-        if let focusedWindow = processID.getFocusedWindow() {
-            handleWindowBounds(for: focusedWindow, elementPid: processID)
+        if let mainWindow = processID.firstMainWindow {
+            handleWindowBounds(for: mainWindow, elementPid: processID)
         }
     }
     
@@ -270,17 +270,17 @@ class AccessibilityNotificationsManager: ObservableObject {
     // MARK: Parsing
     
     private func retrieveWindowContent(for pid: pid_t) {
-        guard let focusedWindow = pid.getFocusedWindow(),
-              let state = PanelStateCoordinator.shared.getState(for: CFHash(focusedWindow)) else { return }
+        guard let mainWindow = pid.firstMainWindow,
+              let state = PanelStateCoordinator.shared.getState(for: CFHash(mainWindow)) else { return }
         
         Task { @MainActor in
-            if let documentInfo = findDocument(in: focusedWindow) {
+            if let documentInfo = findDocument(in: mainWindow) {
                 handleWindowContent(documentInfo, for: state)
                 // TODO: KNA - uncomment this to use WebContentFetchService with AXURL
             } /* else if let urlInfo = await findUrl(in: focusedWindow) {
                 handleWindowContent(urlInfo, for: state)
             } */ else {
-                parseAccessibility(for: pid, in: focusedWindow, state: state)
+                parseAccessibility(for: pid, in: mainWindow, state: state)
             }
         }
     }
@@ -388,9 +388,9 @@ class AccessibilityNotificationsManager: ObservableObject {
                 do {
                     let results = try await withThrowingTaskGroup(of: [String: String]?.self) { group -> [String: String]? in
                         group.addTask {
-                            guard let focusedWindow = pid.getFocusedWindow() else { return nil }
+                            guard let mainWindow = pid.firstMainWindow else { return nil }
                             
-                            return await AccessibilityParser.shared.getAllTextInElement(windowElement: focusedWindow)
+                            return await AccessibilityParser.shared.getAllTextInElement(windowElement: mainWindow)
                         }
                         group.addTask {
                             try await Task.sleep(nanoseconds: 10_000_000_000) // 10 second timeout

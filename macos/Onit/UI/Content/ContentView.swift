@@ -69,18 +69,18 @@ struct ContentView: View {
         .toolbar {
             if !showOnboarding && appState.account != nil {
                 ToolbarItem(placement: .navigation) {
-                    ToolbarAddButton()
+                    ToolbarLeft()
                 }
                 ToolbarItem(placement: .automatic) { TetheredToAppView() }
                 ToolbarItem(placement: .automatic) { Spacer() }
                 ToolbarItem(placement: .primaryAction) {
-                    Toolbar()
+                    ToolbarRight()
                 }
             }
         }
         .simultaneousGesture(
             TapGesture(count: 1)
-                .onEnded({ state.handlePanelClicked() })
+                .onEnded({ handleViewClicked() })
         )
         .fileImporter(
             isPresented: showFileImporterBinding,
@@ -108,6 +108,12 @@ struct ContentView: View {
                 }
             }
         }
+    }
+    
+    private func handleViewClicked() {
+        state.textFocusTrigger.toggle()
+        
+        state.notifyDelegates { $0.panelBecomeKey(state: state) }
     }
 
     private func handleFileImport(_ result: Result<[URL], any Error>) {

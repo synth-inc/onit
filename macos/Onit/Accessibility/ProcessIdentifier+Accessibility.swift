@@ -22,7 +22,7 @@ extension pid_t {
         return getAXUIElement().children() ?? []
     }
     
-    private func findTargetWindows() -> [AXUIElement] {
+    func findTargetWindows() -> [AXUIElement] {
         let windows = self.getRootChildren()
         var targetWindows : [AXUIElement] = []
         
@@ -84,15 +84,5 @@ extension pid_t {
         }
         
         return windows
-    }
-    
-    func getFocusedWindow() -> AXUIElement? {
-        let appElement = getAXUIElement()
-        
-        if let value = appElement.attribute(forAttribute: kAXFocusedWindowAttribute as CFString) {
-            return (value as! AXUIElement)
-        }
-        
-        return nil
     }
 }

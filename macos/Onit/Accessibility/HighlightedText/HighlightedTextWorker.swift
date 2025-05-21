@@ -38,17 +38,17 @@ final class HighlightedTextWorker {
         timer.setEventHandler { [weak self] in
             guard let self = self,
                   Defaults[.autoContextFromHighlights],
-                  let focusedWindow = self.pid.getFocusedWindow() else {
+                  let mainWindow = self.pid.firstMainWindow else {
                 return
             }
 
             self.foundSelectedText = false
 
-            guard !self.highlightedTextFound(for: focusedWindow) else {
+            guard !self.highlightedTextFound(for: mainWindow) else {
                 return
             }
 
-            self.scanElementHierarchyForSelectedText(focusedWindow: focusedWindow)
+            self.scanElementHierarchyForSelectedText(window: mainWindow)
 
             if !self.foundSelectedText && self.lastSelectedText != nil {
                 self.lastSelectedText = nil
@@ -79,9 +79,9 @@ final class HighlightedTextWorker {
         return false
     }
 
-    private func scanElementHierarchyForSelectedText(focusedWindow: AXUIElement) {
+    private func scanElementHierarchyForSelectedText(window: AXUIElement) {
         var documentValue: AnyObject?
-        let error = AXUIElementCopyAttributeValue(focusedWindow, kAXDocumentAttribute as CFString, &documentValue)
+        let error = AXUIElementCopyAttributeValue(window, kAXDocumentAttribute as CFString, &documentValue)
         
         if error == .success, let document = documentValue {
             if highlightedTextFound(for: document as! AXUIElement) {
@@ -89,7 +89,7 @@ final class HighlightedTextWorker {
             }
         }
 
-        _ = highlightedTextFound(in: focusedWindow, element: focusedWindow)
+        _ = highlightedTextFound(in: window, element: window)
     }
     
     private func highlightedTextFound(in focusedWindow: AXUIElement, element: AXUIElement, depth: Int = 0) -> Bool {

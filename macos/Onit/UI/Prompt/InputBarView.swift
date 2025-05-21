@@ -7,6 +7,7 @@
 
 import SwiftUI
 
+/// Deprecated 
 struct InputBarView: View {
     @Environment(\.windowState) private var state
     

@@ -131,20 +131,14 @@ extension GeneralTabAccount {
         TokenManager.token = nil
         appState.account = nil
         Defaults[.authFlowStatus] = .showSignIn
+        
+        // Reset all chat state
+        for windowState in PanelStateCoordinator.shared.states {
+            windowState.newChat(clearContext: true)
+        }
     }
     
     private func openPanel() {
-        let coordinator = PanelStateCoordinator.shared
-        
-        // Open the pinned panel, if it isn't already open, so that the user can see the auth flow forms.
-        if coordinator.state.panel == nil {
-            if let currentScreen = NSScreen.main ?? NSScreen.mouse {
-                let manager = PanelStatePinnedManager.shared
-                
-                manager.hideTetherWindow()
-                coordinator.state.trackedScreen = currentScreen
-                coordinator.state.launchPanel()
-            }
-        }
+        PanelStateCoordinator.shared.launchPanel()
     }
 }

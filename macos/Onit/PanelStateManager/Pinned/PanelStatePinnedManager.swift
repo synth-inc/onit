@@ -6,7 +6,9 @@
 //
 
 import AppKit
+import Combine
 import Defaults
+import PostHog
 import SwiftUI
 
 @MainActor
@@ -18,9 +20,18 @@ class PanelStatePinnedManager: PanelStateBaseManager, ObservableObject {
     
     // MARK: - Properties
     
+    var isResizingWindows: Bool = false
+    
     private var lastScreenFrame = CGRect.zero
     private var globalMouseMonitor: Any?
     private var localMouseMonitor: Any?
+    
+    var attachedScreen: NSScreen?
+    
+    /// Dragging
+    let dragManager = GlobalDragManager()
+    var dragManagerCancellable: AnyCancellable?
+    var draggingWindow: AXUIElement?
     
     // MARK: - Initializer
     
@@ -50,10 +61,22 @@ class PanelStatePinnedManager: PanelStateBaseManager, ObservableObject {
         
         AccessibilityNotificationsManager.shared.addDelegate(self)
         
+        dragManagerCancellable = dragManager.$isDragging
+            .sink { [weak self] isDragging in
+                if !isDragging {
+                    self?.onActiveWindowDragEnded()
+                }
+            }
+        
         NSWorkspace.shared.notificationCenter.addObserver(
             self,
             selector: #selector(appLaunchedReceived),
             name: NSWorkspace.didLaunchApplicationNotification,
+            object: nil)
+        NSWorkspace.shared.notificationCenter.addObserver(
+            self,
+            selector: #selector(spaceChangedReceived),
+            name: NSWorkspace.activeSpaceDidChangeNotification,
             object: nil)
         NotificationCenter.default.addObserver(
             self,
@@ -64,6 +87,7 @@ class PanelStatePinnedManager: PanelStateBaseManager, ObservableObject {
         
         state.addDelegate(self)
         
+        dragManager.startMonitoring()
         activateMouseScreen(forced: true)
     }
 
@@ -80,6 +104,9 @@ class PanelStatePinnedManager: PanelStateBaseManager, ObservableObject {
         AccessibilityNotificationsManager.shared.removeDelegate(self)
         NSWorkspace.shared.notificationCenter.removeObserver(self)
         NotificationCenter.default.removeObserver(self)
+        dragManager.stopMonitoring()
+        dragManagerCancellable?.cancel()
+        draggingWindow = nil
         
         state.removeDelegate(self)
         
@@ -98,6 +125,24 @@ class PanelStatePinnedManager: PanelStateBaseManager, ObservableObject {
         return super.filterPanelChats(chats)
     }
     
+    override func launchPanel(for state: OnitPanelState) {
+        PostHogSDK.shared.capture("launch_panel", properties: ["displayMode": "pinned"])
+        
+        hideTetherWindow()
+        resetFramesOnAppChange()
+        
+        attachedScreen = NSScreen.mouse
+        
+        buildPanelIfNeeded(for: state)
+        showPanel(for: state)
+    }
+    
+    override func closePanel(for state: OnitPanelState) {
+        hidePanel(for: state)
+        
+        super.closePanel(for: state)
+    }
+
     override func fetchWindowContext() {
         AccessibilityNotificationsManager.shared.fetchAutoContext()
     }
@@ -118,12 +163,21 @@ class PanelStatePinnedManager: PanelStateBaseManager, ObservableObject {
             }
         }
     }
+    
+    @objc private func spaceChangedReceived(notification: Notification) {
+        guard state.panelOpened, let panel = state.panel, let screen = panel.screen else { return }
+        
+        panel.orderFrontRegardless()
+        
+        resetFramesOnAppChange()
+        resizeWindows(for: screen)
+    }
 
     @objc private func applicationWillTerminate() {
         resetFramesOnAppChange()
     }
     
-    private func activateMouseScreen(forced: Bool = false) {
+    func activateMouseScreen(forced: Bool = false) {
         if forced {
             lastScreenFrame = .zero
         }
@@ -136,105 +190,34 @@ class PanelStatePinnedManager: PanelStateBaseManager, ObservableObject {
     }
     
     private func handleActivation(of screen: NSScreen) {
-        if state.trackedScreen != screen {
+        if attachedScreen != screen {
             debouncedShowTetherWindow(activeScreen: screen)
         } else {
             hideTetherWindow()
         }
     }
     
-    func resizeWindows(for screen: NSScreen, isResize: Bool = false) {
-        let onitName = Bundle.main.object(forInfoDictionaryKey: "CFBundleName") as? String
-        let appPids = NSWorkspace.shared.runningApplications
-            .filter { $0.activationPolicy == .regular }
-            .filter { $0.localizedName != onitName }
-            .map { $0.processIdentifier }
-         
-        for pid in appPids {
-            let windows = pid.getWindows()
-            
-            for window in windows {
-                resizeWindow(for: screen, window: window, isResize: isResize)
-            }
-        }
-    }
-    
-    private func resizeWindow(for screen: NSScreen, window: AXUIElement, isResize: Bool = false) {
-        if !isResize { guard !targetInitialFrames.keys.contains(window) else { return } }
+    func checkIfDragStarted(window: AXUIElement) -> Bool {
+        guard dragManager.isDragging else { return false }
+        guard draggingWindow == nil else { return true }
         
-        if let windowFrameConverted = window.getFrame(convertedToGlobalCoordinateSpace: true),
-           let windowScreen = windowFrameConverted.findScreen(),
-           windowScreen == screen,
-           let windowFrame = window.getFrame() {
-            
-            let panelWidth = state.panelWidth - (TetheredButton.width / 2) + 1
-            let screenFrame = screen.visibleFrame
-            let availableSpace = screenFrame.maxX - windowFrame.maxX
-            
-            if !isResize {
-                if availableSpace < panelWidth {
-                    targetInitialFrames[window] = windowFrame
-                    let overlapAmount = panelWidth - availableSpace
-                    let newWidth = windowFrame.width - overlapAmount
-                    let newFrame = CGRect(x: windowFrame.origin.x, y: windowFrame.origin.y, width: newWidth, height: windowFrame.height)
-                    _ = window.setFrame(newFrame)
-                }
-            } else {
-                // If we're already tracking it, then make it move.
-                if targetInitialFrames.keys.contains(window) {
-                    let newWidth = (screenFrame.maxX - windowFrame.origin.x) - panelWidth
-                    let newFrame = CGRect(x: windowFrame.origin.x, y:windowFrame.origin.y, width: newWidth, height: windowFrame.height)
-                    _ = window.setFrame(newFrame)
-                } else if availableSpace < panelWidth {
-                    // If we aren't already tracking it and it now needs to get resized, start tracking it.
-                    targetInitialFrames[window] = windowFrame
-                    let overlapAmount = panelWidth - availableSpace
-                    let newWidth = windowFrame.width - overlapAmount
-                    let newFrame = CGRect(x: windowFrame.origin.x, y: windowFrame.origin.y, width: newWidth, height: windowFrame.height)
-                    _ = window.setFrame(newFrame)
-                }
-                
-            }
-        }
-    }
-}
-
-extension PanelStatePinnedManager: AccessibilityNotificationsDelegate {
-    func accessibilityManager(_ manager: AccessibilityNotificationsManager, didActivateWindow window: TrackedWindow) {
-        guard state.panelOpened, let screen = state.panel?.screen else { return }
+        draggingWindow = window
         
-        resizeWindow(for: screen, window: window.element)
-    }
-    func accessibilityManager(_ manager: AccessibilityNotificationsManager, didActivateIgnoredWindow window: TrackedWindow?) {}
-    func accessibilityManager(_ manager: AccessibilityNotificationsManager, didMinimizeWindow window: TrackedWindow) {}
-    func accessibilityManager(_ manager: AccessibilityNotificationsManager, didDeminimizeWindow window: TrackedWindow) {}
-    func accessibilityManager(_ manager: AccessibilityNotificationsManager, didDestroyWindow window: TrackedWindow) {}
-    func accessibilityManager(_ manager: AccessibilityNotificationsManager, didMoveWindow window: TrackedWindow) {}
-    func accessibilityManager(_ manager: AccessibilityNotificationsManager, didResizeWindow window: TrackedWindow) {}
-    func accessibilityManager(_ manager: AccessibilityNotificationsManager, didChangeWindowTitle window: TrackedWindow) {}
-}
-
-extension PanelStatePinnedManager: OnitPanelStateDelegate {
-    func panelBecomeKey(state: OnitPanelState) {
-        self.state = state
-        KeyboardShortcutsManager.enable(modelContainer: SwiftDataContainer.appContainer)
+        return true
     }
     
-    func panelResignKey(state: OnitPanelState) {
-        KeyboardShortcutsManager.disable(modelContainer: SwiftDataContainer.appContainer)
-    }
-    
-    func panelStateDidChange(state: OnitPanelState) {
-        if !state.panelOpened {
-            // resetFramesOnAppChange()
-            
-            state.trackedScreen = nil
-            
-            activateMouseScreen(forced: true)
+    private func onActiveWindowDragEnded() {
+        guard let window = draggingWindow else { return }
+        
+        draggingWindow = nil
+        
+        guard let mouseScreen = NSScreen.mouse,
+              let panelScreen = state.panel?.screen else { return }
+        
+        if mouseScreen === panelScreen {
+            resizeWindow(for: panelScreen, window: window, windowFrameChanged: true)
         } else {
-            state.panel?.setLevel(.floating)
+            targetInitialFrames.removeValue(forKey: window)
         }
     }
-    
-    func userInputsDidChange(instruction: String, contexts: [Context], input: Input?) {}
 }

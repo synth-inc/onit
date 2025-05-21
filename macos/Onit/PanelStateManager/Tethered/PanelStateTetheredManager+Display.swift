@@ -1,42 +1,29 @@
 //
-//  OnitPanelState+Position.swift
+//  PanelStateTetheredManager+Display.swift
 //  Onit
 //
-//  Created by Kévin Naudin on 08/04/2025.
+//  Created by Kévin Naudin on 16/05/2025.
 //
 
-@preconcurrency import AppKit
+import AppKit
 import Foundation
-import SwiftUI
 
-extension OnitPanelState {
-    
-    // MARK: - Panel repositioning
-    
-    private var animationDuration: TimeInterval { 0.2 }
-    
-    @MainActor private func cancelCurrentAnimation() {
-        currentAnimationTask?.cancel()
-        currentAnimationTask = nil
-    }
-    
-    func repositionPanel(action: TrackedWindowAction) {
-        if isScreenMode {
-            return
-        }
-        
-        guard let window = trackedWindow?.element,
-              let panel = self.panel,
+extension PanelStateTetheredManager {
+    func showPanel(for state: OnitPanelState, action: TrackedWindowAction = .undefined) {
+        guard let (trackedWindow, state) = statesByWindow.first(where: { $1 == state }),
+              let panel = state.panel,
               !panel.isAnimating,
               !panel.dragDetails.isDragging else {
             return
         }
         
+        let window = trackedWindow.element
+        
         // Special case for Finder (desktop only)
         if window.isDesktopFinder {
             if let mouseScreen = NSScreen.mouse {
                 let screenFrame = mouseScreen.frame
-                let onitWidth = self.panelWidth
+                let onitWidth = state.panelWidth
                 let onitHeight = screenFrame.height - ContentView.bottomPadding
                 let onitY = screenFrame.maxY - onitHeight
                 let onitX = screenFrame.maxX - onitWidth
@@ -68,7 +55,7 @@ extension OnitPanelState {
         let fullTop = primaryScreenFrame.height - screenFrame.height - visibleFrame.minY + activeScreenInset
         let windowDistanceFromTop = windowFrame.minY - fullTop
         
-        let onitWidth = self.panelWidth
+        let onitWidth = state.panelWidth
         let onitHeight = min(windowFrame.height, screenFrame.height - ContentView.bottomPadding)
         let onitY = visibleFrame.minY + (visibleFrame.height - windowFrame.height) - windowDistanceFromTop
         
@@ -78,140 +65,122 @@ extension OnitPanelState {
         let isOnRightmostScreen = screen == rightmostScreen
         
         if (action == .move && !isOnRightmostScreen) || hasEnoughSpace {
-            self.movePanel(screenFrame: screenFrame, onitWidth: onitWidth, onitHeight: onitHeight, onitY: onitY)
+            movePanel(state: state,
+                      window: window,
+                      screenFrame: screenFrame,
+                      onitWidth: onitWidth,
+                      onitHeight: onitHeight,
+                      onitY: onitY)
         } else {
             
             let maxAvailableWidth = screenFrame.maxX - windowFrame.origin.x - onitWidth - PanelStateBaseManager.spaceBetweenWindows
             
             if maxAvailableWidth >= OnitRegularPanel.minAppWidth {
-                resizeWindowAndMovePanel(onitWidth: onitWidth, onitHeight: onitHeight, onitY: onitY, maxAvailableWidth: maxAvailableWidth)
+                resizeWindowAndMovePanel(state: state,
+                                         window: window,
+                                         onitWidth: onitWidth,
+                                         onitHeight: onitHeight,
+                                         onitY: onitY,
+                                         maxAvailableWidth: maxAvailableWidth)
             } else {
-                moveWindowAndPanel(screenFrame: screenFrame, onitWidth: onitWidth, onitHeight: onitHeight, onitY: onitY)
+                moveWindowAndPanel(state: state,
+                                   window: window,
+                                   screenFrame: screenFrame,
+                                   onitWidth: onitWidth,
+                                   onitHeight: onitHeight,
+                                   onitY: onitY)
             }
         }
     }
-
     
-    func restoreWindowPosition() {
+    func hidePanel(for state: OnitPanelState) {
+        guard let (trackedWindow, state) = statesByWindow.first(where: { $1 == state }),
+              let panel = state.panel,
+              !panel.isAnimating else {
+            return
+        }
+        
+        if state.currentAnimationTask != nil {
+            state.cancelCurrentAnimation()
+        }
+        
+        let window = trackedWindow.element
         var fromActive : NSRect? = nil
         var toActive: NSRect? = nil
         
-        if let panel = self.panel, !panel.isAnimating {
-            
-            if currentAnimationTask != nil {
-                cancelCurrentAnimation()
-            }
-            
-            if let window = trackedWindow?.element,
-                let initialFrame = PanelStateTetheredManager.shared.targetInitialFrames[window],
-                let curFrame = window.getFrame() {
+        if let initialFrame = targetInitialFrames[window], let curFrame = window.getFrame() {
+            // We only try to restore the window if it was resized
+            if panel.resizedApplication {
+                print("Frames found, trying to set them back ")
+                fromActive = curFrame
+                
+                var newWidth = initialFrame.width
 
-                // We only try to restore the window if it was resized
-                if panel.resizedApplication {
-                    print("Frames found, trying to set them back ")
-                    fromActive = curFrame
-                    
-                    var newWidth = initialFrame.width
-
-                    // We want to make sure that we don't expand the window beyond the screen width
-                    if let screenFrame = window.getFrame(convertedToGlobalCoordinateSpace: true)?.findScreen()?.frame {
-                        newWidth = min(screenFrame.maxX - curFrame.origin.x, newWidth)
-                    }
-                        
-                    // We also shouldn't grow it more than the panel width, in case they dragged it left.
-                    newWidth = min(newWidth, curFrame.width + panel.frame.width)
-                    
-                    toActive = NSRect(
-                        x: curFrame.origin.x,
-                        y: curFrame.origin.y,
-                        width: newWidth,
-                        height: curFrame.height
-                    )
+                // We want to make sure that we don't expand the window beyond the screen width
+                if let screenFrame = window.getFrame(convertedToGlobalCoordinateSpace: true)?.findScreen()?.frame {
+                    newWidth = min(screenFrame.maxX - curFrame.origin.x, newWidth)
                 }
-                // We need to remove this everytime, to prevent saving old frames.
-                // If we have old frames, we won't save the new ones.
-                PanelStateTetheredManager.shared.targetInitialFrames.removeValue(forKey: window)
+                    
+                // We also shouldn't grow it more than the panel width, in case they dragged it left.
+                newWidth = min(newWidth, curFrame.width + panel.frame.width)
+                
+                toActive = NSRect(
+                    x: curFrame.origin.x,
+                    y: curFrame.origin.y,
+                    width: newWidth,
+                    height: curFrame.height
+                )
             }
-
-            let toPanel: NSRect
-            if panel.animatedFromLeft {
-                toPanel = NSRect(origin: panel.frame.origin, size: NSSize(width: 1, height: panel.frame.height))
-            } else {
-                let toPanelX = panel.frame.maxX - 2
-                toPanel = NSRect(origin: NSPoint(x: toPanelX, y: panel.frame.minY), size: NSSize(width: 1, height: panel.frame.height))
-            }
-            
-            animateExit(
-                activeWindow: trackedWindow?.element,
-                fromActive: fromActive,
-                toActive: toActive,
-                panel: panel,
-                toPanel: toPanel
-            )
+            // We need to remove this everytime, to prevent saving old frames.
+            // If we have old frames, we won't save the new ones.
+            targetInitialFrames.removeValue(forKey: window)
         }
+
+        let toPanel: NSRect
+        if panel.animatedFromLeft {
+            toPanel = NSRect(origin: panel.frame.origin, size: NSSize(width: 1, height: panel.frame.height))
+        } else {
+            let toPanelX = panel.frame.maxX - 2
+            toPanel = NSRect(origin: NSPoint(x: toPanelX, y: panel.frame.minY), size: NSSize(width: 1, height: panel.frame.height))
+        }
+        
+        animateExit(
+            state: state,
+            activeWindow: window,
+            fromActive: fromActive,
+            toActive: toActive,
+            panel: panel,
+            toPanel: toPanel
+        )
     }
     
-    func tempHidePanel() {
-        guard let panel = panel else { return }        
+    func tempHidePanel(state: OnitPanelState) {
+        guard let panel = state.panel else { return }
+        
         NSAnimationContext.runAnimationGroup { context in
             context.duration = animationDuration
             panel.animator().alphaValue = 0.0
         }
     }
 
-    func tempShowPanel() {
-        guard let panel = panel else { return }
+    func tempShowPanel(state: OnitPanelState) {
+        guard let panel = state.panel else { return }
+        
         NSAnimationContext.runAnimationGroup { context in
             context.duration = animationDuration
             panel.animator().alphaValue = 1.0
         }
     }
     
-    func showPanelForScreen() {
-        guard let screen = trackedScreen,
-              let panel = self.panel,
-              !panel.isAnimating,
-              !panel.dragDetails.isDragging else {
-            return
-        }
-        
-        let fromFrame = NSRect(
-            x: screen.visibleFrame.maxX - 2,
-            y: screen.visibleFrame.minY,
-            width: 0,
-            height: screen.visibleFrame.height
-        )
-        let newFrame = NSRect(
-            x: screen.visibleFrame.maxX - self.panelWidth,
-            y: screen.visibleFrame.minY,
-            width: self.panelWidth,
-            height: screen.visibleFrame.height
-        )
-        
-        if panel.wasAnimated {
-            panel.setFrame(newFrame, display: false)
-        } else {
-            panel.resizedApplication = false
-            animateEnter(activeWindow: nil,
-                         fromActive: nil,
-                         toActive: nil,
-                         panel: panel,
-                         fromPanel: fromFrame,
-                         toPanel: newFrame)
-        }
-        
-    }
-    
-    // MARK: - Layout
-    
-    private func movePanel(screenFrame: CGRect, onitWidth: CGFloat, onitHeight: CGFloat, onitY: CGFloat) {
-        if isScreenMode {
-            return
-        }
-        
-        guard let window = trackedWindow?.element,
-              let windowFrame = window.getFrame(),
-              let panel = panel else {
+    private func movePanel(
+        state: OnitPanelState,
+        window: AXUIElement,
+        screenFrame: CGRect,
+        onitWidth: CGFloat,
+        onitHeight: CGFloat,
+        onitY: CGFloat
+    ) {
+        guard let windowFrame = window.getFrame(), let panel = state.panel else {
             return
         }
         
@@ -232,29 +201,31 @@ extension OnitPanelState {
             panel.setFrame(newFrame, display: false)
         } else {
             panel.resizedApplication = false
-            animateEnter(activeWindow: nil,
-                        fromActive: nil,
-                        toActive: nil,
-                        panel: panel,
-                        fromPanel: fromFrame,
-                        toPanel: newFrame
+            animateEnter(state: state,
+                         activeWindow: nil,
+                         fromActive: nil,
+                         toActive: nil,
+                         panel: panel,
+                         fromPanel: fromFrame,
+                         toPanel: newFrame
             )
         }
     }
     
-    private func moveWindowAndPanel(screenFrame: CGRect, onitWidth: CGFloat, onitHeight: CGFloat, onitY: CGFloat) {
-        if isScreenMode {
-            return
-        }
-        
-        guard let window = trackedWindow?.element,
-              let windowFrame = window.getFrame(),
-              let panel = panel else {
+    private func moveWindowAndPanel(
+        state: OnitPanelState,
+        window: AXUIElement,
+        screenFrame: CGRect,
+        onitWidth: CGFloat,
+        onitHeight: CGFloat,
+        onitY: CGFloat
+    ) {
+        guard let windowFrame = window.getFrame(), let panel = state.panel else {
             return
         }
         
         let newAppX = screenFrame.maxX - windowFrame.width - onitWidth - PanelStateBaseManager.spaceBetweenWindows
-        let yOffset = calculateYOffset(screenFrame: screenFrame, onitY: onitY)
+        let yOffset = onitY < screenFrame.minY ? screenFrame.minY - onitY : 0
         
         let activeWindowTargetRect = CGRect(
             x: newAppX,
@@ -289,6 +260,7 @@ extension OnitPanelState {
             )
             
             animateEnter(
+                state: state,
                 activeWindow: window,
                 fromActive: activeWindowSourceRect,
                 toActive: activeWindowTargetRect,
@@ -299,14 +271,15 @@ extension OnitPanelState {
         }
     }
     
-    private func resizeWindowAndMovePanel(onitWidth: CGFloat, onitHeight: CGFloat, onitY: CGFloat, maxAvailableWidth: CGFloat) {
-        if isScreenMode {
-            return
-        }
-        
-        guard let window = trackedWindow?.element,
-              let panel = panel,
-              let windowFrame = window.getFrame() else {
+    private func resizeWindowAndMovePanel(
+        state: OnitPanelState,
+        window: AXUIElement,
+        onitWidth: CGFloat,
+        onitHeight: CGFloat,
+        onitY: CGFloat,
+        maxAvailableWidth: CGFloat
+    ) {
+        guard let windowFrame = window.getFrame(), let panel = state.panel else {
             return
         }
         
@@ -343,6 +316,7 @@ extension OnitPanelState {
             )
             
             animateEnter(
+                state: state,
                 activeWindow: window,
                 fromActive: activeWindowSourceRect,
                 toActive: activeWindowTargetRect,
@@ -353,17 +327,8 @@ extension OnitPanelState {
         }
     }
     
-    private func calculateYOffset(screenFrame: CGRect, onitY: CGFloat) -> CGFloat {
-        if onitY < screenFrame.minY {
-            return screenFrame.minY - onitY
-        }
-        
-        return 0
-    }
-    
-    // MARK: - Animations
-    
     private func animateEnter(
+        state: OnitPanelState,
         activeWindow: AXUIElement?,
         fromActive: CGRect?,
         toActive: CGRect?,
@@ -378,48 +343,30 @@ extension OnitPanelState {
         panel.alphaValue = 1
 
         // Hide the existing UI before animating the panel in.
-        self.animateChatView = true
-        self.showChatView = false
-        
-        // Check if pinned mode is enabled
-        let usePinnedMode = FeatureFlagManager.shared.usePinnedMode
+        state.animateChatView = true
+        state.showChatView = false
         
         NSAnimationContext.runAnimationGroup { context in
             context.duration = animationDuration
             context.timingFunction = CAMediaTimingFunction(name: .easeOut)
-            
             panel.animator().setFrame(toPanel, display: false)
 
-            // Only animate other windows if not in pinned mode
-            if !usePinnedMode, let activeWindow = activeWindow, let fromActive = fromActive, let toActive = toActive {
+            if let activeWindow = activeWindow, let fromActive = fromActive, let toActive = toActive {
                 DispatchQueue.main.asyncAfter(deadline: .now() + (animationDuration / 2)) {
-                    self.animation(for: activeWindow, from: fromActive, to: toActive)
+                    self.animation(state: state, window: activeWindow, from: fromActive, to: toActive)
                 }
             }
         } completionHandler: {
-            self.animateChatView = true
-            self.showChatView = true
+            state.animateChatView = true
+            state.showChatView = true
             panel.isAnimating = false
             panel.wasAnimated = true
             panel.animatedFromLeft = abs(fromPanel.maxX - toPanel.minX) <= abs(fromPanel.maxX - toPanel.maxX)
-            
-            // Call resizeWindows() AFTER panel animation is complete when in pinned mode
-            if usePinnedMode, let screen = self.trackedScreen ?? NSScreen.mouse {
-                DispatchQueue.main.async {
-                    do {
-                        // Access PanelStateCoordinator and try to resize windows
-                        if let pinnedManager = PanelStateCoordinator.shared.currentManager as? PanelStatePinnedManager {
-                            pinnedManager.resizeWindows(for: screen)
-                        }
-                    } catch {
-                        print("Error trying to resize windows: \(error)")
-                    }
-                }
-            }
         }
     }
     
     private func animateExit(
+        state: OnitPanelState,
         activeWindow: AXUIElement?,
         fromActive: CGRect?,
         toActive: CGRect?,
@@ -430,23 +377,15 @@ extension OnitPanelState {
         guard !panel.isAnimating, panel.frame != toPanel else { return }
         
         panel.isAnimating = true
-        self.animateChatView = true
-        self.showChatView = false
-        
-        // Check if pinned mode is enabled
-        let usePinnedMode = FeatureFlagManager.shared.usePinnedMode
+        state.animateChatView = true
+        state.showChatView = false
         
         // Start an asynchronous block that waits for both animations to complete.
         Task { @MainActor in
-            // Reset frames BEFORE the animation starts when in pinned mode
-            if usePinnedMode, let pinnedManager = PanelStateCoordinator.shared.currentManager as? PanelStatePinnedManager {
-                pinnedManager.resetFramesOnAppChange()
-            }
-                        
             // Capture the window animation task (if applicable)
             var windowAnimationTask: Task<Void, Never>? = nil
-            if !usePinnedMode, let activeWindow = activeWindow, let fromActive = fromActive, let toActive = toActive {
-                windowAnimationTask = self.animation(for: activeWindow, from: fromActive, to: toActive)
+            if let activeWindow = activeWindow, let fromActive = fromActive, let toActive = toActive {
+                windowAnimationTask = self.animation(state: state, window: activeWindow, from: fromActive, to: toActive)
             }
             
             // Await the panel animation by wrapping it in a withCheckedContinuation.
@@ -471,13 +410,13 @@ extension OnitPanelState {
             panel.hide()
             panel.isAnimating = false
             panel.alphaValue = 0
-            self.panel = nil
+            state.panel = nil
         }
     }
     
     @discardableResult
-    private func animation(for activeWindow: AXUIElement, from: NSRect, to: NSRect) -> Task<Void, Never> {
-        cancelCurrentAnimation()
+    private func animation(state: OnitPanelState, window: AXUIElement, from: NSRect, to: NSRect) -> Task<Void, Never> {
+        state.cancelCurrentAnimation()
         let steps = 10
         let stepDuration = animationDuration / TimeInterval(steps)
         
@@ -499,40 +438,20 @@ extension OnitPanelState {
                     height: currentActiveHeight
                 )
                 
-                _ = activeWindow.setFrame(currentActiveFrame)
+                _ = window.setFrame(currentActiveFrame)
                 
                 try? await Task.sleep(nanoseconds: UInt64(stepDuration * 1_000_000_000))
             }
             
             if Task.isCancelled { return }
-            currentAnimationTask = nil
+            state.currentAnimationTask = nil
         }
         
         func easeOutCubic(_ t: Double) -> Double {
             return 1 - pow(1 - t, 3)
         }
         
-        currentAnimationTask = task
+        state.currentAnimationTask = task
         return task
     }
-    
-    
-    // MARK: - Thread-safe counter
-    
-    @preconcurrency
-    private final class AtomicInt: @unchecked Sendable {
-        private let lock = NSLock()
-        private var value: Int
-        
-        init(_ initialValue: Int) {
-            self.value = initialValue
-        }
-        
-        func increment() -> Int {
-            lock.lock()
-            defer { lock.unlock() }
-            value += 1
-            return value
-        }
-    }
-}          
+}

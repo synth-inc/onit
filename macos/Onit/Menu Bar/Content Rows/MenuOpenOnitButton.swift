@@ -16,7 +16,7 @@ struct MenuOpenOnitButton: View {
 
     var body: some View {
         MenuBarRow {
-            PanelStateCoordinator.shared.state.launchPanel()
+            PanelStateCoordinator.shared.launchPanel()
         } leading: {
             HStack(spacing: 4) {
                 Image(.smirk)
