@@ -66,6 +66,7 @@ class OnitRegularPanel: NSPanel {
         let contentView = ContentView()
             .modelContainer(state.container)
             .environment(\.windowState, state)
+            .padding(.leading, TetheredButton.width / 2)
         
         let hostingView = NSHostingView(rootView: contentView)
         hostingView.wantsLayer = true
@@ -98,24 +99,28 @@ class OnitRegularPanel: NSPanel {
                         self.isResizing = false
                     }
                 )
-                .padding(.leading, TetheredButton.width / 2)
             }
-            .allowsHitTesting(true) // Ensure the ZStack intercepts all events
-            .contentShape(Rectangle()) // Make the entire area respond to gestures
+            .allowsHitTesting(true)
+            .contentShape(Rectangle())
         )
         resizeOverlay.wantsLayer = true
         resizeOverlay.layer?.backgroundColor = CGColor.clear
         
-        // The drag resizing mask introduces an issue where the scrollview stops working. This is a workaround that limits the width & height
-        // The height doesn't make any sense.
-        // If I make it 32px height (which is the right size) it shows up 32 pixels too high.
-        // If I make it 10px height, it shows up 54 pixels too high.
-        // If I make it 64px height (which is 2x the right size), it shows up in the correct location
-        // I don't know where that number is coming from- there must be autolayout stuff happening behind the scenes that isn't clear. 
-        resizeOverlay.frame = NSRect(x: 0, y: 0, width: (TetheredButton.width / 2) + ResizeHandle.size, height: ((TetheredButton.width / 2) + ResizeHandle.size) * 2.0)
+        // The target for dragging is be the entire height, and 6px wide, starting at TetheredButton.width/ 2 to leave room for the TetheredButton. 
+        resizeOverlay.frame = NSRect(x: TetheredButton.width / 2, y: 0, width: 6, height: frame.height)
         hostingView.addSubview(resizeOverlay)
-        resizeOverlay.autoresizingMask = [.maxXMargin, .minYMargin]
-        
+        resizeOverlay.autoresizingMask = [.maxXMargin, .height]
+
+        // Create a separate hosting view for the TetheredButton
+        let tetheredButtonView = NSHostingView(rootView: 
+            TetheredButton()
+                .modelContainer(state.container)
+                .environment(\.windowState, state)
+        )
+        tetheredButtonView.wantsLayer = true
+        tetheredButtonView.frame = NSRect(x: 0, y: 0, width: TetheredButton.width, height: frame.height)
+        hostingView.addSubview(tetheredButtonView)
+        tetheredButtonView.autoresizingMask = [.maxXMargin, .height]
 
         if PanelStateCoordinator.shared.isPanelMovable {
             NotificationCenter.default.addObserver(
