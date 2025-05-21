@@ -347,8 +347,14 @@ extension AuthFlow {
                     return
                 } else if let error = error {
                     errorMessageAuth = error.localizedDescription
+                    PostHog.shared.capture("google_sign_in_error", properties: [
+                        "error": error.localizedDescription
+                    ])
                 } else {
                     errorMessageAuth = "Unknown Google sign in error"
+                    PostHog.shared.capture("google_sign_in_error", properties: [
+                        "error": "Unknown error"
+                    ])
                 }
                 return
             }
