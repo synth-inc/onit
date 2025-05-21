@@ -77,6 +77,8 @@ class PanelStateCoordinator {
     func launchPanel(for state: OnitPanelState? = nil) {
         let targetState = state ?? self.state
         
+        guard targetState !== currentManager.defaultState else { return }
+        
         guard let panel = targetState.panel else {
             currentManager.launchPanel(for: targetState)
             return
