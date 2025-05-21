@@ -74,7 +74,10 @@ struct ModelSelectionView: View {
             header: MenuHeader(title: "Model") {
                 IconButton(
                     icon: .settingsCog,
-                    action: { openModelSettings() },
+                    action: {
+                        AnalyticsManager.ModelPicker.settingsPressed()
+                        openModelSettings()
+                    },
                     tooltipPrompt: "Settings"
                 )
             },
@@ -85,6 +88,9 @@ struct ModelSelectionView: View {
         ) {
             remote
             local
+        }
+        .onAppear {
+            AnalyticsManager.ModelPicker.opened()
         }
     }
 
@@ -134,6 +140,7 @@ struct ModelSelectionView: View {
         ) {
             if availableLocalModels.isEmpty {
                 Button("Setup local models") {
+                    AnalyticsManager.ModelPicker.localSetupPressed()
                     appState.settingsTab = .models
                     openSettings()
                 }
@@ -159,6 +166,7 @@ struct ModelSelectionView: View {
                         text: localModelName,
                         selected: isSelectedLocalModel(modelName: localModelName),
                         action: {
+                            AnalyticsManager.ModelPicker.modelSelected(local: true, model: localModelName)
                             selectedModel.wrappedValue = .local(localModelName)
                             open.wrappedValue = false
                         }
