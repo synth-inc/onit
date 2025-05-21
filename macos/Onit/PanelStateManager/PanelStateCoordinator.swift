@@ -61,6 +61,19 @@ class PanelStateCoordinator {
         currentManager.filterPanelChats(allChats)
     }
     
+    func hasPanelOpened() -> Bool {
+        var hasPanelOpened = false
+        
+        for state in states {
+            if state.panelOpened {
+                hasPanelOpened = true
+                break
+            }
+        }
+        
+        return hasPanelOpened
+    }
+    
     func launchPanel(for state: OnitPanelState? = nil) {
         let targetState = state ?? self.state
         
