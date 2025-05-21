@@ -57,13 +57,17 @@ struct FileRow: View {
                 .scrollIndicators(.hidden)
             }
             
-            HStack(spacing: 6) {
+            FlowLayout(spacing: 6) {
                 if addingAutoContext {
                     Loader()
                 }
                 
                 if !contextList.isEmpty {
-                    ContextList(contextList: contextList)
+                    ForEach(contextList, id: \.self) { context in
+                        ContextItem(item: context, isEditing: true)
+                            .scrollTargetLayout()
+                            .contentShape(Rectangle())
+                    }
                 }
             }
         }

@@ -54,6 +54,10 @@ struct PromptCore: View {
         colorTwo: Color(hex: "#4AA4BF") ?? .gray800
     )
     
+    private var shouldIndicateDisabled: Bool {
+        !windowState.websiteUrlsScrapeQueue.isEmpty || !windowState.addAutoContextTasks.isEmpty
+    }
+    
     var body: some View {
         VStack(spacing: 0) {
             if let pendingInput = windowState.pendingInput {
@@ -109,7 +113,7 @@ extension PromptCore {
         .frame(height: min(textHeight, maxHeightLimit))
         .appFont(.medium16)
         .foregroundStyle(.white)
-        .opacity(windowState.websiteUrlsScrapeQueue.isEmpty ? 1 : 0.5)
+        .opacity(shouldIndicateDisabled ? 0.5 : 1)
         .focused($isFocused)
         .onAppear { isFocused = true }
         .onChange(of: windowState.textFocusTrigger) { isFocused = true }
