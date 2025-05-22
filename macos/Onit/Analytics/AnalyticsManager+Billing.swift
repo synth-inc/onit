@@ -29,5 +29,39 @@ extension AnalyticsManager {
         static func viewPastBillingsPressed() {
             AnalyticsManager.sendCommonEvent(event: "billing_view_past_billings")
         }
+        
+        struct Alert {
+            static func opened(name: String) {
+                var properties = AnalyticsManager.getCommonProperties()
+                
+                properties["alert_name"] = name
+                
+                PostHogSDK.shared.capture("billing_alert_opened", properties: properties)
+            }
+            
+            static func closed(name: String) {
+                var properties = AnalyticsManager.getCommonProperties()
+                
+                properties["alert_name"] = name
+                
+                PostHogSDK.shared.capture("billing_alert_closed", properties: properties)
+            }
+            
+            static func limitationPressed(name: String) {
+                var properties = AnalyticsManager.getCommonProperties()
+                
+                properties["alert_name"] = name
+                
+                PostHogSDK.shared.capture("billing_alert_limitation", properties: properties)
+            }
+            
+            static func subscriptionPressed(name: String) {
+                var properties = AnalyticsManager.getCommonProperties()
+                
+                properties["alert_name"] = name
+                
+                PostHogSDK.shared.capture("billing_alert_subscription", properties: properties)
+            }
+        }
     }
 }

@@ -14,6 +14,7 @@ struct FreeLimitAlert: View {
     @State private var renewalDate: String? = nil
     @State private var errorMessage: String = ""
     
+    private let alertName = "free_limit"
     private var errorMessageFallback: String = "Could not retrieve renewal date."
     
     private var footerSupportingText: String {
@@ -31,12 +32,21 @@ struct FreeLimitAlert: View {
     var body: some View {
         SubscriptionAlert(
             title: "Free Limit Reached",
-            close: { appState.showFreeLimitAlert = false },
+            close: {
+                AnalyticsManager.Billing.Alert.closed(name: alertName)
+                appState.showFreeLimitAlert = false
+            },
             description: "You have used your free requests for this month.",
             subscriptionText: "Upgrade to Pro!",
+            subscriptionAction: {
+                AnalyticsManager.Billing.Alert.subscriptionPressed(name: alertName)
+            },
             showSubscriptionPerks: true,
             footerSupportingText: footerSupportingText
         )
+        .onAppear {
+            AnalyticsManager.Billing.Alert.opened(name: alertName)
+        }
         .task {
             await fetchRenewalDate()
         }
