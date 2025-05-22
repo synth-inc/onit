@@ -36,9 +36,7 @@ struct Onboarding: View {
                     Spacer()
                 }
             }
-            .frame(width: panelWidth)
-            .frame(maxHeight: .infinity)
-            // .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
             .background(Color.black)
             .onAppear {
                 if appState.account == nil {
