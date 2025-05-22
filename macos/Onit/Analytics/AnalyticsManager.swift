@@ -10,30 +10,30 @@ import AppKit
 import Defaults
 import PostHog
 
+/**
+ * This class is used to track analytics event using PostHog SDK
+ */
 struct AnalyticsManager {
     static func getCommonProperties() -> [String: Any] {
-        let deviceModel: String = {
+        func getSystemInfo(name: String, defaultValue: String) -> String {
             var size: size_t = 0
-            sysctlbyname("hw.model", nil, &size, nil, 0)
-            var model = [Int8](repeating: 0, count: size)
-            sysctlbyname("hw.model", &model, &size, nil, 0)
-            if let lastIndex = model.firstIndex(of: 0) {
-                model.removeSubrange(lastIndex...)
-            }
-            return String(decoding: model.map(UInt8.init), as: UTF8.self)
-        }()
-        
-        let cpuArchitecture: String = {
-            var size: size_t = 0
-            sysctlbyname("machdep.cpu.brand_string", nil, &size, nil, 0)
+            var result = sysctlbyname(name, nil, &size, nil, 0)
+            
+            guard result != -1 else { return defaultValue }
+            
             var buffer = [Int8](repeating: 0, count: size)
-            sysctlbyname("machdep.cpu.brand_string", &buffer, &size, nil, 0)
+            result = sysctlbyname(name, &buffer, &size, nil, 0)
+            
+            guard result != -1 else { return defaultValue }
+            
             if let lastIndex = buffer.firstIndex(of: 0) {
                 buffer.removeSubrange(lastIndex...)
             }
             return String(decoding: buffer.map(UInt8.init), as: UTF8.self)
-        }()
-
+        }
+        
+        let deviceModel = getSystemInfo(name: "hw.model", defaultValue: "Unknown")
+        let cpuArchitecture = getSystemInfo(name: "machdep.cpu.brand_string", defaultValue: "Unknown")
         let screenCount = NSScreen.screens.count
 
         return [
@@ -46,9 +46,13 @@ struct AnalyticsManager {
         ]
     }
     
-    static func appQuit() {
+    static func sendCommonEvent(event: String) {
         let properties = Self.getCommonProperties()
         
-        PostHogSDK.shared.capture("app_quit", properties: properties)
+        PostHogSDK.shared.capture(event, properties: properties)
+    }
+    
+    static func appQuit() {
+        Self.sendCommonEvent(event: "app_quit")
     }
 }

@@ -20,9 +20,7 @@ extension AnalyticsManager {
     }
     
     @MainActor static func logAXFlags() {
-        let properties = Self.getCommonProperties()
-        
-        PostHogSDK.shared.capture("accessibility_flags_changes", properties: properties)
+        Self.sendCommonEvent(event: "accessibility_flags_changes")
     }
     
     @MainActor static func logAXParseTimedOut(appName: String) {

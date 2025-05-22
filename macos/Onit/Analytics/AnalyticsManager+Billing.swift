@@ -11,33 +11,23 @@ extension AnalyticsManager {
     
     struct Billing {
         static func startFreeTrialPressed() {
-            let properties = AnalyticsManager.getCommonProperties()
-            
-            PostHogSDK.shared.capture("billing_start_free_trial", properties: properties)
+            AnalyticsManager.sendCommonEvent(event: "billing_start_free_trial")
         }
         
         static func upgradeProPressed() {
-            let properties = AnalyticsManager.getCommonProperties()
-            
-            PostHogSDK.shared.capture("billing_upgrade_pro", properties: properties)
+            AnalyticsManager.sendCommonEvent(event: "billing_upgrade_pro")
         }
         
         static func renewSubscriptionPressed() {
-            let properties = AnalyticsManager.getCommonProperties()
-            
-            PostHogSDK.shared.capture("billing_renew_subscription", properties: properties)
+            AnalyticsManager.sendCommonEvent(event: "billing_renew_subscription")
         }
         
         static func manageSubscriptionPressed() {
-            let properties = AnalyticsManager.getCommonProperties()
-            
-            PostHogSDK.shared.capture("billing_manage_subscription", properties: properties)
+            AnalyticsManager.sendCommonEvent(event: "billing_manage_subscription")
         }
         
         static func viewPastBillingsPressed() {
-            let properties = AnalyticsManager.getCommonProperties()
-            
-            PostHogSDK.shared.capture("billing_view_past_billings", properties: properties)
+            AnalyticsManager.sendCommonEvent(event: "billing_view_past_billings")
         }
     }
 }

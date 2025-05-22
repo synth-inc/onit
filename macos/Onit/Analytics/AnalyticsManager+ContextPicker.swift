@@ -11,15 +11,11 @@ extension AnalyticsManager {
     
     struct ContextPicker {
         static func uploadFilePressed() {
-            let properties = AnalyticsManager.getCommonProperties()
-            
-            PostHogSDK.shared.capture("context_picker_upload_file", properties: properties)
+            AnalyticsManager.sendCommonEvent(event: "context_picker_upload_file")
         }
         
         static func autoContextPressed() {
-            let properties = AnalyticsManager.getCommonProperties()
-            
-            PostHogSDK.shared.capture("context_picker_auto_context", properties: properties)
+            AnalyticsManager.sendCommonEvent(event: "context_picker_auto_context")
         }
     }
 }

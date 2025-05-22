@@ -23,7 +23,7 @@ extension AnalyticsManager {
             
             properties["tab_name"] = tabName
             
-            PostHogSDK.shared.capture("settings_tab", properties: properties)
+            PostHogSDK.shared.capture("settings_tab_selected", properties: properties)
         }
         
         // MARK: - General settings

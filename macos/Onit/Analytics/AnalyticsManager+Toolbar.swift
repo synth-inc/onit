@@ -11,24 +11,18 @@ extension AnalyticsManager {
     
     struct Toolbar {
         static func escapePressed() {
-            let properties = AnalyticsManager.getCommonProperties()
-            
-            PostHogSDK.shared.capture("toolbar_escape", properties: properties)
+            AnalyticsManager.sendCommonEvent(event: "toolbar_escape")
         }
         
         static func newChatPressed() {
-            let properties = AnalyticsManager.getCommonProperties()
-            
-            PostHogSDK.shared.capture("toolbar_new_chat", properties: properties)
+            AnalyticsManager.sendCommonEvent(event: "toolbar_new_chat")
         }
         
         static func systemPromptPressed() {
-            let properties = AnalyticsManager.getCommonProperties()
-            
-            PostHogSDK.shared.capture("toolbar_system_prompt", properties: properties)
+            AnalyticsManager.sendCommonEvent(event: "toolbar_system_prompt")
         }
         
-        static func llmModeToggled(oldValue: String, newValue: String) {
+        static func llmModeToggled(oldValue: InferenceMode, newValue: InferenceMode) {
             var properties = AnalyticsManager.getCommonProperties()
             
             properties["old_value"] = oldValue
@@ -46,9 +40,7 @@ extension AnalyticsManager {
         }
         
         static func settingsPressed() {
-            let properties = AnalyticsManager.getCommonProperties()
-            
-            PostHogSDK.shared.capture("toolbar_settings", properties: properties)
+            AnalyticsManager.sendCommonEvent(event: "toolbar_settings")
         }
     }
 }

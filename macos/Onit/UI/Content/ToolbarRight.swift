@@ -59,11 +59,11 @@ struct ToolbarRight: View {
     }
 
     func toggleMode() {
-        let oldMode = mode.rawValue
+        let oldMode = mode
         
         mode = mode == .local ? .remote : .local
         
-        AnalyticsManager.Toolbar.llmModeToggled(oldValue: oldMode, newValue: mode.rawValue)
+        AnalyticsManager.Toolbar.llmModeToggled(oldValue: oldMode, newValue: mode)
     }
     
     var localMode: some View {

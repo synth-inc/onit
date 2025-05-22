@@ -12,15 +12,11 @@ extension AnalyticsManager {
     struct ModelPicker {
         
         static func opened() {
-            let properties = AnalyticsManager.getCommonProperties()
-            
-            PostHogSDK.shared.capture("model_picker_opened", properties: properties)
+            AnalyticsManager.sendCommonEvent(event: "model_picker_opened")
         }
         
         static func settingsPressed() {
-            let properties = AnalyticsManager.getCommonProperties()
-            
-            PostHogSDK.shared.capture("model_picker_settings", properties: properties)
+            AnalyticsManager.sendCommonEvent(event: "model_picker_settings")
         }
         
         static func modelSelected(local: Bool, model: String) {
@@ -33,9 +29,7 @@ extension AnalyticsManager {
         }
         
         static func localSetupPressed() {
-            let properties = AnalyticsManager.getCommonProperties()
-            
-            PostHogSDK.shared.capture("model_picker_local_setup", properties: properties)
+            AnalyticsManager.sendCommonEvent(event: "model_picker_local_setup")
         }
     }
 }

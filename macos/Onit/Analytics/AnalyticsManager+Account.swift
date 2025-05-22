@@ -10,39 +10,27 @@ import PostHog
 extension AnalyticsManager {
     struct Account {
         static func createAccountPressed() {
-            let properties = AnalyticsManager.getCommonProperties()
-            
-            PostHogSDK.shared.capture("account_create", properties: properties)
+            AnalyticsManager.sendCommonEvent(event: "account_create")
         }
         
         static func signInPressed() {
-            let properties = AnalyticsManager.getCommonProperties()
-            
-            PostHogSDK.shared.capture("account_sign_in", properties: properties)
+            AnalyticsManager.sendCommonEvent(event: "account_sign_in")
         }
         
         static func logoutPressed() {
-            let properties = AnalyticsManager.getCommonProperties()
-            
-            PostHogSDK.shared.capture("account_logout", properties: properties)
+            AnalyticsManager.sendCommonEvent(event: "account_logout")
         }
         
         static func deletePressed() {
-            let properties = AnalyticsManager.getCommonProperties()
-            
-            PostHogSDK.shared.capture("account_delete", properties: properties)
+            AnalyticsManager.sendCommonEvent(event: "account_delete")
         }
         
         static func deleteConfirmationCancelPressed() {
-            let properties = AnalyticsManager.getCommonProperties()
-            
-            PostHogSDK.shared.capture("account_delete_confirmation_cancel", properties: properties)
+            AnalyticsManager.sendCommonEvent(event: "account_delete_confirmation_cancel")
         }
         
         static func deleteConfirmationDeletePressed() {
-            let properties = AnalyticsManager.getCommonProperties()
-            
-            PostHogSDK.shared.capture("account_delete_confirmation_delete", properties: properties)
+            AnalyticsManager.sendCommonEvent(event: "account_delete_confirmation_delete")
         }
     }
 }

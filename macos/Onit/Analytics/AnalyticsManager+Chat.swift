@@ -13,15 +13,11 @@ extension AnalyticsManager {
     struct Chat {
         
         static func paperclipPressed() {
-            let properties = AnalyticsManager.getCommonProperties()
-            
-            PostHogSDK.shared.capture("chat_paperclip", properties: properties)
+            AnalyticsManager.sendCommonEvent(event: "chat_paperclip")
         }
         
         static func addContextPressed() {
-            let properties = AnalyticsManager.getCommonProperties()
-            
-            PostHogSDK.shared.capture("chat_add_context", properties: properties)
+            AnalyticsManager.sendCommonEvent(event: "chat_add_context")
         }
         
         /**
