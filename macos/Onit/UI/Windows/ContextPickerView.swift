@@ -19,6 +19,7 @@ struct ContextPickerView: View {
     var body: some View {
         VStack(spacing: 4) {
             Button(action: {
+                AnalyticsManager.ContextPicker.uploadFilePressed()
                 OverlayManager.shared.dismissOverlay()
                 state.showFileImporter = true
             }) {
@@ -32,6 +33,7 @@ struct ContextPickerView: View {
             .buttonStyle(.plain)
 
             Button(action: {
+                AnalyticsManager.ContextPicker.autoContextPressed()
                 OverlayManager.shared.dismissOverlay()
                 PanelStateCoordinator.shared.fetchWindowContext()
             }) {

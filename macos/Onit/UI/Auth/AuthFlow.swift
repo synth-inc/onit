@@ -54,6 +54,9 @@ struct AuthFlow: View {
                 Spacer()
             }
         }
+        .onAppear {
+            AnalyticsManager.Auth.opened()
+        }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .padding(.top, 134)
     }
@@ -227,6 +230,7 @@ extension AuthFlow {
                         DragGesture(minimumDistance: 0)
                             .onChanged {_ in isPressedBackButton = true }
                             .onEnded{ _ in
+                                AnalyticsManager.Auth.cancelled(provider: "email")
                                 isPressedBackButton = false
                                 requestedEmailLogin = false
                             }
@@ -311,21 +315,34 @@ extension AuthFlow {
     
     @MainActor
     private func requestEmailLoginLink() {
+        let provider = "email"
+        AnalyticsManager.Auth.pressed(provider: provider)
+        
         errorMessageEmail = ""
 
         if email.isEmpty {
-            errorMessageEmail = "Please enter your email"
+            let errorMsg = "Please enter your email"
+            
+            AnalyticsManager.Auth.error(provider: provider, error: errorMsg)
+            errorMessageEmail = errorMsg
         } else if !validateEmail() {
-            errorMessageEmail = "Invalid email format"
+            let errorMsg = "Invalid email format"
+            
+            AnalyticsManager.Auth.error(provider: provider, error: errorMsg)
+            errorMessageEmail = errorMsg
         } else {
             let client = FetchingClient()
             
             Task {
                 do {
+                    AnalyticsManager.Auth.requested(provider: provider)
                     try await client.requestLoginLink(email: email)
                     requestedEmailLogin = true
                 } catch {
-                    errorMessageEmail = error.localizedDescription
+                    let errorMsg = error.localizedDescription
+                    
+                    AnalyticsManager.Auth.failed(provider: provider, error: errorMsg)
+                    errorMessageEmail = errorMsg
                 }
             }
         }
@@ -336,25 +353,39 @@ extension AuthFlow {
 
 extension AuthFlow {
     private func handleGoogleSignInButton() {
+        let provider = "google"
+        AnalyticsManager.Auth.pressed(provider: provider)
         errorMessageAuth = ""
         
         guard let window = NSApp.keyWindow else { return }
 
+        AnalyticsManager.Auth.requested(provider: provider)
+        
         GIDSignIn.sharedInstance.signIn(withPresenting: window) { result, error in
             guard let result = result else {
                 if let error = error as? NSError, error.domain == "com.google.GIDSignIn", error.code == -5 {
                     // The user canceled the sign-in flow
+                    AnalyticsManager.Auth.cancelled(provider: provider)
                     return
                 } else if let error = error {
-                    errorMessageAuth = error.localizedDescription
+                    let errorMsg = error.localizedDescription
+                    
+                    AnalyticsManager.Auth.error(provider: provider, error: errorMsg)
+                    errorMessageAuth = errorMsg
                 } else {
-                    errorMessageAuth = "Unknown Google sign in error"
+                    let errorMsg = "Unknown Google sign in error"
+                    
+                    AnalyticsManager.Auth.error(provider: provider, error: errorMsg)
+                    errorMessageAuth = errorMsg
                 }
                 return
             }
 
             guard let idToken = result.user.idToken?.tokenString else {
-                errorMessageAuth = "Failed to get Google identity token"
+                let errorMsg = "Failed to get Google identity token"
+                
+                AnalyticsManager.Auth.error(provider: provider, error: errorMsg)
+                errorMessageAuth = errorMsg
                 return
             }
 
@@ -363,8 +394,12 @@ extension AuthFlow {
                     let client = FetchingClient()
                     let loginResponse = try await client.loginGoogle(idToken: idToken)
                     handleLogin(loginResponse: loginResponse)
+                    AnalyticsManager.Auth.success(provider: provider)
                 } catch {
-                    errorMessageAuth = error.localizedDescription
+                    let errorMsg = error.localizedDescription
+                    
+                    AnalyticsManager.Auth.failed(provider: provider, error: errorMsg)
+                    errorMessageAuth = errorMsg
                 }
             }
         }

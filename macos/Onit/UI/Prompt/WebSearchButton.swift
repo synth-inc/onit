@@ -42,9 +42,15 @@ struct WebSearchButton: View {
     
     private func toggleWebSearch() {
         if !isTavilyAPITokenValidated || tavilyAPIToken.isEmpty {
+            AnalyticsManager.Chat.webSearchToggled(isAvailable: false,
+                                                   oldValue: webSearchEnabled,
+                                                   newValue: webSearchEnabled)
             showingWebSearchAPIKeyAlert = true
             return
         }
+        AnalyticsManager.Chat.webSearchToggled(isAvailable: true,
+                                               oldValue: webSearchEnabled,
+                                               newValue: !webSearchEnabled)
         webSearchEnabled.toggle()
     }
 }

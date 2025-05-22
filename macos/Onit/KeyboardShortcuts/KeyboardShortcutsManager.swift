@@ -87,19 +87,13 @@ struct KeyboardShortcutsManager {
         KeyboardShortcuts.Name.allCases.forEach { name in
             KeyboardShortcuts.onKeyUp(for: name) {
                 let state = PanelStateCoordinator.shared.state
+                
+                AnalyticsManager.shortcutPressed(for: name.rawValue, panelOpened: state.panelOpened)
+                
                 switch name {
                 case .launch:
-                    let eventProperties: [String: Any] = [
-                        "app_hidden": state.panel == nil
-                    ]
-                    PostHogSDK.shared.capture("shortcut_launch", properties: eventProperties)
                     PanelStateCoordinator.shared.launchPanel()
                 case .launchWithAutoContext:
-                    let eventProperties: [String: Any] = [
-                        "app_hidden": state.panel == nil
-                    ]
-                    PostHogSDK.shared.capture(
-                        "shortcut_launch_with_auto_context", properties: eventProperties)
                     state.addAutoContext()
                     PanelStateCoordinator.shared.launchPanel()
                 case .escape:

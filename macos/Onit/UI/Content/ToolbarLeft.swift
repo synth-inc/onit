@@ -20,6 +20,7 @@ struct ToolbarLeft: View {
     
     private var esc: some View {
         Button {
+            AnalyticsManager.Toolbar.escapePressed()
             PanelStateCoordinator.shared.closePanel()
         } label: {
             Text("ESC")
@@ -34,7 +35,10 @@ struct ToolbarLeft: View {
         IconButton(
             icon: .circlePlus,
             iconSize: 22,
-            action: { state.newChat() },
+            action: {
+                AnalyticsManager.Toolbar.newChatPressed()
+                state.newChat()
+            },
             tooltipPrompt: "New Chat",
             tooltipShortcut: .keyboardShortcuts(.newChat)
         )
@@ -44,6 +48,7 @@ struct ToolbarLeft: View {
         IconButton(
             icon: .smallChevDown,
             action: {
+                AnalyticsManager.Toolbar.systemPromptPressed()
                 state.newChat()
                 state.systemPromptState.shouldShowSelection = true
                 state.systemPromptState.shouldShowSystemPrompt = true

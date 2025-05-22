@@ -33,6 +33,7 @@ struct OnboardingSkipAccessibility: View {
             HStack {
                 Spacer()
                 Button {
+                    AnalyticsManager.Onboarding.LimitedExperience.continuePressed()
                     Defaults[.authFlowStatus] = .showSignUp
                     skippedAccessibility.wrappedValue = true
                 } label: {
@@ -44,6 +45,9 @@ struct OnboardingSkipAccessibility: View {
                     isHoveringContinueButton = isHovering
                 }
             }
+        }
+        .onAppear {
+            AnalyticsManager.Onboarding.LimitedExperience.opened()
         }
         .frame(maxWidth: .infinity)
         .padding(16)
@@ -65,6 +69,7 @@ extension OnboardingSkipAccessibility {
                 Spacer()
                 
                 Button {
+                    AnalyticsManager.Onboarding.LimitedExperience.closePressed()
                     showSkipConfirmation.wrappedValue = false
                 } label: {
                     Image(.smallCross).addIconStyles(

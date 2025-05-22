@@ -79,7 +79,8 @@ extension OnitPanelState {
         addPartialResponse(prompt: prompt)
         generatingPrompt = prompt
         generatingPromptPriorState = prompt.generationState
-        trackEventGeneration(prompt: prompt)
+        
+        AnalyticsManager.Chat.prompted(prompt: prompt)
         
         generateTask = Task { [systemPrompt, weak self] in
             guard let self = self else { return }
@@ -257,34 +258,6 @@ extension OnitPanelState {
             }
             generatingPrompt = nil
         }
-    }
-    
-    /**
-     * Track an event when user prompted
-     * - parameter prompt: The current prompt
-     */
-    private func trackEventGeneration(prompt: Prompt) {
-        let eventName = "user_prompted"
-        var modelName = ""
-
-        if Defaults[.mode] == .remote {
-            if let model = Defaults[.remoteModel] {
-                if let customProviderName = model.customProviderName {
-                    modelName = "\(customProviderName)/\(model.displayName)"
-                } else {
-                    modelName = model.displayName
-                }
-            }
-        } else {
-            modelName = Defaults[.localModel] ?? ""
-        }
-
-        let eventProperties: [String: Any] = [
-            "prompt_mode": Defaults[.mode].rawValue,
-            "prompt_model": modelName,
-            "accessibility_enabled": AccessibilityPermissionManager.shared.accessibilityPermissionStatus == .granted
-        ]
-        PostHogSDK.shared.capture(eventName, properties: eventProperties)
     }
 
     func cancelGenerate() {

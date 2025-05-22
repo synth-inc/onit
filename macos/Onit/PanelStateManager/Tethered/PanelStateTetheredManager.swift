@@ -106,21 +106,15 @@ class PanelStateTetheredManager: PanelStateBaseManager, ObservableObject {
     }
     
     override func launchPanel(for state: OnitPanelState) {
-        var applicationName = "N/A"
-        if let (trackedWindow, _) = statesByWindow.first(where: { $1 === state }) {
-            applicationName = trackedWindow.element.appName() ?? "N/A"
-        }
-        let properties = [
-            "displayMode": "tethered",
-            "applicationName": applicationName
-        ]
-        PostHogSDK.shared.capture("launch_panel", properties: properties)
+        AnalyticsManager.Panel.opened(displayMode: "tethered", appName: appName(for: state))
         
         buildPanelIfNeeded(for: state)
         showPanel(for: state)
     }
     
     override func closePanel(for state: OnitPanelState) {
+        AnalyticsManager.Panel.closed(displayMode: "tethered", appName: appName(for: state))
+        
         hidePanel(for: state)
         
         super.closePanel(for: state)
@@ -288,5 +282,14 @@ class PanelStateTetheredManager: PanelStateBaseManager, ObservableObject {
             }
         }
         handlePanelStateChange(state: state, action: .moveEnd)
+    }
+    
+    /// Used for analytics purpose
+    private func appName(for state: OnitPanelState) -> String? {
+        if let (trackedWindow, _) = statesByWindow.first(where: { $1 === state }) {
+            return trackedWindow.element.appName()
+        }
+        
+        return nil
     }
 }

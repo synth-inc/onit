@@ -19,6 +19,7 @@ struct SubscriptionAlert: View {
     private let descriptionActionLoading: Bool
     private let caption: String?
     private let subscriptionText: String?
+    private let subscriptionAction: (() -> Void)?
     private let showSubscriptionPerks: Bool
     private let footerSupportingText: String?
     private let errorMessage: Binding<String>?
@@ -32,6 +33,7 @@ struct SubscriptionAlert: View {
         descriptionActionLoading: Bool = false,
         caption: String? = nil,
         subscriptionText: String? = nil,
+        subscriptionAction: (() -> Void)? = nil,
         showSubscriptionPerks: Bool = false,
         footerSupportingText: String? = nil,
         errorMessage: Binding<String>? = nil
@@ -44,6 +46,7 @@ struct SubscriptionAlert: View {
         self.descriptionActionLoading = descriptionActionLoading
         self.caption = caption
         self.subscriptionText = subscriptionText
+        self.subscriptionAction = subscriptionAction
         self.showSubscriptionPerks = showSubscriptionPerks
         self.footerSupportingText = footerSupportingText
         self.errorMessage = errorMessage
@@ -82,7 +85,7 @@ struct SubscriptionAlert: View {
                 }
                 
                 if let subscriptionText = subscriptionText {
-                    SubscriptionButton(text: subscriptionText)
+                    SubscriptionButton(text: subscriptionText, action: subscriptionAction)
                 }
                 
                 if showSubscriptionPerks {
@@ -102,7 +105,7 @@ struct SubscriptionAlert: View {
             Color.black
                 .opacity(0.8)
                 .onTapGesture {
-                    if let close = close { close() }
+                    close?()
                 }
         )
     }
