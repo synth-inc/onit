@@ -29,16 +29,11 @@ struct ResizeHandle: View {
     
     var body: some View {
         ZStack {
-            Image(.cornerResize)
-                .foregroundColor(.gray300)
-                .padding(8)
             // Overlay the non-draggable NSView
             NonDraggableNSView()
-                .frame(width: ResizeHandle.size, height: ResizeHandle.size)
                 .allowsHitTesting(true)
                 .background(Color.clear)
         }
-        .frame(width: ResizeHandle.size, height: ResizeHandle.size)
         .highPriorityGesture(
             DragGesture(minimumDistance: 1, coordinateSpace: .local)
                 .onChanged { value in
