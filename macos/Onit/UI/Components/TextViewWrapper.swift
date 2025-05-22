@@ -23,6 +23,7 @@ struct TextViewWrapper: NSViewRepresentable {
     var maxHeight: CGFloat? = nil
     var placeholder: String? = nil
     var audioRecorder: AudioRecorder
+    var isDisabled: Bool = false
     
     var font: NSFont = AppFont.medium16.nsFont
     var textColor: NSColor = .white
@@ -67,6 +68,9 @@ struct TextViewWrapper: NSViewRepresentable {
 
     func updateNSView(_ nsView: NSScrollView, context: Self.Context) {
         guard let textView = nsView.documentView as? CustomTextView else { return }
+        
+        // Disable typing and hide cursor when audio recorder is recording or transcribing.
+        textView.isEditable = !(audioRecorder.isRecording || audioRecorder.isTranscribing || isDisabled)
         
         if let maxHeight = maxHeight {
             nsView.hasVerticalScroller = dynamicHeight > maxHeight
@@ -275,8 +279,6 @@ private class CustomTextView: NSTextView {
     override func draw(_ dirtyRect: NSRect) {
         super.draw(dirtyRect)
         
-        // Disable typing and hide cursor when recording or loading
-        isEditable = !(audioRecorder.isRecording || audioRecorder.isTranscribing)
         insertionPointColor = (audioRecorder.isRecording || audioRecorder.isTranscribing) ? .clear : textColor
         
         if string.isEmpty && !audioRecorder.isRecording && !audioRecorder.isTranscribing, let placeholder = placeholder {

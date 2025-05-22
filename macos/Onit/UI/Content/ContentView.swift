@@ -12,13 +12,24 @@ struct ContentView: View {
     @Environment(\.appState) var appState
     @Environment(\.windowState) private var state
     
+    @ObservedObject private var accessibilityPermissionManager = AccessibilityPermissionManager.shared
+    
     @Default(.panelWidth) var panelWidth
     @Default(.authFlowStatus) var authFlowStatus
-    @Default(.showOnboarding) var showOnboarding
+    @Default(.showOnboardingAccessibility) var showOnboardingAccessibility
     @Default(.showTwoWeekProTrialEndedAlert) var showTwoWeekProTrialEndedAlert
     @Default(.hasClosedTrialEndedAlert) var hasClosedTrialEndedAlert
     
     static let bottomPadding: CGFloat = 0
+    
+    private var shouldShowOnboardingAccessibility: Bool {
+        let accessibilityNotGranted = accessibilityPermissionManager.accessibilityPermissionStatus != .granted
+        return accessibilityNotGranted && showOnboardingAccessibility
+    }
+    
+    private var showToolbar: Bool {
+        !shouldShowOnboardingAccessibility && appState.account != nil
+    }
     
     private var showFileImporterBinding: Binding<Bool> {
         Binding(
@@ -28,28 +39,47 @@ struct ContentView: View {
     }
 
     var body: some View {
-        ZStack(alignment: .top) {
-            if showOnboarding {
-                Onboarding()
-            } else if appState.account == nil {
-                AuthFlow()
-            } else {
-                ZStack {
+        HStack(spacing: -TetheredButton.width / 2) {
+            TetheredButton()
+            
+            ZStack(alignment: .top) {
+                if shouldShowOnboardingAccessibility {
                     VStack(spacing: 0) {
-                        Spacer().frame(height: 38)
-                        
-                        PromptDivider()
-                        
-                        if state.showChatView { ChatView().transition(.opacity) }
-                        else { Spacer() }
+                        if state.showChatView {
+                            OnboardingAccessibility().transition(.opacity)
+                        } else {
+                            Spacer()
+                        }
                     }
-                    
-                    if showTwoWeekProTrialEndedAlert {
-                        TwoWeekProTrialEndedAlert()
-                    } else if appState.showFreeLimitAlert {
-                        FreeLimitAlert()
-                    } else if appState.showProLimitAlert {
-                        ProLimitAlert()
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .background(Color.black)
+                    .onAppear {
+                        if appState.account == nil {
+                            authFlowStatus = .showSignUp
+                        } else {
+                            authFlowStatus = .hideAuth
+                        }
+                    }
+                } else if appState.account == nil {
+                    AuthFlow()
+                } else {
+                    ZStack {
+                        VStack(spacing: 0) {
+                            Spacer().frame(height: 38)
+                            
+                            PromptDivider()
+                            
+                            if state.showChatView { ChatView().transition(.opacity) }
+                            else { Spacer() }
+                        }
+                        
+                        if showTwoWeekProTrialEndedAlert {
+                            TwoWeekProTrialEndedAlert()
+                        } else if appState.showFreeLimitAlert {
+                            FreeLimitAlert()
+                        } else if appState.showProLimitAlert {
+                            ProLimitAlert()
+                        }
                     }
                 }
             }
@@ -63,7 +93,7 @@ struct ContentView: View {
         .edgesIgnoringSafeArea(.top)
         .buttonStyle(PlainButtonStyle())
         .toolbar {
-            if !showOnboarding && appState.account != nil {
+            if showToolbar {
                 ToolbarItem(placement: .navigation) {
                     ToolbarLeft()
                 }

@@ -116,7 +116,7 @@ extension Defaults.Keys {
     static let openOnMouseMonitor = Key<Bool>("openOnMouseMonitor", default: false)
     
     // Onboarding
-    static let showOnboarding = Key<Bool>("showOnboarding", default: true)
+    static let showOnboardingAccessibility = Key<Bool>("showOnboardingAccessibility", default: true)
     static let authFlowStatus = Key<AuthFlowStatus>("authFlowStatus", default: .hideAuth)
     
     // Alerts
