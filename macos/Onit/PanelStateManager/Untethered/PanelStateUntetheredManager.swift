@@ -114,13 +114,14 @@ class PanelStateUntetheredManager: PanelStateBaseManager, ObservableObject {
     }
     
     override func launchPanel(for state: OnitPanelState) {
-        PostHogSDK.shared.capture("launch_panel", properties: ["displayMode": "untethered"])
+        AnalyticsManager.Panel.opened(displayMode: "untethered")
         
         buildPanelIfNeeded(for: state)
         showPanel(for: state)
     }
     
     override func closePanel(for state: OnitPanelState) {
+        AnalyticsManager.Panel.closed(displayMode: "untethered")
         hidePanel(for: state)
         
         super.closePanel(for: state)

@@ -16,6 +16,7 @@ struct ProLimitAlert: View {
     @State private var quotaErrorMessage: String = ""
     @State private var renewalDateErrorMessage: String = ""
     
+    private let alertName = "pro_limit"
     private var quotaErrorMessageFallback: String = "Could not retrieve max requests quota."
     private var renewalErrorMessageFallback: String = "Could not retrieve renewal date."
     
@@ -42,11 +43,17 @@ struct ProLimitAlert: View {
     var body: some View {
         SubscriptionAlert(
             title: "Pro Limit Reached",
-            close: { appState.showProLimitAlert = false },
+            close: {
+                AnalyticsManager.Billing.Alert.closed(name: alertName)
+                appState.showProLimitAlert = false
+            },
             description: description,
             descriptionLoading: fetchingData,
             caption: caption
         )
+        .onAppear {
+            AnalyticsManager.Billing.Alert.opened(name: alertName)
+        }
         .task {
             await fetchData()
         }

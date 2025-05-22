@@ -201,20 +201,30 @@ class AppState: NSObject {
         guard url.scheme == "onit" else {
             return
         }
-
+        
+        let provider = "email"
+        
         guard let components = URLComponents(url: url, resolvingAgainstBaseURL: true) else {
-            print("Invalid URL")
+            let errorMsg = "Invalid URL"
+            
+            AnalyticsManager.Auth.failed(provider: provider, error: errorMsg)
+            print(errorMsg)
             return
         }
 
         guard let token = components.queryItems?.first(where: { $0.name == "token" })?.value else {
-            print("Login token not found")
+            let errorMsg = "Login token not found"
+            
+            AnalyticsManager.Auth.failed(provider: provider, error: errorMsg)
+            print(errorMsg)
             return
         }
 
         Task { @MainActor in
             do {
                 let loginResponse = try await FetchingClient().loginToken(loginToken: token)
+                
+                AnalyticsManager.Auth.success(provider: provider)
                 TokenManager.token = loginResponse.token
                 account = loginResponse.account
 
@@ -229,6 +239,7 @@ class AppState: NSObject {
                 
                 Defaults[.showOnboarding] = false
             } catch {
+                AnalyticsManager.Auth.failed(provider: provider, error: error.localizedDescription)
                 print("Login by token failed with error: \(error)")
             }
         }

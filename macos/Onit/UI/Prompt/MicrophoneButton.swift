@@ -100,6 +100,7 @@ extension MicrophoneButton {
 extension MicrophoneButton {
     private func handleMicrophonePress() {
         if audioRecorder.permissionStatus == .denied || audioRecorder.permissionStatus == .restricted {
+            AnalyticsManager.Chat.voicePressed(isAvailable: false)
             showingMicrophonePermissionAlert = true
             return
         }
@@ -109,12 +110,15 @@ extension MicrophoneButton {
                 await audioRecorder.checkPermission()
                 
                 if audioRecorder.permissionGranted {
+                    AnalyticsManager.Chat.voicePressed(isAvailable: true)
                     startRecording()
                 } else if audioRecorder.permissionStatus == .denied {
+                    AnalyticsManager.Chat.voicePressed(isAvailable: false)
                     showingMicrophonePermissionAlert = true
                 }
             }
         } else {
+            AnalyticsManager.Chat.voicePressed(isAvailable: true)
             startRecording()
         }
     }

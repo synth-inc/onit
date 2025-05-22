@@ -116,7 +116,7 @@ class AccessibilityObserversManager {
             
             if !isAXServerInitialized(pid: app.processIdentifier) {
                 log.error("AXServer not fully initialized")
-                AccessibilityAnalytics.logAXServerInitializationError(app: app)
+                AnalyticsManager.Accessibility.serverInitializationError(app: app)
             }
             
             delegate?.accessibilityObserversManager(
@@ -208,7 +208,7 @@ class AccessibilityObserversManager {
             log.info("Observer registered for `\(appName)` (\(pid))")
         } else {
             log.error("Failed to register observer for `\(appName)` (\(pid))")
-            AccessibilityAnalytics.logObserverError(
+            AnalyticsManager.Accessibility.observerError(
                 errorCode: result.rawValue,
                 pid: pid
             )
@@ -259,7 +259,7 @@ class AccessibilityObserversManager {
             log.info("Persistent observer registered for `\(appName)` (\(pid))")
         } else {
             log.error("Failed to register persistent observer for `\(appName)` (\(pid))")
-            AccessibilityAnalytics.logObserverError(
+            AnalyticsManager.Accessibility.observerError(
                 errorCode: result.rawValue,
                 pid: pid
             )

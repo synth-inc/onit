@@ -11,7 +11,10 @@ struct SettingsView: View {
         TabView(
             selection: Binding(
                 get: { appState.settingsTab },
-                set: { appState.settingsTab = $0 }
+                set: {
+                    AnalyticsManager.Settings.tabPressed(tabName: $0.rawValue)
+                    appState.settingsTab = $0
+                }
             )
         ) {
             GeneralTab()
@@ -76,6 +79,9 @@ struct SettingsView: View {
         }
         .frame(idealWidth: 569, minHeight: 500)
         .fixedSize(horizontal: true, vertical: false)
+        .onAppear {
+            AnalyticsManager.Settings.opened(on: appState.settingsTab.rawValue)
+        }
     }
 }
 

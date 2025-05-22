@@ -15,7 +15,6 @@ extension OnitRegularPanel {
               let activeWindowFrame = activeWindow.getFrame(),
               wasAnimated, !isAnimating, dragDetails.isDragging, !state.isWindowDragging else { return }
         
-        log.error("windowDidMove")
         let currentPosition = adjustPanelIfBeyondRightScreenEdge()
 
         if currentPosition != dragDetails.lastPosition {
@@ -53,6 +52,8 @@ extension OnitRegularPanel {
     
     func panelResizeEnded(originalPanelWidth: CGFloat) {
         guard wasAnimated, !isAnimating, !state.isWindowDragging else { return }
+        
+        AnalyticsManager.Panel.resized(oldWidth: originalPanelWidth, newWidth: width)
 
         // Check if pinned mode is enabled
         let usePinnedMode = FeatureFlagManager.shared.usePinnedMode
