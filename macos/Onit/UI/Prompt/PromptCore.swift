@@ -15,14 +15,15 @@ struct PromptCore: View {
     @Environment(\.windowState) private var windowState
     @Query(sort: \Chat.timestamp, order: .reverse) private var allChats: [Chat]
     
+    @Default(.mode) var mode
+    @Default(.showTwoWeekProTrialEndedAlert) var showTwoWeekProTrialEndedAlert
+    
     private var chats: [Chat] {
         let chatsFilteredByAccount = allChats
             .filter { $0.accountId == appState.account?.id }
         
         return PanelStateCoordinator.shared.filterPanelChats(chatsFilteredByAccount)
     }
-    
-    @Default(.mode) var mode
     
     let isEditing: Bool
     let editingText: Binding<String>?
@@ -56,6 +57,10 @@ struct PromptCore: View {
         colorOne: Color(hex: "#7ECD8C") ?? .gray800,
         colorTwo: Color(hex: "#4AA4BF") ?? .gray800
     )
+    
+    private var showingAlert: Bool {
+        showTwoWeekProTrialEndedAlert || appState.showFreeLimitAlert || appState.showProLimitAlert
+    }
     
     var body: some View {
         VStack(spacing: 0) {
@@ -107,6 +112,7 @@ extension PromptCore {
             maxHeight: maxHeightLimit,
             placeholder: placeholderText,
             audioRecorder: audioRecorder,
+            isDisabled: showingAlert,
             detectLinks: true
         )
         .frame(height: min(textHeight, maxHeightLimit))
@@ -115,7 +121,14 @@ extension PromptCore {
         .opacity(windowState.websiteUrlsScrapeQueue.isEmpty ? 1 : 0.5)
         .focused($isFocused)
         .onAppear { isFocused = true }
-        .onChange(of: windowState.textFocusTrigger) { isFocused = true }
+        .onChange(of: windowState.textFocusTrigger) { _, _ in
+            isFocused = true
+        }
+        .onChange(of: showingAlert) { _, new in
+            isFocused = !new
+        }
+        .disabled(showingAlert)
+        .allowsHitTesting(!showingAlert)
     }
     
     private var contextAndInput: some View {

@@ -9,7 +9,12 @@ import AppKit
 import Defaults
 import SwiftUI
 
-extension PanelStateUntetheredManager {    
+extension PanelStateUntetheredManager {
+    private var shouldShowOnboarding: Bool {
+        let accessibilityNotGranted = AccessibilityPermissionManager.shared.accessibilityPermissionStatus != .granted
+        return accessibilityNotGranted && Defaults[.showOnboardingAccessibility]
+    }
+    
     func debouncedShowTetherWindow(state: OnitPanelState, activeScreen: NSScreen) {
         hideTetherWindow()
         let pendingTetherWindow = (state, activeScreen)
@@ -38,7 +43,7 @@ extension PanelStateUntetheredManager {
         tetherHintDetails.lastYComputed = nil
         tetherButtonPanelState = state
 
-        if ContentView.shouldShowOnboardingAccessibility {
+        if shouldShowOnboarding {
             let tutorialView = TetherTutorialOverlay()
             tutorialWindow.contentView = NSHostingView(rootView: tutorialView)
             tutorialWindow.orderFrontRegardless()
@@ -67,7 +72,7 @@ extension PanelStateUntetheredManager {
         )
         tetherHintDetails.tetherWindow.setFrame(frame, display: false)
         
-        if ContentView.shouldShowOnboardingAccessibility {
+        if shouldShowOnboarding {
             let tutorialFrame = NSRect(
                 x: positionX - (TetherTutorialOverlay.width) + (ExternalTetheredButton.containerWidth / 2),
                 y: positionY + (ExternalTetheredButton.containerHeight / 2) - ((TetherTutorialOverlay.height * 1.5) / 2),

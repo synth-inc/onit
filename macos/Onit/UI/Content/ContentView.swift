@@ -12,6 +12,8 @@ struct ContentView: View {
     @Environment(\.appState) var appState
     @Environment(\.windowState) private var state
     
+    @ObservedObject private var accessibilityPermissionManager = AccessibilityPermissionManager.shared
+    
     @Default(.panelWidth) var panelWidth
     @Default(.authFlowStatus) var authFlowStatus
     @Default(.showOnboardingAccessibility) var showOnboardingAccessibility
@@ -20,17 +22,13 @@ struct ContentView: View {
     
     static let bottomPadding: CGFloat = 0
     
-    static var shouldShowOnboardingAccessibility: Bool {
-        let accessibilityNotGranted = AccessibilityPermissionManager.shared.accessibilityPermissionStatus != .granted
-        return accessibilityNotGranted && Defaults[.showOnboardingAccessibility]
-    }
-    
-    private var showingAlert: Bool {
-        showTwoWeekProTrialEndedAlert || appState.showFreeLimitAlert || appState.showProLimitAlert
+    private var shouldShowOnboardingAccessibility: Bool {
+        let accessibilityNotGranted = accessibilityPermissionManager.accessibilityPermissionStatus != .granted
+        return accessibilityNotGranted && showOnboardingAccessibility
     }
     
     private var showToolbar: Bool {
-        !ContentView.shouldShowOnboardingAccessibility && appState.account != nil
+        !shouldShowOnboardingAccessibility && appState.account != nil
     }
     
     private var showFileImporterBinding: Binding<Bool> {
@@ -45,7 +43,7 @@ struct ContentView: View {
             TetheredButton()
             
             ZStack(alignment: .top) {
-                if ContentView.shouldShowOnboardingAccessibility {
+                if shouldShowOnboardingAccessibility {
                     VStack(spacing: 0) {
                         if state.showChatView {
                             OnboardingAccessibility().transition(.opacity)
@@ -77,7 +75,6 @@ struct ContentView: View {
                                 Spacer()
                             }
                         }
-                        .allowsHitTesting(!showingAlert)
                         
                         if showTwoWeekProTrialEndedAlert {
                             TwoWeekProTrialEndedAlert()
