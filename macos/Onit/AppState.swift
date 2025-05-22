@@ -236,8 +236,6 @@ class AppState: NSObject {
                     useDeepSeek = true
                     usePerplexity = true
                 }
-                
-                Defaults[.showOnboarding] = false
             } catch {
                 AnalyticsManager.Auth.failed(provider: provider, error: error.localizedDescription)
                 print("Login by token failed with error: \(error)")
