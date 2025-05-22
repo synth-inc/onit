@@ -115,6 +115,7 @@ extension GeneralTabPlanAndBilling {
             iconText: "🚀",
             text: "Upgrade to PRO",
             action: {
+                AnalyticsManager.Billing.upgradeProPressed()
                 Task {
                     if let error = await Stripe.openSubscriptionForm(openURL) {
                         subscriptionDataErrorMessage = error
@@ -130,6 +131,7 @@ extension GeneralTabPlanAndBilling {
             iconText: "🚀",
             text: "Start 2-Week PRO Trial",
             action: {
+                AnalyticsManager.Billing.startFreeTrialPressed()
                 Task {
                     if let error = await Stripe.openSubscriptionForm(openURL) {
                         subscriptionDataErrorMessage = error
@@ -145,6 +147,7 @@ extension GeneralTabPlanAndBilling {
             iconText: "💫",
             text: "Renew Subscription",
             action: {
+                AnalyticsManager.Billing.renewSubscriptionPressed()
                 Task {
                     await renewSubscription()
                 }
@@ -158,6 +161,7 @@ extension GeneralTabPlanAndBilling {
             iconText: "⚙️",
             text: "Manage Subscription",
             action: {
+                AnalyticsManager.Billing.manageSubscriptionPressed()
                 Task { await openBillingPortal() }
             }
         )
@@ -168,6 +172,7 @@ extension GeneralTabPlanAndBilling {
             iconText: "⚙️",
             text: "View Past Billing Info",
             action: {
+                AnalyticsManager.Billing.viewPastBillingsPressed()
                 Task { await openBillingPortal() }
             }
         )

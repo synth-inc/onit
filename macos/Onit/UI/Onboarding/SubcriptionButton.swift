@@ -15,9 +15,11 @@ struct SubscriptionButton: View {
     @Default(.hasClosedTrialEndedAlert) var hasClosedTrialEndedAlert
     
     private let text: String
+    private let action: (() -> Void)?
     
-    init(text: String) {
+    init(text: String, action: (() -> Void)?) {
         self.text = text
+        self.action = action
     }
     
     @State private var isHovered: Bool = false
@@ -75,7 +77,7 @@ struct SubscriptionButton: View {
                     .onChanged {_ in isPressed = true }
                     .onEnded{ _ in
                         isPressed = false
-                        
+                        action?()
                         Task {
                             if let error = await Stripe.openSubscriptionForm(openURL) {
                                 errorMessage = error

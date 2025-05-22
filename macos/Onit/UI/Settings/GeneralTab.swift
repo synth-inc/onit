@@ -76,6 +76,8 @@ struct GeneralTab: View {
             VStack(alignment: .leading, spacing: 16) {
                 HStack(spacing: 8) {
                     Button {
+                        let oldValue = isPinnedMode ? "pinned" : "tethered"
+                        AnalyticsManager.Settings.General.displayModePressed(oldValue: oldValue, newValue: "pinned")
                         FeatureFlagManager.shared.togglePinnedMode(true)
                     } label: {
                         VStack(spacing: 4) {
@@ -98,6 +100,8 @@ struct GeneralTab: View {
                     .disabled(!accessibilityGranted)
                     
                     Button {
+                        let oldValue = isPinnedMode ? "pinned" : "tethered"
+                        AnalyticsManager.Settings.General.displayModePressed(oldValue: oldValue, newValue: "tethered")
                         FeatureFlagManager.shared.togglePinnedMode(false)
                     } label: {
                         VStack(spacing: 4) {

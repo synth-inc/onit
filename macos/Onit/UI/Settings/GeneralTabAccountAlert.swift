@@ -102,7 +102,10 @@ extension GeneralTabAccountAlert {
     private var cancelButton: some View {
         button(
             text: "Cancel",
-            action: { show.wrappedValue.toggle() },
+            action: {
+                AnalyticsManager.Account.deleteConfirmationCancelPressed()
+                show.wrappedValue.toggle()
+            },
             isHovered: $isHoveredCancel,
             isPressed: $isPressedCancel
         )
@@ -125,6 +128,8 @@ extension GeneralTabAccountAlert {
 extension GeneralTabAccountAlert {
     @MainActor
     private func deleteAccount() {
+        AnalyticsManager.Account.deleteConfirmationDeletePressed()
+        
         accountDeleteError = ""
         let client = FetchingClient()
         

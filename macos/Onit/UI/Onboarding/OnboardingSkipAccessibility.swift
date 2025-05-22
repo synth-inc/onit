@@ -39,6 +39,9 @@ struct OnboardingSkipAccessibility: View {
                 }
             }
         }
+        .onAppear {
+            AnalyticsManager.Onboarding.LimitedExperience.opened()
+        }
         .frame(maxWidth: .infinity)
         .padding(16)
         .background(.gray900)
@@ -59,6 +62,7 @@ extension OnboardingSkipAccessibility {
                 Spacer()
                 
                 Button {
+                    AnalyticsManager.Onboarding.LimitedExperience.closePressed()
                     showSkipConfirmation.wrappedValue = false
                 } label: {
                     Image(.smallCross).addIconStyles(
@@ -79,6 +83,7 @@ extension OnboardingSkipAccessibility {
 
 extension OnboardingSkipAccessibility {
     private func skipAccessibility() {
+        AnalyticsManager.Onboarding.LimitedExperience.continuePressed()
         Defaults[.authFlowStatus] = .showSignUp
         Defaults[.showOnboardingAccessibility] = false
     }

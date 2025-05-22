@@ -38,6 +38,9 @@ struct OnboardingAccessibility: View {
                 skipAccessibilityButton
             }
         }
+        .onAppear {
+            AnalyticsManager.Onboarding.opened()
+        }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .padding(.horizontal, 22)
         .padding(.top, 134)
@@ -65,6 +68,7 @@ extension OnboardingAccessibility {
     private var grantAccessButton: some View {
         TextButton(
             action: {
+                AnalyticsManager.Onboarding.grandAccessPressed()
                 AccessibilityPermissionManager.shared.requestPermission()
             },
             height: 40,
@@ -100,6 +104,7 @@ extension OnboardingAccessibility {
     
     private var skipAccessibilityButton: some View {
         Button {
+            AnalyticsManager.Onboarding.useWithoutAccessibilityPressed()
             showSkipConfirmation = true
         } label: {
             HStack(spacing: 0) {

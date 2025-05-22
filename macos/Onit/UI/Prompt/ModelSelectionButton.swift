@@ -21,7 +21,10 @@ struct ModelSelectionButton: View {
     var body: some View {
         TextButton(
             text: text,
-            action: { open.toggle() },
+            action: {
+                AnalyticsManager.Chat.modelPressed(currentModel: text)
+                open.toggle()
+            },
             gap: 0,
             height: ToolbarButtonStyle.height,
             fillContainer: false,

@@ -33,6 +33,7 @@ struct RemoteModelButton: View {
             text: remoteModel.displayName,
             selected: isSelectedRemoteModel(model: remoteModel),
             action: {
+                AnalyticsManager.ModelPicker.modelSelected(local: false, model: remoteModel.displayName)
                 selectedModel.wrappedValue = .remote(remoteModel)
                 modelSelectionViewOpen.wrappedValue = false
                 Task {
