@@ -37,24 +37,24 @@ struct ContextItem: View {
                     }
                 } else {
                     TagButton(
-                        child: ContextImage(context: item),
                         text: name,
+                        fill: inList,
+                        isTransparent: inList,
+                        child: ContextImage(context: item),
                         caption: item.fileType,
                         tooltip: "View auto-context file",
                         action: showContextWindow,
-                        closeAction: inList ? nil : { removeContextItem() },
-                        fill: inList,
-                        isTransparent: inList
+                        closeAction: inList ? nil : { removeContextItem() }
                     )
                 }
             default:
                 TagButton(
-                    child: ContextImage(context: item),
                     text: name,
-                    caption: item.fileType,
-                    closeAction: inList ? nil : { removeContextItem() },
                     fill: inList,
-                    isTransparent: inList
+                    isTransparent: inList,
+                    child: ContextImage(context: item),
+                    caption: item.fileType,
+                    closeAction: inList ? nil : { removeContextItem() }
                 )
             }
         }

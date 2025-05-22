@@ -37,8 +37,8 @@ struct FileRow: View {
     var body: some View {
 
         VStack(alignment: .leading, spacing: 6) {
-            fileRowHeader
-            fileRowContextList
+            header
+            contextListRow
         }
         .onAppear {
             currentWindowInfo = initializeCurrentWindowInfo()
@@ -76,7 +76,7 @@ struct FileRow: View {
 // MARK: - Child Components
 
 extension FileRow {
-    private var fileRowHeader: some View {
+    private var header: some View {
         HStack(spacing: 6) {
             PaperclipButton(
                 currentWindowIconUrl: currentWindowInfo.appIconUrl,
@@ -100,11 +100,21 @@ extension FileRow {
         }
     }
     
-    private var fileRowContextList: some View {
+    private var pendingAutoContexts: some View {
+        ForEach(Array(windowState.addAutoContextTasks.keys), id: \.self) { windowName in
+            TagButton(
+                text: windowName,
+                maxWidth: 155,
+                borderColor: .clear,
+                child: LoaderPulse().padding(0).padding(.leading, 1),
+                closeAction: { deleteAutoContextTask(windowName) }
+            )
+        }
+    }
+    
+    private var contextListRow: some View {
         FlowLayout(spacing: 6) {
-            if addingAutoContext {
-                Loader()
-            }
+            pendingAutoContexts
             
             if !contextList.isEmpty {
                 ForEach(contextList, id: \.self) { context in

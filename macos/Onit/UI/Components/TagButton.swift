@@ -8,119 +8,145 @@
 import SwiftUI
 
 struct TagButton: View {
+    private let text: String
+    private let maxWidth: CGFloat
+    private let fill: Bool
+    private let isTransparent: Bool
+    private let borderColor: Color
+    
     private let child: (any View)?
     private let icon: ImageResource?
-    private let text: String
     private let caption: String?
     private let tooltip: String?
     
     private let action: (() -> Void)?
     private let closeAction: (() -> Void)?
     
-    private let maxWidth: CGFloat
-    private let fill: Bool
-    private let isTransparent: Bool
-    
     init(
+        text: String,
+        maxWidth: CGFloat = 0,
+        fill: Bool = false,
+        isTransparent: Bool = false,
+        borderColor: Color = .gray400,
+        
         child: (any View)? = nil,
         icon: ImageResource? = nil,
-        text: String,
         caption: String? = nil,
         tooltip: String? = nil,
         
         action: (() -> Void)? = nil,
-        closeAction: (() -> Void)? = nil,
-        
-        maxWidth: CGFloat = 0,
-        fill: Bool = false,
-        isTransparent: Bool = false
+        closeAction: (() -> Void)? = nil
     ) {
+        self.text = text
+        self.maxWidth = maxWidth
+        self.fill = fill
+        self.isTransparent = isTransparent
+        self.borderColor = borderColor
+        
         self.child = child
         self.icon = icon
-        self.text = text
         self.caption = caption
         self.tooltip = tooltip
         
         self.action = action
         self.closeAction = closeAction
-        
-        self.maxWidth = maxWidth
-        self.fill = fill
-        self.isTransparent = isTransparent
     }
     
     @State private var isHovered: Bool = false
     @State private var isPressed: Bool = false
     @State private var isHoveredClose: Bool = false
     
+    private var addIconPadding: Bool {
+        child != nil || icon != nil
+    }
+    
     var body: some View {
-        HStack(alignment: .center, spacing: 3) {
-            if let child = child { AnyView(child) }
-            
-            if let icon = icon {
-                Image(icon).addIconStyles(iconSize: 14)
-            }
-            
-            Text(text)
-                .styleText(size: 13)
-                .truncateText()
-            
-            if let caption = caption {
-                Text(caption)
-                    .styleText(size: 13, weight: .regular, color: .gray100)
+        ZStack(alignment: .leading) {
+            HStack(alignment: .center, spacing: 6) {
+                if let child = child { AnyView(child) }
+                
+                if let icon = icon {
+                    Image(icon).addIconStyles(iconSize: 14)
+                }
+                
+                Text(text)
+                    .styleText(
+                        size: 12,
+                        color: isHoveredClose ? .T_3 : .white
+                    )
                     .truncateText()
+                
+                if let caption = caption {
+                    Text(caption)
+                        .styleText(size: 13, weight: .regular, color: .gray100)
+                        .truncateText()
+                }
             }
             
             if let closeAction = closeAction {
-                Button { closeAction() }
-                label: {
-                    Image(.smallCross)
-                        .addIconStyles(
-                            foregroundColor: isHoveredClose ? .white : .gray100
-                        )
-                        .addAnimation(dependency: isHoveredClose)
+                HStack(spacing: 0) {
+                    Spacer()
+                    FadeHorizontal(color: setHoverBackground())
+                    closeButton(closeAction)
                 }
-                .onHover{ isHovering in isHoveredClose = isHovering }
+                .opacity(isHovered ? 1 : 0)
             }
         }
-        .padding(.horizontal, 3)
+        .padding(.leading, addIconPadding ? 4 : 3)
+        .padding(.trailing, 6)
         .frame(
             maxWidth: maxWidth > 0 ? maxWidth : fill ? .infinity : nil,
             alignment: .leading
         )
         .frame(height: 24)
-        .background(setBackground())
-        .scaleEffect(setScale())
-        .opacity(setOpacity())
         .addBorder(
             cornerRadius: 4,
-            stroke: isTransparent ? .clear : .gray400
+            stroke: isTransparent ? .clear : borderColor
         )
-        .addAnimation(dependency: $isHovered.wrappedValue)
         .help(tooltip ?? "")
-        .onHover{ isHovering in isHovered = isHovering }
-        .gesture(
-            DragGesture(minimumDistance: 0)
-                .onChanged {_ in isPressed = true }
-                .onEnded{ _ in
-                    isPressed = false
-                    if let action = action { action() }
-                }
+        .addAnimation(dependency: isHoveredClose)
+        .addButtonEffects(
+            action: action,
+            background: isTransparent ? .clear : .gray500,
+            hoverBackground: setHoverBackground(),
+            cornerRadius: 4,
+            isHovered: $isHovered,
+            isPressed: $isPressed,
         )
+        .allowsHitTesting(action != nil)
+    }
+}
+
+// MARK: - Child Components
+
+extension TagButton {
+    private func closeButton(_ closeAction: @escaping () -> Void) -> some View {
+        Button {
+            closeAction()
+        } label: {
+            Image(.cross)
+                .addIconStyles(
+                    foregroundColor: isHoveredClose ? .white : .gray100,
+                    iconSize: 9
+                )
+                .addAnimation(dependency: isHoveredClose)
+        }
+        .background(setHoverBackground())
+        .onHover{ isHovering in
+            isHoveredClose = isHovering
+        }
     }
 }
 
 // MARK: - Private Functions
 extension TagButton {
-    private func setBackground() -> Color {
-        if action != nil,
-           isHovered
-        {
-            if isTransparent { return .gray800 }
-            else { return .gray400 }
-        } else {
+    private func setHoverBackground() -> Color {
+        if action == nil {
             if isTransparent { return .clear }
             else { return .gray500 }
+        } else {
+            if isTransparent { return .gray800 }
+            else { return .gray400 }
         }
     }
     

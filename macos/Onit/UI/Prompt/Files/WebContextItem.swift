@@ -44,14 +44,16 @@ struct WebContextItem: View {
         let websiteUndergoingScrape = windowState.websiteUrlsScrapeQueue.keys.contains(websiteUrl.absoluteString)
         
         TagButton(
-            child: websiteUndergoingScrape ? Loader() : favicon,
             text: getCurrentWebsiteTitle(),
-            caption: item.fileType,
-            action: showContextWindow,
-            closeAction: inList ? nil : removeContextItem,
             maxWidth: inList ? 0 : 250,
             fill: inList,
-            isTransparent: inList
+            isTransparent: inList,
+            child: websiteUndergoingScrape ?
+                LoaderPulse().padding(0).padding(.leading, 1) :
+                favicon,
+            caption: item.fileType,
+            action: showContextWindow,
+            closeAction: inList ? nil : removeContextItem
         )
         .opacity(websiteUndergoingScrape ? 0.5 : 1)
         .disabled(websiteUndergoingScrape)
