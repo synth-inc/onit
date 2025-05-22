@@ -57,7 +57,7 @@ struct App: SwiftUI.App {
                     autoContextFromCurrentWindow,
                     autoContextFromHighlights
                 ], initial: true) { oldValue, newValue in
-                    AnalyticsManager.logAXFlags()
+                    AnalyticsManager.Accessibility.flagsChanges()
                 }
                 .onChange(of: debugManager.showDebugWindow, initial: true) { oldValue, newValue in
                     if newValue {

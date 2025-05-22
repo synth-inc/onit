@@ -399,7 +399,7 @@ class AccessibilityNotificationsManager: ObservableObject {
                     await MainActor.run {
                         print("Accessibility timeout")
                         self.timedOutWindowHash.insert(windowHash)
-                        AnalyticsManager.logAXParseTimedOut(appName: appName)
+                        AnalyticsManager.Accessibility.parseTimedOut(appName: appName)
                         self.screenResult = .init()
                         self.screenResult.errorMessage = "Timeout occurred, could not read application in reasonable amount of time."
                         self.showDebug()
