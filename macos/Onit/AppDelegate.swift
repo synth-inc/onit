@@ -28,8 +28,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
     
     func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
-        // Only launch the panel if there is no one opened
-        if !PanelStateCoordinator.shared.hasPanelOpened() {
+        // Only launch the panel if it's not already visible
+        if !PanelStateCoordinator.shared.state.panelOpened {
             PanelStateCoordinator.shared.launchPanel()
         }
         
