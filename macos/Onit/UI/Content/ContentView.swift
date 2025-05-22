@@ -28,43 +28,39 @@ struct ContentView: View {
     }
 
     var body: some View {
-        HStack(spacing: -TetheredButton.width / 2) {
-            TetheredButton()
-            
-            ZStack(alignment: .top) {
-                if showOnboarding {
-                    Onboarding()
-                } else if appState.account == nil {
-                    AuthFlow()
-                } else {
-                    ZStack {
-                        VStack(spacing: 0) {
-                            Spacer().frame(height: 38)
-                            
-                            PromptDivider()
-                            
-                            if state.showChatView { ChatView().transition(.opacity) }
-                            else { Spacer() }
-                        }
+        ZStack(alignment: .top) {
+            if showOnboarding {
+                Onboarding()
+            } else if appState.account == nil {
+                AuthFlow()
+            } else {
+                ZStack {
+                    VStack(spacing: 0) {
+                        Spacer().frame(height: 38)
                         
-                        if showTwoWeekProTrialEndedAlert {
-                            TwoWeekProTrialEndedAlert()
-                        } else if appState.showFreeLimitAlert {
-                            FreeLimitAlert()
-                        } else if appState.showProLimitAlert {
-                            ProLimitAlert()
-                        }
+                        PromptDivider()
+                        
+                        if state.showChatView { ChatView().transition(.opacity) }
+                        else { Spacer() }
+                    }
+                    
+                    if showTwoWeekProTrialEndedAlert {
+                        TwoWeekProTrialEndedAlert()
+                    } else if appState.showFreeLimitAlert {
+                        FreeLimitAlert()
+                    } else if appState.showProLimitAlert {
+                        ProLimitAlert()
                     }
                 }
             }
-            .background(Color.black)
-            .addBorder(
-                cornerRadius: 14,
-                lineWidth: 2,
-                stroke: .gray600
-            )
-            .edgesIgnoringSafeArea(.top)
         }
+        .background(Color.black)
+        .addBorder(
+            cornerRadius: 14,
+            lineWidth: 2,
+            stroke: .gray600
+        )
+        .edgesIgnoringSafeArea(.top)
         .buttonStyle(PlainButtonStyle())
         .toolbar {
             if !showOnboarding && appState.account != nil {

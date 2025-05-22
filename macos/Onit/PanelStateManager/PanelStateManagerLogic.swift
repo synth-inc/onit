@@ -11,6 +11,7 @@ protocol PanelStateManagerLogic {
     // MARK: - Properties
     
     var isPanelMovable: Bool { get }
+    var defaultState: OnitPanelState { get }
     var state: OnitPanelState { get set }
     var states: [OnitPanelState] { get set }
     var tetherButtonPanelState: OnitPanelState? { get set }

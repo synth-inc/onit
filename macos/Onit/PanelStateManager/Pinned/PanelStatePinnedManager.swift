@@ -38,7 +38,7 @@ class PanelStatePinnedManager: PanelStateBaseManager, ObservableObject {
     private override init() {
         super.init()
         
-        states = [defaultState]
+        states = []
     }
 
     // MARK: - PanelStateManagerLogic
@@ -48,6 +48,11 @@ class PanelStatePinnedManager: PanelStateBaseManager, ObservableObject {
     override func start() {
         stop()
 
+        let state = OnitPanelState()
+        
+        self.state = state
+        states = [state]
+        
         globalMouseMonitor = NSEvent.addGlobalMonitorForEvents(matching: .mouseMoved) { [weak self] event in
             guard let self = self else { return }
             activateMouseScreen()
