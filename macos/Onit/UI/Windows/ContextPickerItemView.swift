@@ -8,26 +8,26 @@
 import SwiftUI
 
 struct ContextPickerItemView: View {
-    private let currentWindowIconUrl: URL?
     private let imageRes: ImageResource
     private let title: String
     private let subtitle: String
+    private let currentWindowBundleUrl: URL?
     
     init(
-        currentWindowIconUrl: URL? = nil,
         imageRes: ImageResource,
         title: String,
-        subtitle: String
+        subtitle: String,
+        currentWindowBundleUrl: URL? = nil
     ) {
-        self.currentWindowIconUrl = currentWindowIconUrl
         self.imageRes = imageRes
         self.title = title
         self.subtitle = subtitle
+        self.currentWindowBundleUrl = currentWindowBundleUrl
     }
     
     private var windowIcon: NSImage? {
-        guard let url = currentWindowIconUrl else { return nil }
-        return NSWorkspace.shared.icon(forFile: url.path)
+        guard let bundleUrl = currentWindowBundleUrl else { return nil }
+        return NSWorkspace.shared.icon(forFile: bundleUrl.path)
     }
 
     var body: some View {
@@ -61,5 +61,5 @@ struct ContextPickerItemView: View {
 }
 
 #Preview {
-    ContextPickerItemView(currentWindowIconUrl: nil, imageRes: .arrowsSpin, title: "", subtitle: "")
+    ContextPickerItemView(imageRes: .arrowsSpin, title: "", subtitle: "", currentWindowBundleUrl: nil)
 }

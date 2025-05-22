@@ -73,7 +73,7 @@ extension OnitPanelState {
             appHash: appHash,
             appTitle: appTitle,
             appContent: appContent,
-            appIconUrl: AccessibilityNotificationsManager.shared.screenResult.appIconUrl
+            appBundleUrl: AccessibilityNotificationsManager.shared.screenResult.appBundleUrl
         )
         
         pendingContextList.insert(autoContext, at: 0)

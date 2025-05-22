@@ -32,7 +32,7 @@ class AccessibilityNotificationsManager: ObservableObject {
         var userInteraction: UserInteractions = .init()
         var others: [String: String]?
         var errorMessage: String?  // Renamed field for error message
-        var appIconUrl: URL?
+        var appBundleUrl: URL?
     }
 
     // MARK: - Properties
@@ -423,12 +423,12 @@ class AccessibilityNotificationsManager: ObservableObject {
     }
     
     private func handleWindowContent(_ results: [String: String]?, for state: OnitPanelState) {
-        var appIconUrl: URL? = nil
+        var appBundleUrl: URL? = nil
         
         if let pid = lastActiveWindowPid,
            let app = NSRunningApplication(processIdentifier: pid)
         {
-            appIconUrl = app.bundleURL
+            appBundleUrl = app.bundleURL
         }
         
         let elapsedTime = results?[AccessibilityParsedElements.elapsedTime]
@@ -450,7 +450,7 @@ class AccessibilityNotificationsManager: ObservableObject {
         self.screenResult.applicationTitle = appTitle
         self.screenResult.others = results
         self.screenResult.errorMessage = nil
-        self.screenResult.appIconUrl = appIconUrl
+        self.screenResult.appBundleUrl = appBundleUrl
         self.showDebug()
         
         state.addAutoContext()

@@ -10,20 +10,20 @@ import SwiftUI
 struct AutoContextButton: View {
     private let text: String
     private let isAdd: Bool
-    private let appIconUrl: URL?
+    private let appBundleUrl: URL?
     private let action: () -> Void
     private let removeAction: (() -> Void)?
     
     init(
         text: String,
         isAdd: Bool = false,
-        appIconUrl: URL? = nil,
+        appBundleUrl: URL? = nil,
         action: @escaping () -> Void,
         removeAction: (() -> Void)? = nil
     ) {
         self.text = text
         self.isAdd = isAdd
-        self.appIconUrl = appIconUrl
+        self.appBundleUrl = appBundleUrl
         self.action = action
         self.removeAction = removeAction
     }
@@ -39,8 +39,8 @@ struct AutoContextButton: View {
     }
     
     private var appIcon: NSImage? {
-        guard let url = appIconUrl else { return nil }
-        return NSWorkspace.shared.icon(forFile: url.path)
+        guard let bundleUrl = appBundleUrl else { return nil }
+        return NSWorkspace.shared.icon(forFile: bundleUrl.path)
     }
     
     var body: some View {

@@ -29,7 +29,7 @@ struct ContextItem: View {
                 if isEditing {
                     AutoContextButton(
                         text: name,
-                        appIconUrl: autoContext.appIconUrl
+                        appBundleUrl: autoContext.appBundleUrl
                     ) {
                         showContextWindow()
                     } removeAction: {

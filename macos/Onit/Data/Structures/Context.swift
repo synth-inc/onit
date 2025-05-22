@@ -13,7 +13,7 @@ struct AutoContext: Codable, Hashable {
     let appHash: UInt
     let appTitle: String
     let appContent: [String: String]
-    let appIconUrl: URL?
+    let appBundleUrl: URL?
 }
 
 enum Context {
@@ -96,7 +96,7 @@ extension Context {
         appHash: UInt,
         appTitle: String,
         appContent: [String: String],
-        appIconUrl: URL? = nil
+        appBundleUrl: URL? = nil
     ) {
         self = .auto(
             AutoContext(
@@ -104,7 +104,7 @@ extension Context {
                 appHash: appHash,
                 appTitle: appTitle,
                 appContent: appContent,
-                appIconUrl: appIconUrl
+                appBundleUrl: appBundleUrl
             )
         )
     }

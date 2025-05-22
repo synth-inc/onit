@@ -11,7 +11,7 @@ struct FileRow: View {
     @Environment(\.windowState) var windowState
     @ObservedObject private var accessibilityPermissionManager = AccessibilityPermissionManager.shared
     
-    @State private var currentWindowInfo: (appIconUrl: URL?, name: String?) = (nil, nil)
+    @State private var currentWindowInfo: (appBundleUrl: URL?, name: String?) = (nil, nil)
     @State private var windowDelegate: WindowChangeDelegate? = nil
     @State private var windowAlreadyInContext: Bool = false
     
@@ -79,8 +79,8 @@ extension FileRow {
     private var header: some View {
         HStack(spacing: 6) {
             PaperclipButton(
-                currentWindowIconUrl: currentWindowInfo.appIconUrl,
-                shouldShowAddContextButton: windowName == nil
+                shouldShowAddContextButton: windowName == nil,
+                currentWindowBundleUrl: currentWindowInfo.appBundleUrl
             )
             
             ScrollView(.horizontal) {
@@ -89,7 +89,7 @@ extension FileRow {
                         AutoContextButton(
                             text: windowName,
                             isAdd: true,
-                            appIconUrl: currentWindowInfo.appIconUrl
+                            appBundleUrl: currentWindowInfo.appBundleUrl
                         ) {
                             addWindowToContext()
                         }
@@ -135,10 +135,10 @@ extension FileRow {
            let pid = trackedWindow.element.pid(),
            let windowApp = NSRunningApplication(processIdentifier: pid)
         {
-            let windowAppIconUrl = windowApp.bundleURL
+            let windowAppBundleUrl = windowApp.bundleURL
             let windowName = trackedWindow.element.title() ?? trackedWindow.element.appName() ?? nil
             
-            return (windowAppIconUrl, windowName)
+            return (windowAppBundleUrl, windowName)
         } else {
             return (nil, nil)
         }
@@ -213,8 +213,8 @@ private final class WindowChangeDelegate: AccessibilityNotificationsDelegate {
         didActivateWindow trackedWindow: TrackedWindow
     ) {
         currentlyTrackedWindow = trackedWindow
-        let (windowIconAppUrl, windowName) = FileRow.getWindowIconAndName(trackedWindow)
-        onWindowChange((windowIconAppUrl, windowName))
+        let (windowAppBundleUrl, windowName) = FileRow.getWindowIconAndName(trackedWindow)
+        onWindowChange((windowAppBundleUrl, windowName))
     }
     
     // Tracks when changing focused sub-window in the current window.
@@ -224,25 +224,8 @@ private final class WindowChangeDelegate: AccessibilityNotificationsDelegate {
         didChangeWindowTitle trackedWindow: TrackedWindow
     ) {
         currentlyTrackedWindow = trackedWindow
-        let (windowIconAppUrl, windowName) = FileRow.getWindowIconAndName(trackedWindow)
-        onWindowChange((windowIconAppUrl, windowName))
-    }
-    
-    // Cleaning up tracked windows.
-    func accessibilityManager(
-        _ manager: AccessibilityNotificationsManager,
-        didDestroyWindow window: TrackedWindow
-    ) {
-        let (_, currentlyTrackWindowName) = FileRow.getWindowIconAndName(currentlyTrackedWindow)
-        let (_, recentlyTrackedWindowName) = FileRow.getWindowIconAndName(window)
-        
-        if let currentlyTrackWindowName = currentlyTrackWindowName,
-           let recentlyTrackedWindowName = recentlyTrackedWindowName,
-           currentlyTrackWindowName == recentlyTrackedWindowName
-        {
-            currentlyTrackedWindow = nil
-            onWindowChange((nil, nil))
-        }
+        let (windowAppBundleUrl, windowName) = FileRow.getWindowIconAndName(trackedWindow)
+        onWindowChange((windowAppBundleUrl, windowName))
     }
     
     // Below is required to conform to AccessibilityNotificationsDelegate protocol but aren't needed in this implementation.
@@ -251,6 +234,7 @@ private final class WindowChangeDelegate: AccessibilityNotificationsDelegate {
     func accessibilityManager(_ manager: AccessibilityNotificationsManager, didMinimizeWindow window: TrackedWindow) {}
     func accessibilityManager(_ manager: AccessibilityNotificationsManager, didDeminimizeWindow window: TrackedWindow) {}
     func accessibilityManager(_ manager: AccessibilityNotificationsManager, didActivateIgnoredWindow window: TrackedWindow?) {}
+    func accessibilityManager(_ manager: AccessibilityNotificationsManager, didDestroyWindow window: TrackedWindow) {}
 }
 
 // MARK: - Test

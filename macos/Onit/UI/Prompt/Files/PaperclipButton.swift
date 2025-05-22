@@ -18,15 +18,15 @@ struct PaperclipButton: View {
 
     @Default(.closedAutoContextTag) var closedAutoContextTag
     
-    private let currentWindowIconUrl: URL?
     private let shouldShowAddContextButton: Bool
+    private let currentWindowBundleUrl: URL?
     
     init(
-        currentWindowIconUrl: URL? = nil,
-        shouldShowAddContextButton: Bool = false
+        shouldShowAddContextButton: Bool = false,
+        currentWindowBundleUrl: URL? = nil
     ) {
-        self.currentWindowIconUrl = currentWindowIconUrl
         self.shouldShowAddContextButton = shouldShowAddContextButton
+        self.currentWindowBundleUrl = currentWindowBundleUrl
     }
     
     var accessibilityAutoContextEnabled: Bool {
@@ -78,7 +78,7 @@ struct PaperclipButton: View {
                 }
             }
             OverlayManager.shared.captureClickPosition()
-            let view = ContextPickerView(currentWindowIconUrl: currentWindowIconUrl)
+            let view = ContextPickerView(currentWindowBundleUrl: currentWindowBundleUrl)
                 .environment(\.appState, appState)
                 .environment(\.windowState, state)
             OverlayManager.shared.showOverlay(content: view)
