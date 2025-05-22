@@ -28,8 +28,7 @@ struct OnboardingSkipAccessibility: View {
             HStack {
                 Spacer()
                 Button {
-                    Defaults[.authFlowStatus] = .showSignUp
-                    Defaults[.showOnboardingAccessibility] = false
+                    skipAccessibility()
                 } label: {
                     Text("Yes, continue →")
                         .styleText(size: 13, underline: isHoveringContinueButton)
@@ -76,6 +75,14 @@ extension OnboardingSkipAccessibility {
     }
 }
 
+// MARK: - Private Function
+
+extension OnboardingSkipAccessibility {
+    private func skipAccessibility() {
+        Defaults[.authFlowStatus] = .showSignUp
+        Defaults[.showOnboardingAccessibility] = false
+    }
+}
 
 #Preview {
     OnboardingSkipAccessibility(showSkipConfirmation: .constant(true))
