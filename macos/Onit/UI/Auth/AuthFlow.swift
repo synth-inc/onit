@@ -15,7 +15,6 @@ struct AuthFlow: View {
     @Environment(\.appState) var appState
     
     @Default(.authFlowStatus) var authFlowStatus
-    @Default(.showOnboarding) var showOnboarding
     
     @Default(.useOpenAI) var useOpenAI
     @Default(.useAnthropic) var useAnthropic
@@ -158,7 +157,6 @@ extension AuthFlow {
             
             Button {
                 authFlowStatus = .hideAuth
-                showOnboarding = false
             } label: {
                 Text(generateSkipText())
                     .styleText(size: 13, weight: .regular, underline: isHoveredSkipButton)
@@ -295,7 +293,6 @@ extension AuthFlow {
         }
         
         authFlowStatus = .hideAuth
-        showOnboarding = false
     }
 }
 

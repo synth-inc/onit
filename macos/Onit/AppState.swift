@@ -226,8 +226,6 @@ class AppState: NSObject {
                     useDeepSeek = true
                     usePerplexity = true
                 }
-                
-                Defaults[.showOnboarding] = false
             } catch {
                 print("Login by token failed with error: \(error)")
             }

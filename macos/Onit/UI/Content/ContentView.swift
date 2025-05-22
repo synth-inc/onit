@@ -14,11 +14,24 @@ struct ContentView: View {
     
     @Default(.panelWidth) var panelWidth
     @Default(.authFlowStatus) var authFlowStatus
-    @Default(.showOnboarding) var showOnboarding
+    @Default(.showOnboardingAccessibility) var showOnboardingAccessibility
     @Default(.showTwoWeekProTrialEndedAlert) var showTwoWeekProTrialEndedAlert
     @Default(.hasClosedTrialEndedAlert) var hasClosedTrialEndedAlert
     
     static let bottomPadding: CGFloat = 0
+    
+    static var shouldShowOnboardingAccessibility: Bool {
+        let accessibilityNotGranted = AccessibilityPermissionManager.shared.accessibilityPermissionStatus != .granted
+        return accessibilityNotGranted && Defaults[.showOnboardingAccessibility]
+    }
+    
+    private var showingAlert: Bool {
+        showTwoWeekProTrialEndedAlert || appState.showFreeLimitAlert || appState.showProLimitAlert
+    }
+    
+    private var showToolbar: Bool {
+        !ContentView.shouldShowOnboardingAccessibility && appState.account != nil
+    }
     
     private var showFileImporterBinding: Binding<Bool> {
         Binding(
@@ -32,8 +45,23 @@ struct ContentView: View {
             TetheredButton()
             
             ZStack(alignment: .top) {
-                if showOnboarding {
-                    Onboarding()
+                if ContentView.shouldShowOnboardingAccessibility {
+                    VStack(spacing: 0) {
+                        if state.showChatView {
+                            OnboardingAccessibility().transition(.opacity)
+                        } else {
+                            Spacer()
+                        }
+                    }
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .background(Color.black)
+                    .onAppear {
+                        if appState.account == nil {
+                            authFlowStatus = .showSignUp
+                        } else {
+                            authFlowStatus = .hideAuth
+                        }
+                    }
                 } else if appState.account == nil {
                     AuthFlow()
                 } else {
@@ -43,9 +71,13 @@ struct ContentView: View {
                             
                             PromptDivider()
                             
-                            if state.showChatView { ChatView().transition(.opacity) }
-                            else { Spacer() }
+                            if state.showChatView {
+                                ChatView().transition(.opacity)
+                            } else {
+                                Spacer()
+                            }
                         }
+                        .allowsHitTesting(!showingAlert)
                         
                         if showTwoWeekProTrialEndedAlert {
                             TwoWeekProTrialEndedAlert()
@@ -67,7 +99,7 @@ struct ContentView: View {
         }
         .buttonStyle(PlainButtonStyle())
         .toolbar {
-            if !showOnboarding && appState.account != nil {
+            if showToolbar {
                 ToolbarItem(placement: .navigation) {
                     ToolbarLeft()
                 }

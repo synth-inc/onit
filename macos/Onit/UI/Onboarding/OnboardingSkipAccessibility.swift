@@ -9,14 +9,9 @@ import Defaults
 import SwiftUI
 
 struct OnboardingSkipAccessibility: View {
-    private var skippedAccessibility: Binding<Bool>
     private var showSkipConfirmation: Binding<Bool>
     
-    init(
-        skippedAccessibility: Binding<Bool>,
-        showSkipConfirmation: Binding<Bool>
-    ) {
-        self.skippedAccessibility = skippedAccessibility
+    init(showSkipConfirmation: Binding<Bool>) {
         self.showSkipConfirmation = showSkipConfirmation
     }
     
@@ -34,7 +29,7 @@ struct OnboardingSkipAccessibility: View {
                 Spacer()
                 Button {
                     Defaults[.authFlowStatus] = .showSignUp
-                    skippedAccessibility.wrappedValue = true
+                    Defaults[.showOnboardingAccessibility] = false
                 } label: {
                     Text("Yes, continue →")
                         .styleText(size: 13, underline: isHoveringContinueButton)
@@ -83,8 +78,5 @@ extension OnboardingSkipAccessibility {
 
 
 #Preview {
-    OnboardingSkipAccessibility(
-        skippedAccessibility: .constant(false),
-        showSkipConfirmation: .constant(true)
-    )
+    OnboardingSkipAccessibility(showSkipConfirmation: .constant(true))
 }
