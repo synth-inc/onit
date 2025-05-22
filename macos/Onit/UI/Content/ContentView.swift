@@ -69,11 +69,8 @@ struct ContentView: View {
                             
                             PromptDivider()
                             
-                            if state.showChatView {
-                                ChatView().transition(.opacity)
-                            } else {
-                                Spacer()
-                            }
+                            if state.showChatView { ChatView().transition(.opacity) }
+                            else { Spacer() }
                         }
                         
                         if showTwoWeekProTrialEndedAlert {
@@ -86,14 +83,14 @@ struct ContentView: View {
                     }
                 }
             }
-            .background(Color.black)
-            .addBorder(
-                cornerRadius: 14,
-                lineWidth: 2,
-                stroke: .gray600
-            )
-            .edgesIgnoringSafeArea(.top)
         }
+        .background(Color.black)
+        .addBorder(
+            cornerRadius: 14,
+            lineWidth: 2,
+            stroke: .gray600
+        )
+        .edgesIgnoringSafeArea(.top)
         .buttonStyle(PlainButtonStyle())
         .toolbar {
             if showToolbar {
