@@ -17,30 +17,12 @@ class AccessibilityNotificationsManager: ObservableObject {
     // MARK: - Singleton instance
 
     static let shared = AccessibilityNotificationsManager()
-    
-    // MARK: - ScreenResult
-
-    struct ScreenResult {
-        struct UserInteractions {
-            var selectedText: String?
-            var input: String?
-        }
-
-        var elapsedTime: String?
-        var applicationName: String?
-        var applicationTitle: String?
-        var userInteraction: UserInteractions = .init()
-        var others: [String: String]?
-        var errorMessage: String?  // Renamed field for error message
-    }
-
-//    @Published private(set) var userInput: AccessibilityUserInput = .empty
-//    @Published private(set) var selectedText: String?
-//    @Published private(set) var inputPosition: CGPoint?
 
     // MARK: - Properties
     
     @Published private(set) var screenResult: ScreenResult = .init()
+    @Published private(set) var userInput: AccessibilityUserInput = .empty
+    @Published private(set) var inputPosition: CGPoint?
     
     let windowsManager = AccessibilityWindowsManager()
     
@@ -448,23 +430,16 @@ class AccessibilityNotificationsManager: ObservableObject {
         // Ensure we're on the main thread
         dispatchPrecondition(condition: .onQueue(.main))
 
-        guard let value = element.value() else {
-            screenResult.userInteraction.input = nil
+        guard let userInput = getUserInput(for: element) else {
+            userInput = .empty
+            inputPosition = nil
             showDebug()
             return
         }
-//        handleExternalElement(element) { [weak self] _ in
-//            guard let userInput = self?.getUserInput(for: element) else {
-//                self?.userInput = .empty
-//                self?.inputPosition = nil
-//                self?.showDebug()
-//                return
-//            }
-//
-//            self?.userInput = userInput
-//            self?.inputPosition = element.position()
+        
+        self.userInput = userInput
+        self.inputPosition = element.position()
 
-        screenResult.userInteraction.input = value
         showDebug()
     }
 
@@ -489,9 +464,6 @@ class AccessibilityNotificationsManager: ObservableObject {
             PanelStateCoordinator.shared.state.pendingInput = nil
             return
         }
-
-        
-        screenResult.userInteraction.selectedText = selectedText
         
         let input = Input(selectedText: selectedText, application: currentSource ?? "")
         PanelStateCoordinator.shared.state.pendingInput = input
@@ -532,9 +504,6 @@ class AccessibilityNotificationsManager: ObservableObject {
         let precedingText = String(fullText.prefix(cursorPosition))
         let followingText = String(fullText.dropFirst(cursorPosition))
         
-        // TODO: KNA - Check if it works
-        selectedText = selectedTextValue as? String
-        
         return AccessibilityUserInput(
             fullText: fullText,
             precedingText: precedingText,
@@ -556,6 +525,7 @@ class AccessibilityNotificationsManager: ObservableObject {
             Application Title: \(screenResult.applicationTitle ?? "N/A")
 
             User Input: \(userInput)
+            User Input position: \(inputPosition ?? .zero)
 
             Error Message: \(screenResult.errorMessage ?? "N/A")
 

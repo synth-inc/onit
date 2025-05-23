@@ -47,9 +47,7 @@ extension AXUIElement {
         return pid.getWindows().first?.role() == "AXScrollArea"
     }
     
-    // MARK: - Private functions
-    
-    private func position() -> CGPoint? {
+    func position() -> CGPoint? {
         let position = self.attribute(forAttribute: kAXPositionAttribute as CFString)
         if let position = position {
             var cgPoint = CGPoint()
@@ -59,6 +57,8 @@ extension AXUIElement {
             return nil
         }
     }
+    
+    // MARK: - Private functions
     
     private func size() -> CGSize? {
         let size = self.attribute(forAttribute: kAXSizeAttribute as CFString)

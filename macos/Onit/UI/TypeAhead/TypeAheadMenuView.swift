@@ -10,7 +10,7 @@ import KeyboardShortcuts
 import SwiftUI
 
 struct TypeAheadMenuView: View {
-    @Environment(\.model) var model
+    @Environment(\.appState) var appState
     @Environment(\.openSettings) var openSettings
     @Default(.typeaheadConfig) var typeaheadConfig
     
@@ -45,7 +45,7 @@ struct TypeAheadMenuView: View {
         .padding(8)
         .background {
             RoundedRectangle(cornerRadius: 12)
-                .fill(Color(rgba: 0x16171AF2))
+                .fill(.typeAheadMenuBG)
                 .stroke(.gray500)
         }
     }
@@ -71,10 +71,20 @@ struct TypeAheadMenuView: View {
     }
     
     private func viewContextAction() {
-        let screenResult = AccessibilityNotificationsManager.shared.screenResult
-        let item = Context.auto(screenResult.applicationName ?? "", screenResult.others ?? [:])
+        let manager = AccessibilityNotificationsManager.shared
+        guard let trackedScreen = manager.windowsManager.activeTrackedWindow else { return }
         
-        model.showAutoContextWindow(context: item)
+        let screenResult = manager.screenResult
+        let autocontext = AutoContext(appName: screenResult.applicationName ?? "",
+                                      appHash: trackedScreen.hash,
+                                      appTitle: screenResult.applicationTitle ?? "",
+                                      appContent: screenResult.others ?? [:])
+        let item = Context.auto(autocontext)
+        
+        ContextWindowsManager.shared.showContextWindow(
+            context: item,
+            pendingContextList: [], // We cannot access the panelState
+        )
         globalState.showMenu = false
     }
     
@@ -95,7 +105,7 @@ struct TypeAheadMenuView: View {
     }
     
     private func advancedSettingsAction() {
-        model.setSettingsTab(tab: .accessibility)
+        appState.setSettingsTab(tab: .typeahead)
         openSettings()
         globalState.showMenu = false
     }

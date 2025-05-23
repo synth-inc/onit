@@ -18,13 +18,22 @@ import SwiftData
 @MainActor
 @Observable
 class TypeaheadLearningService {
-    static let shared = TypeaheadLearningService()
-    private var modelContext: ModelContext?
     
-    func initialize(with container: ModelContainer) {
-        self.modelContext = ModelContext(container)
+    // MARK: - Singleton instance
+    
+    static let shared = TypeaheadLearningService()
+    
+    // MARK: - Properties
+    
+    private let modelContext = ModelContext(SwiftDataContainer.appContainer)
+    
+    // MARK: - Private initializer
+    
+    private init() {
         startCollecting()
     }
+    
+    // MARK: - Functions
     
     private func startCollecting() {
         Task { @MainActor in
@@ -41,7 +50,6 @@ class TypeaheadLearningService {
     
     func saveCase(input: AccessibilityUserInput, screenResult: ScreenResult) async {
         guard Defaults[.typeaheadLearningConfig].isEnabled,
-              let modelContext = modelContext,
               !input.fullText.isEmpty,
               let descriptor = getFetchDescriptor(input: input, screenResult: screenResult)
         else { return }
@@ -74,7 +82,6 @@ class TypeaheadLearningService {
     
     func updateCase(with aiCompletion: String, input: AccessibilityUserInput, screenResult: ScreenResult) async {
         guard Defaults[.typeaheadLearningConfig].isEnabled,
-              let modelContext = modelContext,
               !input.fullText.isEmpty,
               let descriptor = getFetchDescriptor(input: input, screenResult: screenResult)
         else { return }
@@ -102,8 +109,7 @@ class TypeaheadLearningService {
     }
     
     func getCases(limit: Int? = nil) async throws -> [TypeaheadCase] {
-        guard Defaults[.typeaheadLearningConfig].isEnabled,
-              let modelContext = modelContext
+        guard Defaults[.typeaheadLearningConfig].isEnabled
         else { return [] }
         
         var descriptor = FetchDescriptor<TypeaheadCase>(
@@ -120,7 +126,6 @@ class TypeaheadLearningService {
         screenResult: ScreenResult
     ) async -> [TypeaheadExample] {
         guard Defaults[.typeaheadLearningConfig].isEnabled,
-              let modelContext = modelContext,
               let descriptor = getFetchDescriptor(input: input, screenResult: screenResult)
         else { return [] }
         

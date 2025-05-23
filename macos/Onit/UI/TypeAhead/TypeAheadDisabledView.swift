@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct TypeAheadDisabledView: View {
-    @Environment(\.model) var model
+    @Environment(\.appState) var appState
     @Environment(\.openSettings) var openSettings
     
     let reason: String
@@ -22,7 +22,7 @@ struct TypeAheadDisabledView: View {
             Text(reason)
                 .font(.system(size: 12, weight: .medium))
             Button {
-                model.setSettingsTab(tab: .accessibility)
+                appState.setSettingsTab(tab: .typeahead)
                 openSettings()
             } label: {
                 Image(.settingsCog)

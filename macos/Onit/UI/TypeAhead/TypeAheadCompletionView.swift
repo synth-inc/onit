@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct TypeAheadCompletionView: View {
-    @Environment(\.model) var model
+    @Environment(\.appState) var appState
     @Environment(\.openSettings) var openSettings
     
     @State private var contentHeight: CGFloat = 0
@@ -58,7 +58,7 @@ struct TypeAheadCompletionView: View {
             if let error = globalState.error {
                 if error == .noModelConfigured {
                     Button {
-                        model.setSettingsTab(tab: .accessibility)
+                        appState.setSettingsTab(tab: .typeahead)
                         openSettings()
                     } label: {
                         HStack {

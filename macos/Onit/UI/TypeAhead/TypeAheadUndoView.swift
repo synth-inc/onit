@@ -9,7 +9,7 @@ import KeyboardShortcuts
 import SwiftUI
 
 struct TypeAheadUndoView: View {
-    @Environment(\.model) var model
+    @Environment(\.appState) var appState
     @Environment(\.openSettings) var openSettings
     
     private var shortcut: KeyboardShortcut? {
@@ -30,7 +30,7 @@ struct TypeAheadUndoView: View {
                 .foregroundStyle(.white)
                 .background(RoundedRectangle(cornerRadius: 6).fill(.gray400))
             Button {
-                model.setSettingsTab(tab: .accessibility)
+                appState.setSettingsTab(tab: .typeahead)
                 openSettings()
             } label: {
                 Image(.settingsCog)

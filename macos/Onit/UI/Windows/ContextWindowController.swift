@@ -20,7 +20,7 @@ class ContextWindowController: NSObject, NSWindowDelegate {
 
     // MARK: - Initializers
 
-    init?(windowState: OnitPanelState, context: Context) {
+    init?(context: Context, pendingContextList: [Context]) {
         var title: String
         
         switch context {
@@ -33,7 +33,6 @@ class ContextWindowController: NSObject, NSWindowDelegate {
             self.webFileContents = "Contents for \(websiteUrlDomain) are still loading."
             
             let websiteContentsUnavailableText = "Website contents not available."
-            let pendingContextList = windowState.getPendingContextList()
             
             let webContextItemIndex = getWebContextItemIndex(
                 pendingContextList: pendingContextList,

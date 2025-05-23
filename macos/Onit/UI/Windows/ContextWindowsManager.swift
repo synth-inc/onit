@@ -20,14 +20,16 @@ class ContextWindowsManager {
     
     /**
      * Display the AutoContext's window
-     * - parameter context: `Context` with `.auto` type
+     * - parameter context: `Context` with `.auto` or `.web` type
+     * - parameter pendingContextList: Array of `Context` added by the user in `OnitPanelState`
      */
-    func showContextWindow(windowState: OnitPanelState, context: Context) {
+    func showContextWindow(context: Context, pendingContextList: [Context]) {
         if let controller = contextWindowControllers[context] {
             controller.bringToFront()
         } else {
-            guard let controller = ContextWindowController(windowState: windowState, context: context) else {
-                /** Skip when context isn't `.auto` */
+            guard let controller = ContextWindowController(context: context,
+                                                           pendingContextList: pendingContextList) else {
+                /** Skip when context isn't `.auto` or `.web` */
                 return
             }
 
