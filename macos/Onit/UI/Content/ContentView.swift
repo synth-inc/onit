@@ -13,6 +13,7 @@ struct ContentView: View {
     @Environment(\.windowState) private var state
     
     @ObservedObject private var accessibilityPermissionManager = AccessibilityPermissionManager.shared
+    @Namespace private var animation
     
     @Default(.panelWidth) var panelWidth
     @Default(.authFlowStatus) var authFlowStatus
@@ -38,48 +39,76 @@ struct ContentView: View {
         )
     }
 
+    // MARK: - Private Functions
+    
+    @ViewBuilder
+    private func alertView<Content: View>(
+        isPresented: Bool,
+        id: String,
+        content: Content
+    ) -> some View {
+        if isPresented {
+            content
+                .transition(.scale(scale: 0.8).combined(with: .opacity))
+                .matchedGeometryEffect(id: id, in: animation)
+        }
+    }
+    
     var body: some View {
-        HStack(spacing: -TetheredButton.width / 2) {
-            TetheredButton()
-            
-            ZStack(alignment: .top) {
-                if shouldShowOnboardingAccessibility {
+        ZStack(alignment: .top) {
+            if shouldShowOnboardingAccessibility {
+                VStack(spacing: 0) {
+                    if state.showChatView {
+                        OnboardingAccessibility().transition(.opacity)
+                    } else {
+                        Spacer()
+                    }
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .background(Color.black)
+                .onAppear {
+                    if appState.account == nil {
+                        authFlowStatus = .showSignUp
+                    } else {
+                        authFlowStatus = .hideAuth
+                    }
+                }
+            } else if appState.account == nil {
+                AuthFlow()
+            } else {
+                ZStack {
                     VStack(spacing: 0) {
-                        if state.showChatView {
-                            OnboardingAccessibility().transition(.opacity)
-                        } else {
-                            Spacer()
-                        }
-                    }
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .background(Color.black)
-                    .onAppear {
-                        if appState.account == nil {
-                            authFlowStatus = .showSignUp
-                        } else {
-                            authFlowStatus = .hideAuth
-                        }
-                    }
-                } else if appState.account == nil {
-                    AuthFlow()
-                } else {
-                    ZStack {
-                        VStack(spacing: 0) {
-                            Spacer().frame(height: 38)
-                            
-                            PromptDivider()
-                            
-                            if state.showChatView { ChatView().transition(.opacity) }
-                            else { Spacer() }
-                        }
+                        Spacer().frame(height: 38)
                         
-                        if showTwoWeekProTrialEndedAlert {
-                            TwoWeekProTrialEndedAlert()
-                        } else if appState.showFreeLimitAlert {
-                            FreeLimitAlert()
-                        } else if appState.showProLimitAlert {
-                            ProLimitAlert()
+                        PromptDivider()
+                        
+                        if state.showChatView { ChatView().transition(.opacity) }
+                        else { Spacer() }
+                    }
+                    
+                    if state.showChatView {
+                        ZStack {
+                            alertView(
+                                isPresented: showTwoWeekProTrialEndedAlert,
+                                id: "trial_ended_alert",
+                                content: TwoWeekProTrialEndedAlert()
+                            )
+                            
+                            alertView(
+                                isPresented: appState.showFreeLimitAlert,
+                                id: "free_limit_alert",
+                                content: FreeLimitAlert()
+                            )
+                            
+                            alertView(
+                                isPresented: appState.showProLimitAlert,
+                                id: "pro_limit_alert",
+                                content: ProLimitAlert()
+                            )
                         }
+                        .animation(.spring(response: 0.3, dampingFraction: 0.8), value: showTwoWeekProTrialEndedAlert)
+                        .animation(.spring(response: 0.3, dampingFraction: 0.8), value: appState.showFreeLimitAlert)
+                        .animation(.spring(response: 0.3, dampingFraction: 0.8), value: appState.showProLimitAlert)
                     }
                 }
             }
