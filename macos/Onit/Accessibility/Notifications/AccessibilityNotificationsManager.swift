@@ -39,6 +39,10 @@ class AccessibilityNotificationsManager: ObservableObject {
     private var timedOutWindowHash: Set<UInt> = []  // Track window's hash that have timed out
     
     private var lastActiveWindowPid: pid_t?
+    
+#if DEBUG
+    var screenResultsByDate: [Date: ScreenResult] = [:]
+#endif
 
     // MARK: - Private initializer
 
@@ -113,6 +117,10 @@ class AccessibilityNotificationsManager: ObservableObject {
         if let mainWindow = processID.firstMainWindow {
             handleWindowBounds(for: mainWindow, elementPid: processID)
         }
+        
+        #if DEBUG
+        retrieveWindowContent(for: processID)
+        #endif
     }
     
     private func handleAppDeactivation(appName: String?, processID: pid_t) {
@@ -420,6 +428,18 @@ class AccessibilityNotificationsManager: ObservableObject {
         self.screenResult.others = results
         self.screenResult.errorMessage = nil
         self.showDebug()
+        
+        #if DEBUG
+        screenResultsByDate[Date()] = screenResult
+        
+        // Keep only the 5 most recent entries
+        if screenResultsByDate.count > 5 {
+            let sortedDates = screenResultsByDate.keys.sorted()
+            if let oldestDate = sortedDates.first {
+                screenResultsByDate.removeValue(forKey: oldestDate)
+            }
+        }
+        #endif
         
         state.addAutoContext()
     }
