@@ -33,7 +33,6 @@ struct WebSearchButton: View {
     }
     
     private var webSearchButtonHelpText: String {
-        @Default(.isTavilyAPITokenValidated) var isTavilyAPITokenValidated
         if !isTavilyAPITokenValidated {
             return "Add a Tavily API key in Settings > Web Search to enable web search"
         }
