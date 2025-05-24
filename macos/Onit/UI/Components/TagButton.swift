@@ -111,7 +111,7 @@ struct TagButton: View {
             hoverBackground: setHoverBackground(),
             cornerRadius: 4,
             isHovered: $isHovered,
-            isPressed: $isPressed,
+            isPressed: $isPressed
         )
         .allowsHitTesting(action != nil)
     }
