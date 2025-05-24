@@ -34,30 +34,6 @@ struct ToolbarRight: View {
         EmptyView()
     }
 
-    // Helper function to create a picker for models
-    private func createModelPicker<T: Hashable>(
-        title: String,
-        selection: Binding<T?>,
-        models: [T],
-        currentModel: T?
-    ) -> some View {
-        Picker(title, selection: selection) {
-            ForEach(models, id: \.self) { model in
-                HStack {
-                    Text("\(model)")
-                    Spacer()
-                    if model == currentModel {
-                        Text("default")
-                            .italic()
-                            .foregroundStyle(.gray400)
-                    }
-                }
-                .tag(model as T?)
-            }
-        }
-        .pickerStyle(.inline)
-    }
-
     func toggleMode() {
         let oldMode = mode
         

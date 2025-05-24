@@ -8,6 +8,7 @@
 import AuthenticationServices
 import SwiftUI
 
+// Unused as we need to sign the app with Apple's validation
 struct OnboardingAuthApple: View {
     private let handleLogin: (LoginResponse) -> Void
     private let errorMessageAuth: Binding<String>

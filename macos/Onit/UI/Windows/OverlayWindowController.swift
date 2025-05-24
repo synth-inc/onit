@@ -55,18 +55,18 @@ class OverlayWindowController<Content: View>: NSObject, NSWindowDelegate {
             .leftMouseDown, .rightMouseDown,
         ]) {
             [weak self] event in
-            self?.handleMouseDownOutside(event)
+            self?.handleMouseDownOutside()
         }
 
         localEventMonitor = NSEvent.addLocalMonitorForEvents(matching: [
             .leftMouseDown, .rightMouseDown,
         ]) { [weak self] event in
-            self?.handleMouseDownOutside(event)
+            self?.handleMouseDownOutside()
             return event
         }
     }
 
-    func handleMouseDownOutside(_ event: NSEvent) {
+    func handleMouseDownOutside() {
         guard let overlayWindow = overlayWindow else { return }
 
         let clickLocation = NSEvent.mouseLocation

@@ -20,16 +20,6 @@ struct TokenValidationState {
             return false
         }
 
-        var isValid: Bool {
-            if case .valid = self { return true }
-            return false
-        }
-
-        var error: Error? {
-            if case .invalid(let error) = self { return error }
-            return nil
-        }
-
         static func == (lhs: Self, rhs: Self) -> Bool {
             switch (lhs, rhs) {
             case (.notValidated, .notValidated): return true

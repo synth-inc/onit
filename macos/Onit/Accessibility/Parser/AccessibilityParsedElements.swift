@@ -15,6 +15,5 @@ struct AccessibilityParsedElements {
 
     struct Xcode {
         static let editor = "editor"
-        static let console = "console"
     }
 }

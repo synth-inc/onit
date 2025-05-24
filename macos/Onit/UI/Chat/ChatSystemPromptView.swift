@@ -19,17 +19,6 @@ struct ChatSystemPromptView: View {
     private let infoSecondLinePrefix = "To change system prompt, "
     private let infoClickableText = "start a new chat->"
     
-    private var infoAttributedString: AttributedString {
-        var attributedString = AttributedString(infoFirstLine + "\n" + infoSecondLinePrefix + infoClickableText)
-
-        if let range = attributedString.range(of: infoClickableText) {
-            attributedString[range].foregroundColor = .blue300
-            attributedString[range].underlineStyle = .single
-        }
-        
-        return attributedString
-    }
-    
     var body: some View {
         VStack(alignment: .leading) {
             Button {

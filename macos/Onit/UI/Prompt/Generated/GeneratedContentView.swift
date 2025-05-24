@@ -19,12 +19,6 @@ struct GeneratedContentView: View {
 
     var prompt: Prompt
     
-    var isPartial: Bool {
-        let response = prompt.sortedResponses[prompt.generationIndex]
-        
-        return response.isPartial
-    }
-    
     var textToRead: String {
         let response = prompt.sortedResponses[prompt.generationIndex]
         

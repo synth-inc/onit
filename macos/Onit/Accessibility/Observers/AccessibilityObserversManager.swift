@@ -177,7 +177,7 @@ class AccessibilityObserversManager {
                 let userInfo: [String: Any] = (userInfo as? [String: Any]) ?? [:]
                 
                 accessibilityInstance.handleAccessibilityNotifications(
-                    notification as String, element: element, info: userInfo, observer: observer)
+                    notification as String, element: element, info: userInfo)
             }
         }
 
@@ -305,7 +305,7 @@ class AccessibilityObserversManager {
     // MARK: - Notifications handling
     
     private func handleAccessibilityNotifications(
-        _ notification: String, element: AXUIElement, info: [String: Any], observer: AXObserver
+        _ notification: String, element: AXUIElement, info: [String: Any]
     ) {
         log.info("Notification received: \(notification)")
         if let elementPid = element.pid() {

@@ -25,7 +25,7 @@ class GlobalDragManager: ObservableObject {
         globalMonitor = NSEvent.addGlobalMonitorForEvents(matching: [.leftMouseDragged, .leftMouseUp]) { [weak self] event in
             switch event.type {
             case .leftMouseDragged:
-                self?.handleMouseDragged(event)
+                self?.handleMouseDragged()
             case .leftMouseUp:
                 self?.handleMouseUp()
             default:
@@ -44,7 +44,7 @@ class GlobalDragManager: ObservableObject {
     
     // MARK: - Private functions
     
-    private func handleMouseDragged(_ event: NSEvent) {
+    private func handleMouseDragged() {
         if !isDragging {
             isDragging = true
         }

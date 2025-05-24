@@ -23,7 +23,6 @@ struct MenuSection<Children: View>: View {
         titleIcon: ImageResource? = nil,
         titleIconColor: Color = Color.white,
         title: String = "",
-        titleChild: (any View)? = nil,
         showTopBorder: Bool = false,
         maxHeight: CGFloat = 0,
         contentTopPadding: CGFloat = 8,
