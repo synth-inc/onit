@@ -17,7 +17,6 @@ struct CustomProviderRow: View {
 
     @State private var searchText: String = ""
     @State private var loading = false
-    @State private var validated = false
     @State private var errorMessage: String?
     @State private var showAlert = false
     @State private var showAdvanced: Bool = false
@@ -114,15 +113,20 @@ struct CustomProviderRow: View {
                 Task {
                     loading = true
                     do {
-                        try await provider.fetchModels()
-                        validated = true
+                        await TokenValidationManager.shared.validateToken(provider: .custom, token: provider.token)
+                        if provider.isTokenValidated {
+                            errorMessage = nil
+                        } else {
+                            errorMessage = "Failed to validate token"
+                        }
                     } catch {
-                        errorMessage = "Failed to fetch models: \(error.localizedDescription)"
+                        errorMessage = "Failed to validate token: \(error.localizedDescription)"
+                        provider.isTokenValidated = false
                     }
                     loading = false
                 }
             } label: {
-                if validated {
+                if provider.isTokenValidated {
                     Text("Verified")
                 } else {
                     if loading {

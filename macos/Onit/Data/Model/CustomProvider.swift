@@ -10,6 +10,7 @@ class CustomProvider: Codable, Identifiable, Defaults.Serializable {
     var token: String
     var models: [AIModel]
     var isEnabled: Bool
+    var isTokenValidated: Bool
 
     init(name: String, baseURL: String, token: String, models: [AIModel]) {
         self.name = name
@@ -17,12 +18,14 @@ class CustomProvider: Codable, Identifiable, Defaults.Serializable {
         self.token = token
         self.models = models
         self.isEnabled = true
+        self.isTokenValidated = false
     }
 
     static func == (lhs: CustomProvider, rhs: CustomProvider) -> Bool {
         return lhs.name == rhs.name && lhs.baseURL == rhs.baseURL
             && lhs.token == rhs.token && lhs.models == rhs.models
             && lhs.isEnabled == rhs.isEnabled
+            && lhs.isTokenValidated == rhs.isTokenValidated
     }
 
     @MainActor

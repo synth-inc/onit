@@ -62,10 +62,10 @@ class TokenValidationManager {
             case .custom:
                 // For custom providers, we'll validate by trying to fetch the models list
                 if let customProviderName = Defaults[.remoteModel]?.customProviderName,
-                    let customProvider = Defaults[.availableCustomProviders].first(where: {
-                        $0.name == customProviderName
-                    }),
-                    let url = URL(string: customProvider.baseURL)
+                   let customProvider = Defaults[.availableCustomProviders].first(where: {
+                       $0.name == customProviderName
+                   }),
+                   let url = URL(string: customProvider.baseURL)
                 {
                     let endpoint = CustomModelsEndpoint(baseURL: url, token: token)
                     _ = try await FetchingClient().execute(endpoint)
@@ -107,7 +107,14 @@ class TokenValidationManager {
         case .perplexity:
             Defaults[.isPerplexityTokenValidated] = isValid
         case .custom:
-            break
+            if let customProviderName = Defaults[.remoteModel]?.customProviderName,
+               let customProvider = Defaults[.availableCustomProviders].first(where: { $0.name == customProviderName }) {
+                var updatedProvider = customProvider
+                updatedProvider.isTokenValidated = isValid
+                if let index = Defaults[.availableCustomProviders].firstIndex(where: { $0.name == customProviderName }) {
+                    Defaults[.availableCustomProviders][index] = updatedProvider
+                }
+            }
         }
     }
 
@@ -127,6 +134,11 @@ class TokenValidationManager {
             case .perplexity:
                 return Defaults[.isPerplexityTokenValidated] ? Defaults[.perplexityToken] : nil
             case .custom:
+                if let customProviderName = model?.customProviderName,
+                   let customProvider = Defaults[.availableCustomProviders].first(where: { $0.name == customProviderName }),
+                   customProvider.isTokenValidated {
+                    return customProvider.token
+                }
                 return nil
             }
         }
