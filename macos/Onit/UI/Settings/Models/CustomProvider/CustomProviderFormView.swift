@@ -84,6 +84,7 @@ struct CustomProviderFormView: View {
                 try await provider.fetchModels()
 
                 // If the above doesn't crash, we're good!
+                provider.isTokenValidated = true
                 availableCustomProviders.append(provider)
                 availableRemoteModels.append(contentsOf: provider.models)
                 DispatchQueue.main.async {
