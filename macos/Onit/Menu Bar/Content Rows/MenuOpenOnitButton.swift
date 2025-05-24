@@ -9,11 +9,6 @@ import SwiftUI
 import KeyboardShortcuts
 
 struct MenuOpenOnitButton: View {
-    
-    var shortcut: KeyboardShortcut {
-        .init(.space, modifiers: [.option, .command])
-    }
-
     var body: some View {
         MenuBarRow {
             PanelStateCoordinator.shared.launchPanel()

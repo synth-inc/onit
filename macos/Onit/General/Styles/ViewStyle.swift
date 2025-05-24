@@ -70,10 +70,6 @@ extension View {
     ) -> some View {
         self.shadow(color: color, radius: radius, x: x, y: y)
     }
-    
-    func preventInteraction() -> some View {
-        self.allowsHitTesting(false)
-    }
 }
 
 // MARK: - Text Styles

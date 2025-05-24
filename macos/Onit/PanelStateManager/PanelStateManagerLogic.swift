@@ -14,8 +14,6 @@ protocol PanelStateManagerLogic {
     var defaultState: OnitPanelState { get }
     var state: OnitPanelState { get set }
     var states: [OnitPanelState] { get set }
-    var tetherButtonPanelState: OnitPanelState? { get set }
-    var tetherHintDetails: TetherHintDetails { get set }
     
     // MARK: - Functions
     

@@ -45,14 +45,7 @@ extension Defaults.Keys {
     static let streamResponse = Key<StreamResponseConfig>("streamResponse", default: StreamResponseConfig.default)
 
     // Dialogs closed
-    static let closedRemote = Key<Bool>("closedRemote", default: false)
     static let closedLocal = Key<Bool>("closedLocal", default: false)
-    static let closedOpenAI = Key<Bool>("closedOpenAI", default: false)
-    static let closedAnthropic = Key<Bool>("closedAnthropic", default: false)
-    static let closedXAI = Key<Bool>("closedXAI", default: false)
-    static let closedGoogleAI = Key<Bool>("closedGoogleAI", default: false)
-    static let closedDeepSeek = Key<Bool>("closedDeepSeek", default: false)
-    static let closedPerplexity = Key<Bool>("closedPerplexity", default: false)
     static let closedNoLocalModels = Key<Bool>("closedNoLocalModels", default: false)
     static let closedNoRemoteModels = Key<Bool>("closedNoRemoteModels", default: false)
     static let closedNewRemoteData = Key<Data>("closedNewRemoteData", default: Data())

@@ -21,11 +21,6 @@ struct Tooltip {
         self.prompt = prompt
         self.shortcut = shortcut
     }
-
-    init(prompt: String, shortcut: KeyboardShortcuts.Name) {
-        self.prompt = prompt
-        self.shortcut = .keyboardShortcuts(shortcut)
-    }
 }
 
 extension Tooltip {

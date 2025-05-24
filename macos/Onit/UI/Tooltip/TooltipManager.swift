@@ -17,10 +17,7 @@ class TooltipManager {
     // MARK: - Properties
     
     var tooltipWindow: NSWindow?
-    var tooltip: Tooltip?
     var tooltipTask: Task<Void, Never>?
-    var tooltipWidth: CGFloat = 0
-    var tooltipHeight: CGFloat = 0
     var isTooltipActive = false
     
     // MARK: - Functions
@@ -110,20 +107,6 @@ class TooltipManager {
         tooltipWindow.setFrameOrigin(globalTooltipOrigin)
     }
 
-    func convertRectToScreen(rect: CGRect, from view: NSView) -> CGRect {
-        guard let window = view.window else {
-            return rect
-        }
-
-        // Convert rect from view coordinates to window coordinates
-        let windowRect = view.convert(rect, to: nil)
-
-        // Convert rect from window coordinates to screen coordinates
-        let screenRect = window.convertToScreen(windowRect)
-
-        return screenRect
-    }
-
     func showWindowWithoutAnimation() {
         guard let tooltipWindow = self.tooltipWindow else { return }
         tooltipWindow.alphaValue = 1.0
@@ -149,36 +132,6 @@ class TooltipManager {
         guard let tooltipWindow = self.tooltipWindow else { return }
         tooltipWindow.orderOut(nil)
         tooltipWindow.alphaValue = 1.0
-    }
-
-    func showWindowWithAnimation() {
-        guard let tooltipWindow = self.tooltipWindow else { return }
-
-        tooltipWindow.contentView?.wantsLayer = true
-        guard let layer = tooltipWindow.contentView?.layer else { return }
-
-        let oldFrame = layer.frame
-        layer.anchorPoint = CGPoint(x: 0.5, y: 0.5)
-        layer.frame = oldFrame  // Reset frame to keep the layer in the same place
-
-        // Set initial state
-        tooltipWindow.alphaValue = 0.0
-        tooltipWindow.orderFront(nil)
-
-        NSAnimationContext.runAnimationGroup { context in
-            context.duration = 0.3  // Adjust duration as needed
-            context.timingFunction = CAMediaTimingFunction(name: .easeOut)
-            tooltipWindow.animator().alphaValue = 1.0
-        }
-
-        let scaleAnimation = CABasicAnimation(keyPath: "transform.scale")
-        scaleAnimation.fromValue = 0.95
-        scaleAnimation.toValue = 1.0
-        scaleAnimation.duration = 0.3  // Match duration with alphaValue animation
-        scaleAnimation.timingFunction = CAMediaTimingFunction(name: .easeOut)
-
-        layer.add(scaleAnimation, forKey: "scaleUp")
-        layer.transform = CATransform3DIdentity
     }
 
     func setupTooltip(_ tooltip: Tooltip) {

@@ -3,7 +3,6 @@ import Defaults
 
 struct DebugModeTab: View {
     @ObservedObject private var debugManager = DebugManager.shared
-    @ObservedObject private var featureFlagsManager = FeatureFlagManager.shared
 
     var body: some View {
         VStack(spacing: 25) {

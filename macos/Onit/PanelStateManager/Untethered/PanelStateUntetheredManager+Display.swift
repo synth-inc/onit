@@ -85,8 +85,7 @@ extension PanelStateUntetheredManager {
     private func animateExit(
         state: OnitPanelState,
         panel: OnitPanel,
-        toPanel: CGRect,
-        steps: Int = 10
+        toPanel: CGRect
     ) {
         guard !panel.isAnimating, panel.frame != toPanel else { return }
         

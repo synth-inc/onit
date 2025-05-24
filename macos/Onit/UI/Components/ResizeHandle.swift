@@ -23,7 +23,6 @@ struct NonDraggableNSView: NSViewRepresentable {
 }
 
 struct ResizeHandle: View {
-    static let size: CGFloat = 24
     var onDrag: (CGFloat) -> Void
     var onDragEnded: (() -> Void)?
     

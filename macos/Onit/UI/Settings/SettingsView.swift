@@ -5,7 +5,6 @@ import Defaults
 struct SettingsView: View {
     @Environment(\.appState) var appState
     @ObservedObject private var accessibilityPermissionManager = AccessibilityPermissionManager.shared
-    @ObservedObject private var featureFlagsManager = FeatureFlagManager.shared
 
     var body: some View {
         TabView(
@@ -63,12 +62,6 @@ struct SettingsView: View {
                         Label("Debug", systemImage: "wrench.and.screwdriver")
                     }
                     .tag(SettingsTab.debug)
-            
-//                AccountTab()
-//                    .tabItem {
-//                        Label("Account", systemImage: "person.crop.circle")
-//                    }
-//                    .tag(SettingsTab.account)
             #endif
 
             AboutTab()

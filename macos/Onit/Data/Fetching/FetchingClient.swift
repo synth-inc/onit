@@ -10,7 +10,6 @@ import Foundation
 import UniformTypeIdentifiers
 
 actor FetchingClient {
-    let session = URLSession.shared
     let encoder = JSONEncoder()
     let decoder = {
         let decoder = JSONDecoder()

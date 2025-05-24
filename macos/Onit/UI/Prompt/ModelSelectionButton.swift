@@ -9,9 +9,6 @@ import Defaults
 import SwiftUI
 
 struct ModelSelectionButton: View {
-    @Environment(\.windowState) private var state
-    @Environment(\.appState) private var appState
-    
     @Default(.mode) var mode
     @Default(.remoteModel) var remoteModel
     @Default(.localModel) var localModel

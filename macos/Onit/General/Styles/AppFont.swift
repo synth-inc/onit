@@ -74,25 +74,6 @@ enum AppFont {
         }
     }
 
-    private var originalPointSize: CGFloat {
-        switch self {
-        case .medium10:
-            return 10
-        case .medium11:
-            return 11
-        case .medium12:
-            return 12
-        case .medium13:
-            return 13
-        case .medium14:
-            return 14
-        case .medium16:
-            return 16
-        case .code:
-            return 16
-        }
-    }
-
     private var originalLineSpacing: CGFloat {
         switch self {
         case .medium10:

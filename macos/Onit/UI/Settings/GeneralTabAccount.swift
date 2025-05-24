@@ -10,7 +10,6 @@ import SwiftUI
 
 struct GeneralTabAccount: View {
     @Environment(\.appState) var appState
-    @Environment(\.openWindow) private var openWindow
     
     @Default(.authFlowStatus) var authFlowStatus
     

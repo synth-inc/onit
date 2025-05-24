@@ -8,14 +8,6 @@ struct WebSearchResult: Identifiable, Codable {
     var rawContent: String
     var score: Double
     
-    init(title: String, url: String, content: String, rawContent: String, score: Double) {
-        self.title = title
-        self.url = url
-        self.content = content
-        self.rawContent = rawContent
-        self.score = score
-    }
-    
     // Initialize from Tavily API response
     init(from tavilyResult: [String: Any]) {
         self.title = tavilyResult["title"] as? String ?? "Unknown Title"

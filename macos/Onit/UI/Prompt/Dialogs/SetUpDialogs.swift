@@ -18,7 +18,6 @@ struct SetUpDialogs: View {
     @State private var debounceTask: DispatchWorkItem?
 
     @Default(.mode) var mode
-    @Default(.closedRemote) var closedRemote
     @Default(.closedLocal) var closedLocal
     @Default(.closedNoLocalModels) var closedNoLocalModels
     @Default(.closedNoRemoteModels) var closedNoRemoteModels
@@ -45,10 +44,6 @@ struct SetUpDialogs: View {
     }
     
     let scrollMaxHeight: CGFloat = 230
-
-    init() {
-        // resetAppStorageFlags()
-    }
 
     var body: some View {
         ScrollView(showsIndicators: false) {
@@ -251,10 +246,5 @@ struct SetUpDialogs: View {
             appState.setSettingsTab(tab: .models)
             openSettings()
         }
-    }
-
-    func resetAppStorageFlags() {
-        closedRemote = false
-        closedLocal = false
     }
 }

@@ -15,11 +15,6 @@ struct ModelSelectionView: View {
     @Default(.mode) var mode
     @Default(.localModel) var localModel
     @Default(.remoteModel) var remoteModel
-    @Default(.useOpenAI) var useOpenAI
-    @Default(.useAnthropic) var useAnthropic
-    @Default(.useXAI) var useXAI
-    @Default(.useGoogleAI) var useGoogleAI
-    @Default(.availableRemoteModels) var availableRemoteModels
     @Default(.availableLocalModels) var availableLocalModels
     
     private var open: Binding<Bool>
@@ -184,37 +179,37 @@ struct ModelSelectionView: View {
         )
     }
     
-    var custom: some View {
-        VStack(alignment: .leading, spacing: 2) {
-            HStack {
-                Text("Custom models")
-                    .appFont(.medium13)
-                    .foregroundStyle(.white.opacity(0.6))
-                Spacer()
-                if appState.remoteNeedsSetup
-                    || (!appState.remoteNeedsSetup && availableRemoteModels.isEmpty)
-                {
-                    Image(.warningSettings)
-                }
-            }
-            .padding(.horizontal, 12)
-
-            if appState.listedModels.isEmpty {
-                Button("Setup remote models") {
-                    appState.settingsTab = .models
-                    openSettings()
-                }
-                .buttonStyle(SetUpButtonStyle(showArrow: true))
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(.horizontal, 12)
-                .padding(.top, 6)
-                .padding(.bottom, 10)
-
-            } else {
-                remoteModelsView
-            }
-        }
-    }
+//    var custom: some View {
+//        VStack(alignment: .leading, spacing: 2) {
+//            HStack {
+//                Text("Custom models")
+//                    .appFont(.medium13)
+//                    .foregroundStyle(.white.opacity(0.6))
+//                Spacer()
+//                if appState.remoteNeedsSetup
+//                    || (!appState.remoteNeedsSetup && availableRemoteModels.isEmpty)
+//                {
+//                    Image(.warningSettings)
+//                }
+//            }
+//            .padding(.horizontal, 12)
+//
+//            if appState.listedModels.isEmpty {
+//                Button("Setup remote models") {
+//                    appState.settingsTab = .models
+//                    openSettings()
+//                }
+//                .buttonStyle(SetUpButtonStyle(showArrow: true))
+//                .frame(maxWidth: .infinity, alignment: .leading)
+//                .padding(.horizontal, 12)
+//                .padding(.top, 6)
+//                .padding(.bottom, 10)
+//
+//            } else {
+//                remoteModelsView
+//            }
+//        }
+//    }
 }
 
 // MARK: - Private Functions

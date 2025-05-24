@@ -9,9 +9,6 @@ import SwiftUI
 import Defaults
 
 struct MenuBarContent: View {
-    @ObservedObject private var accessibilityPermissionManager = AccessibilityPermissionManager.shared
-    @ObservedObject private var featureFlagsManager = FeatureFlagManager.shared
-
     var body: some View {
         VStack(spacing: 5) {
             MenuCheckForPermissions()

@@ -69,13 +69,13 @@ class ClipboardParser: AccessibilityParserLogic {
         return true
     }
     
-    private func deselectWithEscape() {
-        let escapeDown = CGEvent(keyboardEventSource: nil, virtualKey: CGKeyCode(53), keyDown: true)
-        let escapeUp = CGEvent(keyboardEventSource: nil, virtualKey: CGKeyCode(53), keyDown: false)
-        
-        escapeDown?.post(tap: .cghidEventTap)
-        escapeUp?.post(tap: .cghidEventTap)
-    }
+//    private func deselectWithEscape() {
+//        let escapeDown = CGEvent(keyboardEventSource: nil, virtualKey: CGKeyCode(53), keyDown: true)
+//        let escapeUp = CGEvent(keyboardEventSource: nil, virtualKey: CGKeyCode(53), keyDown: false)
+//        
+//        escapeDown?.post(tap: .cghidEventTap)
+//        escapeUp?.post(tap: .cghidEventTap)
+//    }
     
     private func deselectWithArrowKeys() {
         let leftKeyDown = CGEvent(keyboardEventSource: nil, virtualKey: CGKeyCode(123), keyDown: true)
@@ -93,25 +93,25 @@ class ClipboardParser: AccessibilityParserLogic {
         rightKeyUp?.post(tap: .cghidEventTap)
     }
     
-    private func clickAt(position: CGPoint) {
-        let mouseDown = CGEvent(
-            mouseEventSource: nil,
-            mouseType: .leftMouseDown,
-            mouseCursorPosition: position,
-            mouseButton: .left
-        )
-        
-        let mouseUp = CGEvent(
-            mouseEventSource: nil,
-            mouseType: .leftMouseUp,
-            mouseCursorPosition: position,
-            mouseButton: .left
-        )
-        
-        mouseDown?.post(tap: .cghidEventTap)
-        usleep(1000)
-        mouseUp?.post(tap: .cghidEventTap)
-    }
+//    private func clickAt(position: CGPoint) {
+//        let mouseDown = CGEvent(
+//            mouseEventSource: nil,
+//            mouseType: .leftMouseDown,
+//            mouseCursorPosition: position,
+//            mouseButton: .left
+//        )
+//        
+//        let mouseUp = CGEvent(
+//            mouseEventSource: nil,
+//            mouseType: .leftMouseUp,
+//            mouseCursorPosition: position,
+//            mouseButton: .left
+//        )
+//        
+//        mouseDown?.post(tap: .cghidEventTap)
+//        usleep(1000)
+//        mouseUp?.post(tap: .cghidEventTap)
+//    }
     
     private func readFromPasteboard() -> String {
         let pasteboard = NSPasteboard.general

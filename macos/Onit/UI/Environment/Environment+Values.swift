@@ -20,8 +20,6 @@ private struct OnitAppStateKey: @preconcurrency EnvironmentKey {
 }
 
 extension EnvironmentValues {
-    @Entry var systemPrompt: SystemPromptState = SystemPromptState()
-
     var appState: AppState {
         get { self[OnitAppStateKey.self] }
         set { self[OnitAppStateKey.self] = newValue }

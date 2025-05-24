@@ -13,9 +13,6 @@ struct TetheredButton: View {
     @Environment(\.openSettings) var openSettings
     @Environment(\.windowState) private var state
     
-    @ObservedObject private var accessibilityPermissionManager = AccessibilityPermissionManager.shared
-    @ObservedObject private var featureFlagsManager = FeatureFlagManager.shared
-    
     static let width: CGFloat = 19
     static let height: CGFloat = 53
     

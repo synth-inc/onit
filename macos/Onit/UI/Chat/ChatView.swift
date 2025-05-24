@@ -56,10 +56,6 @@ struct ChatView: View {
             
             PromptCore()
             
-            // Kept here for testing purposes. When testing, comment out `PromptCore()`.
-            // This is effectively deprecated, so it should be deleted eventually.
-//            InputBarView()
-            
             if currentPromptsCount <= 0 { Spacer() }
         }
         .drag()
