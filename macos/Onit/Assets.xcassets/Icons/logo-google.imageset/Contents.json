@@ -2,8 +2,7 @@
   "images" : [
     {
       "filename" : "logo-google.svg",
-      "idiom" : "universal",
-      "scale" : "1x"
+      "idiom" : "universal"
     }
   ],
   "info" : {

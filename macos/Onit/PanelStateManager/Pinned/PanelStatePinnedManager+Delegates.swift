@@ -43,6 +43,8 @@ extension PanelStatePinnedManager: AccessibilityNotificationsDelegate {
         
         resizeWindow(for: screen, window: window.element, windowFrameChanged: true)
     }
+    
+    func accessibilityManager(_ manager: AccessibilityNotificationsManager, didChangeWindowTitle window: TrackedWindow) {}
 }
 
 extension PanelStatePinnedManager: OnitPanelStateDelegate {

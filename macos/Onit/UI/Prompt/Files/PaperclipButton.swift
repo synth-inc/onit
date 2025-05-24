@@ -18,6 +18,17 @@ struct PaperclipButton: View {
 
     @Default(.closedAutoContextTag) var closedAutoContextTag
     
+    private let shouldShowAddContextButton: Bool
+    private let currentWindowBundleUrl: URL?
+    
+    init(
+        shouldShowAddContextButton: Bool = false,
+        currentWindowBundleUrl: URL? = nil
+    ) {
+        self.shouldShowAddContextButton = shouldShowAddContextButton
+        self.currentWindowBundleUrl = currentWindowBundleUrl
+    }
+    
     var accessibilityAutoContextEnabled: Bool {
         accessibilityPermissionManager.accessibilityPermissionStatus == .granted
     }
@@ -37,28 +48,19 @@ struct PaperclipButton: View {
             if state.pendingContextList.isEmpty {
                 if !accessibilityAutoContextEnabled && !closedAutoContextTag {
                     EnableAutocontextTag()
-                } else if accessibilityAutoContextEnabled {
-                    Button {
-                        AnalyticsManager.Chat.addContextPressed()
-                        handleAddContext()
-                    } label: {
-                        Text("Add context")
-                            .styleText(
-                                size: 13,
-                                weight: .medium,
-                                color: .gray200
-                            )
-                    }
-                } else {
-                    Button {
-                        handleAddContext()
-                    } label: {
-
-                        Text("Add context")
-                            .foregroundStyle(.gray200)
-                            .appFont(.medium13)
-
-                    }
+                }
+            }
+            
+            if shouldShowAddContextButton {
+                Button {
+                    handleAddContext()
+                } label: {
+                    Text("Add context")
+                        .styleText(
+                            size: 13,
+                            weight: .medium,
+                            color: .gray200
+                        )
                 }
             }
         }
@@ -79,7 +81,7 @@ struct PaperclipButton: View {
                 }
             }
             OverlayManager.shared.captureClickPosition()
-            let view = ContextPickerView()
+            let view = ContextPickerView(currentWindowBundleUrl: currentWindowBundleUrl)
                 .environment(\.appState, appState)
                 .environment(\.windowState, state)
             OverlayManager.shared.showOverlay(content: view)

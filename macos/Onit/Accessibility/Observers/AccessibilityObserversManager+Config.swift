@@ -19,7 +19,7 @@ extension AccessibilityObserversManager {
             kAXWindowMovedNotification,
             kAXWindowResizedNotification,
             kAXWindowCreatedNotification,
-            kAXUIElementDestroyedNotification
+            kAXUIElementDestroyedNotification,
             //            kAXFocusedUIElementChangedNotification,
             //            kAXSelectedColumnsChangedNotification,
             //            kAXSelectedRowsChangedNotification,
@@ -47,7 +47,7 @@ extension AccessibilityObserversManager {
             //            kAXSelectedChildrenChangedNotification,
             //            kAXSelectedChildrenMovedNotification,
             //            kAXSheetCreatedNotification,
-            //            kAXTitleChangedNotification, // Used
+                        kAXTitleChangedNotification, // Used
             //            kAXUIElementDestroyedNotification,
             //            kAXUnitsChangedNotification,
             //            kAXWindowCreatedNotification,

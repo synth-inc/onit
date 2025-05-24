@@ -16,4 +16,6 @@ import SwiftUI
     
     func accessibilityManager(_ manager: AccessibilityNotificationsManager, didMoveWindow window: TrackedWindow)
     func accessibilityManager(_ manager: AccessibilityNotificationsManager, didResizeWindow window: TrackedWindow)
+    
+    func accessibilityManager(_ manager: AccessibilityNotificationsManager, didChangeWindowTitle window: TrackedWindow)
 }

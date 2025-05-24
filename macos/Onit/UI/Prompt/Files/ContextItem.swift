@@ -25,25 +25,36 @@ struct ContextItem: View {
                     showContextWindow: showContextWindow,
                     removeContextItem: removeContextItem
                 )
-            case .auto:
-                TagButton(
-                    child: ContextImage(context: item),
-                    text: name,
-                    caption: item.fileType,
-                    tooltip: "View auto-context file",
-                    action: showContextWindow,
-                    closeAction: inList ? nil : { removeContextItem() },
-                    fill: inList,
-                    isTransparent: inList
-                )
+            case .auto(let autoContext):
+                if isEditing {
+                    AutoContextButton(
+                        text: name,
+                        appBundleUrl: autoContext.appBundleUrl
+                    ) {
+                        showContextWindow()
+                    } removeAction: {
+                        removeContextItem()
+                    }
+                } else {
+                    TagButton(
+                        text: name,
+                        fill: inList,
+                        isTransparent: inList,
+                        child: ContextImage(context: item),
+                        caption: item.fileType,
+                        tooltip: "View auto-context file",
+                        action: showContextWindow,
+                        closeAction: inList ? nil : { removeContextItem() }
+                    )
+                }
             default:
                 TagButton(
-                    child: ContextImage(context: item),
                     text: name,
-                    caption: item.fileType,
-                    closeAction: inList ? nil : { removeContextItem() },
                     fill: inList,
-                    isTransparent: inList
+                    isTransparent: inList,
+                    child: ContextImage(context: item),
+                    caption: item.fileType,
+                    closeAction: inList ? nil : { removeContextItem() }
                 )
             }
         }
@@ -52,7 +63,7 @@ struct ContextItem: View {
     var name: String {
         switch item {
         case .auto(let autoContext):
-            autoContext.appName
+            autoContext.appTitle
         case .file(let url), .image(let url):
             url.lastPathComponent
         case .error(_, let error):
