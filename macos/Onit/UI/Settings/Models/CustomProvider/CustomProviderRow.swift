@@ -110,20 +110,19 @@ struct CustomProviderRow: View {
                 .foregroundColor(.primary)  // Ensure placeholder text is not dimmed
 
             Button {
+                loading = true
+                
                 Task {
-                    loading = true
-                    do {
-                        await TokenValidationManager.shared.validateToken(provider: .custom, token: provider.token)
+                    await TokenValidationManager.shared.validateToken(provider: .custom, token: provider.token)
+                    
+                    DispatchQueue.main.async {
                         if provider.isTokenValidated {
                             errorMessage = nil
                         } else {
                             errorMessage = "Failed to validate token"
                         }
-                    } catch {
-                        errorMessage = "Failed to validate token: \(error.localizedDescription)"
-                        provider.isTokenValidated = false
+                        loading = false
                     }
-                    loading = false
                 }
             } label: {
                 if provider.isTokenValidated {

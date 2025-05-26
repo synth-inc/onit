@@ -108,12 +108,8 @@ class TokenValidationManager {
             Defaults[.isPerplexityTokenValidated] = isValid
         case .custom:
             if let customProviderName = Defaults[.remoteModel]?.customProviderName,
-               let customProvider = Defaults[.availableCustomProviders].first(where: { $0.name == customProviderName }) {
-                var updatedProvider = customProvider
-                updatedProvider.isTokenValidated = isValid
-                if let index = Defaults[.availableCustomProviders].firstIndex(where: { $0.name == customProviderName }) {
-                    Defaults[.availableCustomProviders][index] = updatedProvider
-                }
+               let index = Defaults[.availableCustomProviders].firstIndex(where: { $0.name == customProviderName }) {
+                Defaults[.availableCustomProviders][index].isTokenValidated = isValid
             }
         }
     }
