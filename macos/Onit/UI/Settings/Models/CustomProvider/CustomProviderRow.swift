@@ -17,8 +17,8 @@ struct CustomProviderRow: View {
 
     @State private var searchText: String = ""
     @State private var loading = false
-    @State private var validated = false
-    @State private var errorMessage: String?
+    @State private var message: String?
+    @State private var isErrorMessage: Bool = false
     @State private var showAlert = false
     @State private var showAdvanced: Bool = false
     
@@ -70,9 +70,9 @@ struct CustomProviderRow: View {
             }
 
             tokenField
-            if let errorMessage = errorMessage {
-                Text(errorMessage)
-                    .foregroundColor(.red)
+            if let message = message {
+                Text(message)
+                    .foregroundColor(isErrorMessage ? .red : .gray200)
             }
 
             if provider.isEnabled {
@@ -111,18 +111,27 @@ struct CustomProviderRow: View {
                 .foregroundColor(.primary)  // Ensure placeholder text is not dimmed
 
             Button {
+                loading = true
                 Task {
-                    loading = true
                     do {
                         try await provider.fetchModels()
-                        validated = true
+                        provider.isTokenValidated = true
                     } catch {
-                        errorMessage = "Failed to fetch models: \(error.localizedDescription)"
+                        provider.isTokenValidated = false
                     }
-                    loading = false
+                    DispatchQueue.main.async {
+                        if provider.isTokenValidated {
+                            message = "Successfully verified token!"
+                            isErrorMessage = false
+                        } else {
+                            message = "Failed to verify token."
+                            isErrorMessage = true
+                        }
+                        loading = false
+                    }
                 }
             } label: {
-                if validated {
+                if provider.isTokenValidated {
                     Text("Verified")
                 } else {
                     if loading {

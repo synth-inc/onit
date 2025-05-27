@@ -33,46 +33,34 @@ class TokenValidationManager {
                 let endpoint = OpenAIValidationEndpoint(apiKey: token)
                 _ = try await FetchingClient().execute(endpoint)
                 state.setValid(provider: provider)
-
+                
             case .anthropic:
                 let endpoint = AnthropicValidationEndpoint(apiKey: token)
                 _ = try await FetchingClient().execute(endpoint)
                 state.setValid(provider: provider)
-
+                
             case .xAI:
                 let endpoint = XAIValidationEndpoint(apiKey: token)
                 _ = try await FetchingClient().execute(endpoint)
                 state.setValid(provider: provider)
-
+                
             case .googleAI:
                 let endpoint = GoogleAIValidationEndpoint(apiKey: token)
                 _ = try await FetchingClient().execute(endpoint)
                 state.setValid(provider: provider)
-
+                
             case .deepSeek:
                 let endpoint = DeepSeekValidationEndpoint(apiKey: token)
                 _ = try await FetchingClient().execute(endpoint)
                 state.setValid(provider: provider)
-
+                
             case .perplexity:
                 let endpoint = PerplexityValidationEndpoint(apiKey: token)
                 _ = try await FetchingClient().execute(endpoint)
                 state.setValid(provider: provider)
-
+                
             case .custom:
-                // For custom providers, we'll validate by trying to fetch the models list
-                if let customProviderName = Defaults[.remoteModel]?.customProviderName,
-                    let customProvider = Defaults[.availableCustomProviders].first(where: {
-                        $0.name == customProviderName
-                    }),
-                    let url = URL(string: customProvider.baseURL)
-                {
-                    let endpoint = CustomModelsEndpoint(baseURL: url, token: token)
-                    _ = try await FetchingClient().execute(endpoint)
-                    state.setValid(provider: provider)
-                } else {
-                    throw FetchingError.invalidURL
-                }
+                throw FetchingError.invalidRequest(message: "Custom provider token validation is not supported")   
             }
             Self.setTokenIsValid(true)
         } catch let error as FetchingError {
@@ -107,7 +95,10 @@ class TokenValidationManager {
         case .perplexity:
             Defaults[.isPerplexityTokenValidated] = isValid
         case .custom:
-            break
+            if let customProviderName = Defaults[.remoteModel]?.customProviderName,
+               let index = Defaults[.availableCustomProviders].firstIndex(where: { $0.name == customProviderName }) {
+                Defaults[.availableCustomProviders][index].isTokenValidated = isValid
+            }
         }
     }
 
@@ -127,6 +118,11 @@ class TokenValidationManager {
             case .perplexity:
                 return Defaults[.isPerplexityTokenValidated] ? Defaults[.perplexityToken] : nil
             case .custom:
+                if let customProviderName = model?.customProviderName,
+                   let customProvider = Defaults[.availableCustomProviders].first(where: { $0.name == customProviderName }),
+                   customProvider.isTokenValidated {
+                    return customProvider.token
+                }
                 return nil
             }
         }
