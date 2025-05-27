@@ -17,7 +17,8 @@ struct CustomProviderRow: View {
 
     @State private var searchText: String = ""
     @State private var loading = false
-    @State private var errorMessage: String?
+    @State private var message: String?
+    @State private var isErrorMessage: Bool = false
     @State private var showAlert = false
     @State private var showAdvanced: Bool = false
     
@@ -69,9 +70,9 @@ struct CustomProviderRow: View {
             }
 
             tokenField
-            if let errorMessage = errorMessage {
-                Text(errorMessage)
-                    .foregroundColor(.red)
+            if let message = message {
+                Text(message)
+                    .foregroundColor(isErrorMessage ? .red : .gray200)
             }
 
             if provider.isEnabled {
@@ -111,15 +112,20 @@ struct CustomProviderRow: View {
 
             Button {
                 loading = true
-                
                 Task {
-                    await TokenValidationManager.shared.validateToken(provider: .custom, token: provider.token)
-                    
+                    do {
+                        try await provider.fetchModels()
+                        provider.isTokenValidated = true
+                    } catch {
+                        provider.isTokenValidated = false
+                    }
                     DispatchQueue.main.async {
                         if provider.isTokenValidated {
-                            errorMessage = nil
+                            message = "Successfully verified token!"
+                            isErrorMessage = false
                         } else {
-                            errorMessage = "Failed to validate token"
+                            message = "Failed to verify token."
+                            isErrorMessage = true
                         }
                         loading = false
                     }
