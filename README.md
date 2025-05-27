@@ -70,11 +70,11 @@ It's like Cursor Chat, but for every _other_ app on your computer - not just in 
 
  
 ## 📊 Data & Privacy
-- No server component in V1
-- Local requests are handled locally
-- Remote requests go directly to model providers' APIs
-- Auto-Context is not uploaded until you hit the 'submit' button
-- Only crash reports are collected (via Firebase) and non-personal analytics (via PostHog)
+- Local requests are handled locally.
+- When you have added your own tokens, remote requests are sent directly to the providers' APIs.
+- When you haven't added your own token, remote requests are redirected through our server. We don't store any of the details of these requests.
+- Auto-Context is not uploaded until you hit the 'submit' button.
+- Only crash reports are collected (via Firebase) and analytics (via PostHog). You can opt out of both in settings. 
 
 ## 💡 Future Roadmap
 
@@ -98,7 +98,7 @@ We are building Onit based on these core beliefs:
 
 ## 📝 License
 
-Onit V1 is released under a Creative Commons Non-Commercial license. We believe in:
+Onit is released under a Creative Commons Non-Commercial license. We believe in:
 - Open-source transparency
 - User customization freedom
 - Protection against commercial exploitation
@@ -106,14 +106,13 @@ Onit V1 is released under a Creative Commons Non-Commercial license. We believe 
 
 ## 💰 Monetization
 
-V1 is completely free. Future versions may include paid premium features, but:
+V2 offers a simple subscription that provides users with access to all the model providers we support through a single, low monthly fee. Details are [here](https://www.getonit.ai/#pricing). If you'd prefer not to use our subscription, you can still access models by adding your own API tokens. 
 
 - Local chat will always remain free
 - Source code will remain open for customization
 
   
 ## 👥 About Us
-
 
 We are Synth, Inc., a small team of developers in San Francisco building at the edge of AI progress. Past projects include:
 - [Checkbin](https://www.checkbin.dev)
