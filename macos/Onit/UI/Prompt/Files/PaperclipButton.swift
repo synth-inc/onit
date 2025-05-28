@@ -13,7 +13,6 @@ struct PaperclipButton: View {
     @Environment(\.appState) private var appState
     @Environment(\.windowState) private var state
     @ObservedObject private var accessibilityPermissionManager = AccessibilityPermissionManager.shared
-    @ObservedObject private var featureFlagsManager = FeatureFlagManager.shared
     @AppStorage("closedAutocontext") private var closedAutocontext = false
 
     @Default(.closedAutoContextTag) var closedAutoContextTag

@@ -15,8 +15,6 @@ struct ExternalTetheredButton: View {
     @Environment(\.windowState) var windowState
     @Environment(\.openSettings) var openSettings
     
-    @ObservedObject private var accessibilityPermissionManager = AccessibilityPermissionManager.shared
-    
     static let width: CGFloat = 19
     static let height: CGFloat = 53
     static let containerWidth: CGFloat = width * 2

@@ -76,24 +76,6 @@ struct AnthropicChatStreamingResponse: Codable {
             case partialJson = "partial_json"
         }
     }
-    
-    struct Message: Codable {
-        let id: String
-        let type: String
-        let role: String
-        let content: [Content]
-        let model: String
-        let stopReason: String?
-        let stopSequence: String?
-        let usage: Usage
-
-        enum CodingKeys: String, CodingKey {
-            case id, type, role, content, model
-            case stopReason = "stop_reason"
-            case stopSequence = "stop_sequence"
-            case usage
-        }
-    }
 
     struct Content: Codable {
         let type: String

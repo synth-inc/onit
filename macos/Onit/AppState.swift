@@ -43,7 +43,7 @@ class AppState: NSObject {
     private var chatGenerationLimitTask: Task<Void, Never>? = nil
     
     var subscription: Subscription?
-    var subscriptionActive: Bool { subscription?.status == "active" || subscription?.status == "trialing" }
+//    var subscriptionActive: Bool { subscription?.status == "active" || subscription?.status == "trialing" }
     
     var subscriptionCanceled: Bool {
         if let canceled = subscription?.cancelAtPeriodEnd {
@@ -468,7 +468,7 @@ class AppState: NSObject {
         return models
     }
 
-    var remoteNeedsSetup: Bool {
-        listedModels.isEmpty
-    }
+//    var remoteNeedsSetup: Bool {
+//        listedModels.isEmpty
+//    }
 }

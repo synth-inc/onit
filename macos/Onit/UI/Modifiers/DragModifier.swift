@@ -9,11 +9,7 @@ import SwiftUI
 
 struct DragModifier: ViewModifier {
     @Environment(\.windowState) private var state
-
     @State var dragging = false
-    @State private var droppedImage: NSImage = NSImage(
-        systemSymbolName: "plus", accessibilityDescription: nil)!
-    @State private var droppedFile: URL?
 
     var background: Color {
         if dragging {

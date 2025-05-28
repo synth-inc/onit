@@ -33,7 +33,6 @@ class OnitRegularPanel: NSPanel {
     var animatedFromLeft: Bool = false
     var resizedApplication: Bool = false
     var isResizing: Bool = false
-    var onitContentView: ContentView?
     var originalFrame : NSRect = .zero
     
     init(state: OnitPanelState) {

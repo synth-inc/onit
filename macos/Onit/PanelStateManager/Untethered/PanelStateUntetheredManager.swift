@@ -67,13 +67,13 @@ class PanelStateUntetheredManager: PanelStateBaseManager, ObservableObject {
         // Add global monitor to capture mouse moved events
         globalMouseMonitor = NSEvent.addGlobalMonitorForEvents(matching: .mouseMoved) { [weak self] event in
             guard let self = self else { return }
-            handleMouseMoved(event: event)
+            handleMouseMoved()
         }
 
         // Add local monitor to capture mouse moved events when the application is foregrounded
         localMouseMonitor = NSEvent.addLocalMonitorForEvents(matching: .mouseMoved) { [weak self] event in
             guard let self = self else { return event }
-            handleMouseMoved(event: event)
+            handleMouseMoved()
             return event
         }
         
@@ -139,7 +139,7 @@ class PanelStateUntetheredManager: PanelStateBaseManager, ObservableObject {
     
     // MARK: - Functions
 
-    private func handleMouseMoved(event: NSEvent) {
+    private func handleMouseMoved() {
         if let mouseScreen = NSScreen.mouse {
             if !mouseScreen.frame.equalTo(lastScreenFrame) {
                 handleActivation(of: mouseScreen)

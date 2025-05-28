@@ -1,0 +1,8 @@
+project: Onit.xcodeproj
+clean_build: true
+retain_assign_only_properties: true
+retain_objc_accessible: true
+retain_unused_protocol_func_params: true
+retain_public: true
+schemes:
+- Onit

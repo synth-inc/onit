@@ -11,8 +11,6 @@ import Defaults
 
 struct ShortcutsTab: View {
     @Default(.escapeShortcutDisabled) var escapeShortcutDisabled
-
-    @ObservedObject private var featureFlagsManager = FeatureFlagManager.shared
     
     var body: some View {
         Form {

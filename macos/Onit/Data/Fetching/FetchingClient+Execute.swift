@@ -63,84 +63,84 @@ extension FetchingClient {
         }
     }
 
-    func executeMultipart<E: Endpoint>(_ endpoint: E, files: [URL]) async throws -> E.Response {
-        let url = endpoint.baseURL.appendingPathComponent(endpoint.path)
-
-        var request = URLRequest(url: url)
-        request.httpMethod = endpoint.method.rawValue
-        if let token = endpoint.token {
-            request.addValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
-        }
-
-        let boundary = UUID().uuidString
-        request.setValue(
-            "multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
-        let body = try createMultipartBody(for: endpoint, files: files, boundary: boundary)
-
-        request.httpBody = body
-
-        let (data, response) = try await URLSession.shared.data(for: request)
-        let message = parseErrorMessage(from: data) ?? "Client error occurred."
-        guard let httpResponse = response as? HTTPURLResponse else {
-            throw FetchingError.invalidResponse(message: message)
-        }
-        try self.handle(response: httpResponse, withData: data)
-        let decodedResponse = try decoder.decode(E.Response.self, from: data)
-        return decodedResponse
-    }
-
-    private func createMultipartBody<E: Endpoint>(for endpoint: E, files: [URL], boundary: String)
-        throws -> Data
-    {
-        var body = Data()
-
-        if let requestBody = endpoint.requestBody {
-            let jsonData = try encoder.encode(requestBody)
-            if let jsonDict = try JSONSerialization.jsonObject(with: jsonData) as? [String: Any] {
-                for (key, value) in jsonDict {
-                    if let stringValue = value as? String, stringValue.isEmpty {
-                        continue
-                    } else if value is NSNull {
-                        continue
-                    }
-
-                    body.append("--\(boundary)\r\n".data(using: .utf8) ?? Data())
-                    body.append(
-                        "Content-Disposition: form-data; name=\"\(key)\"\r\n\r\n".data(using: .utf8)
-                            ?? Data())
-
-                    let valueString: String
-                    if let stringValue = value as? String {
-                        valueString = stringValue
-                    } else if let boolValue = value as? Bool {
-                        valueString = boolValue ? "true" : "false"
-                    } else {
-                        let valueData = try JSONSerialization.data(withJSONObject: value)
-                        valueString = String(data: valueData, encoding: .utf8) ?? ""
-                    }
-
-                    body.append(valueString.data(using: .utf8) ?? Data())
-                    body.append("\r\n".data(using: .utf8) ?? Data())
-                }
-            }
-        }
-
-        for fileURL in files {
-            let fileName = fileURL.lastPathComponent
-            let fileData = try Data(contentsOf: fileURL)
-            body.append("--\(boundary)\r\n".data(using: .utf8) ?? Data())
-            body.append(
-                "Content-Disposition: form-data; name=\"file\"; filename=\"\(fileName)\"\r\n".data(
-                    using: .utf8) ?? Data())
-            body.append(
-                "Content-Type: application/octet-stream\r\n\r\n".data(using: .utf8) ?? Data())
-            body.append(fileData)
-            body.append("\r\n".data(using: .utf8) ?? Data())
-        }
-
-        body.append("--\(boundary)--\r\n".data(using: .utf8) ?? Data())
-        return body
-    }
+//    func executeMultipart<E: Endpoint>(_ endpoint: E, files: [URL]) async throws -> E.Response {
+//        let url = endpoint.baseURL.appendingPathComponent(endpoint.path)
+//
+//        var request = URLRequest(url: url)
+//        request.httpMethod = endpoint.method.rawValue
+//        if let token = endpoint.token {
+//            request.addValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+//        }
+//
+//        let boundary = UUID().uuidString
+//        request.setValue(
+//            "multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
+//        let body = try createMultipartBody(for: endpoint, files: files, boundary: boundary)
+//
+//        request.httpBody = body
+//
+//        let (data, response) = try await URLSession.shared.data(for: request)
+//        let message = parseErrorMessage(from: data) ?? "Client error occurred."
+//        guard let httpResponse = response as? HTTPURLResponse else {
+//            throw FetchingError.invalidResponse(message: message)
+//        }
+//        try self.handle(response: httpResponse, withData: data)
+//        let decodedResponse = try decoder.decode(E.Response.self, from: data)
+//        return decodedResponse
+//    }
+//
+//    private func createMultipartBody<E: Endpoint>(for endpoint: E, files: [URL], boundary: String)
+//        throws -> Data
+//    {
+//        var body = Data()
+//
+//        if let requestBody = endpoint.requestBody {
+//            let jsonData = try encoder.encode(requestBody)
+//            if let jsonDict = try JSONSerialization.jsonObject(with: jsonData) as? [String: Any] {
+//                for (key, value) in jsonDict {
+//                    if let stringValue = value as? String, stringValue.isEmpty {
+//                        continue
+//                    } else if value is NSNull {
+//                        continue
+//                    }
+//
+//                    body.append("--\(boundary)\r\n".data(using: .utf8) ?? Data())
+//                    body.append(
+//                        "Content-Disposition: form-data; name=\"\(key)\"\r\n\r\n".data(using: .utf8)
+//                            ?? Data())
+//
+//                    let valueString: String
+//                    if let stringValue = value as? String {
+//                        valueString = stringValue
+//                    } else if let boolValue = value as? Bool {
+//                        valueString = boolValue ? "true" : "false"
+//                    } else {
+//                        let valueData = try JSONSerialization.data(withJSONObject: value)
+//                        valueString = String(data: valueData, encoding: .utf8) ?? ""
+//                    }
+//
+//                    body.append(valueString.data(using: .utf8) ?? Data())
+//                    body.append("\r\n".data(using: .utf8) ?? Data())
+//                }
+//            }
+//        }
+//
+//        for fileURL in files {
+//            let fileName = fileURL.lastPathComponent
+//            let fileData = try Data(contentsOf: fileURL)
+//            body.append("--\(boundary)\r\n".data(using: .utf8) ?? Data())
+//            body.append(
+//                "Content-Disposition: form-data; name=\"file\"; filename=\"\(fileName)\"\r\n".data(
+//                    using: .utf8) ?? Data())
+//            body.append(
+//                "Content-Type: application/octet-stream\r\n\r\n".data(using: .utf8) ?? Data())
+//            body.append(fileData)
+//            body.append("\r\n".data(using: .utf8) ?? Data())
+//        }
+//
+//        body.append("--\(boundary)--\r\n".data(using: .utf8) ?? Data())
+//        return body
+//    }
 
 
 }

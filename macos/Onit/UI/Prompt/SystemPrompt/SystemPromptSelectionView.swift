@@ -10,7 +10,6 @@ import SwiftUI
 
 struct SystemPromptSelectionView: View {
     @Environment(\.appState) private var appState
-    @Environment(\.modelContext) private var modelContext
     @Environment(\.openSettings) private var openSettings
     @Environment(\.windowState) private var state
     

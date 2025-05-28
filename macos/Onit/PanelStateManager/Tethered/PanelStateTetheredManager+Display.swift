@@ -67,7 +67,6 @@ extension PanelStateTetheredManager {
         if (action == .move && !isOnRightmostScreen) || hasEnoughSpace {
             movePanel(state: state,
                       window: window,
-                      screenFrame: screenFrame,
                       onitWidth: onitWidth,
                       onitHeight: onitHeight,
                       onitY: onitY)
@@ -175,7 +174,6 @@ extension PanelStateTetheredManager {
     private func movePanel(
         state: OnitPanelState,
         window: AXUIElement,
-        screenFrame: CGRect,
         onitWidth: CGFloat,
         onitHeight: CGFloat,
         onitY: CGFloat
@@ -371,8 +369,7 @@ extension PanelStateTetheredManager {
         fromActive: CGRect?,
         toActive: CGRect?,
         panel: OnitPanel,
-        toPanel: CGRect,
-        steps: Int = 10
+        toPanel: CGRect
     ) {
         guard !panel.isAnimating, panel.frame != toPanel else { return }
         
