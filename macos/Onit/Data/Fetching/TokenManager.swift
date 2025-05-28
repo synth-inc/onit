@@ -42,9 +42,37 @@ struct TokenManager {
         }
     }
     
+    private static func legacyFetchToken() -> String? {
+        let query: [String: Any] = [
+            kSecClass as String: kSecClassGenericPassword,
+            kSecAttrService as String: "inc.synth.Onit.auth",
+            kSecAttrAccount as String: "token",
+            kSecReturnData as String: true,
+            kSecMatchLimit as String: kSecMatchLimitOne
+        ]
+
+        var out: CFTypeRef?
+        let status = SecItemCopyMatching(query as CFDictionary, &out)
+
+        if status == errSecSuccess {
+            if let retrievedData = out as? Data,
+               let token = String(data: retrievedData, encoding: .utf8) {
+                return token
+            }
+        }
+
+        return nil
+    }
+
+    
     private static func getToken() throws -> String? {
         guard FileManager.default.fileExists(atPath: tokenFileURL.path) else {
-            return nil
+            if let legacyToken = legacyFetchToken() {
+                try setToken(legacyToken)
+                return legacyToken
+            } else {
+                return nil
+            }
         }
         
         do {
