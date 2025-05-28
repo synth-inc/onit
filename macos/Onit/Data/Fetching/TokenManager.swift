@@ -46,7 +46,8 @@ struct TokenManager {
     }
 
     private static func fetch() -> String? {
-        let query: [String: Any] = [
+        // First try with access group (new format)
+        let queryWithGroup: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
             kSecAttrService as String: service,
             kSecAttrAccount as String: account,
@@ -56,12 +57,35 @@ struct TokenManager {
         ]
 
         var out: CFTypeRef?
-        let status = SecItemCopyMatching(query as CFDictionary, &out)
+        let status = SecItemCopyMatching(queryWithGroup as CFDictionary, &out)
 
         if status == errSecSuccess {
             if let retrievedData = out as? Data,
                let token = String(data: retrievedData, encoding: .utf8) {
                 return token
+            }
+        }
+
+        // If not found with access group, try legacy format
+        let legacyQuery: [String: Any] = [
+            kSecClass as String: kSecClassGenericPassword,
+            kSecAttrService as String: service,
+            kSecAttrAccount as String: account,
+            kSecReturnData as String: true,
+            kSecMatchLimit as String: kSecMatchLimitOne
+        ]
+
+        let legacyStatus = SecItemCopyMatching(legacyQuery as CFDictionary, &out)
+
+        if legacyStatus == errSecSuccess {
+            if let retrievedData = out as? Data,
+               let token = String(data: retrievedData, encoding: .utf8) {
+                // Found legacy token, migrate it to new format
+                if save(token: token) {
+                    // Remove the legacy token
+                    _ = SecItemDelete(legacyQuery as CFDictionary)
+                    return token
+                }
             }
         }
 
