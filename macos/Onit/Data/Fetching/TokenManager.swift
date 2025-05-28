@@ -10,6 +10,7 @@ import Security
 
 struct TokenManager {
     private static let service = "inc.synth.Onit.auth"
+    private static let keychainGroup = "inc.synth.Onit"
     private static let account = "token"
 
     public static var token: String? {
@@ -31,6 +32,7 @@ struct TokenManager {
             kSecClass as String: kSecClassGenericPassword,
             kSecAttrService as String: service,
             kSecAttrAccount as String: account,
+            kSecAttrAccessGroup as String: keychainGroup,
             kSecValueData as String: data
         ]
 
@@ -48,6 +50,7 @@ struct TokenManager {
             kSecClass as String: kSecClassGenericPassword,
             kSecAttrService as String: service,
             kSecAttrAccount as String: account,
+            kSecAttrAccessGroup as String: keychainGroup,
             kSecReturnData as String: true,
             kSecMatchLimit as String: kSecMatchLimitOne
         ]
