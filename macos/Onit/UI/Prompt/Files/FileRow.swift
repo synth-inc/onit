@@ -216,7 +216,7 @@ extension FileRow {
             
             windowState.addAutoContextTasks[windowName] = Task {
                 let _ = AccessibilityNotificationsManager.shared.windowsManager.append(focusedWindow, pid: pid)
-                AccessibilityNotificationsManager.shared.fetchAutoContext(pid: pid)
+                AccessibilityNotificationsManager.shared.fetchAutoContext(pid: pid, state: windowState)
             }
         }
     }

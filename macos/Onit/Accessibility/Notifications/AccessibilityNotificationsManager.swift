@@ -99,11 +99,11 @@ class AccessibilityNotificationsManager: ObservableObject {
         lastActiveWindowPid = nil
     }
     
-    func fetchAutoContext(pid: pid_t? = nil) {
+    func fetchAutoContext(pid: pid_t? = nil, state: OnitPanelState? = nil) {
         if let pid = pid {
-            retrieveWindowContent(for: pid)
+            retrieveWindowContent(for: pid, state: state)
         } else if let pid = lastActiveWindowPid {
-            retrieveWindowContent(for: pid)
+            retrieveWindowContent(for: pid, state: state)
         }
     }
 
@@ -269,9 +269,9 @@ class AccessibilityNotificationsManager: ObservableObject {
     
     // MARK: Parsing
     
-    private func retrieveWindowContent(for pid: pid_t) {
+    private func retrieveWindowContent(for pid: pid_t, state: OnitPanelState?) {
         guard let mainWindow = pid.firstMainWindow,
-              let state = PanelStateCoordinator.shared.getState(for: CFHash(mainWindow)) else { return }
+              let state = state ?? PanelStateCoordinator.shared.getState(for: CFHash(mainWindow)) else { return }
         
         Task { @MainActor in
             if let documentInfo = findDocument(in: mainWindow) {
