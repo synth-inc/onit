@@ -11,7 +11,12 @@ struct FileRow: View {
     @Environment(\.windowState) var windowState
     @ObservedObject private var accessibilityPermissionManager = AccessibilityPermissionManager.shared
     
-    @State private var currentWindowInfo: (appBundleUrl: URL?, name: String?) = (nil, nil)
+    @State private var currentWindowInfo: (
+        appBundleUrl: URL?,
+        name: String?,
+        pid: pid_t?
+    ) = (nil, nil, nil)
+    
     @State private var windowDelegate: WindowChangeDelegate? = nil
     @State private var windowAlreadyInContext: Bool = false
     
@@ -27,6 +32,19 @@ struct FileRow: View {
            let windowName = currentWindowInfo.name
         {
             return windowName
+        } else {
+            return nil
+        }
+    }
+    
+    var appIcon: (any View)? {
+        if let appBundleUrl = currentWindowInfo.appBundleUrl {
+            let iconUrl = NSWorkspace.shared.icon(forFile: appBundleUrl.path)
+            
+            return Image(nsImage: iconUrl)
+                .resizable()
+                .frame(width: 16, height: 16)
+                .cornerRadius(4)
         } else {
             return nil
         }
@@ -86,13 +104,25 @@ extension FileRow {
             ScrollView(.horizontal) {
                 HStack(spacing: 6) {
                     if let windowName = windowName {
-                        AutoContextButton(
+                        ContextButton(
                             text: windowName,
-                            isAdd: true,
-                            appBundleUrl: currentWindowInfo.appBundleUrl
+                            hoverTextColor: .T_2,
+                            background: .clear,
+                            hoverBackground: .clear,
+                            hasHoverBorder: true,
+                            shouldFadeIn: true,
+                            icon: appIcon
                         ) {
                             addWindowToContext()
                         }
+                        
+//                        AutoContextButton(
+//                            text: windowName,
+//                            isAdd: true,
+//                            appBundleUrl: currentWindowInfo.appBundleUrl
+//                        ) {
+//                            addWindowToContext()
+//                        }
                     }
                 }
             }
@@ -130,7 +160,7 @@ extension FileRow {
 // MARK: - Private Functions
 
 extension FileRow {
-    static func getWindowIconAndName(_ trackedWindow: TrackedWindow?) -> (URL?, String?) {
+    static func getWindowIconAndName(_ trackedWindow: TrackedWindow?) -> (URL?, String?, pid_t?) {
         if let trackedWindow = trackedWindow,
            let pid = trackedWindow.element.pid(),
            let windowApp = NSRunningApplication(processIdentifier: pid)
@@ -138,13 +168,13 @@ extension FileRow {
             let windowAppBundleUrl = windowApp.bundleURL
             let windowName = trackedWindow.element.title() ?? trackedWindow.element.appName() ?? nil
             
-            return (windowAppBundleUrl, windowName)
+            return (windowAppBundleUrl, windowName, pid)
         } else {
-            return (nil, nil)
+            return (nil, nil, nil)
         }
     }
     
-    private func initializeCurrentWindowInfo() -> (URL?, String?) {
+    private func initializeCurrentWindowInfo() -> (URL?, String?, pid_t?) {
         let windowsManager = AccessibilityNotificationsManager.shared.windowsManager
         return FileRow.getWindowIconAndName(windowsManager.activeTrackedWindow)
     }
@@ -156,6 +186,7 @@ extension FileRow {
                     if windowName == autoContext.appTitle {
                         deleteAutoContextTask(windowName)
                         return true
+                        
                     }
                 }
             }
@@ -166,12 +197,26 @@ extension FileRow {
         }
     }
     
+//    private func addWindowToContext() {
+//        if let windowName = currentWindowInfo.name {
+//            windowState.addAutoContextTasks[windowName]?.cancel()
+//            
+//            windowState.addAutoContextTasks[windowName] = Task {
+//                PanelStateCoordinator.shared.fetchWindowContext()
+//            }
+//        }
+//    }
+    
     private func addWindowToContext() {
-        if let windowName = currentWindowInfo.name {
+        if let windowName = currentWindowInfo.name,
+           let pid = currentWindowInfo.pid,
+           let focusedWindow = pid.firstMainWindow
+        {
             windowState.addAutoContextTasks[windowName]?.cancel()
             
             windowState.addAutoContextTasks[windowName] = Task {
-                PanelStateCoordinator.shared.fetchWindowContext()
+                let _ = AccessibilityNotificationsManager.shared.windowsManager.append(focusedWindow, pid: pid)
+                AccessibilityNotificationsManager.shared.fetchAutoContext(pid: pid)
             }
         }
     }
@@ -199,33 +244,75 @@ extension FileRow {
 // MARK: - Window Change Delegate (to track window changes)
 
 private final class WindowChangeDelegate: AccessibilityNotificationsDelegate {
-    private var currentlyTrackedWindow: TrackedWindow? = nil
+    private let onWindowChange: ((URL?, String?, pid_t?)) -> Void
     
-    private let onWindowChange: ((URL?, String?)) -> Void
-    
-    init(onWindowChange: @escaping ((URL?, String?)) -> Void) {
+    init(onWindowChange: @escaping ((URL?, String?, pid_t?)) -> Void) {
         self.onWindowChange = onWindowChange
+        
+        NSWorkspace.shared.notificationCenter.addObserver(
+            self,
+            selector: #selector(appLaunchedReceived),
+            name: NSWorkspace.didLaunchApplicationNotification,
+            object: nil
+        )
+
+    }
+    
+    deinit {
+        NSWorkspace.shared.notificationCenter.removeObserver(self)
+    }
+    
+    // Tracks when a new window is opened.
+    @objc private func appLaunchedReceived(notification: Notification) {
+        guard let userInfo = notification.userInfo,
+              let app = (userInfo[NSWorkspace.applicationUserInfoKey] as? NSRunningApplication) ??
+                        (userInfo["NSWorkspaceApplicationKey"] as? NSRunningApplication)
+        else { return }
+        
+        let currentAppIsXCode = app.localizedName?.lowercased() == "xcode"
+        var isDev: Bool = false
+        #if DEBUG
+        isDev = true
+        #endif
+        
+        let doNotTrackXCode = currentAppIsXCode && isDev
+        
+        if doNotTrackXCode {
+            onWindowChange((nil, nil, nil))
+        } else {
+            var title: String? = nil
+            var appName: String? = nil
+            
+            if let window = app.processIdentifier.firstMainWindow {
+                title = window.title()
+                appName = window.appName()
+            } else {
+                appName = app.processIdentifier.getAXUIElement().appName()
+            }
+            
+            let windowAppBundleUrl = app.bundleURL
+            let windowName = title ?? appName ?? app.localizedName ?? "Unknown"
+            
+            onWindowChange((windowAppBundleUrl, windowName, app.processIdentifier))
+        }
     }
     
     // Tracks when changing focused window.
     func accessibilityManager(
         _ manager: AccessibilityNotificationsManager,
-        didActivateWindow trackedWindow: TrackedWindow
+        didActivateWindow window: TrackedWindow
     ) {
-        currentlyTrackedWindow = trackedWindow
-        let (windowAppBundleUrl, windowName) = FileRow.getWindowIconAndName(trackedWindow)
-        onWindowChange((windowAppBundleUrl, windowName))
+        let (windowAppBundleUrl, windowName, pid) = FileRow.getWindowIconAndName(window)
+        onWindowChange((windowAppBundleUrl, windowName, pid))
     }
     
-    // Tracks when changing focused sub-window in the current window.
-    // For example, switching browser tabs.
+    // Tracks when changing focused sub-window in the current window (switching browser tabs, etc.).
     func accessibilityManager(
         _ manager: AccessibilityNotificationsManager,
-        didChangeWindowTitle trackedWindow: TrackedWindow
+        didChangeWindowTitle window: TrackedWindow
     ) {
-        currentlyTrackedWindow = trackedWindow
-        let (windowAppBundleUrl, windowName) = FileRow.getWindowIconAndName(trackedWindow)
-        onWindowChange((windowAppBundleUrl, windowName))
+        let (windowAppBundleUrl, windowName, pid) = FileRow.getWindowIconAndName(window)
+        onWindowChange((windowAppBundleUrl, windowName, pid))
     }
     
     // Below is required to conform to AccessibilityNotificationsDelegate protocol but aren't needed in this implementation.

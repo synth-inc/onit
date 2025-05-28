@@ -25,13 +25,20 @@ extension View {
         cornerRadius: CGFloat = DefaultBorderValues().cornerRadius,
         inset: CGFloat = DefaultBorderValues().inset,
         lineWidth: CGFloat = DefaultBorderValues().lineWidth,
-        stroke: Color = Color.gray500
+        stroke: Color = Color.gray500,
+        dotted: Bool = false
     ) -> some View {
         self
             .overlay(
                 RoundedRectangle(cornerRadius: cornerRadius)
                     .inset(by: inset)
-                    .stroke(stroke, lineWidth: lineWidth)
+                    .stroke(
+                        stroke,
+                        style: StrokeStyle(
+                            lineWidth: lineWidth,
+                            dash: dotted ? [2, 2] : []
+                        )
+                    )
             )
             .cornerRadius(cornerRadius)
     }
