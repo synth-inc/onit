@@ -16,6 +16,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         if let darkAppearance = NSAppearance(named: .darkAqua) {
             NSApp.appearance = darkAppearance
         }
+        // Launch the panel on fresh start so users immediately see Onit
+        DispatchQueue.main.async {
+            PanelStateCoordinator.shared.launchPanel()
+        }
         // This is helpful for debugging the new user experience, but should never be committed!
         //        if let appDomain = Bundle.main.bundleIdentifier {
         //            UserDefaults.standard.removePersistentDomain(forName: appDomain)
