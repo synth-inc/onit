@@ -17,16 +17,20 @@ struct PaperclipButton: View {
     @AppStorage("closedAutocontext") private var closedAutocontext = false
 
     @Default(.closedAutoContextTag) var closedAutoContextTag
+    @Default(.autoContextFromCurrentWindow) var autoContextFromCurrentWindow
     
-    private let shouldShowAddContextButton: Bool
     private let currentWindowBundleUrl: URL?
+    private let currentWindowName: String?
+    private let currentWindowPid: pid_t?
     
     init(
-        shouldShowAddContextButton: Bool = false,
-        currentWindowBundleUrl: URL? = nil
+        currentWindowBundleUrl: URL? = nil,
+        currentWindowName: String? = nil,
+        currentWindowPid: pid_t? = nil,
     ) {
-        self.shouldShowAddContextButton = shouldShowAddContextButton
         self.currentWindowBundleUrl = currentWindowBundleUrl
+        self.currentWindowName = currentWindowName
+        self.currentWindowPid = currentWindowPid
     }
     
     var accessibilityAutoContextEnabled: Bool {
@@ -34,7 +38,7 @@ struct PaperclipButton: View {
     }
 
     var body: some View {
-        HStack(spacing: 6) {
+        HStack(spacing: 4) {
             IconButton(
                 icon: .paperclip,
                 iconSize: 18,
@@ -51,7 +55,7 @@ struct PaperclipButton: View {
                 }
             }
             
-            if shouldShowAddContextButton {
+            if !autoContextFromCurrentWindow {
                 Button {
                     handleAddContext()
                 } label: {
@@ -64,6 +68,7 @@ struct PaperclipButton: View {
                 }
             }
         }
+        .padding(.trailing, 4)
         .onAppear {
             resetClosedAutocontext()
         }
@@ -80,10 +85,17 @@ struct PaperclipButton: View {
                     panel.makeKey()
                 }
             }
+            
             OverlayManager.shared.captureClickPosition()
-            let view = ContextPickerView(currentWindowBundleUrl: currentWindowBundleUrl)
+            
+            let view = ContextPickerView(
+                currentWindowBundleUrl: currentWindowBundleUrl,
+                currentWindowName: currentWindowName,
+                currentWindowPid: currentWindowPid
+            )
                 .environment(\.appState, appState)
                 .environment(\.windowState, state)
+            
             OverlayManager.shared.showOverlay(content: view)
         } else {
             state.showFileImporter = true

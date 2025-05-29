@@ -5,11 +5,14 @@
 //  Created by Benjamin Sage on 10/23/24.
 //
 
+import Defaults
 import SwiftUI
 
 struct FileRow: View {
     @Environment(\.windowState) var windowState
     @ObservedObject private var accessibilityPermissionManager = AccessibilityPermissionManager.shared
+    
+    @Default(.autoContextFromCurrentWindow) var autoContextFromCurrentWindow
     
     @State private var currentWindowInfo: (
         appBundleUrl: URL?,
@@ -55,11 +58,14 @@ struct FileRow: View {
     var body: some View {
         FlowLayout(spacing: 6) {
             PaperclipButton(
-//                shouldShowAddContextButton: windowName == nil, /* DON'T DELETE THIS, WILL NEED LATER FOR WHEN WE CAN TOGGLE "CURRENT WINDOW" ON/OFF IN SETTINGS */
-                currentWindowBundleUrl: currentWindowInfo.appBundleUrl
+                currentWindowBundleUrl: currentWindowInfo.appBundleUrl,
+                currentWindowName: currentWindowInfo.name,
+                currentWindowPid: currentWindowInfo.pid
             )
             
-            if let windowName = windowName {
+            if autoContextFromCurrentWindow,
+               let windowName = windowName
+            {
                 ContextTag(
                     text: windowName,
                     hoverTextColor: .T_2,

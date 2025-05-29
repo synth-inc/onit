@@ -10,10 +10,22 @@ import SwiftUI
 struct ContextPickerView: View {
     @Environment(\.windowState) private var state
 
+    private let currentWindowName: String?
     private let currentWindowBundleUrl: URL?
+    private let currentWindowPid: pid_t?
     
-    init(currentWindowBundleUrl: URL? = nil) {
+    init(
+        currentWindowBundleUrl: URL? = nil,
+        currentWindowName: String?,
+        currentWindowPid: pid_t?
+    ) {
         self.currentWindowBundleUrl = currentWindowBundleUrl
+        self.currentWindowName = currentWindowName
+        self.currentWindowPid = currentWindowPid
+    }
+    
+    var autoContextDisabled: Bool {
+        return currentWindowName == nil || currentWindowPid == nil
     }
     
     var body: some View {
@@ -35,7 +47,19 @@ struct ContextPickerView: View {
             Button(action: {
                 AnalyticsManager.ContextPicker.autoContextPressed()
                 OverlayManager.shared.dismissOverlay()
-                PanelStateCoordinator.shared.fetchWindowContext()
+                
+                if let windowName = currentWindowName,
+                   let pid = currentWindowPid,
+                   let focusedWindow = pid.firstMainWindow
+                {
+                    state.addAutoContextTasks[windowName]?.cancel()
+                    
+                    state.addAutoContextTasks[windowName] = Task {
+                        let _ = AccessibilityNotificationsManager.shared.windowsManager.append(focusedWindow, pid: pid)
+                        AccessibilityNotificationsManager.shared.fetchAutoContext(pid: pid, state: state)
+//                        PanelStateCoordinator.shared.fetchWindowContext()
+                    }
+                }
             }) {
                 ContextPickerItemView(
                     imageRes: .stars,
@@ -47,6 +71,8 @@ struct ContextPickerView: View {
             .buttonStyle(.plain)
             .foregroundColor(.gray200)
             .padding(.bottom, 6)
+            .opacity(autoContextDisabled ? 0.6 : 1)
+            .allowsHitTesting(!autoContextDisabled)
         }
         .background(Color(.gray600))
         .cornerRadius(12)

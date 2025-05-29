@@ -112,7 +112,7 @@ struct ContextTag: View {
         .padding(.trailing, 6)
         .frame(height: height)
         .frame(maxWidth: maxWidth, alignment: .leading)
-        .opacity(shouldFadeIn ? isHoveredBody ? 1 : 0.5 : 1)
+        .opacity(shouldFadeIn ? isHoveredBody ? 1 : 0.7 : 1)
         .onHover { isHovering in
             isHoveredBody = isHovering
             
