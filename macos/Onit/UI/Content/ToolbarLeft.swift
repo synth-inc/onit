@@ -11,7 +11,7 @@ struct ToolbarLeft: View {
     @Environment(\.windowState) private var state
     
     var body: some View {
-        HStack(spacing: 0) {
+        HStack(alignment: .center, spacing: 0) {
             esc
             newChatButton
             systemPromptsButton
@@ -24,8 +24,11 @@ struct ToolbarLeft: View {
             PanelStateCoordinator.shared.closePanel()
         } label: {
             Text("ESC")
-                .appFont(.medium11)
-                .foregroundStyle(.gray200)
+                .styleText(
+                    size: 11,
+                    weight: .medium,
+                    color: .gray200
+                )
                 .padding(4)
         }
         .tooltip(prompt: "Close Onit", shortcut: .keyboardShortcuts(.escape))
