@@ -8,17 +8,20 @@
 import SwiftUI
 
 struct ContextPickerItemView: View {
+    private let showEmptyIcon: Bool
     private let imageRes: ImageResource
     private let title: String
     private let subtitle: String
     private let currentWindowBundleUrl: URL?
     
     init(
+        showEmptyIcon: Bool = false,
         imageRes: ImageResource,
         title: String,
         subtitle: String,
         currentWindowBundleUrl: URL? = nil
     ) {
+        self.showEmptyIcon = showEmptyIcon
         self.imageRes = imageRes
         self.title = title
         self.subtitle = subtitle
@@ -32,7 +35,13 @@ struct ContextPickerItemView: View {
 
     var body: some View {
         HStack(spacing: 0) {
-            if let windowIcon = windowIcon {
+            if showEmptyIcon {
+                Rectangle()
+                    .fill(.T_8)
+                    .frame(width: 20, height: 20)
+                    .cornerRadius(4.5)
+                    .padding(.leading, 12)
+            } else if let windowIcon = windowIcon {
                 Image(nsImage: windowIcon)
                     .resizable()
                     .frame(width: 20, height: 20)

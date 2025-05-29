@@ -5,10 +5,13 @@
 //  Created by Kévin Naudin on 25/01/2025.
 //
 
+import Defaults
 import SwiftUI
 
 struct ContextPickerView: View {
     @Environment(\.windowState) private var state
+    
+    @Default(.autoContextFromCurrentWindow) var autoContextFromCurrentWindow
 
     private let currentWindowName: String?
     private let currentWindowBundleUrl: URL?
@@ -25,7 +28,7 @@ struct ContextPickerView: View {
     }
     
     var autoContextDisabled: Bool {
-        return currentWindowName == nil || currentWindowPid == nil
+        return autoContextFromCurrentWindow && (currentWindowName == nil || currentWindowPid == nil)
     }
     
     var body: some View {
@@ -45,26 +48,19 @@ struct ContextPickerView: View {
             .buttonStyle(.plain)
 
             Button(action: {
-                AnalyticsManager.ContextPicker.autoContextPressed()
                 OverlayManager.shared.dismissOverlay()
                 
-                if let windowName = currentWindowName,
-                   let pid = currentWindowPid,
-                   let focusedWindow = pid.firstMainWindow
-                {
-                    state.addAutoContextTasks[windowName]?.cancel()
-                    
-                    state.addAutoContextTasks[windowName] = Task {
-                        let _ = AccessibilityNotificationsManager.shared.windowsManager.append(focusedWindow, pid: pid)
-                        AccessibilityNotificationsManager.shared.fetchAutoContext(pid: pid, state: state)
-//                        PanelStateCoordinator.shared.fetchWindowContext()
-                    }
+                if autoContextFromCurrentWindow {
+                    addAutoContext()
+                } else {
+                    enableCurrentWindowSetting()
                 }
             }) {
                 ContextPickerItemView(
+                    showEmptyIcon: !autoContextFromCurrentWindow,
                     imageRes: .stars,
-                    title: "AutoContext",
-                    subtitle: "Current window",
+                    title: autoContextFromCurrentWindow ? "AutoContext" : "Current Window",
+                    subtitle: autoContextFromCurrentWindow ? "Current window" : "Click to enable",
                     currentWindowBundleUrl: currentWindowBundleUrl
                 )
             }
@@ -87,5 +83,29 @@ struct ContextPickerView: View {
             .padding(8)
             .buttonStyle(PlainButtonStyle())
         }
+    }
+}
+
+// MARK: - Private Functions
+
+extension ContextPickerView {
+    private func addAutoContext() {
+        AnalyticsManager.ContextPicker.autoContextPressed()
+        
+        if let windowName = currentWindowName,
+           let pid = currentWindowPid,
+           let focusedWindow = pid.firstMainWindow
+        {
+            state.addAutoContextTasks[windowName]?.cancel()
+            
+            state.addAutoContextTasks[windowName] = Task {
+                let _ = AccessibilityNotificationsManager.shared.windowsManager.append(focusedWindow, pid: pid)
+                AccessibilityNotificationsManager.shared.fetchAutoContext(pid: pid, state: state)
+            }
+        }
+    }
+    
+    private func enableCurrentWindowSetting() {
+        autoContextFromCurrentWindow = true
     }
 }
