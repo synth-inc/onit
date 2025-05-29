@@ -25,7 +25,7 @@ struct PaperclipButton: View {
     init(
         currentWindowBundleUrl: URL? = nil,
         currentWindowName: String? = nil,
-        currentWindowPid: pid_t? = nil,
+        currentWindowPid: pid_t? = nil
     ) {
         self.currentWindowBundleUrl = currentWindowBundleUrl
         self.currentWindowName = currentWindowName
