@@ -306,7 +306,7 @@ extension OnitPanelState {
     }
     
     func sendAction(accountId: Int?) {
-        if websiteUrlsScrapeQueue.isEmpty {
+        if websiteUrlsScrapeQueue.isEmpty && addAutoContextTasks.isEmpty {
             let inputText = (pendingInstruction).trimmingCharacters(in: .whitespacesAndNewlines)
             guard !inputText.isEmpty else { return }
             createAndSavePrompt(accountId: accountId)

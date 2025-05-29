@@ -5,6 +5,7 @@
 //  Created by Benjamin Sage on 10/23/24.
 //
 
+import AppKit
 import Foundation
 
 struct AutoContext: Codable, Hashable {
@@ -12,6 +13,7 @@ struct AutoContext: Codable, Hashable {
     let appHash: UInt
     let appTitle: String
     let appContent: [String: String]
+    let appBundleUrl: URL?
 }
 
 enum Context {
@@ -89,8 +91,22 @@ enum Context {
 }
 
 extension Context {
-    init(appName: String, appHash: UInt, appTitle: String, appContent: [String: String]) {
-        self = .auto(AutoContext(appName: appName, appHash: appHash, appTitle: appTitle, appContent: appContent))
+    init(
+        appName: String,
+        appHash: UInt,
+        appTitle: String,
+        appContent: [String: String],
+        appBundleUrl: URL? = nil
+    ) {
+        self = .auto(
+            AutoContext(
+                appName: appName,
+                appHash: appHash,
+                appTitle: appTitle,
+                appContent: appContent,
+                appBundleUrl: appBundleUrl
+            )
+        )
     }
     
     init(title: String, content: String, source: String, url: URL? = nil) {

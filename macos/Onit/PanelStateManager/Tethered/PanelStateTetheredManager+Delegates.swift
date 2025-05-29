@@ -70,6 +70,8 @@ extension PanelStateTetheredManager: AccessibilityNotificationsDelegate {
         
         handlePanelStateChange(state: panelState, action: .resize)
     }
+    
+    func accessibilityManager(_ manager: AccessibilityNotificationsManager, didChangeWindowTitle window: TrackedWindow) {}
 }
 
 // MARK: - OnitPanelStateDelegate

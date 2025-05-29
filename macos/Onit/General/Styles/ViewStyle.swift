@@ -25,13 +25,20 @@ extension View {
         cornerRadius: CGFloat = DefaultBorderValues().cornerRadius,
         inset: CGFloat = DefaultBorderValues().inset,
         lineWidth: CGFloat = DefaultBorderValues().lineWidth,
-        stroke: Color = Color.gray500
+        stroke: Color = Color.gray500,
+        dotted: Bool = false
     ) -> some View {
         self
             .overlay(
                 RoundedRectangle(cornerRadius: cornerRadius)
                     .inset(by: inset)
-                    .stroke(stroke, lineWidth: lineWidth)
+                    .stroke(
+                        stroke,
+                        style: StrokeStyle(
+                            lineWidth: lineWidth,
+                            dash: dotted ? [2, 2] : []
+                        )
+                    )
             )
             .cornerRadius(cornerRadius)
     }
@@ -100,19 +107,24 @@ extension View {
 
 extension View {
     func addButtonEffects(
-        action: @escaping () -> Void,
+        action: (() -> Void)?,
         background: Color = .clear,
         hoverBackground: Color = .gray600,
         cornerRadius: CGFloat = 8,
         isHovered: Binding<Bool>,
         isPressed: Binding<Bool>,
-        disabled: Bool = false
+        disabled: Bool = false,
+        shouldFadeOnClick: Bool = true
     ) -> some View {
         self
             .background(isHovered.wrappedValue ? hoverBackground : background)
             .cornerRadius(cornerRadius)
             .scaleEffect(isPressed.wrappedValue ? 0.99 : 1)
-            .opacity(disabled ? 0.4 : isPressed.wrappedValue ? 0.7 : 1)
+            .opacity(
+                disabled ? 0.4
+                    : (isPressed.wrappedValue && shouldFadeOnClick) ? 0.7
+                    : 1
+            )
             .disabled(disabled)
             .onHover{ isHovering in
                 isHovered.wrappedValue = isHovering
@@ -122,7 +134,7 @@ extension View {
                     .onChanged {_ in isPressed.wrappedValue = true }
                     .onEnded{ _ in
                         isPressed.wrappedValue = false
-                        action()
+                        action?()
                     }
                 )
             .allowsHitTesting(!disabled)

@@ -16,13 +16,28 @@ struct PaperclipButton: View {
     @AppStorage("closedAutocontext") private var closedAutocontext = false
 
     @Default(.closedAutoContextTag) var closedAutoContextTag
+    @Default(.autoContextFromCurrentWindow) var autoContextFromCurrentWindow
+    
+    private let currentWindowBundleUrl: URL?
+    private let currentWindowName: String?
+    private let currentWindowPid: pid_t?
+    
+    init(
+        currentWindowBundleUrl: URL? = nil,
+        currentWindowName: String? = nil,
+        currentWindowPid: pid_t? = nil,
+    ) {
+        self.currentWindowBundleUrl = currentWindowBundleUrl
+        self.currentWindowName = currentWindowName
+        self.currentWindowPid = currentWindowPid
+    }
     
     var accessibilityAutoContextEnabled: Bool {
         accessibilityPermissionManager.accessibilityPermissionStatus == .granted
     }
 
     var body: some View {
-        HStack(spacing: 6) {
+        HStack(spacing: 4) {
             IconButton(
                 icon: .paperclip,
                 iconSize: 18,
@@ -36,31 +51,23 @@ struct PaperclipButton: View {
             if state.pendingContextList.isEmpty {
                 if !accessibilityAutoContextEnabled && !closedAutoContextTag {
                     EnableAutocontextTag()
-                } else if accessibilityAutoContextEnabled {
-                    Button {
-                        AnalyticsManager.Chat.addContextPressed()
-                        handleAddContext()
-                    } label: {
-                        Text("Add context")
-                            .styleText(
-                                size: 13,
-                                weight: .medium,
-                                color: .gray200
-                            )
-                    }
-                } else {
-                    Button {
-                        handleAddContext()
-                    } label: {
-
-                        Text("Add context")
-                            .foregroundStyle(.gray200)
-                            .appFont(.medium13)
-
-                    }
+                }
+            }
+            
+            if !autoContextFromCurrentWindow {
+                Button {
+                    handleAddContext()
+                } label: {
+                    Text("Add context")
+                        .styleText(
+                            size: 13,
+                            weight: .medium,
+                            color: .gray200
+                        )
                 }
             }
         }
+        .padding(.trailing, 4)
         .onAppear {
             resetClosedAutocontext()
         }
@@ -77,10 +84,17 @@ struct PaperclipButton: View {
                     panel.makeKey()
                 }
             }
+            
             OverlayManager.shared.captureClickPosition()
-            let view = ContextPickerView()
+            
+            let view = ContextPickerView(
+                currentWindowBundleUrl: currentWindowBundleUrl,
+                currentWindowName: currentWindowName,
+                currentWindowPid: currentWindowPid
+            )
                 .environment(\.appState, appState)
                 .environment(\.windowState, state)
+            
             OverlayManager.shared.showOverlay(content: view)
         } else {
             state.showFileImporter = true

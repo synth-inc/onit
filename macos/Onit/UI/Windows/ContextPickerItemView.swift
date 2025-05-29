@@ -8,17 +8,51 @@
 import SwiftUI
 
 struct ContextPickerItemView: View {
-
-    let imageRes: ImageResource
-    let title: String
-    let subtitle: String
+    private let showEmptyIcon: Bool
+    private let imageRes: ImageResource
+    private let title: String
+    private let subtitle: String
+    private let currentWindowBundleUrl: URL?
+    
+    init(
+        showEmptyIcon: Bool = false,
+        imageRes: ImageResource,
+        title: String,
+        subtitle: String,
+        currentWindowBundleUrl: URL? = nil
+    ) {
+        self.showEmptyIcon = showEmptyIcon
+        self.imageRes = imageRes
+        self.title = title
+        self.subtitle = subtitle
+        self.currentWindowBundleUrl = currentWindowBundleUrl
+    }
+    
+    private var windowIcon: NSImage? {
+        guard let bundleUrl = currentWindowBundleUrl else { return nil }
+        return NSWorkspace.shared.icon(forFile: bundleUrl.path)
+    }
 
     var body: some View {
         HStack(spacing: 0) {
-            Image(imageRes)
-                .resizable()
-                .frame(width: 20, height: 20)
-                .padding(.leading, 12)
+            if showEmptyIcon {
+                Rectangle()
+                    .fill(.T_8)
+                    .frame(width: 20, height: 20)
+                    .cornerRadius(4.5)
+                    .padding(.leading, 12)
+            } else if let windowIcon = windowIcon {
+                Image(nsImage: windowIcon)
+                    .resizable()
+                    .frame(width: 20, height: 20)
+                    .cornerRadius(4.5)
+                    .padding(.leading, 12)
+            } else {
+                Image(imageRes)
+                    .resizable()
+                    .frame(width: 20, height: 20)
+                    .padding(.leading, 12)
+            }
 
             VStack(alignment: .leading, spacing: 4) {
                 Text(title)
@@ -36,5 +70,5 @@ struct ContextPickerItemView: View {
 }
 
 #Preview {
-    ContextPickerItemView(imageRes: .arrowsSpin, title: "", subtitle: "")
+    ContextPickerItemView(imageRes: .arrowsSpin, title: "", subtitle: "", currentWindowBundleUrl: nil)
 }

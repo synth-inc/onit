@@ -32,6 +32,7 @@ class AccessibilityNotificationsManager: ObservableObject {
         var userInteraction: UserInteractions = .init()
         var others: [String: String]?
         var errorMessage: String?  // Renamed field for error message
+        var appBundleUrl: URL?
     }
 
     // MARK: - Properties
@@ -98,11 +99,11 @@ class AccessibilityNotificationsManager: ObservableObject {
         lastActiveWindowPid = nil
     }
     
-    func fetchAutoContext(pid: pid_t? = nil) {
+    func fetchAutoContext(pid: pid_t? = nil, state: OnitPanelState? = nil) {
         if let pid = pid {
-            retrieveWindowContent(for: pid)
+            retrieveWindowContent(for: pid, state: state)
         } else if let pid = lastActiveWindowPid {
-            retrieveWindowContent(for: pid)
+            retrieveWindowContent(for: pid, state: state)
         }
     }
 
@@ -162,9 +163,17 @@ class AccessibilityNotificationsManager: ObservableObject {
             self.handleMinimizedElement(for: element)
         case kAXWindowDeminiaturizedNotification:
             self.handleDeminimizedElement(for: element)
+        case kAXTitleChangedNotification:
+            self.handleTitleChanged(for: element, elementPid: elementPid)
         default:
             break
         }
+    }
+    
+    private func handleTitleChanged(for element: AXUIElement, elementPid: pid_t) {
+        guard let trackedWindow = self.windowsManager.append(element, pid: elementPid) else { return }
+        
+        notifyDelegates { $0.accessibilityManager(self, didChangeWindowTitle: trackedWindow) }
     }
     
     private func handleWindowMoved(for element: AXUIElement, elementPid: pid_t) {
@@ -260,9 +269,9 @@ class AccessibilityNotificationsManager: ObservableObject {
     
     // MARK: Parsing
     
-    private func retrieveWindowContent(for pid: pid_t) {
+    private func retrieveWindowContent(for pid: pid_t, state: OnitPanelState?) {
         guard let mainWindow = pid.firstMainWindow,
-              let state = PanelStateCoordinator.shared.getState(for: CFHash(mainWindow)) else { return }
+              let state = state ?? PanelStateCoordinator.shared.getState(for: CFHash(mainWindow)) else { return }
         
         Task { @MainActor in
             if let documentInfo = findDocument(in: mainWindow) {
@@ -414,6 +423,14 @@ class AccessibilityNotificationsManager: ObservableObject {
     }
     
     private func handleWindowContent(_ results: [String: String]?, for state: OnitPanelState) {
+        var appBundleUrl: URL? = nil
+        
+        if let pid = lastActiveWindowPid,
+           let app = NSRunningApplication(processIdentifier: pid)
+        {
+            appBundleUrl = app.bundleURL
+        }
+        
         let elapsedTime = results?[AccessibilityParsedElements.elapsedTime]
         let appName = results?[AccessibilityParsedElements.applicationName]
         let appTitle = results?[AccessibilityParsedElements.applicationTitle]
@@ -433,6 +450,7 @@ class AccessibilityNotificationsManager: ObservableObject {
         self.screenResult.applicationTitle = appTitle
         self.screenResult.others = results
         self.screenResult.errorMessage = nil
+        self.screenResult.appBundleUrl = appBundleUrl
         self.showDebug()
         
         state.addAutoContext()

@@ -22,7 +22,11 @@ class TooltipManager {
     
     // MARK: - Functions
     
-    func setTooltip(_ tooltip: Tooltip?, immediate: Bool = false) {
+    func setTooltip(
+        _ tooltip: Tooltip?,
+        delayStart: Double = 0,
+        delayEnd: Double = 0.2
+    ) {
         tooltipTask?.cancel()
 
         if let tooltip {
@@ -33,7 +37,7 @@ class TooltipManager {
                 showWindowWithoutAnimation()
             } else {
                 tooltipTask = Task {
-                    try? await Task.sleep(for: .seconds(0.5))
+                    try? await Task.sleep(for: .seconds(delayStart))
                     if Task.isCancelled { return }
                     isTooltipActive = true
                     setupTooltip(tooltip)
@@ -44,10 +48,10 @@ class TooltipManager {
             }
         } else {
             tooltipTask = Task {
-                try? await Task.sleep(for: .seconds(immediate ? 0 : 0.2))
+                try? await Task.sleep(for: .seconds(delayEnd))
                 if Task.isCancelled { return }
                 isTooltipActive = false
-                if immediate {
+                if delayEnd == 0 {
                     hideWindowWithoutAnimation()
                 } else {
                     hideWindowWithAnimation()

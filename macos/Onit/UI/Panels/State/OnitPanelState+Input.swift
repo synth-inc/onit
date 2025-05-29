@@ -34,7 +34,7 @@ extension OnitPanelState {
 
         if let existingIndex = pendingContextList.firstIndex(where: { context in
             if case .auto(let autoContext) = context {
-                return autoContext.appName == appName && autoContext.appHash == appHash
+                return autoContext.appTitle == appTitle && autoContext.appHash == appHash
             }
             return false
         }) {
@@ -68,7 +68,14 @@ extension OnitPanelState {
 //            }
         }
 
-        let autoContext = Context(appName: appName, appHash: appHash, appTitle: appTitle, appContent: appContent)
+        let autoContext = Context(
+            appName: appName,
+            appHash: appHash,
+            appTitle: appTitle,
+            appContent: appContent,
+            appBundleUrl: AccessibilityNotificationsManager.shared.screenResult.appBundleUrl
+        )
+        
         pendingContextList.insert(autoContext, at: 0)
     }
     

@@ -12,7 +12,6 @@ struct ContextItem: View {
 
     var item: Context
     var isEditing: Bool = true
-    var inList: Bool = false
 
     var body: some View {
         HStack(spacing: 0) {
@@ -21,29 +20,33 @@ struct ContextItem: View {
                 WebContextItem(
                     item: item,
                     isEditing: isEditing,
-                    inList: inList,
                     showContextWindow: showContextWindow,
                     removeContextItem: removeContextItem
                 )
-            case .auto:
-                TagButton(
-                    child: ContextImage(context: item),
+            case .auto(let autoContext):
+                ContextTag(
                     text: name,
-                    caption: item.fileType,
-                    tooltip: "View auto-context file",
+                    textColor: isEditing ? .T_2 : .white,
+                    background: isEditing ? .gray500 : .clear,
+                    hoverBackground: isEditing ? .gray400 : .gray600,
+                    maxWidth: isEditing ? 155 : .infinity,
+                    iconBundleURL: autoContext.appBundleUrl,
+                    tooltip: isEditing ? name : "View auto-context file",
                     action: showContextWindow,
-                    closeAction: inList ? nil : { removeContextItem() },
-                    fill: inList,
-                    isTransparent: inList
+                    removeAction: isEditing ? { removeContextItem() } : nil
                 )
             default:
-                TagButton(
-                    child: ContextImage(context: item),
+                ContextTag(
                     text: name,
+                    textColor: isEditing ? .T_2 : .white,
+                    background: isEditing ? .gray500 : .clear,
+                    hoverBackground: isEditing ? .gray400 : .gray600,
+                    maxWidth: isEditing ? 155 : .infinity,
+                    iconView: ContextImage(context: item),
                     caption: item.fileType,
-                    closeAction: inList ? nil : { removeContextItem() },
-                    fill: inList,
-                    isTransparent: inList
+                    tooltip: isEditing ? name : "View \(item.fileType ?? "") file",
+                    action: showContextWindow,
+                    removeAction: isEditing ? { removeContextItem() } : nil
                 )
             }
         }
@@ -52,7 +55,7 @@ struct ContextItem: View {
     var name: String {
         switch item {
         case .auto(let autoContext):
-            autoContext.appName
+            autoContext.appTitle
         case .file(let url), .image(let url):
             url.lastPathComponent
         case .error(_, let error):
