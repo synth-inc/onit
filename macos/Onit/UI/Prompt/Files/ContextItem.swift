@@ -12,7 +12,6 @@ struct ContextItem: View {
 
     var item: Context
     var isEditing: Bool = true
-    var inList: Bool = false
 
     var body: some View {
         HStack(spacing: 0) {
@@ -21,40 +20,33 @@ struct ContextItem: View {
                 WebContextItem(
                     item: item,
                     isEditing: isEditing,
-                    inList: inList,
                     showContextWindow: showContextWindow,
                     removeContextItem: removeContextItem
                 )
             case .auto(let autoContext):
-                if isEditing {
-                    AutoContextButton(
-                        text: name,
-                        appBundleUrl: autoContext.appBundleUrl
-                    ) {
-                        showContextWindow()
-                    } removeAction: {
-                        removeContextItem()
-                    }
-                } else {
-                    TagButton(
-                        text: name,
-                        fill: inList,
-                        isTransparent: inList,
-                        child: ContextImage(context: item),
-                        caption: item.fileType,
-                        tooltip: "View auto-context file",
-                        action: showContextWindow,
-                        closeAction: inList ? nil : { removeContextItem() }
-                    )
-                }
-            default:
-                TagButton(
+                ContextTag(
                     text: name,
-                    fill: inList,
-                    isTransparent: inList,
-                    child: ContextImage(context: item),
+                    textColor: isEditing ? .T_2 : .white,
+                    background: isEditing ? .gray500 : .clear,
+                    hoverBackground: isEditing ? .gray400 : .gray600,
+                    maxWidth: isEditing ? 155 : .infinity,
+                    iconBundleURL: autoContext.appBundleUrl,
+                    tooltip: isEditing ? name : "View auto-context file",
+                    action: showContextWindow,
+                    removeAction: isEditing ? { removeContextItem() } : nil
+                )
+            default:
+                ContextTag(
+                    text: name,
+                    textColor: isEditing ? .T_2 : .white,
+                    background: isEditing ? .gray500 : .clear,
+                    hoverBackground: isEditing ? .gray400 : .gray600,
+                    maxWidth: isEditing ? 155 : .infinity,
+                    iconView: ContextImage(context: item),
                     caption: item.fileType,
-                    closeAction: inList ? nil : { removeContextItem() }
+                    tooltip: isEditing ? name : "View \(item.fileType ?? "") file",
+                    action: showContextWindow,
+                    removeAction: isEditing ? { removeContextItem() } : nil
                 )
             }
         }

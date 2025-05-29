@@ -61,7 +61,7 @@ struct ExternalTetheredButtonStyle: ButtonStyle {
         }
         .onChange(of: configuration.isPressed) { _, pressed in
             if pressed {
-                TooltipManager.shared.setTooltip(nil, immediate: true)
+                TooltipManager.shared.setTooltip(nil, delayEnd: 0)
             }
         }
         .scaleEffect(hovering ? 1.3 : 1.0, anchor: .trailing)

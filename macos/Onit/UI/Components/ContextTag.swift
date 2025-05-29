@@ -1,5 +1,5 @@
 //
-//  ContextButton.swift
+//  ContextTag.swift
 //  Onit
 //
 //  Created by Loyd Kim on 5/28/25.
@@ -7,19 +7,21 @@
 
 import SwiftUI
 
-struct ContextButton: View {
+struct ContextTag: View {
     private let text: String
     private let textColor: Color
     private let hoverTextColor: Color
     private let background: Color
     private let hoverBackground: Color
     private let hasHoverBorder: Bool
+    private let maxWidth: CGFloat
     private let isLoading: Bool
     private let shouldFadeIn: Bool
-    private let icon: (any View)?
+    private let iconBundleURL: URL?
+    private let iconView: (any View)?
     private let caption: String?
     private let tooltip: String?
-    private let action: () -> Void
+    private let action: (() -> Void)?
     private let removeAction: (() -> Void)?
     
     init(
@@ -29,12 +31,14 @@ struct ContextButton: View {
         background: Color = .gray500,
         hoverBackground: Color = .gray400,
         hasHoverBorder: Bool = false,
+        maxWidth: CGFloat = 155,
         isLoading: Bool = false,
         shouldFadeIn: Bool = false,
-        icon: (any View)? = nil,
+        iconBundleURL: URL? = nil,
+        iconView: (any View)? = nil,
         caption: String? = nil,
         tooltip: String? = nil,
-        action: @escaping () -> Void,
+        action: (() -> Void)? = nil,
         removeAction: (() -> Void)? = nil
     ) {
         self.text = text
@@ -43,9 +47,11 @@ struct ContextButton: View {
         self.background = background
         self.hoverBackground = hoverBackground
         self.hasHoverBorder = hasHoverBorder
+        self.maxWidth = maxWidth
         self.isLoading = isLoading
         self.shouldFadeIn = shouldFadeIn
-        self.icon = icon
+        self.iconBundleURL = iconBundleURL
+        self.iconView = iconView
         self.caption = caption
         self.tooltip = tooltip
         self.action = action
@@ -58,18 +64,37 @@ struct ContextButton: View {
     
     private let height: CGFloat = 24
     
+    private var bundleUrlIcon: NSImage? {
+        guard let bundleUrl = iconBundleURL else { return nil }
+        return NSWorkspace.shared.icon(forFile: bundleUrl.path)
+    }
+    
     var body: some View {
         ZStack(alignment: .leading) {
             HStack(alignment: .center, spacing: 6) {
-                if let icon = icon { AnyView(icon) }
+                if let bundleUrlIcon = bundleUrlIcon {
+                    Image(nsImage: bundleUrlIcon)
+                        .resizable()
+                        .frame(width: 16, height: 16)
+                        .cornerRadius(4)
+                }
                 
-                Text(text)
-                    .styleText(
-                        size: 12,
-                        color: isHoveredRemove ? .T_3 : isHoveredBody ? hoverTextColor : textColor
-                    )
-                    .truncateText()
-                    .addAnimation(dependency: [isHoveredBody, isHoveredRemove])
+                if let iconView = iconView {
+                    AnyView(iconView)
+                }
+                
+                if isLoading { textView.shimmering() }
+                else { textView }
+                
+                if let caption = caption {
+                    Text(caption)
+                        .styleText(
+                            size: 12,
+                            weight: .regular,
+                            color: .gray100
+                        )
+                        .truncateText()
+                }
             }
             
             HStack(spacing: 0) {
@@ -86,10 +111,25 @@ struct ContextButton: View {
         .padding(.leading, 4)
         .padding(.trailing, 6)
         .frame(height: height)
-        .frame(maxWidth: 155, alignment: .leading)
+        .frame(maxWidth: maxWidth, alignment: .leading)
         .opacity(shouldFadeIn ? isHoveredBody ? 1 : 0.5 : 1)
         .onHover { isHovering in
             isHoveredBody = isHovering
+            
+            if tooltip != nil {
+                if isHovering {
+                    TooltipManager.shared.setTooltip(
+                        Tooltip(prompt: tooltip ?? ""),
+                        delayStart: 0.4,
+                        delayEnd: 0
+                    )
+                } else {
+                    TooltipManager.shared.setTooltip(
+                        nil,
+                        delayEnd: 0
+                    )
+                }
+            }
         }
         .addAnimation(dependency: isHoveredBody)
         .addBorder(
@@ -109,10 +149,19 @@ struct ContextButton: View {
     }
 }
 
-
 // MARK: - Child Components
 
-extension ContextButton {
+extension ContextTag {
+    private var textView: some View {
+        Text(text)
+            .styleText(
+                size: 12,
+                color: isHoveredRemove ? .T_3 : isHoveredBody ? hoverTextColor : textColor
+            )
+            .truncateText()
+            .addAnimation(dependency: [isHoveredBody, isHoveredRemove])
+    }
+    
     private func removeButton(_ removeAction: @escaping () -> Void) -> some View {
         Button {
             removeAction()

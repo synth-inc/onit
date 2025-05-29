@@ -13,7 +13,6 @@ struct WebContextItem: View {
     
     private let item: Context
     private let isEditing: Bool
-    private let inList: Bool
     private let showContextWindow: () -> Void
     private let removeContextItem: () -> Void
     private let websiteUrl: URL
@@ -22,13 +21,11 @@ struct WebContextItem: View {
     init(
         item: Context,
         isEditing: Bool,
-        inList: Bool,
         showContextWindow: @escaping () -> Void,
         removeContextItem: @escaping () -> Void
     ) {
         self.item = item
         self.isEditing = isEditing
-        self.inList = inList
         self.showContextWindow = showContextWindow
         self.removeContextItem = removeContextItem
         
@@ -42,21 +39,22 @@ struct WebContextItem: View {
     
     var body: some View {
         let websiteUndergoingScrape = windowState.websiteUrlsScrapeQueue.keys.contains(websiteUrl.absoluteString)
-        
-        TagButton(
+
+        ContextTag(
             text: getCurrentWebsiteTitle(),
-            maxWidth: inList ? 0 : 250,
-            fill: inList,
-            isTransparent: inList,
-            child: websiteUndergoingScrape ?
-                LoaderPulse().padding(0).padding(.leading, 1) :
-                favicon,
+            textColor: isEditing ? .T_2 : .white,
+            background: websiteUndergoingScrape || !isEditing ? .clear : .gray500,
+            hoverBackground: isEditing ? .gray400 : .gray600,
+            maxWidth: isEditing ? 155 : .infinity,
+            isLoading: websiteUndergoingScrape,
+            iconView: websiteUndergoingScrape ? LoaderPulse() : favicon,
             caption: item.fileType,
+            tooltip: getCurrentWebsiteTitle(),
             action: showContextWindow,
-            closeAction: inList ? nil : removeContextItem
+            removeAction: isEditing ? { removeContextItem() } : nil
         )
-        .opacity(websiteUndergoingScrape ? 0.5 : 1)
         .disabled(websiteUndergoingScrape)
+        .allowsHitTesting(!websiteUndergoingScrape)
     }
 }
 

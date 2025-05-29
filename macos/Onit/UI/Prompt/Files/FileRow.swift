@@ -53,10 +53,36 @@ struct FileRow: View {
     var contextList: [Context]
 
     var body: some View {
-
-        VStack(alignment: .leading, spacing: 6) {
-            header
-            contextListRow
+        FlowLayout(spacing: 6) {
+            PaperclipButton(
+//                shouldShowAddContextButton: windowName == nil, /* DON'T DELETE THIS, WILL NEED LATER FOR WHEN WE CAN TOGGLE "CURRENT WINDOW" ON/OFF IN SETTINGS */
+                currentWindowBundleUrl: currentWindowInfo.appBundleUrl
+            )
+            
+            if let windowName = windowName {
+                ContextTag(
+                    text: windowName,
+                    hoverTextColor: .T_2,
+                    background: .clear,
+                    hoverBackground: .clear,
+                    hasHoverBorder: true,
+                    shouldFadeIn: true,
+                    iconBundleURL: currentWindowInfo.appBundleUrl,
+                    tooltip: "Add \(windowName) Context"
+                ) {
+                    addWindowToContext()
+                }
+            }
+            
+            pendingAutoContextItems
+            
+            if !contextList.isEmpty {
+                ForEach(contextList, id: \.self) { context in
+                    ContextItem(item: context, isEditing: true)
+                        .scrollTargetLayout()
+                        .contentShape(Rectangle())
+                }
+            }
         }
         .onAppear {
             currentWindowInfo = initializeCurrentWindowInfo()
@@ -94,65 +120,16 @@ struct FileRow: View {
 // MARK: - Child Components
 
 extension FileRow {
-    private var header: some View {
-        HStack(spacing: 6) {
-            PaperclipButton(
-                shouldShowAddContextButton: windowName == nil,
-                currentWindowBundleUrl: currentWindowInfo.appBundleUrl
-            )
-            
-            ScrollView(.horizontal) {
-                HStack(spacing: 6) {
-                    if let windowName = windowName {
-                        ContextButton(
-                            text: windowName,
-                            hoverTextColor: .T_2,
-                            background: .clear,
-                            hoverBackground: .clear,
-                            hasHoverBorder: true,
-                            shouldFadeIn: true,
-                            icon: appIcon
-                        ) {
-                            addWindowToContext()
-                        }
-                        
-//                        AutoContextButton(
-//                            text: windowName,
-//                            isAdd: true,
-//                            appBundleUrl: currentWindowInfo.appBundleUrl
-//                        ) {
-//                            addWindowToContext()
-//                        }
-                    }
-                }
-            }
-            .scrollIndicators(.hidden)
-        }
-    }
-    
-    private var pendingAutoContexts: some View {
+    private var pendingAutoContextItems: some View {
         ForEach(Array(windowState.addAutoContextTasks.keys), id: \.self) { windowName in
-            TagButton(
+            ContextTag(
                 text: windowName,
-                maxWidth: 155,
-                borderColor: .clear,
-                child: LoaderPulse().padding(0).padding(.leading, 1),
-                closeAction: { deleteAutoContextTask(windowName) }
+                background: .clear,
+                hoverBackground: .clear,
+                isLoading: true,
+                iconView: LoaderPulse(),
+                removeAction: { deleteAutoContextTask(windowName) }
             )
-        }
-    }
-    
-    private var contextListRow: some View {
-        FlowLayout(spacing: 6) {
-            pendingAutoContexts
-            
-            if !contextList.isEmpty {
-                ForEach(contextList, id: \.self) { context in
-                    ContextItem(item: context, isEditing: true)
-                        .scrollTargetLayout()
-                        .contentShape(Rectangle())
-                }
-            }
         }
     }
 }
@@ -196,16 +173,6 @@ extension FileRow {
             return false
         }
     }
-    
-//    private func addWindowToContext() {
-//        if let windowName = currentWindowInfo.name {
-//            windowState.addAutoContextTasks[windowName]?.cancel()
-//            
-//            windowState.addAutoContextTasks[windowName] = Task {
-//                PanelStateCoordinator.shared.fetchWindowContext()
-//            }
-//        }
-//    }
     
     private func addWindowToContext() {
         if let windowName = currentWindowInfo.name,
@@ -277,6 +244,7 @@ private final class WindowChangeDelegate: AccessibilityNotificationsDelegate {
         
         let doNotTrackXCode = currentAppIsXCode && isDev
         
+        // We don't want to track XCode in accessibility in DEBUG mode because it causes issues when launching Onit.
         if doNotTrackXCode {
             onWindowChange((nil, nil, nil))
         } else {

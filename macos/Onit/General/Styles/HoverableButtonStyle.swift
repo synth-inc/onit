@@ -38,7 +38,7 @@ struct HoverableButtonStyle: ButtonStyle {
             }
             .onChange(of: configuration.isPressed) { _, pressed in
                 if pressed {
-                    TooltipManager.shared.setTooltip(nil, immediate: true)
+                    TooltipManager.shared.setTooltip(nil, delayEnd: 0)
                 }
             }
     }
