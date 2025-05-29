@@ -83,7 +83,7 @@ struct TypeAheadMenuView: View {
         
         ContextWindowsManager.shared.showContextWindow(
             context: item,
-            pendingContextList: [], // We cannot access the panelState
+            pendingContextList: [] // We cannot access the panelState
         )
         globalState.showMenu = false
     }

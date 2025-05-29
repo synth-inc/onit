@@ -169,7 +169,7 @@ class AccessibilityObserversManager {
         let observerCallback: AXObserverCallbackWithInfo = {
             observer, element, notification, userInfo, refcon in
             // Dispatch to main thread immediately
-            log.info("Notification received: \(notification)")
+            // log.info("Notification received: \(notification)")
             DispatchQueue.main.async {
                 let accessibilityInstance = Unmanaged<AccessibilityObserversManager>
                     .fromOpaque(refcon!)
@@ -307,7 +307,7 @@ class AccessibilityObserversManager {
     private func handleAccessibilityNotifications(
         _ notification: String, element: AXUIElement, info: [String: Any], observer: AXObserver
     ) {
-        log.info("Notification received: \(notification)")
+        // log.info("Notification received: \(notification)")
         if let elementPid = element.pid() {
            delegate?.accessibilityObserversManager(
                 didReceiveNotification: notification,

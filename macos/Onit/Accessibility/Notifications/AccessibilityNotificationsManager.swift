@@ -136,7 +136,7 @@ class AccessibilityNotificationsManager: ObservableObject {
     ) {
         dispatchPrecondition(condition: .onQueue(.main))
         
-        log.debug("Received notification: \(notification) \(element.role() ?? "") \(element.title() ?? "")")
+        // log.debug("Received notification: \(notification) \(element.role() ?? "") \(element.title() ?? "")")
         switch notification {
         case kAXFocusedWindowChangedNotification, kAXMainWindowChangedNotification:
             self.handleWindowBounds(for: element, elementPid: elementPid)
@@ -520,9 +520,14 @@ class AccessibilityNotificationsManager: ObservableObject {
 
         guard let fullText = element.value() else { return nil }
         
+        
         let cursorPosition = selectedRange.location
         let precedingText = String(fullText.prefix(cursorPosition))
         let followingText = String(fullText.dropFirst(cursorPosition))
+        
+        // TODO
+        // This is the place to do my word detection.
+        
         
         return AccessibilityUserInput(
             fullText: fullText,
