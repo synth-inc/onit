@@ -28,7 +28,6 @@ struct ToolbarLeft: View {
                 fillContainer: false,
                 cornerRadius: ToolbarButtonStyle.cornerRadius,
                 fontSize: 11,
-                fontWeight: .medium,
                 fontColor: .gray200,
                 text: "ESC",
                 action: {
