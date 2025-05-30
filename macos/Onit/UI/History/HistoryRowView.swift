@@ -17,13 +17,14 @@ struct HistoryRowView: View {
 
     var body: some View {
         TextButton(
-            text: getPromptText(),
-            action: { windowState.setChat(chat: chat, index: index) }
+            text: getPromptText()
         ) {
             Group {
                 if showDelete { deleteButton }
                 else { chatResponseCount }
             }
+        } action: {
+            windowState.setChat(chat: chat, index: index)
         }
         .onHover { hovering in showDelete = hovering }
     }

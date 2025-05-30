@@ -29,10 +29,10 @@ struct OnboardingAuthButton: View {
             .foregroundColor(Color.primary)
             .addBorder(cornerRadius: 9, stroke: .gray700)
             .addButtonEffects(
-                action: action,
                 background: isHovered ? .gray800 : .gray900,
                 isHovered: $isHovered,
-                isPressed: $isPressed
+                isPressed: $isPressed,
+                action: action
             )
     }
 }

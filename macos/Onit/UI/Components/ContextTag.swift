@@ -138,13 +138,13 @@ struct ContextTag: View {
             dotted: true
         )
         .addButtonEffects(
-            action: action,
             background: background,
             hoverBackground: hoverBackground,
             cornerRadius: 4,
+            shouldFadeOnClick: false,
             isHovered: $isHoveredBody,
             isPressed: $isPressedBody,
-            shouldFadeOnClick: false
+            action: action
         )
     }
 }

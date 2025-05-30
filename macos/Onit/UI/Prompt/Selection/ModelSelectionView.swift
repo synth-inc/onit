@@ -156,10 +156,10 @@ struct ModelSelectionView: View {
             VStack(spacing: 0) {
                 ForEach(filteredLocalModels, id: \.self) { localModelName in
                     TextButton(
-                        icon: localModelName.lowercased().contains("llama") ? .logoOllama : .logoProviderUnknown,
                         iconSize: 16,
-                        text: localModelName,
                         selected: isSelectedLocalModel(modelName: localModelName),
+                        icon: localModelName.lowercased().contains("llama") ? .logoOllama : .logoProviderUnknown,
+                        text: localModelName,
                         action: {
                             AnalyticsManager.ModelPicker.modelSelected(local: true, model: localModelName)
                             selectedModel.wrappedValue = .local(localModelName)

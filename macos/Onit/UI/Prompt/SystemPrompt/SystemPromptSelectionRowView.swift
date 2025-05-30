@@ -18,15 +18,16 @@ struct SystemPromptSelectionRowView: View {
         let isSelected: Bool = windowState.systemPromptId == prompt.id
         
         TextButton(
-            text: prompt.name,
             selected: isSelected,
-            action: selectPrompt
+            text: prompt.name
         ) {
             if let shortcut = KeyboardShortcuts.Name(prompt.id).shortcut?.native {
                 KeyboardShortcutView(shortcut: shortcut, characterWidth: 12, spacing: 3)
                     .font(.system(size: 13, weight: .light))
                     .foregroundStyle(.gray200)
             }
+        } action: {
+            selectPrompt()
         }
     }
 }

@@ -107,14 +107,15 @@ extension View {
 
 extension View {
     func addButtonEffects(
-        action: (() -> Void)?,
         background: Color = .clear,
         hoverBackground: Color = .gray600,
         cornerRadius: CGFloat = 8,
+        disabled: Bool = false,
+        allowsHitTesting: Bool = true,
+        shouldFadeOnClick: Bool = true,
         isHovered: Binding<Bool>,
         isPressed: Binding<Bool>,
-        disabled: Bool = false,
-        shouldFadeOnClick: Bool = true
+        action: (() -> Void)?
     ) -> some View {
         self
             .background(isHovered.wrappedValue ? hoverBackground : background)
@@ -137,7 +138,7 @@ extension View {
                         action?()
                     }
                 )
-            .allowsHitTesting(!disabled)
+            .allowsHitTesting(allowsHitTesting)
             .addAnimation(
                 dependency: [
                     isHovered.wrappedValue,

@@ -67,10 +67,6 @@ extension OnboardingAccessibility {
     
     private var grantAccessButton: some View {
         TextButton(
-            action: {
-                AnalyticsManager.Onboarding.grandAccessPressed()
-                AccessibilityPermissionManager.shared.requestPermission()
-            },
             height: 40,
             fillContainer: false,
             cornerRadius: 9,
@@ -80,6 +76,9 @@ extension OnboardingAccessibility {
             Text("Grant access")
                 .styleText(size: 14, weight: .regular, align: .center)
                 .frame(maxWidth: .infinity)
+        } action: {
+            AnalyticsManager.Onboarding.grandAccessPressed()
+            AccessibilityPermissionManager.shared.requestPermission()
         }
     }
     

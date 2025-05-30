@@ -36,9 +36,7 @@ struct PromptCoreFooterButton: View {
     
     var body: some View {
         TextButton(
-            text: text,
             disabled: disabled,
-            action: action,
             height: ToolbarButtonStyle.height,
             fillContainer: false,
             horizontalPadding: 4,
@@ -46,7 +44,9 @@ struct PromptCoreFooterButton: View {
             background: background,
             hoverBackground: hoverBackground,
             fontSize: 13,
-            fontColor: fontColor
+            fontColor: fontColor,
+            text: text,
+            action: action
         )
     }
 }

@@ -75,11 +75,12 @@ extension GeneralTabAccountAlert {
     
     private func button(
         text: String,
-        action: @escaping () -> Void,
+        disabled: Bool = false,
+        allowsHitTesting: Bool = true,
+        isCritical: Bool = false,
         isHovered: Binding<Bool>,
         isPressed: Binding<Bool>,
-        disabled: Bool = false,
-        isCritical: Bool = false
+        action: @escaping () -> Void
     ) -> some View {
         VStack(alignment: .center) {
             Text(text)
@@ -89,37 +90,39 @@ extension GeneralTabAccountAlert {
         .frame(maxWidth: .infinity)
         .addBorder(cornerRadius: 5, stroke: isCritical ? deleteButtonBorderColor : .clear)
         .addButtonEffects(
-            action: action,
             background: isCritical ? .redBrick : customGrayBackgroundColor,
             hoverBackground: isCritical ? .redBrick.opacity(0.5) : Color(hex: "#3C3C3C") ?? .gray600,
             cornerRadius: 5,
+            disabled: disabled,
+            allowsHitTesting: allowsHitTesting,
             isHovered: isHovered,
             isPressed: isPressed,
-            disabled: disabled
+            action: action
         )
     }
     
     private var cancelButton: some View {
         button(
             text: "Cancel",
-            action: {
-                AnalyticsManager.Account.deleteConfirmationCancelPressed()
-                show.wrappedValue.toggle()
-            },
             isHovered: $isHoveredCancel,
             isPressed: $isPressedCancel
-        )
+        ) {
+            AnalyticsManager.Account.deleteConfirmationCancelPressed()
+            show.wrappedValue.toggle()
+        }
     }
     
     private var deleteButton: some View {
         button(
             text: "Delete",
-            action: deleteAccount,
-            isHovered: $isHoveredDelete,
-            isPressed: $isPressedDelete,
             disabled: deleteText != "DELETE",
-            isCritical: true
-        )
+            allowsHitTesting: deleteText == "DELETE",
+            isCritical: true,
+            isHovered: $isHoveredDelete,
+            isPressed: $isPressedDelete
+        ) {
+            deleteAccount()
+        }
     }
 }
 

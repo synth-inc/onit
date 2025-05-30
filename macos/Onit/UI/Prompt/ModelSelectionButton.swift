@@ -17,18 +17,14 @@ struct ModelSelectionButton: View {
     
     var body: some View {
         TextButton(
-            text: text,
-            action: {
-                AnalyticsManager.Chat.modelPressed(currentModel: text)
-                open.toggle()
-            },
             gap: 0,
             height: ToolbarButtonStyle.height,
             fillContainer: false,
             horizontalPadding: 4,
             cornerRadius: 4,
             fontSize: 13,
-            fontColor: .gray200
+            fontColor: .gray200,
+            text: text
         ) {
             Image(.smallChevDown)
                 .addIconStyles(
@@ -37,6 +33,9 @@ struct ModelSelectionButton: View {
                 )
                 .addAnimation(dependency: open)
                 .rotationEffect(.degrees(open ? 180 : 0))
+        } action: {
+            AnalyticsManager.Chat.modelPressed(currentModel: text)
+            open.toggle()
         }
         .tooltip(prompt: "Change model")
         .popover(isPresented: $open)  {

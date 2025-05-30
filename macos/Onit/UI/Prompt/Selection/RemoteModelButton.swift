@@ -28,21 +28,20 @@ struct RemoteModelButton: View {
     
     var body: some View {
         TextButton(
-            icon: determineRemoteModelLogo(provider: remoteModel.provider),
             iconSize: 16,
-            text: remoteModel.displayName,
             selected: isSelectedRemoteModel(model: remoteModel),
-            action: {
-                AnalyticsManager.ModelPicker.modelSelected(local: false, model: remoteModel.displayName)
-                selectedModel.wrappedValue = .remote(remoteModel)
-                modelSelectionViewOpen.wrappedValue = false
-                Task {
-                    await appState.checkSubscriptionAlerts {}
-                }
-            }
+            icon: determineRemoteModelLogo(provider: remoteModel.provider),
+            text: remoteModel.displayName
         ) {
             if planLimitReached {
                 Circle().fill(.blue300).frame(width: 6, height: 6)
+            }
+        } action: {
+            AnalyticsManager.ModelPicker.modelSelected(local: false, model: remoteModel.displayName)
+            selectedModel.wrappedValue = .remote(remoteModel)
+            modelSelectionViewOpen.wrappedValue = false
+            Task {
+                await appState.checkSubscriptionAlerts {}
             }
         }
         .task {

@@ -93,12 +93,12 @@ extension AuthFlow {
             .frame(height: 40)
             .styleText(align: .center)
             .addButtonEffects(
-                action: requestEmailLoginLink,
                 background: .blue400,
                 hoverBackground: .blue350,
                 cornerRadius: 9,
                 isHovered: $isHoveredContinueWithEmailButton,
-                isPressed: $isPressedContinueWithEmailButton
+                isPressed: $isPressedContinueWithEmailButton,
+                action: requestEmailLoginLink
             )
     }
     
