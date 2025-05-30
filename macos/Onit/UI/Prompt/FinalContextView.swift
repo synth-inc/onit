@@ -145,7 +145,7 @@ struct FinalContextView: View {
                         .foregroundColor(.gray200)
                     Spacer()
                 }
-                .shimmering()
+                .fixedShimmer()
             } else if usingContextOrInput {
                 Button {
                     isExpanded.toggle()

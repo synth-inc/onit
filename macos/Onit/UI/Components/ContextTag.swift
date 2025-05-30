@@ -83,7 +83,7 @@ struct ContextTag: View {
                     AnyView(iconView)
                 }
                 
-                if isLoading { textView.shimmering() }
+                if isLoading { textView.fixedShimmer() }
                 else { textView }
                 
                 if let caption = caption {

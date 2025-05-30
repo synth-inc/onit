@@ -38,7 +38,7 @@ struct GeneratingView: View {
 
     var icon: some View {
         Image(.word)
-            .shimmering()
+            .fixedShimmer()
     }
 
     var text: some View {

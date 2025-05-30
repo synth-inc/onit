@@ -29,6 +29,6 @@ struct Shimmer: View {
                 height: height
             )
             .cornerRadius(cornerRadius)
-            .shimmering()
+            .fixedShimmer()
     }
 }
