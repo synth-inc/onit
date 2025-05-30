@@ -168,9 +168,12 @@ struct App: SwiftUI.App {
 
     private func restoreSession() {
         if TokenManager.token != nil && appState.account == nil {
-            Task {
+            Task { @MainActor in 
                 let client = FetchingClient()
-                appState.account = try? await client.getAccount()
+                if let fetched = try? await client.getAccount() {
+                    appState.account = fetched
+                    AnalyticsManager.Identity.identify(account: fetched)
+                }
             }
         }
     }

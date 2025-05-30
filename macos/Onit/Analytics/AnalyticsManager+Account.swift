@@ -8,7 +8,7 @@
 import PostHog
 
 extension AnalyticsManager {
-    struct Account {
+    struct AccountEvents {
         static func createAccountPressed() {
             AnalyticsManager.sendCommonEvent(event: "account_create")
         }
