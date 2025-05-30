@@ -79,22 +79,20 @@ struct TextViewWrapper: NSViewRepresentable {
         // Update waveform and loading state
         textView.audioRecorder = audioRecorder
         
-        if textView.string != text {
-            if audioRecorder.isRecording || audioRecorder.isTranscribing || !textView.hasMarkedText() {
-                let selectedRanges = textView.selectedRanges
-                textView.string = text
-                textView.selectedRanges = selectedRanges
-                
-                if !text.isEmpty {
-                    let range = NSRange(location: 0, length: text.count)
-                    textView.setTextColor(textColor, range: range)
-                    textView.setFont(font, range: range)
-                }
-                
-                // Move cursor to the end of the text
-                let endRange = NSRange(location: text.count, length: 0)
-                textView.setSelectedRange(endRange)
+        if textView.string != text && !textView.hasMarkedText() {
+            let selectedRanges = textView.selectedRanges
+            textView.string = text
+            textView.selectedRanges = selectedRanges
+            
+            if !text.isEmpty {
+                let range = NSRange(location: 0, length: text.count)
+                textView.setTextColor(textColor, range: range)
+                textView.setFont(font, range: range)
             }
+            
+            // Move cursor to the end of the text
+            let endRange = NSRange(location: text.count, length: 0)
+            textView.setSelectedRange(endRange)
 
             context.coordinator.updateHeight()
         }
