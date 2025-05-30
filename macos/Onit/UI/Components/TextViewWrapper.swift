@@ -80,19 +80,21 @@ struct TextViewWrapper: NSViewRepresentable {
         textView.audioRecorder = audioRecorder
         
         if textView.string != text {
-            let selectedRanges = textView.selectedRanges
-            textView.string = text
-            textView.selectedRanges = selectedRanges
-            
-            if !text.isEmpty {
-                let range = NSRange(location: 0, length: text.count)
-                textView.setTextColor(textColor, range: range)
-                textView.setFont(font, range: range)
+            if audioRecorder.isRecording || audioRecorder.isTranscribing || !textView.hasMarkedText() {
+                let selectedRanges = textView.selectedRanges
+                textView.string = text
+                textView.selectedRanges = selectedRanges
+                
+                if !text.isEmpty {
+                    let range = NSRange(location: 0, length: text.count)
+                    textView.setTextColor(textColor, range: range)
+                    textView.setFont(font, range: range)
+                }
+                
+                // Move cursor to the end of the text
+                let endRange = NSRange(location: text.count, length: 0)
+                textView.setSelectedRange(endRange)
             }
-            
-            // Move cursor to the end of the text
-            let endRange = NSRange(location: text.count, length: 0)
-            textView.setSelectedRange(endRange)
 
             context.coordinator.updateHeight()
         }

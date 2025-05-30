@@ -31,7 +31,7 @@ struct PromptCoreFooter: View {
             Spacer()
             
             HStack(spacing: 4) {
-                MicrophoneButton(audioRecorder: audioRecorder)
+//                MicrophoneButton(audioRecorder: audioRecorder)
                 PromptCoreFooterButton(
                     text: "􀅇 Send",
                     disabled: windowState.pendingInstruction.isEmpty,
