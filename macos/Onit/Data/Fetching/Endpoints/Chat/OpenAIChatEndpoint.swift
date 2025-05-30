@@ -3,8 +3,8 @@
 //  Onit
 //
 
-import Foundation
 import EventSource
+import Foundation
 
 struct OpenAIChatEndpoint: Endpoint {
     var baseURL: URL = URL(string: "https://api.openai.com")!
@@ -16,7 +16,9 @@ struct OpenAIChatEndpoint: Endpoint {
     let token: String?
     let model: String
 
-    var path: String { "/v1/chat/completions" }
+    // Updated to use the new OpenAI Responses API
+    // https://platform.openai.com/docs/api-reference/responses/create
+    var path: String { "/v1/responses" }
     var getParams: [String: String]? { nil }
     var method: HTTPMethod { .post }
     var requestBody: OpenAIChatRequest? {
@@ -26,7 +28,7 @@ struct OpenAIChatEndpoint: Endpoint {
         ["Authorization": "Bearer \(token ?? "")"]
     }
     var timeout: TimeInterval? { nil }
-    
+
     func getContent(response: Response) -> String? {
         return response.choices.first?.message.content
     }
@@ -82,10 +84,10 @@ struct OpenAIChatRequest: Codable {
 
 struct OpenAIChatResponse: Codable {
     let choices: [Choice]
-    
+
     struct Choice: Codable {
         let message: Message
-        
+
         struct Message: Codable {
             let content: String
         }
