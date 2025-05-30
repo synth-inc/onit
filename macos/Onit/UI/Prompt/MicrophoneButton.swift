@@ -234,14 +234,12 @@ extension MicrophoneButton {
         let cursorPosition = windowState.pendingInstructionCursorPosition
         let spaces = String(repeating: " ", count: recordingSpacesCount)
         
-        windowState.pendingInstruction.insert(
-            contentsOf: spaces,
-            at: windowState.pendingInstruction.index(
-                windowState.pendingInstruction.startIndex,
-                offsetBy: cursorPosition
-            )
+        // We've seen index out of bounds errors here, so we need to clamp the index
+        let targetIndex = windowState.pendingInstruction.index(
+            windowState.pendingInstruction.startIndex,
+            offsetBy: min(max(0, cursorPosition), windowState.pendingInstruction.count)
         )
-        
+        windowState.pendingInstruction.insert(contentsOf: spaces, at: targetIndex)
         addedRecordingSpaces = true
     }
     
