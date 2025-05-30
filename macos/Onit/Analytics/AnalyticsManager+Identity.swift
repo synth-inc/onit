@@ -6,6 +6,7 @@
 //
 
 import PostHog
+import Foundation
 
 extension AnalyticsManager {
     struct Identity {
@@ -14,7 +15,7 @@ extension AnalyticsManager {
             if let email = account.email ?? account.appleEmail {
                 properties["email"] = email
             }
-            PostHogSDK.shared.identify(String(account.id), properties: properties)
+            PostHogSDK.shared.identify(String(account.id), userProperties: properties)
         }
     }
 }

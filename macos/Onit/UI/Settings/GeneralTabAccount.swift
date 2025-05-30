@@ -82,7 +82,7 @@ extension GeneralTabAccount {
             iconText: "👤",
             text: "Create an account",
             action: {
-                AnalyticsManager.Account.createAccountPressed()
+                AnalyticsManager.AccountEvents.createAccountPressed()
                 authFlowStatus = .showSignUp
                 openPanel()
             },
@@ -94,7 +94,7 @@ extension GeneralTabAccount {
         SimpleButton(
             text: "Sign in",
             action: {
-                AnalyticsManager.Account.signInPressed()
+                AnalyticsManager.AccountEvents.signInPressed()
                 authFlowStatus = .showSignIn
                 openPanel()
             }
@@ -105,7 +105,7 @@ extension GeneralTabAccount {
         SimpleButton(
             text: "Log out",
             action: {
-                AnalyticsManager.Account.logoutPressed()
+                AnalyticsManager.AccountEvents.logoutPressed()
                 logout()
             }
         )
@@ -116,7 +116,7 @@ extension GeneralTabAccount {
             text: "Delete account",
             textColor: .red,
             action: {
-                AnalyticsManager.Account.deletePressed()
+                AnalyticsManager.AccountEvents.deletePressed()
                 showDeleteAccountAlert = true
             },
             background: .redBrick
