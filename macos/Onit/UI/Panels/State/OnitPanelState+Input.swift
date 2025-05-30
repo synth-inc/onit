@@ -79,6 +79,45 @@ extension OnitPanelState {
         pendingContextList.insert(autoContext, at: 0)
     }
     
+    func addChromeExtensionContext(ocrMessage: OCRMessage) {
+        let appName = ocrMessage.appName
+        let appHash = UInt(abs(ocrMessage.pageUrl.hashValue))
+        let appTitle = ocrMessage.pageTitle
+        let appContent = [
+            "text": ocrMessage.extractedText,
+            "url": ocrMessage.pageUrl,
+        ]
+        
+        let appBundleUrl = NSWorkspace.shared.runningApplications
+            .first { $0.localizedName == ocrMessage.appName}?.bundleURL
+        
+        let extensionContext = Context(
+            appName: appName,
+            appHash: appHash,
+            appTitle: appTitle,
+            appContent: appContent,
+            appBundleUrl: appBundleUrl,
+            fromChromeExtension: true,
+            captureFullscreen: ocrMessage.captureFullscreen
+        )
+        
+        if let existingIndex = pendingContextList.firstIndex(where: { context in
+            if case .auto(let autoContext) = context {
+                return autoContext.appTitle == appTitle && autoContext.appHash == appHash
+            }
+            return false
+        }) {
+            let oldContext = pendingContextList[existingIndex]
+            
+            if oldContext != extensionContext {
+                ContextWindowsManager.shared.deleteContextItem(item: oldContext)
+                pendingContextList[existingIndex] = extensionContext
+            }
+        } else {
+            pendingContextList.insert(extensionContext, at: 0)
+        }
+    }
+    
     func getPendingContextList() -> [Context] {
         return pendingContextList
     }

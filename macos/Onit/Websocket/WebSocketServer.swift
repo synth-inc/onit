@@ -216,9 +216,12 @@ class WebSocketServer: ObservableObject {
     private func processOCRMessage(_ ocrMessage: OCRMessage) {
         log.info("Processing OCR: '\(ocrMessage.extractedText)' from '\(ocrMessage.pageTitle)' (\(ocrMessage.pageUrl))")
         
-        /// TODO:
-        /// - Add Context correctly
-        /// - Add some diff
+        let currentState = PanelStateCoordinator.shared.state
+
+        currentState.addChromeExtensionContext(ocrMessage: ocrMessage)
+
+		// TODO:
+		/// - Add diff between Accessibility, OCR & HTML
     }
     
     private func sendResponse(_ response: WebSocketResponse, to connection: NWConnection) {

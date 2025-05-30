@@ -13,6 +13,7 @@ struct ContextTag: View {
     private let hoverTextColor: Color
     private let background: Color
     private let hoverBackground: Color
+    private let borderColor: Color
     private let hasHoverBorder: Bool
     private let maxWidth: CGFloat
     private let isLoading: Bool
@@ -30,6 +31,7 @@ struct ContextTag: View {
         hoverTextColor: Color = .white,
         background: Color = .gray500,
         hoverBackground: Color = .gray400,
+        borderColor: Color = .clear,
         hasHoverBorder: Bool = false,
         maxWidth: CGFloat = 155,
         isLoading: Bool = false,
@@ -46,6 +48,7 @@ struct ContextTag: View {
         self.hoverTextColor = hoverTextColor
         self.background = background
         self.hoverBackground = hoverBackground
+        self.borderColor = borderColor
         self.hasHoverBorder = hasHoverBorder
         self.maxWidth = maxWidth
         self.isLoading = isLoading
@@ -134,8 +137,8 @@ struct ContextTag: View {
         .addAnimation(dependency: isHoveredBody)
         .addBorder(
             cornerRadius: 4,
-            stroke: hasHoverBorder && isHoveredBody ? .T_4 : .clear,
-            dotted: true
+            stroke: borderColor != .clear ? borderColor : (hasHoverBorder && isHoveredBody ? .T_4 : .clear),
+            dotted: borderColor == .clear && hasHoverBorder && isHoveredBody
         )
         .addButtonEffects(
             background: background,

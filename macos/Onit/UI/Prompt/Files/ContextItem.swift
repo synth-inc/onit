@@ -29,6 +29,13 @@ struct ContextItem: View {
                     textColor: isEditing ? .T_2 : .white,
                     background: isEditing ? .gray500 : .clear,
                     hoverBackground: isEditing ? .gray400 : .gray600,
+                    borderColor: {
+                        if let captureFullscreen = autoContext.captureFullscreen {
+                            return captureFullscreen ? .limeGreen : .cyanBlue
+                        } else {
+                            return .clear
+                        }
+                    }(),
                     maxWidth: isEditing ? 155 : .infinity,
                     iconBundleURL: autoContext.appBundleUrl,
                     tooltip: isEditing ? name : "View auto-context file",

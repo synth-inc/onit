@@ -14,6 +14,8 @@ struct AutoContext: Codable, Hashable {
     let appTitle: String
     let appContent: [String: String]
     let appBundleUrl: URL?
+    let fromChromeExtension: Bool
+    let captureFullscreen: Bool?
 }
 
 enum Context {
@@ -96,7 +98,9 @@ extension Context {
         appHash: UInt,
         appTitle: String,
         appContent: [String: String],
-        appBundleUrl: URL? = nil
+        appBundleUrl: URL? = nil,
+        fromChromeExtension: Bool = false,
+        captureFullscreen: Bool? = nil
     ) {
         self = .auto(
             AutoContext(
@@ -104,7 +108,9 @@ extension Context {
                 appHash: appHash,
                 appTitle: appTitle,
                 appContent: appContent,
-                appBundleUrl: appBundleUrl
+                appBundleUrl: appBundleUrl,
+                fromChromeExtension: fromChromeExtension,
+                captureFullscreen: captureFullscreen
             )
         )
     }
@@ -242,7 +248,9 @@ extension Context: Equatable, Hashable {
             return autoContext1.appName == autoContext2.appName &&
             autoContext1.appHash == autoContext2.appHash &&
             autoContext1.appTitle == autoContext2.appTitle &&
-            autoContext1.appContent == autoContext2.appContent
+            autoContext1.appContent == autoContext2.appContent &&
+            autoContext1.fromChromeExtension == autoContext2.fromChromeExtension &&
+            autoContext1.captureFullscreen == autoContext2.captureFullscreen
         case (.webSearch(let title1, let content1, let source1, _), .webSearch(let title2, let content2, let source2, _)):
             return title1 == title2 && content1 == content2 && source1 == source2
         case (.web(let websiteUrl1, _, _), .web(let websiteUrl2, _, _)):
