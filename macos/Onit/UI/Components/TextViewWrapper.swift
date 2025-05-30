@@ -85,15 +85,15 @@ struct TextViewWrapper: NSViewRepresentable {
                 textView.string = text
                 textView.selectedRanges = selectedRanges
                 
+                if !text.isEmpty {
+                    let range = NSRange(location: 0, length: text.count)
+                    textView.setTextColor(textColor, range: range)
+                    textView.setFont(font, range: range)
+                }
+                
                 // Move cursor to the end of the text
                 let endRange = NSRange(location: text.count, length: 0)
                 textView.setSelectedRange(endRange)
-            }
-            
-            if !text.isEmpty {
-                let range = NSRange(location: 0, length: text.count)
-                textView.setTextColor(textColor, range: range)
-                textView.setFont(font, range: range)
             }
 
             context.coordinator.updateHeight()
