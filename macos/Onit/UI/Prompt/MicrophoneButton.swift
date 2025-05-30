@@ -12,7 +12,6 @@ struct MicrophoneButton: View {
     @Environment(\.windowState) private var windowState
     
     @Default(.openAIToken) var openAIToken
-    @Default(.isOpenAITokenValidated) var isOpenAITokenValidated
     
     @ObservedObject private var audioRecorder: AudioRecorder
     
@@ -38,7 +37,7 @@ struct MicrophoneButton: View {
             hoverBackground: audioRecorder.isRecording ? Color.red.opacity(0.3) : .gray600,
             fontColor: audioRecorder.isRecording ? .red : .gray200
         )
-        .disabled(audioRecorder.isTranscribing || !isOpenAITokenValidated)
+        .disabled(audioRecorder.isTranscribing)
         .help(microphoneButtonHelpText)
         .onDisappear {
             if audioRecorder.isRecording { cancelRecording() }
@@ -83,9 +82,7 @@ struct MicrophoneButton: View {
 
 extension MicrophoneButton {
     private var microphoneButtonHelpText: String {
-        if !isOpenAITokenValidated {
-            return "Add an OpenAI API key in Settings → Models to use voice input"
-        } else if !audioRecorder.permissionGranted {
+        if !audioRecorder.permissionGranted {
             return "Click to enable microphone access"
         } else if audioRecorder.isRecording {
             return "Stop recording"
@@ -139,6 +136,69 @@ extension MicrophoneButton {
         }
     }
     
+    private func handleTranscriptionSuccess(_ transcription: String) {
+        DispatchQueue.main.async {
+            removeSpacesAtCursor()
+            
+            let cursorPosition = windowState.pendingInstructionCursorPosition
+            
+            windowState.pendingInstruction.insert(
+                contentsOf: transcription,
+                at: windowState.pendingInstruction.index(
+                    windowState.pendingInstruction.startIndex,
+                    offsetBy: cursorPosition
+                )
+            )
+            
+            audioRecorder.isTranscribing = false
+        }
+    }
+    
+    private func handleTranscriptionFailure(_ error: String) {
+        DispatchQueue.main.async {
+            removeSpacesAtCursor()
+            errorMessage = error
+            showingErrorAlert = true
+            audioRecorder.isTranscribing = false
+        }
+    }
+    
+    private func handleAudioOnClient(_ clientOpenAIToken: String, _ audioURL: URL) {
+        let whisperService = WhisperService(apiKey: clientOpenAIToken)
+        
+        transcriptionTask = Task {
+            do {
+                let transcription = try await whisperService.transcribe(audioURL: audioURL)
+                
+                if !Task.isCancelled {
+                    handleTranscriptionSuccess(transcription)
+                }
+            } catch {
+                if !Task.isCancelled {
+                    handleTranscriptionFailure(error.localizedDescription)
+                }
+            }
+        }
+    }
+    
+    private func handleAudioOnServer(_ audioURL: URL) {
+        let serverTranscriptionService = TranscriptionService()
+        
+        transcriptionTask = Task {
+            do {
+                let transcription = try await serverTranscriptionService.transcribe(audioURL: audioURL)
+                
+                if !Task.isCancelled {
+                    handleTranscriptionSuccess(transcription)
+                }
+            } catch {
+                if !Task.isCancelled {
+                    handleTranscriptionFailure(error.localizedDescription)
+                }
+            }
+        }
+    }
+    
     private func stopRecordingAndTranscribe() {
         if let monitor = eventMonitor {
             NSEvent.removeMonitor(monitor)
@@ -148,46 +208,12 @@ extension MicrophoneButton {
         guard let audioURL = audioRecorder.stopRecording() else { return }
         audioRecorder.isTranscribing = true
         
-        guard let openAIToken = openAIToken, !openAIToken.isEmpty else {
-            showingAPIKeyAlert = true
-            audioRecorder.isTranscribing = false
+        guard let clientOpenAIToken = openAIToken, !clientOpenAIToken.isEmpty else {
+            handleAudioOnServer(audioURL)
             return
         }
         
-        let whisperService = WhisperService(apiKey: openAIToken)
-        
-        transcriptionTask = Task {
-            do {
-                let transcription = try await whisperService.transcribe(audioURL: audioURL)
-                
-                if !Task.isCancelled {
-                    DispatchQueue.main.async {
-                        removeSpacesAtCursor()
-                        
-                        let cursorPosition = windowState.pendingInstructionCursorPosition
-                        
-                        windowState.pendingInstruction.insert(
-                            contentsOf: transcription,
-                            at: windowState.pendingInstruction.index(
-                                windowState.pendingInstruction.startIndex,
-                                offsetBy: cursorPosition
-                            )
-                        )
-                        
-                        audioRecorder.isTranscribing = false
-                    }
-                }
-            } catch {
-                if !Task.isCancelled {
-                    DispatchQueue.main.async {
-                        removeSpacesAtCursor()
-                        errorMessage = error.localizedDescription
-                        showingErrorAlert = true
-                        audioRecorder.isTranscribing = false
-                    }
-                }
-            }
-        }
+        handleAudioOnClient(clientOpenAIToken, audioURL)
     }
     
     private func cancelRecording() {
