@@ -136,31 +136,29 @@ extension MicrophoneButton {
         }
     }
     
+    @MainActor
     private func handleTranscriptionSuccess(_ transcription: String) {
-        DispatchQueue.main.async {
-            removeSpacesAtCursor()
-            
-            let cursorPosition = windowState.pendingInstructionCursorPosition
-            
-            windowState.pendingInstruction.insert(
-                contentsOf: transcription,
-                at: windowState.pendingInstruction.index(
-                    windowState.pendingInstruction.startIndex,
-                    offsetBy: cursorPosition
-                )
+        removeSpacesAtCursor()
+        
+        let cursorPosition = windowState.pendingInstructionCursorPosition
+        
+        windowState.pendingInstruction.insert(
+            contentsOf: transcription,
+            at: windowState.pendingInstruction.index(
+                windowState.pendingInstruction.startIndex,
+                offsetBy: cursorPosition
             )
-            
-            audioRecorder.isTranscribing = false
-        }
+        )
+        
+        audioRecorder.isTranscribing = false
     }
     
+    @MainActor
     private func handleTranscriptionFailure(_ error: String) {
-        DispatchQueue.main.async {
-            removeSpacesAtCursor()
-            errorMessage = error
-            showingErrorAlert = true
-            audioRecorder.isTranscribing = false
-        }
+        removeSpacesAtCursor()
+        errorMessage = error
+        showingErrorAlert = true
+        audioRecorder.isTranscribing = false
     }
     
     private func handleAudioOnClient(_ clientOpenAIToken: String, _ audioURL: URL) {

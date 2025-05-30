@@ -21,14 +21,21 @@ class TranscriptionService {
         var data = Data()
         
         // Add file data
-        data.append("--\(boundary)\r\n".data(using: .utf8)!)
-        data.append("Content-Disposition: form-data; name=\"file\"; filename=\"audio.m4a\"\r\n".data(using: .utf8)!)
-        data.append("Content-Type: audio/m4a\r\n\r\n".data(using: .utf8)!)
-        data.append(try Data(contentsOf: audioURL))
-        data.append("\r\n".data(using: .utf8)!)
+        guard let boundaryData = "--\(boundary)\r\n".data(using: .utf8),
+              let dispositionData = "Content-Disposition: form-data; name=\"file\"; filename=\"audio.m4a\"\r\n".data(using: .utf8),
+              let contentTypeData = "Content-Type: audio/m4a\r\n\r\n".data(using: .utf8),
+              let newlineData = "\r\n".data(using: .utf8),
+              let closingBoundaryData = "--\(boundary)--\r\n".data(using: .utf8)
+        else {
+            throw FetchingError.invalidResponse(message: "Failed to encode multipart form data")
+        }
         
-        // Add closing boundary
-        data.append("--\(boundary)--\r\n".data(using: .utf8)!)
+        data.append(boundaryData)
+        data.append(dispositionData)
+        data.append(contentTypeData)
+        data.append(try Data(contentsOf: audioURL))
+        data.append(newlineData)
+        data.append(closingBoundaryData)
         
         request.httpBody = data
         
