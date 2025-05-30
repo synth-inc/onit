@@ -79,7 +79,7 @@ struct TextViewWrapper: NSViewRepresentable {
         // Update waveform and loading state
         textView.audioRecorder = audioRecorder
         
-        if textView.string != text {
+        if textView.string != text && !textView.hasMarkedText() {
             let selectedRanges = textView.selectedRanges
             textView.string = text
             textView.selectedRanges = selectedRanges
