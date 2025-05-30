@@ -23,6 +23,7 @@ struct App: SwiftUI.App {
     
     @NSApplicationDelegateAdaptor(AppDelegate.self) var delegate
     @ObservedObject private var debugManager = DebugManager.shared
+    @ObservedObject private var webSocketServer = WebSocketServer.shared
 
     @Default(.launchOnStartupRequested) var launchOnStartupRequested
     @Default(.autoContextFromCurrentWindow) var autoContextFromCurrentWindow
@@ -37,6 +38,8 @@ struct App: SwiftUI.App {
         
         let pid = NSWorkspace.shared.frontmostApplication?.processIdentifier
         appCoordinator = AppCoordinator(frontmostPidAtLaunch: pid)
+        
+        webSocketServer.start()
         
         // For testing new user experience
         // clearTokens()
