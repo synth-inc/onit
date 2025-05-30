@@ -16,7 +16,6 @@ struct MenuBarContent: View {
             MenuDivider()
             MenuSettings()
             MenuCheckForUpdates()
-            MenuHowItWorks()
             MenuDivider()
             MenuQuit()
         }
