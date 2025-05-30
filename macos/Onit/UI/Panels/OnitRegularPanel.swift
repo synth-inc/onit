@@ -34,6 +34,7 @@ class OnitRegularPanel: NSPanel {
     var resizedApplication: Bool = false
     var isResizing: Bool = false
     var originalFrame : NSRect = .zero
+    @Published var isTetheredButtonHovered = false
     
     init(state: OnitPanelState) {
         self.state = state
@@ -96,7 +97,11 @@ class OnitRegularPanel: NSPanel {
                         self.panelResizeEnded(originalPanelWidth: self.originalFrame.width)
                         self.originalFrame = .zero
                         self.isResizing = false
-                    }
+                    },
+                    disableHover: Binding(
+                        get: { self.isTetheredButtonHovered },
+                        set: { self.isTetheredButtonHovered = $0 }
+                    )
                 )
             }
             .allowsHitTesting(true)
@@ -106,13 +111,16 @@ class OnitRegularPanel: NSPanel {
         resizeOverlay.layer?.backgroundColor = CGColor.clear
         
         // The target for dragging is be the entire height, and 6px wide, starting at TetheredButton.width/ 2 to leave room for the TetheredButton. 
-        resizeOverlay.frame = NSRect(x: TetheredButton.width / 2, y: 0, width: 6, height: frame.height)
+        resizeOverlay.frame = NSRect(x: (TetheredButton.width / 2) - 2, y: 0, width: 8, height: frame.height)
         hostingView.addSubview(resizeOverlay)
         resizeOverlay.autoresizingMask = [.maxXMargin, .height]
 
         // Create a separate hosting view for the TetheredButton
         let tetheredButtonView = NSHostingView(rootView: 
-            TetheredButton()
+            TetheredButton(isHovered: Binding(
+                get: { self.isTetheredButtonHovered },
+                set: { self.isTetheredButtonHovered = $0 }
+            ))
                 .modelContainer(state.container)
                 .environment(\.windowState, state)
         )

@@ -12,6 +12,7 @@ struct TetheredButton: View {
     @Environment(\.appState) var appState
     @Environment(\.openSettings) var openSettings
     @Environment(\.windowState) private var state
+    @Binding var isHovered: Bool
     
     static let width: CGFloat = 19
     static let height: CGFloat = 53
@@ -42,7 +43,9 @@ struct TetheredButton: View {
                     .rotationEffect((state.trackedScreen != nil || state.panel == nil || state.panel?.resizedApplication == true) ? .degrees(0) : .degrees(180))
                     .frame(width: Self.width, height: Self.height, alignment: .center)
             }
-            
+            .onHover { hovering in
+                isHovered = hovering
+            }
             .background {
                 RoundedRectangle(cornerRadius: Self.width / 2)
                     .fill(.black)
@@ -57,5 +60,5 @@ struct TetheredButton: View {
 }
 
 #Preview {
-    TetheredButton()
+    TetheredButton(isHovered: .constant(false))
 }

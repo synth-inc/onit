@@ -19,6 +19,10 @@ struct NonDraggableNSView: NSViewRepresentable {
 
     class NonDraggableView: NSView {
         override var mouseDownCanMoveWindow: Bool { false }
+        
+        override func resetCursorRects() {
+            addCursorRect(bounds, cursor: .resizeLeftRight)
+        }
     }
 }
 
@@ -26,12 +30,26 @@ struct ResizeHandle: View {
     var onDrag: (CGFloat) -> Void
     var onDragEnded: (() -> Void)?
     
+    @Binding var disableHover: Bool {
+        didSet {
+            print("RESIZEHANDLE: disableHover changed to: \(disableHover)")
+        }
+    }
+    @State private var isHovering = false
+    
     var body: some View {
         ZStack {
             // Overlay the non-draggable NSView
             NonDraggableNSView()
                 .allowsHitTesting(true)
                 .background(Color.clear)
+            
+            // Left edge indicator
+            Rectangle()
+                .fill(Color.white)
+                .frame(width: 4)
+                .opacity(isHovering ? 0.1 : 0)
+                .frame(maxWidth: .infinity, alignment: .leading)
         }
         .highPriorityGesture(
             DragGesture(minimumDistance: 1, coordinateSpace: .local)
@@ -44,13 +62,19 @@ struct ResizeHandle: View {
         )
         .contentShape(Rectangle()) // Ensure the entire area is tappable
         .allowsHitTesting(true) // Make sure the view intercepts all events
+        .onHover { hovering in
+            isHovering = hovering && !disableHover
+        }
     }
 }
 
 #if DEBUG
 struct ResizeHandle_Previews: PreviewProvider {
     static var previews: some View {
-        ResizeHandle(onDrag: { _ in })
+        ResizeHandle(
+            onDrag: { _ in },
+            disableHover: .constant(false)
+        )
             .previewLayout(.sizeThatFits)
             .padding()
             .background(Color.black)
