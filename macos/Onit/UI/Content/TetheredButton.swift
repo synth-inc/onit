@@ -23,6 +23,18 @@ struct TetheredButton: View {
     private var spacerHeight: CGFloat? {
         state.tetheredButtonYPosition
     }
+
+    private var arrowRotation: Angle {
+        if FeatureFlagManager.shared.usePinnedMode {
+            return .degrees(0)
+        }
+
+        if state.trackedScreen != nil || state.panel == nil || state.panel?.resizedApplication == true {
+            return .degrees(0)
+        } else {
+            return .degrees(180)
+        }
+    }
     
     var body: some View {
         VStack {
@@ -39,7 +51,7 @@ struct TetheredButton: View {
                 Image(.smallChevRight)
                     .renderingMode(.template)
                     .foregroundColor(.white)
-                    .rotationEffect((state.trackedScreen != nil || state.panel == nil || state.panel?.resizedApplication == true) ? .degrees(0) : .degrees(180))
+                    .rotationEffect(arrowRotation)
                     .frame(width: Self.width, height: Self.height, alignment: .center)
             }
             
