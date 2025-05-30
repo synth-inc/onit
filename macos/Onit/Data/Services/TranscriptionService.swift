@@ -1,34 +1,24 @@
+//
+//  TranscriptionService.swift
+//  Onit
+//
+//  Created by Jay Swanson on 5/30/25.
+//
+
 import Foundation
 
-class WhisperService {
-    private let apiKey: String
-    private let endpoint = "https://api.openai.com/v1/audio/transcriptions"
-    
-    init(apiKey: String) {
-        self.apiKey = apiKey
-    }
+class TranscriptionService {
+    private let endpoint = "\(OnitServer.baseURL)/v1/chat/transcription"
     
     func transcribe(audioURL: URL) async throws -> String {
         let boundary = UUID().uuidString
         guard let url = URL(string: endpoint) else { throw FetchingError.invalidURL }
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
-        request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
+        request.setValue("Bearer \(TokenManager.token ?? "")", forHTTPHeaderField: "Authorization")
         request.setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
         
         var data = Data()
-        
-        // Add model parameter
-        guard let boundaryData = "--\(boundary)\r\n".data(using: .utf8),
-              let dispositionData = "Content-Disposition: form-data; name=\"model\"\r\n\r\n".data(using: .utf8),
-              let whisperData = "whisper-1\r\n".data(using: .utf8)
-        else {
-            throw FetchingError.invalidResponse(message: "Failed to encode model parameters")
-        }
-        
-        data.append(boundaryData)
-        data.append(dispositionData)
-        data.append(whisperData)
         
         // Add file data
         guard let boundaryData = "--\(boundary)\r\n".data(using: .utf8),
@@ -57,11 +47,11 @@ class WhisperService {
             let message = HTTPURLResponse.localizedString(forStatusCode: httpResponse.statusCode)
             throw FetchingError.invalidResponse(message: message)
         }
-        let responseDecoded = try JSONDecoder().decode(WhisperResponse.self, from: responseData)
+        let responseDecoded = try JSONDecoder().decode(TranscriptionResponse.self, from: responseData)
         return responseDecoded.text
     }
 }
 
-struct WhisperResponse: Codable {
+struct TranscriptionResponse: Codable {
     let text: String
 }
