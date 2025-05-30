@@ -223,12 +223,13 @@ class AppState: NSObject {
         Task { @MainActor in
             do {
                 let loginResponse = try await FetchingClient().loginToken(loginToken: token)
-                
+
                 AnalyticsManager.Auth.success(provider: provider)
                 TokenManager.token = loginResponse.token
                 account = loginResponse.account
 
                 if loginResponse.isNewAccount {
+                    AnalyticsManager.Identity.identify(account: loginResponse.account)
                     useOpenAI = true
                     useAnthropic = true
                     useXAI = true

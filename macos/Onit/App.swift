@@ -170,7 +170,10 @@ struct App: SwiftUI.App {
         if TokenManager.token != nil && appState.account == nil {
             Task {
                 let client = FetchingClient()
-                appState.account = try? await client.getAccount()
+                if let fetched = try? await client.getAccount() {
+                    appState.account = fetched
+                    AnalyticsManager.Identity.identify(account: fetched)
+                }
             }
         }
     }
