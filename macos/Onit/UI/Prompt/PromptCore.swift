@@ -90,6 +90,14 @@ struct PromptCore: View {
                 newListener
             }
         }
+        .onReceive(NotificationCenter.default.publisher(for: .panelDidBecomeKey)) { _ in
+            if !showingAlert {
+                isFocused = true
+            }
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .panelDidResignKey)) { _ in
+            isFocused = false
+        }
         .onChange(of: editingText?.wrappedValue ?? windowState.pendingInstruction) { _, _ in
             windowState.detectIsTyping()
         }
