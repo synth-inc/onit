@@ -8,7 +8,7 @@
 import Foundation
 
 struct OCRMessage: Codable {
-    let appName: String
+    let appName: String?
     let confidence: Int
     let extractedText: String
     let pageTitle: String

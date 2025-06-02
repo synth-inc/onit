@@ -80,16 +80,19 @@ extension OnitPanelState {
     }
     
     func addChromeExtensionContext(ocrMessage: OCRMessage) {
-        let appName = ocrMessage.appName
+        let appName: String = ocrMessage.appName ?? "AutoContext"
         let appHash = UInt(abs(ocrMessage.pageUrl.hashValue))
         let appTitle = ocrMessage.pageTitle
         let appContent = [
             "text": ocrMessage.extractedText,
             "url": ocrMessage.pageUrl,
         ]
+        var appBundleUrl: URL? = nil
         
-        let appBundleUrl = NSWorkspace.shared.runningApplications
-            .first { $0.localizedName == ocrMessage.appName}?.bundleURL
+        if let unwrappedAppName = ocrMessage.appName {
+            appBundleUrl = NSWorkspace.shared.runningApplications
+                .first { $0.localizedName == unwrappedAppName }?.bundleURL
+        }
         
         let extensionContext = Context(
             appName: appName,
