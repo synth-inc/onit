@@ -32,22 +32,24 @@ struct ContextPickerView: View {
     }
     
     var body: some View {
-        VStack(spacing: 4) {
-            Button(action: {
+        VStack(alignment: .leading, spacing: 4) {
+            ContextPickerItemView(
+                imageRes: .file,
+                title: "Upload file",
+                subtitle: "Choose from computer"
+            ) {
                 AnalyticsManager.ContextPicker.uploadFilePressed()
                 OverlayManager.shared.dismissOverlay()
                 state.showFileImporter = true
-            }) {
-                ContextPickerItemView(
-                    imageRes: .file,
-                    title: "Upload file",
-                    subtitle: "Choose from computer"
-                )
             }
-            .padding(.top, 6)
-            .buttonStyle(.plain)
-
-            Button(action: {
+            
+            ContextPickerItemView(
+                showEmptyIcon: !autoContextFromCurrentWindow,
+                imageRes: .stars,
+                title: "Current Window",
+                subtitle: getAutoContextTitle(),
+                currentWindowBundleUrl: currentWindowBundleUrl
+            ) {
                 OverlayManager.shared.dismissOverlay()
                 
                 if autoContextFromCurrentWindow {
@@ -55,40 +57,29 @@ struct ContextPickerView: View {
                 } else {
                     enableCurrentWindowSetting()
                 }
-            }) {
-                ContextPickerItemView(
-                    showEmptyIcon: !autoContextFromCurrentWindow,
-                    imageRes: .stars,
-                    title: autoContextFromCurrentWindow ? "AutoContext" : "Current Window",
-                    subtitle: autoContextFromCurrentWindow ? "Current window" : "Click to enable",
-                    currentWindowBundleUrl: currentWindowBundleUrl
-                )
             }
-            .buttonStyle(.plain)
-            .foregroundColor(.gray200)
-            .padding(.bottom, 6)
             .opacity(autoContextDisabled ? 0.6 : 1)
             .allowsHitTesting(!autoContextDisabled)
         }
+        .padding(6)
         .background(Color(.gray600))
         .cornerRadius(12)
-        .overlay(alignment: .topTrailing) {
-            Button(action: {
-                OverlayManager.shared.dismissOverlay()
-            }) {
-                Image(.smallRemove)
-                    .renderingMode(.template)
-                    .foregroundStyle(.gray200)
-            }
-            .padding(8)
-            .buttonStyle(PlainButtonStyle())
-        }
     }
 }
 
 // MARK: - Private Functions
 
 extension ContextPickerView {
+    private func getAutoContextTitle() -> String {
+        if autoContextDisabled {
+            return "Could not determine window"
+        } else if autoContextFromCurrentWindow {
+            return currentWindowName ?? "Current window"
+        } else {
+            return "Click to enable"
+        }
+    }
+    
     private func addAutoContext() {
         AnalyticsManager.ContextPicker.autoContextPressed()
         
