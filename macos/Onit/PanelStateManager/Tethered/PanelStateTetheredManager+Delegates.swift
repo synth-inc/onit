@@ -95,12 +95,16 @@ extension PanelStateTetheredManager: OnitPanelStateDelegate {
         foregroundTrackedWindowIfNeeded(state: state)
         
         // Tracks when Onit app goes into foreground.
-        NotificationCenter.default.post(name: .panelDidBecomeKey, object: state)
+        DispatchQueue.main.async {
+            NotificationCenter.default.post(name: .panelDidBecomeKey, object: state)
+        }
     }
     
     func panelResignKey(state: OnitPanelState) {
         // Tracks when Onit app goes into background.
-        NotificationCenter.default.post(name: .panelDidResignKey, object: state)
+        DispatchQueue.main.async {
+            NotificationCenter.default.post(name: .panelDidResignKey, object: state)
+        }
     }
     
     func panelStateDidChange(state: OnitPanelState) {
