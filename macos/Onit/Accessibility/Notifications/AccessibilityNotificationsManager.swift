@@ -573,8 +573,8 @@ class AccessibilityNotificationsManager: ObservableObject {
               let selectedText = text,
               HighlightedTextValidator.isValid(text: selectedText)
         else {
-            PanelStateCoordinator.shared.state.pendingInput = nil
             PanelStateCoordinator.shared.state.highlightedText = nil
+            PanelStateCoordinator.shared.state.pendingInput = nil
             return
         }
         
@@ -583,12 +583,10 @@ class AccessibilityNotificationsManager: ObservableObject {
         if Defaults[.useTextHighlightContext] {
             let pendingContextList = PanelStateCoordinator.shared.state.getPendingContextList()
             
-            let textAlreadyAdded = pendingContextList.contains { context in
-                if case .text(let text) = context {
-                    return text.selectedText == selectedText
-                }
-                return false
-            }
+            let textAlreadyAdded = checkContextTextAlreadyAdded(
+                contextList: pendingContextList,
+                text: selectedText
+            )
             
             if !textAlreadyAdded {
                 let alreadyHasTextContext = pendingContextList.contains { $0.text != nil }

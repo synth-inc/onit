@@ -114,6 +114,9 @@ extension Defaults.Keys {
     static let lineHeight = Key<Double>("lineHeight", default: 1.5)
     static let voiceSilenceThreshold = Key<Float>("voiceSilenceThreshold", default: -40)
     static let voiceSpeechPassThreshold = Key<Double>("voiceSpeechPassThreshold", default: 0.7)
+    
+    // Context Settings
+    /// When toggled on (set to `true`), turns highlighted text into individual context items.
     static let useTextHighlightContext = Key<Bool>("useTextHighlightContext", default: false)
 
     // Local model advanced options

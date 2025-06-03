@@ -12,15 +12,6 @@ struct InputTitle: View {
     var input: Input
     var close: (() -> Void)? = nil
 
-    var sourceString: String {
-        guard let sourceText = input.application else { return "" }
-        return " - \(sourceText)"
-    }
-
-    var inputString: String {
-        "Input\(sourceString)"
-    }
-    
     var title: String {
         guard let sourceText = input.application else { return "No Title" }
         return "From \(sourceText)"
@@ -33,7 +24,9 @@ struct InputTitle: View {
                     size: 12,
                     color: .gray100
                 )
+            
             Spacer()
+            
             InputButtons(
                 inputExpanded: $inputExpanded,
                 input: input,

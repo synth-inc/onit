@@ -185,10 +185,8 @@ class TooltipManager {
     }
     
     func createTooltipView(_ tooltip: Tooltip, _ maxWidth: CGFloat? = nil) -> some View {
-        if let maxWidth = maxWidth {
-            return AnyView(TooltipView(tooltip: tooltip).frame(maxWidth: maxWidth))
-        } else {
-            return AnyView(TooltipView(tooltip: tooltip).fixedSize())
-        }
+        TooltipView(tooltip: tooltip)
+            .frame(maxWidth: maxWidth ?? nil)
+            .fixedSize()
     }
 }
