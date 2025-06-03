@@ -24,6 +24,7 @@ class TooltipManager {
     
     func setTooltip(
         _ tooltip: Tooltip?,
+        maxWidth: CGFloat? = nil,
         delayStart: Double = 0,
         delayEnd: Double = 0.2
     ) {
@@ -31,7 +32,7 @@ class TooltipManager {
 
         if let tooltip {
             if isTooltipActive {
-                resetTooltip(tooltip)
+                resetTooltip(tooltip, maxWidth)
                 updateTooltipWindowSize()
                 moveTooltip()
                 showWindowWithoutAnimation()
@@ -40,7 +41,7 @@ class TooltipManager {
                     try? await Task.sleep(for: .seconds(delayStart))
                     if Task.isCancelled { return }
                     isTooltipActive = true
-                    setupTooltip(tooltip)
+                    setupTooltip(tooltip, maxWidth)
                     updateTooltipWindowSize()
                     moveTooltip()
                     showWindowWithoutAnimation()
@@ -138,9 +139,9 @@ class TooltipManager {
         tooltipWindow.alphaValue = 1.0
     }
 
-    func setupTooltip(_ tooltip: Tooltip) {
+    func setupTooltip(_ tooltip: Tooltip, _ maxWidth: CGFloat? = nil) {
         if tooltipWindow == nil {
-            let contentView = TooltipView(tooltip: tooltip).fixedSize()
+            let contentView = createTooltipView(tooltip, maxWidth)
             let hostingController = NSHostingController(rootView: contentView)
 
             let window = NSWindow(contentViewController: hostingController)
@@ -156,17 +157,17 @@ class TooltipManager {
 
             updateTooltipWindowSize()
         } else {
-            resetTooltip(tooltip)
+            resetTooltip(tooltip, maxWidth)
         }
     }
 
-    func resetTooltip(_ tooltip: Tooltip) {
+    func resetTooltip(_ tooltip: Tooltip, _ maxWidth: CGFloat? = nil) {
         guard let tooltipWindow = self.tooltipWindow else {
             print("No window available to reset.")
             return
         }
 
-        let content = TooltipView(tooltip: tooltip).fixedSize()
+        let content = createTooltipView(tooltip, maxWidth)
         let newHostingController = NSHostingController(rootView: content)
 
         tooltipWindow.contentViewController = newHostingController
@@ -181,5 +182,13 @@ class TooltipManager {
         contentView.layoutSubtreeIfNeeded()
         let contentSize = contentView.fittingSize
         tooltipWindow.setContentSize(contentSize)
+    }
+    
+    func createTooltipView(_ tooltip: Tooltip, _ maxWidth: CGFloat? = nil) -> some View {
+        if let maxWidth = maxWidth {
+            return AnyView(TooltipView(tooltip: tooltip).frame(maxWidth: maxWidth))
+        } else {
+            return AnyView(TooltipView(tooltip: tooltip).fixedSize())
+        }
     }
 }

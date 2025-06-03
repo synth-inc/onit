@@ -12,7 +12,14 @@ import Foundation
  */
 struct ChatEndpointMessagesBuilder {
     
-    static func user(instructions: [String], inputs: [Input?], files: [[URL]], autoContexts: [[String: String]], webSearchContexts: [[(title: String, content: String, source: String, url: URL?)]]) -> [String] {
+    static func user(
+        instructions: [String],
+        inputs: [Input?],
+        files: [[URL]],
+        autoContexts: [[String: String]],
+        webSearchContexts: [[(title: String, content: String, source: String, url: URL?)]],
+        textsContexts: [[Input]]
+    ) -> [String] {
         var userMessages: [String] = []
         for (index, instruction) in instructions.enumerated() {
             var message = ""
@@ -46,9 +53,20 @@ struct ChatEndpointMessagesBuilder {
                     message += "\n\(webSearchContext.content)"
                 }
             }
+            
+            if !textsContexts[index].isEmpty {
+                message += "\n\nUse the following highlighted text as context. When present, highlighted text and selected text should take priority over other context."
+                for highlightedText in textsContexts[index] {
+                    if let application = highlightedText.application {
+                        message += "\n\nHighlighted Text Content from \(application): \(highlightedText.selectedText)"
+                    } else {
+                        message += "\n\nHighlighted Text Content: \(highlightedText.selectedText)"
+                    }
+                }
+            }
 
            if let input = inputs[index], !input.selectedText.isEmpty { 
-                message += "\n\nUse the following selected text as context. When present, selected text should take priority over other context."
+                message += "\n\nUse the following selected text as context. When present, selected text and highlighted text should take priority over other context."
                 if let application = input.application {
                     message += "\n\nSelected Text from \(application): \(input.selectedText)"
                 } else {

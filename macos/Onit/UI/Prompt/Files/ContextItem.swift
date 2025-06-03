@@ -36,6 +36,25 @@ struct ContextItem: View {
                     action: showContextWindow,
                     removeAction: isEditing ? { removeContextItem() } : nil   
                 )
+            case .text(let text):
+                ContextTag(
+                    text: "Text: \(name)",
+                    textColor: isEditing ? .T_2 : .white,
+                    background: isEditing ? .gray500 : .clear,
+                    hoverBackground: isEditing ? .gray400 : .gray600,
+                    borderColor: getTextContextBorderColor(text.selectedText),
+                    maxWidth: isEditing ? 190 : .infinity,
+                    iconView: ContextImage(context: item),
+                    tooltip: "Highlighted text",
+                    action: { state.selectedHighlightedText = text },
+                    removeAction: isEditing ? {
+                        removeContextItem()
+                        
+                        if state.selectedHighlightedText == text {
+                            state.selectedHighlightedText = nil
+                        }
+                    } : nil
+                )
             default:
                 ContextTag(
                     text: name,
@@ -67,6 +86,8 @@ struct ContextItem: View {
             title
         case .web(let websiteUrl, let websiteTitle, _):
             websiteTitle.isEmpty ? websiteUrl.host() ?? websiteUrl.absoluteString : websiteTitle
+        case .text(let text):
+            text.selectedText
         }
     }
     
@@ -90,6 +111,20 @@ struct ContextItem: View {
 // MARK: - Private Functions
 
 extension ContextItem {
+    private func getTextContextBorderColor(_ text: String) -> Color {
+        if let selectedHighlightedText = state.selectedHighlightedText,
+           selectedHighlightedText.selectedText == text
+        {
+            if isEditing {
+                return .gray400
+            } else {
+                return .gray600
+            }
+        } else {
+            return .clear
+        }
+    }
+    
     private func showContextWindow() {
         ContextWindowsManager.shared.showContextWindow(
             windowState: state,

@@ -18,6 +18,7 @@ actor StreamingClient {
               images: [[URL]],
               autoContexts: [[String: String]],
               webSearchContexts: [[(title: String, content: String, source: String, url: URL?)]],
+              textsContexts: [[Input]],
               responses: [String],
               useOnitServer: Bool,
               model: AIModel,
@@ -28,7 +29,9 @@ actor StreamingClient {
             inputs: inputs,
             files: files,
             autoContexts: autoContexts,
-            webSearchContexts: webSearchContexts)
+            webSearchContexts: webSearchContexts,
+            textsContexts: textsContexts
+        )
         let endpoint = try ChatStreamingEndpointBuilder.build(
             useOnitServer: useOnitServer,
             model: model,
@@ -54,6 +57,7 @@ actor StreamingClient {
                    images: [[URL]],
                    autoContexts: [[String: String]],
                    webSearchContexts: [[(title: String, content: String, source: String, url: URL?)]],
+                   textsContexts: [[Input]],
                    responses: [String],
                    model: String) async throws -> AsyncThrowingStream<String, Error> {
         let userMessages = ChatEndpointMessagesBuilder.user(
@@ -61,7 +65,9 @@ actor StreamingClient {
             inputs: inputs,
             files: files,
             autoContexts: autoContexts,
-            webSearchContexts: webSearchContexts)
+            webSearchContexts: webSearchContexts,
+            textsContexts: textsContexts
+        )
         let localMessages = ChatEndpointMessagesBuilder.local(
             images: images,
             responses: responses,

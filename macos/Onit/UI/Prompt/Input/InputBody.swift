@@ -21,53 +21,59 @@ struct InputBody: View {
         self.input = input
     }
 
-    var height: CGFloat {
-        min(textHeight, 73)
-    }
-
     var body: some View {
-        ViewThatFits(in: .vertical) {
+        Group {
             if let text = text {
-                textView(text: text)
-                ScrollView {
-                    textView(text: text)
+                if inputExpanded {
+                    textScrollView(text)
                 }
             } else {
-                ProgressView("Loading highlighted text...")
-                    .controlSize(.small)
-                    .padding(.vertical, 16)
-                    .background {
-                        geometryReader
-                    }
+                loader
             }
         }
-        .frame(height: inputExpanded ? height : 0)
         .onChange(of: input.selectedText, initial: true) {
             DispatchQueue.main.async {
                 text = input.selectedText
             }
         }
     }
+}
 
-    func textView(text: String) -> some View {
-        Text(text)
-            .multilineTextAlignment(.leading)
-            .foregroundColor(.FG)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .fixedSize(horizontal: false, vertical: true)
-            .padding(10)
-            .background {
-                geometryReader
-            }
-    }
+// MARK: - Child Components
 
-    var geometryReader: some View {
-        GeometryReader { proxy in
-            Color.clear
-                .onAppear {
-                    textHeight = proxy.size.height
+extension InputBody {
+    private func textScrollView(_ text: String) -> some View {
+        ScrollView {
+            Text(text)
+                .styleText(size: 13, weight: .regular)
+                .padding(.top, 4)
+                .padding([.horizontal, .bottom], 12)
+                .background {
+                    GeometryReader { proxy in
+                        Color.clear
+                            .onAppear {
+                                textHeight = proxy.size.height
+                            }
+                            .onChange(of: proxy.size.height) { _, newHeight in
+                                textHeight = newHeight
+                            }
+                    }
                 }
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .frame(maxHeight: min(textHeight, 222))
+    }
+    
+    private var loader: some View {
+        VStack(alignment: .center, spacing: 12) {
+            ProgressView()
+                .controlSize(.small)
+            
+            Text("Loading highlighted text...")
+                .styleText(size: 13, weight: .regular)
+        }
+        .frame(maxWidth: .infinity)
+        .padding(12)
     }
 }
 

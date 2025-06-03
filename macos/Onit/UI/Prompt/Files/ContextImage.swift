@@ -20,6 +20,8 @@ struct ContextImage: View {
             file
         case .webSearch(_, _, let source, _):
             webSearchContext(domain: source)
+        case .text:
+            text
         default:
             warning
         }
@@ -71,6 +73,11 @@ struct ContextImage: View {
                     .padding(2)
             }
         }
+    }
+    
+    var text: some View {
+        Image(.text)
+            .addIconStyles(iconSize: 14)
     }
     
     var warning: some View {

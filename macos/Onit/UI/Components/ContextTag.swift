@@ -13,7 +13,9 @@ struct ContextTag: View {
     private let hoverTextColor: Color
     private let background: Color
     private let hoverBackground: Color
-    private let hasHoverBorder: Bool
+    private let borderColor: Color
+    private let hoverBorderColor: Color
+    private let hasDottedBorder: Bool
     private let maxWidth: CGFloat
     private let isLoading: Bool
     private let shouldFadeIn: Bool
@@ -31,7 +33,9 @@ struct ContextTag: View {
         hoverTextColor: Color = .white,
         background: Color = .gray500,
         hoverBackground: Color = .gray400,
-        hasHoverBorder: Bool = false,
+        borderColor: Color = .clear,
+        hoverBorderColor: Color = .clear,
+        hasDottedBorder: Bool = false,
         maxWidth: CGFloat = 155,
         isLoading: Bool = false,
         shouldFadeIn: Bool = false,
@@ -48,7 +52,9 @@ struct ContextTag: View {
         self.hoverTextColor = hoverTextColor
         self.background = background
         self.hoverBackground = hoverBackground
-        self.hasHoverBorder = hasHoverBorder
+        self.borderColor = borderColor
+        self.hoverBorderColor = hoverBorderColor
+        self.hasDottedBorder = hasDottedBorder
         self.maxWidth = maxWidth
         self.isLoading = isLoading
         self.shouldFadeIn = shouldFadeIn
@@ -137,12 +143,14 @@ struct ContextTag: View {
                 if isHovering {
                     TooltipManager.shared.setTooltip(
                         Tooltip(prompt: tooltip ?? ""),
+                        maxWidth: 200,
                         delayStart: 0.4,
                         delayEnd: 0
                     )
                 } else {
                     TooltipManager.shared.setTooltip(
                         nil,
+                        maxWidth: 200,
                         delayEnd: 0
                     )
                 }
@@ -151,8 +159,8 @@ struct ContextTag: View {
         .addAnimation(dependency: isHoveredBody)
         .addBorder(
             cornerRadius: 4,
-            stroke: hasHoverBorder && isHoveredBody ? .T_4 : .clear,
-            dotted: true
+            stroke: isHoveredBody ? hoverBorderColor : borderColor,
+            dotted: hasDottedBorder
         )
         .addButtonEffects(
             background: background,

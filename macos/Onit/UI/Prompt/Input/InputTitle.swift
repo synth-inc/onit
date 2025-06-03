@@ -10,6 +10,7 @@ import SwiftUI
 struct InputTitle: View {
     @Binding var inputExpanded: Bool
     var input: Input
+    var close: (() -> Void)? = nil
 
     var sourceString: String {
         guard let sourceText = input.application else { return "" }
@@ -19,17 +20,28 @@ struct InputTitle: View {
     var inputString: String {
         "Input\(sourceString)"
     }
+    
+    var title: String {
+        guard let sourceText = input.application else { return "No Title" }
+        return "From \(sourceText)"
+    }
 
     var body: some View {
         HStack(spacing: 8) {
-            Text(inputString)
-                .appFont(.medium13)
+            Text(title)
+                .styleText(
+                    size: 12,
+                    color: .gray100
+                )
             Spacer()
-            InputButtons(inputExpanded: $inputExpanded, input: input)
+            InputButtons(
+                inputExpanded: $inputExpanded,
+                input: input,
+                close: close
+            )
         }
-        .foregroundStyle(.gray100)
         .padding(.horizontal, 12)
-        .padding(.vertical, 8)
+        .padding(.vertical, 4)
     }
 }
 

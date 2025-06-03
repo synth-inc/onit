@@ -571,16 +571,38 @@ class AccessibilityNotificationsManager: ObservableObject {
     private func processSelectedText(_ text: String?, elementFrame: CGRect?) {
         guard Defaults[.autoContextFromHighlights],
               let selectedText = text,
-              HighlightedTextValidator.isValid(text: selectedText) else {
-            
+              HighlightedTextValidator.isValid(text: selectedText)
+        else {
             PanelStateCoordinator.shared.state.pendingInput = nil
+            PanelStateCoordinator.shared.state.highlightedText = nil
             return
         }
         
-        screenResult.userInteraction.selectedText = selectedText
-        
         let input = Input(selectedText: selectedText, application: currentSource ?? "")
-        PanelStateCoordinator.shared.state.pendingInput = input
+        
+        if Defaults[.useTextHighlightContext] {
+            let pendingContextList = PanelStateCoordinator.shared.state.getPendingContextList()
+            
+            let textAlreadyAdded = pendingContextList.contains { context in
+                if case .text(let text) = context {
+                    return text.selectedText == selectedText
+                }
+                return false
+            }
+            
+            if !textAlreadyAdded {
+                let alreadyHasTextContext = pendingContextList.contains { $0.text != nil }
+                
+                if alreadyHasTextContext {
+                    PanelStateCoordinator.shared.state.highlightedText = input
+                } else {
+                    PanelStateCoordinator.shared.state.addContext(texts: [input])
+                }
+            }
+        } else {
+            screenResult.userInteraction.selectedText = selectedText
+            PanelStateCoordinator.shared.state.pendingInput = input
+        }
     }
 
     // MARK: Debug
