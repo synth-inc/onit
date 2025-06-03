@@ -116,6 +116,38 @@ extension FileRow {
                 )
             }
         }
+            
+            return false
+        } else {
+            return false
+        }
+    }
+    
+    private func addHighlightedTextToContext(_ highlightedText: Input) {
+        let pendingContextList = windowState.getPendingContextList()
+        
+        let textAlreadyAdded = checkContextTextAlreadyAdded(
+            contextList: pendingContextList,
+            text: highlightedText.selectedText
+        )
+        
+        if !textAlreadyAdded {
+            windowState.addContext(texts: [highlightedText])
+        }
+    }
+    
+    private func addWindowToContext() {
+        if let windowName = currentWindowInfo.name,
+           let pid = currentWindowInfo.pid,
+           let focusedWindow = pid.firstMainWindow
+        {
+            windowState.addAutoContextTasks[windowName]?.cancel()
+            
+            windowState.addAutoContextTasks[windowName] = Task {
+                let _ = AccessibilityNotificationsManager.shared.windowsManager.append(focusedWindow, pid: pid)
+                AccessibilityNotificationsManager.shared.fetchAutoContext(pid: pid, state: windowState)
+            }
+        }
     }
     
     @ViewBuilder
