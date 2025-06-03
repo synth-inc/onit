@@ -19,6 +19,9 @@ class ChatScrollView: NSScrollView {
     private var shouldCompensateGrowth: Bool = false
     private var frozenScrollPosition: CGFloat = 0
     
+    private var manualScrollDetectedTime: Date?
+    private let gracePeriod: TimeInterval = 0.5
+    
     private var _hasUserManuallyScrolled: Bool = false {
         didSet {
             onUserScrollStateChanged?(_hasUserManuallyScrolled)
@@ -163,10 +166,12 @@ class ChatScrollView: NSScrollView {
         let maxScrollPosition = max(0, contentHeight - visibleRect.height)
         let distanceFromBottom = contentHeight - (visibleRect.origin.y + visibleRect.height)
         let isInElasticZone = currentScrollPosition < 0 || currentScrollPosition > maxScrollPosition
+        let isInGracePeriod = manualScrollDetectedTime?.timeIntervalSinceNow ?? -1 > -gracePeriod
         
-        if scrollDirection > 0 {
+        if scrollDirection > 0 && !isInGracePeriod {
             if distanceFromBottom <= 50 || (distanceFromBottom <= 100 && isInElasticZone) {
                 _hasUserManuallyScrolled = false
+                manualScrollDetectedTime = nil
             	startAutoScrolling()
             }
         }
@@ -174,8 +179,9 @@ class ChatScrollView: NSScrollView {
             lastScrollPosition = currentScrollPosition
             return
         }
-        if scrollDirection < -5 {
+        if scrollDirection < 0 {
             _hasUserManuallyScrolled = true
+            manualScrollDetectedTime = Date()
             stopAutoScrolling()
         }
         
