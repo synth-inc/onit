@@ -222,12 +222,10 @@ extension FileRow {
     private func addHighlightedTextToContext(_ highlightedText: Input) {
         let pendingContextList = windowState.getPendingContextList()
         
-        let textAlreadyAdded = pendingContextList.contains { context in
-            if case .text(let text) = context {
-                return text.selectedText == highlightedText.selectedText
-            }
-            return false
-        }
+        let textAlreadyAdded = checkContextTextAlreadyAdded(
+            contextList: pendingContextList,
+            text: highlightedText.selectedText
+        )
         
         if !textAlreadyAdded {
             windowState.addContext(texts: [highlightedText])

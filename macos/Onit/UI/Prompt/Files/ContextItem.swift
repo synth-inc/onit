@@ -24,25 +24,16 @@ struct ContextItem: View {
                     removeContextItem: removeContextItem
                 )
             case .auto(let autoContext):
-                ContextTag(
+                tagButton(
                     text: name,
-                    textColor: isEditing ? .T_2 : .white,
-                    background: isEditing ? .gray500 : .clear,
-                    hoverBackground: isEditing ? .gray400 : .gray600,
-                    maxWidth: isEditing ? 155 : .infinity,
                     iconBundleURL: autoContext.appBundleUrl,
                     tooltip: isEditing ? name : "View auto-context file",
                     action: showContextWindow,
                     removeAction: isEditing ? { removeContextItem() } : nil
                 )
             case .text(let text):
-                ContextTag(
+                tagButton(
                     text: "Text: \(name)",
-                    textColor: isEditing ? .T_2 : .white,
-                    background: isEditing ? .gray500 : .clear,
-                    hoverBackground: isEditing ? .gray400 : .gray600,
-                    borderColor: getTextContextBorderColor(text.selectedText),
-                    maxWidth: isEditing ? 190 : .infinity,
                     iconView: ContextImage(context: item),
                     tooltip: "Highlighted text",
                     action: { state.selectedHighlightedText = text },
@@ -55,14 +46,9 @@ struct ContextItem: View {
                     } : nil
                 )
             default:
-                ContextTag(
+                tagButton(
                     text: name,
-                    textColor: isEditing ? .T_2 : .white,
-                    background: isEditing ? .gray500 : .clear,
-                    hoverBackground: isEditing ? .gray400 : .gray600,
-                    maxWidth: isEditing ? 155 : .infinity,
                     iconView: ContextImage(context: item),
-                    caption: item.fileType,
                     tooltip: isEditing ? name : "View \(item.fileType ?? "") file",
                     action: showContextWindow,
                     removeAction: isEditing ? { removeContextItem() } : nil
@@ -88,6 +74,31 @@ struct ContextItem: View {
         case .text(let text):
             text.selectedText
         }
+    }
+}
+
+// MARK: - Child Components
+
+extension ContextItem {
+    private func tagButton(
+        text: String,
+        iconBundleURL: URL? = nil,
+        iconView: (any View)? = nil,
+        tooltip: String,
+        action: @escaping () -> Void,
+        removeAction: (() -> Void)? = nil
+    ) -> some View {
+        ContextTag(
+            text: text,
+            textColor: isEditing ? .T_2 : Color.primary,  
+            background: isEditing ? .gray500 : .clear,
+            hoverBackground: isEditing ? .gray400 : .gray600,
+            iconBundleURL: iconBundleURL,
+            iconView: iconView,
+            tooltip: tooltip,
+            action: action,
+            removeAction: removeAction
+        )
     }
 }
 

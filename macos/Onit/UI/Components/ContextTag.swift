@@ -35,7 +35,7 @@ struct ContextTag: View {
         borderColor: Color = .clear,
         hoverBorderColor: Color = .clear,
         hasDottedBorder: Bool = false,
-        maxWidth: CGFloat = 155,
+        maxWidth: CGFloat = 190,
         isLoading: Bool = false,
         shouldFadeIn: Bool = false,
         iconBundleURL: URL? = nil,
@@ -69,6 +69,7 @@ struct ContextTag: View {
     @State private var isHoveredRemove: Bool = false
     
     private let height: CGFloat = 24
+    private let tooltipMaxWidth: CGFloat = 200
     
     private var bundleUrlIcon: NSImage? {
         guard let bundleUrl = iconBundleURL else { return nil }
@@ -126,14 +127,14 @@ struct ContextTag: View {
                 if isHovering {
                     TooltipManager.shared.setTooltip(
                         Tooltip(prompt: tooltip ?? ""),
-                        maxWidth: 200,
+                        maxWidth: tooltipMaxWidth,
                         delayStart: 0.4,
                         delayEnd: 0
                     )
                 } else {
                     TooltipManager.shared.setTooltip(
                         nil,
-                        maxWidth: 200,
+                        maxWidth: tooltipMaxWidth,
                         delayEnd: 0
                     )
                 }
