@@ -18,8 +18,8 @@ struct ToolbarRight: View {
 
     var body: some View {
         HStack(alignment: .center, spacing: 4) {
-            localMode
             discord
+            localMode
             history
             settings
         }
@@ -66,7 +66,7 @@ struct ToolbarRight: View {
             icon: .logoDiscord,
             iconSize: 22,
             action: { openDiscord() },
-            tooltipPrompt: "Discord"
+            tooltipPrompt: "Join Discord"
         )
     }
 

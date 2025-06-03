@@ -62,6 +62,7 @@ extension IconButton {
             .resizable()
             .renderingMode(.template)
             .foregroundColor(handleIconColor())
+            .aspectRatio(contentMode: .fit)
             .frame(width: iconSize, height: iconSize)
     }
     
