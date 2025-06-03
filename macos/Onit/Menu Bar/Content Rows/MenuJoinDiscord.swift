@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct MenuJoinDiscord: View {
-    static let link = "https://discord.gg/U5g6ABkv"
+    static let link = "https://discord.gg/2E8WWkvGYZ"
 
     var body: some View {
         MenuBarRow {
@@ -16,14 +16,8 @@ struct MenuJoinDiscord: View {
                 NSWorkspace.shared.open(url)
             }
         } leading: {
-            Text("Join Discord")
+            Text("Join Discord →")
                 .padding(.horizontal, 10)
-        } trailing: {
-            Image(.smallChevRight)
-                .resizable()
-                .renderingMode(.template)
-                .scaledToFit()
-                .frame(width: 6, height: 6)
         }
     }
 }
