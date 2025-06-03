@@ -164,7 +164,7 @@ class ChatScrollView: NSScrollView {
         let distanceFromBottom = contentHeight - (visibleRect.origin.y + visibleRect.height)
         let isInElasticZone = currentScrollPosition < 0 || currentScrollPosition > maxScrollPosition
         
-        if scrollDirection > 5 {
+        if scrollDirection > 0 {
             if distanceFromBottom <= 50 || (distanceFromBottom <= 100 && isInElasticZone) {
                 _hasUserManuallyScrolled = false
             	startAutoScrolling()
