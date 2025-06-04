@@ -8,6 +8,6 @@
 import Foundation
 
 struct WebSocketMessage: Codable {
-    let type: String
     let ocrMessage: OCRMessage
+    let htmlToTextMessage: HtmlToTextMessage
 }
