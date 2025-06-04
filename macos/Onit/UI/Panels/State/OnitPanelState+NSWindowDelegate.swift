@@ -13,6 +13,10 @@ extension OnitPanelState: NSWindowDelegate {
         notifyDelegates { $0.panelBecomeKey(state: self) }
     }
 
+    func windowDidResignKey(_ notification: Notification) {
+        notifyDelegates { $0.panelResignKey(state: self) }
+    }
+
     func windowWillMiniaturize(_ notification: Notification) {
         if !panelMiniaturized {
             panelMiniaturized = true
