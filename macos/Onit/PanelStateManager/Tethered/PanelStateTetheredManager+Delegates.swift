@@ -7,8 +7,6 @@
 
 // MARK: - AccessibilityNotificationsDelegate
 
-import Foundation
-
 extension PanelStateTetheredManager: AccessibilityNotificationsDelegate {
     
     func accessibilityManager(_ manager: AccessibilityNotificationsManager, didActivateWindow window: TrackedWindow) {
@@ -93,19 +91,9 @@ extension PanelStateTetheredManager: OnitPanelStateDelegate {
         
         self.state = state
         foregroundTrackedWindowIfNeeded(state: state)
-        
-        // Tracks when Onit app goes into foreground.
-        DispatchQueue.main.async {
-            NotificationCenter.default.post(name: .panelDidBecomeKey, object: state)
-        }
     }
     
-    func panelResignKey(state: OnitPanelState) {
-        // Tracks when Onit app goes into background.
-        DispatchQueue.main.async {
-            NotificationCenter.default.post(name: .panelDidResignKey, object: state)
-        }
-    }
+    func panelResignKey(state: OnitPanelState) {}
     
     func panelStateDidChange(state: OnitPanelState) {
         handlePanelStateChange(state: state, action: .undefined)

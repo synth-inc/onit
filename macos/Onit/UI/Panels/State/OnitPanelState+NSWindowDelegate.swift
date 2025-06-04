@@ -12,10 +12,6 @@ extension OnitPanelState: NSWindowDelegate {
     func windowDidBecomeKey(_ notification: Notification) {
         notifyDelegates { $0.panelBecomeKey(state: self) }
     }
-    
-    func windowDidResignKey(_ notification: Notification) {
-        notifyDelegates { $0.panelResignKey(state: self) }
-    }
 
     func windowDidResignKey(_ notification: Notification) {
         notifyDelegates { $0.panelResignKey(state: self) }
