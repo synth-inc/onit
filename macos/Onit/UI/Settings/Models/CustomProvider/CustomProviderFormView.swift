@@ -75,6 +75,12 @@ struct CustomProviderFormView: View {
                     return
                 }
 
+                if containsVersionSegment(baseURL) {
+                    errorMessage =
+                        "The base URL should not include the API version or endpoint (for example, for OpenRouter, use 'https://openrouter.ai/api', not 'https://openrouter.ai/api/v1' or 'https://openrouter.ai/api/v1/models')."
+                    return
+                }
+
                 let provider = CustomProvider(
                     name: name,
                     baseURL: baseURL,
@@ -95,6 +101,12 @@ struct CustomProviderFormView: View {
                 errorMessage = "Failed to fetch models: \(error.localizedDescription)"
             }
         }
+    }
+
+    private func containsVersionSegment(_ urlString: String) -> Bool {
+        guard let url = URL(string: urlString) else { return false }
+        let path = url.path.lowercased()
+        return path.range(of: #"\/v\d+"#, options: .regularExpression) != nil
     }
 }
 
