@@ -56,9 +56,9 @@ extension OnitRegularPanel {
         AnalyticsManager.Panel.resized(oldWidth: originalPanelWidth, newWidth: width)
 
         // Check if pinned mode is enabled
-        let usePinnedMode = FeatureFlagManager.shared.usePinnedMode
-        
-        if state.isScreenMode && usePinnedMode {
+        let isPinned = FeatureFlagManager.shared.displayMode == .pinned
+
+        if state.isScreenMode && isPinned {
             // In pinned mode, we need to resize all windows that overlap with the panel
             if let screen = state.trackedScreen ?? NSScreen.mouse,
                let pinnedManager = PanelStateCoordinator.shared.currentManager as? PanelStatePinnedManager {
