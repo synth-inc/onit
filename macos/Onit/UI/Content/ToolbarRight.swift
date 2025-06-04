@@ -18,6 +18,7 @@ struct ToolbarRight: View {
 
     var body: some View {
         HStack(alignment: .center, spacing: 4) {
+            discord
             localMode
             history
             settings
@@ -51,6 +52,21 @@ struct ToolbarRight: View {
             activeColor: .limeGreen,
             tooltipPrompt: "Local Mode",
             tooltipShortcut: .keyboardShortcuts(.toggleLocalMode)
+        )
+    }
+
+    func openDiscord() {
+        if let url = URL(string: MenuJoinDiscord.link) {
+            NSWorkspace.shared.open(url)
+        }
+    }
+
+    var discord: some View {
+        IconButton(
+            icon: .logoDiscord,
+            iconSize: 22,
+            action: { openDiscord() },
+            tooltipPrompt: "Join Discord"
         )
     }
 
