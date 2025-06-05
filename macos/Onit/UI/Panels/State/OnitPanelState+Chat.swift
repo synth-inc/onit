@@ -139,7 +139,15 @@ extension OnitPanelState {
                 streamedResponse = ""
                 
                 let isNewInstruction = !prompt.priorInstructions.dropLast().contains(prompt.instruction)
-                if Defaults[.webSearchEnabled] && isNewInstruction {
+
+                // Determine web search strategy
+                let webSearchEnabled = Defaults[.webSearchEnabled]
+                let hasTavilyToken = !Defaults[.tavilyAPIToken].isEmpty && Defaults[.isTavilyAPITokenValidated]
+                let shouldPerformClientSideWebSearch = webSearchEnabled && hasTavilyToken && isNewInstruction
+                let shouldUseServerSideWebSearch = webSearchEnabled && !hasTavilyToken && isNewInstruction
+
+                // Perform client-side web search with Tavily if available
+                if shouldPerformClientSideWebSearch {
                     isSearchingWeb[prompt.id] = true
                     let searchResults = await performWebSearch(query: curInstruction)
                     if !searchResults.isEmpty {
@@ -184,7 +192,8 @@ extension OnitPanelState {
                             responses: responsesHistory,
                             useOnitServer: useOnitChat,
                             model: model,
-                            apiToken: apiToken)
+                            apiToken: apiToken,
+                            includeSearch: shouldUseServerSideWebSearch ? true : nil)
                         for try await response in asyncText {
                             streamedResponse += response
                         }
