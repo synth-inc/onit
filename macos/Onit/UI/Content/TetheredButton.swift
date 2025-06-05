@@ -25,7 +25,7 @@ struct TetheredButton: View {
     }
 
     private var arrowRotation: Angle {
-        if FeatureFlagManager.shared.usePinnedMode {
+        if FeatureFlagManager.shared.displayMode != .tethered {
             return .degrees(0)
         }
 
