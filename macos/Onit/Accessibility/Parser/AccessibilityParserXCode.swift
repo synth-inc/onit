@@ -13,17 +13,18 @@ class AccessibilityParserXCode: AccessibilityParserBase {
     // MARK: - AccessibilityParserLogic
 
     /** See ``AccessibilityParserLogic`` parse function */
-    override func parse(element: AXUIElement) async -> [String: String] {
+    override func parse(element: AXUIElement, includeBoundingBoxes: Bool ) async -> ([String: String], [TextBoundingBox]?) {
         var result: [String: String] = [:]
         var highlightedTextFound = false
-
-        return await AccessibilityParserUtility.recursivelyParse(
+        var boundingBoxes : [TextBoundingBox] = []
+        
+        result = await AccessibilityParserUtility.recursivelyParse(
             element: element,
             maxDepth: AccessibilityParserConfig.recursiveDepthMax
         ) { element, depth in
             
             if !highlightedTextFound {
-                let parentResult = await super.parse(element: element)
+                let (parentResult, parentBoundingBoxes) = await super.parse(element: element)
                 
                 if !parentResult.isEmpty {
                     highlightedTextFound = true
@@ -34,6 +35,7 @@ class AccessibilityParserXCode: AccessibilityParserBase {
             guard let description = element.description(),
                   let role = element.role(),
                   role == kAXTextAreaRole,
+                  let frame = element.getFrame(),
                   let value = element.value(),
                   !value.isEmpty
             else {
@@ -44,15 +46,16 @@ class AccessibilityParserXCode: AccessibilityParserBase {
             if description == "Console" {
                 return .stopRecursing(result.isEmpty ? nil : result)
             }
-
+            
             switch description {
             case "Source Editor":
                 result[AccessibilityParsedElements.Xcode.editor] = value
+                boundingBoxes.append(TextBoundingBox(text: value, boundingBox: frame, elementRole: role, elementDescription: element.description() ?? ""))
             default:
                 break
             }
-
             return .continueRecursing(result.isEmpty ? nil : result)
         }
+        return (result, includeBoundingBoxes ? boundingBoxes : nil)
     }
 }

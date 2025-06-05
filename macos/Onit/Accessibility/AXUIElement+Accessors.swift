@@ -307,6 +307,33 @@ extension AXUIElement {
     public func focused() -> Bool? {
         return self.attribute(forAttribute: kAXFocusedAttribute as CFString) as? Bool
     }
+    
+    func documentURL() -> String? {
+        return self.attribute(forAttribute: kAXDocumentAttribute as CFString) as? String
+    }
+    
+    func documentRootDomain() -> String? {
+        guard let documentString = documentURL() else { return nil }
+        
+        // Handle both URL strings and plain URLs
+        let urlString: String
+        if documentString.hasPrefix("http://") || documentString.hasPrefix("https://") {
+            urlString = documentString
+        } else if documentString.contains(".") && !documentString.contains("/") {
+            // Looks like a domain without protocol
+            urlString = "https://\(documentString)"
+        } else {
+            return nil
+        }
+        
+        guard let url = URL(string: urlString),
+              let host = url.host else { return nil }
+        
+        // Remove www. prefix if present
+        let domain = host.hasPrefix("www.") ? String(host.dropFirst(4)) : host
+        
+        return domain
+    }
 }
 
 //
@@ -466,7 +493,7 @@ extension AXUIElement {
 //
 //    public func window() -> AXUIElement? {
 //        var error : AXError = AXError.failure
-//        return self.valueOfAXUIElement(attributeKey: kAXWindowAttribute,error: &error)
+//        return self.valueOfAXUIElement(attributeKey: kAXWindowAttribute, error: &error)
 //    }
 //
 //    public func topLevelUIElement() -> AXUIElement? {
@@ -511,6 +538,7 @@ extension AXUIElement {
 //            for axValue in axValues {
 //                if let range = axValue.cfRange(){
 //                    result.append(range)
+//
 //                }
 //
 //            }

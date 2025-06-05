@@ -473,8 +473,7 @@ class AccessibilityNotificationsManager: ObservableObject {
             
             Task {
                 do {
-                    let results = try await AccessibilityParser.shared.getAllTextInElement(windowElement: mainWindow)
-                    
+                    let (results, boundingBoxes) = try await AccessibilityParser.shared.getAllTextInElement(windowElement: mainWindow)
                     self.handleWindowContent(
                         results,
                         for: state,
