@@ -45,16 +45,25 @@ struct ChatView: View {
                     }
                     
                     if hasUserManuallyScrolled {
-                        IconButton(
-                            icon: .circleArrowUp,
-                            action: {
-                                hasUserManuallyScrolled = false
-                            },
-                            tooltipPrompt: "Scroll to bottom"
-                        )
-                        .rotationEffect(.degrees(180))
-                        .padding(.bottom, 12)
-                        .transition(.scale.combined(with: .opacity))
+                        HStack {
+                            Spacer()
+                            IconButton(
+                                icon: .arrowDown,
+                                buttonSize: 36,
+                                action: {
+                                    hasUserManuallyScrolled = false
+                                },
+                                activeColor: .white,
+                                inactiveColor: .white,
+                                tooltipPrompt: "Scroll to bottom",
+                                hoverBackgroundColor: .gray400
+                            )
+                            .background(.gray600)
+                            .addBorder(cornerRadius: 18, stroke: .gray400)
+                            .transition(.scale.combined(with: .opacity))
+                            .padding(.trailing, 20)
+                        }
+                        .padding(.bottom, 4)
                     }
                 }
                 .onChange(of: state.currentChat) { old, new in
