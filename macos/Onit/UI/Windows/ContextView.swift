@@ -237,14 +237,7 @@ struct ContextView: View {
                     }
                 }
             } else if errorCode == "1800" {
-                updateOCRComparisonResult()
-                if ocrComparisonResult != nil {
-                    ocrToShow = ocrComparisonResult
-//                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
-                    showOCRDetails = true
-//                    }
-                }
-                
+                showOCRDetails = true
             }
         }
         .fixedSize(horizontal: false, vertical: true)
