@@ -55,7 +55,11 @@ struct ContextItem: View {
     var name: String {
         switch item {
         case .auto(let autoContext):
-            autoContext.appTitle
+            if let matchPercentage = autoContext.ocrMatchingPercentage {
+                "\(matchPercentage)% - \(autoContext.appTitle)"
+            } else {
+                autoContext.appTitle
+            }
         case .file(let url), .image(let url):
             url.lastPathComponent
         case .error(_, let error):

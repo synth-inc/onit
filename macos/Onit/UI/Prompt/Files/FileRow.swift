@@ -108,8 +108,17 @@ struct FileRow: View {
         .onChange(of: currentWindowInfo.name) { _, _ in
             windowAlreadyInContext = detectCurrentWindowAlreadyInContext()
         }
-        .onChange(of: contextList) { _, _ in
+        .onChange(of: contextList) { oldContexts, newContexts in
             windowAlreadyInContext = detectCurrentWindowAlreadyInContext()
+            
+            #if DEBUG
+            Task {
+                _ = await processContextChangesWithOCR(
+                    oldContexts: oldContexts,
+                    newContexts: newContexts
+                )
+            }
+            #endif
         }
         .onChange(of: windowState.addAutoContextTasks) { _, _ in
             if let windowName = currentWindowInfo.name,

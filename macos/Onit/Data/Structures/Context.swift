@@ -14,6 +14,7 @@ struct AutoContext: Codable, Hashable {
     let appTitle: String
     let appContent: [String: String]
     let appBundleUrl: URL?
+    var ocrMatchingPercentage: Int?
 }
 
 enum Context {
@@ -242,7 +243,8 @@ extension Context: Equatable, Hashable {
             return autoContext1.appName == autoContext2.appName &&
             autoContext1.appHash == autoContext2.appHash &&
             autoContext1.appTitle == autoContext2.appTitle &&
-            autoContext1.appContent == autoContext2.appContent
+            autoContext1.appContent == autoContext2.appContent &&
+            autoContext1.ocrMatchingPercentage == autoContext2.ocrMatchingPercentage
         case (.webSearch(let title1, let content1, let source1, _), .webSearch(let title2, let content2, let source2, _)):
             return title1 == title2 && content1 == content2 && source1 == source2
         case (.web(let websiteUrl1, _, _), .web(let websiteUrl2, _, _)):
