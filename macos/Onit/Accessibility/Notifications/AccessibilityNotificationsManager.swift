@@ -35,7 +35,9 @@ class AccessibilityNotificationsManager: ObservableObject {
     private var valueDebounceWorkItem: DispatchWorkItem?
     private var selectionDebounceWorkItem: DispatchWorkItem?
     private var parseDebounceWorkItem: DispatchWorkItem?
-
+    
+    private var initialValue: String?  // Store the initial value for value changes
+    
     private var timedOutWindowHash: Set<UInt> = []  // Track window's hash that have timed out
     
     private var lastActiveWindowPid: pid_t?
@@ -221,15 +223,36 @@ class AccessibilityNotificationsManager: ObservableObject {
             return
         }
 
+        // If this is the first value change, store the initial value
+        if initialValue == nil {
+            initialValue = element.value()
+        }
+
+        // Check for special characters that should trigger immediate processing
+        if let value = element.value() {
+            let lastChar = value.last
+            if lastChar == "." || lastChar == "!" || lastChar == "?" || 
+               lastChar == "\n" || lastChar == "\r" || lastChar == "\t" {
+                // Process immediately without debouncing
+                // processValueChanged(for: element, initialValue: initialValue)
+                initialValue = nil
+                return
+            }
+        }
+
         valueDebounceWorkItem?.cancel()
 
         let workItem = DispatchWorkItem { [weak self] in
-            self?.processValueChanged(for: element)
+            guard let self = self else { return }
+            self.processValueChanged(for: element, initialValue: self.initialValue)
+            self.initialValue = nil  // Reset the initial value after processing
         }
+
+
 
         valueDebounceWorkItem = workItem
 
-        DispatchQueue.main.asyncAfter(deadline: .now() + Config.debounceInterval, execute: workItem)
+        DispatchQueue.main.asyncAfter(deadline: .now() + Config.typingDebounceInterval, execute: workItem)
     }
 
     private func handleSelectionChange(for element: AXUIElement) {
@@ -446,7 +469,7 @@ class AccessibilityNotificationsManager: ObservableObject {
 
     // MARK: Value Changed
 
-    private func processValueChanged(for element: AXUIElement) {
+    private func processValueChanged(for element: AXUIElement, initialValue: String?) {
         // Ensure we're on the main thread
         dispatchPrecondition(condition: .onQueue(.main))
 
@@ -457,10 +480,29 @@ class AccessibilityNotificationsManager: ObservableObject {
             return
         }
         
+        // Calculate the diff between initial and new value if we have both
+        if let initialValue = initialValue {
+            let newValue = userInput.fullText
+            let diff = calculateDiff(from: initialValue, to: newValue)
+            print("Value changed - Diff: \(diff)")
+        }
+        
         self.userInput = userInput
         self.inputPosition = element.position()
 
-        showDebug()
+        ()
+    }
+
+    private func calculateDiff(from oldValue: String, to newValue: String) -> String {
+        // Simple diff calculation - you might want to use a more sophisticated diff algorithm
+        if oldValue.isEmpty {
+            return "Added: \(newValue)"
+        } else if newValue.isEmpty {
+            return "Removed: \(oldValue)"
+        } else if oldValue != newValue {
+            return "Changed from '\(oldValue)' to '\(newValue)'"
+        }
+        return "No change"
     }
 
     // MARK: Text Selection
@@ -475,7 +517,7 @@ class AccessibilityNotificationsManager: ObservableObject {
         processSelectedText(selectedTextExtracted, elementFrame: elementBounds)
         showDebug()
     }
-
+    
     private func processSelectedText(_ text: String?, elementFrame: CGRect?) {
         guard Defaults[.autoContextFromHighlights],
               let selectedText = text,
@@ -500,15 +542,18 @@ class AccessibilityNotificationsManager: ObservableObject {
             AXUIElementCopyAttributeValue(
                 element, kAXSelectedTextRangeAttribute as CFString, &selectedRangeValue) == .success
         else {
-            print("Accessibility.getUserInput - Failed to get selected text range")
+            print("getUserInput - Failed to get selected text range")
             return nil
         }
         let rangeValue = selectedRangeValue as! AXValue
 
         guard AXValueGetValue(rangeValue, .cfRange, &selectedRange) else {
-            print("Accessibility.getUserInput - Failed to convert range value")
+            print("getUserInput - Failed to convert range value")
             return nil
         }
+
+        print("getUserInput - Element role: \(element.role() ?? "unknown")")
+        print("getUserInput - Selected range: \(selectedRange)")
 
         var selectedTextValue: CFTypeRef?
         _ = AXUIElementCopyParameterizedAttributeValue(
@@ -518,8 +563,8 @@ class AccessibilityNotificationsManager: ObservableObject {
             &selectedTextValue
         )
 
+        // print("getUserInput - Selected text value: \(selectedTextValue ?? "nil")")
         guard let fullText = element.value() else { return nil }
-        
         
         let cursorPosition = selectedRange.location
         let precedingText = String(fullText.prefix(cursorPosition))

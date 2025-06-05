@@ -43,53 +43,55 @@ class TypeaheadLearningService {
             
             var lastSavedWord = ""
 
-            
-            for try await (userInput, screenResult) in publisher.values {
-                // Skip if text is empty
-                guard !userInput.fullText.isEmpty else { continue }
-                
-                let currentText = userInput.fullText
-                let cursorPosition = userInput.cursorPosition
-                
-                let cursorIndex = currentText.index(currentText.startIndex, offsetBy: cursorPosition)
-                var traversePosition = cursorIndex
-                
-                // Move backwards until we find whitespace or reach the start
-                var charactersBack = 0
-                var wordsBack = 0
-                var wordOneStartIndex = traversePosition
-                
-                while traversePosition > currentText.startIndex {
-                    let previousIndex = currentText.index(before: traversePosition)
-                    let char = currentText[previousIndex]
-                    if char.isWhitespace {
-                        wordsBack += 1
-                        if wordsBack == 1 {
-                            // Only update previousWordStartIndex if we haven't found it yet
-                            if wordOneStartIndex == cursorIndex {
-                                wordOneStartIndex = previousIndex
-                            }
-                        }
-                        if wordsBack == 2 {
-                            break
-                        }
-                    }
-                    traversePosition = previousIndex
-                    charactersBack += 1
-                }
-                let currentWordAtCursor = String(currentText[wordOneStartIndex..<cursorIndex])
-                let previousWord = String(currentText[traversePosition..<wordOneStartIndex])
-
-                if currentWordAtCursor.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && !previousWord.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                    if previousWord != lastSavedWord {
-                        
-                        lastSavedWord = previousWord
-                        
-                    } else {
-                        print("skipping word we just done")
-                    }
-                }
-            }
+//        
+//            for try await (userInput, screenResult) in publisher.values {
+//                // Skip if text is empty
+//                guard !userInput.fullText.isEmpty else { continue }
+//                
+//                let currentText = userInput.fullText
+//                let cursorPosition = userInput.cursorPosition
+//
+                    // STring INdex out of bounds happeneing here.
+                    // The cursorPosition is way outside of the bounds of the string. The string is short (in Notes) and cursor position is 15293. We must not be getting the full string somehow.
+//                let cursorIndex = currentText.index(currentText.startIndex, offsetBy: cursorPosition)
+//                var traversePosition = cursorIndex
+//                
+//                // Move backwards until we find whitespace or reach the start
+//                var charactersBack = 0
+//                var wordsBack = 0
+//                var wordOneStartIndex = traversePosition
+//                
+//                while traversePosition > currentText.startIndex {
+//                    let previousIndex = currentText.index(before: traversePosition)
+//                    let char = currentText[previousIndex]
+//                    if char.isWhitespace {
+//                        wordsBack += 1
+//                        if wordsBack == 1 {
+//                            // Only update previousWordStartIndex if we haven't found it yet
+//                            if wordOneStartIndex == cursorIndex {
+//                                wordOneStartIndex = previousIndex
+//                            }
+//                        }
+//                        if wordsBack == 2 {
+//                            break
+//                        }
+//                    }
+//                    traversePosition = previousIndex
+//                    charactersBack += 1
+//                }
+//                let currentWordAtCursor = String(currentText[wordOneStartIndex..<cursorIndex])
+//                let previousWord = String(currentText[traversePosition..<wordOneStartIndex])
+//
+//                if currentWordAtCursor.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && !previousWord.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+//                    if previousWord != lastSavedWord {
+//                        
+//                        lastSavedWord = previousWord
+//                        
+//                    } else {
+//                        print("skipping word we just done")
+//                    }
+//                }
+//            }
         }
     }
     

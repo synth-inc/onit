@@ -12,6 +12,6 @@ extension AccessibilityNotificationsManager {
     struct Config {
 
         static let debounceInterval: TimeInterval = 0.3  // 300ms
-
+        static let typingDebounceInterval: TimeInterval = 1.0 // 1s
     }
 }
