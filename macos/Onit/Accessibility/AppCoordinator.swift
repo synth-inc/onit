@@ -34,7 +34,9 @@ class AppCoordinator {
         notificationsManager = AccessibilityNotificationsManager.shared
         panelStateCoordinator = PanelStateCoordinator.shared
         featureFlagManager = FeatureFlagManager.shared
+        #if DEBUG || BETA
         debugManager = DebugManager.shared
+        #endif
         
         observerManager.delegate = notificationsManager
         
