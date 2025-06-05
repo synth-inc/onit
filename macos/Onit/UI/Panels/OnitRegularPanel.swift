@@ -75,11 +75,8 @@ class OnitRegularPanel: NSPanel {
         var contentView = ContentView()
             .modelContainer(state.container)
             .environment(\.windowState, state)
+            .padding(.leading, displayMode == .conventional ? 0 : TetheredButton.width / 2)
 
-        if displayMode != .conventional {
-            contentView = contentView.padding(.leading, TetheredButton.width / 2)
-        }
-        
         let hostingView = NSHostingView(rootView: contentView)
         hostingView.wantsLayer = true
         hostingView.layer?.cornerRadius = 14
