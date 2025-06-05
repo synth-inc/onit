@@ -72,10 +72,13 @@ class OnitRegularPanel: NSPanel {
         standardWindowButton(.miniaturizeButton)?.isHidden = hideButtons
         standardWindowButton(.zoomButton)?.isHidden = hideButtons
         
-        let contentView = ContentView()
+        var contentView = ContentView()
             .modelContainer(state.container)
             .environment(\.windowState, state)
-            .padding(.leading, TetheredButton.width / 2)
+
+        if displayMode != .conventional {
+            contentView = contentView.padding(.leading, TetheredButton.width / 2)
+        }
         
         let hostingView = NSHostingView(rootView: contentView)
         hostingView.wantsLayer = true
@@ -122,16 +125,18 @@ class OnitRegularPanel: NSPanel {
             resizeOverlay.autoresizingMask = [.maxXMargin, .height]
         }
 
-        // Create a separate hosting view for the TetheredButton
-        let tetheredButtonView = NSHostingView(rootView: 
-            TetheredButton()
-                .modelContainer(state.container)
-                .environment(\.windowState, state)
-        )
-        tetheredButtonView.wantsLayer = true
-        tetheredButtonView.frame = NSRect(x: 0, y: 0, width: TetheredButton.width, height: frame.height)
-        hostingView.addSubview(tetheredButtonView)
-        tetheredButtonView.autoresizingMask = [.maxXMargin, .height]
+        if displayMode != .conventional {
+            // Create a separate hosting view for the TetheredButton
+            let tetheredButtonView = NSHostingView(rootView:
+                TetheredButton()
+                    .modelContainer(state.container)
+                    .environment(\.windowState, state)
+            )
+            tetheredButtonView.wantsLayer = true
+            tetheredButtonView.frame = NSRect(x: 0, y: 0, width: TetheredButton.width, height: frame.height)
+            hostingView.addSubview(tetheredButtonView)
+            tetheredButtonView.autoresizingMask = [.maxXMargin, .height]
+        }
 
         if PanelStateCoordinator.shared.isPanelMovable {
             NotificationCenter.default.addObserver(
