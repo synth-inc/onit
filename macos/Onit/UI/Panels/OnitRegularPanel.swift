@@ -19,7 +19,7 @@ class OnitRegularPanel: NSPanel {
     }
     
     override var canBecomeKey: Bool {
-        return _level == .floating
+        return displayMode == .conventional || _level == .floating
     }
     
     let state: OnitPanelState
@@ -34,10 +34,12 @@ class OnitRegularPanel: NSPanel {
     var resizedApplication: Bool = false
     var isResizing: Bool = false
     var originalFrame : NSRect = .zero
-    
+    let displayMode: DisplayMode
+
     init(state: OnitPanelState, displayMode: DisplayMode = FeatureFlagManager.shared.displayMode) {
         self.state = state
         self.width = state.panelWidth
+        self.displayMode = displayMode
 
         var style: NSWindow.StyleMask = [.titled, .fullSizeContentView]
         if displayMode != .conventional {
@@ -162,7 +164,9 @@ class OnitRegularPanel: NSPanel {
             }
         }
         
-        show()
+        if displayMode != .conventional {
+            show()
+        }
     }
     
     @objc private func windowWillMove(_ notification: Notification) {
@@ -236,7 +240,9 @@ extension OnitRegularPanel: OnitPanel {
     
     func show() {
         makeKeyAndOrderFront(nil)
-        setupFrame()
+        if displayMode != .conventional {
+            setupFrame()
+        }
     }
     
     func hide() {
