@@ -35,20 +35,27 @@ class OnitRegularPanel: NSPanel {
     var isResizing: Bool = false
     var originalFrame : NSRect = .zero
     
-    init(state: OnitPanelState) {
+    init(state: OnitPanelState, displayMode: DisplayMode = FeatureFlagManager.shared.displayMode) {
         self.state = state
         self.width = state.panelWidth
-        
+
+        var style: NSWindow.StyleMask = [.titled, .fullSizeContentView]
+        if displayMode != .conventional {
+            style.insert(.nonactivatingPanel)
+        } else {
+            style.formUnion([.closable, .miniaturizable, .resizable])
+        }
+
         super.init(
             contentRect: NSRect(x: 0, y: 0, width: width, height: 0),
-            styleMask: [.titled, .nonactivatingPanel, .fullSizeContentView],
+            styleMask: style,
             backing: .buffered,
             defer: false
         )
         
         isOpaque = false
         backgroundColor = NSColor.clear
-        level = .floating
+        level = displayMode == .conventional ? .normal : .floating
         titleVisibility = .hidden
         titlebarAppearsTransparent = true
         isMovable = PanelStateCoordinator.shared.isPanelMovable
@@ -58,9 +65,10 @@ class OnitRegularPanel: NSPanel {
         animationBehavior = .none
         collectionBehavior = [.moveToActiveSpace]
         
-        standardWindowButton(.closeButton)?.isHidden = true
-        standardWindowButton(.miniaturizeButton)?.isHidden = true
-        standardWindowButton(.zoomButton)?.isHidden = true
+        let hideButtons = displayMode != .conventional
+        standardWindowButton(.closeButton)?.isHidden = hideButtons
+        standardWindowButton(.miniaturizeButton)?.isHidden = hideButtons
+        standardWindowButton(.zoomButton)?.isHidden = hideButtons
         
         let contentView = ContentView()
             .modelContainer(state.container)
@@ -77,38 +85,40 @@ class OnitRegularPanel: NSPanel {
         self.contentView = hostingView
         self.contentView?.setFrameOrigin(NSPoint(x: 0, y: 0))
         
-        let resizeOverlay = NSHostingView(rootView: 
-            ZStack(alignment: .bottomLeading) {
-                Color.clear // Transparent background
-                
-                ResizeHandle(
-                    onDrag: { [weak self] deltaX in
-                        guard let self = self else { return }
-                        self.isResizing = true
-                        if self.originalFrame == .zero {
-                            self.originalFrame = NSRect(origin: frame.origin, size: frame.size)
-                            }
-                        self.resizePanel(byWidth: deltaX)
-                    },
-                    onDragEnded: { [weak self] in
-                        guard let self = self else { return }
-                        Defaults[.panelWidth] = self.width
-                        self.panelResizeEnded(originalPanelWidth: self.originalFrame.width)
-                        self.originalFrame = .zero
-                        self.isResizing = false
-                    }
-                )
-            }
-            .allowsHitTesting(true)
-            .contentShape(Rectangle())
-        )
-        resizeOverlay.wantsLayer = true
-        resizeOverlay.layer?.backgroundColor = CGColor.clear
-        
-        // The target for dragging is be the entire height, and 6px wide, starting at TetheredButton.width/ 2 to leave room for the TetheredButton. 
-        resizeOverlay.frame = NSRect(x: TetheredButton.width / 2, y: 0, width: 6, height: frame.height)
-        hostingView.addSubview(resizeOverlay)
-        resizeOverlay.autoresizingMask = [.maxXMargin, .height]
+        if displayMode != .conventional {
+            let resizeOverlay = NSHostingView(rootView:
+                ZStack(alignment: .bottomLeading) {
+                    Color.clear // Transparent background
+
+                    ResizeHandle(
+                        onDrag: { [weak self] deltaX in
+                            guard let self = self else { return }
+                            self.isResizing = true
+                            if self.originalFrame == .zero {
+                                self.originalFrame = NSRect(origin: frame.origin, size: frame.size)
+                                }
+                            self.resizePanel(byWidth: deltaX)
+                        },
+                        onDragEnded: { [weak self] in
+                            guard let self = self else { return }
+                            Defaults[.panelWidth] = self.width
+                            self.panelResizeEnded(originalPanelWidth: self.originalFrame.width)
+                            self.originalFrame = .zero
+                            self.isResizing = false
+                        }
+                    )
+                }
+                .allowsHitTesting(true)
+                .contentShape(Rectangle())
+            )
+            resizeOverlay.wantsLayer = true
+            resizeOverlay.layer?.backgroundColor = CGColor.clear
+
+            // The target for dragging is be the entire height, and 6px wide, starting at TetheredButton.width/ 2 to leave room for the TetheredButton.
+            resizeOverlay.frame = NSRect(x: TetheredButton.width / 2, y: 0, width: 6, height: frame.height)
+            hostingView.addSubview(resizeOverlay)
+            resizeOverlay.autoresizingMask = [.maxXMargin, .height]
+        }
 
         // Create a separate hosting view for the TetheredButton
         let tetheredButtonView = NSHostingView(rootView: 

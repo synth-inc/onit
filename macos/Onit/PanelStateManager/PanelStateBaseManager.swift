@@ -134,7 +134,10 @@ class PanelStateBaseManager: PanelStateManagerLogic {
             state.newChat(clearContext: false)
         }
 
-        state.panel = OnitRegularPanel(state: state)
+        state.panel = OnitRegularPanel(
+            state: state,
+            displayMode: FeatureFlagManager.shared.displayMode
+        )
     }
     
     private func closePanels() {

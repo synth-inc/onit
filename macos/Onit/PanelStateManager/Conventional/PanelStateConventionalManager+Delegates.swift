@@ -19,7 +19,7 @@ extension PanelStateConventionalManager: OnitPanelStateDelegate {
         if !state.panelOpened {
             activateMouseScreen(forced: true)
         } else {
-            state.panel?.setLevel(.floating)
+            state.panel?.setLevel(.normal)
         }
     }
     func userInputsDidChange(instruction: String, contexts: [Context], input: Input?) { }
