@@ -5,6 +5,7 @@ struct ChatView: View {
     @Environment(\.windowState) private var state
     
     @State private var hasUserManuallyScrolled: Bool = false
+    @State private var chatChangeTask: Task<Void, Never>?
     
     private var chatsID: Int? {
         state.currentChat?.hashValue
@@ -67,7 +68,17 @@ struct ChatView: View {
                     }
                 }
                 .onChange(of: state.currentChat) { old, new in
-                    hasUserManuallyScrolled = false
+					chatChangeTask?.cancel()
+                    hasUserManuallyScrolled = true
+                    chatChangeTask = Task {
+                        try? await Task.sleep(for: .milliseconds(300))
+                        
+                        if !Task.isCancelled {
+                            await MainActor.run {
+                                hasUserManuallyScrolled = false
+                            }
+                        }
+                    }
                 }
             } else {
                 systemPrompt

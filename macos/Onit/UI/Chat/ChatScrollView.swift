@@ -131,9 +131,7 @@ class ChatScrollView: NSScrollView {
             contentView.setBoundsOrigin(targetPoint)
         }
         
-        DispatchQueue.main.async { [weak self] in
-            self?.lastScrollPosition = self?.documentVisibleRect.origin.y ?? 0
-        }
+        lastScrollPosition = documentVisibleRect.origin.y
     }
     
     func resetUserScrollState() {
@@ -275,6 +273,7 @@ struct ChatScrollViewRepresentable: NSViewRepresentable {
         NSLayoutConstraint.activate([
             hostView.leadingAnchor.constraint(equalTo: scrollView.contentView.leadingAnchor),
             hostView.trailingAnchor.constraint(equalTo: scrollView.contentView.trailingAnchor),
+            hostView.topAnchor.constraint(equalTo: scrollView.contentView.topAnchor),
             hostView.widthAnchor.constraint(equalTo: scrollView.contentView.widthAnchor)
         ])
         
