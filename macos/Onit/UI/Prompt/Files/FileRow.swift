@@ -54,6 +54,15 @@ struct FileRow: View {
     }
     
     var contextList: [Context]
+    
+    var highlightedTextAlreadyInContext: Bool {
+        if let highlightedText = windowState.highlightedText {
+            let pendingContextList = windowState.getPendingContextList()
+            return pendingContextList.contains { $0.text == highlightedText }
+        } else {
+            return false
+        }
+    }
 
     var body: some View {
         FlowLayout(spacing: 6) {
@@ -63,20 +72,25 @@ struct FileRow: View {
                 currentWindowPid: currentWindowInfo.pid
             )
             
-            if autoContextFromCurrentWindow,
-               let windowName = windowName
-            {
-                ContextTag(
-                    text: windowName,
-                    hoverTextColor: .T_2,
-                    background: .clear,
-                    hoverBackground: .clear,
-                    hasHoverBorder: true,
-                    shouldFadeIn: true,
-                    iconBundleURL: currentWindowInfo.appBundleUrl,
-                    tooltip: "Add \(windowName) Context"
-                ) {
-                    addWindowToContext()
+            if autoContextFromCurrentWindow {
+                if let highlightedText = windowState.highlightedText,
+                   !highlightedTextAlreadyInContext
+                {
+                    AddAutoContextButton(
+                        text: highlightedText.selectedText,
+                        iconView: Image(.text).addIconStyles(iconSize: 14),
+                        tooltip: "Add Highlighted Text Context"
+                    ) {
+                        addHighlightedTextToContext(highlightedText)
+                    }
+                } else if let windowName = windowName {
+                    AddAutoContextButton(
+                        text: windowName,
+                        iconBundleURL: currentWindowInfo.appBundleUrl,
+                        tooltip: "Add \(windowName) Context"
+                    ) {
+                        addWindowToContext()
+                    }
                 }
             }
             
@@ -126,6 +140,31 @@ struct FileRow: View {
 // MARK: - Child Components
 
 extension FileRow {
+    private struct AddAutoContextButton: View {
+        var text: String
+        var iconBundleURL: URL?
+        var iconView: (any View)?
+        var tooltip: String
+        let action: () -> Void
+        
+        var body: some View {
+            ContextTag(
+                text: text,
+                hoverTextColor: .T_2,
+                background: .clear,
+                hoverBackground: .clear,
+                hoverBorderColor: .T_4,
+                hasDottedBorder: true,
+                shouldFadeIn: true,
+                iconBundleURL: iconBundleURL,
+                iconView: iconView,
+                tooltip: tooltip
+            ) {
+                action()
+            }
+        }
+    }
+    
     private var pendingAutoContextItems: some View {
         ForEach(Array(windowState.addAutoContextTasks.keys), id: \.self) { windowName in
             ContextTag(
@@ -177,6 +216,19 @@ extension FileRow {
             return false
         } else {
             return false
+        }
+    }
+    
+    private func addHighlightedTextToContext(_ highlightedText: Input) {
+        let pendingContextList = windowState.getPendingContextList()
+        
+        let textAlreadyAdded = checkContextTextAlreadyAdded(
+            contextList: pendingContextList,
+            text: highlightedText.selectedText
+        )
+        
+        if !textAlreadyAdded {
+            windowState.addContext(texts: [highlightedText])
         }
     }
     
