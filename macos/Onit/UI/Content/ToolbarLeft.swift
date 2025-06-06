@@ -11,32 +11,11 @@ struct ToolbarLeft: View {
     @Environment(\.windowState) private var state
     
     var body: some View {
-        HStack(alignment: .center, spacing: 4) {
-            esc
-            
-            HStack(alignment: .center, spacing: 0) {
-                newChatButton
-                systemPromptsButton
-            }
+        HStack(alignment: .center, spacing: 0) {
+            newChatButton
+            systemPromptsButton
         }
-    }
-    
-    private var esc: some View {
-        Button {} label: {
-            TextButton(
-                height: ToolbarButtonStyle.height,
-                fillContainer: false,
-                cornerRadius: ToolbarButtonStyle.cornerRadius,
-                fontSize: 11,
-                fontColor: .gray200,
-                text: "ESC",
-                action: {
-                    AnalyticsManager.Toolbar.escapePressed()
-                    PanelStateCoordinator.shared.closePanel()
-                }
-            )
-        }
-        .tooltip(prompt: "Close Onit", shortcut: .keyboardShortcuts(.escape))
+        .padding(.leading, 10)
     }
     
     private var newChatButton: some View {

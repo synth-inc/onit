@@ -21,11 +21,20 @@ class FeatureFlagManager: ObservableObject {
     // MARK: - Feature Flags
 
     @Published private(set) var autocontextDemoVideoUrl: String? = nil
-    @Published private(set) var usePinnedMode: Bool = true
+    @Published private(set) var displayMode: DisplayMode
 
     // MARK: - Private initializer
     
-    private init() { }
+    private init() {
+        if let mode = Defaults[.displayMode] as DisplayMode? {
+            displayMode = mode
+        } else if let pinned = Defaults[.usePinnedMode] {
+            displayMode = pinned ? .pinned : .tethered
+            Defaults[.displayMode] = displayMode
+        } else {
+            displayMode = .pinned
+        }
+    }
     
     // MARK: - Functions
 
@@ -49,9 +58,9 @@ class FeatureFlagManager: ObservableObject {
         PostHogSDK.shared.setup(config)
     }
 
-    func togglePinnedMode(_ enabled: Bool) {
-        Defaults[.usePinnedMode] = enabled
-        usePinnedMode = enabled
+    func setDisplayMode(_ mode: DisplayMode) {
+        Defaults[.displayMode] = mode
+        displayMode = mode
     }
 
     // MARK: - Objective-C Functions
@@ -74,12 +83,15 @@ class FeatureFlagManager: ObservableObject {
             autocontextDemoVideoUrl = nil
         }
         
-        if let pinnedModeEnabled = Defaults[.usePinnedMode] {
-            usePinnedMode = pinnedModeEnabled
+        if let mode = Defaults[.displayMode] as DisplayMode? {
+            displayMode = mode
+        } else if let pinnedModeEnabled = Defaults[.usePinnedMode] {
+            displayMode = pinnedModeEnabled ? .pinned : .tethered
+            Defaults[.displayMode] = displayMode
         } else {
             let pinnedModeFlag = PostHogSDK.shared.isFeatureEnabled("pinned_mode")
-            
-            togglePinnedMode(pinnedModeFlag)
+            displayMode = pinnedModeFlag ? .pinned : .tethered
+            Defaults[.displayMode] = displayMode
         }
     }
 }

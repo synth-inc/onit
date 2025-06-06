@@ -12,7 +12,7 @@ struct GeneralTab: View {
     @Default(.launchShortcutToggleEnabled) var launchShortcutToggleEnabled
     @Default(.createNewChatOnPanelOpen) var createNewChatOnPanelOpen
     @Default(.openOnMouseMonitor) var openOnMouseMonitor
-    @Default(.usePinnedMode) var usePinnedMode
+    @Default(.displayMode) var displayMode
     
     @State var isLaunchAtStartupEnabled: Bool = SMAppService.mainApp.status == .enabled
     @State var isAnalyticsEnabled: Bool = PostHogSDK.shared.isOptOut() == false
@@ -24,7 +24,7 @@ struct GeneralTab: View {
     }
     
     private var isPinnedMode: Bool {
-        usePinnedMode ?? true
+        displayMode == .pinned
     }
     
     var body: some View {
@@ -74,9 +74,8 @@ struct GeneralTab: View {
             VStack(alignment: .leading, spacing: 16) {
                 HStack(spacing: 8) {
                     Button {
-                        let oldValue = isPinnedMode ? "pinned" : "tethered"
-                        AnalyticsManager.Settings.General.displayModePressed(oldValue: oldValue, newValue: "pinned")
-                        FeatureFlagManager.shared.togglePinnedMode(true)
+                        AnalyticsManager.Settings.General.displayModePressed(oldValue: displayMode.rawValue, newValue: "pinned")
+                        FeatureFlagManager.shared.setDisplayMode(.pinned)
                     } label: {
                         VStack(spacing: 4) {
                             Image(systemName: "pin.fill")
@@ -89,18 +88,17 @@ struct GeneralTab: View {
                         }
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 8)
-                        .background(isPinnedMode ? Color.accentColor : Color.clear)
+                        .background(displayMode == .pinned ? Color.accentColor : Color.clear)
                         .clipShape(RoundedRectangle(cornerRadius: 6))
                         .contentShape(Rectangle())
                         .opacity(accessibilityGranted ? 1.0 : 0.5)
                     }
                     .buttonStyle(.plain)
                     .disabled(!accessibilityGranted)
-                    
+
                     Button {
-                        let oldValue = isPinnedMode ? "pinned" : "tethered"
-                        AnalyticsManager.Settings.General.displayModePressed(oldValue: oldValue, newValue: "tethered")
-                        FeatureFlagManager.shared.togglePinnedMode(false)
+                        AnalyticsManager.Settings.General.displayModePressed(oldValue: displayMode.rawValue, newValue: "tethered")
+                        FeatureFlagManager.shared.setDisplayMode(.tethered)
                     } label: {
                         VStack(spacing: 4) {
                             Image(systemName: "rectangle.split.2x1")
@@ -113,13 +111,34 @@ struct GeneralTab: View {
                         }
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 8)
-                        .background(!isPinnedMode ? Color.accentColor : Color.clear)
+                        .background(displayMode == .tethered ? Color.accentColor : Color.clear)
                         .clipShape(RoundedRectangle(cornerRadius: 6))
                         .contentShape(Rectangle())
                         .opacity(accessibilityGranted ? 1.0 : 0.5)
                     }
                     .buttonStyle(.plain)
                     .disabled(!accessibilityGranted)
+
+                    Button {
+                        AnalyticsManager.Settings.General.displayModePressed(oldValue: displayMode.rawValue, newValue: "conventional")
+                        FeatureFlagManager.shared.setDisplayMode(.conventional)
+                    } label: {
+                        VStack(spacing: 4) {
+                            Image(systemName: "rectangle")
+                                .font(.system(size: 16))
+                            Text("Conventional")
+                                .font(.system(size: 11))
+                            Text("Standard window")
+                                .font(.system(size: 9))
+                                .foregroundStyle(.secondary)
+                        }
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 8)
+                        .background(displayMode == .conventional ? Color.accentColor : Color.clear)
+                        .clipShape(RoundedRectangle(cornerRadius: 6))
+                        .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
                 }
                 
                 if !accessibilityGranted {
@@ -147,12 +166,17 @@ struct GeneralTab: View {
                     }
                 } else {
                     VStack(alignment: .leading, spacing: 4) {
-                        if isPinnedMode {
+                        switch displayMode {
+                        case .pinned:
                             Text("Onit will always appear on the right side of your screen. You will only have one Onit panel at any given time. Other applications will be resized to make room for Onit.")
                                 .font(.system(size: 12))
                                 .foregroundStyle(.gray200)
-                        } else {
+                        case .tethered:
                             Text("Onit will attach to your applications. There can be one Onit panel for each application window. If you move your app, Onit will move with it.")
+                                .font(.system(size: 12))
+                                .foregroundStyle(.gray200)
+                        case .conventional:
+                            Text("Onit behaves like a normal window. It keeps its last position between sessions and doesn't resize other apps.")
                                 .font(.system(size: 12))
                                 .foregroundStyle(.gray200)
                         }

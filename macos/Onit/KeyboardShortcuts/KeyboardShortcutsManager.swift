@@ -36,7 +36,7 @@ struct KeyboardShortcutsManager {
             .filter { ![.launch, .launchWithAutoContext].contains($0) }
         
         // Remove ESC if needed for pinned mode
-        let isPinned = FeatureFlagManager.shared.usePinnedMode
+        let isPinned = FeatureFlagManager.shared.displayMode == .pinned
         let isForeground = NSApp.isActive
         let escDisabled = Defaults[.escapeShortcutDisabled]
         if isPinned {
