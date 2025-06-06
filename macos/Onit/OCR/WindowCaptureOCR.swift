@@ -157,6 +157,61 @@ final class WindowCaptureOCR: Sendable {
         
         return debugImage
     }
+    
+    func createAccessibilityDebugImage(original: NSImage, accessibilityBoundingBoxes: [TextBoundingBox]) -> NSImage {
+        let debugImage = NSImage(size: original.size)
+        
+        debugImage.lockFocus()
+        
+        // Draw original image
+        original.draw(in: NSRect(origin: .zero, size: original.size))
+        
+        // Draw rectangles around accessibility bounding boxes
+        for textBox in accessibilityBoundingBoxes {
+            let convertedRect = convertAccessibilityCoordinates(textBox.boundingBox, imageSize: original.size)
+            
+            let path = NSBezierPath(rect: convertedRect)
+            path.lineWidth = 2
+            NSColor.green.withAlphaComponent(0.8).setStroke()
+            path.stroke()
+            
+            if !textBox.text.isEmpty {
+                let font = NSFont.systemFont(ofSize: 10)
+                let attributes: [NSAttributedString.Key: Any] = [
+                    .font: font,
+                    .foregroundColor: NSColor.white,
+                    .backgroundColor: NSColor.green.withAlphaComponent(0.8)
+                ]
+                
+                let labelText = textBox.text.count > 30 ? String(textBox.text.prefix(30)) + "..." : textBox.text
+                let attributedString = NSAttributedString(string: labelText, attributes: attributes)
+                
+                let labelRect = NSRect(
+                    x: convertedRect.origin.x,
+                    y: convertedRect.origin.y - attributedString.size().height - 2, 
+                    width: min(attributedString.size().width + 4, original.size.width - convertedRect.origin.x),
+                    height: attributedString.size().height + 2
+                )
+                
+                attributedString.draw(in: labelRect)
+            }
+        }
+        
+        debugImage.unlockFocus()
+        
+        return debugImage
+    }
+    
+    private func convertAccessibilityCoordinates(_ accessibilityRect: CGRect, imageSize: NSSize) -> CGRect {
+        let x = max(0, min(accessibilityRect.origin.x, imageSize.width - 1))
+        let width = min(accessibilityRect.size.width, imageSize.width - x)
+        let height = min(accessibilityRect.size.height, imageSize.height)
+        
+        let flippedY = imageSize.height - accessibilityRect.origin.y - accessibilityRect.size.height
+        let y = max(0, min(flippedY, imageSize.height - 1))
+        
+        return CGRect(x: x, y: y, width: max(1, width), height: max(1, height))
+    }
 }
 
 // MARK: - Error Types

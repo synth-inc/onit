@@ -18,6 +18,7 @@ struct OCRComparisonResult: Codable, Identifiable, Hashable {
     let ocrObservations: [OCRTextObservation]
     let screenshotPath: String?
     let debugScreenshotPath: String?
+    let debugAccessibilityScreenshotPath: String?
     let appBundleUrl: URL?
     
     var screenshot: NSImage? {
@@ -32,13 +33,20 @@ struct OCRComparisonResult: Codable, Identifiable, Hashable {
         return NSImage(data: data)
     }
     
-    init(appName: String, 
-         appTitle: String, 
-         matchPercentage: Int, 
-         accessibilityText: String, 
-         ocrObservations: [OCRTextObservation], 
+    var debugAccessibilityScreenshot: NSImage? {
+        guard let path = debugAccessibilityScreenshotPath,
+              let data = try? Data(contentsOf: URL(fileURLWithPath: path)) else { return nil }
+        return NSImage(data: data)
+    }
+    
+    init(appName: String,
+         appTitle: String,
+         matchPercentage: Int,
+         accessibilityText: String,
+         ocrObservations: [OCRTextObservation],
          screenshot: NSImage?,
          debugScreenshot: NSImage?,
+         debugAccessibilityScreenshot: NSImage?,
          appBundleUrl: URL?) {
         self.appName = appName
         self.appTitle = appTitle
@@ -47,10 +55,9 @@ struct OCRComparisonResult: Codable, Identifiable, Hashable {
         self.accessibilityText = accessibilityText
         self.ocrObservations = ocrObservations
         self.appBundleUrl = appBundleUrl
-        
-        // Save screenshots to disk
         self.screenshotPath = Self.saveImageToDisk(screenshot, prefix: "screenshot_\(id.uuidString)")
         self.debugScreenshotPath = Self.saveImageToDisk(debugScreenshot, prefix: "debug_\(id.uuidString)")
+        self.debugAccessibilityScreenshotPath = Self.saveImageToDisk(debugAccessibilityScreenshot, prefix: "debug_accessibility_\(id.uuidString)")
     }
     
     func hash(into hasher: inout Hasher) {
@@ -64,7 +71,7 @@ struct OCRComparisonResult: Codable, Identifiable, Hashable {
     enum CodingKeys: String, CodingKey {
         case id, appName, appTitle, timestamp, matchPercentage
         case accessibilityText, ocrObservations, appBundleUrl
-        case screenshotPath, debugScreenshotPath
+        case screenshotPath, debugScreenshotPath, debugAccessibilityScreenshotPath
     }
     
     func encode(to encoder: Encoder) throws {
@@ -79,6 +86,7 @@ struct OCRComparisonResult: Codable, Identifiable, Hashable {
         try container.encode(appBundleUrl, forKey: .appBundleUrl)
         try container.encode(screenshotPath, forKey: .screenshotPath)
         try container.encode(debugScreenshotPath, forKey: .debugScreenshotPath)
+        try container.encode(debugAccessibilityScreenshotPath, forKey: .debugAccessibilityScreenshotPath)
     }
     
     // MARK: - Disk Storage
@@ -93,13 +101,11 @@ struct OCRComparisonResult: Codable, Identifiable, Hashable {
         
         let documentsPath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
         let ocrFolder = documentsPath.appendingPathComponent("OCRScreenshots")
-        
-        // Create folder if it doesn't exist
         try? FileManager.default.createDirectory(at: ocrFolder, withIntermediateDirectories: true)
         
         let fileName = "\(prefix)_\(Date().timeIntervalSince1970).png"
         let fileURL = ocrFolder.appendingPathComponent(fileName)
-        
+
         do {
             try pngData.write(to: fileURL)
             return fileURL.path
@@ -115,6 +121,9 @@ struct OCRComparisonResult: Codable, Identifiable, Hashable {
             try? FileManager.default.removeItem(atPath: path)
         }
         if let path = debugScreenshotPath {
+            try? FileManager.default.removeItem(atPath: path)
+        }
+        if let path = debugAccessibilityScreenshotPath {
             try? FileManager.default.removeItem(atPath: path)
         }
     }

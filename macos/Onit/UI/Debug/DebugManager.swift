@@ -180,7 +180,8 @@ class DebugManager: ObservableObject {
             ocrComparisonResults = loadedResults.filter { result in
                 let screenshotExists = result.screenshotPath == nil || FileManager.default.fileExists(atPath: result.screenshotPath!)
                 let debugScreenshotExists = result.debugScreenshotPath == nil || FileManager.default.fileExists(atPath: result.debugScreenshotPath!)
-                return screenshotExists && debugScreenshotExists
+                let debugAccessibilityScreenshotExists = result.debugAccessibilityScreenshotPath == nil || FileManager.default.fileExists(atPath: result.debugAccessibilityScreenshotPath!)
+                return screenshotExists && debugScreenshotExists && debugAccessibilityScreenshotExists
             }
         } catch {
             print("Failed to load OCR comparison results: \(error)")
@@ -205,7 +206,9 @@ class DebugManager: ObservableObject {
             return
         }
         
-        let currentPaths = Set(ocrComparisonResults.compactMap { $0.screenshotPath } + ocrComparisonResults.compactMap { $0.debugScreenshotPath })
+        let currentPaths = Set(ocrComparisonResults.compactMap { $0.screenshotPath } +
+                              ocrComparisonResults.compactMap { $0.debugScreenshotPath } +
+                              ocrComparisonResults.compactMap { $0.debugAccessibilityScreenshotPath })
         
         // Remove files that are no longer referenced
         for file in files {
@@ -228,98 +231,283 @@ private final class AutoOCRComparisonDelegate: AccessibilityNotificationsDelegat
             print("AutoOCRDelegate: comparison disabled, skipping")
             return
         }
+    
+        let windowElement = window.element
+        let windowTitle = window.element.title() ?? "unknown"
         
         Task {
-            print("AutoOCRDelegate: starting OCR comparison for window: \(window.element.title() ?? "unknown")")
-            await performOCRComparison(for: window)
+            let startTime = CFAbsoluteTimeGetCurrent()
+            print("AutoOCRDelegate: starting OCR comparison for window: \(windowTitle)")
+            await performOCRComparison(for: windowElement)
+            let endTime = CFAbsoluteTimeGetCurrent()
+            print("AutoOCRDelegate: OCR comparison completed in \(endTime - startTime) seconds")
         }
     }
     
-    private func performOCRComparison(for window: TrackedWindow) async {
-        guard let pid = window.element.pid() else { return }
+    private func performOCRComparison(for windowElement: AXUIElement) async {
+        guard let pid = windowElement.pid() else { return }
         
         do {
-            // Get accessibility text
-            let accessibilityResults = await AccessibilityParser.shared.getAllTextInElement(windowElement: window.element)
+            let startTime = CFAbsoluteTimeGetCurrent()
+            
+            let accessibilityStartTime = CFAbsoluteTimeGetCurrent()
+            let (accessibilityResults, accessibilityBoundingBoxes) = await AccessibilityParser.shared.getAllTextInElement(windowElement: windowElement, includeBoundingBoxes: true)
+            let accessibilityEndTime = CFAbsoluteTimeGetCurrent()
+            print("ocrTiming - Accessibility parsing took: \(accessibilityEndTime - accessibilityStartTime) seconds")
+            
             let accessibilityText = accessibilityResults["screen"] ?? ""
             
-            // Get OCR text
-            let appName = window.element.appName() ?? "Unknown"
-            let appTitle = window.element.title() ?? appName
+            let appName = windowElement.appName() ?? "Unknown"
+            let appTitle = windowElement.title() ?? appName
             
-            // Get OCR observations and screenshot
+            let ocrStartTime = CFAbsoluteTimeGetCurrent()
             let (observations, screenshot) = try await OCRManager.shared.extractTextFromApp(appName)
-            let accessibilityWords = accessibilityText.components(separatedBy: .whitespacesAndNewlines)
-                .filter { $0.count > 1 }
-            var matchedWords = 0
-            var totalWords = 0
-            // Compare each observation with accessibility text
-            var ocrObservations = observations
-            for i in 0..<ocrObservations.count {
-                let ocrWords = ocrObservations[i].text.components(separatedBy: .whitespacesAndNewlines)
-                    .filter { $0.count > 1 }
-                let percentageContained = compareOCRWithAutoContext(ocrWords: ocrWords, accessibilityWords: accessibilityWords)
-                ocrObservations[i].isFoundInAccessibility = percentageContained >= 80
-                ocrObservations[i].percentageMatched = percentageContained
-
-                let newMatchedWords = Int((Double(percentageContained) / 100.0) * Double(ocrWords.count))
-                if percentageContained > 0 {
-                    print("Here")
-                }
-                print("New matched words: \(newMatchedWords)")
-                matchedWords += newMatchedWords
-                totalWords += ocrWords.count
-                print("performOCRComparison - Observation '\(ocrObservations[i].text)' found: \(ocrObservations[i].isFoundInAccessibility)")
+            let ocrEndTime = CFAbsoluteTimeGetCurrent()
+            print("ocrTiming - OCR processing took: \(ocrEndTime - ocrStartTime) seconds")
+            
+            // Create a copy of the screenshot for the detached task
+            let screenshotCopy = NSImage(data: screenshot.tiffRepresentation!)!
+            
+//            let computationResult = await Task.detached(priority: .utility) {
+            let computationStartTime = CFAbsoluteTimeGetCurrent()
+            let result = await self.performHeavyComputation(
+                observations: observations,
+                screenshot: screenshotCopy,
+                accessibilityText: accessibilityText,
+                accessibilityBoundingBoxes: accessibilityBoundingBoxes,
+                appName: appName,
+                appTitle: appTitle,
+                pid: pid
+            )
+            let computationEndTime = CFAbsoluteTimeGetCurrent()
+            print("ocrTiming - Heavy computation took: \(computationEndTime - computationStartTime) seconds")
+//                return result
+//            }.value
+            
+            await MainActor.run {
+                DebugManager.shared.addOCRComparisonResult(result)
             }
-
-            // Calculate overall match percentage
-            if totalWords > 0 {
-                let matchPercentage = Int((Double(matchedWords) / Double(totalWords)) * 100)
-                // Create debug image for failed observations
-                let failedObservations = ocrObservations.filter { !$0.isFoundInAccessibility }
-                print("performOCRComparison - Total observations: \(observations.count), Failed observations: \(failedObservations.count)")
-                
-                let debugScreenshot = WindowCaptureOCR().createDebugImage(
-                    original: screenshot,
-                    failedObservations: failedObservations
-                )
-                print("performOCRComparison - totalWords: \(totalWords) matchedWords: \(matchedWords) matchPercentage: \(matchPercentage)%")
-//                print("performOCRComparison - match percentage: \(matchPercentage)%")
-                
-                await MainActor.run {
-                    let result = OCRComparisonResult(
-                        appName: appName,
-                        appTitle: appTitle,
-                        matchPercentage: matchPercentage,
-                        accessibilityText: accessibilityText,
-                        ocrObservations: ocrObservations,
-                        screenshot: screenshot,
-                        debugScreenshot: debugScreenshot,
-                        appBundleUrl: NSRunningApplication(processIdentifier: pid)?.bundleURL
-                    )
-                    
-                    DebugManager.shared.addOCRComparisonResult(result)
-                }
-            } else {
-                print("Skipping, didn't find any words...")
-            }
+            
+            let endTime = CFAbsoluteTimeGetCurrent()
+            print("ocrTiming - Total OCR comparison took: \(endTime - startTime) seconds")
+            
         } catch {
-            print("Failed to perform OCR comparison: \(error)")
+            print("ocrTiming - Failed to perform OCR comparison: \(error)")
         }
     }
     
-    private func compareOCRWithAutoContext(ocrWords: [String], accessibilityWords:  [String]) -> Int {
+    private func performHeavyComputation(
+        observations: [OCRTextObservation],
+        screenshot: NSImage,
+        accessibilityText: String,
+        accessibilityBoundingBoxes: [TextBoundingBox]?,
+        appName: String,
+        appTitle: String,
+        pid: pid_t
+    ) async -> OCRComparisonResult {
+        
+        let startTime = CFAbsoluteTimeGetCurrent()
+        
+        let matchingStartTime = CFAbsoluteTimeGetCurrent()
+        let boundingBoxMatcher = BoundingBoxMatcher()
+        let spatialMatches = boundingBoxMatcher.findBestMatches(for: observations, in: accessibilityBoundingBoxes ?? [])
+        let matchingEndTime = CFAbsoluteTimeGetCurrent()
+        print("ocrTiming - Spatial matching took: \(matchingEndTime - matchingStartTime) seconds")
+        
+        var ocrObservations = observations
+        var matchedWords = 0
+        var totalWords = 0
+        
+        let tokenStartTime = CFAbsoluteTimeGetCurrent()
+        let accessibilityWords = extractTokens(from: accessibilityText)
+        let tokenEndTime = CFAbsoluteTimeGetCurrent()
+        print("ocrTiming - Token extraction took: \(tokenEndTime - tokenStartTime) seconds")
+        
+        let comparisonStartTime = CFAbsoluteTimeGetCurrent()
+        for i in 0..<ocrObservations.count {
+            let ocrWords = extractTokens(from: ocrObservations[i].text)
+
+            let textPercentage = compareOCRWithAutoContext(ocrWords: ocrWords, accessibilityWords: accessibilityWords)
+
+            let finalPercentage = textPercentage
+            ocrObservations[i].isFoundInAccessibility = finalPercentage >= 80
+            ocrObservations[i].percentageMatched = finalPercentage
+            
+            let newMatchedWords = Int((Double(finalPercentage) / 100.0) * Double(ocrWords.count))
+            matchedWords += newMatchedWords
+            totalWords += ocrWords.count
+        }
+        let comparisonEndTime = CFAbsoluteTimeGetCurrent()
+        print("ocrTiming - Text comparison took: \(comparisonEndTime - comparisonStartTime) seconds")
+
+        let matchPercentage = totalWords > 0 ? Int((Double(matchedWords) / Double(totalWords)) * 100.0) : 0
+        
+        let imageStartTime = CFAbsoluteTimeGetCurrent()
+        let failedObservations = ocrObservations.filter { !$0.isFoundInAccessibility }
+        
+        let debugScreenshot = WindowCaptureOCR().createDebugImage(
+            original: screenshot,
+            failedObservations: failedObservations
+        )
+        
+        let debugAccessibilityScreenshot = WindowCaptureOCR().createAccessibilityDebugImage(
+            original: screenshot,
+            accessibilityBoundingBoxes: accessibilityBoundingBoxes ?? []
+        )
+        let imageEndTime = CFAbsoluteTimeGetCurrent()
+        print("Debug image creation took: \(imageEndTime - imageStartTime) seconds")
+        
+        print("Total words: \(totalWords), Matched: \(matchedWords), Percentage: \(matchPercentage)%")
+        
+        let endTime = CFAbsoluteTimeGetCurrent()
+        print("ocrTiming - performHeavyComputation took: \(endTime - startTime) seconds")
+        
+        return OCRComparisonResult(
+            appName: appName,
+            appTitle: appTitle,
+            matchPercentage: matchPercentage,
+            accessibilityText: accessibilityText,
+            ocrObservations: ocrObservations,
+            screenshot: screenshot,
+            debugScreenshot: debugScreenshot,
+            debugAccessibilityScreenshot: debugAccessibilityScreenshot,
+            appBundleUrl: NSRunningApplication(processIdentifier: pid)?.bundleURL
+        )
+    }
+    
+    private func extractTokens(from text: String) -> [String] {
+        let delimiters = CharacterSet(charactersIn: " \t\n\r(){}[]<>.,;:!@#$%^&*+=|\\\"'`~?/-")
+        
+        let basicTokens = text.components(separatedBy: delimiters)
+            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+            .filter { $0.count > 1 }
+        
+        var allTokens = Set(basicTokens)
+        
+        let genericPatterns = [
+            "\\w+\\(\\)",           // Function calls: print(), len(), etc.
+            "\\w+\\[\\]",           // Array/list types: int[], Array[], etc.
+            "\\w+\\{\\}",           // Object/dict literals: {}, Object{}
+            "\\.\\w+",              // Property/method access: .length, .size, .frame
+            "\\w+\\.\\w+",          // Namespace/module access: Math.max, os.path
+            "#\\w+",                // Hash tags, preprocessor directives: #include, #define
+            "\\$\\w+",              // Variables: $var (PHP, Bash), $state (SwiftUI)
+            "@\\w+",                // Decorators/annotations: @override, @State
+            "\\w+\\?",              // Optionals/nullable: String?, Optional
+            "\\w+!",                // Non-null/force unwrap: value!, required
+            "//.*",                 // Single line comments
+            "/\\*.*\\*/",           // Multi-line comments (simple)
+            "<!--.*-->",            // HTML comments
+            "\"[^\"]*\"",           // String literals
+            "'[^']*'",              // String literals (single quotes)
+            "`[^`]*`",              // Template literals/backticks
+            "\\d+\\.\\d+",          // Decimal numbers
+            "\\w+:\\w+",            // Key-value pairs, labels: name:value
+            "\\w+=\\w+",            // Assignments: var=value
+            "\\w+\\+=\\w+",         // Compound assignments
+            "\\w+->\\w+",           // Arrow functions, pointers: ->
+            "\\w+=>\\w+",           // Arrow functions: =>
+            "::\\w+",               // Scope resolution: ::method (C++)
+            "\\w+<\\w+>",           // Generics/templates: List<String>
+        ]
+        
+        for pattern in genericPatterns {
+            if let regex = try? NSRegularExpression(pattern: pattern, options: []) {
+                let matches = regex.matches(in: text, options: [], range: NSRange(text.startIndex..., in: text))
+                
+                for match in matches {
+                    if let range = Range(match.range, in: text) {
+                        let matchedToken = String(text[range]).trimmingCharacters(in: .whitespacesAndNewlines)
+                        if matchedToken.count > 1 {
+                            allTokens.insert(matchedToken)
+                        }
+                    }
+                }
+            }
+        }
+        
+        let compoundSeparators = ["_", "-"]
+        for token in basicTokens {
+            for separator in compoundSeparators {
+                if token.contains(separator) {
+                    allTokens.insert(token)
+                    let parts = token.components(separatedBy: separator).filter { $0.count > 1 }
+                    allTokens.formUnion(parts)
+                }
+            }
+        }
+        
+        return Array(allTokens)
+    }
+    
+    private func findBestMatchInAccessibilityText(ocrText: String, accessibilityText: String) -> String? {
+        let ocrLength = ocrText.count
+        let accessibilityLength = accessibilityText.count
+        let maxDistance = Int(Double(ocrLength) * 0.1)
+        
+        guard ocrLength <= accessibilityLength else { return nil }
+        
+        for i in 0...(accessibilityLength - ocrLength) {
+            let startIndex = accessibilityText.index(accessibilityText.startIndex, offsetBy: i)
+            let endIndex = accessibilityText.index(startIndex, offsetBy: ocrLength)
+            let subtext = String(accessibilityText[startIndex..<endIndex])
+            
+            let distance = ocrText.levenshteinDistance(to: subtext)
+            if ocrText == "@Default.lineHeight var lineHeight" && subtext.contains("@Default(.lineHeight) var lineHeig") {
+                print("checking here. ")
+            }
+            if ocrText == "Spacer ()" && subtext.contains("Spacer()") {
+                print("checking here. ")
+            }
+            
+            if distance <= maxDistance {
+                return subtext
+            }
+        }
+        return nil
+    }
+    
+    private func compareOCRWithAutoContext(ocrWords: [String], accessibilityWords: [String]) -> Int {
         guard !ocrWords.isEmpty, !accessibilityWords.isEmpty else { return 0 }
         
         let accessibilityWordsSet = Set(accessibilityWords)
-        let matchingWords = ocrWords.filter { accessibilityWordsSet.contains($0) }
-        let unmatchedWords = ocrWords.filter { !accessibilityWordsSet.contains($0) }
-        
-        print("compareOCRWithAutoContext - Matched words: \(matchingWords)")
-        print("compareOCRWithAutoContext - Unmatched words: \(unmatchedWords)")
+        let matchingWords = ocrWords.filter { ocrWord in
+            let maxDistance = calculateMaxDistance(for: ocrWord)
+            
+            
+            if let matchedWord = accessibilityWordsSet.first(where: { accessibilityWord in
+                let lengthDiff = abs(ocrWord.count - accessibilityWord.count)
+                guard lengthDiff <= maxDistance else { return false }
+                return ocrWord.levenshteinDistance(to: accessibilityWord) <= maxDistance
+            }) {
+                // print("compareOCRWithAutoContext - OCR word '\(ocrWord)' matched '\(matchedWord)'")
+                return true
+            }
+//            print("compareOCRWithAutoContext - OCR word '\(ocrWord)' not matched.")
+            return false
+        }
         
         let percentage = (Double(matchingWords.count) / Double(ocrWords.count)) * 100.0
         return Int(percentage.rounded())
+    }
+    
+    
+    private func calculateMaxDistance(for token: String) -> Int {
+        let length = token.count
+        
+        if length <= 3 {
+            return 1
+        }
+        
+        if length <= 6 {
+            return min(2, length / 3)
+        }
+        
+        if length <= 12 {
+            return min(3, length / 4)
+        }
+    
+        return min(5, length / 4)
     }
     
     // Required delegate methods (no-op)

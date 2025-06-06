@@ -3,7 +3,11 @@ import Defaults
 
 struct DebugModeTab: View {
     @ObservedObject private var debugManager = DebugManager.shared
-    @State private var showOnlyFailures = true
+    @State private var showOnlyFailures = false
+    @State private var loadedItemsCount = 5 // Start with 20 items
+    @State private var isLoadingMore = false
+    
+    private let itemsPerPage = 20
 
     var body: some View {
         ScrollView {
@@ -60,6 +64,7 @@ struct DebugModeTab: View {
                             HStack(spacing: 12) {
                                 Button(showOnlyFailures ? "Show All" : "Show Failures Only") {
                                     showOnlyFailures.toggle()
+                                    loadedItemsCount = itemsPerPage // Reset pagination
                                 }
                                 .buttonStyle(.plain)
                                 .font(.system(size: 12))
@@ -67,6 +72,7 @@ struct DebugModeTab: View {
                                 
                                 Button("Clear All") {
                                     debugManager.clearOCRComparisonResults()
+                                    loadedItemsCount = itemsPerPage
                                 }
                                 .buttonStyle(.plain)
                                 .foregroundColor(.red)
@@ -92,14 +98,40 @@ struct DebugModeTab: View {
                             }
                         }
                         
-                        ScrollView {
+                        VStack(spacing: 8) {
                             LazyVStack(spacing: 8) {
-                                ForEach(filteredResults.reversed()) { result in
+                                ForEach(visibleResults) { result in
                                     OCRComparisonResultRow(result: result)
+                                        .onAppear {
+                                            if result.id == visibleResults.last?.id {
+                                                loadMoreIfNeeded()
+                                            }
+                                        }
+                                }
+                            }
+                            
+                            if canLoadMore {
+                                if isLoadingMore {
+                                    HStack {
+                                        ProgressView()
+                                            .scaleEffect(0.8)
+                                        Text("Loading more results...")
+                                            .font(.system(size: 12))
+                                            .foregroundColor(.secondary)
+                                    }
+                                    .padding()
+                                } else {
+                                    Button("Load More Results") {
+                                        loadMoreResults()
+                                    }
+                                    .buttonStyle(.plain)
+                                    .font(.system(size: 12))
+                                    .foregroundColor(.blue)
+                                    .padding()
                                 }
                             }
                         }
-                        .frame(minHeight: 500)
+                        .frame(minHeight: 300)
                     }
                 }
             }
@@ -109,10 +141,34 @@ struct DebugModeTab: View {
     }
     
     private var filteredResults: [OCRComparisonResult] {
-        if showOnlyFailures {
-            return debugManager.failedOCRResults
-        } else {
-            return debugManager.ocrComparisonResults
+        let results = showOnlyFailures ? debugManager.failedOCRResults : debugManager.ocrComparisonResults
+        return results.reversed()
+    }
+    
+    private var visibleResults: [OCRComparisonResult] {
+        let results = filteredResults
+        return Array(results.prefix(loadedItemsCount))
+    }
+    
+    private var canLoadMore: Bool {
+        loadedItemsCount < filteredResults.count
+    }
+    
+    private func loadMoreResults() {
+        guard !isLoadingMore else { return }
+        
+        isLoadingMore = true
+        
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+            let newCount = min(loadedItemsCount + itemsPerPage, filteredResults.count)
+            loadedItemsCount = newCount
+            isLoadingMore = false
+        }
+    }
+    
+    private func loadMoreIfNeeded() {
+        if filteredResults.count - loadedItemsCount <= 5 {
+            loadMoreResults()
         }
     }
     
@@ -122,9 +178,9 @@ struct DebugModeTab: View {
         let successful = total - failed
         
         if showOnlyFailures {
-            return "\(failed) failures (of \(total) total)"
+            return "\(failed) failures (of \(total) total) - Showing \(min(loadedItemsCount, failed))"
         } else {
-            return "\(total) total results (\(total - failed) successful, \(failed) failed)"
+            return "\(total) total results (\(successful) successful, \(failed) failed) - Showing \(min(loadedItemsCount, total))"s
         }
     }
     
@@ -142,7 +198,7 @@ struct DebugModeTab: View {
                 failedCount: failedCount,
                 totalCount: results.count
             )
-        }.sorted { $0.failedCount > $1.failedCount } // Sort by most failures first
+        }.sorted { $0.failedCount > $1.failedCount }
     }
 }
 
@@ -252,7 +308,7 @@ struct OCRComparisonResultRow: View {
                 .padding(.leading, 8)
             }
             
-            if let debugImage = result.debugScreenshot ?? result.screenshot {
+            if isExpanded, let debugImage = result.debugScreenshot ?? result.screenshot {
                 Button {
                     showImageViewer = true
                 } label: {
@@ -276,37 +332,46 @@ struct OCRComparisonResultRow: View {
                     VStack(alignment: .leading, spacing: 8) {
                         Text("Accessibility Text:")
                             .font(.system(size: 11, weight: .medium))
-                        Text(result.accessibilityText.isEmpty ? "No text found" : result.accessibilityText)
-                            .font(.system(size: 10, design: .monospaced))
-                            .padding(8)
-                            .background(Color.gray.opacity(0.1))
-                            .cornerRadius(4)
-                            .frame(maxHeight: 100)
+                        ScrollView {
+                            Text(result.accessibilityText.isEmpty ? "No text found" : result.accessibilityText)
+                                .font(.system(size: 10, design: .monospaced))
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                        }
+                        .padding(8)
+                        .background(Color.gray.opacity(0.1))
+                        .cornerRadius(4)
+                        .frame(maxHeight: 100)
                         
                         Text("OCR Text:")
                             .font(.system(size: 11, weight: .medium))
-                        Text(result.ocrObservations.isEmpty ? "No text found" : result.ocrObservations.map(\.text).joined(separator: " "))
-                            .font(.system(size: 10, design: .monospaced))
-                            .padding(8)
-                            .background(Color.gray.opacity(0.1))
-                            .cornerRadius(4)
-                            .frame(maxHeight: 100)
+                        ScrollView {
+                            Text(result.ocrObservations.isEmpty ? "No text found" : result.ocrObservations.map(\.text).joined(separator: " "))
+                                .font(.system(size: 10, design: .monospaced))
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                        }
+                        .padding(8)
+                        .background(Color.gray.opacity(0.1))
+                        .cornerRadius(4)
+                        .frame(maxHeight: 100)
                         
                         if !missingText.isEmpty {
                             Text("Text Missing from Accessibility:")
                                 .font(.system(size: 11, weight: .medium))
                                 .foregroundColor(.red)
-                            Text(missingText)
-                                .font(.system(size: 10, design: .monospaced))
-                                .padding(8)
-                                .background(Color.red.opacity(0.1))
-                                .cornerRadius(4)
-                                .frame(maxHeight: 100)
+                            ScrollView {
+                                Text(missingText)
+                                    .font(.system(size: 10, design: .monospaced))
+                                    .frame(maxWidth: .infinity, alignment: .leading)
+                            }
+                            .padding(8)
+                            .background(Color.red.opacity(0.1))
+                            .cornerRadius(4)
+                            .frame(maxHeight: 100)
                         }
                         
                         HStack {
                             Spacer()
-                            HStack(spacing: 8) {
+                            VStack(spacing: 4) {
                                 Button("Export Accessibility Text...") {
                                     exportText(result.accessibilityText, filename: "\(result.appName)_accessibility")
                                 }
@@ -330,7 +395,25 @@ struct OCRComparisonResultRow: View {
                                 .foregroundColor(.blue)
                                 
                                 Button("Save Screenshot...") {
-                                    if let screenshot = result.debugScreenshot ?? result.screenshot {
+                                    if let screenshot = result.screenshot {
+                                        saveScreenshot(screenshot)
+                                    }
+                                }
+                                .buttonStyle(.plain)
+                                .font(.system(size: 11))
+                                .foregroundColor(.blue)
+                                
+                                Button("Save OCR Debug Screenshot...") {
+                                    if let screenshot = result.debugScreenshot {
+                                        saveScreenshot(screenshot)
+                                    }
+                                }
+                                .buttonStyle(.plain)
+                                .font(.system(size: 11))
+                                .foregroundColor(.blue)
+                                
+                                Button("Save AX Debug Screenshot...") {
+                                    if let screenshot = result.debugAccessibilityScreenshot {
                                         saveScreenshot(screenshot)
                                     }
                                 }
