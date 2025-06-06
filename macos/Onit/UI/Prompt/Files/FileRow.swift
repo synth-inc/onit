@@ -11,6 +11,7 @@ import SwiftUI
 struct FileRow: View {
     @Environment(\.windowState) var windowState
     @ObservedObject private var accessibilityPermissionManager = AccessibilityPermissionManager.shared
+    @ObservedObject private var debugManager = DebugManager.shared
     
     @Default(.autoContextFromCurrentWindow) var autoContextFromCurrentWindow
     
@@ -111,14 +112,14 @@ struct FileRow: View {
         .onChange(of: contextList) { oldContexts, newContexts in
             windowAlreadyInContext = detectCurrentWindowAlreadyInContext()
             
-            #if DEBUG
-            Task {
-                _ = await processContextChangesWithOCR(
-                    oldContexts: oldContexts,
-                    newContexts: newContexts
-                )
+            if debugManager.enableOCRComparison {
+                Task {
+                    _ = await processContextChangesWithOCR(
+                        oldContexts: oldContexts,
+                        newContexts: newContexts
+                    )
+                }
             }
-            #endif
         }
         .onChange(of: windowState.addAutoContextTasks) { _, _ in
             if let windowName = currentWindowInfo.name,

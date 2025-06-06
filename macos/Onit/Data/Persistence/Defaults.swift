@@ -115,6 +115,12 @@ extension Defaults.Keys {
     // Alerts
     static let showTwoWeekProTrialEndedAlert = Key<Bool>("showTwoWeekProTrialEndedAlert", default: false)
     static let hasClosedTrialEndedAlert = Key<Bool>("hasClosedTrialEndedAlert", default: false)
+
+    // Existing keys...
+    
+    static let ocrComparisonResults = Key<Data?>("ocrComparisonResults", default: nil)
+    static let enableOCRComparison = Key<Bool>("enableOCRComparison", default: false)
+    static let enableAutoOCRComparison = Key<Bool>("enableAutoOCRComparison", default: false)
 }
 
 extension NSRect: Defaults.Serializable {

@@ -27,16 +27,40 @@ class OCRManager: ObservableObject {
     
     // MARK: - Functions
     
-    func extractTextFromApp(_ appName: String) async throws -> String {
+    func extractTextFromApp(_ appName: String) async throws -> (observations: [OCRTextObservation], image: NSImage) {
+        try await ensureScreenRecordingPermission()
+        
+        return try await withCheckedThrowingContinuation { continuation in
+            Task.detached {
+                do {
+                    let (observations, image) = try await self.windowCaptureOCR.captureWindowAndExtractText(from: appName)
+                    continuation.resume(returning: (observations, image))
+                } catch {
+                    let ocrError = error as? OCRError ?? .captureError(error.localizedDescription)
+                    continuation.resume(throwing: ocrError)
+                }
+            }
+        }
+    }
+    
+    func extractScreenshot(from appName: String) async throws -> NSImage {
         try await ensureScreenRecordingPermission()
         
         do {
-            let text = try await windowCaptureOCR.captureWindowAndExtractText(from: appName)
-            
-            return text
+            return try await withCheckedThrowingContinuation { continuation in
+                Task.detached {
+                    do {
+                        let windowCaptureOCR = WindowCaptureOCR()
+                        let screenshot = try await windowCaptureOCR.captureWindowScreenshot(from: appName)
+                        continuation.resume(returning: screenshot)
+                    } catch {
+                        let ocrError = error as? OCRError ?? .captureError(error.localizedDescription)
+                        continuation.resume(throwing: ocrError)
+                    }
+                }
+            }
         } catch {
             let ocrError = error as? OCRError ?? .captureError(error.localizedDescription)
-            
             throw ocrError
         }
     }

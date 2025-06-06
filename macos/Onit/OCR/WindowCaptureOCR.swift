@@ -18,11 +18,16 @@ final class WindowCaptureOCR: Sendable {
     
     // MARK: - Functions
     
-    func captureWindowAndExtractText(from appName: String) async throws -> String {
+    func captureWindowAndExtractText(from appName: String) async throws -> (observations: [OCRTextObservation], image: NSImage) {
         let window = try await findWindow(for: appName)
         let image = try await captureWindow(window: window)
-		
-        return try await performOCR(on: image)
+        let observations = try await performOCR(on: image)
+        return (observations, image)
+    }
+    
+    func captureWindowScreenshot(from appName: String) async throws -> NSImage {
+        let window = try await findWindow(for: appName)
+        return try await captureWindow(window: window)
     }
     
     // MARK: - Private Functions
@@ -46,23 +51,39 @@ final class WindowCaptureOCR: Sendable {
     private func captureWindow(window: SCWindow) async throws -> NSImage {
         let filter = SCContentFilter(desktopIndependentWindow: window)
         let configuration = SCStreamConfiguration()
-
-        configuration.width = Int(window.frame.width)
-        configuration.height = Int(window.frame.height)
+        
+        print("captureWindow - Window frame width: \(window.frame.width)")
+        print("captureWindow - Window frame height: \(window.frame.height)")
+        
+        let scaleFactor = NSScreen.main?.backingScaleFactor ?? 2.0
+        let captureWidth = Int(window.frame.width * scaleFactor)
+        let captureHeight = Int(window.frame.height * scaleFactor)
+        
+        configuration.width = max(captureWidth, Int(window.frame.width))
+        configuration.height = max(captureHeight, Int(window.frame.height))
         configuration.captureResolution = .best
         configuration.scalesToFit = false
         configuration.showsCursor = false
+        configuration.pixelFormat = kCVPixelFormatType_32BGRA
+        configuration.backgroundColor = CGColor.clear
+        
+        print("captureWindow - Capture size: \(configuration.width) x \(configuration.height)")
         
         let cgImage = try await SCScreenshotManager.captureImage(
             contentFilter: filter,
             configuration: configuration
         )
-        let nsImage = NSImage(cgImage: cgImage, size: window.frame.size)
-		
+        
+        let imageSize = NSSize(width: window.frame.width, height: window.frame.height)
+        let nsImage = NSImage(cgImage: cgImage, size: imageSize)
+        
+        print("captureWindow - Final image size: \(nsImage.size.width) x \(nsImage.size.height)")
+        print("captureWindow - CGImage size: \(cgImage.width) x \(cgImage.height)")
+        
         return nsImage
     }
     
-    private func performOCR(on image: NSImage) async throws -> String {
+    private func performOCR(on image: NSImage) async throws -> [OCRTextObservation] {
         guard let cgImage = image.cgImage(forProposedRect: nil, context: nil, hints: nil) else {
             throw OCRError.ocrError("Failed to convert image to CGImage")
         }
@@ -79,11 +100,24 @@ final class WindowCaptureOCR: Sendable {
                     return
                 }
                 
-                let extractedText = observations.compactMap { observation in
-                    observation.topCandidates(1).first?.string
-                }.joined(separator: "\n")
+                let results = observations.compactMap { observation -> OCRTextObservation? in
+                    guard let candidate = observation.topCandidates(1).first else { return nil }
+                    
+                    // Convert normalized coordinates to image coordinates
+                    let bounds = VNImageRectForNormalizedRect(observation.boundingBox,
+                                                            Int(image.size.width),
+                                                            Int(image.size.height))
+                    
+                    return OCRTextObservation(
+                        text: candidate.string,
+                        bounds: bounds,
+                        confidence: candidate.confidence,
+                        isFoundInAccessibility: false,
+                        percentageMatched: 0
+                    )
+                }
                 
-                continuation.resume(returning: extractedText)
+                continuation.resume(returning: results)
             }
             
             request.recognitionLevel = .accurate
@@ -98,6 +132,30 @@ final class WindowCaptureOCR: Sendable {
                 }
             }
         }
+    }
+    
+    func createDebugImage(original: NSImage, failedObservations: [OCRTextObservation]) -> NSImage {
+        let debugImage = NSImage(size: original.size)
+        
+        debugImage.lockFocus()
+        
+        // Draw original image
+        original.draw(in: NSRect(origin: .zero, size: original.size))
+        
+        // Set up red highlight
+        NSColor.red.withAlphaComponent(0.3).set()
+        
+        // Draw rectangles around failed observations
+        for observation in failedObservations {
+            let path = NSBezierPath(rect: observation.bounds)
+            path.lineWidth = 2
+            path.stroke()
+            path.fill()
+        }
+        
+        debugImage.unlockFocus()
+        
+        return debugImage
     }
 }
 

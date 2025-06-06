@@ -14,7 +14,10 @@ extension FileRow {
         }
         
         do {
-            let extractedText = try await OCRManager.shared.extractTextFromApp(newAutoContext.appName)
+            let (observations, screenshot) = try await OCRManager.shared.extractTextFromApp(newAutoContext.appName)
+            
+            // Join all OCR text observations into a single string
+            let extractedText = observations.map(\.text).joined(separator: " ")
             let matchPercentage = compareOCRWithAutoContext(ocrText: extractedText, autoContext: newAutoContext)
             
             if let firstIndex = windowState.pendingContextList.firstIndex(where: {
@@ -50,7 +53,7 @@ extension FileRow {
             return nil
         })
         let addedAutoContexts = newAutoContexts.subtracting(oldAutoContexts)
-		
+        
         return addedAutoContexts.first
     }
     
