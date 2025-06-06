@@ -17,6 +17,7 @@ struct IconButton: View {
     private let inactiveColor: Color?
     private let tooltipPrompt: String?
     private let tooltipShortcut: Tooltip.Shortcut?
+    private let hoverBackgroundColor: Color?
     
     init(
         icon: ImageResource,
@@ -27,7 +28,8 @@ struct IconButton: View {
         activeColor: Color? = nil,
         inactiveColor: Color? = nil,
         tooltipPrompt: String? = nil,
-        tooltipShortcut: Tooltip.Shortcut? = nil
+        tooltipShortcut: Tooltip.Shortcut? = nil,
+        hoverBackgroundColor: Color? = nil
     ) {
         self.icon = icon
         self.iconSize = iconSize
@@ -38,6 +40,7 @@ struct IconButton: View {
         self.inactiveColor = inactiveColor
         self.tooltipPrompt = tooltipPrompt
         self.tooltipShortcut = tooltipShortcut
+        self.hoverBackgroundColor = hoverBackgroundColor
     }
     
     @State private var isHovered: Bool = false
@@ -62,6 +65,7 @@ extension IconButton {
             .resizable()
             .renderingMode(.template)
             .foregroundColor(handleIconColor())
+            .background((isHovered || isActive) ? (hoverBackgroundColor ?? .gray800) : .clear)
             .aspectRatio(contentMode: .fit)
             .frame(width: iconSize, height: iconSize)
     }
@@ -73,7 +77,8 @@ extension IconButton {
             .applySharedStyles(
                 buttonSize: buttonSize,
                 isHovered: $isHovered,
-                isActive: isActive
+                isActive: isActive,
+                hoverBackgroundColor: hoverBackgroundColor
             )
     }
     
@@ -84,7 +89,8 @@ extension IconButton {
             .applySharedStyles(
                 buttonSize: buttonSize,
                 isHovered: $isHovered,
-                isActive: isActive
+                isActive: isActive,
+                hoverBackgroundColor: hoverBackgroundColor
             )
     }
     
@@ -94,7 +100,8 @@ extension IconButton {
             .applySharedStyles(
                 buttonSize: buttonSize,
                 isHovered: $isHovered,
-                isActive: isActive
+                isActive: isActive,
+                hoverBackgroundColor: hoverBackgroundColor
             )
     }
 }
@@ -119,18 +126,20 @@ private extension View {
     func applySharedStyles(
         buttonSize: CGFloat,
         isHovered: Binding<Bool>,
-        isActive: Bool
+        isActive: Bool,
+        hoverBackgroundColor: Color?
     ) -> some View {
         
         return self
             .buttonStyle(PlainButtonStyle())
             .frame(width: buttonSize, height: buttonSize)
-            .background((isHovered.wrappedValue || isActive) ? .gray800 : .clear)
+            .background((isHovered.wrappedValue || isActive) ? (hoverBackgroundColor ?? .gray800) : .clear)
             .addBorder(
                 cornerRadius: ToolbarButtonStyle.cornerRadius,
                 stroke: isActive ? .gray500 : .clear
             )
             .addAnimation(dependency: isHovered.wrappedValue)
             .onHover{ isHovering in isHovered.wrappedValue = isHovering }
+            .contentShape(Rectangle())
     }
 }
