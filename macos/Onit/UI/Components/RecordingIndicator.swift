@@ -9,6 +9,8 @@ import SwiftUI
 
 struct RecordingIndicator: View {
     @ObservedObject var audioRecorder: AudioRecorder
+    
+    static let maxHeight: CGFloat = 18
 
     var body: some View {
         Group {
@@ -46,7 +48,7 @@ struct WaveformIndicator: View {
                 bar(for: index)
             }
         }
-        .frame(height: 22)
+        .frame(height: RecordingIndicator.maxHeight)
         .padding(.horizontal, 8)
         .background(
             RoundedRectangle(cornerRadius: 11)
@@ -89,7 +91,7 @@ struct LoadingIndicator: View {
         ZStack {
             RoundedRectangle(cornerRadius: 11)
                 .fill(Color.blue400.opacity(0.2))
-                .frame(width: 22, height: 22)
+                .frame(width: RecordingIndicator.maxHeight, height: RecordingIndicator.maxHeight)
             
             Color.blue400.mask {
                 Loader()
