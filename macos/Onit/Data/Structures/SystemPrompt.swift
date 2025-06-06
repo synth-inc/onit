@@ -17,8 +17,13 @@ class SystemPrompt {
     
     var name: String
     var prompt: String
+    
+    @Attribute(.externalStorage)
     var applications: [URL]
+    
+    @Attribute(.externalStorage) 
     var tags: [String]
+    
     var timestamp: Date
     var lastUsed: Date?
     
