@@ -15,6 +15,12 @@ import SwiftData
 struct KeyboardShortcutsManager {
     
     private static var didObserveAppActiveNotifications = false
+
+	private static let persistentShortcuts: [KeyboardShortcuts.Name] = [
+		.launch,
+		.launchWithAutoContext,
+		.quickEdit
+	]
     
     static func configure() {
         registerSettingsShortcuts()
@@ -33,7 +39,7 @@ struct KeyboardShortcutsManager {
     
     static func enable(modelContainer: ModelContainer) {
         var names = KeyboardShortcuts.Name.allCases
-            .filter { ![.launch, .launchWithAutoContext].contains($0) }
+            .filter { !persistentShortcuts.contains($0) }
         
         // Remove ESC if needed for pinned mode
         let isPinned = FeatureFlagManager.shared.usePinnedMode
@@ -62,7 +68,7 @@ struct KeyboardShortcutsManager {
 
     static func disable(modelContainer: ModelContainer) {
         var names = KeyboardShortcuts.Name.allCases
-            .filter { ![.launch, .launchWithAutoContext].contains($0) }
+            .filter { !persistentShortcuts.contains($0) }
         
         do {
             let storedPrompts = try modelContainer.mainContext.fetch(FetchDescriptor<SystemPrompt>())
@@ -114,6 +120,8 @@ struct KeyboardShortcutsManager {
                     if let foregroundWindow = state.foregroundWindow {
                         state.addWindowToContext(window: foregroundWindow.element)
                     }
+                case .quickEdit:
+                    QuickEditManager.shared.show()
                 default:
                     print("KeyboardShortcut not handled: \(name)")
                 }
@@ -122,7 +130,7 @@ struct KeyboardShortcutsManager {
         // Since we support turning on and off shortcuts, we should disable these all after registering.
         // Then, the shortcuts that are on will be enabled when enable() is called. 
         let names = KeyboardShortcuts.Name.allCases
-            .filter { ![.launch, .launchWithAutoContext].contains($0) }
+            .filter { !persistentShortcuts.contains($0) }
         KeyboardShortcuts.disable(names)
     }
     

@@ -16,13 +16,13 @@ extension AccessibilityObserversManager {
             kAXMainWindowChangedNotification,
             kAXSelectedTextChangedNotification,
             kAXValueChangedNotification,
+            kAXFocusedUIElementChangedNotification,
             kAXWindowMovedNotification,
             kAXWindowResizedNotification,
             kAXWindowCreatedNotification,
             kAXUIElementDestroyedNotification,
             kAXTitleChangedNotification
 
-//            kAXFocusedUIElementChangedNotification,
 //            kAXSelectedColumnsChangedNotification,
 //            kAXSelectedRowsChangedNotification,
 //            kAXAnnouncementRequestedNotification,

@@ -24,8 +24,10 @@ class AppCoordinator {
 
     #if DEBUG || BETA
     private let debugManager : DebugManager
+    private let quickEditManager: QuickEditManager
     #endif
-
+    
+    
     private var stateChangesCancellable: AnyCancellable?
     
     // MARK: - Initializer
@@ -39,6 +41,7 @@ class AppCoordinator {
         featureFlagManager = FeatureFlagManager.shared
         #if DEBUG || BETA
         debugManager = DebugManager.shared
+        quickEditManager = QuickEditManager.shared
         #endif
         
         observerManager.delegate = notificationsManager

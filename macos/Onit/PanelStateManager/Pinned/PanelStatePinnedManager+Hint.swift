@@ -45,7 +45,7 @@ extension PanelStatePinnedManager {
     
     private func tetherHintClicked(screen: NSScreen) {
         state.trackedScreen = screen
-        launchPanel(for: state)
+        launchPanel(for: state, createNewChat: true)
     }
     
     private func updateTetherWindowPosition(for screen: NSScreen, lastYComputed: CGFloat? = nil) {
