@@ -99,11 +99,23 @@ class AccessibilityNotificationsManager: ObservableObject {
         lastActiveWindowPid = nil
     }
     
-    func fetchAutoContext(pid: pid_t? = nil, state: OnitPanelState? = nil) {
+    func fetchAutoContext(
+        pid: pid_t? = nil,
+        state: OnitPanelState? = nil,
+        customAppBundleUrl: URL? = nil
+    ) {
         if let pid = pid {
-            retrieveWindowContent(for: pid, state: state)
+            retrieveWindowContent(
+                for: pid,
+                state: state,
+                customAppBundleUrl: customAppBundleUrl
+            )
         } else if let pid = lastActiveWindowPid {
-            retrieveWindowContent(for: pid, state: state)
+            retrieveWindowContent(
+                for: pid,
+                state: state,
+                customAppBundleUrl: customAppBundleUrl
+            )
         }
     }
 
@@ -269,18 +281,31 @@ class AccessibilityNotificationsManager: ObservableObject {
     
     // MARK: Parsing
     
-    private func retrieveWindowContent(for pid: pid_t, state: OnitPanelState?) {
+    private func retrieveWindowContent(
+        for pid: pid_t,
+        state: OnitPanelState?,
+        customAppBundleUrl: URL? = nil
+    ) {
         guard let mainWindow = pid.firstMainWindow,
               let state = state ?? PanelStateCoordinator.shared.getState(for: CFHash(mainWindow)) else { return }
         
         Task { @MainActor in
             if let documentInfo = findDocument(in: mainWindow) {
-                handleWindowContent(documentInfo, for: state)
+                handleWindowContent(
+                    documentInfo,
+                    for: state,
+                    customAppBundleUrl: customAppBundleUrl
+                )
                 // TODO: KNA - uncomment this to use WebContentFetchService with AXURL
             } /* else if let urlInfo = await findUrl(in: focusedWindow) {
                 handleWindowContent(urlInfo, for: state)
             } */ else {
-                parseAccessibility(for: pid, in: mainWindow, state: state)
+                parseAccessibility(
+                    for: pid,
+                    in: mainWindow,
+                    state: state,
+                    customAppBundleUrl: customAppBundleUrl
+                )
             }
         }
     }
@@ -363,7 +388,12 @@ class AccessibilityNotificationsManager: ObservableObject {
         return nil
     }
 
-    private func parseAccessibility(for pid: pid_t, in window: AXUIElement, state: OnitPanelState) {
+    private func parseAccessibility(
+        for pid: pid_t,
+        in window: AXUIElement,
+        state: OnitPanelState,
+        customAppBundleUrl: URL? = nil
+    ) {
         let windowHash = CFHash(window)
         let appName = window.parent()?.title() ?? "Unknown"
         
@@ -402,7 +432,11 @@ class AccessibilityNotificationsManager: ObservableObject {
                     }
                     
                     await MainActor.run {
-                        self.handleWindowContent(results, for: state)
+                        self.handleWindowContent(
+                            results,
+                            for: state,
+                            customAppBundleUrl: customAppBundleUrl
+                        )
                     }
                 } catch {
                     await MainActor.run {
@@ -422,10 +456,15 @@ class AccessibilityNotificationsManager: ObservableObject {
         DispatchQueue.main.asyncAfter(deadline: .now() + Config.debounceInterval, execute: workItem)
     }
     
-    private func handleWindowContent(_ results: [String: String]?, for state: OnitPanelState) {
-        var appBundleUrl: URL? = nil
+    private func handleWindowContent(
+        _ results: [String: String]?,
+        for state: OnitPanelState,
+        customAppBundleUrl: URL? = nil
+    ) {
+        var appBundleUrl: URL? = customAppBundleUrl
         
-        if let pid = lastActiveWindowPid,
+        if appBundleUrl == nil,
+           let pid = lastActiveWindowPid,
            let app = NSRunningApplication(processIdentifier: pid)
         {
             appBundleUrl = app.bundleURL

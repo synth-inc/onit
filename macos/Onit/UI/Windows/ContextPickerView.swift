@@ -53,7 +53,7 @@ struct ContextPickerView: View {
                 OverlayManager.shared.dismissOverlay()
                 
                 if autoContextFromCurrentWindow {
-                    addAutoContext()
+                    addWindowToContext()
                 } else {
                     enableCurrentWindowSetting()
                 }
@@ -80,19 +80,17 @@ extension ContextPickerView {
         }
     }
     
-    private func addAutoContext() {
+    private func addWindowToContext() {
         AnalyticsManager.ContextPicker.autoContextPressed()
         
         if let windowName = currentWindowName,
-           let pid = currentWindowPid,
-           let focusedWindow = pid.firstMainWindow
+           let pid = currentWindowPid
         {
-            state.addAutoContextTasks[windowName]?.cancel()
-            
-            state.addAutoContextTasks[windowName] = Task {
-                let _ = AccessibilityNotificationsManager.shared.windowsManager.append(focusedWindow, pid: pid)
-                AccessibilityNotificationsManager.shared.fetchAutoContext(pid: pid, state: state)
-            }
+            state.addWindowToContext(
+                windowName: windowName,
+                pid: pid,
+                appBundleUrl: currentWindowBundleUrl
+            )
         }
     }
     

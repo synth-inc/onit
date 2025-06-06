@@ -32,6 +32,8 @@ struct PaperclipButton: View {
         self.currentWindowPid = currentWindowPid
     }
     
+    @State private var showContextMenu: Bool = false
+    
     var accessibilityAutoContextEnabled: Bool {
         accessibilityPermissionManager.accessibilityPermissionStatus == .granted
     }
@@ -43,7 +45,12 @@ struct PaperclipButton: View {
                 iconSize: 18,
                 action: {
                     AnalyticsManager.Chat.paperclipPressed()
-                    handleAddContext()
+                    
+                    if accessibilityAutoContextEnabled && autoContextFromCurrentWindow {
+                        showContextMenu = true
+                    } else {
+                        handleAddContext()
+                    }
                 },
                 tooltipPrompt: accessibilityAutoContextEnabled ? "Add context" : "Upload file"
             )
@@ -70,6 +77,11 @@ struct PaperclipButton: View {
         .padding(.trailing, 4)
         .onAppear {
             resetClosedAutocontext()
+        }
+        .popover(
+            isPresented: $showContextMenu
+        ) {
+            ContextMenu($showContextMenu)
         }
     }
 

@@ -43,6 +43,10 @@ struct PromptCore: View {
     @State private var textHeight: CGFloat = 20
     private let maxHeightLimit: CGFloat = 100
     
+    @State private var showSlashMenu: Bool = false
+    @State private var showContextMenu: Bool = false // This should be removed later when the Slash Menu is developed.
+    @State private var disableSend: Bool = false
+    
     @FocusState private var isFocused: Bool
     
     private var unfocusedBorder = GradientBorder(
@@ -60,14 +64,6 @@ struct PromptCore: View {
         colorTwo: Color(hex: "#4AA4BF") ?? .gray800
     )
     
-    private var shouldIndicateDisabled: Bool {
-        !windowState.websiteUrlsScrapeQueue.isEmpty || !windowState.addAutoContextTasks.isEmpty
-    }
-    
-    private var showingAlert: Bool {
-        showTwoWeekProTrialEndedAlert || appState.showFreeLimitAlert || appState.showProLimitAlert
-    }
-    
     var body: some View {
         VStack(spacing: 0) {
             if let pendingInput = windowState.pendingInput {
@@ -78,6 +74,7 @@ struct PromptCore: View {
                 contextAndInput
                 PromptCoreFooter(
                     audioRecorder: audioRecorder,
+                    disableSend: disableSend,
                     handleSend: handleSend
                 )
             }
@@ -112,8 +109,14 @@ struct PromptCore: View {
                 windowState.removeDelegate(delegate)
             }
         }
-        .onChange(of: editingText?.wrappedValue ?? windowState.pendingInstruction) { _, _ in
+        .onChange(of: editingText?.wrappedValue ?? windowState.pendingInstruction) { _, new in
             windowState.detectIsTyping()
+            
+            let firstTextInputCharacter = new.prefix(1)
+            let slashMenuOpened = firstTextInputCharacter == "/"
+            showSlashMenu = slashMenuOpened
+            showContextMenu = slashMenuOpened // This should be removed later when the Slash Menu is developed.
+            disableSend = slashMenuOpened || new.isEmpty
         }
         .onChange(of: windowState.pendingInstructionCursorPosition) {
             if !isEditing {
@@ -155,6 +158,12 @@ extension PromptCore {
         }
         .disabled(showingAlert)
         .allowsHitTesting(!showingAlert)
+        // This should be replaced later when the Slash Menu when it's developed.
+        .popover(
+            isPresented: $showContextMenu
+        ) {
+            ContextMenu($showContextMenu)
+        }
     }
     
     private var contextAndInput: some View {
@@ -236,6 +245,14 @@ extension PromptCore {
 // MARK: - Private Variables
 
 extension PromptCore {
+    private var shouldIndicateDisabled: Bool {
+        !windowState.websiteUrlsScrapeQueue.isEmpty || !windowState.addAutoContextTasks.isEmpty
+    }
+    
+    private var showingAlert: Bool {
+        showTwoWeekProTrialEndedAlert || appState.showFreeLimitAlert || appState.showProLimitAlert
+    }
+    
     private var isRemote: Bool {
         switch mode {
         case .remote: return true
@@ -250,16 +267,16 @@ extension PromptCore {
                 if let keyboardShortcutString = KeyboardShortcuts.getShortcut(for: .newChat)?
                     .description
                 {
-                    "Follow-up... (" + keyboardShortcutString + " for new)"
+                    "Follow-up... (" + keyboardShortcutString + " for new), / for actions"
                 } else {
-                    "Follow-up..."
+                    "Follow-up..., / for actions"
                 }
 
             } else {
-                "New instructions..."
+                "New instructions, / for actions"
             }
         } else {
-            "New instructions..."
+            "New instructions, / for actions"
         }
     }
 }

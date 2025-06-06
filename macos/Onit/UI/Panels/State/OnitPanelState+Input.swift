@@ -42,13 +42,21 @@ extension OnitPanelState {
             /// Later on, we should implement a data aggregator.
             
             let oldContext = pendingContextList[existingIndex]
-            let newContext = Context(appName: appName, appHash: appHash, appTitle: appTitle, appContent: appContent)
+            
+            let newContext = Context(
+                appName: appName,
+                appHash: appHash,
+                appTitle: appTitle,
+                appContent: appContent,
+                appBundleUrl: AccessibilityNotificationsManager.shared.screenResult.appBundleUrl
+            )
             
             if oldContext != newContext {
                 ContextWindowsManager.shared.deleteContextItem(item: oldContext)
                 pendingContextList[existingIndex] = newContext
             }
             
+            cleanupAutoContextTask(windowName: appTitle)
             return
             /** Merge result for existing autoContext */
 //            if case .auto(let autoContext) = pendingContextList[existingIndex] {
@@ -77,8 +85,71 @@ extension OnitPanelState {
         )
         
         pendingContextList.insert(autoContext, at: 0)
+        
+        cleanupAutoContextTask(windowName: appTitle)
     }
     
+    func cleanupAutoContextTask(windowName: String) {
+        addAutoContextTasks[windowName]?.cancel()
+        addAutoContextTasks.removeValue(forKey: windowName)
+    }
+    
+    func addWindowToContext(
+        windowName: String,
+        pid: pid_t,
+        appBundleUrl: URL?
+    ) {
+        addAutoContextTasks[windowName]?.cancel()
+        
+        addAutoContextTasks[windowName] = Task {
+            guard let focusedWindow = pid.firstMainWindow
+            else {
+                await MainActor.run {
+                    self.cleanupAutoContextTask(windowName: windowName)
+                }
+                return
+            }
+            
+            let _ = AccessibilityNotificationsManager.shared.windowsManager.append(
+                focusedWindow,
+                pid: pid
+            )
+            
+            // No need to clean up `addAutoContextTasks` here, because `fetchAutoContext` ultimately leads to `addAutoContext()` down the stack, which will handle the cleanup.
+            AccessibilityNotificationsManager.shared.fetchAutoContext(
+                pid: pid,
+                state: self,
+                customAppBundleUrl: appBundleUrl
+            )
+        }
+    }
+    
+    func getCurrentWindowDetails() -> (String?, pid_t?, URL?) {
+        let windowsManager = AccessibilityNotificationsManager.shared.windowsManager
+        
+        if let currentWindow = windowsManager.activeTrackedWindow,
+           let windowPid = currentWindow.element.pid(),
+           let windowApp = NSRunningApplication(processIdentifier: windowPid)
+        {
+            let windowName = currentWindow.element.title() ?? currentWindow.element.appName() ?? "Unknown"
+            let windowAppBundleUrl = windowApp.bundleURL
+            
+            return (windowName, windowPid, windowAppBundleUrl)
+        } else {
+            return (nil, nil, nil)
+        }
+    }
+    
+    func setCurrentWindowDetails(
+        windowName: String? = nil,
+        windowPid: pid_t? = nil,
+        windowAppBundleUrl: URL? = nil
+    ) {
+        self.currentWindowName = windowName
+        self.currentWindowPid = windowPid
+        self.currentWindowAppBundleUrl = windowAppBundleUrl
+    }
+
     func getPendingContextList() -> [Context] {
         return pendingContextList
     }
