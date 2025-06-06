@@ -80,6 +80,14 @@ struct App: SwiftUI.App {
                     window.level = settingsWindowLevel
                 })
         }
+        
+        // TODO: KNA - Should be removed after debugging
+        Window("CaretPosition", id: "caretPosition") {
+            CaretPositionDebug()
+                .frame(minWidth: 500, minHeight: 600)
+        }
+        .windowResizability(.contentSize)
+        .defaultPosition(.center)
 
         Window("URLHandler", id: "urlHandler") {
             Color.clear

@@ -297,6 +297,45 @@ extension AXUIElement {
     public func focused() -> Bool? {
         return self.attribute(forAttribute: kAXFocusedAttribute as CFString) as? Bool
     }
+    
+    // MARK: - Caret Position Methods
+    
+    func supportsCaretTracking() -> Bool {
+        guard let role = role() else { return false }
+        
+        let supportedRoles = [
+            kAXTextFieldRole,
+            kAXTextAreaRole,
+            kAXStaticTextRole
+        ]
+        
+        return supportedRoles.contains(role)
+    }
+    
+    // TODO: KNA - Should be removed after debugging
+    func findFocusedTextElement() -> AXUIElement? {
+        if focused() == true && supportsCaretTracking() {
+            return self
+        }
+        
+        if role() == kAXApplicationRole {
+            if let focusedElementValue = self.attribute(forAttribute: kAXFocusedUIElementAttribute as CFString) {
+                let focusedElement = focusedElementValue as! AXUIElement
+                
+                return focusedElement.findFocusedTextElement()
+            }
+        }
+        
+        if let children = children() {
+            for child in children {
+                if let focusedChild = child.findFocusedTextElement() {
+                    return focusedChild
+                }
+            }
+        }
+        
+        return nil
+    }
 }
 
 //
