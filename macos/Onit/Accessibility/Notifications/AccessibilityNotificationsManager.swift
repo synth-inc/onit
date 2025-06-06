@@ -42,6 +42,8 @@ class AccessibilityNotificationsManager: ObservableObject {
     let windowsManager = AccessibilityWindowsManager()
     
     private let highlightedTextCoordinator = HighlightedTextCoordinator()
+    
+    private let caretPositionManager = CaretPositionManager.shared
 
     private var currentSource: String?
 
@@ -149,8 +151,12 @@ class AccessibilityNotificationsManager: ObservableObject {
             self.handleWindowBounds(for: element, elementPid: elementPid)
         case kAXSelectedTextChangedNotification:
             self.handleSelectionChange(for: element)
+            self.handleCaretPositionChange(for: element)
         case kAXValueChangedNotification:
             self.handleValueChanged(for: element)
+            self.handleCaretPositionChange(for: element)
+        case kAXFocusedUIElementChangedNotification:
+            self.handleCaretPositionChange(for: element)
         case kAXWindowMovedNotification:
             self.handleWindowMoved(for: element, elementPid: elementPid)
         case kAXWindowResizedNotification:
@@ -498,6 +504,14 @@ class AccessibilityNotificationsManager: ObservableObject {
         
         let input = Input(selectedText: selectedText, application: currentSource ?? "")
         PanelStateCoordinator.shared.state.pendingInput = input
+    }
+
+	// MARK: Caret Position Handling
+    
+    private func handleCaretPositionChange(for element: AXUIElement) {
+        guard element.supportsCaretTracking() else { return }
+        
+        caretPositionManager.updateCaretPosition(for: element)
     }
 
     // MARK: Debug
