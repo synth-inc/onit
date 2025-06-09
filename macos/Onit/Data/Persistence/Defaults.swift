@@ -88,6 +88,7 @@ extension Defaults.Keys {
 
     // Window state
     static let panelWidth = Key<Double>("panelWidth", default: 400)
+    static let pinnedResizeMode = Key<PinnedResizeMode>("pinnedResizeMode", default: .overlap)
 
     // General settings
     static let launchOnStartupRequested = Key<Bool>("launchOnStartupRequested", default: false)

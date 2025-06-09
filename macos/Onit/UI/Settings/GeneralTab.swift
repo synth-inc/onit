@@ -8,6 +8,7 @@ struct GeneralTab: View {
     @Default(.fontSize) var fontSize
     @Default(.lineHeight) var lineHeight
     @Default(.panelWidth) var panelWidth
+    @Default(.pinnedResizeMode) var pinnedResizeMode
     
     @Default(.launchShortcutToggleEnabled) var launchShortcutToggleEnabled
     @Default(.createNewChatOnPanelOpen) var createNewChatOnPanelOpen
@@ -151,6 +152,17 @@ struct GeneralTab: View {
                             Text("Onit will always appear on the right side of your screen. You will only have one Onit panel at any given time. Other applications will be resized to make room for Onit.")
                                 .font(.system(size: 12))
                                 .foregroundStyle(.gray200)
+
+                            HStack {
+                                Text("Resize windows")
+                                    .font(.system(size: 13))
+                                Picker("", selection: $pinnedResizeMode) {
+                                    Text("Overlap").tag(PinnedResizeMode.overlap)
+                                    Text("All").tag(PinnedResizeMode.all)
+                                }
+                                .pickerStyle(.segmented)
+                                .frame(width: 150)
+                            }
                         } else {
                             Text("Onit will attach to your applications. There can be one Onit panel for each application window. If you move your app, Onit will move with it.")
                                 .font(.system(size: 12))

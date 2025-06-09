@@ -6,6 +6,7 @@
 //
 
 import AppKit
+import Defaults
 
 extension PanelStatePinnedManager {
     
@@ -38,17 +39,35 @@ extension PanelStatePinnedManager {
         isPanelResized: Bool = false
     ) {
         if !windowFrameChanged, !isPanelResized { guard !targetInitialFrames.keys.contains(window) else { return } }
-        
+
         if let windowFrameConverted = window.getFrame(convertedToGlobalCoordinateSpace: true),
            let windowScreen = windowFrameConverted.findScreen(),
            windowScreen == screen,
            let windowFrame = window.getFrame() {
-            
+
+            let resizeMode = Defaults[.pinnedResizeMode]
+
             let panelWidth = state.panelWidth - (TetheredButton.width / 2) + 1
             let screenFrame = screen.visibleFrame
             let availableSpace = screenFrame.maxX - windowFrame.maxX
-            
-            if !isPanelResized {
+
+            if resizeMode == .all {
+                if targetInitialFrames[window] == nil {
+                    if windowFrameChanged {
+                        let newWidth = windowFrame.width + panelWidth
+                        let newFrame = NSRect(origin: windowFrame.origin,
+                                              size: NSSize(width: newWidth, height: windowFrame.height))
+                        targetInitialFrames[window] = newFrame
+                    } else {
+                        targetInitialFrames[window] = windowFrame
+                    }
+                }
+
+                let newWidth = (screenFrame.maxX - windowFrame.origin.x) - panelWidth
+                let newFrame = CGRect(x: windowFrame.origin.x, y: windowFrame.origin.y, width: newWidth, height: windowFrame.height)
+                _ = window.setFrame(newFrame)
+
+            } else if !isPanelResized {
                 if availableSpace < panelWidth {
                     if !windowFrameChanged {
                         targetInitialFrames[window] = windowFrame
