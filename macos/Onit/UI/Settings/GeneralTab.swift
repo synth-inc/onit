@@ -163,14 +163,14 @@ struct GeneralTab: View {
                     Section {
                         VStack(alignment: .leading, spacing: 4) {
                             HStack {
-                                Text("AutoContext on Launch")
+                                Text("Add Current Window on Launch")
                                     .font(.system(size: 13))
                                 Spacer()
                                 Toggle("", isOn: $autoContextOnLaunchTethered)
                                     .toggleStyle(.switch)
                                     .controlSize(.small)
                                 SettingInfoButton(
-                                    title: "AutoContext on Launch",
+                                    title: "Add Current Window on Launch",
                                     description:
                                         "When enabled, Onit automatically reads the tethered window and adds its text as context whenever the panel opens.",
                                     defaultValue: "on",
