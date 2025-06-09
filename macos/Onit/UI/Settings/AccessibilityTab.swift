@@ -8,7 +8,6 @@ import AppKit
 struct AccessibilityTab: View {
     @Default(.autoContextFromHighlights) var autoContextFromHighlights
     @Default(.autoContextFromCurrentWindow) var autoContextFromCurrentWindow
-    @Default(.autoContextOnLaunchTethered) var autoContextOnLaunchTethered
 
     @ObservedObject private var accessibilityPermissionManager = AccessibilityPermissionManager.shared
     @ObservedObject private var featureFlagsManager = FeatureFlagManager.shared
@@ -120,31 +119,6 @@ struct AccessibilityTab: View {
                         Text("Loads context from the active window. Note: this feature may not work in every application. ")
                             .font(.system(size: 12))
                             .foregroundStyle(.gray200)
-                    }
-                }
-
-                if !featureFlagsManager.usePinnedMode {
-                    Section {
-                        VStack(alignment: .leading, spacing: 4) {
-                            HStack {
-                                Text("AutoContext on Launch")
-                                    .font(.system(size: 13))
-                                Spacer()
-                                Toggle("", isOn: $autoContextOnLaunchTethered)
-                                    .toggleStyle(.switch)
-                                    .controlSize(.small)
-                                SettingInfoButton(
-                                    title: "AutoContext on Launch",
-                                    description:
-                                        "When enabled, Onit automatically reads the tethered window and adds its text as context each time the panel opens.",
-                                    defaultValue: "on",
-                                    valueType: "Bool"
-                                )
-                            }
-                            Text("Adds context from the current window whenever Onit opens in Tethered mode.")
-                                .font(.system(size: 12))
-                                .foregroundStyle(.gray200)
-                        }
                     }
                 }
             }
