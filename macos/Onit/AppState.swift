@@ -469,6 +469,45 @@ class AppState: NSObject {
         return models
     }
 
+    var hasUserAPITokens: Bool {
+        if let token = Defaults[.openAIToken],
+           !token.isEmpty,
+           isOpenAITokenValidated {
+            return true
+        }
+        if let token = Defaults[.anthropicToken],
+           !token.isEmpty,
+           isAnthropicTokenValidated {
+            return true
+        }
+        if let token = Defaults[.xAIToken],
+           !token.isEmpty,
+           isXAITokenValidated {
+            return true
+        }
+        if let token = Defaults[.googleAIToken],
+           !token.isEmpty,
+           isGoogleAITokenValidated {
+            return true
+        }
+        if let token = Defaults[.deepSeekToken],
+           !token.isEmpty,
+           isDeepSeekTokenValidated {
+            return true
+        }
+        if let token = Defaults[.perplexityToken],
+           !token.isEmpty,
+           isPerplexityTokenValidated {
+            return true
+        }
+        for provider in availableCustomProvider {
+            if !provider.token.isEmpty && provider.isTokenValidated {
+                return true
+            }
+        }
+        return false
+    }
+
 //    var remoteNeedsSetup: Bool {
 //        listedModels.isEmpty
 //    }
