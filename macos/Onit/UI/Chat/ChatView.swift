@@ -89,6 +89,13 @@ struct ChatView: View {
             if currentPromptsCount <= 0 { Spacer() }
         }
         .drag()
+        .overlay(alignment: .bottomTrailing) {
+            if state.generatingPrompt != nil {
+                StopGenerationButton()
+                    .padding(.trailing, 12)
+                    .padding(.bottom, 60)
+            }
+        }
     }
 }
 

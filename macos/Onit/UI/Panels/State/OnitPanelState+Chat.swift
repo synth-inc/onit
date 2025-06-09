@@ -267,6 +267,26 @@ extension OnitPanelState {
             curPrompt.generationState = priorState
         }
     }
+
+    func stopGeneration() {
+        guard let prompt = generatingPrompt else { return }
+        cancelGenerate()
+
+        pendingInstruction = prompt.instruction
+        textFocusTrigger.toggle()
+
+        if Defaults[.stopMode] == .removePartial {
+            if let index = currentChat?.prompts.firstIndex(where: { $0.id == prompt.id }) {
+                currentChat?.prompts.remove(at: index)
+            }
+            if let curIndex = currentPrompts?.firstIndex(where: { $0.id == prompt.id }) {
+                currentPrompts?.remove(at: curIndex)
+            }
+            container.mainContext.delete(prompt)
+        }
+
+        generatingPrompt = nil
+    }
     
     func shouldUseStream(_ aiModel: AIModel) -> Bool {
         switch aiModel.provider {
