@@ -41,7 +41,7 @@ actor StreamingClient {
         var eventParser: EventParser?
         
         if !useOnitServer && model.provider == .perplexity {
-            eventParser = PerplexityEventParser(mode: .dataOnly)
+            eventParser = PerplexityEventParser()
         }
 
         return try await stream(endpoint: endpoint, eventParser: eventParser)
@@ -78,7 +78,7 @@ actor StreamingClient {
         -> AsyncThrowingStream<String, Error>
     {
         let urlRequest = try endpoint.asURLRequest()
-        let eventSource = EventSource(mode: .dataOnly, eventParser: eventParser)
+        let eventSource = EventSource(eventParser: eventParser)
         let dataTask = await eventSource.dataTask(for: urlRequest)
         
         #if DEBUG

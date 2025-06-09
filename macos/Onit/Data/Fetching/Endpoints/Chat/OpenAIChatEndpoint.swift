@@ -16,11 +16,11 @@ struct OpenAIChatEndpoint: Endpoint {
     let token: String?
     let model: String
 
-    var path: String { "/v1/chat/completions" }
+    var path: String { "/v1/responses" }
     var getParams: [String: String]? { nil }
     var method: HTTPMethod { .post }
     var requestBody: OpenAIChatRequest? {
-        OpenAIChatRequest(model: model, messages: messages, stream: false)
+        OpenAIChatRequest(model: model, input: messages, stream: false)
     }
     var additionalHeaders: [String: String]? {
         ["Authorization": "Bearer \(token ?? "")"]
@@ -28,7 +28,7 @@ struct OpenAIChatEndpoint: Endpoint {
     var timeout: TimeInterval? { nil }
     
     func getContent(response: Response) -> String? {
-        return response.choices.first?.message.content
+        return response.delta
     }
 }
 
@@ -67,27 +67,15 @@ enum OpenAIChatContent: Codable {
 struct OpenAIChatContentPart: Codable {
     let type: String
     let text: String?
-    let image_url: ImageURL?
-
-    struct ImageURL: Codable {
-        let url: String
-    }
+    let image_url: String?
 }
 
 struct OpenAIChatRequest: Codable {
     let model: String
-    let messages: [OpenAIChatMessage]
+    let input: [OpenAIChatMessage]
     let stream: Bool
 }
 
 struct OpenAIChatResponse: Codable {
-    let choices: [Choice]
-    
-    struct Choice: Codable {
-        let message: Message
-        
-        struct Message: Codable {
-            let content: String
-        }
-    }
+    let delta: String?
 }
