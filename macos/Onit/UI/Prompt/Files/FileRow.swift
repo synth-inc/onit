@@ -86,9 +86,9 @@ struct FileRow: View {
            let windowName = currentWindowInfo.windowName,
            ocrResult.appTitle == windowName {
             if ocrResult.matchPercentage < 50 {
-                return .red.opacity(0.1)
+                return .redDisabled
             } else if ocrResult.matchPercentage < 75 {
-                return .yellow.opacity(0.1)
+                return .warningDisabled
             } else {
                 return .clear
             }
@@ -102,14 +102,30 @@ struct FileRow: View {
            let windowName = currentWindowInfo.windowName,
            ocrResult.appTitle == windowName {
             if ocrResult.matchPercentage < 50 {
-                return .red.opacity(0.2)
+                return .redDisabledHover
             } else if ocrResult.matchPercentage < 75 {
-                return .yellow.opacity(0.2)
+                return .warningDisabledHover
             } else {
                 return .clear
             }
         } else {
             return .clear
+        }
+    }
+    
+    var contextTagErrorDotColor: Color? {
+        if let ocrResult = ocrComparisonResult,
+           let windowName = currentWindowInfo.windowName,
+           ocrResult.appTitle == windowName {
+            if ocrResult.matchPercentage < 50 {
+                return .red
+            } else if ocrResult.matchPercentage < 75 {
+                return .yellow
+            } else {
+                return nil
+            }
+        } else {
+            return nil
         }
     }
     
@@ -158,7 +174,8 @@ struct FileRow: View {
                         hasHoverBorder: true,
                         shouldFadeIn: true,
                         iconBundleURL: currentWindowInfo.appBundleUrl,
-                        tooltip: "Add \(windowName) Context"
+                        tooltip: "Add \(windowName) Context",
+                        errorDotColor: contextTagErrorDotColor
                     ) {
                         addWindowToContext()
                     }
@@ -183,7 +200,7 @@ struct FileRow: View {
                     }
                     .buttonStyle(.plain)
                     .font(.system(size: 11))
-                    .foregroundColor(contextTagHoverTextColor)
+                    .foregroundColor(contextTagErrorDotColor)
                     Spacer()
                 }
                 .padding(.top, 2)
