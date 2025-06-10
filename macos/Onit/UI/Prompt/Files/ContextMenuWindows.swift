@@ -75,7 +75,7 @@ struct ContextMenuWindows: View {
     }
     
     private var uploadFileButtonIndex: Int {
-        return foregroundWindowCaptured ? filteredCapturedOpenWindows.count + 2 : filteredCapturedOpenWindows.count + 1
+        return foregroundWindowCaptured ? filteredCapturedOpenWindows.count + 1 : filteredCapturedOpenWindows.count
     }
     
     var body: some View {
@@ -111,7 +111,8 @@ extension ContextMenuWindows {
         if let currentWindowName = windowState.currentWindowName,
            let currentWindowPid = windowState.currentWindowPid,
            let currentWindowAppBundleUrl = windowState.currentWindowAppBundleUrl,
-           !checkWindowShouldBeIgnored(currentWindowName)
+           !checkWindowShouldBeIgnored(currentWindowName),
+           (searchQuery.isEmpty || currentWindowName.contains(searchQuery))
         {
             let windowContextItem = getWindowContextItem(currentWindowName)
             
@@ -172,7 +173,6 @@ extension ContextMenuWindows {
             VStack(alignment: .leading, spacing: 2) {
                 currentForegroundWindowButton // The current foreground window is always the first option.
                 capturedOpenWindowsButtons
-                allBrowserTabsButton
             }
         }
         .onAppear {
@@ -281,9 +281,12 @@ extension ContextMenuWindows {
     }
     
     private func handleReturnKeyPress() {
-        if currentArrowKeyIndex == allBrowserTabsButtonIndex {
-            showBrowserTabsSubMenu()
-        } else if currentArrowKeyIndex == uploadFileButtonIndex {
+        /// Bring this back when implementing in-memory hashmap cache of browser tab contexts.
+//        if currentArrowKeyIndex == allBrowserTabsButtonIndex {
+//            showBrowserTabsSubMenu()
+//        }
+        
+        if currentArrowKeyIndex == uploadFileButtonIndex {
             openFilePicker()
         } else if foregroundWindowCaptured && currentArrowKeyIndex == 0,
                   let currentWindowName = windowState.currentWindowName,

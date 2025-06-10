@@ -109,9 +109,8 @@ struct PromptCore: View {
                 windowState.removeDelegate(delegate)
             }
         }
-        .onChange(of: editingText?.wrappedValue ?? windowState.pendingInstruction) { _, new in
-            let firstTextInputCharacter = new.prefix(1)
-            let slashMenuOpened = firstTextInputCharacter == "/"
+        .onChange(of: editingText?.wrappedValue ?? windowState.pendingInstruction) { old, new in
+            let slashMenuOpened = new == "/" && old != "/ "
             showSlashMenu = slashMenuOpened
             windowState.showContextMenu = slashMenuOpened // This should be removed later when the Slash Menu is developed.
             disableSend = slashMenuOpened || new.isEmpty
