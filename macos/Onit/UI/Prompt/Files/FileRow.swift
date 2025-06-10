@@ -63,13 +63,8 @@ struct FileRow: View {
         if let ocrResult = ocrComparisonResult,
            let windowName = currentWindowInfo.windowName,
            ocrResult.appTitle == windowName {
-            if ocrResult.matchPercentage < 50 {
-                return .red
-            } else if ocrResult.matchPercentage < 75 {
-                return .yellow
-            } else {
-                return .T_2
-            }
+            // Always use normal text color regardless of OCR result
+            return .T_2
         } else {
             return .T_2
         }
@@ -79,15 +74,42 @@ struct FileRow: View {
         if let ocrResult = ocrComparisonResult,
            let windowName = currentWindowInfo.windowName,
            ocrResult.appTitle == windowName {
+            // Always use normal hover text color regardless of OCR result
+            return .white
+        } else {
+            return .white
+        }
+    }
+    
+    var contextTagBackground: Color {
+        if let ocrResult = ocrComparisonResult,
+           let windowName = currentWindowInfo.windowName,
+           ocrResult.appTitle == windowName {
             if ocrResult.matchPercentage < 50 {
-                return .red
+                return .red.opacity(0.1)
             } else if ocrResult.matchPercentage < 75 {
-                return .yellow
+                return .yellow.opacity(0.1)
             } else {
-                return .T_2
+                return .clear
             }
         } else {
-            return .T_2
+            return .clear
+        }
+    }
+    
+    var contextTagHoverBackground: Color {
+        if let ocrResult = ocrComparisonResult,
+           let windowName = currentWindowInfo.windowName,
+           ocrResult.appTitle == windowName {
+            if ocrResult.matchPercentage < 50 {
+                return .red.opacity(0.2)
+            } else if ocrResult.matchPercentage < 75 {
+                return .yellow.opacity(0.2)
+            } else {
+                return .clear
+            }
+        } else {
+            return .clear
         }
     }
     
@@ -131,8 +153,8 @@ struct FileRow: View {
                         text: contextTagText,
                         textColor: contextTagTextColor,
                         hoverTextColor: contextTagHoverTextColor,
-                        background: .clear,
-                        hoverBackground: .clear,
+                        background: contextTagBackground,
+                        hoverBackground: contextTagHoverBackground,
                         hasHoverBorder: true,
                         shouldFadeIn: true,
                         iconBundleURL: currentWindowInfo.appBundleUrl,
