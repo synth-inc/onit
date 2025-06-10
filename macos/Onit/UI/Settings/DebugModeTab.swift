@@ -115,9 +115,21 @@ struct DebugModeTab: View {
                         
                         if !failingApps.isEmpty {
                             VStack(alignment: .leading, spacing: 8) {
-                                Text("Failing Apps")
-                                    .font(.system(size: 13, weight: .medium))
+                                HStack {
+                                    Text("Failing Apps")
+                                        .font(.system(size: 13, weight: .medium))
+                                        .padding(.top, 16)
+                                    
+                                    Spacer()
+                                    
+                                    Button("Copy Report") {
+                                        copyFailingAppsReport()
+                                    }
+                                    .buttonStyle(.plain)
+                                    .font(.system(size: 12))
+                                    .foregroundColor(.blue)
                                     .padding(.top, 16)
+                                }
                                 
                                 LazyVStack(spacing: 4) {
                                     ForEach(failingApps, id: \.appName) { appSummary in
@@ -254,6 +266,25 @@ struct DebugModeTab: View {
                 failurePercentage: failurePercentage
             )
         }.sorted { $0.failurePercentage > $1.failurePercentage }
+    }
+    
+    private func copyFailingAppsReport() {
+        let report = failingApps.map { app in
+            let emoji: String
+            if app.failurePercentage > 50 {
+                emoji = "🔴"
+            } else if app.failurePercentage >= 25 {
+                emoji = "🟡"
+            } else {
+                emoji = "🟢"
+            }
+            
+            return "\(emoji) \(app.appName): \(app.failedCount)/\(app.totalCount) failed (\(Int(app.failurePercentage.rounded()))%)"
+        }.joined(separator: "\n")
+        
+        let pasteboard = NSPasteboard.general
+        pasteboard.clearContents()
+        pasteboard.setString(report, forType: .string)
     }
 }
 

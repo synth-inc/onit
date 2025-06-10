@@ -143,15 +143,15 @@ final class WindowCaptureOCR: Sendable {
         let filter = SCContentFilter(desktopIndependentWindow: window)
         let configuration = SCStreamConfiguration()
         
-        if (window.frame.width < 100 || window.frame.height < 100) {
-            print("captureWindow - Window frame width: \(window.frame.width)")
-            print("captureWindow - Window frame height: \(window.frame.height)")
-        }
+        print("captureWindow - Window frame width: \(window.frame.width)")
+        print("captureWindow - Window frame height: \(window.frame.height)")
         
         let scaleFactor = NSScreen.main?.backingScaleFactor ?? 2.0
         let captureWidth = Int(window.frame.width * scaleFactor)
         let captureHeight = Int(window.frame.height * scaleFactor)
         
+        configuration.width = captureWidth
+        configuration.height = captureHeight
         configuration.captureResolution = .best
         configuration.scalesToFit = false
         configuration.preservesAspectRatio = true
@@ -167,10 +167,8 @@ final class WindowCaptureOCR: Sendable {
         let imageSize = NSSize(width: cgImage.width, height: cgImage.height)
         let nsImage = NSImage(cgImage: cgImage, size: imageSize)
         
-        if (window.frame.width < 100 || window.frame.height < 100) {
-            print("captureWindow - Final image size: \(nsImage.size.width) x \(nsImage.size.height)")
-            print("captureWindow - CGImage size: \(cgImage.width) x \(cgImage.height)")
-        }
+        print("captureWindow - Final image size: \(nsImage.size.width) x \(nsImage.size.height)")
+        print("captureWindow - CGImage size: \(cgImage.width) x \(cgImage.height)")
             
         return nsImage
     }
