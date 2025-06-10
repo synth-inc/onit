@@ -300,8 +300,10 @@ class DebugManager: ObservableObject {
             let appName = windowElement.appName() ?? "Unknown"
             let appTitle = windowElement.title() ?? appName
             
+            let windowFrame = windowElement.frame()
+            
             let ocrStartTime = CFAbsoluteTimeGetCurrent()
-            let (observations, screenshot) = try await OCRManager.shared.extractTextFromApp(appName)
+            let (observations, screenshot) = try await OCRManager.shared.extractTextFromApp(appName, appTitle: appTitle, windowFrame: windowFrame)
             let ocrEndTime = CFAbsoluteTimeGetCurrent()
             print("ocrTiming - OCR processing took: \(ocrEndTime - ocrStartTime) seconds")
             

@@ -27,13 +27,13 @@ class OCRManager: ObservableObject {
     
     // MARK: - Functions
     
-    func extractTextFromApp(_ appName: String) async throws -> (observations: [OCRTextObservation], image: NSImage) {
+    func extractTextFromApp(_ appName: String, appTitle: String? = nil, windowFrame: CGRect? = nil) async throws -> (observations: [OCRTextObservation], image: NSImage) {
         try await ensureScreenRecordingPermission()
         
         return try await withCheckedThrowingContinuation { continuation in
             Task.detached {
                 do {
-                    let (observations, image) = try await self.windowCaptureOCR.captureWindowAndExtractText(from: appName)
+                    let (observations, image) = try await self.windowCaptureOCR.captureWindowAndExtractText(from: appName, appTitle: appTitle, windowFrame: windowFrame)
                     continuation.resume(returning: (observations, image))
                 } catch {
                     let ocrError = error as? OCRError ?? .captureError(error.localizedDescription)
@@ -43,7 +43,7 @@ class OCRManager: ObservableObject {
         }
     }
     
-    func extractScreenshot(from appName: String) async throws -> NSImage {
+    func extractScreenshot(from appName: String, appTitle: String? = nil, windowFrame: CGRect? = nil) async throws -> NSImage {
         try await ensureScreenRecordingPermission()
         
         do {
@@ -51,7 +51,7 @@ class OCRManager: ObservableObject {
                 Task.detached {
                     do {
                         let windowCaptureOCR = WindowCaptureOCR()
-                        let screenshot = try await windowCaptureOCR.captureWindowScreenshot(from: appName)
+                        let screenshot = try await windowCaptureOCR.captureWindowScreenshot(from: appName, appTitle: appTitle, windowFrame: windowFrame)
                         continuation.resume(returning: screenshot)
                     } catch {
                         let ocrError = error as? OCRError ?? .captureError(error.localizedDescription)

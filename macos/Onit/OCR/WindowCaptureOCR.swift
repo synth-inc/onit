@@ -18,35 +18,125 @@ final class WindowCaptureOCR: Sendable {
     
     // MARK: - Functions
     
-    func captureWindowAndExtractText(from appName: String) async throws -> (observations: [OCRTextObservation], image: NSImage) {
-        print("captureWindow - for app: \(appName)")
-        let window = try await findWindow(for: appName)
+    func captureWindowAndExtractText(from appName: String, appTitle: String? = nil, windowFrame: CGRect? = nil) async throws -> (observations: [OCRTextObservation], image: NSImage) {
+        print("captureWindow - for app: \(appName), title: \(appTitle ?? "nil"), frame: \(windowFrame?.debugDescription ?? "nil")")
+        let window = try await findWindow(for: appName, targetAppTitle: appTitle, targetWindowFrame: windowFrame)
         let image = try await captureWindow(window: window)
         let observations = try await performOCR(on: image)
         return (observations, image)
     }
     
-    func captureWindowScreenshot(from appName: String) async throws -> NSImage {
-        let window = try await findWindow(for: appName)
+    func captureWindowScreenshot(from appName: String, appTitle: String? = nil, windowFrame: CGRect? = nil) async throws -> NSImage {
+        let window = try await findWindow(for: appName, targetAppTitle: appTitle, targetWindowFrame: windowFrame)
         return try await captureWindow(window: window)
     }
     
     // MARK: - Private Functions
     
-    private func findWindow(for appName: String) async throws -> SCWindow {
+    private func findWindow(for appName: String, targetAppTitle: String? = nil, targetWindowFrame: CGRect? = nil) async throws -> SCWindow {
         let shareableContent = try await SCShareableContent.excludingDesktopWindows(
             false,
             onScreenWindowsOnly: true
         )
         
-        guard let window = shareableContent.windows.first(where: { window in
+        print("findWindow - Target app: '\(appName)', title: '\(targetAppTitle ?? "nil")', frame: \(targetWindowFrame?.debugDescription ?? "nil")")
+        
+        // Filter windows by app name first
+        let appWindows = shareableContent.windows.filter { window in
             guard let app = window.owningApplication else { return false }
             return app.applicationName.lowercased().contains(appName.lowercased())
-        }) else {
+        }
+        
+        print("findWindow - Found \(appWindows.count) windows for app '\(appName)'")
+        
+        var bestMatch: SCWindow?
+        var bestScore = 0
+        
+        // Evaluate all candidate windows and find the best match
+        for (index, window) in appWindows.enumerated() {
+            var score = 0
+            var matchDetails: [String] = []
+            
+            let curWindowTitle = window.title ?? ""
+            let curWindowFrame = window.frame
+            
+            print("findWindow - Candidate \(index + 1): title: '\(curWindowTitle)', frame: \(curWindowFrame)")
+            
+            // Score based on title matching
+            if let targetTitle = targetAppTitle, !targetTitle.isEmpty {
+                if curWindowTitle.lowercased() == targetTitle.lowercased() {
+                    score += 100
+                    matchDetails.append("exact title match")
+                } else if curWindowTitle.lowercased().contains(targetTitle.lowercased()) {
+                    score += 75
+                    matchDetails.append("partial title match")
+                } else if targetTitle.lowercased().contains(curWindowTitle.lowercased()) && !curWindowTitle.isEmpty {
+                    score += 50
+                    matchDetails.append("title contained in target")
+                }
+            } else {
+                // If no target title provided, prefer windows with non-empty titles
+                if !curWindowTitle.isEmpty {
+                    score += 25
+                    matchDetails.append("has title")
+                }
+            }
+            if let targetFrame = targetWindowFrame {
+                let frameDifference = calculateFrameDifference(targetFrame, curWindowFrame)
+                if frameDifference < 10 {
+                    score += 100
+                    matchDetails.append("exact frame match")
+                } else if frameDifference < 50 {
+                    score += 75
+                    matchDetails.append("close frame match")
+                } else if frameDifference < 200 {
+                    score += 25
+                    matchDetails.append("approximate frame match")
+                }
+            }
+            
+            // Prefer larger windows (more likely to be main windows)
+            let windowArea = curWindowFrame.width * curWindowFrame.height
+            if windowArea > 10000 {
+                score += 10
+                matchDetails.append("large window")
+            } else if windowArea > 1000 {
+                score += 5
+                matchDetails.append("medium window")
+            }
+            
+            // Prefer windows that are reasonably positioned (not off-screen)
+            if curWindowFrame.origin.x >= -100 && curWindowFrame.origin.y >= -100 {
+                score += 5
+                matchDetails.append("on-screen position")
+            }
+            
+            print("findWindow - Candidate \(index + 1) score: \(score) (\(matchDetails.joined(separator: ", ")))")
+            
+            if score > bestScore {
+                bestScore = score
+                bestMatch = window
+                print("findWindow - New best match with score \(score)")
+            }
+        }
+        
+        guard let selectedWindow = bestMatch else {
+            print("findWindow - No suitable window found for app '\(appName)'")
             throw OCRError.windowNotFound(appName)
         }
         
-        return window
+        print("findWindow - Selected window: title: '\(selectedWindow.title ?? "")', frame: \(selectedWindow.frame), final score: \(bestScore)")
+        return selectedWindow
+    }
+    
+    private func calculateFrameDifference(_ frame1: CGRect, _ frame2: CGRect) -> Double {
+        let xDiff = abs(frame1.origin.x - frame2.origin.x)
+        let yDiff = abs(frame1.origin.y - frame2.origin.y)
+        let widthDiff = abs(frame1.size.width - frame2.size.width)
+        let heightDiff = abs(frame1.size.height - frame2.size.height)
+        
+        // Calculate a weighted difference score
+        return Double(xDiff + yDiff + (widthDiff * 0.5) + (heightDiff * 0.5))
     }
     
     private func captureWindow(window: SCWindow) async throws -> NSImage {
@@ -62,25 +152,19 @@ final class WindowCaptureOCR: Sendable {
         let captureWidth = Int(window.frame.width * scaleFactor)
         let captureHeight = Int(window.frame.height * scaleFactor)
         
-//        configuration.width = max(captureWidth, Int(window.frame.width))
-//        configuration.height = max(captureHeight, Int(window.frame.height))
-        configuration.captureResolution = .nominal
+        configuration.captureResolution = .best
         configuration.scalesToFit = false
         configuration.preservesAspectRatio = true
         configuration.showsCursor = false
         configuration.pixelFormat = kCVPixelFormatType_32BGRA
         configuration.backgroundColor = CGColor.clear
         
-//        if (window.frame.width < 100 || window.frame.height < 100) {
-////            print("captureWindow - Capture size: \(configuration.width) x \(configuration.height)")
-//        }
-        
         let cgImage = try await SCScreenshotManager.captureImage(
             contentFilter: filter,
             configuration: configuration
         )
         
-        let imageSize = NSSize(width: cgImage.width, height: cgImage.height)// NSSize(width: window.frame.width, height: window.frame.height)
+        let imageSize = NSSize(width: cgImage.width, height: cgImage.height)
         let nsImage = NSImage(cgImage: cgImage, size: imageSize)
         
         if (window.frame.width < 100 || window.frame.height < 100) {
@@ -196,7 +280,7 @@ final class WindowCaptureOCR: Sendable {
                 
                 let labelRect = NSRect(
                     x: convertedRect.origin.x,
-                    y: convertedRect.origin.y - attributedString.size().height - 2, 
+                    y: convertedRect.origin.y - attributedString.size().height - 2,
                     width: min(attributedString.size().width + 4, original.size.width - convertedRect.origin.x),
                     height: attributedString.size().height + 2
                 )

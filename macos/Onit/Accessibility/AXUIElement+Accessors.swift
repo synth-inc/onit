@@ -85,6 +85,10 @@ extension AXUIElement {
             return nil
         }
     }
+    
+    func frame() -> CGRect? {
+        return getFrame(convertedToGlobalCoordinateSpace: false)
+    }
 
     func role() -> String? {
         return self.attribute(forAttribute: kAXRoleAttribute as CFString) as? String
@@ -456,7 +460,7 @@ extension AXUIElement {
 //
 //    public func window() -> AXUIElement? {
 //        var error : AXError = AXError.failure
-//        return self.valueOfAXUIElement(attributeKey: kAXWindowAttribute,error: &error)
+//        return self.valueOfAXUIElement(attributeKey: kAXWindowAttribute, error: &error)
 //    }
 //
 //    public func topLevelUIElement() -> AXUIElement? {
@@ -501,6 +505,7 @@ extension AXUIElement {
 //            for axValue in axValues {
 //                if let range = axValue.cfRange(){
 //                    result.append(range)
+//
 //                }
 //
 //            }
