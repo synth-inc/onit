@@ -180,7 +180,7 @@ struct DebugModeTab: View {
         if showOnlyFailures {
             return "\(failed) failures (of \(total) total) - Showing \(min(loadedItemsCount, failed))"
         } else {
-            return "\(total) total results (\(successful) successful, \(failed) failed) - Showing \(min(loadedItemsCount, total))"s
+            return "\(total) total results (\(successful) successful, \(failed) failed) - Showing \(min(loadedItemsCount, total))"
         }
     }
     
@@ -192,13 +192,15 @@ struct DebugModeTab: View {
             guard failedCount > 0 else { return nil }
             
             let appBundleUrl = results.first?.appBundleUrl
+            let failurePercentage = Double(failedCount) / Double(results.count) * 100.0
             return AppComparisonSummary(
                 appName: appName,
                 appBundleUrl: appBundleUrl,
                 failedCount: failedCount,
-                totalCount: results.count
+                totalCount: results.count,
+                failurePercentage: failurePercentage
             )
-        }.sorted { $0.failedCount > $1.failedCount }
+        }.sorted { $0.failurePercentage > $1.failurePercentage }
     }
 }
 
@@ -207,10 +209,21 @@ struct AppComparisonSummary {
     let appBundleUrl: URL?
     let failedCount: Int
     let totalCount: Int
+    let failurePercentage: Double
 }
 
 struct FailingAppRow: View {
     let appSummary: AppComparisonSummary
+    
+    private var failureColor: Color {
+        if appSummary.failurePercentage < 30 {
+            return .green
+        } else if appSummary.failurePercentage <= 50 {
+            return .yellow
+        } else {
+            return .red
+        }
+    }
     
     var body: some View {
         HStack(spacing: 8) {
@@ -226,12 +239,12 @@ struct FailingAppRow: View {
             
             Spacer()
             
-            Text("\(appSummary.failedCount) / \(appSummary.totalCount) failed")
+            Text("\(appSummary.failedCount) / \(appSummary.totalCount) failed (\(Int(appSummary.failurePercentage.rounded()))%)")
                 .font(.system(size: 11))
-                .foregroundColor(.red)
+                .foregroundColor(failureColor)
                 .padding(.horizontal, 6)
                 .padding(.vertical, 2)
-                .background(Color.red.opacity(0.1))
+                .background(failureColor.opacity(0.1))
                 .cornerRadius(4)
         }
         .padding(.horizontal, 8)
@@ -371,55 +384,58 @@ struct OCRComparisonResultRow: View {
                         
                         HStack {
                             Spacer()
-                            VStack(spacing: 4) {
-                                Button("Export Accessibility Text...") {
-                                    exportText(result.accessibilityText, filename: "\(result.appName)_accessibility")
-                                }
-                                .buttonStyle(.plain)
-                                .font(.system(size: 11))
-                                .foregroundColor(.blue)
-                                
-                                Button("Export OCR Text...") {
-                                    let ocrText = result.ocrObservations.map(\.text).joined(separator: "\n")
-                                    exportText(ocrText, filename: "\(result.appName)_ocr")
-                                }
-                                .buttonStyle(.plain)
-                                .font(.system(size: 11))
-                                .foregroundColor(.blue)
-                                
-                                Button("Export Comparison...") {
-                                    exportComparison()
-                                }
-                                .buttonStyle(.plain)
-                                .font(.system(size: 11))
-                                .foregroundColor(.blue)
-                                
-                                Button("Save Screenshot...") {
-                                    if let screenshot = result.screenshot {
-                                        saveScreenshot(screenshot)
+                            HStack {
+                                VStack(alignment: .leading, spacing: 4) {
+                                    Button("Export Accessibility Text →") {
+                                        exportText(result.accessibilityText, filename: "\(result.appName)_accessibility")
                                     }
-                                }
-                                .buttonStyle(.plain)
-                                .font(.system(size: 11))
-                                .foregroundColor(.blue)
-                                
-                                Button("Save OCR Debug Screenshot...") {
-                                    if let screenshot = result.debugScreenshot {
-                                        saveScreenshot(screenshot)
+                                    .buttonStyle(.plain)
+                                    .font(.system(size: 11))
+                                    .foregroundColor(.blue)
+                                    
+                                    Button("Export OCR Text →") {
+                                        let ocrText = result.ocrObservations.map(\.text).joined(separator: "\n")
+                                        exportText(ocrText, filename: "\(result.appName)_ocr")
                                     }
-                                }
-                                .buttonStyle(.plain)
-                                .font(.system(size: 11))
-                                .foregroundColor(.blue)
-                                
-                                Button("Save AX Debug Screenshot...") {
-                                    if let screenshot = result.debugAccessibilityScreenshot {
-                                        saveScreenshot(screenshot)
+                                    .buttonStyle(.plain)
+                                    .font(.system(size: 11))
+                                    .foregroundColor(.blue)
+                                    
+                                    Button("Export Comparison →") {
+                                        exportComparison()
                                     }
+                                    .buttonStyle(.plain)
+                                    .font(.system(size: 11))
+                                    .foregroundColor(.blue)
+                                    
+                                    Button("Save Screenshot →") {
+                                        if let screenshot = result.screenshot {
+                                            saveScreenshot(screenshot)
+                                        }
+                                    }
+                                    .buttonStyle(.plain)
+                                    .font(.system(size: 11))
+                                    .foregroundColor(.blue)
+                                    
+                                    Button("Save OCR Debug Screenshot →") {
+                                        if let screenshot = result.debugScreenshot {
+                                            saveScreenshot(screenshot)
+                                        }
+                                    }
+                                    .buttonStyle(.plain)
+                                    .font(.system(size: 11))
+                                    .foregroundColor(.blue)
+                                    
+                                    Button("Save AX Debug Screenshot →") {
+                                        if let screenshot = result.debugAccessibilityScreenshot {
+                                            saveScreenshot(screenshot)
+                                        }
+                                    }
+                                    .buttonStyle(.plain)
+                                    .font(.system(size: 11))
+                                    .foregroundColor(.blue)
                                 }
-                                .buttonStyle(.plain)
-                                .font(.system(size: 11))
-                                .foregroundColor(.blue)
+                                Spacer()
                             }
                         }
                     }

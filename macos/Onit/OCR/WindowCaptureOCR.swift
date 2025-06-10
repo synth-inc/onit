@@ -19,6 +19,7 @@ final class WindowCaptureOCR: Sendable {
     // MARK: - Functions
     
     func captureWindowAndExtractText(from appName: String) async throws -> (observations: [OCRTextObservation], image: NSImage) {
+        print("captureWindow - for app: \(appName)")
         let window = try await findWindow(for: appName)
         let image = try await captureWindow(window: window)
         let observations = try await performOCR(on: image)
@@ -52,34 +53,41 @@ final class WindowCaptureOCR: Sendable {
         let filter = SCContentFilter(desktopIndependentWindow: window)
         let configuration = SCStreamConfiguration()
         
-        print("captureWindow - Window frame width: \(window.frame.width)")
-        print("captureWindow - Window frame height: \(window.frame.height)")
+        if (window.frame.width < 100 || window.frame.height < 100) {
+            print("captureWindow - Window frame width: \(window.frame.width)")
+            print("captureWindow - Window frame height: \(window.frame.height)")
+        }
         
         let scaleFactor = NSScreen.main?.backingScaleFactor ?? 2.0
         let captureWidth = Int(window.frame.width * scaleFactor)
         let captureHeight = Int(window.frame.height * scaleFactor)
         
-        configuration.width = max(captureWidth, Int(window.frame.width))
-        configuration.height = max(captureHeight, Int(window.frame.height))
-        configuration.captureResolution = .best
+//        configuration.width = max(captureWidth, Int(window.frame.width))
+//        configuration.height = max(captureHeight, Int(window.frame.height))
+        configuration.captureResolution = .nominal
         configuration.scalesToFit = false
+        configuration.preservesAspectRatio = true
         configuration.showsCursor = false
         configuration.pixelFormat = kCVPixelFormatType_32BGRA
         configuration.backgroundColor = CGColor.clear
         
-        print("captureWindow - Capture size: \(configuration.width) x \(configuration.height)")
+//        if (window.frame.width < 100 || window.frame.height < 100) {
+////            print("captureWindow - Capture size: \(configuration.width) x \(configuration.height)")
+//        }
         
         let cgImage = try await SCScreenshotManager.captureImage(
             contentFilter: filter,
             configuration: configuration
         )
         
-        let imageSize = NSSize(width: window.frame.width, height: window.frame.height)
+        let imageSize = NSSize(width: cgImage.width, height: cgImage.height)// NSSize(width: window.frame.width, height: window.frame.height)
         let nsImage = NSImage(cgImage: cgImage, size: imageSize)
         
-        print("captureWindow - Final image size: \(nsImage.size.width) x \(nsImage.size.height)")
-        print("captureWindow - CGImage size: \(cgImage.width) x \(cgImage.height)")
-        
+        if (window.frame.width < 100 || window.frame.height < 100) {
+            print("captureWindow - Final image size: \(nsImage.size.width) x \(nsImage.size.height)")
+            print("captureWindow - CGImage size: \(cgImage.width) x \(cgImage.height)")
+        }
+            
         return nsImage
     }
     
