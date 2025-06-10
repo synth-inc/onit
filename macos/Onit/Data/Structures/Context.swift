@@ -97,7 +97,8 @@ extension Context {
         appHash: UInt,
         appTitle: String,
         appContent: [String: String],
-        appBundleUrl: URL? = nil
+        appBundleUrl: URL? = nil,
+        ocrMatchingPercentage: Int? = nil
     ) {
         self = .auto(
             AutoContext(
@@ -105,7 +106,8 @@ extension Context {
                 appHash: appHash,
                 appTitle: appTitle,
                 appContent: appContent,
-                appBundleUrl: appBundleUrl
+                appBundleUrl: appBundleUrl,
+                ocrMatchingPercentage: ocrMatchingPercentage
             )
         )
     }
