@@ -124,6 +124,28 @@ extension OnitPanelState {
         }
     }
     
+    func getWindowApp(pid: pid_t) -> NSRunningApplication? {
+        return NSRunningApplication(processIdentifier: pid)
+    }
+    
+    func convertAppBundleUrlToNSImage(_ appBundleUrl: URL) -> NSImage {
+        return NSWorkspace.shared.icon(forFile: appBundleUrl.path)
+    }
+    
+    func getWindowIconAndName(window: AXUIElement, pid: pid_t) -> (NSImage?, String) {
+        var windowIcon: NSImage? = nil
+        
+        let windowApp = getWindowApp(pid: pid)
+        
+        if let appBundleUrl = windowApp?.bundleURL {
+            windowIcon = convertAppBundleUrlToNSImage(appBundleUrl)
+        }
+        
+        let windowName = window.title() ?? window.appName() ?? windowApp?.localizedName ?? "Unknown"
+        
+        return (windowIcon, windowName)
+    }
+    
     func getCurrentWindowDetails() -> (String?, pid_t?, URL?) {
         let windowsManager = AccessibilityNotificationsManager.shared.windowsManager
         

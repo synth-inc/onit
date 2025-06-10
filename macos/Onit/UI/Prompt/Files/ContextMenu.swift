@@ -10,14 +10,10 @@ import SwiftUI
 struct ContextMenu: View {
     @Environment(\.windowState) private var windowState
     
-    private let showContextMenu: Binding<Bool>
-    
-    init(_ showContextMenu: Binding<Bool>) {
-        self.showContextMenu = showContextMenu
-    }
-    
     @State private var searchQuery: String = ""
     @State private var showBrowserTabs: Bool = false
+    @State private var currentArrowKeyIndex: Int = 0
+    @State private var maxArrowKeyIndex: Int = 0
     
     var body: some View {
         MenuList(
@@ -32,11 +28,49 @@ struct ContextMenu: View {
                     closeContextMenu()
                 }
             } else {
-                ContextMenuWindows {
+                ContextMenuWindows(
+                    searchQuery: $searchQuery,
+                    currentArrowKeyIndex: $currentArrowKeyIndex,
+                    maxArrowKeyIndex: $maxArrowKeyIndex
+                ) {
                     closeContextMenu()
                 } showBrowserTabsSubMenu: {
                     showBrowserTabsSubMenu()
                 }
+            }
+        }
+        .background {
+            if windowState.showContextMenu {
+                upListener
+                downListener
+            }
+        }
+        .onChange(of: showBrowserTabs) { _, _ in
+            searchQuery = ""
+            currentArrowKeyIndex = 0
+        }
+    }
+}
+
+// MARK: - Keyboard Arrow Key Listeners
+
+extension ContextMenu {
+    private var upListener: some View {
+        KeyListener(key: .upArrow, modifiers: []) {
+            if currentArrowKeyIndex - 1 <= 0 {
+                currentArrowKeyIndex = 0
+            } else {
+                currentArrowKeyIndex -= 1
+            }
+        }
+    }
+    
+    private var downListener: some View {
+        KeyListener(key: .downArrow, modifiers: []) {
+            if currentArrowKeyIndex + 1 >= maxArrowKeyIndex {
+                currentArrowKeyIndex = maxArrowKeyIndex
+            } else {
+                currentArrowKeyIndex += 1
             }
         }
     }
@@ -74,7 +108,7 @@ extension ContextMenu {
 
 extension ContextMenu {
     private func closeContextMenu() {
-        showContextMenu.wrappedValue = false
+        windowState.showContextMenu = false
     }
     
     private func showBrowserTabsSubMenu() {

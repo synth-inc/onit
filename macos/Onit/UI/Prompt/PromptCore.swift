@@ -44,7 +44,7 @@ struct PromptCore: View {
     private let maxHeightLimit: CGFloat = 100
     
     @State private var showSlashMenu: Bool = false
-    @State private var showContextMenu: Bool = false // This should be removed later when the Slash Menu is developed.
+    
     @State private var disableSend: Bool = false
     
     @FocusState private var isFocused: Bool
@@ -81,7 +81,7 @@ struct PromptCore: View {
         }
         .background {
             if !isEditing {
-                if !windowState.isTyping {
+                if !showSlashMenu && !windowState.showContextMenu && !windowState.isTyping {
                     upListener
                     downListener
                 }
@@ -110,13 +110,13 @@ struct PromptCore: View {
             }
         }
         .onChange(of: editingText?.wrappedValue ?? windowState.pendingInstruction) { _, new in
-            windowState.detectIsTyping()
-            
             let firstTextInputCharacter = new.prefix(1)
             let slashMenuOpened = firstTextInputCharacter == "/"
             showSlashMenu = slashMenuOpened
-            showContextMenu = slashMenuOpened // This should be removed later when the Slash Menu is developed.
+            windowState.showContextMenu = slashMenuOpened // This should be removed later when the Slash Menu is developed.
             disableSend = slashMenuOpened || new.isEmpty
+            
+            windowState.detectIsTyping()
         }
         .onChange(of: windowState.pendingInstructionCursorPosition) {
             if !isEditing {
@@ -158,12 +158,12 @@ extension PromptCore {
         }
         .disabled(showingAlert)
         .allowsHitTesting(!showingAlert)
-        // This should be replaced later when the Slash Menu when it's developed.
-        .popover(
-            isPresented: $showContextMenu
-        ) {
-            ContextMenu($showContextMenu)
-        }
+        // This should be commented in when the Slash Menu is built.
+//        .popover(
+//            isPresented: $showSlashMenu
+//        ) {
+//            SlashMenu()
+//        }
     }
     
     private var contextAndInput: some View {
@@ -200,8 +200,8 @@ extension PromptCore {
 // MARK: - Keyboard Arrow Key Listeners
 
 extension PromptCore {
-    var upListener: some View {
-        Button {
+    private var upListener: some View {
+        KeyListener(key: .upArrow, modifiers: []) {
             guard !chats.isEmpty else { return }
 
             if windowState.historyIndex + 1 < chats.count {
@@ -209,14 +209,11 @@ extension PromptCore {
                 windowState.currentChat = chats[windowState.historyIndex]
                 windowState.currentPrompts = chats[windowState.historyIndex].prompts
             }
-        } label: {
-            EmptyView()
         }
-        .keyboardShortcut(.upArrow, modifiers: [])
     }
 
-    var downListener: some View {
-        Button {
+    private var downListener: some View {
+        KeyListener(key: .downArrow, modifiers: []) {
             if windowState.historyIndex > 0 {
                 windowState.historyIndex -= 1
                 windowState.currentChat = chats[windowState.historyIndex]
@@ -226,19 +223,13 @@ extension PromptCore {
                 windowState.currentChat = nil
                 windowState.currentPrompts = nil
             }
-        } label: {
-            EmptyView()
         }
-        .keyboardShortcut(.downArrow, modifiers: [])
     }
     
-    var newListener: some View {
-        Button {
+    private var newListener: some View {
+        KeyListener(key: "n") {
             windowState.newChat()
-        } label: {
-            EmptyView()
         }
-        .keyboardShortcut("n")
     }
 }
 

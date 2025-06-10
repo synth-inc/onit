@@ -8,36 +8,37 @@
 import SwiftUI
 
 struct ContextMenuWindowButton: View {
-    @Environment(\.windowState) private var windowState
-    
+    private let isLoadingIntoContext: Bool
+    private let selected: Bool
+    private let windowName: String
     private let windowContextItem: Context?
-    private let pid: pid_t
-    private let name: String
-    private let icon: NSImage?
+    private let windowIcon: NSImage?
+    private let action: () -> Void
     
     init(
+        isLoadingIntoContext: Bool,
+        selected: Bool,
+        windowName: String,
         windowContextItem: Context?,
-        pid: pid_t,
-        name: String,
-        icon: NSImage? = nil
+        windowIcon: NSImage? = nil,
+        action: @escaping () -> Void
     ) {
+        self.isLoadingIntoContext = isLoadingIntoContext
+        self.selected = selected
+        self.windowName = windowName
         self.windowContextItem = windowContextItem
-        self.pid = pid
-        self.name = name
-        self.icon = icon
-    }
-    
-    var isLoadingWindowIntoContext: Bool {
-        getIsLoadingWindowIntoContext(name)
+        self.windowIcon = windowIcon
+        self.action = action
     }
     
     var body: some View {
         TextButton(
-            icon: icon == nil ? .stars : nil,
-            iconImage: icon,
-            text: name
+            background: selected ? .gray600 : .clear,
+            icon: windowIcon == nil ? .stars : nil,
+            iconImage: windowIcon,
+            text: windowName
         ){
-            if isLoadingWindowIntoContext {
+            if isLoadingIntoContext {
                 LoaderPulse()
             } else if windowContextItem == nil {
                 checkEmpty
@@ -45,16 +46,7 @@ struct ContextMenuWindowButton: View {
                 checkFilled
             }
         } action: {
-            if isLoadingWindowIntoContext {
-                windowState.cleanupAutoContextTask(windowName: name)
-            } else if let contextItem = windowContextItem {
-                removeWindowFromContext(contextItem)
-            } else {
-                addWindowToContext(
-                    windowName: name,
-                    windowPid: pid
-                )
-            }
+            action()
         }
     }
 }
@@ -81,33 +73,5 @@ extension ContextMenuWindowButton {
                 cornerRadius: 999,
                 stroke: .blue300
             )
-    }
-}
-
-// MARK: - Private Functions
-
-extension ContextMenuWindowButton {
-    private func addWindowToContext(
-        windowName: String,
-        windowPid: pid_t
-    ) {
-        let appBundleUrl = NSRunningApplication(processIdentifier: windowPid)?.bundleURL
-        
-        windowState.addWindowToContext(
-            windowName: windowName,
-            pid: windowPid,
-            appBundleUrl: appBundleUrl
-        )
-    }
-    
-    private func removeWindowFromContext(_ contextItem: Context) {
-        ContextWindowsManager.shared.deleteContextItem(
-            item: contextItem
-        )
-        windowState.removeContext(context: contextItem)
-    }
-    
-    private func getIsLoadingWindowIntoContext(_ windowName: String) -> Bool {
-        return windowState.addAutoContextTasks[windowName] != nil
     }
 }
