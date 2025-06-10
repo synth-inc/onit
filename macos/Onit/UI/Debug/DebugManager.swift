@@ -32,6 +32,9 @@ class DebugManager: ObservableObject {
     // MARK: - Private Properties
     
     private var autoOCRDelegate: WindowChangeDelegate?
+    private var currentOCRTask: Task<Void, Never>?
+    private var debounceTimer: Timer?
+    private let debounceDelay: TimeInterval = 0.5 // 500ms debounce
     
     // MARK: - Initialization
     
@@ -118,6 +121,9 @@ class DebugManager: ObservableObject {
         AccessibilityNotificationsManager.shared.removeDelegate(delegate)
         autoOCRDelegate = nil
         
+        debounceTimer?.invalidate()
+        currentOCRTask?.cancel()
+        
         if autoOCRDelegate == nil {
             print("WindowChangeDelegate successfully removed")
         }
@@ -135,14 +141,36 @@ class DebugManager: ObservableObject {
             return
         }
         
-        let windowTitle = windowInfo.windowName ?? "unknown"
+        debounceTimer?.invalidate()
         
-        Task {
-            let startTime = CFAbsoluteTimeGetCurrent()
-            print("DebugManager: starting OCR comparison for window: \(windowTitle)")
-            await performOCRComparison(for: windowElement)
-            let endTime = CFAbsoluteTimeGetCurrent()
-            print("DebugManager: OCR comparison completed in \(endTime - startTime) seconds")
+        let windowTitle = windowInfo.windowName ?? "unknown"
+        print("DebugManager: debouncing OCR comparison for window: \(windowTitle)")
+        
+        debounceTimer = Timer.scheduledTimer(withTimeInterval: debounceDelay, repeats: false) { _ in
+            Task { @MainActor in
+                self.currentOCRTask?.cancel()
+                self.currentOCRTask = Task {
+                    let startTime = CFAbsoluteTimeGetCurrent()
+                    print("DebugManager: starting OCR comparison for window: \(windowTitle)")
+                    
+                    // Check if task was cancelled before starting
+                    guard !Task.isCancelled else {
+                        print("DebugManager: OCR comparison cancelled before starting")
+                        return
+                    }
+                    
+                    await self.performOCRComparison(for: windowElement)
+                    
+                    // Check if task was cancelled after completion
+                    guard !Task.isCancelled else {
+                        print("DebugManager: OCR comparison cancelled after completion")
+                        return
+                    }
+                    
+                    let endTime = CFAbsoluteTimeGetCurrent()
+                    print("DebugManager: OCR comparison completed in \(endTime - startTime) seconds")
+                }
+            }
         }
     }
 
@@ -167,9 +195,9 @@ class DebugManager: ObservableObject {
         
         ocrComparisonResults.append(result)
         
-        // Keep only the last 100 results to prevent memory issues
-        if ocrComparisonResults.count > 100 {
-            ocrComparisonResults.removeFirst(ocrComparisonResults.count - 100)
+        // Keep only the last 1000 results to prevent memory issues
+        if ocrComparisonResults.count > 1000 {
+            ocrComparisonResults.removeFirst(ocrComparisonResults.count - 1000)
         }
         
         // Save after adding
@@ -247,6 +275,12 @@ class DebugManager: ObservableObject {
     private func performOCRComparison(for windowElement: AXUIElement) async {
         guard let pid = windowElement.pid() else { return }
         
+        // Check if task was cancelled before starting
+        guard !Task.isCancelled else {
+            print("performOCRComparison: task cancelled at start")
+            return
+        }
+        
         do {
             let startTime = CFAbsoluteTimeGetCurrent()
             
@@ -254,6 +288,12 @@ class DebugManager: ObservableObject {
             let (accessibilityResults, accessibilityBoundingBoxes) = await AccessibilityParser.shared.getAllTextInElement(windowElement: windowElement, includeBoundingBoxes: true)
             let accessibilityEndTime = CFAbsoluteTimeGetCurrent()
             print("ocrTiming - Accessibility parsing took: \(accessibilityEndTime - accessibilityStartTime) seconds")
+            
+            // Check if task was cancelled after accessibility parsing
+            guard !Task.isCancelled else {
+                print("ocrTiming - task cancelled after accessibility parsing")
+                return
+            }
             
             let accessibilityText = accessibilityResults["screen"] ?? ""
             
@@ -264,6 +304,12 @@ class DebugManager: ObservableObject {
             let (observations, screenshot) = try await OCRManager.shared.extractTextFromApp(appName)
             let ocrEndTime = CFAbsoluteTimeGetCurrent()
             print("ocrTiming - OCR processing took: \(ocrEndTime - ocrStartTime) seconds")
+            
+            // Check if task was cancelled after OCR
+            guard !Task.isCancelled else {
+                print("ocrTiming - task cancelled after OCR")
+                return
+            }
             
             // Create a copy of the screenshot for the detached task
             let screenshotCopy = NSImage(data: screenshot.tiffRepresentation!)!
@@ -286,7 +332,12 @@ class DebugManager: ObservableObject {
             print("ocrTiming - Total OCR comparison took: \(endTime - startTime) seconds")
             
         } catch {
-            print("ocrTiming - Failed to perform OCR comparison: \(error)")
+            // Check if error is due to cancellation
+            if Task.isCancelled {
+                print("ocrTiming - OCR comparison cancelled: \(error)")
+            } else {
+                print("ocrTiming - Failed to perform OCR comparison: \(error)")
+            }
         }
     }
     
@@ -313,7 +364,10 @@ class DebugManager: ObservableObject {
             allOCRWords.append(contentsOf: words)
         }
         
-        let wordMatchResults = await compareOCRWithAutoContext(ocrWords: allOCRWords, accessibilityWords: extractTokens(from: accessibilityText))
+        let wordMatchResults = await MainActor.run {
+            String.findMatchingWords(ocrWords: allOCRWords, accessibilityWords: extractTokens(from: accessibilityText), maxDistance: 2)
+        }
+        
         let comparisonAllEndTime = CFAbsoluteTimeGetCurrent()
         print("ocrTiming - ALL text comparison took: \(comparisonAllEndTime - comparisonAllStartTime) seconds")
         
@@ -328,7 +382,7 @@ class DebugManager: ObservableObject {
             
             // Count how many words in this observation were matched
             let matchedWordsInObservation = ocrWords.filter { word in
-                wordMatchResults[word] == true
+                wordMatchResults.contains(word)
             }.count
             
             let observationPercentage = wordsInObservation > 0 ?
@@ -361,6 +415,16 @@ class DebugManager: ObservableObject {
         print("Debug image creation took: \(imageEndTime - imageStartTime) seconds")
         
         print("Total words: \(totalWords), Matched: \(matchedWords), Percentage: \(matchPercentage)%")
+        
+        // Send analytics events
+        await MainActor.run {
+            AnalyticsManager.ocrComparisonCompleted(appName: appName, matchPercentage: matchPercentage)
+            
+            // Send failure event if match percentage is less than 50%
+            if matchPercentage < 50 {
+                AnalyticsManager.ocrComparisonFailed(appName: appName, matchPercentage: matchPercentage)
+            }
+        }
         
         let endTime = CFAbsoluteTimeGetCurrent()
         print("ocrTiming - performHeavyComputation took: \(endTime - startTime) seconds")

@@ -51,7 +51,7 @@ struct FileRow: View {
         if let ocrResult = ocrComparisonResult,
            let windowName = currentWindowInfo.windowName,
            ocrResult.appTitle == windowName {
-            return "\(ocrResult.matchPercentage)% \(windowName))"
+            return "\(ocrResult.matchPercentage)% \(windowName)"
         } else if let windowName = currentWindowInfo.windowName {
             return windowName
         } else {
