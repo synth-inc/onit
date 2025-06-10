@@ -107,9 +107,12 @@ class PanelStateTetheredManager: PanelStateBaseManager, ObservableObject {
     
     override func launchPanel(for state: OnitPanelState) {
         AnalyticsManager.Panel.opened(displayMode: "tethered", appName: appName(for: state))
-        
+
         buildPanelIfNeeded(for: state)
         showPanel(for: state)
+        if Defaults[.autoContextOnLaunchTethered] {
+            fetchWindowContext()
+        }
     }
     
     override func closePanel(for state: OnitPanelState) {
