@@ -92,7 +92,9 @@ extension PanelStateTetheredManager: OnitPanelStateDelegate {
         self.state = state
         foregroundTrackedWindowIfNeeded(state: state)
     }
-    func panelResignKey(state: OnitPanelState) { }
+    
+    func panelResignKey(state: OnitPanelState) {}
+    
     func panelStateDidChange(state: OnitPanelState) {
         handlePanelStateChange(state: state, action: .undefined)
     }

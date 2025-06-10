@@ -38,6 +38,8 @@ struct PromptCore: View {
     
     @StateObject private var audioRecorder = AudioRecorder()
     
+    @State private var notificationDelegate: NotificationDelegate? = nil
+    
     @State private var textHeight: CGFloat = 20
     private let maxHeightLimit: CGFloat = 100
     
@@ -88,6 +90,26 @@ struct PromptCore: View {
                 }
                 
                 newListener
+            }
+        }
+        .onAppear {
+            let delegate = NotificationDelegate(
+                onPanelBecomeKey: {
+                    if !showingAlert {
+                        isFocused = true
+                    }
+                },
+                onPanelResignKey: {
+                    isFocused = false
+                }
+            )
+            
+            notificationDelegate = delegate
+            windowState.addDelegate(delegate)
+        }
+        .onDisappear {
+            if let delegate = notificationDelegate {
+                windowState.removeDelegate(delegate)
             }
         }
         .onChange(of: editingText?.wrappedValue ?? windowState.pendingInstruction) { _, _ in
@@ -252,4 +274,31 @@ extension PromptCore {
             }
         }
     }
+}
+
+// MARK: - Notification Delegate
+
+private final class NotificationDelegate: OnitPanelStateDelegate {
+    let onPanelBecomeKey: () -> Void
+    let onPanelResignKey: () -> Void
+    
+    init(
+        onPanelBecomeKey: @escaping () -> Void,
+        onPanelResignKey: @escaping () -> Void
+    ) {
+        self.onPanelBecomeKey = onPanelBecomeKey
+        self.onPanelResignKey = onPanelResignKey
+    }
+    
+    func panelBecomeKey(state: OnitPanelState) {
+        onPanelBecomeKey()
+    }
+    
+    func panelResignKey(state: OnitPanelState) {
+        onPanelResignKey()
+    }
+    
+    // These are required to conform to the OnitPanelStateDelegate protocol, but they aren't needed in this implementation.
+    func panelStateDidChange(state: OnitPanelState) {}
+    func userInputsDidChange(instruction: String, contexts: [Context], input: Input?) {}
 }
