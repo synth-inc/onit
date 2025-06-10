@@ -15,11 +15,13 @@ struct FileRow: View {
     
     @Default(.autoContextFromCurrentWindow) var autoContextFromCurrentWindow
     
-    @State private var currentWindowInfo: (
-        appBundleUrl: URL?,
-        name: String?,
-        pid: pid_t?
-    ) = (nil, nil, nil)
+    @State private var currentWindowInfo = WindowChangeInfo(
+        appBundleUrl: nil,
+        windowName: nil,
+        pid: nil,
+        element: nil,
+        trackedWindow: nil
+    )
     
     @State private var currentTrackedWindow: TrackedWindow? = nil
     @State private var ocrComparisonResult: OCRComparisonResult? = nil
@@ -37,7 +39,7 @@ struct FileRow: View {
     var windowName: String? {
         if accessibilityEnabled,
            !windowAlreadyInContext,
-           let windowName = currentWindowInfo.name
+           let windowName = currentWindowInfo.windowName
         {
             return windowName
         } else {
@@ -47,10 +49,10 @@ struct FileRow: View {
     
     var contextTagText: String {
         if let ocrResult = ocrComparisonResult,
-           let windowName = currentWindowInfo.name,
+           let windowName = currentWindowInfo.windowName,
            ocrResult.appTitle == windowName {
             return "\(ocrResult.matchPercentage)% \(windowName))"
-        } else if let windowName = currentWindowInfo.name {
+        } else if let windowName = currentWindowInfo.windowName {
             return windowName
         } else {
             return "Unknown"
@@ -59,7 +61,7 @@ struct FileRow: View {
     
     var contextTagTextColor: Color {
         if let ocrResult = ocrComparisonResult,
-           let windowName = currentWindowInfo.name,
+           let windowName = currentWindowInfo.windowName,
            ocrResult.appTitle == windowName {
             if ocrResult.matchPercentage < 50 {
                 return .red
@@ -75,7 +77,7 @@ struct FileRow: View {
     
     var contextTagHoverTextColor: Color {
         if let ocrResult = ocrComparisonResult,
-           let windowName = currentWindowInfo.name,
+           let windowName = currentWindowInfo.windowName,
            ocrResult.appTitle == windowName {
             if ocrResult.matchPercentage < 50 {
                 return .red
@@ -91,7 +93,7 @@ struct FileRow: View {
     
     var showOCRDetailsLink: Bool {
         if let ocrResult = ocrComparisonResult,
-           let windowName = currentWindowInfo.name,
+           let windowName = currentWindowInfo.windowName,
            ocrResult.appTitle == windowName {
             return ocrResult.matchPercentage < 75
         }
@@ -118,7 +120,7 @@ struct FileRow: View {
             FlowLayout(spacing: 6) {
                 PaperclipButton(
                     currentWindowBundleUrl: currentWindowInfo.appBundleUrl,
-                    currentWindowName: currentWindowInfo.name,
+                    currentWindowName: currentWindowInfo.windowName,
                     currentWindowPid: currentWindowInfo.pid
                 )
                 
@@ -166,13 +168,12 @@ struct FileRow: View {
             }
         }
         .onAppear {
-            let windowInfo = initializeCurrentWindowInfo()
-            currentWindowInfo = windowInfo
+            currentWindowInfo = initializeCurrentWindowInfo()
             updateCurrentTrackedWindow()
             
-            let delegate = WindowChangeDelegate(onWindowChange: { windowInfo in
+            let delegate = WindowChangeDelegate { windowInfo in
                 currentWindowInfo = windowInfo
-            })
+            }
             
             windowDelegate = delegate
             
@@ -182,7 +183,7 @@ struct FileRow: View {
             cleanUpPendingAutoContextTasks()
             cleanUpWindowDelegateIfExists()
         }
-        .onChange(of: currentWindowInfo.name) { _, _ in
+        .onChange(of: currentWindowInfo.windowName) { _, _ in
             windowAlreadyInContext = detectCurrentWindowAlreadyInContext()
             updateCurrentTrackedWindow()
         }
@@ -191,18 +192,9 @@ struct FileRow: View {
         }
         .onChange(of: contextList) { oldContexts, newContexts in
             windowAlreadyInContext = detectCurrentWindowAlreadyInContext()
-            
-//            if debugManager.enableOCRComparison {
-//                Task {
-//                    _ = await processContextChangesWithOCR(
-//                        oldContexts: oldContexts,
-//                        newContexts: newContexts
-//                    )
-//                }
-//            }
         }
         .onChange(of: windowState.addAutoContextTasks) { _, _ in
-            if let windowName = currentWindowInfo.name,
+            if let windowName = currentWindowInfo.windowName,
                let _ = windowState.addAutoContextTasks[windowName]
             {
                 windowAlreadyInContext = true
@@ -238,23 +230,31 @@ extension FileRow {
 // MARK: - Private Functions
 
 extension FileRow {
-    static func getWindowIconAndName(_ trackedWindow: TrackedWindow?) -> (URL?, String?, pid_t?) {
-        if let trackedWindow = trackedWindow,
+    private func initializeCurrentWindowInfo() -> WindowChangeInfo {
+        let windowsManager = AccessibilityNotificationsManager.shared.windowsManager
+        if let trackedWindow = windowsManager.activeTrackedWindow,
            let pid = trackedWindow.element.pid(),
            let windowApp = NSRunningApplication(processIdentifier: pid)
         {
             let windowAppBundleUrl = windowApp.bundleURL
             let windowName = trackedWindow.element.title() ?? trackedWindow.element.appName() ?? nil
             
-            return (windowAppBundleUrl, windowName, pid)
+            return WindowChangeInfo(
+                appBundleUrl: windowAppBundleUrl,
+                windowName: windowName,
+                pid: pid,
+                element: trackedWindow.element,
+                trackedWindow: trackedWindow
+            )
         } else {
-            return (nil, nil, nil)
+            return WindowChangeInfo(
+                appBundleUrl: nil,
+                windowName: nil,
+                pid: nil,
+                element: nil,
+                trackedWindow: nil
+            )
         }
-    }
-    
-    private func initializeCurrentWindowInfo() -> (URL?, String?, pid_t?) {
-        let windowsManager = AccessibilityNotificationsManager.shared.windowsManager
-        return FileRow.getWindowIconAndName(windowsManager.activeTrackedWindow)
     }
     
     private func updateCurrentTrackedWindow() {
@@ -270,7 +270,7 @@ extension FileRow {
     }
     
     private func updateOCRComparisonResult(from results: [OCRComparisonResult]) {
-        guard let windowName = currentWindowInfo.name,
+        guard let windowName = currentWindowInfo.windowName,
               let pid = currentWindowInfo.pid else {
             ocrComparisonResult = nil
             return
@@ -288,7 +288,7 @@ extension FileRow {
     }
     
     private func detectCurrentWindowAlreadyInContext() -> Bool {
-        if let windowName = currentWindowInfo.name, !contextList.isEmpty {
+        if let windowName = currentWindowInfo.windowName, !contextList.isEmpty {
             for context in contextList {
                 if case .auto(let autoContext) = context {
                     if windowName == autoContext.appTitle {
@@ -306,7 +306,7 @@ extension FileRow {
     }
     
     private func addWindowToContext() {
-        if let windowName = currentWindowInfo.name,
+        if let windowName = currentWindowInfo.windowName,
            let pid = currentWindowInfo.pid,
            let focusedWindow = pid.firstMainWindow
         {
@@ -337,90 +337,6 @@ extension FileRow {
             AccessibilityNotificationsManager.shared.removeDelegate(delegate)
         }
     }
-}
-
-// MARK: - Window Change Delegate (to track window changes)
-
-private final class WindowChangeDelegate: AccessibilityNotificationsDelegate {
-    private let onWindowChange: ((URL?, String?, pid_t?)) -> Void
-    
-    init(onWindowChange: @escaping ((URL?, String?, pid_t?)) -> Void) {
-        self.onWindowChange = onWindowChange
-        
-        NSWorkspace.shared.notificationCenter.addObserver(
-            self,
-            selector: #selector(appLaunchedReceived),
-            name: NSWorkspace.didLaunchApplicationNotification,
-            object: nil
-        )
-
-    }
-    
-    deinit {
-        NSWorkspace.shared.notificationCenter.removeObserver(self)
-    }
-    
-    // Tracks when a new window is opened.
-    @objc private func appLaunchedReceived(notification: Notification) {
-        guard let userInfo = notification.userInfo,
-              let app = (userInfo[NSWorkspace.applicationUserInfoKey] as? NSRunningApplication) ??
-                        (userInfo["NSWorkspaceApplicationKey"] as? NSRunningApplication)
-        else { return }
-        
-        let currentAppIsXCode = app.localizedName?.lowercased() == "xcode"
-        var isDev: Bool = false
-        #if DEBUG
-        isDev = true
-        #endif
-        
-        let doNotTrackXCode = currentAppIsXCode && isDev
-        
-        // We don't want to track XCode in accessibility in DEBUG mode because it causes issues when launching Onit.
-        if doNotTrackXCode {
-            onWindowChange((nil, nil, nil))
-        } else {
-            var title: String? = nil
-            var appName: String? = nil
-            
-            if let window = app.processIdentifier.firstMainWindow {
-                title = window.title()
-                appName = window.appName()
-            } else {
-                appName = app.processIdentifier.getAXUIElement().appName()
-            }
-            
-            let windowAppBundleUrl = app.bundleURL
-            let windowName = title ?? appName ?? app.localizedName ?? "Unknown"
-            
-            onWindowChange((windowAppBundleUrl, windowName, app.processIdentifier))
-        }
-    }
-    
-    // Tracks when changing focused window.
-    func accessibilityManager(
-        _ manager: AccessibilityNotificationsManager,
-        didActivateWindow window: TrackedWindow
-    ) {
-        let (windowAppBundleUrl, windowName, pid) = FileRow.getWindowIconAndName(window)
-        onWindowChange((windowAppBundleUrl, windowName, pid))
-    }
-    
-    // Tracks when changing focused sub-window in the current window (switching browser tabs, etc.).
-    func accessibilityManager(
-        _ manager: AccessibilityNotificationsManager,
-        didChangeWindowTitle window: TrackedWindow
-    ) {
-        let (windowAppBundleUrl, windowName, pid) = FileRow.getWindowIconAndName(window)
-        onWindowChange((windowAppBundleUrl, windowName, pid))
-    }
-    
-    // Below is required to conform to AccessibilityNotificationsDelegate protocol but aren't needed in this implementation.
-    func accessibilityManager(_ manager: AccessibilityNotificationsManager, didMoveWindow window: TrackedWindow) {}
-    func accessibilityManager(_ manager: AccessibilityNotificationsManager, didResizeWindow window: TrackedWindow) {}
-    func accessibilityManager(_ manager: AccessibilityNotificationsManager, didMinimizeWindow window: TrackedWindow) {}
-    func accessibilityManager(_ manager: AccessibilityNotificationsManager, didDeminimizeWindow window: TrackedWindow) {}
-    func accessibilityManager(_ manager: AccessibilityNotificationsManager, didActivateIgnoredWindow window: TrackedWindow?) {}
-    func accessibilityManager(_ manager: AccessibilityNotificationsManager, didDestroyWindow window: TrackedWindow) {}
 }
 
 // MARK: - Test

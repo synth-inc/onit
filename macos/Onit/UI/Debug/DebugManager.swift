@@ -31,7 +31,7 @@ class DebugManager: ObservableObject {
     
     // MARK: - Private Properties
     
-    private var autoOCRDelegate: AutoOCRComparisonDelegate?
+    private var autoOCRDelegate: WindowChangeDelegate?
     
     // MARK: - Initialization
     
@@ -97,7 +97,9 @@ class DebugManager: ObservableObject {
             return
         }
         
-        let delegate = AutoOCRComparisonDelegate()
+        let delegate = WindowChangeDelegate { windowInfo in
+            self.handleWindowChange(windowInfo)
+        }
         print("startAutoOCRComparison: created new delegate")
         AccessibilityNotificationsManager.shared.addDelegate(delegate)
         print("startAutoOCRComparison: added delegate to notifications manager")
@@ -112,15 +114,38 @@ class DebugManager: ObservableObject {
     func stopAutoOCRComparison() {
         guard let delegate = autoOCRDelegate else { return }
         
-        print("Removing AutoOCRComparisonDelegate from AccessibilityNotificationsManager")
+        print("Removing WindowChangeDelegate from AccessibilityNotificationsManager")
         AccessibilityNotificationsManager.shared.removeDelegate(delegate)
         autoOCRDelegate = nil
         
         if autoOCRDelegate == nil {
-            print("AutoOCRComparisonDelegate successfully removed")
+            print("WindowChangeDelegate successfully removed")
         }
     }
     
+    private func handleWindowChange(_ windowInfo: WindowChangeInfo) {
+        print("DebugManager: handleWindowChange called")
+        guard enableAutoOCRComparison else {
+            print("DebugManager: comparison disabled, skipping")
+            return
+        }
+        
+        guard let windowElement = windowInfo.element else {
+            print("DebugManager: no window element, skipping")
+            return
+        }
+        
+        let windowTitle = windowInfo.windowName ?? "unknown"
+        
+        Task {
+            let startTime = CFAbsoluteTimeGetCurrent()
+            print("DebugManager: starting OCR comparison for window: \(windowTitle)")
+            await performOCRComparison(for: windowElement)
+            let endTime = CFAbsoluteTimeGetCurrent()
+            print("DebugManager: OCR comparison completed in \(endTime - startTime) seconds")
+        }
+    }
+
     func addOCRComparisonResult(_ result: OCRComparisonResult) {
         if let existingIndex = ocrComparisonResults.firstIndex(where: { existing in
             // Same app and title
@@ -218,32 +243,7 @@ class DebugManager: ObservableObject {
             }
         }
     }
-}
 
-// MARK: - Auto OCR Comparison Delegate
-
-@MainActor
-private final class AutoOCRComparisonDelegate: AccessibilityNotificationsDelegate {
-    
-    func accessibilityManager(_ manager: AccessibilityNotificationsManager, didActivateWindow window: TrackedWindow) {
-        print("AutoOCRDelegate: didActivateWindow called")
-        guard DebugManager.shared.enableAutoOCRComparison else {
-            print("AutoOCRDelegate: comparison disabled, skipping")
-            return
-        }
-    
-        let windowElement = window.element
-        let windowTitle = window.element.title() ?? "unknown"
-        
-        Task {
-            let startTime = CFAbsoluteTimeGetCurrent()
-            print("AutoOCRDelegate: starting OCR comparison for window: \(windowTitle)")
-            await performOCRComparison(for: windowElement)
-            let endTime = CFAbsoluteTimeGetCurrent()
-            print("AutoOCRDelegate: OCR comparison completed in \(endTime - startTime) seconds")
-        }
-    }
-    
     private func performOCRComparison(for windowElement: AXUIElement) async {
         guard let pid = windowElement.pid() else { return }
         
@@ -279,7 +279,7 @@ private final class AutoOCRComparisonDelegate: AccessibilityNotificationsDelegat
             )
             
             await MainActor.run {
-                DebugManager.shared.addOCRComparisonResult(computationResult)
+                self.addOCRComparisonResult(computationResult)
             }
             
             let endTime = CFAbsoluteTimeGetCurrent()
@@ -499,13 +499,4 @@ private final class AutoOCRComparisonDelegate: AccessibilityNotificationsDelegat
     
         return min(5, length / 4)
     }
-    
-    // Required delegate methods (no-op)
-    func accessibilityManager(_ manager: AccessibilityNotificationsManager, didActivateIgnoredWindow window: TrackedWindow?) {}
-    func accessibilityManager(_ manager: AccessibilityNotificationsManager, didMinimizeWindow window: TrackedWindow) {}
-    func accessibilityManager(_ manager: AccessibilityNotificationsManager, didDeminimizeWindow window: TrackedWindow) {}
-    func accessibilityManager(_ manager: AccessibilityNotificationsManager, didDestroyWindow window: TrackedWindow) {}
-    func accessibilityManager(_ manager: AccessibilityNotificationsManager, didMoveWindow window: TrackedWindow) {}
-    func accessibilityManager(_ manager: AccessibilityNotificationsManager, didResizeWindow window: TrackedWindow) {}
-    func accessibilityManager(_ manager: AccessibilityNotificationsManager, didChangeWindowTitle window: TrackedWindow) {}
 }
