@@ -6,6 +6,7 @@ struct DebugModeTab: View {
     @State private var showOnlyFailures = false
     @State private var loadedItemsCount = 5 // Start with 20 items
     @State private var isLoadingMore = false
+    @State private var searchText = ""
     
     private let itemsPerPage = 20
 
@@ -80,6 +81,34 @@ struct DebugModeTab: View {
                             }
                         }
                         
+                        HStack {
+                            Image(systemName: "magnifyingglass")
+                                .foregroundColor(.secondary)
+                                .font(.system(size: 12))
+                            
+                            TextField("Search by app name...", text: $searchText)
+                                .textFieldStyle(.plain)
+                                .font(.system(size: 12))
+                                .onChange(of: searchText) { _, _ in
+                                    loadedItemsCount = itemsPerPage // Reset pagination when searching
+                                }
+                            
+                            if !searchText.isEmpty {
+                                Button {
+                                    searchText = ""
+                                } label: {
+                                    Image(systemName: "xmark.circle.fill")
+                                        .foregroundColor(.secondary)
+                                        .font(.system(size: 12))
+                                }
+                                .buttonStyle(.plain)
+                            }
+                        }
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 6)
+                        .background(Color.gray.opacity(0.1))
+                        .cornerRadius(6)
+                        
                         Text(resultCountText)
                             .font(.system(size: 12))
                             .foregroundColor(.secondary)
@@ -141,8 +170,13 @@ struct DebugModeTab: View {
     }
     
     private var filteredResults: [OCRComparisonResult] {
-        let results = showOnlyFailures ? debugManager.failedOCRResults : debugManager.ocrComparisonResults
-        return results.reversed()
+        let baseResults = showOnlyFailures ? debugManager.failedOCRResults : debugManager.ocrComparisonResults
+        
+        let searchFiltered = searchText.isEmpty ? baseResults : baseResults.filter { result in
+            result.appName.localizedCaseInsensitiveContains(searchText)
+        }
+        
+        return searchFiltered.reversed()
     }
     
     private var visibleResults: [OCRComparisonResult] {
@@ -173,19 +207,38 @@ struct DebugModeTab: View {
     }
     
     private var resultCountText: String {
-        let total = debugManager.ocrComparisonResults.count
-        let failed = debugManager.failedOCRResults.count
-        let successful = total - failed
+        let allResults = debugManager.ocrComparisonResults
+        let allFailed = debugManager.failedOCRResults
+        let filteredCount = filteredResults.count
         
-        if showOnlyFailures {
-            return "\(failed) failures (of \(total) total) - Showing \(min(loadedItemsCount, failed))"
+        if !searchText.isEmpty {
+            if showOnlyFailures {
+                let filteredFailed = allFailed.filter { $0.appName.localizedCaseInsensitiveContains(searchText) }.count
+                return "\(filteredFailed) failures matching '\(searchText)' (of \(allFailed.count) total failures) - Showing \(min(loadedItemsCount, filteredCount))"
+            } else {
+                return "\(filteredCount) results matching '\(searchText)' (of \(allResults.count) total) - Showing \(min(loadedItemsCount, filteredCount))"
+            }
         } else {
-            return "\(total) total results (\(successful) successful, \(failed) failed) - Showing \(min(loadedItemsCount, total))"
+            let total = allResults.count
+            let failed = allFailed.count
+            let successful = total - failed
+            
+            if showOnlyFailures {
+                return "\(failed) failures (of \(total) total) - Showing \(min(loadedItemsCount, failed))"
+            } else {
+                return "\(total) total results (\(successful) successful, \(failed) failed) - Showing \(min(loadedItemsCount, total))"
+            }
         }
     }
     
     private var failingApps: [AppComparisonSummary] {
-        let groupedResults = Dictionary(grouping: debugManager.ocrComparisonResults) { $0.appName }
+        let allResults = debugManager.ocrComparisonResults
+        
+        let resultsToGroup = searchText.isEmpty ? allResults : allResults.filter { result in
+            result.appName.localizedCaseInsensitiveContains(searchText)
+        }
+        
+        let groupedResults = Dictionary(grouping: resultsToGroup) { $0.appName }
         
         return groupedResults.compactMap { (appName, results) in
             let failedCount = results.filter { $0.matchPercentage < 70 }.count
