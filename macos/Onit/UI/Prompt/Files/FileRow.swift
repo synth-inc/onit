@@ -21,6 +21,10 @@ struct FileRow: View {
         pid: pid_t?
     ) = (nil, nil, nil)
     
+    @State private var currentTrackedWindow: TrackedWindow? = nil
+    @State private var ocrComparisonResult: OCRComparisonResult? = nil
+    @State private var showOCRDetails = false
+    
     @State private var windowDelegate: WindowChangeDelegate? = nil
     @State private var windowAlreadyInContext: Bool = false
     
@@ -41,6 +45,59 @@ struct FileRow: View {
         }
     }
     
+    var contextTagText: String {
+        if let ocrResult = ocrComparisonResult,
+           let windowName = currentWindowInfo.name,
+           ocrResult.appTitle == windowName {
+            return "\(ocrResult.matchPercentage)% \(windowName))"
+        } else if let windowName = currentWindowInfo.name {
+            return windowName
+        } else {
+            return "Unknown"
+        }
+    }
+    
+    var contextTagTextColor: Color {
+        if let ocrResult = ocrComparisonResult,
+           let windowName = currentWindowInfo.name,
+           ocrResult.appTitle == windowName {
+            if ocrResult.matchPercentage < 50 {
+                return .red
+            } else if ocrResult.matchPercentage < 75 {
+                return .yellow
+            } else {
+                return .T_2
+            }
+        } else {
+            return .T_2
+        }
+    }
+    
+    var contextTagHoverTextColor: Color {
+        if let ocrResult = ocrComparisonResult,
+           let windowName = currentWindowInfo.name,
+           ocrResult.appTitle == windowName {
+            if ocrResult.matchPercentage < 50 {
+                return .red
+            } else if ocrResult.matchPercentage < 75 {
+                return .yellow
+            } else {
+                return .T_2
+            }
+        } else {
+            return .T_2
+        }
+    }
+    
+    var showOCRDetailsLink: Bool {
+        if let ocrResult = ocrComparisonResult,
+           let windowName = currentWindowInfo.name,
+           ocrResult.appTitle == windowName {
+            return ocrResult.matchPercentage < 75
+        }
+        return false
+    }
+    
     var appIcon: (any View)? {
         if let appBundleUrl = currentWindowInfo.appBundleUrl {
             let iconUrl = NSWorkspace.shared.icon(forFile: appBundleUrl.path)
@@ -55,44 +112,63 @@ struct FileRow: View {
     }
     
     var contextList: [Context]
-
+    
     var body: some View {
-        FlowLayout(spacing: 6) {
-            PaperclipButton(
-                currentWindowBundleUrl: currentWindowInfo.appBundleUrl,
-                currentWindowName: currentWindowInfo.name,
-                currentWindowPid: currentWindowInfo.pid
-            )
-            
-            if autoContextFromCurrentWindow,
-               let windowName = windowName
-            {
-                ContextTag(
-                    text: windowName,
-                    hoverTextColor: .T_2,
-                    background: .clear,
-                    hoverBackground: .clear,
-                    hasHoverBorder: true,
-                    shouldFadeIn: true,
-                    iconBundleURL: currentWindowInfo.appBundleUrl,
-                    tooltip: "Add \(windowName) Context"
-                ) {
-                    addWindowToContext()
+        VStack(alignment: .leading, spacing: 6) {
+            FlowLayout(spacing: 6) {
+                PaperclipButton(
+                    currentWindowBundleUrl: currentWindowInfo.appBundleUrl,
+                    currentWindowName: currentWindowInfo.name,
+                    currentWindowPid: currentWindowInfo.pid
+                )
+                
+                if autoContextFromCurrentWindow,
+                   let windowName = windowName
+                {
+                    ContextTag(
+                        text: contextTagText,
+                        textColor: contextTagTextColor,
+                        hoverTextColor: contextTagHoverTextColor,
+                        background: .clear,
+                        hoverBackground: .clear,
+                        hasHoverBorder: true,
+                        shouldFadeIn: true,
+                        iconBundleURL: currentWindowInfo.appBundleUrl,
+                        tooltip: "Add \(windowName) Context"
+                    ) {
+                        addWindowToContext()
+                    }
+                }
+                
+                pendingAutoContextItems
+                
+                if !contextList.isEmpty {
+                    ForEach(contextList, id: \.self) { context in
+                        ContextItem(item: context, isEditing: true)
+                            .scrollTargetLayout()
+                            .contentShape(Rectangle())
+                    }
                 }
             }
             
-            pendingAutoContextItems
-            
-            if !contextList.isEmpty {
-                ForEach(contextList, id: \.self) { context in
-                    ContextItem(item: context, isEditing: true)
-                        .scrollTargetLayout()
-                        .contentShape(Rectangle())
+            // OCR Details Link
+            if showOCRDetailsLink {
+                HStack {
+                    Button("Details →") {
+                        showOCRDetails = true
+                    }
+                    .buttonStyle(.plain)
+                    .font(.system(size: 11))
+                    .foregroundColor(contextTagHoverTextColor)
+                    Spacer()
                 }
+                .padding(.top, 2)
             }
         }
         .onAppear {
-            currentWindowInfo = initializeCurrentWindowInfo()
+            let windowInfo = initializeCurrentWindowInfo()
+            currentWindowInfo = windowInfo
+            updateCurrentTrackedWindow()
             
             let delegate = WindowChangeDelegate(onWindowChange: { windowInfo in
                 currentWindowInfo = windowInfo
@@ -108,18 +184,22 @@ struct FileRow: View {
         }
         .onChange(of: currentWindowInfo.name) { _, _ in
             windowAlreadyInContext = detectCurrentWindowAlreadyInContext()
+            updateCurrentTrackedWindow()
+        }
+        .onChange(of: debugManager.ocrComparisonResults) { _, newResults in
+            updateOCRComparisonResult(from: newResults)
         }
         .onChange(of: contextList) { oldContexts, newContexts in
             windowAlreadyInContext = detectCurrentWindowAlreadyInContext()
             
-            if debugManager.enableOCRComparison {
-                Task {
-                    _ = await processContextChangesWithOCR(
-                        oldContexts: oldContexts,
-                        newContexts: newContexts
-                    )
-                }
-            }
+//            if debugManager.enableOCRComparison {
+//                Task {
+//                    _ = await processContextChangesWithOCR(
+//                        oldContexts: oldContexts,
+//                        newContexts: newContexts
+//                    )
+//                }
+//            }
         }
         .onChange(of: windowState.addAutoContextTasks) { _, _ in
             if let windowName = currentWindowInfo.name,
@@ -129,6 +209,11 @@ struct FileRow: View {
             }
             
             addingAutoContext = !windowState.addAutoContextTasks.isEmpty
+        }
+        .sheet(isPresented: $showOCRDetails) {
+            if let ocrResult = ocrComparisonResult {
+                OCRDetailSheet(result: ocrResult)
+            }
         }
     }
 }
@@ -170,6 +255,36 @@ extension FileRow {
     private func initializeCurrentWindowInfo() -> (URL?, String?, pid_t?) {
         let windowsManager = AccessibilityNotificationsManager.shared.windowsManager
         return FileRow.getWindowIconAndName(windowsManager.activeTrackedWindow)
+    }
+    
+    private func updateCurrentTrackedWindow() {
+        let windowsManager = AccessibilityNotificationsManager.shared.windowsManager
+        currentTrackedWindow = windowsManager.activeTrackedWindow
+        
+        // When window changes, check if we have an OCR result for it
+        if let trackedWindow = currentTrackedWindow {
+            updateOCRComparisonResult(from: debugManager.ocrComparisonResults)
+        } else {
+            ocrComparisonResult = nil
+        }
+    }
+    
+    private func updateOCRComparisonResult(from results: [OCRComparisonResult]) {
+        guard let windowName = currentWindowInfo.name,
+              let pid = currentWindowInfo.pid else {
+            ocrComparisonResult = nil
+            return
+        }
+        
+        // Find the most recent OCR result that matches our current window
+        ocrComparisonResult = results
+            .filter { result in
+                // Match by app title and check if it's recent (within last 5 minutes)
+                result.appTitle == windowName &&
+                Date().timeIntervalSince(result.timestamp) < 300
+            }
+            .sorted { $0.timestamp > $1.timestamp }
+            .first
     }
     
     private func detectCurrentWindowAlreadyInContext() -> Bool {
