@@ -20,7 +20,7 @@ struct ContextItem: View {
                 WebContextItem(
                     item: item,
                     isEditing: isEditing,
-                    action: showContextMenu,
+                    action: showContextWindow,
                     removeAction: removeContextItem
                 )
             case .auto(let autoContext):
@@ -32,7 +32,7 @@ struct ContextItem: View {
                     maxWidth: isEditing ? 155 : .infinity,
                     iconBundleURL: autoContext.appBundleUrl,
                     tooltip: isEditing ? name : "View auto-context file",
-                    action: showContextMenu,
+                    action: showContextWindow,
                     removeAction: isEditing ? { removeContextItem() } : nil
                 )
             default:
@@ -45,7 +45,7 @@ struct ContextItem: View {
                     iconView: ContextImage(context: item),
                     caption: item.fileType,
                     tooltip: isEditing ? name : "View \(item.fileType ?? "") file",
-                    action: showContextMenu,
+                    action: showContextWindow,
                     removeAction: isEditing ? { removeContextItem() } : nil
                 )
             }
@@ -73,10 +73,6 @@ struct ContextItem: View {
 // MARK: - Private Functions
 
 extension ContextItem {
-    private func showContextMenu() {
-        state.showContextMenu = true
-    }
-    
     private func showContextWindow() {
         ContextWindowsManager.shared.showContextWindow(
             windowState: state,
