@@ -147,11 +147,8 @@ class OnitPanelState: NSObject {
     var currentWindowAppBundleUrl: URL? = nil
     
     // Menu States
-    
     var showContextMenu: Bool = false
     var showContextMenuBrowserTabs: Bool = false
-    
-    //
 
     var deleteChatFailed: Bool = false
     

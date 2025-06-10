@@ -26,14 +26,16 @@ struct DynamicScrollView<Children: View>: View {
     @State private var maxScrollHeight: CGFloat = 0
     @State private var yScrollPosition: CGFloat = 0
     
+    private let scrollOffset: CGFloat = 5
+    
     private var showTopGradient: Bool {
-        let notScrolledToTop = yScrollPosition > 5
+        let notScrolledToTop = yScrollPosition > scrollOffset
         return notScrolledToTop
     }
     
     private var showBottomGradient: Bool {
         let currentMaxScrollHeight = max(0, childrenHeight - maxScrollHeight)
-        let notScrolledToBottom = yScrollPosition < currentMaxScrollHeight - 5
+        let notScrolledToBottom = yScrollPosition < currentMaxScrollHeight - scrollOffset
         return notScrolledToBottom
     }
     
@@ -43,7 +45,7 @@ struct DynamicScrollView<Children: View>: View {
     var body: some View {
         ScrollView {
             children()
-                .background{
+                .background {
                     // Required for scroll view dynamic max height.
                     GeometryReader { proxy in
                         let yOffset = proxy.frame(in: .named(coordinateSpaceName)).minY

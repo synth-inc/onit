@@ -24,7 +24,7 @@ extension ContextMenuLoading {
     private var shimmer: some View {
         Shimmer(
             width: .infinity,
-            height: textButtonHeight,
+            height: ButtonConstants.textButtonHeight,
             cornerRadius: 8
         )
     }

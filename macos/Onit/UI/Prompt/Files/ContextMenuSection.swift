@@ -22,11 +22,11 @@ struct ContextMenuSection<Children: View>: View {
         self.children = children()
     }
     
-    let gapSize: CGFloat = 2
+    private let gapSize: CGFloat = 2
     
     private var maxScrollHeight: CGFloat {
         let maxTextButtonCount: CGFloat = 5
-        let collectiveTextButtonHeight = textButtonHeight * maxTextButtonCount
+        let collectiveTextButtonHeight = ButtonConstants.textButtonHeight * maxTextButtonCount
         
         let gapCount = maxTextButtonCount - 1
         let collectiveGapSize = gapSize * gapCount

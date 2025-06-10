@@ -59,7 +59,7 @@ struct ContextMenuWindows: View {
         if searchQuery.isEmpty {
             return capturedOpenWindows
         } else {
-            return capturedOpenWindows.filter { $0.name.contains(searchQuery) }
+            return capturedOpenWindows.filter { $0.name.localizedCaseInsensitiveContains(searchQuery) }
         }
     }
     

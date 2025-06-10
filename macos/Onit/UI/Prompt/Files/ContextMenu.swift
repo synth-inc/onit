@@ -60,7 +60,7 @@ struct ContextMenu: View {
 extension ContextMenu {
     private var upListener: some View {
         KeyListener(key: .upArrow, modifiers: []) {
-            if currentArrowKeyIndex - 1 <= 0 {
+            if currentArrowKeyIndex - 1 < 0 {
                 currentArrowKeyIndex = 0
             } else {
                 currentArrowKeyIndex -= 1

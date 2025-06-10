@@ -7,4 +7,6 @@
 
 import CoreGraphics
 
-let textButtonHeight: CGFloat = 32
+enum ButtonConstants {
+    static let textButtonHeight: CGFloat = 32
+}

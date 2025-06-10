@@ -44,7 +44,7 @@ struct TextButton<Child: View>: View {
 
         gap: CGFloat = 10,
         maxWidth: CGFloat = 0,
-        height: CGFloat = textButtonHeight,
+        height: CGFloat = ButtonConstants.textButtonHeight,
         fillContainer: Bool = true,
         horizontalPadding: CGFloat = 8,
         cornerRadius: CGFloat = 8,
@@ -53,7 +53,7 @@ struct TextButton<Child: View>: View {
         hoverBackground: Color = .gray600,
         fontSize: CGFloat = 14,
         fontWeight: Font.Weight = Font.Weight.medium,
-        fontColor: Color = Color.white,
+        fontColor: Color = Color.primary,
 
         icon: ImageResource? = nil,
         iconImage: NSImage? = nil,
