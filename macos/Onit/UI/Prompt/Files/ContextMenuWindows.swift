@@ -177,14 +177,14 @@ extension ContextMenuWindows {
         }
         .onAppear {
             capturingOpenWindowsTask?.cancel()
-            isCapturingOpenWindows = true
             
             capturingOpenWindowsTask = Task {
                 capturedOpenWindows = await captureOpenWindows()
+                
+                await MainActor.run {
+                    capturingOpenWindowsTask = nil
+                }
             }
-            
-            capturingOpenWindowsTask = nil
-            isCapturingOpenWindows = false
         }
         .onDisappear {
             capturingOpenWindowsTask?.cancel()
@@ -316,6 +316,8 @@ extension ContextMenuWindows {
     }
     
     private func captureOpenWindows() async -> [CapturedOpenWindow] {
+        isCapturingOpenWindows = true
+        
         let onitName = Bundle.main.object(forInfoDictionaryKey: "CFBundleName") as? String
         
         let windowPids = NSWorkspace.shared.runningApplications
@@ -356,6 +358,7 @@ extension ContextMenuWindows {
             }
         }
         
+        isCapturingOpenWindows = false
         return capturedWindowsList
     }
 }
