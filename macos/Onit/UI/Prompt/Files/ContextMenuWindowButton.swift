@@ -48,6 +48,7 @@ struct ContextMenuWindowButton: View {
         } action: {
             action()
         }
+        .addAnimation(dependency: selected)
     }
 }
 

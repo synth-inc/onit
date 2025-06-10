@@ -166,6 +166,7 @@ extension ContextMenuWindows {
         ) {
             showBrowserTabsSubMenu()
         }
+        .addAnimation(dependency: selected)
     }
     
     private var windowOptions: some View {
@@ -209,6 +210,7 @@ extension ContextMenuWindows {
         ) {
             openFilePicker()
         }
+        .addAnimation(dependency: selected)
     }
     
     private var actionOptions: some View {
