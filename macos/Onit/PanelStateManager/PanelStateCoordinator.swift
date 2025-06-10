@@ -41,12 +41,12 @@ class PanelStateCoordinator {
         
         stateChangesCancellable = Publishers.CombineLatest(
             AccessibilityPermissionManager.shared.$accessibilityPermissionStatus,
-            FeatureFlagManager.shared.$usePinnedMode
+            FeatureFlagManager.shared.$displayMode
         )
         .filter { $0.0 != .notDetermined }
         .debounce(for: .milliseconds(300), scheduler: RunLoop.main)
-        .sink { [weak self] permission, pinnedModeEnabled in
-            self?.handleStateChange(accessibilityPermission: permission, pinnedModeEnabled: pinnedModeEnabled)
+        .sink { [weak self] permission, displayMode in
+            self?.handleStateChange(accessibilityPermission: permission, displayMode: displayMode)
         }
     }
     
@@ -101,20 +101,18 @@ class PanelStateCoordinator {
     
     // MARK: - Private functions
     
-    private func handleStateChange(accessibilityPermission: AccessibilityPermissionStatus, pinnedModeEnabled: Bool) {
+    private func handleStateChange(accessibilityPermission: AccessibilityPermissionStatus, displayMode: DisplayMode) {
         AnalyticsManager.Accessibility.permissionChanges(local: accessibilityPermission)
-        
+
         let oldManager = currentManager
-        
-        switch accessibilityPermission {
-        case .granted:
-            if pinnedModeEnabled {
-                currentManager = PanelStatePinnedManager.shared
-            } else {
-                currentManager = PanelStateTetheredManager.shared
-            }
-        case .denied, .notDetermined:
-            currentManager = PanelStateUntetheredManager.shared
+
+        switch displayMode {
+        case .conventional:
+            currentManager = PanelStateConventionalManager.shared
+        case .pinned:
+            currentManager = accessibilityPermission == .granted ? PanelStatePinnedManager.shared : PanelStateUntetheredManager.shared
+        case .tethered:
+            currentManager = accessibilityPermission == .granted ? PanelStateTetheredManager.shared : PanelStateUntetheredManager.shared
         }
         
         if (oldManager as AnyObject) !== (currentManager as AnyObject) {
@@ -133,6 +131,7 @@ class PanelStateCoordinator {
         PanelStateTetheredManager.shared.stop()
         PanelStateUntetheredManager.shared.stop()
         PanelStatePinnedManager.shared.stop()
+        PanelStateConventionalManager.shared.stop()
     }
     
     /**

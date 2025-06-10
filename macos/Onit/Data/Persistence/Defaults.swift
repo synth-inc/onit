@@ -77,6 +77,8 @@ extension Defaults.Keys {
 
     // Feature flags
     static let usePinnedMode = Key<Bool?>("use_screen_mode_with_accessibility", default: nil)
+    static let displayMode = Key<DisplayMode>("displayMode", default: .pinned)
+    static let conventionalPanelFrame = Key<NSRect?>("conventionalPanelFrame", default: nil)
     
     static let autoContextFromCurrentWindow = Key<Bool>("autoContextFromCurrentWindow", default: true)
     static let autoContextFromHighlights = Key<Bool>("autoContextFromHighlights", default: true)
