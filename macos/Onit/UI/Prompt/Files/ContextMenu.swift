@@ -11,9 +11,12 @@ struct ContextMenu: View {
     @Environment(\.windowState) private var windowState
     
     @State private var searchQuery: String = ""
-    @State private var showBrowserTabs: Bool = false
     @State private var currentArrowKeyIndex: Int = 0
     @State private var maxArrowKeyIndex: Int = 0
+    
+    var showBrowserTabs: Bool {
+        return windowState.showContextMenuBrowserTabs
+    }
     
     var body: some View {
         MenuList(
@@ -84,7 +87,7 @@ extension ContextMenu {
             icon: .chevLeft,
             action: {
                 searchQuery = ""
-                showBrowserTabs = false
+                windowState.showContextMenuBrowserTabs = false
             }
         )
     }
@@ -113,6 +116,6 @@ extension ContextMenu {
     
     private func showBrowserTabsSubMenu() {
         searchQuery = ""
-        showBrowserTabs = true
+        windowState.showContextMenuBrowserTabs = true
     }
 }

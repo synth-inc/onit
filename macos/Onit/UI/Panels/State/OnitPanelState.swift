@@ -149,6 +149,7 @@ class OnitPanelState: NSObject {
     // Menu States
     
     var showContextMenu: Bool = false
+    var showContextMenuBrowserTabs: Bool = false
     
     //
 
