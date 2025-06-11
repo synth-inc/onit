@@ -227,4 +227,47 @@ class PanelStatePinnedManager: PanelStateBaseManager, ObservableObject {
             targetInitialFrames.removeValue(forKey: window)
         }
     }
+    
+    override func resetFramesOnAppChange() {
+        print("resizeWindow - resetFramesOnAppChange called frames to reset: \(targetInitialFrames.count)")
+        let panelWidth = state.panelWidth - (TetheredButton.width / 2) + 1
+        if Defaults[.pinnedResizeMode] == .all {
+            targetInitialFrames.forEach { element, initialFrame in
+                if let currentFrame = element.getFrame(convertedToGlobalCoordinateSpace: true) {
+                    // If the window is not on the panel screen, don't reset the frame
+                    if let panelScreen = state.panel?.screen {
+                        if let currentScreen = currentFrame.findScreen(),
+                        currentScreen != panelScreen {
+                            return
+                        }
+                    }
+                    // We actually don't care about the initial frame here, we just want to add panelWidth back to the window. 
+                    let newWidth = currentFrame.width + panelWidth
+                    let newFrame = NSRect(origin: currentFrame.origin,
+                                          size: NSSize(width: newWidth, height: currentFrame.height))
+                    _ = element.setFrame(newFrame)
+                }
+            }
+        } else {
+            targetInitialFrames.forEach { element, initialFrame in
+                // In Pinned mode, we should only reset the frame if it's still bordering the panel. 
+                // Instead of using the initial frame, we should add panelWidth back to the window, so it goes all the way to the edge of the screen.
+
+                if let currentFrame = element.getFrame() {
+                    let screenFrame = NSScreen.main?.visibleFrame ?? .zero
+                    let isNearPanel = abs((screenFrame.maxX - panelWidth) - currentFrame.maxX) <= 2
+                    
+                    if !isNearPanel {
+                        return
+                    }
+                    let newWidth = currentFrame.width + panelWidth
+                    let newFrame = NSRect(origin: currentFrame.origin,
+                                          size: NSSize(width: newWidth, height: currentFrame.height))
+                    print("resizeWindow - resetting initialFrame \(initialFrame)")
+                    _ = element.setFrame(newFrame)
+                }
+            }
+        }
+        targetInitialFrames.removeAll()
+    }
 }

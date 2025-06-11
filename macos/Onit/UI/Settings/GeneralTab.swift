@@ -149,20 +149,32 @@ struct GeneralTab: View {
                 } else {
                     VStack(alignment: .leading, spacing: 4) {
                         if isPinnedMode {
-                            Text("Onit will always appear on the right side of your screen. You will only have one Onit panel at any given time. Other applications will be resized to make room for Onit.")
+                            Text("Onit will always appear on the right side of your screen. You will only have one Onit panel at any given time. Other applications will be resized to make room for Onit. In 'All' mode, all applications will be resized by the size of the Onit panel, regardless of where they are on the screen.")
                                 .font(.system(size: 12))
                                 .foregroundStyle(.gray200)
 
-                            HStack {
-                                Text("Resize windows")
-                                    .font(.system(size: 13))
-                                Picker("", selection: $pinnedResizeMode) {
-                                    Text("Overlap").tag(PinnedResizeMode.overlap)
-                                    Text("All").tag(PinnedResizeMode.all)
+                            Section {
+                                VStack(alignment: .leading, spacing: 4) {
+                                    HStack {
+                                        Text("Window Resizing")
+                                            .font(.system(size: 13))
+                                        Picker("", selection: $pinnedResizeMode) {
+                                            Text("Overlap").tag(PinnedResizeMode.overlap)
+                                            Text("All").tag(PinnedResizeMode.all)
+                                        }
+                                        .padding(.top, 4)
+                                        .pickerStyle(.segmented)
+                                        .frame(width: 150)
+                                    }
+                                    Text(pinnedResizeMode == .overlap ? 
+                                            "In 'Overlap' mode, when the Onit panel is opened, any applications that occupy space that the Onit panel will occupy are resized. When the panel is closed, applications will be restored to their original size, but only if they still shared a border with the Onit panel. 'Overlap' mode is good for most users. " : 
+                                            "In 'All' mode, when the Onit panel is opened, all applications are reduced by the size of the Onit panel. When the panel is closed, all applications are expanded by the width of the Onit panel. 'All' mode is good for users who wish to preserve the relative layout of other application windows.")
+                                        .font(.system(size: 12))
+                                        .foregroundStyle(.gray200)
+                                        .fixedSize(horizontal: false, vertical: true)
                                 }
-                                .pickerStyle(.segmented)
-                                .frame(width: 150)
                             }
+                            .padding(.top, 12)
                         } else {
                             Text("Onit will attach to your applications. There can be one Onit panel for each application window. If you move your app, Onit will move with it.")
                                 .font(.system(size: 12))

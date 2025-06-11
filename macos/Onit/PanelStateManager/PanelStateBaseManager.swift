@@ -72,6 +72,7 @@ class PanelStateBaseManager: PanelStateManagerLogic {
         
         state = defaultState
         tetherButtonPanelState = nil
+        print("resizeWindow - resetting target frame")
         targetInitialFrames = [:]
     }
     
@@ -85,7 +86,9 @@ class PanelStateBaseManager: PanelStateManagerLogic {
     }
     
     func resetFramesOnAppChange() {
+        print("resizeWindow - resetFramesOnAppChange called frames to reset: \(targetInitialFrames.count)")
         targetInitialFrames.forEach { element, initialFrame in
+            print("resizeWindow - resetting initialFrame \(initialFrame)")
             _ = element.setFrame(initialFrame)
         }
         targetInitialFrames.removeAll()
