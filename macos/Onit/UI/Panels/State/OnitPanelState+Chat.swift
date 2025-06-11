@@ -287,7 +287,12 @@ extension OnitPanelState {
             do {
                 try container.mainContext.save()
             } catch {
-                print("Failed to save after deleting prompt: \(error.localizedDescription)")
+                // If save fails, let's restore the partial prompt to prevent weird states. 
+                container.mainContext.rollback()
+                if let chat = currentChat {
+                    chat.prompts.append(prompt)
+                    currentPrompts?.append(prompt)
+                }
             }
         }
 
