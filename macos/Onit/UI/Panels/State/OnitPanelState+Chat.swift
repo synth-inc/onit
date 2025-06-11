@@ -283,6 +283,12 @@ extension OnitPanelState {
                 currentPrompts?.remove(at: curIndex)
             }
             container.mainContext.delete(prompt)
+            
+            do {
+                try container.mainContext.save()
+            } catch {
+                print("Failed to save after deleting prompt: \(error.localizedDescription)")
+            }
         }
 
         generatingPrompt = nil
