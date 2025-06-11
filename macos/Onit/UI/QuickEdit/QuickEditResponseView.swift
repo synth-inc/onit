@@ -9,9 +9,27 @@ import SwiftUI
 import Defaults
 import LLMStream
 
+struct ViewOffsetKey: @preconcurrency PreferenceKey {
+    typealias Value = CGFloat
+    @MainActor static var defaultValue = CGFloat.zero
+    static func reduce(value: inout Value, nextValue: () -> Value) {
+        value += nextValue()
+    }
+}
+
 struct QuickEditResponseView: View {
     @Environment(\.windowState) private var state
     @Environment(\.openURL) var openURL
+    
+    @State private var previousViewOffset: CGFloat = 0
+    @State private var hasUserManuallyScrolled: Bool = false
+    @State private var isAutoScrolling: Bool = false
+    @State private var lastAutoScrollTime: Date = Date.distantPast
+    @State private var scrollProxy: ScrollViewProxy?
+    @State private var isButtonScrolling: Bool = false
+    
+    private let minimumOffset: CGFloat = 16
+    private let autoScrollThrottleInterval: TimeInterval = 0.03
     
     @Default(.fontSize) var fontSize
     @Default(.lineHeight) var lineHeight
@@ -89,41 +107,137 @@ extension QuickEditResponseView {
                     }
                     .padding(.vertical, 16)
                 } else {
-                    ScrollView {
-                        LLMStreamView(
-                            text: textToDisplay,
-                            configuration: configuration,
-                            onUrlClicked: onUrlClicked,
-                            onCodeAction: codeAction
-                        )
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                    }
-                    .frame(maxHeight: 300)
-                    .mask(
-                        VStack(spacing: 0) {
-                            LinearGradient(
-                                gradient: Gradient(colors: [Color.clear, Color.white]),
-                                startPoint: .top,
-                                endPoint: .bottom
-                            )
-                            .frame(height: 20)
-                            
-                            Color.white
-                            
-                            LinearGradient(
-                                gradient: Gradient(colors: [Color.white, Color.clear]),
-                                startPoint: .top,
-                                endPoint: .bottom
-                            )
-                            .frame(height: 20)
+                    ZStack(alignment: .bottom) {
+                        scrollView
+                        
+                        if hasUserManuallyScrolled {
+                            HStack {
+                                Spacer()
+                                IconButton(
+                                    icon: .arrowDown,
+                                    buttonSize: 36,
+                                    action: {
+                                        hasUserManuallyScrolled = false
+                                        isButtonScrolling = true
+                                        
+                                        if let proxy = scrollProxy {
+                                            withAnimation(.easeOut(duration: 0.2)) {
+                                                proxy.scrollTo("bottom", anchor: .bottom)
+                                            }
+                                            
+                                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                                                isButtonScrolling = false
+                                            }
+                                        }
+                                    },
+                                    activeColor: .white,
+                                    inactiveColor: .white,
+                                    tooltipPrompt: "Scroll to bottom",
+                                    hoverBackgroundColor: .gray400
+                                )
+                                .background(.gray600)
+                                .addBorder(cornerRadius: 18, stroke: .gray400)
+                                .transition(.scale.combined(with: .opacity))
+                                .padding(.trailing, 20)
+                            }
+                            .padding(.bottom, 4)
                         }
-                    )
+                    }
                 }
                 
             default:
                 EmptyView()
             }
         }
+    }
+    
+    private var scrollView: some View {
+        ScrollViewReader { proxy in
+            ScrollView {
+                VStack(spacing: 0) {
+                    LLMStreamView(
+                        text: textToDisplay,
+                        configuration: configuration,
+                        onUrlClicked: onUrlClicked,
+                        onCodeAction: codeAction)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.vertical, 8)
+                    .id("content")
+                    
+                    Color.clear
+                    .frame(height: 1)
+                    .id("bottom")
+                }
+                .background(
+                    GeometryReader {
+                        Color.clear.preference(key: ViewOffsetKey.self, value: -$0.frame(in: .named("scroll")).origin.y)
+                    }
+                )
+                .onPreferenceChange(ViewOffsetKey.self) { currentOffset in
+                    guard !isAutoScrolling && !isButtonScrolling else { return }
+                    
+                    let offsetDifference: CGFloat = abs(previousViewOffset - currentOffset)
+                    
+                    if offsetDifference > minimumOffset {
+                        if previousViewOffset > currentOffset {
+                            hasUserManuallyScrolled = true
+                        } else if previousViewOffset < currentOffset {
+                            if offsetDifference > 50 {
+                                hasUserManuallyScrolled = true
+                            }
+                        }
+                        
+                        previousViewOffset = currentOffset
+                    }
+                }
+            }
+            .coordinateSpace(name: "scroll")
+            .frame(maxHeight: 300)
+            .onAppear {
+                scrollProxy = proxy
+            }
+            .onChange(of: textToDisplay) { oldValue, newValue in
+                if newValue.count > oldValue.count &&
+                    prompt.generationState == .streaming &&
+                    !hasUserManuallyScrolled {
+                    
+                    let now = Date()
+                    let timeSinceLastScroll = now.timeIntervalSince(lastAutoScrollTime)
+                    
+                    if timeSinceLastScroll >= autoScrollThrottleInterval && !isAutoScrolling {
+                        lastAutoScrollTime = now
+                        isAutoScrolling = true
+                        
+                        withAnimation(.easeOut(duration: 0.03)) {
+                            proxy.scrollTo("bottom", anchor: .bottom)
+                        }
+                        
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.06) {
+                            isAutoScrolling = false
+                        }
+                    }
+                }
+            }
+        }
+        .mask(
+            VStack(spacing: 0) {
+                LinearGradient(
+                    gradient: Gradient(colors: [Color.clear, Color.white]),
+                    startPoint: .top,
+                    endPoint: .bottom
+                )
+                .frame(height: 20)
+                
+                Color.white
+                
+                LinearGradient(
+                    gradient: Gradient(colors: [Color.white, Color.clear]),
+                    startPoint: .top,
+                    endPoint: .bottom
+                )
+                .frame(height: 20)
+            }
+        )
     }
     
     private var generatedToolbar: some View {
