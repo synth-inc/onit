@@ -14,19 +14,30 @@ struct StopGenerationButton: View {
     private let shortcut = KeyboardShortcut(.delete, modifiers: [.command])
 
     var body: some View {
-        TextButton(
-            gap: 4,
-            height: ToolbarButtonStyle.height,
-            fillContainer: false,
-            horizontalPadding: 8,
-            cornerRadius: ToolbarButtonStyle.cornerRadius,
-            background: .gray800,
-            hoverBackground: .gray600,
-            fontSize: 13,
-            fontColor: .gray200,
-            text: "Stop",
-            child: { KeyboardShortcutView(shortcut: shortcut) },
-            action: { state.stopGeneration() }
+        Button(action: { state.stopGeneration() }) {
+            HStack(spacing: 4) {
+                Image(systemName: "command")
+                    .font(.system(size: 10))
+                    .foregroundColor(.white)
+                
+                Image(systemName: "delete.left")
+                    .font(.system(size: 10))
+                    .foregroundColor(.white)
+                
+                Text("Stop")
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundColor(.white)
+            }
+            .padding(.horizontal, 6)
+            .padding(.vertical, 0)
+            .frame(height: 26)
+        }
+        .buttonStyle(PlainButtonStyle())
+        .background(.gray800)
+        .cornerRadius(6)
+        .overlay(
+            RoundedRectangle(cornerRadius: 6)
+                .stroke(.gray500, lineWidth: 1)
         )
         .keyboardShortcut(shortcut)
     }

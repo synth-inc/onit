@@ -44,28 +44,6 @@ struct ChatView: View {
                                 }
                         }
                     }
-                    
-                    if hasUserManuallyScrolled {
-                        HStack {
-                            Spacer()
-                            IconButton(
-                                icon: .arrowDown,
-                                buttonSize: 36,
-                                action: {
-                                    hasUserManuallyScrolled = false
-                                },
-                                activeColor: .white,
-                                inactiveColor: .white,
-                                tooltipPrompt: "Scroll to bottom",
-                                hoverBackgroundColor: .gray400
-                            )
-                            .background(.gray600)
-                            .addBorder(cornerRadius: 18, stroke: .gray400)
-                            .transition(.scale.combined(with: .opacity))
-                            .padding(.trailing, 20)
-                        }
-                        .padding(.bottom, 4)
-                    }
                 }
                 .onChange(of: state.currentChat) { old, new in
 					chatChangeTask?.cancel()
@@ -84,18 +62,42 @@ struct ChatView: View {
                 systemPrompt
             }
             
-            PromptCore()
+            // Floating action buttons area
+            if state.generatingPrompt != nil || hasUserManuallyScrolled {
+                HStack {
+                    Spacer()
+                    
+                    if state.generatingPrompt != nil {
+                        StopGenerationButton()
+                    }
+                    
+                    Spacer()
+                    
+                    if hasUserManuallyScrolled {
+                        IconButton(
+                            icon: .arrowDown,
+                            buttonSize: 36,
+                            action: {
+                                hasUserManuallyScrolled = false
+                            },
+                            activeColor: .white,
+                            inactiveColor: .white,
+                            tooltipPrompt: "Scroll to bottom",
+                            hoverBackgroundColor: .gray400
+                        )
+                        .background(.gray600)
+                        .addBorder(cornerRadius: 18, stroke: .gray400)
+                        .transition(.scale.combined(with: .opacity))
+                        .padding(.trailing, 20)
+                    }
+                }
+                .padding(.bottom, 4)
+            }
             
+            PromptCore()
             if currentPromptsCount <= 0 { Spacer() }
         }
         .drag()
-        .overlay(alignment: .bottomTrailing) {
-            if state.generatingPrompt != nil {
-                StopGenerationButton()
-                    .padding(.trailing, 12)
-                    .padding(.bottom, 60)
-            }
-        }
     }
 }
 
