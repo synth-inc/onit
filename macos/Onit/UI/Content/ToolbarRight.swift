@@ -64,7 +64,7 @@ struct ToolbarRight: View {
     var discord: some View {
         IconButton(
             icon: .logoDiscord,
-            iconSize: 22,
+            iconSize: 21,
             action: { MenuJoinDiscord.openDiscord(appState) },
             tooltipPrompt: "Join Discord"
         )
