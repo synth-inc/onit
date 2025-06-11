@@ -5,19 +5,31 @@
 //  Created by OpenAI Codex on 2024.
 //
 
+import Defaults
 import SwiftUI
 
 struct MenuJoinDiscord: View {
+    @Environment(\.appState) private var appState
+    
     static let link = "https://discord.gg/2E8WWkvGYZ"
 
     var body: some View {
         MenuBarRow {
-            if let url = URL(string: Self.link) {
-                NSWorkspace.shared.open(url)
-            }
+            Self.openDiscord(appState)
         } leading: {
             Text("Join Discord →")
                 .padding(.horizontal, 10)
+        }
+    }
+}
+
+// MARK: - Static Functions
+
+extension MenuJoinDiscord {
+    static func openDiscord(_ appState: AppState) {
+        if let url = URL(string: Self.link) {
+            NSWorkspace.shared.open(url)
+            appState.removeDiscordFooterNotifications()
         }
     }
 }

@@ -2,7 +2,10 @@ import Defaults
 import SwiftUI
 
 struct ChatView: View {
+    @Environment(\.appState) private var appState
     @Environment(\.windowState) private var state
+    
+    @Default(.footerNotifications) var footerNotifications
     
     @State private var hasUserManuallyScrolled: Bool = false
     @State private var chatChangeTask: Task<Void, Never>?
@@ -86,9 +89,15 @@ struct ChatView: View {
             
             PromptCore()
             
-            if currentPromptsCount <= 0 { Spacer() }
+            if currentPromptsCount <= 0 {
+                Spacer()
+                footerNotificationsList
+            }
         }
         .drag()
+        .onAppear {
+            appState.checkForAvailableUpdate()
+        }
     }
 }
 
@@ -101,6 +110,22 @@ extension ChatView {
                 ChatSystemPromptView(systemPrompt: systemPrompt)
             }
             if shouldShowSystemPrompt { SystemPromptView() }
+        }
+    }
+    
+    @ViewBuilder
+    private var footerNotificationsList: some View {
+        if !footerNotifications.isEmpty {
+            ZStack {
+                ForEach(footerNotifications.indices, id: \.self) { index in
+                    let footerNotification = footerNotifications[index]
+                    
+                    ContentViewFooterNotification(
+                        index: index,
+                        footerNotification: footerNotification
+                    )
+                }
+            }
         }
     }
 }

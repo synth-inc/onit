@@ -15,6 +15,7 @@ struct ToolbarRight: View {
     @Environment(\.windowState) private var state
     
     @Default(.mode) var mode
+    @Default(.footerNotifications) var footerNotifications
 
     var body: some View {
         HStack(alignment: .center, spacing: 4) {
@@ -22,7 +23,12 @@ struct ToolbarRight: View {
             localMode
             history
             settings
+            
+            if footerNotifications.contains(.update) {
+                installUpdate
+            }
         }
+        .padding(.trailing, 6)
         .frame(maxWidth: .infinity, alignment: .leading)
         .frame(height: 32, alignment: .center)
         .foregroundStyle(.gray200)
@@ -55,17 +61,11 @@ struct ToolbarRight: View {
         )
     }
 
-    func openDiscord() {
-        if let url = URL(string: MenuJoinDiscord.link) {
-            NSWorkspace.shared.open(url)
-        }
-    }
-
     var discord: some View {
         IconButton(
             icon: .logoDiscord,
             iconSize: 22,
-            action: { openDiscord() },
+            action: { MenuJoinDiscord.openDiscord(appState) },
             tooltipPrompt: "Join Discord"
         )
     }
@@ -110,6 +110,17 @@ struct ToolbarRight: View {
             iconSize: 22,
             action: { openSettingsWindow() },
             tooltipPrompt: "Settings"
+        )
+    }
+    
+    var installUpdate: some View {
+        IconButton(
+            icon: .lightning,
+            iconSize: 21,
+            action: appState.checkForAvailableUpdateWithDownload,
+            inactiveColor: .blue300,
+            tooltipPrompt: "Install Update",
+            hoverBackgroundColor: .blue300.opacity(0.2)
         )
     }
 }
