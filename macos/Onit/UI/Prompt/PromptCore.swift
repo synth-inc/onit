@@ -78,6 +78,7 @@ struct PromptCore: View {
                 contextAndInput
                 PromptCoreFooter(
                     audioRecorder: audioRecorder,
+                    sendDisabled: windowState.pendingInstruction.isEmpty,
                     handleSend: handleSend
                 )
             }

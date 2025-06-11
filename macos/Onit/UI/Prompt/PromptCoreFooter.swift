@@ -8,16 +8,17 @@
 import SwiftUI
 
 struct PromptCoreFooter: View {
-    @Environment(\.windowState) private var windowState
-    
     private let audioRecorder: AudioRecorder
+    private let sendDisabled: Bool
     private let handleSend: () -> Void
     
     init(
         audioRecorder: AudioRecorder,
+        sendDisabled: Bool,
         handleSend: @escaping () -> Void
     ) {
         self.audioRecorder = audioRecorder
+        self.sendDisabled = sendDisabled
         self.handleSend = handleSend
     }
     
@@ -34,7 +35,7 @@ struct PromptCoreFooter: View {
                 MicrophoneButton(audioRecorder: audioRecorder)
                 PromptCoreFooterButton(
                     text: "􀅇 Send",
-                    disabled: windowState.pendingInstruction.isEmpty,
+                    disabled: sendDisabled,
                     action: handleSend
                 )
             }

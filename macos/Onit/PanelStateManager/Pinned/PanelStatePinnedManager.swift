@@ -130,7 +130,7 @@ class PanelStatePinnedManager: PanelStateBaseManager, ObservableObject {
         return super.filterPanelChats(chats)
     }
     
-    override func launchPanel(for state: OnitPanelState) {
+    override func launchPanel(for state: OnitPanelState, createNewChat: Bool) {
         AnalyticsManager.Panel.opened(displayMode: "pinned")
         
         hideTetherWindow()
@@ -138,7 +138,7 @@ class PanelStatePinnedManager: PanelStateBaseManager, ObservableObject {
         
         attachedScreen = NSScreen.mouse
         
-        buildPanelIfNeeded(for: state)
+        buildPanelIfNeeded(for: state, createNewChat: createNewChat)
         showPanel(for: state)
     }
     

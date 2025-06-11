@@ -103,7 +103,7 @@ class PanelStateBaseManager: PanelStateManagerLogic {
         return chats
     }
     
-    func launchPanel(for state: OnitPanelState) {
+    func launchPanel(for state: OnitPanelState, createNewChat: Bool) {
         // Implemented by children
     }
     
@@ -118,7 +118,7 @@ class PanelStateBaseManager: PanelStateManagerLogic {
     
     // MARK: - Private functions
     
-    func buildPanelIfNeeded(for state: OnitPanelState) {
+    func buildPanelIfNeeded(for state: OnitPanelState, createNewChat: Bool) {
         if let existingPanel = state.panel, existingPanel.isVisible {
             existingPanel.makeKeyAndOrderFront(nil)
             existingPanel.orderFrontRegardless()
@@ -130,7 +130,7 @@ class PanelStateBaseManager: PanelStateManagerLogic {
 
         // Create a new chat when creating a new panel if the setting is enabled
         // But we don't want to clear out the context, so that autocontext still works.
-        if Defaults[.createNewChatOnPanelOpen] {
+        if Defaults[.createNewChatOnPanelOpen], createNewChat {
             state.newChat(clearContext: false)
         }
 

@@ -113,10 +113,10 @@ class PanelStateUntetheredManager: PanelStateBaseManager, ObservableObject {
         return super.filterPanelChats(chats)
     }
     
-    override func launchPanel(for state: OnitPanelState) {
+    override func launchPanel(for state: OnitPanelState, createNewChat: Bool) {
         AnalyticsManager.Panel.opened(displayMode: "untethered")
         
-        buildPanelIfNeeded(for: state)
+        buildPanelIfNeeded(for: state, createNewChat: createNewChat)
         showPanel(for: state)
     }
     

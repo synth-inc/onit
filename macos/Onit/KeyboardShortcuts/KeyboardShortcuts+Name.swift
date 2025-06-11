@@ -17,6 +17,7 @@ extension KeyboardShortcuts.Name {
     static let newChat = Self("newChat", default: .init(.nine, modifiers: [.command]))
     static let toggleLocalMode = Self(
         "toggleLocalMode", default: .init(.seven, modifiers: [.shift, .command]))
+    static let quickEdit = Self("quickEdit", default: .init(.k, modifiers: [.command]))
 }
 
 extension KeyboardShortcuts.Name: @retroactive CaseIterable {
@@ -25,6 +26,7 @@ extension KeyboardShortcuts.Name: @retroactive CaseIterable {
         .launchWithAutoContext,
         .escape,
         .newChat,
-        .toggleLocalMode
+        .toggleLocalMode,
+        .quickEdit
     ]
 }
