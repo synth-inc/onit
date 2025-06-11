@@ -20,6 +20,7 @@ struct ContentView: View {
     @Default(.showOnboardingAccessibility) var showOnboardingAccessibility
     @Default(.showTwoWeekProTrialEndedAlert) var showTwoWeekProTrialEndedAlert
     @Default(.hasClosedTrialEndedAlert) var hasClosedTrialEndedAlert
+    @State private var showBanner: Bool = true
     
     static let bottomPadding: CGFloat = 0
     
@@ -84,6 +85,20 @@ struct ContentView: View {
                         
                         if state.showChatView { ChatView().transition(.opacity) }
                         else { Spacer() }
+                        
+                        if showBanner {
+                            BottomBanner(
+                                title: "Upgrade to Pro for unlimited access",
+                                buttonText: "Upgrade",
+                                buttonIcon: "sparkles",
+                                buttonAction: {
+                                    // Handle upgrade action
+                                },
+                                onClose: {
+                                    showBanner = false
+                                }
+                            )
+                        }
                     }
                     
                     if state.showChatView {
