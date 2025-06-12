@@ -17,12 +17,46 @@ struct QuickEditView: View {
     @State private var displayedPrompt: Prompt?
     
     @Default(.showTwoWeekProTrialEndedAlert) var showTwoWeekProTrialEndedAlert
+    @Default(.autoContextFromCurrentWindow) var autoContextFromCurrentWindow
     
-    private let maxWidth: CGFloat = 365
+    @ObservedObject private var accessibilityPermissionManager = AccessibilityPermissionManager.shared
+    
+    @State private var currentWindowInfo: (
+        appBundleUrl: URL?,
+        name: String?,
+        pid: pid_t?
+    ) = (nil, nil, nil)
+    
+    @State private var isAddingContext: Bool = false
+    
     private let maxTextHeight: CGFloat = 100
     
     private var showingAlert: Bool {
         showTwoWeekProTrialEndedAlert || appState.showFreeLimitAlert || appState.showProLimitAlert
+    }
+    
+    var accessibilityEnabled: Bool {
+        accessibilityPermissionManager.accessibilityPermissionStatus == .granted
+    }
+    
+    var shouldShowWindowContext: Bool {
+        return autoContextFromCurrentWindow && 
+               accessibilityEnabled && 
+               currentWindowInfo.name != nil &&
+               (isWindowAlreadyInContext || isAddingContext)
+    }
+    
+    var isWindowAlreadyInContext: Bool {
+        guard let windowName = currentWindowInfo.name else {
+            return false
+        }
+        
+        return windowState.pendingContextList.contains { context in
+            if case .auto(let autoContext) = context {
+                return windowName == autoContext.appTitle
+            }
+            return false
+        }
     }
     
     var body: some View {
@@ -46,7 +80,7 @@ struct QuickEditView: View {
         }
         .background(VibrantVisualEffectView { Color.quickEditBG })
         .addBorder(cornerRadius: 14, lineWidth: 1, stroke: .T_4)
-        .frame(minWidth: 320, maxWidth: maxWidth, minHeight: 120, maxHeight: 605)
+        .frame(minWidth: 360, minHeight: 120, maxHeight: 605)
         .onChange(of: windowState.generatingPrompt) { _, generatingPrompt in
             if let generatingPrompt = generatingPrompt {
                 displayedPrompt = generatingPrompt
@@ -57,6 +91,25 @@ struct QuickEditView: View {
                 displayedPrompt = lastPrompt
             }
         }
+        .onAppear {
+            loadCurrentWindowInfo()
+            
+            if autoContextFromCurrentWindow && accessibilityEnabled {
+                addCurrentWindowToContext()
+            }
+        }
+        .onChange(of: windowState.pendingContextList) { _, newContextList in
+            if isAddingContext,
+               let windowName = currentWindowInfo.name,
+               newContextList.contains(where: { context in
+                   if case .auto(let autoContext) = context {
+                       return windowName == autoContext.appTitle
+                   }
+                   return false
+               }) {
+                isAddingContext = false
+            }
+        }
     }
 }
 
@@ -65,14 +118,34 @@ struct QuickEditView: View {
 extension QuickEditView {
     private var headerView: some View {
         HStack(alignment: .center, spacing: 8) {
-            IconButton(
-                icon: .addContext,
-                iconSize: 18,
-                action: {
-                    // TODO: KNA - Quick Edit
-                },
-                tooltipPrompt: "Add window context"
-            )
+            if shouldShowWindowContext,
+               let appBundleUrl = currentWindowInfo.appBundleUrl,
+               let windowName = currentWindowInfo.name {
+                ContextTag(
+                    text: windowName,
+                    textColor: .T_2,
+                    hoverTextColor: .T_2,
+                    background: .clear,
+                    hoverBackground: .T_8,
+                    maxWidth: 250,
+                    isLoading: isAddingContext,
+                    iconBundleURL: isAddingContext ? nil : appBundleUrl,
+                    iconView: isAddingContext ? LoaderPulse() : nil,
+                    tooltip: windowName,
+                    action: isAddingContext ? nil : { showContextWindow(windowName: windowName) },
+                    removeAction: isAddingContext ? nil : { removeCurrentWindowFromContext() }
+                )
+                .buttonStyle(PlainButtonStyle())
+            } else {
+                IconButton(
+                    icon: .addContext,
+                    iconSize: 18,
+                    action: {
+                        addCurrentWindowToContext()
+                    },
+                    tooltipPrompt: "Add window context"
+                )
+            }
             
             Spacer()
             
@@ -134,5 +207,64 @@ extension QuickEditView {
                 windowState.sendAction(accountId: appState.account?.id)
             }
         }
+    }
+    
+    // MARK: Window Context
+    
+    private func loadCurrentWindowInfo() {
+        let windowsManager = AccessibilityNotificationsManager.shared.windowsManager
+        
+        if let trackedWindow = windowsManager.activeTrackedWindow,
+           let pid = trackedWindow.element.pid(),
+           let windowApp = NSRunningApplication(processIdentifier: pid)
+        {
+            let windowAppBundleUrl = windowApp.bundleURL
+            let windowName = trackedWindow.element.title() ?? trackedWindow.element.appName()
+            
+            currentWindowInfo = (windowAppBundleUrl, windowName, pid)
+        }
+    }
+    
+    private func addCurrentWindowToContext() {
+        guard let pid = currentWindowInfo.pid,
+              let focusedWindow = pid.firstMainWindow,
+              !isAddingContext,
+              !isWindowAlreadyInContext else {
+            return
+        }
+        
+        isAddingContext = true
+        
+        let _ = AccessibilityNotificationsManager.shared.windowsManager.append(focusedWindow, pid: pid)
+        AccessibilityNotificationsManager.shared.fetchAutoContext(pid: pid, state: windowState)
+    }
+    
+    private func removeCurrentWindowFromContext() {
+        guard let windowName = currentWindowInfo.name else {
+            return
+        }
+        
+        windowState.pendingContextList.removeAll { context in
+            if case .auto(let autoContext) = context {
+                return windowName == autoContext.appTitle
+            }
+            return false
+        }
+    }
+    
+    private func showContextWindow(windowName: String) {
+        guard let context = windowState.pendingContextList.first(where: { context in
+            if case .auto(let autoContext) = context {
+                return windowName == autoContext.appTitle
+            }
+            return false
+        }) else {
+            return
+        }
+        
+        ContextWindowsManager.shared.showContextWindow(
+            windowState: windowState,
+            context: context
+        )
     }
 }
