@@ -30,6 +30,18 @@ class WhisperService {
         data.append(dispositionData)
         data.append(whisperData)
         
+        // Configuring Whipser API to return `no_speech_prob`.
+        guard let responseFormatBoundaryData = "--\(boundary)\r\n".data(using: .utf8),
+              let responseDispositionData = "Content-Disposition: form-data; name=\"response_format\"\r\n\r\n".data(using: .utf8),
+              let responseFormatData = "verbose_json\r\n".data(using: .utf8)
+        else {
+            throw FetchingError.invalidResponse(message: "Failed to encode response_format parameter")
+        }
+        
+        data.append(responseFormatBoundaryData)
+        data.append(responseDispositionData)
+        data.append(responseFormatData)
+        
         // Add file data
         guard let boundaryData = "--\(boundary)\r\n".data(using: .utf8),
               let dispositionData = "Content-Disposition: form-data; name=\"file\"; filename=\"audio.m4a\"\r\n".data(using: .utf8),
@@ -57,11 +69,19 @@ class WhisperService {
             let message = HTTPURLResponse.localizedString(forStatusCode: httpResponse.statusCode)
             throw FetchingError.invalidResponse(message: message)
         }
-        let responseDecoded = try JSONDecoder().decode(WhisperResponse.self, from: responseData)
+        
+        let decoder = JSONDecoder()
+        let responseDecoded = try decoder.decode(WhisperServiceVerbose.self, from: responseData)
+        
+        // Requiring 70% speech confidence to pass.
+        let containsSpeech = responseDecoded.segments.contains { segment in
+            let speechConfidenceInterval = 1 - segment.no_speech_prob
+            return speechConfidenceInterval >= WhisperServiceVerbose.requiredSpeechConfidenceInterval
+        }
+        
+        // If Whisper is confident there is no speech, just return an empty string.
+        // Otherwise, return the transcribed text.
+        guard containsSpeech else { return "" }
         return responseDecoded.text
     }
-}
-
-struct WhisperResponse: Codable {
-    let text: String
 }

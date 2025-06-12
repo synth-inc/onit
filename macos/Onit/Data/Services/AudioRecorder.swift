@@ -15,9 +15,11 @@ class AudioRecorder: NSObject, ObservableObject {
     private var audioFileURL: URL?
     private var levelTimer: Timer?
     private var lastSignificantAudioTime: Date?
-    private let silenceThreshold: Float = 0.02
     private var minDB: Float = 0.0
     private var maxDB: Float = -100.0
+    private let silenceThreshold: Float = -30.0 // Prevents audio from being recorded if it has less DB than this value (silence detection).
+    private var consecutiveSignificantSamples = 0
+    private let requiredConsecutiveSamples = 3  // Required amount of above-threshold samples for valid audio transcription.
     
     override init() {
         super.init()
@@ -65,8 +67,9 @@ class AudioRecorder: NSObject, ObservableObject {
             // Start monitoring audio levels
             startMonitoringAudioLevels()
             
-            // Reset the last significant audio time
-            lastSignificantAudioTime = Date()
+            // Reset/clean up values for new recording.
+            lastSignificantAudioTime = nil
+            consecutiveSignificantSamples = 0
             return true
         } catch {
             print("Could not start recording: \(error)")
@@ -100,14 +103,25 @@ class AudioRecorder: NSObject, ObservableObject {
                 self.maxDB = max(self.maxDB, averagePower)
 
                 // Convert decibels to a linear scale (0.0 to 1.0)
-                let normalizedValue = max(0.0, (averagePower - self.minDB) / abs(self.maxDB - self.minDB))
+                let dbRange = abs(self.maxDB - self.minDB)
+                let normalizedValue = dbRange > 0.1 ? max(0, (averagePower - self.minDB) / dbRange) : 0
                 
                 // Apply more smoothing to avoid jumpy animation
                 self.audioLevel = min(1.0, self.audioLevel * 0.85 + normalizedValue * 0.15)
                 
                 // Check if we have significant audio
-                if self.audioLevel > self.silenceThreshold {
-                    self.lastSignificantAudioTime = Date()
+                // Using `silenceThreshold` to detect actual speech vs. ambient noise.
+                if averagePower > self.silenceThreshold {
+                    self.consecutiveSignificantSamples += 1
+                    
+                    let hasSustainedSignificantAudio = self.consecutiveSignificantSamples >= self.requiredConsecutiveSamples
+                    
+                    if hasSustainedSignificantAudio {
+                        self.lastSignificantAudioTime = Date()
+                    }
+                } else {
+                    // Reset counter if we drop below threshold.
+                    self.consecutiveSignificantSamples = 0
                 }
             }
         }
@@ -125,5 +139,9 @@ class AudioRecorder: NSObject, ObservableObject {
     
     func clearError() {
         recordingError = nil
+    }
+    
+    func recordingIsNotSilent() -> Bool {
+        return lastSignificantAudioTime != nil
     }
 }

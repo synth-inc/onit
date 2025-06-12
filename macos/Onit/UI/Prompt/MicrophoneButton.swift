@@ -204,6 +204,13 @@ extension MicrophoneButton {
         }
         
         guard let audioURL = audioRecorder.stopRecording() else { return }
+        
+        // Preventing transcription of silent recordings.
+        guard audioRecorder.recordingIsNotSilent() else {
+            removeSpacesAtCursor()
+            return
+        }
+        
         audioRecorder.isTranscribing = true
         
         guard let clientOpenAIToken = openAIToken, !clientOpenAIToken.isEmpty else {
