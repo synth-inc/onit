@@ -20,6 +20,7 @@ class PanelStateUntetheredManager: PanelStateBaseManager, ObservableObject {
     // MARK: - Properties
     
     var lastScreenFrame = CGRect.zero
+    var hintYRelativePositionsByScreen: [String: CGFloat] = [:]
     
     private var globalMouseMonitor: Any?
     private var localMouseMonitor: Any?
@@ -98,6 +99,7 @@ class PanelStateUntetheredManager: PanelStateBaseManager, ObservableObject {
         super.stop()
         
         lastScreenFrame = CGRect.zero
+        hintYRelativePositionsByScreen = [:]
         statesByScreen = [:]
     }
     

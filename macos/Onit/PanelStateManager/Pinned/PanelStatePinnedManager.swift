@@ -21,6 +21,7 @@ class PanelStatePinnedManager: PanelStateBaseManager, ObservableObject {
     // MARK: - Properties
     
     var isResizingWindows: Bool = false
+    var hintYRelativePosition: CGFloat?
     
     private var lastScreenFrame = CGRect.zero
     private var globalMouseMonitor: Any?
@@ -114,6 +115,8 @@ class PanelStatePinnedManager: PanelStateBaseManager, ObservableObject {
         draggingWindow = nil
         
         state.removeDelegate(self)
+        
+        hintYRelativePosition = nil
         
         super.stop()
     }

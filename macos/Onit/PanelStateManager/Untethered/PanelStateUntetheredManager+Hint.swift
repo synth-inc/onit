@@ -40,7 +40,6 @@ extension PanelStateUntetheredManager {
 
         let buttonView = NSHostingView(rootView: tetherView)
         tetherHintDetails.tetherWindow.contentView = buttonView
-        tetherHintDetails.lastYComputed = nil
         tetherButtonPanelState = state
 
         if shouldShowOnboarding {
@@ -57,11 +56,17 @@ extension PanelStateUntetheredManager {
         let activeScreenFrame = screen.visibleFrame
         let positionX = activeScreenFrame.maxX - ExternalTetheredButton.containerWidth
         var positionY: CGFloat
-        
-        if lastYComputed == nil {
-            positionY = activeScreenFrame.minY + (activeScreenFrame.height / 2) - (ExternalTetheredButton.containerHeight / 2)
+        let screenKey = screenKey(for: screen)
+		
+        if let relativePosition = hintYRelativePositionsByScreen[screenKey] {
+            positionY = activeScreenFrame.minY + (relativePosition * activeScreenFrame.height) - (ExternalTetheredButton.containerHeight / 2)
+            positionY = max(activeScreenFrame.minY, min(positionY, activeScreenFrame.maxY - ExternalTetheredButton.containerHeight))
+            
+            if let state = tetherButtonPanelState {
+                state.tetheredButtonYRelativePosition = relativePosition
+            }
         } else {
-            positionY = computeHintYPosition(for: activeScreenFrame, offset: lastYComputed)
+            positionY = activeScreenFrame.minY + (activeScreenFrame.height / 2) - (ExternalTetheredButton.containerHeight / 2)
         }
         
         let frame = NSRect(
@@ -112,10 +117,12 @@ extension PanelStateUntetheredManager {
         
         tetherHintDetails.lastYComputed = lastYComputed
         
+        let relativeY = (lastYComputed + (ExternalTetheredButton.containerHeight / 2) - screenFrame.minY) / screenFrame.height
+        let screenKey = screenKey(for: screen)
+        hintYRelativePositionsByScreen[screenKey] = max(0.0, min(1.0, relativeY))
+        
         if let state = tetherButtonPanelState {
-            state.tetheredButtonYPosition = screenFrame.height -
-                (lastYComputed - screenFrame.minY) -
-                ExternalTetheredButton.containerHeight + (TetheredButton.height / 2)
+            state.tetheredButtonYRelativePosition = hintYRelativePositionsByScreen[screenKey]
         }
 
         let frame = NSRect(
@@ -126,5 +133,20 @@ extension PanelStateUntetheredManager {
         )
         
         tetherHintDetails.tetherWindow.setFrame(frame, display: true)
+        
+        if shouldShowOnboarding {
+            let positionX = screenFrame.maxX - ExternalTetheredButton.containerWidth
+            let tutorialFrame = NSRect(
+                x: positionX - (TetherTutorialOverlay.width) + (ExternalTetheredButton.containerWidth / 2),
+                y: lastYComputed + (ExternalTetheredButton.containerHeight / 2) - ((TetherTutorialOverlay.height * 1.5) / 2),
+                width: (TetherTutorialOverlay.width * 1.5),
+                height: (TetherTutorialOverlay.height * 1.5)
+            )
+            tutorialWindow.setFrame(tutorialFrame, display: true)
+        }
+    }
+
+	private func screenKey(for screen: NSScreen) -> String {
+        return "\(screen.frame.origin.x)-\(screen.frame.origin.y)-\(screen.frame.width)-\(screen.frame.height)"
     }
 }
