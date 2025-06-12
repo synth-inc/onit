@@ -119,11 +119,9 @@ extension PanelStateUntetheredManager {
         
         let relativeY = (lastYComputed + (ExternalTetheredButton.containerHeight / 2) - screenFrame.minY) / screenFrame.height
         let screenKey = screenKey(for: screen)
-        hintYRelativePositionsByScreen[screenKey] = max(0.0, min(1.0, relativeY))
         
-        if let state = tetherButtonPanelState {
-            state.tetheredButtonYRelativePosition = hintYRelativePositionsByScreen[screenKey]
-        }
+        hintYRelativePositionsByScreen[screenKey] = max(0.0, min(1.0, relativeY))
+        tetherButtonPanelState?.tetheredButtonYRelativePosition = hintYRelativePositionsByScreen[screenKey]
 
         let frame = NSRect(
             x: tetherHintDetails.tetherWindow.frame.origin.x,
