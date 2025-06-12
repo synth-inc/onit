@@ -117,11 +117,8 @@ extension ChatView {
     private var footerNotificationsList: some View {
         if !footerNotifications.isEmpty {
             ZStack {
-                ForEach(footerNotifications.indices, id: \.self) { index in
-                    let footerNotification = footerNotifications[index]
-                    
+                ForEach(footerNotifications, id: \.self) { footerNotification in
                     ContentViewFooterNotification(
-                        index: index,
                         footerNotification: footerNotification
                     )
                 }

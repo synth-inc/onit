@@ -5,7 +5,6 @@
 //  Created by OpenAI Codex on 2024.
 //
 
-import Defaults
 import SwiftUI
 
 struct MenuJoinDiscord: View {

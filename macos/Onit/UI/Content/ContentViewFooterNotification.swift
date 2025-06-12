@@ -11,14 +11,9 @@ import SwiftUI
 struct ContentViewFooterNotification: View {
     @Environment(\.appState) private var appState
     
-    let index: Int
     let footerNotification: FooterNotification
     
-    init(
-        index: Int,
-        footerNotification: FooterNotification
-    ) {
-        self.index = index
+    init(footerNotification: FooterNotification) {
         self.footerNotification = footerNotification
     }
     
