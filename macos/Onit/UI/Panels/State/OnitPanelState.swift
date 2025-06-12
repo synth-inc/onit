@@ -23,6 +23,8 @@ import SwiftUI
 @Observable
 class OnitPanelState: NSObject {
     
+    @ObservationIgnored var defaultEnvironmentSource: String? = nil
+    
     /// Clients
     let client = FetchingClient()
     let streamingClient = StreamingClient()

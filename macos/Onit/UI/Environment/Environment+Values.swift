@@ -10,7 +10,11 @@ import SwiftUI
 private struct OnitPanelStateKey: @preconcurrency EnvironmentKey {
     
     @MainActor
-    static let defaultValue: OnitPanelState = OnitPanelState()
+    static let defaultValue: OnitPanelState = {
+        let state = OnitPanelState()
+        state.defaultEnvironmentSource = "EnvironmentKey"
+        return state
+    }()
 }
 
 private struct OnitAppStateKey: @preconcurrency EnvironmentKey {
