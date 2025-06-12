@@ -355,17 +355,17 @@ extension OnitPanelState {
     }
     
     func replacePartialResponse(prompt: Prompt, response: Response) {
-        // TODO could this cause isues where the generation index is beyond the lnegth of responses?
+        // TODO could this cause isues where the generation index is beyond the length of responses?
         if let partialResponseIndex = prompt.responses.firstIndex(where: { $0.isPartial }) {
             prompt.responses.remove(at: partialResponseIndex)
         }
         // We don't need to add the response if the generation was stopped we're removing the partial responses.
         if generationStopped == false || Defaults[.stopMode] != .removePartial {
             prompt.responses.append(response)
-        }
-        prompt.generationState = .done
-        do { try container.mainContext.save() } catch {
-            print("replacePartialResponse - Save failed!")
+            prompt.generationState = .done
+            do { try container.mainContext.save() } catch {
+                print("replacePartialResponse - Save failed!")
+            }
         }
     }
     

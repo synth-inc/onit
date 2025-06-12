@@ -10,6 +10,7 @@ import Defaults
 
 struct StopGenerationButton: View {
     @Environment(\.windowState) private var state
+    @State private var isHovered: Bool = false
 
     private let shortcut = KeyboardShortcut(.delete, modifiers: [.command])
 
@@ -33,12 +34,15 @@ struct StopGenerationButton: View {
             .frame(height: 26)
         }
         .buttonStyle(PlainButtonStyle())
-        .background(.gray800)
+        .background(isHovered ? .gray400 : .gray800)
         .cornerRadius(6)
         .overlay(
             RoundedRectangle(cornerRadius: 6)
                 .stroke(.gray500, lineWidth: 1)
         )
         .keyboardShortcut(shortcut)
+        .onHover { hovering in
+            isHovered = hovering
+        }
     }
 }
