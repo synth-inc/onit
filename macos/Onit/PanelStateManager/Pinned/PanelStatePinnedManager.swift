@@ -234,7 +234,7 @@ class PanelStatePinnedManager: PanelStateBaseManager, ObservableObject {
 
             // In Pinned mode, we should only reset the frame if it's still bordering the panel. 
             // Instead of using the initial frame, we should add panelWidth back to the window, so it goes all the way to the edge of the screen.
-            if let currentFrame = element.getFrame() {
+            if let currentFrame = element.getFrame(convertedToGlobalCoordinateSpace: true) {
                 let screenFrame = NSScreen.main?.visibleFrame ?? .zero
                 let isNearPanel = abs((screenFrame.maxX - panelWidth) - currentFrame.maxX) <= 2
 
