@@ -145,7 +145,7 @@ class AccessibilityNotificationsManager: ObservableObject {
         case kAXSelectedTextChangedNotification:
             self.handleSelectionChange(for: element)
         case kAXValueChangedNotification:
-            self.handleValueChanged(for: element)
+            self(handleValueChanged(for: element))
         case kAXWindowMovedNotification:
             self.handleWindowMoved(for: element, elementPid: elementPid)
         case kAXWindowResizedNotification:
@@ -404,7 +404,7 @@ class AccessibilityNotificationsManager: ObservableObject {
                             try await Task.sleep(nanoseconds: 10_000_000_000) // 10 second timeout
                             throw NSError(domain: "AccessibilityParsingTimeout", code: 1, userInfo: nil)
                         }
-                        let firstCompleted = try await group.next()!
+                        guard let firstCompleted = try await group.next() else { return nil }
                         group.cancelAll()
                         return firstCompleted
                     }
@@ -416,7 +416,7 @@ class AccessibilityNotificationsManager: ObservableObject {
                     await MainActor.run {
                         print("Accessibility timeout")
                         self.timedOutWindowHash.insert(windowHash)
-                        AnalyticsManager.Accessibility.parseTimedOut(appName: appName)
+                        AnalyticsManager.Accessibility.parseTimedOut(appName: appName, applicationTitle: window.title() ?? "", method: "parseAccessibility")
                         self.screenResult = .init()
                         self.screenResult.errorMessage = "Timeout occurred, could not read application in reasonable amount of time."
                         self.showDebug()
@@ -529,6 +529,13 @@ class AccessibilityNotificationsManager: ObservableObject {
         
         let input = Input(selectedText: selectedText, application: currentSource ?? "")
         PanelStateCoordinator.shared.state.pendingInput = input
+
+        // Add highlighted text entry to history
+        if Defaults[.storeHistory] {
+            let appName = currentSource ?? ""
+            let windowTitle = windowsManager.activeTrackedWindow?.title
+            HistoryManager.shared.highlightedText.add(text: selectedText, applicationName: appName, applicationTitle: windowTitle ?? "", method: "highlightedText")
+        }
     }
     
     private func getUserInput(for element: AXUIElement) -> AccessibilityUserInput? {

@@ -113,7 +113,7 @@ class TypeaheadLearningService {
             existingCase.followingText = input.followingText
             existingCase.timestamp = Date()
         } else {
-            let newCase = TypeaheadCase(
+            let newCase = TypeAheadTestCase(
                 applicationName: screenResult.applicationName ?? "",
                 applicationTitle: screenResult.applicationTitle,
                 screenContent: screenResult.others?.values.joined(separator: "\n\n") ?? "",
@@ -139,7 +139,7 @@ class TypeaheadLearningService {
             existingCase.aiCompletion = aiCompletion
             existingCase.timestamp = Date()
         } else {
-            let newCase = TypeaheadCase(
+            let newCase = TypeAheadTestCase(
                 applicationName: screenResult.applicationName ?? "",
                 applicationTitle: screenResult.applicationTitle,
                 screenContent: screenResult.others?.values.joined(separator: "\n\n") ?? "",
@@ -155,12 +155,12 @@ class TypeaheadLearningService {
         try? modelContext.save()
     }
     
-    func getCases(limit: Int? = nil) async throws -> [TypeaheadCase] {
+    func getCases(limit: Int? = nil) async throws -> [TypeAheadTestCase] {
         guard Defaults[.typeaheadLearningConfig].isEnabled
         else { return [] }
         
-        var descriptor = FetchDescriptor<TypeaheadCase>(
-            sortBy: [SortDescriptor(\TypeaheadCase.timestamp, order: .reverse)]
+        var descriptor = FetchDescriptor<TypeAheadTestCase>(
+            sortBy: [SortDescriptor(\TypeAheadTestCase.timestamp, order: .reverse)]
         )
         
         descriptor.fetchLimit = limit
@@ -196,17 +196,17 @@ class TypeaheadLearningService {
     private func getFetchDescriptor(
         input: AccessibilityUserInput,
         screenResult: ScreenResult
-    ) -> FetchDescriptor<TypeaheadCase>? {
+    ) -> FetchDescriptor<TypeAheadTestCase>? {
         guard let applicationName = screenResult.applicationName else { return nil }
         let applicationTitle = screenResult.applicationTitle
         
-        return FetchDescriptor<TypeaheadCase>(
-            predicate: #Predicate<TypeaheadCase> {
+        return FetchDescriptor<TypeAheadTestCase>(
+            predicate: #Predicate<TypeAheadTestCase> {
                 $0.applicationName == applicationName &&
                 $0.applicationTitle == applicationTitle
             },
             sortBy: [
-                SortDescriptor(\TypeaheadCase.timestamp, order: .reverse)
+                SortDescriptor(\TypeAheadTestCase.timestamp, order: .reverse)
             ]
         )
     }

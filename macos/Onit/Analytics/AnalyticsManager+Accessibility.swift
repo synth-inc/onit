@@ -24,10 +24,12 @@ extension AnalyticsManager {
             AnalyticsManager.sendCommonEvent(event: "accessibility_flags_changes")
         }
         
-        @MainActor static func parseTimedOut(appName: String) {
+        @MainActor static func parseTimedOut(appName: String, applicationTitle: String?, method: String) {
             var properties = AnalyticsManager.getCommonProperties()
             
             properties["app_name"] = appName
+            properties["app_title"] = applicationTitle
+            properties["method"] = method
             
             PostHogSDK.shared.capture("accessibility_parse_timed_out", properties: properties)
         }

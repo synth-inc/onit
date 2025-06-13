@@ -9,7 +9,7 @@ import SwiftData
 import Foundation
 
 @Model
-final class TypeaheadCase {
+final class TypeAheadTestCase {
     var applicationName: String
     var applicationTitle: String?
     var screenContent: String

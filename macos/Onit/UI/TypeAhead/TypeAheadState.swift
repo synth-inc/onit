@@ -20,7 +20,7 @@ final class TypeAheadState {
     
     // MARK: - Properties
     
-    var request: Request?
+    var request: TypeAheadRequest?
     var isLoading = false
     var error: TypeAheadError?
     var isCompletionInserted = false
@@ -34,7 +34,7 @@ final class TypeAheadState {
     
     private var requestQueue = RequestQueue()
     
-    struct Request {
+    struct TypeAheadRequest {
         let input: AccessibilityUserInput
         let screenResult: ScreenResult
         var completion: String = ""
@@ -64,7 +64,7 @@ final class TypeAheadState {
     
     // MARK: - Private functions
     
-    private func insertSuggestion(request: Request) {
+    private func insertSuggestion(request: TypeAheadRequest) {
         if !isLoading && !request.completion.isEmpty {
             // Copy/Paste trick
             let pasteboard = NSPasteboard.general
@@ -116,7 +116,7 @@ final class TypeAheadState {
         moreSuggestionsState.reset()
     }
     
-    private func updateShouldShow(request: Request) {
+    private func updateShouldShow(request: TypeAheadRequest) {
         let config = Defaults[.typeaheadConfig]
         let inputText = request.input.fullText.trimmingCharacters(in: .whitespacesAndNewlines)
         let appName = request.screenResult.applicationName ?? ""
@@ -132,7 +132,7 @@ final class TypeAheadState {
             let manager = AccessibilityNotificationsManager.shared
             
             for try await userInput in manager.$userInput.values {
-                let request = Request(input: userInput, screenResult: manager.screenResult)
+                let request = TypeAheadRequest(input: userInput, screenResult: manager.screenResult)
                 
                 await handleUserInputChange(request)
             }
@@ -161,7 +161,7 @@ final class TypeAheadState {
         }
     }
     
-    private func handleUserInputChange(_ request: Request) async {
+    private func handleUserInputChange(_ request: TypeAheadRequest) async {
         await requestQueue.cancelAll()
         
         updateShouldShow(request: request)
@@ -181,7 +181,7 @@ final class TypeAheadState {
         }
     }
     
-    private func requestCompletion(request: Request) async {
+    private func requestCompletion(request: TypeAheadRequest) async {
         await MainActor.run {
             reset(loading: true)
         }

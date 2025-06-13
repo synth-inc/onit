@@ -123,7 +123,7 @@ class TypeaheadTestingService {
         return results
     }
     
-    private func runTest(model: String, test: TypeaheadTest, testCase: TypeaheadCase) async throws -> [String: String] {
+    private func runTest(model: String, test: TypeaheadTest, testCase: TypeAheadTestCase) async throws -> [String: String] {
         let localMessages = buildMessages(testCase: testCase, systemMessage: test.systemMessage, userMessage: test.userMessage)
         let keepAlive: String? = test.parameters[TypeaheadTest.Parameter.keepAlive]
         var options = LocalChatOptions()
@@ -189,7 +189,7 @@ class TypeaheadTestingService {
         return Double(commonWords) / Double(completionWords.count)
     }
     
-    private func buildMessages(testCase: TypeaheadCase, systemMessage: String, userMessage: String) -> [LocalChatMessage] {
+    private func buildMessages(testCase: TypeAheadTestCase, systemMessage: String, userMessage: String) -> [LocalChatMessage] {
         let finalSystemMessage = systemMessage
             .replacingOccurrences(of: TypeaheadTest.Message.applicationName, with: testCase.applicationName)
             .replacingOccurrences(of: TypeaheadTest.Message.applicationTitle, with: testCase.applicationTitle ?? "")

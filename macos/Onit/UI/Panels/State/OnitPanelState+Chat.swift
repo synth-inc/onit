@@ -217,7 +217,7 @@ extension OnitPanelState {
                     )
                     
                     if Defaults[.streamResponse].local {
-                        prompt.generationState = .streaming                        
+                        prompt.generationState = .streaming
                         let asyncText = try await streamingClient.localChat(
                             systemMessage: systemPrompt.prompt,
                             instructions: instructionsHistory,

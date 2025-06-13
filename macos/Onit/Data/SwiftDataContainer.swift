@@ -16,7 +16,7 @@ actor SwiftDataContainer {
             let schema = Schema([
                 Chat.self,
                 SystemPrompt.self,
-                TypeaheadCase.self
+                TypeAheadTestCase.self
             ])
                         
             let container = try ModelContainer(for: schema) // , migrationPlan: migrationPlan)
@@ -67,7 +67,7 @@ actor SwiftDataContainer {
         let promptDescriptor = FetchDescriptor<Prompt>()
         do {
             let prompts = try context.fetch(promptDescriptor)
-            for prompt in prompts {                
+            for prompt in prompts {
                 // Update each response's instruction field
                 for response in prompt.responses {
                     response.instruction = prompt.instruction
