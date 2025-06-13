@@ -44,5 +44,6 @@ struct StopGenerationButton: View {
         .onHover { hovering in
             isHovered = hovering
         }
+        .addAnimation(dependency: isHovered)
     }
 }

@@ -210,7 +210,7 @@ extension OnitPanelState {
                     }
                     
                     if Defaults[.streamResponse].local {
-                        prompt.generationState = .streaming                        
+                        prompt.generationState = .streaming
                         let asyncText = try await streamingClient.localChat(
                             systemMessage: systemPrompt.prompt,
                             instructions: instructionsHistory,
@@ -307,12 +307,14 @@ extension OnitPanelState {
             do {
                 try container.mainContext.save()
                 // Reset the nextPrompt/priorPrompt links, to account for the removed prompt. We only want to do this if the save succeeded.
-                for existingPrompt in currentChat?.prompts ?? [] {
-                    if existingPrompt.nextPrompt?.id == prompt.id {
-                        existingPrompt.nextPrompt = prompt.nextPrompt
-                    }
-                    if existingPrompt.priorPrompt?.id == prompt.id {
-                        existingPrompt.priorPrompt = prompt.priorPrompt
+                if let chatPrompts = currentChat?.prompts {
+                    for existingPrompt in chatPrompts {
+                        if existingPrompt.nextPrompt?.id == prompt.id {
+                            existingPrompt.nextPrompt = prompt.nextPrompt
+                        }
+                        if existingPrompt.priorPrompt?.id == prompt.id {
+                            existingPrompt.priorPrompt = prompt.priorPrompt
+                        }
                     }
                 }
             } catch {
@@ -364,6 +366,7 @@ extension OnitPanelState {
             prompt.responses.append(response)
             prompt.generationState = .done
             do { try container.mainContext.save() } catch {
+                container.mainContext.rollback()
                 print("replacePartialResponse - Save failed!")
             }
         }
