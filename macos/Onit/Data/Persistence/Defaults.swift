@@ -116,6 +116,9 @@ extension Defaults.Keys {
     // Alerts
     static let showTwoWeekProTrialEndedAlert = Key<Bool>("showTwoWeekProTrialEndedAlert", default: false)
     static let hasClosedTrialEndedAlert = Key<Bool>("hasClosedTrialEndedAlert", default: false)
+
+    // Stop generation behavior
+    static let stopMode = Key<StopMode>("stopMode", default: .removePartial)
 }
 
 extension NSRect: Defaults.Serializable {

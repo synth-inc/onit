@@ -44,26 +44,42 @@ struct ChatView: View {
                                 }
                         }
                     }
-                    
-                    if hasUserManuallyScrolled {
+                    // Floating action buttons area
+                    if state.generatingPrompt != nil || hasUserManuallyScrolled {
                         HStack {
                             Spacer()
-                            IconButton(
-                                icon: .arrowDown,
-                                buttonSize: 36,
-                                action: {
-                                    hasUserManuallyScrolled = false
-                                },
-                                activeColor: .white,
-                                inactiveColor: .white,
-                                tooltipPrompt: "Scroll to bottom",
-                                hoverBackgroundColor: .gray400
-                            )
-                            .background(.gray600)
-                            .addBorder(cornerRadius: 18, stroke: .gray400)
-                            .transition(.scale.combined(with: .opacity))
-                            .padding(.trailing, 20)
+                            
+                            if state.generatingPrompt != nil {
+                                StopGenerationButton()
+                                    .offset(x: 18, y: 0) // This centers it to account for the scroll button frame
+                            }
+                            
+                            Spacer()
+                            
+                            if hasUserManuallyScrolled {
+                                IconButton(
+                                    icon: .arrowDown,
+                                    buttonSize: 36,
+                                    action: {
+                                        hasUserManuallyScrolled = false
+                                    },
+                                    activeColor: .white,
+                                    inactiveColor: .white,
+                                    tooltipPrompt: "Scroll to bottom",
+                                    hoverBackgroundColor: .gray400
+                                )
+                                .background(.gray600)
+                                .addBorder(cornerRadius: 18, stroke: .gray400)
+                                .transition(.scale.combined(with: .opacity))
+                                .padding(.trailing, 20)
+                            } else {
+                                // Placeholders.
+                                Color.clear
+                                    .frame(width: 36, height: 36)
+                                    .padding(.trailing, 20)
+                            }
                         }
+                        .background(.clear)
                         .padding(.bottom, 4)
                     }
                 }
@@ -85,7 +101,6 @@ struct ChatView: View {
             }
             
             PromptCore()
-            
             if currentPromptsCount <= 0 { Spacer() }
         }
         .drag()

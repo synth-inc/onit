@@ -129,6 +129,7 @@ class OnitPanelState: NSObject {
     var generateTask: Task<Void, Never>? = nil
     var generatingPrompt: Prompt?
     var generatingPromptPriorState: GenerationState?
+    var generationStopped: Bool = false
     
     /// Don't leave this text empty to ensure the first scroll works.
     var streamedResponse: String = " "
