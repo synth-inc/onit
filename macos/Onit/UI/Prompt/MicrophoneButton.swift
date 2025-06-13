@@ -141,12 +141,13 @@ extension MicrophoneButton {
         removeSpacesAtCursor()
         
         let cursorPosition = windowState.pendingInstructionCursorPosition
+        let cursorPositionWithinBounds = min(max(0, cursorPosition), windowState.pendingInstruction.count)
         
         windowState.pendingInstruction.insert(
             contentsOf: transcription,
             at: windowState.pendingInstruction.index(
                 windowState.pendingInstruction.startIndex,
-                offsetBy: cursorPosition
+                offsetBy: cursorPositionWithinBounds
             )
         )
         
@@ -247,17 +248,21 @@ extension MicrophoneButton {
         guard addedRecordingSpaces else { return }
         
         let cursorPosition = windowState.pendingInstructionCursorPosition
+        
         let startPosition = cursorPosition
-        let endPosition = max(0, startPosition + recordingSpacesCount)
+        let startPositionWithinBounds = min(max(0, startPosition), windowState.pendingInstruction.count)
         
         let startIndex = windowState.pendingInstruction.index(
             windowState.pendingInstruction.startIndex,
-            offsetBy: startPosition
+            offsetBy: startPositionWithinBounds
         )
+        
+        let endPosition = max(0, startPosition + recordingSpacesCount)
+        let endPositionWithinBounds = min(max(0, endPosition), windowState.pendingInstruction.count)
         
         let endIndex = windowState.pendingInstruction.index(
             windowState.pendingInstruction.startIndex,
-            offsetBy: endPosition
+            offsetBy: endPositionWithinBounds
         )
         
         windowState.pendingInstruction.removeSubrange(startIndex..<endIndex)
