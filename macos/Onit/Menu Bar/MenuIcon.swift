@@ -14,9 +14,16 @@ struct MenuIcon: View {
 
     var body: some View {
         let statusGranted = accessibilityPermissionManager.accessibilityPermissionStatus == .granted
+#if BETA
+        Image(statusGranted ? .betaNoodle : .untrusted)
+            .renderingMode(statusGranted ? .template : .original)
+            .animation(.default, value: statusGranted)
+#else
         Image(statusGranted ? .smirk : .untrusted)
             .renderingMode(statusGranted ? .template : .original)
             .animation(.default, value: statusGranted)
+#endif
+            
     }
 }
 
