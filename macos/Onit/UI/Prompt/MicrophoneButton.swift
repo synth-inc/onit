@@ -31,7 +31,9 @@ struct MicrophoneButton: View {
     
     var body: some View {
         PromptCoreFooterButton(
-            text: audioRecorder.isRecording ? "􀊰 Stop" : "􀊰 Voice",
+            iconColor: audioRecorder.isRecording ? .red : .gray200,
+            icon: .microphone,
+            text: audioRecorder.isRecording ? "Stop" : "Voice",
             action: { handleMicrophonePress() },
             background: audioRecorder.isRecording ? Color.red.opacity(0.15) : .clear,
             hoverBackground: audioRecorder.isRecording ? Color.red.opacity(0.3) : .gray600,
@@ -162,12 +164,44 @@ extension MicrophoneButton {
         audioRecorder.isTranscribing = false
     }
     
+    // Each `group.addTask` might execute on a different thread.
+    // Therefore, `Sendable` is required here to tell the compiler that any value
+    //   returned from a group is safe to hop between threads.
+    // `Sendable` allows the Swift compiler to do the heavy lifting, ensuring that
+    //   mutable state isn't accidentally shared across threads (i.e. safe to hop).
+    private func transcribeWithTimeout<Result: Sendable>(
+        seconds: TimeInterval = 10,
+        operation: @Sendable @escaping () async throws -> Result
+    ) async throws -> Result {
+        try await withThrowingTaskGroup(of: Result.self) { group in
+            // Main task.
+            group.addTask { @Sendable in
+                return try await operation()
+            }
+            
+            // Timeout task.
+            group.addTask { @Sendable in
+                try await Task.sleep(nanoseconds: UInt64(seconds * 1_000_000_000))
+                throw FetchingError.timeout
+            }
+            
+            // Whichever task finishes first wins.
+            guard let result = try await group.next() else {
+                // Fallback. Probably won't hit this, but it never hurts to be extra sure.
+                throw FetchingError.timeout
+            }
+            
+            group.cancelAll()
+            return result
+        }
+    }
+    
     private func handleAudioOnClient(_ clientOpenAIToken: String, _ audioURL: URL) {
-        let whisperService = WhisperService(apiKey: clientOpenAIToken)
-        
-        transcriptionTask = Task {
+        transcriptionTask = Task { @MainActor in
             do {
-                let transcription = try await whisperService.transcribe(audioURL: audioURL)
+                let transcription = try await transcribeWithTimeout() { @Sendable in
+                    try await WhisperService(apiKey: clientOpenAIToken).transcribe(audioURL: audioURL)
+                }
                 
                 if !Task.isCancelled {
                     handleTranscriptionSuccess(transcription)
@@ -181,11 +215,11 @@ extension MicrophoneButton {
     }
     
     private func handleAudioOnServer(_ audioURL: URL) {
-        let serverTranscriptionService = TranscriptionService()
-        
-        transcriptionTask = Task {
+        transcriptionTask = Task { @MainActor in
             do {
-                let transcription = try await serverTranscriptionService.transcribe(audioURL: audioURL)
+                let transcription = try await transcribeWithTimeout() { @Sendable in
+                    try await TranscriptionService().transcribe(audioURL: audioURL)
+                }
                 
                 if !Task.isCancelled {
                     handleTranscriptionSuccess(transcription)
@@ -205,6 +239,13 @@ extension MicrophoneButton {
         }
         
         guard let audioURL = audioRecorder.stopRecording() else { return }
+        
+        // Preventing transcription of silent recordings.
+        guard audioRecorder.recordingIsNotSilent() else {
+            removeSpacesAtCursor()
+            return
+        }
+        
         audioRecorder.isTranscribing = true
         
         guard let clientOpenAIToken = openAIToken, !clientOpenAIToken.isEmpty else {

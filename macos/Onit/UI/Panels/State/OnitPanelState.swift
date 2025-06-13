@@ -98,6 +98,9 @@ class OnitPanelState: NSObject {
     
     var pendingInstruction = "" {
         didSet {
+            if pendingInstruction.isEmpty {
+                pendingInstructionCursorPosition = 0
+            }
             notifyDelegateInputsChange()
         }
     }
