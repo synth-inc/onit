@@ -18,8 +18,37 @@ class DebugManager: ObservableObject {
     // MARK: - Properties
     
     @Published var showDebugWindow = false
+    @Default(.enableOCRComparison) var enableOCRComparison
+    @Default(.enableAutoOCRComparison) var enableAutoOCRComparison
     @Published var debugText: String = ""
+    @Published var ocrComparisonResults: [OCRComparisonResult] = []
+    
     var debugPanel: NSPanel? = nil
+    
+    var hasAutoOCRDelegate: Bool {
+        autoOCRDelegate != nil
+    }
+    
+    // MARK: - Private Properties
+    
+    private var autoOCRDelegate: WindowChangeDelegate?
+    private var currentOCRTask: Task<Void, Never>?
+    private var debounceTimer: Timer?
+    private let debounceDelay: TimeInterval = 0.5 // 500ms debounce
+    
+    // MARK: - Initialization
+    
+    private init() {
+        // Load persisted OCR comparison results
+        loadOCRComparisonResults()
+        
+        // Clean up orphaned screenshot files
+        cleanupOldScreenshots()
+        
+        if enableAutoOCRComparison {
+            startAutoOCRComparison()
+        }
+    }
     
     // MARK: - Functions
     
@@ -52,20 +81,6 @@ class DebugManager: ObservableObject {
         debugPanel.contentView = debugPanelContentView
         debugPanel.contentView?.setFrameOrigin(NSPoint(x: 0, y: 0))
 
-//        if let screen = NSScreen.main {
-//            let visibleFrame = screen.visibleFrame
-//            let defaultPanelFrame = NSRect(x: 0, y: 0, width: 400, height: 600)
-//            let windowWidth = defaultPanelFrame.width
-//            let windowHeight = defaultPanelFrame.height
-//
-//            let finalXPosition = visibleFrame.origin.x + visibleFrame.width - 16 - windowWidth
-//            let finalYPosition = visibleFrame.origin.y + visibleFrame.height - 16 - ContentView.bottomPadding
-//            debugPanel.setFrameOrigin(
-//                NSPoint(x: finalXPosition, y: finalYPosition - (windowHeight * 2.0) - 16))
-//            debugPanel.makeKeyAndOrderFront(nil)
-//            debugPanel.orderFrontRegardless()
-//        }
-
         debugPanel.makeKeyAndOrderFront(nil)
         debugPanel.orderFrontRegardless()
         
@@ -77,5 +92,477 @@ class DebugManager: ObservableObject {
         
         panel.orderOut(nil)
         self.debugPanel = nil
+    }
+    
+    func startAutoOCRComparison() {
+        guard autoOCRDelegate == nil else {
+            print("startAutoOCRComparison: delegate already exists")
+            return
+        }
+        
+        let delegate = WindowChangeDelegate { windowInfo in
+            self.handleWindowChange(windowInfo)
+        }
+        print("startAutoOCRComparison: created new delegate")
+        AccessibilityNotificationsManager.shared.addDelegate(delegate)
+        print("startAutoOCRComparison: added delegate to notifications manager")
+        autoOCRDelegate = delegate
+        print("startAutoOCRComparison: stored delegate reference")
+        
+        if let _ = autoOCRDelegate {
+            print("startAutoOCRComparison: delegate successfully stored")
+        }
+    }
+    
+    func stopAutoOCRComparison() {
+        guard let delegate = autoOCRDelegate else { return }
+        
+        print("Removing WindowChangeDelegate from AccessibilityNotificationsManager")
+        AccessibilityNotificationsManager.shared.removeDelegate(delegate)
+        autoOCRDelegate = nil
+        
+        debounceTimer?.invalidate()
+        currentOCRTask?.cancel()
+        
+        if autoOCRDelegate == nil {
+            print("WindowChangeDelegate successfully removed")
+        }
+    }
+    
+    private func handleWindowChange(_ windowInfo: WindowChangeInfo) {
+        print("DebugManager: handleWindowChange called")
+        guard enableAutoOCRComparison else {
+            print("DebugManager: comparison disabled, skipping")
+            return
+        }
+        
+        guard let windowElement = windowInfo.element else {
+            print("DebugManager: no window element, skipping")
+            return
+        }
+        
+        debounceTimer?.invalidate()
+        
+        let windowTitle = windowInfo.windowName ?? "unknown"
+        print("DebugManager: debouncing OCR comparison for window: \(windowTitle)")
+        
+        debounceTimer = Timer.scheduledTimer(withTimeInterval: debounceDelay, repeats: false) { _ in
+            Task { @MainActor in
+                self.currentOCRTask?.cancel()
+                self.currentOCRTask = Task {
+                    let startTime = CFAbsoluteTimeGetCurrent()
+                    print("DebugManager: starting OCR comparison for window: \(windowTitle)")
+                    
+                    // Check if task was cancelled before starting
+                    guard !Task.isCancelled else {
+                        print("DebugManager: OCR comparison cancelled before starting")
+                        return
+                    }
+                    
+                    await self.performOCRComparison(for: windowElement)
+                    
+                    // Check if task was cancelled after completion
+                    guard !Task.isCancelled else {
+                        print("DebugManager: OCR comparison cancelled after completion")
+                        return
+                    }
+                    
+                    let endTime = CFAbsoluteTimeGetCurrent()
+                    print("DebugManager: OCR comparison completed in \(endTime - startTime) seconds")
+                }
+            }
+        }
+    }
+
+    func addOCRComparisonResult(_ result: OCRComparisonResult) {
+        if let existingIndex = ocrComparisonResults.firstIndex(where: { existing in
+            // Same app and title
+            existing.appName == result.appName &&
+            existing.appTitle == result.appTitle &&
+            // Within last 5 minutes
+            abs(existing.timestamp.timeIntervalSince(result.timestamp)) < 300 &&
+            // Similar match percentage (within 5%)
+            abs(existing.matchPercentage - result.matchPercentage) < 5
+        }) {
+            // Update the existing result if the new one has a lower match percentage
+            if result.matchPercentage < ocrComparisonResults[existingIndex].matchPercentage {
+                ocrComparisonResults[existingIndex] = result
+            }
+            // Save after update
+            saveOCRComparisonResults()
+            return
+        }
+        
+        ocrComparisonResults.append(result)
+        
+        // Keep only the last 1000 results to prevent memory issues
+        if ocrComparisonResults.count > 1000 {
+            ocrComparisonResults.removeFirst(ocrComparisonResults.count - 1000)
+        }
+        
+        // Save after adding
+        saveOCRComparisonResults()
+    }
+    
+    func removeOCRComparisonResult(_ result: OCRComparisonResult) {
+        // Clean up associated files before removing
+        result.cleanupFiles()
+        ocrComparisonResults.removeAll { $0.id == result.id }
+        saveOCRComparisonResults()
+    }
+    
+    func clearOCRComparisonResults() {
+        // Clean up all associated files before clearing
+        for result in ocrComparisonResults {
+            result.cleanupFiles()
+        }
+        ocrComparisonResults.removeAll()
+        saveOCRComparisonResults()
+    }
+    
+    var failedOCRResults: [OCRComparisonResult] {
+        ocrComparisonResults.filter { $0.matchPercentage < 70 }
+    }
+    
+    func loadOCRComparisonResults() {
+        guard let data = Defaults[.ocrComparisonResults] else { return }
+        
+        do {
+            let loadedResults = try JSONDecoder().decode([OCRComparisonResult].self, from: data)
+            // Filter out results with missing files
+            ocrComparisonResults = loadedResults.filter { result in
+                let screenshotExists = result.screenshotPath == nil || FileManager.default.fileExists(atPath: result.screenshotPath!)
+                let debugScreenshotExists = result.debugScreenshotPath == nil || FileManager.default.fileExists(atPath: result.debugScreenshotPath!)
+                let debugAccessibilityScreenshotExists = result.debugAccessibilityScreenshotPath == nil || FileManager.default.fileExists(atPath: result.debugAccessibilityScreenshotPath!)
+                return screenshotExists && debugScreenshotExists && debugAccessibilityScreenshotExists
+            }
+        } catch {
+            print("Failed to load OCR comparison results: \(error)")
+            ocrComparisonResults = []
+        }
+    }
+    
+    private func saveOCRComparisonResults() {
+        do {
+            let data = try JSONEncoder().encode(ocrComparisonResults)
+            Defaults[.ocrComparisonResults] = data
+        } catch {
+            print("Failed to save OCR comparison results: \(error)")
+        }
+    }
+    
+    func cleanupOldScreenshots() {
+        let documentsPath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
+        let ocrFolder = documentsPath.appendingPathComponent("OCRScreenshots")
+        
+        guard let files = try? FileManager.default.contentsOfDirectory(at: ocrFolder, includingPropertiesForKeys: [.creationDateKey]) else {
+            return
+        }
+        
+        let currentPaths = Set(ocrComparisonResults.compactMap { $0.screenshotPath } +
+                              ocrComparisonResults.compactMap { $0.debugScreenshotPath } +
+                              ocrComparisonResults.compactMap { $0.debugAccessibilityScreenshotPath })
+        
+        // Remove files that are no longer referenced
+        for file in files {
+            if !currentPaths.contains(file.path) {
+                try? FileManager.default.removeItem(at: file)
+                print("Cleaned up orphaned screenshot: \(file.lastPathComponent)")
+            }
+        }
+    }
+
+    private func performOCRComparison(for windowElement: AXUIElement) async {
+        guard let pid = windowElement.pid() else { return }
+        
+        // Check if task was cancelled before starting
+        guard !Task.isCancelled else {
+            print("performOCRComparison: task cancelled at start")
+            return
+        }
+        
+        do {
+            let startTime = CFAbsoluteTimeGetCurrent()
+            
+            let accessibilityStartTime = CFAbsoluteTimeGetCurrent()
+            let (accessibilityResults, accessibilityBoundingBoxes) = await AccessibilityParser.shared.getAllTextInElement(windowElement: windowElement, includeBoundingBoxes: true)
+            let accessibilityEndTime = CFAbsoluteTimeGetCurrent()
+            print("ocrTiming - Accessibility parsing took: \(accessibilityEndTime - accessibilityStartTime) seconds")
+            
+            // Check if task was cancelled after accessibility parsing
+            guard !Task.isCancelled else {
+                print("ocrTiming - task cancelled after accessibility parsing")
+                return
+            }
+            
+            let accessibilityText = accessibilityResults["screen"] ?? ""
+            
+            let appName = windowElement.appName() ?? "Unknown"
+            let appTitle = windowElement.title() ?? appName
+            
+            let windowFrame = windowElement.frame()
+            
+            let ocrStartTime = CFAbsoluteTimeGetCurrent()
+            let (observations, screenshot) = try await OCRManager.shared.extractTextFromApp(appName, appTitle: appTitle, windowFrame: windowFrame)
+            let ocrEndTime = CFAbsoluteTimeGetCurrent()
+            print("ocrTiming - OCR processing took: \(ocrEndTime - ocrStartTime) seconds")
+            
+            // Check if task was cancelled after OCR
+            guard !Task.isCancelled else {
+                print("ocrTiming - task cancelled after OCR")
+                return
+            }
+            
+            // Create a copy of the screenshot for the detached task
+            let screenshotCopy = NSImage(data: screenshot.tiffRepresentation!)!
+            
+            let computationResult = await performHeavyComputation(
+                observations: observations,
+                screenshot: screenshotCopy,
+                accessibilityText: accessibilityText,
+                accessibilityBoundingBoxes: accessibilityBoundingBoxes,
+                appName: appName,
+                appTitle: appTitle,
+                pid: pid
+            )
+            
+            await MainActor.run {
+                self.addOCRComparisonResult(computationResult)
+            }
+            
+            let endTime = CFAbsoluteTimeGetCurrent()
+            print("ocrTiming - Total OCR comparison took: \(endTime - startTime) seconds")
+            
+        } catch {
+            // Check if error is due to cancellation
+            if Task.isCancelled {
+                print("ocrTiming - OCR comparison cancelled: \(error)")
+            } else {
+                print("ocrTiming - Failed to perform OCR comparison: \(error)")
+            }
+        }
+    }
+    
+    private func performHeavyComputation(
+        observations: [OCRTextObservation],
+        screenshot: NSImage,
+        accessibilityText: String,
+        accessibilityBoundingBoxes: [TextBoundingBox]?,
+        appName: String,
+        appTitle: String,
+        pid: pid_t
+    ) async -> OCRComparisonResult {
+        
+        let startTime = CFAbsoluteTimeGetCurrent()
+        
+        // Create a mutable copy of observations
+        var ocrObservations = observations
+        
+        let comparisonAllStartTime = CFAbsoluteTimeGetCurrent()
+        // Extract all OCR words and get matching results
+        var allOCRWords: [String] = []
+        for observation in ocrObservations {
+            let words = extractTokens(from: observation.text)
+            allOCRWords.append(contentsOf: words)
+        }
+        
+        let wordMatchResults = await MainActor.run {
+            String.findMatchingWords(ocrWords: allOCRWords, accessibilityWords: extractTokens(from: accessibilityText), maxDistance: 2)
+        }
+        
+        let comparisonAllEndTime = CFAbsoluteTimeGetCurrent()
+        print("ocrTiming - ALL text comparison took: \(comparisonAllEndTime - comparisonAllStartTime) seconds")
+        
+        // Now process individual observations using the batch results
+        let observationProcessingStartTime = CFAbsoluteTimeGetCurrent()
+        var matchedWords = 0
+        var totalWords = 0
+        
+        for i in 0..<ocrObservations.count {
+            let ocrWords = extractTokens(from: ocrObservations[i].text)
+            let wordsInObservation = ocrWords.count
+            
+            // Count how many words in this observation were matched
+            let matchedWordsInObservation = ocrWords.filter { word in
+                wordMatchResults.contains(word)
+            }.count
+            
+            let observationPercentage = wordsInObservation > 0 ?
+                Int((Double(matchedWordsInObservation) / Double(wordsInObservation)) * 100.0) : 0
+            
+            ocrObservations[i].isFoundInAccessibility = observationPercentage >= 80
+            ocrObservations[i].percentageMatched = observationPercentage
+            
+            matchedWords += matchedWordsInObservation
+            totalWords += wordsInObservation
+        }
+        let observationProcessingEndTime = CFAbsoluteTimeGetCurrent()
+        print("ocrTiming - Observation processing took: \(observationProcessingEndTime - observationProcessingStartTime) seconds")
+        
+        let matchPercentage = totalWords > 0 ? Int((Double(matchedWords) / Double(totalWords)) * 100.0) : 0
+        
+        let imageStartTime = CFAbsoluteTimeGetCurrent()
+        let failedObservations = ocrObservations.filter { !$0.isFoundInAccessibility }
+        
+        let debugScreenshot = WindowCaptureOCR().createDebugImage(
+            original: screenshot,
+            failedObservations: failedObservations
+        )
+        
+        let debugAccessibilityScreenshot = WindowCaptureOCR().createAccessibilityDebugImage(
+            original: screenshot,
+            accessibilityBoundingBoxes: accessibilityBoundingBoxes ?? []
+        )
+        let imageEndTime = CFAbsoluteTimeGetCurrent()
+        print("Debug image creation took: \(imageEndTime - imageStartTime) seconds")
+        
+        print("Total words: \(totalWords), Matched: \(matchedWords), Percentage: \(matchPercentage)%")
+        
+        // Send analytics events
+        await MainActor.run {
+            AnalyticsManager.ocrComparisonCompleted(appName: appName, matchPercentage: matchPercentage)
+            
+            // Send failure event if match percentage is less than 50%
+            if matchPercentage < 50 {
+                AnalyticsManager.ocrComparisonFailed(appName: appName, matchPercentage: matchPercentage)
+            }
+        }
+        
+        let endTime = CFAbsoluteTimeGetCurrent()
+        print("ocrTiming - performHeavyComputation took: \(endTime - startTime) seconds")
+        
+        return OCRComparisonResult(
+            appName: appName,
+            appTitle: appTitle,
+            matchPercentage: matchPercentage,
+            accessibilityText: accessibilityText,
+            ocrObservations: ocrObservations,
+            screenshot: screenshot,
+            debugScreenshot: debugScreenshot,
+            debugAccessibilityScreenshot: debugAccessibilityScreenshot,
+            appBundleUrl: NSRunningApplication(processIdentifier: pid)?.bundleURL
+        )
+    }
+    
+    private func extractTokens(from text: String) -> [String] {
+        let delimiters = CharacterSet(charactersIn: " \t\n\r(){}[]<>.,;:!@#$%^&*+=|\\\"'`~?/-")
+        
+        let basicTokens = text.components(separatedBy: delimiters)
+            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+            .filter { $0.count > 1 }
+        
+        var allTokens = Set(basicTokens)
+        
+        let genericPatterns = [
+            "\\w+\\(\\)",           // Function calls: print(), len(), etc.
+            "\\w+\\[\\]",           // Array/list types: int[], Array[], etc.
+            "\\w+\\{\\}",           // Object/dict literals: {}, Object{}
+            "\\.\\w+",              // Property/method access: .length, .size, .frame
+            "\\w+\\.\\w+",          // Namespace/module access: Math.max, os.path
+            "#\\w+",                // Hash tags, preprocessor directives: #include, #define
+            "\\$\\w+",              // Variables: $var (PHP, Bash), $state (SwiftUI)
+            "@\\w+",                // Decorators/annotations: @override, @State
+            "\\w+\\?",              // Optionals/nullable: String?, Optional
+            "\\w+!",                // Non-null/force unwrap: value!, required
+            "//.*",                 // Single line comments
+            "/\\*.*\\*/",           // Multi-line comments (simple)
+            "<!--.*-->",            // HTML comments
+            "\"[^\"]*\"",           // String literals
+            "'[^']*'",              // String literals (single quotes)
+            "`[^`]*`",              // Template literals/backticks
+            "\\d+\\.\\d+",          // Decimal numbers
+            "\\w+:\\w+",            // Key-value pairs, labels: name:value
+            "\\w+=\\w+",            // Assignments: var=value
+            "\\w+\\+=\\w+",         // Compound assignments
+            "\\w+->\\w+",           // Arrow functions, pointers: ->
+            "\\w+=>\\w+",           // Arrow functions: =>
+            "::\\w+",               // Scope resolution: ::method (C++)
+            "\\w+<\\w+>",           // Generics/templates: List<String>
+        ]
+        
+        for pattern in genericPatterns {
+            if let regex = try? NSRegularExpression(pattern: pattern, options: []) {
+                let matches = regex.matches(in: text, options: [], range: NSRange(text.startIndex..., in: text))
+                
+                for match in matches {
+                    if let range = Range(match.range, in: text) {
+                        let matchedToken = String(text[range]).trimmingCharacters(in: .whitespacesAndNewlines)
+                        if matchedToken.count > 1 {
+                            allTokens.insert(matchedToken)
+                        }
+                    }
+                }
+            }
+        }
+        
+        let compoundSeparators = ["_", "-"]
+        for token in basicTokens {
+            for separator in compoundSeparators {
+                if token.contains(separator) {
+                    allTokens.insert(token)
+                    let parts = token.components(separatedBy: separator).filter { $0.count > 1 }
+                    allTokens.formUnion(parts)
+                }
+            }
+        }
+        
+        return Array(allTokens)
+    }
+    
+    private func compareOCRWithAutoContext(ocrWords: [String], accessibilityWords: [String]) async -> [String: Bool] {
+        guard !ocrWords.isEmpty, !accessibilityWords.isEmpty else { return [:] }
+        
+        // Use GPU-accelerated matching if available
+        let matchingWords = await MainActor.run {
+            String.findMatchingWords(ocrWords: ocrWords, accessibilityWords: accessibilityWords, maxDistance: 2)
+        }
+        
+        // Create a dictionary mapping each word to whether it was matched
+        let matchingWordsSet = Set(matchingWords)
+        var wordMatchResults: [String: Bool] = [:]
+        
+        for word in ocrWords {
+            wordMatchResults[word] = matchingWordsSet.contains(word)
+        }
+        
+        return wordMatchResults
+    }
+    
+    private func findBestMatchInAccessibilityText(ocrText: String, accessibilityText: String) -> String? {
+        let ocrLength = ocrText.count
+        let accessibilityLength = accessibilityText.count
+        let maxDistance = Int(Double(ocrLength) * 0.1)
+        
+        guard ocrLength <= accessibilityLength else { return nil }
+        
+        for i in 0...(accessibilityLength - ocrLength) {
+            let startIndex = accessibilityText.index(accessibilityText.startIndex, offsetBy: i)
+            let endIndex = accessibilityText.index(startIndex, offsetBy: ocrLength)
+            let subtext = String(accessibilityText[startIndex..<endIndex])
+            
+            let distance = ocrText.earlyExitLevenshteinDistance(to: subtext, maxAllowableDistance: maxDistance)
+            if let distance = distance, distance <= maxDistance {
+                return subtext
+            }
+        }
+        return nil
+    }
+    
+    private func calculateMaxDistance(for token: String) -> Int {
+        let length = token.count
+        
+        if length <= 3 {
+            return 1
+        }
+        
+        if length <= 6 {
+            return min(2, length / 3)
+        }
+        
+        if length <= 12 {
+            return min(3, length / 4)
+        }
+    
+        return min(5, length / 4)
     }
 }

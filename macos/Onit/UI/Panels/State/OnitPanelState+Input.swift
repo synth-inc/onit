@@ -42,7 +42,18 @@ extension OnitPanelState {
             /// Later on, we should implement a data aggregator.
             
             let oldContext = pendingContextList[existingIndex]
-            let newContext = Context(appName: appName, appHash: appHash, appTitle: appTitle, appContent: appContent)
+            
+            let ocrMatchingPercentage = getOCRMatchingPercentage(for: appTitle)
+            
+            var autoContext = AutoContext(
+                appName: appName,
+                appHash: appHash,
+                appTitle: appTitle,
+                appContent: appContent,
+                appBundleUrl: AccessibilityNotificationsManager.shared.screenResult.appBundleUrl,
+                ocrMatchingPercentage: ocrMatchingPercentage
+            )
+            let newContext = Context.auto(autoContext)
             
             if oldContext != newContext {
                 ContextWindowsManager.shared.deleteContextItem(item: oldContext)
@@ -55,28 +66,45 @@ extension OnitPanelState {
 //                var existingContent = autoContext.appContent
 //                let appContentString = appContent[AccessibilityParsedElements.screen] ?? ""
 //                let contentString = existingContent[AccessibilityParsedElements.screen] ?? ""
-//                
+//
 //                if !appContentString.isEmpty && !contentString.isEmpty {
 //                    let mergedContent = mergeFragments([contentString, appContentString])
 //                    existingContent[AccessibilityParsedElements.screen] = mergedContent
-//                    
+//
 //                    let updatedContext = Context(appName: appName, appHash: appHash, appTitle: appTitle, appContent: existingContent)
 //                    pendingContextList[existingIndex] = updatedContext
-//                    
+//
 //                    return
 //                }
 //            }
         }
 
-        let autoContext = Context(
+        let ocrMatchingPercentage = getOCRMatchingPercentage(for: appTitle)
+        
+        var autoContext = AutoContext(
             appName: appName,
             appHash: appHash,
             appTitle: appTitle,
             appContent: appContent,
-            appBundleUrl: AccessibilityNotificationsManager.shared.screenResult.appBundleUrl
+            appBundleUrl: AccessibilityNotificationsManager.shared.screenResult.appBundleUrl,
+            ocrMatchingPercentage: ocrMatchingPercentage
         )
         
-        pendingContextList.insert(autoContext, at: 0)
+        let context = Context.auto(autoContext)
+        pendingContextList.insert(context, at: 0)
+    }
+    
+    private func getOCRMatchingPercentage(for appTitle: String) -> Int? {
+        // Find the most recent OCR result that matches the app title
+        let recentResult = DebugManager.shared.ocrComparisonResults
+            .filter { result in
+                result.appTitle == appTitle &&
+                Date().timeIntervalSince(result.timestamp) < 300 // Within last 5 minutes
+            }
+            .sorted { $0.timestamp > $1.timestamp }
+            .first
+        
+        return recentResult?.matchPercentage
     }
     
     func getPendingContextList() -> [Context] {
