@@ -11,6 +11,8 @@ import Defaults
 struct MenuBarContent: View {
     var body: some View {
         VStack(spacing: 5) {
+            MenuVersion()
+            MenuDivider()
             MenuCheckForPermissions()
             MenuOpenOnitButton()
             MenuDivider()
