@@ -15,6 +15,11 @@ enum AuthFlowStatus: String, Defaults.Serializable {
     case showSignIn
 }
 
+enum FooterNotification: String, Defaults.Serializable {
+    case discord
+    case update
+}
+
 extension Defaults.Keys {
     
     // Remote model tokens
@@ -116,6 +121,9 @@ extension Defaults.Keys {
     // Alerts
     static let showTwoWeekProTrialEndedAlert = Key<Bool>("showTwoWeekProTrialEndedAlert", default: false)
     static let hasClosedTrialEndedAlert = Key<Bool>("hasClosedTrialEndedAlert", default: false)
+    
+    // Notifications
+    static let footerNotifications = Key<[FooterNotification]>("footerNotifications", default: [FooterNotification.discord])
 }
 
 extension NSRect: Defaults.Serializable {
