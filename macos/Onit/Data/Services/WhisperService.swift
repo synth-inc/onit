@@ -31,7 +31,7 @@ class WhisperService {
         data.append(dispositionData)
         data.append(whisperData)
         
-        // Configuring Whipser API to return `no_speech_prob`.
+        // Configuring Whisper API to return `no_speech_prob`.
         guard let responseFormatBoundaryData = "--\(boundary)\r\n".data(using: .utf8),
               let responseDispositionData = "Content-Disposition: form-data; name=\"response_format\"\r\n\r\n".data(using: .utf8),
               let responseFormatData = "verbose_json\r\n".data(using: .utf8)

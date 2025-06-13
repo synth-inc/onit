@@ -36,8 +36,8 @@ struct TextButton<Child: View>: View {
     
     init(
         iconSize: CGFloat = 20,
-        iconColor: Color = .white,
-        hoverIconColor: Color = .white,
+        iconColor: Color = Color.primary,
+        hoverIconColor: Color = Color.primary,
         disabled: Bool = false,
         selected: Bool = false,
 
@@ -95,7 +95,7 @@ struct TextButton<Child: View>: View {
         HStack(alignment: .center, spacing: gap) {
             if let icon = icon {
                 Image(icon).addIconStyles(
-                    foregroundColor: isHovered ? hoverIconColor : selected ? .blue300 : iconColor,
+                    foregroundColor: selected ? .blue300 : isHovered ? hoverIconColor : iconColor,
                     iconSize: iconSize
                 )
             }
