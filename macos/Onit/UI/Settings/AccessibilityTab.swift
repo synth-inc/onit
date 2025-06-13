@@ -8,6 +8,7 @@ import AppKit
 struct AccessibilityTab: View {
     @Default(.autoContextFromHighlights) var autoContextFromHighlights
     @Default(.autoContextFromCurrentWindow) var autoContextFromCurrentWindow
+    @Default(.useTextHighlightContext) var useTextHighlightContext
 
     @ObservedObject private var accessibilityPermissionManager = AccessibilityPermissionManager.shared
     @ObservedObject private var featureFlagsManager = FeatureFlagManager.shared
@@ -94,6 +95,29 @@ struct AccessibilityTab: View {
                             )
                         }
                         Text("Automatically loads highlighted text as content.")
+                            .font(.system(size: 12))
+                            .foregroundStyle(.gray200)
+                    }
+                }
+                
+                Section {
+                    VStack(alignment: .leading, spacing: 4) {
+                        HStack {
+                            Text("Highlighted Text: Multi-Context")
+                                .font(.system(size: 13))
+                            Spacer()
+                            Toggle("", isOn: $useTextHighlightContext)
+                                .toggleStyle(.switch)
+                                .controlSize(.small)
+                            SettingInfoButton(
+                                title: "Multi-Context with Highlighted Text",
+                                description:
+                                    "When enabled, Onit will read highlighted text from any application, and allow you to add it as an individual context item to your conversation. Context is not uploaded until you submit your conversation. In local mode, no context is ever uploaded.",
+                                defaultValue: "off",
+                                valueType: "Bool"
+                            )
+                        }
+                        Text("Add highlighted text as individual context items.")
                             .font(.system(size: 12))
                             .foregroundStyle(.gray200)
                     }

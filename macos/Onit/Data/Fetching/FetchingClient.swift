@@ -27,6 +27,7 @@ actor FetchingClient {
         images: [[URL]],
         autoContexts: [[String: String]],
         webSearchContexts: [[(title: String, content: String, source: String, url: URL?)]],
+        textsContexts: [[Input]],
         responses: [String],
         model: AIModel,
         apiToken: String?
@@ -36,7 +37,9 @@ actor FetchingClient {
             inputs: inputs,
             files: files,
             autoContexts: autoContexts,
-            webSearchContexts: webSearchContexts)
+            webSearchContexts: webSearchContexts,
+            textsContexts: textsContexts
+        )
         
         let endpoint = try ChatEndpointBuilder.build(
             model: model,
@@ -65,6 +68,7 @@ actor FetchingClient {
         images: [[URL]],
         autoContexts: [[String: String]],
         webSearchContexts: [[(title: String, content: String, source: String, url: URL?)]],
+        textsContexts: [[Input]],
         responses: [String],
         model: String
     ) async throws -> String {
@@ -74,7 +78,9 @@ actor FetchingClient {
             inputs: inputs,
             files: files,
             autoContexts: autoContexts,
-            webSearchContexts: webSearchContexts)
+            webSearchContexts: webSearchContexts,
+            textsContexts: textsContexts
+        )
 
         let localMessages = ChatEndpointMessagesBuilder.local(
             images: images,
