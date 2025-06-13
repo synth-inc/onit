@@ -89,7 +89,7 @@ class OnitPanelState: NSObject {
         }
     }
     
-    var tetheredButtonYPosition: CGFloat?
+    var tetheredButtonYRelativePosition: CGFloat?
     
     var panelWidth: CGFloat 
     

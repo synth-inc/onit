@@ -85,7 +85,6 @@ class PanelStateBaseManager: PanelStateManagerLogic {
 
         tetherHintDetails.tetherWindow.orderOut(nil)
         tetherHintDetails.tetherWindow.contentView = nil
-        tetherHintDetails.lastYComputed = nil
     }
     
     func resetFramesOnAppChange() {
