@@ -93,6 +93,9 @@ struct ModelSelectionView: View {
         return MenuSection(
             title: "Remote",
             showTopBorder: true,
+            maxScrollHeight: setModelListHeight(
+                listCount: CGFloat(filteredRemoteModels.count)
+            ),
             contentRightPadding: 0,
             contentBottomPadding: 0,
             contentLeftPadding: 0
@@ -102,25 +105,17 @@ struct ModelSelectionView: View {
     }
     
     var remoteModelsView: some View {
-        ScrollView {
-            VStack(spacing: 0) {
-                ForEach(filteredRemoteModels) { remoteModel in
-                    RemoteModelButton(
-                        modelSelectionViewOpen: open,
-                        selectedModel: selectedModel,
-                        remoteModel: remoteModel
-                    )
-                }
-            }
-            .padding(.horizontal, 8)
-            .padding(.bottom, 8)
-        }
-        .frame(
-            maxHeight:
-                setModelListHeight(
-                    listCount: CGFloat(filteredRemoteModels.count)
+        VStack(spacing: 0) {
+            ForEach(filteredRemoteModels) { remoteModel in
+                RemoteModelButton(
+                    modelSelectionViewOpen: open,
+                    selectedModel: selectedModel,
+                    remoteModel: remoteModel
                 )
-        )
+            }
+        }
+        .padding(.horizontal, 8)
+        .padding(.bottom, 8)
     }
 
     var local: some View {
@@ -129,6 +124,9 @@ struct ModelSelectionView: View {
             titleIconColor: .orange,
             title: "Local",
             showTopBorder: true,
+            maxScrollHeight: setModelListHeight(
+                listCount: CGFloat(filteredLocalModels.count)
+            ),
             contentRightPadding: 0,
             contentBottomPadding: 0,
             contentLeftPadding: 0
@@ -152,31 +150,23 @@ struct ModelSelectionView: View {
     }
 
     var localModelsView: some View {
-        ScrollView {
-            VStack(spacing: 0) {
-                ForEach(filteredLocalModels, id: \.self) { localModelName in
-                    TextButton(
-                        iconSize: 16,
-                        selected: isSelectedLocalModel(modelName: localModelName),
-                        icon: localModelName.lowercased().contains("llama") ? .logoOllama : .logoProviderUnknown,
-                        text: localModelName,
-                        action: {
-                            AnalyticsManager.ModelPicker.modelSelected(local: true, model: localModelName)
-                            selectedModel.wrappedValue = .local(localModelName)
-                            open.wrappedValue = false
-                        }
-                    )
-                }
-            }
-            .padding(.horizontal, 8)
-            .padding(.bottom, 8)
-        }
-        .frame(
-            maxHeight:
-                setModelListHeight(
-                    listCount: CGFloat(filteredLocalModels.count)
+        VStack(spacing: 0) {
+            ForEach(filteredLocalModels, id: \.self) { localModelName in
+                TextButton(
+                    iconSize: 16,
+                    selected: isSelectedLocalModel(modelName: localModelName),
+                    icon: localModelName.lowercased().contains("llama") ? .logoOllama : .logoProviderUnknown,
+                    text: localModelName,
+                    action: {
+                        AnalyticsManager.ModelPicker.modelSelected(local: true, model: localModelName)
+                        selectedModel.wrappedValue = .local(localModelName)
+                        open.wrappedValue = false
+                    }
                 )
-        )
+            }
+        }
+        .padding(.horizontal, 8)
+        .padding(.bottom, 8)
     }
     
 //    var custom: some View {

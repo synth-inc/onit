@@ -133,15 +133,24 @@ class OnitPanelState: NSObject {
     /// Don't leave this text empty to ensure the first scroll works.
     var streamedResponse: String = " "
     
-    // Web search state
+    // Web search states
     var webSearchError: Error? = nil
     var isSearchingWeb: [PersistentIdentifier: Bool] = [:]
 
     typealias WebsiteUrlScrapeTask = Task<Void, Never>
     var websiteUrlsScrapeQueue: [String: WebsiteUrlScrapeTask] = [:]
     
+    // Auto-context states
     typealias TaskWindowName = String
     var addAutoContextTasks: [TaskWindowName: Task<Void, Never>] = [:]
+    
+    var currentWindowName: String? = nil
+    var currentWindowPid: pid_t? = nil
+    var currentWindowAppBundleUrl: URL? = nil
+    
+    // Menu States
+    var showContextMenu: Bool = false
+    var showContextMenuBrowserTabs: Bool = false
 
     var deleteChatFailed: Bool = false
     

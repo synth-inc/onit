@@ -22,10 +22,11 @@ struct MenuHeader<Child: View>: View {
     var body: some View {
         HStack(alignment: .center) {
             Text(title)
-                .font(.system(size: 13))
-                .foregroundColor(.gray100)
-                .lineLimit(1)
-                .truncationMode(.tail)
+                .styleText(
+                    size: 13,
+                    color: .gray100
+                )
+                .truncateText()
             
             Spacer()
             

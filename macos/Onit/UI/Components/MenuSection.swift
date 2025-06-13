@@ -10,9 +10,9 @@ import SwiftUI
 struct MenuSection<Children: View>: View {
     private let titleIcon: ImageResource?
     private let titleIconColor: Color
-    private let title: String
+    private let title: String?
     private let showTopBorder: Bool
-    private let maxHeight: CGFloat
+    private let maxScrollHeight: CGFloat?
     private let contentTopPadding: CGFloat
     private let contentRightPadding: CGFloat
     private let contentBottomPadding: CGFloat
@@ -22,9 +22,9 @@ struct MenuSection<Children: View>: View {
     init(
         titleIcon: ImageResource? = nil,
         titleIconColor: Color = Color.white,
-        title: String = "",
+        title: String? = nil,
         showTopBorder: Bool = false,
-        maxHeight: CGFloat = 0,
+        maxScrollHeight: CGFloat? = nil,
         contentTopPadding: CGFloat = 8,
         contentRightPadding: CGFloat = 8,
         contentBottomPadding: CGFloat = 8,
@@ -35,7 +35,7 @@ struct MenuSection<Children: View>: View {
         self.titleIconColor = titleIconColor
         self.title = title
         self.showTopBorder = showTopBorder
-        self.maxHeight = maxHeight
+        self.maxScrollHeight = maxScrollHeight
         self.contentTopPadding = contentTopPadding
         self.contentRightPadding = contentRightPadding
         self.contentBottomPadding = contentBottomPadding
@@ -45,13 +45,27 @@ struct MenuSection<Children: View>: View {
     
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            if maxHeight > 0 || showTopBorder { DividerHorizontal() }
+            if showTopBorder { DividerHorizontal() }
             
-            if maxHeight > 0 {
-                ScrollView { content }.frame(maxHeight: maxHeight)
-            } else {
-                content
+            VStack(alignment: .leading, spacing: 0) {
+                if let title = title,
+                   !title.isEmpty
+                {
+                    header(title)
+                }
+                
+                if let maxHeight = maxScrollHeight {
+                    DynamicScrollView(maxHeight: maxHeight) { children() }
+                } else {
+                    children()
+                }
             }
+            .padding(.init(
+                top: contentTopPadding,
+                leading: contentLeftPadding,
+                bottom: contentBottomPadding,
+                trailing: contentRightPadding
+            ))
         }
     }
 }
@@ -59,7 +73,7 @@ struct MenuSection<Children: View>: View {
 // MARK: - Child Components
 
 extension MenuSection {
-    private var header: some View {
+    private func header(_ title: String) -> some View {
         HStack(alignment: .center, spacing: 8) {
             HStack(alignment: .center, spacing: 4) {
                 if let titleIcon = titleIcon {
@@ -78,18 +92,5 @@ extension MenuSection {
             .padding(.bottom, 6)
         }
         .padding(.horizontal, 8)
-    }
-    
-    private var content: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            if !title.isEmpty { header }
-            children()
-        }
-        .padding(.init(
-            top: contentTopPadding,
-            leading: contentLeftPadding,
-            bottom: contentBottomPadding,
-            trailing: contentRightPadding
-        ))
     }
 }

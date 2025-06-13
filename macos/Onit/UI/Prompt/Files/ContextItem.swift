@@ -20,8 +20,8 @@ struct ContextItem: View {
                 WebContextItem(
                     item: item,
                     isEditing: isEditing,
-                    showContextWindow: showContextWindow,
-                    removeContextItem: removeContextItem
+                    action: showContextWindow,
+                    removeAction: removeContextItem
                 )
             case .auto(let autoContext):
                 ContextTag(

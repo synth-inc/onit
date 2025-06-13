@@ -11,13 +11,16 @@ struct PromptCoreFooter: View {
     @Environment(\.windowState) private var windowState
     
     private let audioRecorder: AudioRecorder
+    private let disableSend: Bool
     private let handleSend: () -> Void
     
     init(
         audioRecorder: AudioRecorder,
+        disableSend: Bool,
         handleSend: @escaping () -> Void
     ) {
         self.audioRecorder = audioRecorder
+        self.disableSend = disableSend
         self.handleSend = handleSend
     }
     
@@ -32,9 +35,10 @@ struct PromptCoreFooter: View {
             
             HStack(spacing: 4) {
                 MicrophoneButton(audioRecorder: audioRecorder)
+                
                 PromptCoreFooterButton(
                     text: "􀅇 Send",
-                    disabled: windowState.pendingInstruction.isEmpty,
+                    disabled: disableSend,
                     action: handleSend
                 )
             }

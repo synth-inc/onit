@@ -11,23 +11,23 @@ import SwiftSoup
 struct WebContextItem: View {
     @Environment(\.windowState) var windowState
     
+    private let websiteUrl: URL
     private let item: Context
     private let isEditing: Bool
-    private let showContextWindow: () -> Void
-    private let removeContextItem: () -> Void
-    private let websiteUrl: URL
     private let websiteTitle: String
+    private let action: () -> Void
+    private let removeAction: () -> Void
     
     init(
         item: Context,
         isEditing: Bool,
-        showContextWindow: @escaping () -> Void,
-        removeContextItem: @escaping () -> Void
+        action: @escaping () -> Void,
+        removeAction: @escaping () -> Void
     ) {
         self.item = item
         self.isEditing = isEditing
-        self.showContextWindow = showContextWindow
-        self.removeContextItem = removeContextItem
+        self.action = action
+        self.removeAction = removeAction
         
         if case .web(let websiteUrl, let websiteTitle, _) = self.item {
             self.websiteUrl = websiteUrl
@@ -50,8 +50,8 @@ struct WebContextItem: View {
             iconView: websiteUndergoingScrape ? LoaderPulse() : favicon,
             caption: item.fileType,
             tooltip: getCurrentWebsiteTitle(),
-            action: showContextWindow,
-            removeAction: isEditing ? { removeContextItem() } : nil
+            action: action,
+            removeAction: isEditing ? { removeAction() } : nil
         )
         .disabled(websiteUndergoingScrape)
         .allowsHitTesting(!websiteUndergoingScrape)

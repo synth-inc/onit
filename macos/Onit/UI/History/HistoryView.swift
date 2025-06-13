@@ -56,14 +56,14 @@ struct HistoryView: View {
         MenuList(
             header: MenuHeader(title: "History") {
                 IconButton(
-                    icon: .smallCross,
-                    iconSize: 22,
+                    icon: .cross,
+                    iconSize: 10,
                     action: { windowState.showHistory = false }
                 )
             },
             search: MenuList.Search(query: $searchQuery)
         ) {
-            MenuSection(maxHeight: 295) {
+            MenuSection(maxScrollHeight: 295) {
                 if sortedChats.isEmpty { emptyText }
                 else { historyRows }
             }

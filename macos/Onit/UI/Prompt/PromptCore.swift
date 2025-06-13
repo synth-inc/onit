@@ -43,6 +43,10 @@ struct PromptCore: View {
     @State private var textHeight: CGFloat = 20
     private let maxHeightLimit: CGFloat = 100
     
+    @State private var showSlashMenu: Bool = false
+    
+    @State private var disableSend: Bool = false
+    
     @FocusState private var isFocused: Bool
     
     private var unfocusedBorder = GradientBorder(
@@ -60,14 +64,6 @@ struct PromptCore: View {
         colorTwo: Color(hex: "#4AA4BF") ?? .gray800
     )
     
-    private var shouldIndicateDisabled: Bool {
-        !windowState.websiteUrlsScrapeQueue.isEmpty || !windowState.addAutoContextTasks.isEmpty
-    }
-    
-    private var showingAlert: Bool {
-        showTwoWeekProTrialEndedAlert || appState.showFreeLimitAlert || appState.showProLimitAlert
-    }
-    
     var body: some View {
         VStack(spacing: 0) {
             if let pendingInput = windowState.pendingInput {
@@ -78,13 +74,14 @@ struct PromptCore: View {
                 contextAndInput
                 PromptCoreFooter(
                     audioRecorder: audioRecorder,
+                    disableSend: disableSend,
                     handleSend: handleSend
                 )
             }
         }
         .background {
             if !isEditing {
-                if !windowState.isTyping {
+                if !showSlashMenu && !windowState.showContextMenu && !windowState.isTyping {
                     upListener
                     downListener
                 }
@@ -112,7 +109,12 @@ struct PromptCore: View {
                 windowState.removeDelegate(delegate)
             }
         }
-        .onChange(of: editingText?.wrappedValue ?? windowState.pendingInstruction) { _, _ in
+        .onChange(of: editingText?.wrappedValue ?? windowState.pendingInstruction) { old, new in
+            let slashMenuOpened = new == "/" && old != "/ "
+            showSlashMenu = slashMenuOpened
+            windowState.showContextMenu = slashMenuOpened // This should be removed later when the Slash Menu is developed.
+            disableSend = slashMenuOpened || new.isEmpty
+            
             windowState.detectIsTyping()
         }
         .onChange(of: windowState.pendingInstructionCursorPosition) {
@@ -155,6 +157,12 @@ extension PromptCore {
         }
         .disabled(showingAlert)
         .allowsHitTesting(!showingAlert)
+        // This should be commented in when the Slash Menu is built.
+//        .popover(
+//            isPresented: $showSlashMenu
+//        ) {
+//            SlashMenu()
+//        }
     }
     
     private var contextAndInput: some View {
@@ -191,8 +199,8 @@ extension PromptCore {
 // MARK: - Keyboard Arrow Key Listeners
 
 extension PromptCore {
-    var upListener: some View {
-        Button {
+    private var upListener: some View {
+        KeyListener(key: .upArrow, modifiers: []) {
             guard !chats.isEmpty else { return }
 
             if windowState.historyIndex + 1 < chats.count {
@@ -200,14 +208,11 @@ extension PromptCore {
                 windowState.currentChat = chats[windowState.historyIndex]
                 windowState.currentPrompts = chats[windowState.historyIndex].prompts
             }
-        } label: {
-            EmptyView()
         }
-        .keyboardShortcut(.upArrow, modifiers: [])
     }
 
-    var downListener: some View {
-        Button {
+    private var downListener: some View {
+        KeyListener(key: .downArrow, modifiers: []) {
             if windowState.historyIndex > 0 {
                 windowState.historyIndex -= 1
                 windowState.currentChat = chats[windowState.historyIndex]
@@ -217,25 +222,27 @@ extension PromptCore {
                 windowState.currentChat = nil
                 windowState.currentPrompts = nil
             }
-        } label: {
-            EmptyView()
         }
-        .keyboardShortcut(.downArrow, modifiers: [])
     }
     
-    var newListener: some View {
-        Button {
+    private var newListener: some View {
+        KeyListener(key: "n") {
             windowState.newChat()
-        } label: {
-            EmptyView()
         }
-        .keyboardShortcut("n")
     }
 }
 
 // MARK: - Private Variables
 
 extension PromptCore {
+    private var shouldIndicateDisabled: Bool {
+        !windowState.websiteUrlsScrapeQueue.isEmpty || !windowState.addAutoContextTasks.isEmpty
+    }
+    
+    private var showingAlert: Bool {
+        showTwoWeekProTrialEndedAlert || appState.showFreeLimitAlert || appState.showProLimitAlert
+    }
+    
     private var isRemote: Bool {
         switch mode {
         case .remote: return true
@@ -250,16 +257,16 @@ extension PromptCore {
                 if let keyboardShortcutString = KeyboardShortcuts.getShortcut(for: .newChat)?
                     .description
                 {
-                    "Follow-up... (" + keyboardShortcutString + " for new)"
+                    "Follow-up... (" + keyboardShortcutString + " for new), / for actions"
                 } else {
-                    "Follow-up..."
+                    "Follow-up..., / for actions"
                 }
 
             } else {
-                "New instructions..."
+                "New instructions, / for actions"
             }
         } else {
-            "New instructions..."
+            "New instructions, / for actions"
         }
     }
 }
