@@ -10,6 +10,7 @@ import SwiftUI
 struct TextButton<Child: View>: View {
     private let iconSize: CGFloat
     private let iconColor: Color
+    private let hoverIconColor: Color
     private let disabled: Bool
     private let selected: Bool
     
@@ -36,6 +37,7 @@ struct TextButton<Child: View>: View {
     init(
         iconSize: CGFloat = 20,
         iconColor: Color = .white,
+        hoverIconColor: Color = .white,
         disabled: Bool = false,
         selected: Bool = false,
 
@@ -61,6 +63,7 @@ struct TextButton<Child: View>: View {
     ) {
         self.iconSize = iconSize
         self.iconColor = iconColor
+        self.hoverIconColor = hoverIconColor
         self.disabled = disabled
         self.selected = selected
         
@@ -92,7 +95,7 @@ struct TextButton<Child: View>: View {
         HStack(alignment: .center, spacing: gap) {
             if let icon = icon {
                 Image(icon).addIconStyles(
-                    foregroundColor: selected ? .blue300 : iconColor,
+                    foregroundColor: isHovered ? hoverIconColor : selected ? .blue300 : iconColor,
                     iconSize: iconSize
                 )
             }

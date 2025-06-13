@@ -287,6 +287,9 @@ struct GeneralTab: View {
                         .controlSize(.small)
                     }
                 }
+                
+                GeneralTabAudio()
+                
                 //                VStack(alignment: .leading, spacing: 8) {
                 //                    Text("Panel Position")
                 //                        .font(.system(size: 13))

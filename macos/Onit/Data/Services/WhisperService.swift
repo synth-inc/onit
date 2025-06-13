@@ -1,3 +1,4 @@
+import Defaults
 import Foundation
 
 class WhisperService {
@@ -73,15 +74,16 @@ class WhisperService {
         let decoder = JSONDecoder()
         let responseDecoded = try decoder.decode(WhisperServiceVerbose.self, from: responseData)
         
-        // Requiring 70% speech confidence to pass.
-        let containsSpeech = responseDecoded.segments.contains { segment in
-            let speechConfidenceInterval = 1 - segment.no_speech_prob
-            return speechConfidenceInterval >= WhisperServiceVerbose.requiredSpeechConfidenceInterval
-        }
         
-        // If Whisper is confident there is no speech, just return an empty string.
-        // Otherwise, return the transcribed text.
-        guard containsSpeech else { return "" }
-        return responseDecoded.text
+        let transcribedText = responseDecoded.segments.filter { segment in
+            let speechConfidence = 1 - segment.no_speech_prob
+            let passesSpeechPassThreshold = speechConfidence >= Defaults[.voiceSpeechPassThreshold]
+            return passesSpeechPassThreshold
+        }
+            .map { $0.text }
+            .joined()
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        
+        return transcribedText
     }
 }

@@ -15,7 +15,4 @@ struct WhisperServiceVerbose: Codable {
     
     let text: String
     let segments: [Segment]
-    
-    // Requiring 70% speech confidence to pass.
-    static let requiredSpeechConfidenceInterval = 0.7
 }

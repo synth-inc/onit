@@ -1,4 +1,5 @@
 import AVFoundation
+import Defaults
 import Foundation
 import Combine
 
@@ -17,7 +18,6 @@ class AudioRecorder: NSObject, ObservableObject {
     private var lastSignificantAudioTime: Date?
     private var minDB: Float = 0.0
     private var maxDB: Float = -100.0
-    private let silenceThreshold: Float = -30.0 // Prevents audio from being recorded if it has less DB than this value (silence detection).
     private var consecutiveSignificantSamples = 0
     private let requiredConsecutiveSamples = 3  // Required amount of above-threshold samples for valid audio transcription.
     
@@ -110,8 +110,8 @@ class AudioRecorder: NSObject, ObservableObject {
                 self.audioLevel = min(1.0, self.audioLevel * 0.85 + normalizedValue * 0.15)
                 
                 // Check if we have significant audio
-                // Using `silenceThreshold` to detect actual speech vs. ambient noise.
-                if averagePower > self.silenceThreshold {
+                // Using `audioSilenceThreshold` to detect actual speech vs. ambient noise.
+                if averagePower > Defaults[.voiceSilenceThreshold] {
                     self.consecutiveSignificantSamples += 1
                     
                     let hasSustainedSignificantAudio = self.consecutiveSignificantSamples >= self.requiredConsecutiveSamples
