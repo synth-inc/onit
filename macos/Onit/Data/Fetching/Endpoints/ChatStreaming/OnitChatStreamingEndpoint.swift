@@ -25,20 +25,22 @@ struct OnitChatStreamingEndpoint: StreamingEndpoint {
 
     let model: String
     let messages: [OnitChatMessage]
+    let tools: [Tool]
     let includeSearch: Bool?
 
     var requestBody: OnitChatRequest? {
-        OnitChatRequest(model: model, messages: messages, includeSearch: includeSearch)
+        OnitChatRequest(model: model, messages: messages, tools: tools, includeSearch: includeSearch)
     }
 
     var additionalHeaders: [String : String]? { nil }
 
     var timeout: TimeInterval? { nil }
 
-    func getContentFromSSE(event: EVEvent) throws -> String? {
+    func getContentFromSSE(event: EVEvent) throws -> StreamingEndpointResponse? {
         if let data = event.data?.data(using: .utf8) {
             let response = try JSONDecoder().decode(Response.self, from: data)
-            return response.content
+
+            return StreamingEndpointResponse(content: response.content, functionName: response.functionName, functionArguments: response.functionArguments)
         }
         return nil
     }
@@ -49,9 +51,10 @@ struct OnitChatStreamingEndpoint: StreamingEndpoint {
     }
 }
 
-struct OnitChatRequest: Codable {
+struct OnitChatRequest: Encodable {
     let model: String
     let messages: [OnitChatMessage]
+    let tools: [Tool]
     let includeSearch: Bool?
 }
 
@@ -72,7 +75,9 @@ struct OnitImageSource: Codable {
 }
 
 struct OnitChatStreamingResponse: Codable {
-    let content: String
+    let content: String?
+    let functionName: String?
+    let functionArguments: String?
 }
 
 struct OnitChatStreamingError: Codable {
