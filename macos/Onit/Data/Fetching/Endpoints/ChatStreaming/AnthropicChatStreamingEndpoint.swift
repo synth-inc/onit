@@ -40,7 +40,7 @@ struct AnthropicChatStreamingEndpoint: StreamingEndpoint {
     
     var timeout: TimeInterval? { nil }
     
-    func getContentFromSSE(event: EVEvent) throws -> String? {
+    func getContentFromSSE(event: EVEvent) throws -> StreamingEndpointResponse? {
         guard let eventString = event.event,
               let dataStart = eventString.range(of: "data: ")?.upperBound else { return nil }
         
@@ -49,7 +49,9 @@ struct AnthropicChatStreamingEndpoint: StreamingEndpoint {
         if let data = jsonString.data(using: .utf8) {
             let response = try JSONDecoder().decode(Response.self, from: data)
             
-            return response.delta?.text
+            if let content = response.delta?.text {
+                return StreamingEndpointResponse(content: content, functionName: nil, functionArguments: nil)
+            }
         }
         
         return nil

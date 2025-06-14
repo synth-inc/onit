@@ -27,22 +27,26 @@ struct PerplexityChatStreamingEndpoint: StreamingEndpoint {
     var additionalHeaders: [String: String]? { nil }
     var timeout: TimeInterval? { nil }
 
-    func getContentFromSSE(event: EVEvent) throws -> String? {
+    func getContentFromSSE(event: EVEvent) throws -> StreamingEndpointResponse? {
         if let data = event.data?.data(using: .utf8) {
             let response = try JSONDecoder().decode(Response.self, from: data)
-            var content = response.choices.first?.delta.content
+            let content = response.choices.first?.delta.content
+
+            guard var content = content else {
+                return StreamingEndpointResponse(content: nil, functionName: nil, functionArguments: nil)
+            }
             
             guard let citations = response.citations, !citations.isEmpty else {
-                return content
+                return StreamingEndpointResponse(content: content, functionName: nil, functionArguments: nil)
             }
             
             for (index, citation) in citations.enumerated() {
                 let realIndex = index + 1
                 let citation = "[CITATION, \(realIndex), \(citation)]"
-                content?.replace("[\(realIndex)]", with: citation)
+                content.replace("[\(realIndex)]", with: citation)
             }
             
-            return content
+            return StreamingEndpointResponse(content: content, functionName: nil, functionArguments: nil)
         }
         return nil
     }

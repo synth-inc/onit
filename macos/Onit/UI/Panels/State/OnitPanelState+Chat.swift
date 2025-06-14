@@ -137,6 +137,8 @@ extension OnitPanelState {
                 }
 
                 streamedResponse = ""
+                var functionName = ""
+                var functionArguments = ""
                 
                 let isNewInstruction = !prompt.priorInstructions.dropLast().contains(prompt.instruction)
                 if Defaults[.webSearchEnabled] && isNewInstruction {
@@ -182,11 +184,16 @@ extension OnitPanelState {
                             autoContexts: autoContextsHistory,
                             webSearchContexts: webSearchContextsHistory,
                             responses: responsesHistory,
+                            tools: ToolRouter.activeTools,
                             useOnitServer: useOnitChat,
                             model: model,
                             apiToken: apiToken)
                         for try await response in asyncText {
-                            streamedResponse += response
+                            streamedResponse += response.content ?? ""
+                            if response.functionName != nil {
+                                functionName = response.functionName ?? ""
+                            }
+                            functionArguments += response.functionArguments ?? ""
                         }
                     } else {
                         prompt.generationState = .generating
@@ -209,7 +216,7 @@ extension OnitPanelState {
                     }
                     
                     if Defaults[.streamResponse].local {
-                        prompt.generationState = .streaming                        
+                        prompt.generationState = .streaming
                         let asyncText = try await streamingClient.localChat(
                             systemMessage: systemPrompt.prompt,
                             instructions: instructionsHistory,
@@ -221,7 +228,11 @@ extension OnitPanelState {
                             responses: responsesHistory,
                             model: model)
                         for try await response in asyncText {
-                            streamedResponse += response
+                            streamedResponse += response.content ?? ""
+                            if response.functionName != nil {
+                                functionName = response.functionName ?? ""
+                            }
+                            functionArguments += response.functionArguments ?? ""
                         }
                     } else {
                         prompt.generationState = .generating
@@ -239,6 +250,22 @@ extension OnitPanelState {
                 }
                 
                 let response = Response(text: String(streamedResponse), instruction: curInstruction, type: .success, model: currentModelName)
+
+                if !functionArguments.isEmpty {
+                    let toolResult = await ToolRouter.parseAndExecuteToolCalls(functionName: functionName, functionArguments: functionArguments)
+                    response.toolCallFunctionName = functionName
+                    response.toolCallArguments = functionArguments
+
+                    switch toolResult {
+                    case .success(let success):
+                        response.toolCallResult = success.result
+                        response.toolCallSuccess = true
+                    case .failure(let failure):
+                        response.toolCallResult = failure.message
+                        response.toolCallSuccess = false
+                    }
+                }
+
                 replacePartialResponse(prompt: prompt, response: response)
                 TokenValidationManager.setTokenIsValid(true)
             } catch let error as FetchingError {
