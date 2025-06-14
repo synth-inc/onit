@@ -9,12 +9,12 @@ import Foundation
 import EventSource
 
 protocol StreamingEndpoint: Endpoint {    
-    func getContentFromSSE(event: EVEvent) throws -> String?
+    func getContentFromSSE(event: EVEvent) throws -> StreamingEndpointResponse?
     func getStreamingErrorMessage(data: Data) -> String?
 }
 
 extension StreamingEndpoint {
-    func getContentFromSSE(event: EVEvent) throws -> String? {
+    func getContentFromSSE(event: EVEvent) throws -> StreamingEndpointResponse? {
         return nil
     }
     func getStreamingErrorMessage(data: Data) -> String? {
@@ -53,4 +53,10 @@ extension StreamingEndpoint {
 
         return request
     }
+}
+
+struct StreamingEndpointResponse {
+    let content: String?
+    let functionName: String?
+    let functionArguments: String?
 }

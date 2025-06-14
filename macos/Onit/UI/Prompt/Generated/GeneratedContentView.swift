@@ -39,14 +39,21 @@ struct GeneratedContentView: View {
     
     var body: some View {
 
-        VStack(alignment: .leading) {
+        VStack(alignment: .leading, spacing: 8) {
             LLMStreamView(text: textToRead,
                           configuration: configuration,
                           onUrlClicked: onUrlClicked,
                           onCodeAction: codeAction)
                 .padding(.horizontal, 12)
+
+            let response = currentResponse
+            if let response = response, response.hasToolCall {
+                ToolCallView(response: response)
+                    .padding(.horizontal, 12)
+            }
+
             Spacer()
-            if textToRead.isEmpty && !(state.isSearchingWeb[prompt.id] ?? false) {
+            if textToRead.isEmpty && !(state.isSearchingWeb[prompt.id] ?? false) && response?.hasToolCall != true {
                 HStack {
                     Spacer()
                     QLImage("loader_rotated-200")
@@ -58,6 +65,14 @@ struct GeneratedContentView: View {
         }
     }
     
+    private var currentResponse: Response? {
+        guard prompt.generationIndex >= 0,
+              prompt.generationIndex < prompt.sortedResponses.count else {
+            return nil
+        }
+        return prompt.sortedResponses[prompt.generationIndex]
+    }
+
     private func onUrlClicked(urlString: String) {
         if let url = URL(string: urlString) {
             openURL(url)

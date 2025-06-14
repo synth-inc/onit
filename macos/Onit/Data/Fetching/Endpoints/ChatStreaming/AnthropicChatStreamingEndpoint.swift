@@ -46,16 +46,18 @@ struct AnthropicChatStreamingEndpoint: StreamingEndpoint {
     
     var timeout: TimeInterval? { nil }
     
-    func getContentFromSSE(event: EVEvent) throws -> String? {
+    func getContentFromSSE(event: EVEvent) throws -> StreamingEndpointResponse? {
         
         if let data = event.data?.data(using: .utf8) {
             let response = try JSONDecoder().decode(Response.self, from: data)
             
             if response.contentBlock?.type == "server_tool_use" {
-                return "\n\n...\n\n"
+                return StreamingEndpointResponse(content: "\n\n...\n\n", functionName: nil, functionArguments: nil)
             }
             
-            return response.delta?.text
+            if let content = response.delta?.text {
+                return StreamingEndpointResponse(content: content, functionName: nil, functionArguments: nil)
+            }
         }
         
         return nil
