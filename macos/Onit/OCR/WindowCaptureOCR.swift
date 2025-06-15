@@ -18,7 +18,8 @@ final class WindowCaptureOCR: Sendable {
     
     // MARK: - Functions
     
-    func captureWindowAndExtractText(from appName: String, appTitle: String? = nil, windowFrame: CGRect? = nil) async throws -> (observations: [OCRTextObservation], image: NSImage) {
+    /// Captures the window and extracts text, returning OCR observations and a CGImage.
+    func captureWindowAndExtractText(from appName: String, appTitle: String? = nil, windowFrame: CGRect? = nil) async throws -> (observations: [OCRTextObservation], image: CGImage) {
         print("captureWindow - for app: \(appName), title: \(appTitle ?? "nil"), frame: \(windowFrame?.debugDescription ?? "nil")")
         let window = try await findWindow(for: appName, targetAppTitle: appTitle, targetWindowFrame: windowFrame)
         let image = try await captureWindow(window: window)
@@ -26,7 +27,8 @@ final class WindowCaptureOCR: Sendable {
         return (observations, image)
     }
     
-    func captureWindowScreenshot(from appName: String, appTitle: String? = nil, windowFrame: CGRect? = nil) async throws -> NSImage {
+    /// Captures a screenshot as a CGImage from the specified app window.
+    func captureWindowScreenshot(from appName: String, appTitle: String? = nil, windowFrame: CGRect? = nil) async throws -> CGImage {
         let window = try await findWindow(for: appName, targetAppTitle: appTitle, targetWindowFrame: windowFrame)
         return try await captureWindow(window: window)
     }
@@ -139,7 +141,7 @@ final class WindowCaptureOCR: Sendable {
         return Double(xDiff + yDiff + (widthDiff * 0.5) + (heightDiff * 0.5))
     }
     
-    private func captureWindow(window: SCWindow) async throws -> NSImage {
+    private func captureWindow(window: SCWindow) async throws -> CGImage {
         let filter = SCContentFilter(desktopIndependentWindow: window)
         let configuration = SCStreamConfiguration()
         
@@ -163,41 +165,25 @@ final class WindowCaptureOCR: Sendable {
             contentFilter: filter,
             configuration: configuration
         )
-        
-        let imageSize = NSSize(width: cgImage.width, height: cgImage.height)
-        let nsImage = NSImage(cgImage: cgImage, size: imageSize)
-        
-        print("captureWindow - Final image size: \(nsImage.size.width) x \(nsImage.size.height)")
-        print("captureWindow - CGImage size: \(cgImage.width) x \(cgImage.height)")
-            
-        return nsImage
+        return cgImage
     }
     
-    private func performOCR(on image: NSImage) async throws -> [OCRTextObservation] {
-        guard let cgImage = image.cgImage(forProposedRect: nil, context: nil, hints: nil) else {
-            throw OCRError.ocrError("Failed to convert image to CGImage")
-        }
-        
+    private func performOCR(on image: CGImage) async throws -> [OCRTextObservation] {
         return try await withCheckedThrowingContinuation { continuation in
             let request = VNRecognizeTextRequest { request, error in
                 if let error = error {
                     continuation.resume(throwing: OCRError.ocrError(error.localizedDescription))
                     return
                 }
-                
                 guard let observations = request.results as? [VNRecognizedTextObservation] else {
                     continuation.resume(throwing: OCRError.ocrError("No text observations found"))
                     return
                 }
-                
                 let results = observations.compactMap { observation -> OCRTextObservation? in
                     guard let candidate = observation.topCandidates(1).first else { return nil }
-                    
-                    // Convert normalized coordinates to image coordinates
                     let bounds = VNImageRectForNormalizedRect(observation.boundingBox,
-                                                            Int(image.size.width),
-                                                            Int(image.size.height))
-                    
+                                                            image.width,
+                                                            image.height)
                     return OCRTextObservation(
                         text: candidate.string,
                         bounds: bounds,
@@ -206,15 +192,12 @@ final class WindowCaptureOCR: Sendable {
                         percentageMatched: 0
                     )
                 }
-                
                 continuation.resume(returning: results)
             }
-            
             request.recognitionLevel = .accurate
             request.usesLanguageCorrection = true
-            
             visionQueue.async {
-                let handler = VNImageRequestHandler(cgImage: cgImage, options: [:])
+                let handler = VNImageRequestHandler(cgImage: image, options: [:])
                 do {
                     try handler.perform([request])
                 } catch {
@@ -224,13 +207,14 @@ final class WindowCaptureOCR: Sendable {
         }
     }
     
-    func createDebugImage(original: NSImage, failedObservations: [OCRTextObservation]) -> NSImage {
-        let debugImage = NSImage(size: original.size)
+    func createDebugImage(original: CGImage, failedObservations: [OCRTextObservation]) -> NSImage {
+        let nsImage = NSImage(cgImage: original, size: NSSize(width: original.width, height: original.height))
+        let debugImage = NSImage(size: nsImage.size)
         
         debugImage.lockFocus()
         
         // Draw original image
-        original.draw(in: NSRect(origin: .zero, size: original.size))
+        nsImage.draw(in: NSRect(origin: .zero, size: nsImage.size))
         
         // Set up red highlight
         NSColor.red.withAlphaComponent(0.3).set()
@@ -248,17 +232,17 @@ final class WindowCaptureOCR: Sendable {
         return debugImage
     }
     
-    func createAccessibilityDebugImage(original: NSImage, accessibilityBoundingBoxes: [TextBoundingBox]) -> NSImage {
-        let debugImage = NSImage(size: original.size)
-        
+    func createAccessibilityDebugImage(original: CGImage, accessibilityBoundingBoxes: [TextBoundingBox]) -> NSImage {
+        let nsImage = NSImage(cgImage: original, size: NSSize(width: original.width, height: original.height))
+        let debugImage = NSImage(size: nsImage.size)
         debugImage.lockFocus()
         
         // Draw original image
-        original.draw(in: NSRect(origin: .zero, size: original.size))
+        nsImage.draw(in: NSRect(origin: .zero, size: nsImage.size))
         
         // Draw rectangles around accessibility bounding boxes
         for textBox in accessibilityBoundingBoxes {
-            let convertedRect = convertAccessibilityCoordinates(textBox.boundingBox, imageSize: original.size)
+            let convertedRect = convertAccessibilityCoordinates(textBox.boundingBox, imageSize: nsImage.size)
             
             let path = NSBezierPath(rect: convertedRect)
             path.lineWidth = 2
@@ -279,7 +263,7 @@ final class WindowCaptureOCR: Sendable {
                 let labelRect = NSRect(
                     x: convertedRect.origin.x,
                     y: convertedRect.origin.y - attributedString.size().height - 2,
-                    width: min(attributedString.size().width + 4, original.size.width - convertedRect.origin.x),
+                    width: min(attributedString.size().width + 4, nsImage.size.width - convertedRect.origin.x),
                     height: attributedString.size().height + 2
                 )
                 

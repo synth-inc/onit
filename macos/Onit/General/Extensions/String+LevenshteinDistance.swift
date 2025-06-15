@@ -230,19 +230,24 @@ private final class GPUWordMatcher {
         
         // Convert strings to fixed-size character arrays
         let ocrData = ocrWords.prefix(1024).compactMap { word -> [UInt8]? in
-            guard word.count <= maxStringLength else { return nil }
             var data = Array(word.utf8)
-            data.append(contentsOf: Array(repeating: 0, count: maxStringLength - data.count))
+            if data.count > maxStringLength {
+                data = Array(data.prefix(maxStringLength))
+            } else {
+                data.append(contentsOf: Array(repeating: 0, count: maxStringLength - data.count))
+            }
             return data
         }
         
         let accessibilityData = accessibilityWords.prefix(1024).compactMap { word -> [UInt8]? in
-            guard word.count <= maxStringLength else { return nil }
             var data = Array(word.utf8)
-            data.append(contentsOf: Array(repeating: 0, count: maxStringLength - data.count))
+            if data.count > maxStringLength {
+                data = Array(data.prefix(maxStringLength))
+            } else {
+                data.append(contentsOf: Array(repeating: 0, count: maxStringLength - data.count))
+            }
             return data
         }
-        
         guard !ocrData.isEmpty && !accessibilityData.isEmpty else {
             return []
         }

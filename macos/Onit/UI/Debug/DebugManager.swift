@@ -274,78 +274,81 @@ class DebugManager: ObservableObject {
 
     private func performOCRComparison(for windowElement: AXUIElement) async {
         guard let pid = windowElement.pid() else { return }
-        
-        // Check if task was cancelled before starting
         guard !Task.isCancelled else {
             print("performOCRComparison: task cancelled at start")
             return
         }
+   
+        let startTime = CFAbsoluteTimeGetCurrent()
+        let initializationStartTime = CFAbsoluteTimeGetCurrent()
+        let appName = windowElement.appName() ?? "Unknown"
+        let appTitle = windowElement.title() ?? appName
+        let windowFrame = windowElement.frame()
+
+        var accessibilityResults: [String: String] = [:]
+        var accessibilityBoundingBoxes: [TextBoundingBox]? = nil
+        var ocrObservations: [OCRTextObservation] = []
+        var ocrImage: CGImage? = nil
+        let initializationEndTime = CFAbsoluteTimeGetCurrent()
+        print("ocrTiming - Initialization parse took: \(initializationEndTime - initializationStartTime) seconds")
+
+        // Get accessibility data first (must be on MainActor)
+        let axParseStartTime = CFAbsoluteTimeGetCurrent()
+        let (results, boundingBoxes) = await AccessibilityParser.shared.getAllTextInElement(windowElement: windowElement, includeBoundingBoxes: true)
+        accessibilityResults = results
+        accessibilityBoundingBoxes = boundingBoxes
+        guard !Task.isCancelled else {
+            print("ocrTiming - task cancelled after accessibility parsing")
+            return
+        }
+        let axParseEndTime = CFAbsoluteTimeGetCurrent()
+        print("ocrTiming - Accessibility parse took: \(axParseEndTime - axParseStartTime) seconds")
         
+        // Then get OCR data (can be on OCRActor)
+        let ocrStartTime = CFAbsoluteTimeGetCurrent()
         do {
-            let startTime = CFAbsoluteTimeGetCurrent()
-            
-            let accessibilityStartTime = CFAbsoluteTimeGetCurrent()
-            let (accessibilityResults, accessibilityBoundingBoxes) = await AccessibilityParser.shared.getAllTextInElement(windowElement: windowElement, includeBoundingBoxes: true)
-            let accessibilityEndTime = CFAbsoluteTimeGetCurrent()
-            print("ocrTiming - Accessibility parsing took: \(accessibilityEndTime - accessibilityStartTime) seconds")
-            
-            // Check if task was cancelled after accessibility parsing
-            guard !Task.isCancelled else {
-                print("ocrTiming - task cancelled after accessibility parsing")
-                return
-            }
-            
-            let accessibilityText = accessibilityResults["screen"] ?? ""
-            
-            let appName = windowElement.appName() ?? "Unknown"
-            let appTitle = windowElement.title() ?? appName
-            
-            let windowFrame = windowElement.frame()
-            
-            let ocrStartTime = CFAbsoluteTimeGetCurrent()
-            let (observations, screenshot) = try await OCRManager.shared.extractTextFromApp(appName, appTitle: appTitle, windowFrame: windowFrame)
-            let ocrEndTime = CFAbsoluteTimeGetCurrent()
-            print("ocrTiming - OCR processing took: \(ocrEndTime - ocrStartTime) seconds")
-            
-            // Check if task was cancelled after OCR
-            guard !Task.isCancelled else {
-                print("ocrTiming - task cancelled after OCR")
-                return
-            }
-            
-            // Create a copy of the screenshot for the detached task
-            let screenshotCopy = NSImage(data: screenshot.tiffRepresentation!)!
-            
-            let computationResult = await performHeavyComputation(
-                observations: observations,
-                screenshot: screenshotCopy,
+            let (observations, image) = try await OCRManager.shared.extractTextFromApp(appName, appTitle: appTitle, windowFrame: windowFrame)
+            ocrObservations = observations
+            ocrImage = image
+        } catch {
+            print("OCR extraction failed: \(error)")
+            return
+        }
+        
+        guard !Task.isCancelled else {
+            print("ocrTiming - task cancelled after OCR processing")
+            return
+        }
+        let ocrEndTime = CFAbsoluteTimeGetCurrent()
+        print("ocrTiming - OCR took: \(ocrEndTime - ocrStartTime) seconds")
+        
+        let heavy2StartTime = CFAbsoluteTimeGetCurrent()
+        let accessibilityText = accessibilityResults["screen"] ?? ""
+        let computationResult = await Task {
+            await self.performHeavyComputation(
+                observations: ocrObservations,
+                screenshot: ocrImage,
                 accessibilityText: accessibilityText,
                 accessibilityBoundingBoxes: accessibilityBoundingBoxes,
                 appName: appName,
                 appTitle: appTitle,
                 pid: pid
             )
-            
-            await MainActor.run {
-                self.addOCRComparisonResult(computationResult)
-            }
-            
-            let endTime = CFAbsoluteTimeGetCurrent()
-            print("ocrTiming - Total OCR comparison took: \(endTime - startTime) seconds")
-            
-        } catch {
-            // Check if error is due to cancellation
-            if Task.isCancelled {
-                print("ocrTiming - OCR comparison cancelled: \(error)")
-            } else {
-                print("ocrTiming - Failed to perform OCR comparison: \(error)")
-            }
-        }
+        }.value
+        
+        // Only add result if computation completed successfully and wasn't cancelled
+        self.addOCRComparisonResult(computationResult)
+        
+        let heavy2EndTime = CFAbsoluteTimeGetCurrent()
+        print("ocrTiming - Heavy2 took: \(heavy2EndTime - heavy2StartTime) seconds")
+        
+        let endTime = CFAbsoluteTimeGetCurrent()
+        print("ocrTiming - Total OCR comparison took: \(endTime - startTime) seconds")
     }
     
-    private func performHeavyComputation(
+    private nonisolated func performHeavyComputation(
         observations: [OCRTextObservation],
-        screenshot: NSImage,
+        screenshot: CGImage?,
         accessibilityText: String,
         accessibilityBoundingBoxes: [TextBoundingBox]?,
         appName: String,
@@ -371,7 +374,7 @@ class DebugManager: ObservableObject {
         }
         
         let comparisonAllEndTime = CFAbsoluteTimeGetCurrent()
-        print("ocrTiming - ALL text comparison took: \(comparisonAllEndTime - comparisonAllStartTime) seconds")
+        print("ocrTiming - performHeavyComputation - ALL text comparison took: \(comparisonAllEndTime - comparisonAllStartTime) seconds")
         
         // Now process individual observations using the batch results
         let observationProcessingStartTime = CFAbsoluteTimeGetCurrent()
@@ -397,7 +400,7 @@ class DebugManager: ObservableObject {
             totalWords += wordsInObservation
         }
         let observationProcessingEndTime = CFAbsoluteTimeGetCurrent()
-        print("ocrTiming - Observation processing took: \(observationProcessingEndTime - observationProcessingStartTime) seconds")
+        print("ocrTiming - performHeavyComputation - Observation processing took: \(observationProcessingEndTime - observationProcessingStartTime) seconds")
         
         let matchPercentage = totalWords > 0 ? Int((Double(matchedWords) / Double(totalWords)) * 100.0) : 0
         
@@ -405,16 +408,16 @@ class DebugManager: ObservableObject {
         let failedObservations = ocrObservations.filter { !$0.isFoundInAccessibility }
         
         let debugScreenshot = WindowCaptureOCR().createDebugImage(
-            original: screenshot,
+            original: screenshot!,
             failedObservations: failedObservations
         )
         
         let debugAccessibilityScreenshot = WindowCaptureOCR().createAccessibilityDebugImage(
-            original: screenshot,
+            original: screenshot!,
             accessibilityBoundingBoxes: accessibilityBoundingBoxes ?? []
         )
         let imageEndTime = CFAbsoluteTimeGetCurrent()
-        print("Debug image creation took: \(imageEndTime - imageStartTime) seconds")
+        print("ocrTiming - performHeavyComputation - Debug image creation took: \(imageEndTime - imageStartTime) seconds")
         
         print("Total words: \(totalWords), Matched: \(matchedWords), Percentage: \(matchPercentage)%")
         
@@ -428,6 +431,7 @@ class DebugManager: ObservableObject {
             }
         }
         
+        let nsScreenshot = NSImage(cgImage: screenshot!, size: NSSize(width: screenshot!.width, height: screenshot!.height))
         let endTime = CFAbsoluteTimeGetCurrent()
         print("ocrTiming - performHeavyComputation took: \(endTime - startTime) seconds")
         
@@ -437,14 +441,14 @@ class DebugManager: ObservableObject {
             matchPercentage: matchPercentage,
             accessibilityText: accessibilityText,
             ocrObservations: ocrObservations,
-            screenshot: screenshot,
+            screenshot: nsScreenshot,
             debugScreenshot: debugScreenshot,
             debugAccessibilityScreenshot: debugAccessibilityScreenshot,
             appBundleUrl: NSRunningApplication(processIdentifier: pid)?.bundleURL
         )
     }
     
-    private func extractTokens(from text: String) -> [String] {
+    private nonisolated func extractTokens(from text: String) -> [String] {
         let delimiters = CharacterSet(charactersIn: " \t\n\r(){}[]<>.,;:!@#$%^&*+=|\\\"'`~?/-")
         
         let basicTokens = text.components(separatedBy: delimiters)
@@ -550,11 +554,6 @@ class DebugManager: ObservableObject {
     
     private func calculateMaxDistance(for token: String) -> Int {
         let length = token.count
-        
-        if length <= 3 {
-            return 1
-        }
-        
         if length <= 6 {
             return min(2, length / 3)
         }

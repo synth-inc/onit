@@ -9,7 +9,13 @@ import Foundation
 import Combine
 import ScreenCaptureKit
 
-@MainActor
+@globalActor
+struct OCRActor {
+    static let shared = OCRActorType()
+}
+actor OCRActorType {}
+
+@OCRActor
 class OCRManager: ObservableObject {
     
     // MARK: - Singleton instance
@@ -27,42 +33,18 @@ class OCRManager: ObservableObject {
     
     // MARK: - Functions
     
-    func extractTextFromApp(_ appName: String, appTitle: String? = nil, windowFrame: CGRect? = nil) async throws -> (observations: [OCRTextObservation], image: NSImage) {
+    /// Extracts text from the specified app window and returns OCR observations and a CGImage screenshot.
+    func extractTextFromApp(_ appName: String, appTitle: String? = nil, windowFrame: CGRect? = nil) async throws -> (observations: [OCRTextObservation], image: CGImage) {
         try await ensureScreenRecordingPermission()
-        
-        return try await withCheckedThrowingContinuation { continuation in
-            Task.detached {
-                do {
-                    let (observations, image) = try await self.windowCaptureOCR.captureWindowAndExtractText(from: appName, appTitle: appTitle, windowFrame: windowFrame)
-                    continuation.resume(returning: (observations, image))
-                } catch {
-                    let ocrError = error as? OCRError ?? .captureError(error.localizedDescription)
-                    continuation.resume(throwing: ocrError)
-                }
-            }
-        }
+        let (observations, image) = try await self.windowCaptureOCR.captureWindowAndExtractText(from: appName, appTitle: appTitle, windowFrame: windowFrame)
+        return (observations, image)
     }
     
-    func extractScreenshot(from appName: String, appTitle: String? = nil, windowFrame: CGRect? = nil) async throws -> NSImage {
+    /// Extracts a screenshot as a CGImage from the specified app window.
+    func extractScreenshot(from appName: String, appTitle: String? = nil, windowFrame: CGRect? = nil) async throws -> CGImage {
         try await ensureScreenRecordingPermission()
-        
-        do {
-            return try await withCheckedThrowingContinuation { continuation in
-                Task.detached {
-                    do {
-                        let windowCaptureOCR = WindowCaptureOCR()
-                        let screenshot = try await windowCaptureOCR.captureWindowScreenshot(from: appName, appTitle: appTitle, windowFrame: windowFrame)
-                        continuation.resume(returning: screenshot)
-                    } catch {
-                        let ocrError = error as? OCRError ?? .captureError(error.localizedDescription)
-                        continuation.resume(throwing: ocrError)
-                    }
-                }
-            }
-        } catch {
-            let ocrError = error as? OCRError ?? .captureError(error.localizedDescription)
-            throw ocrError
-        }
+        let screenshot = try await windowCaptureOCR.captureWindowScreenshot(from: appName, appTitle: appTitle, windowFrame: windowFrame)
+        return screenshot
     }
     
     // MARK: - Private Functions
@@ -80,12 +62,12 @@ class OCRManager: ObservableObject {
                 } catch {
                     DispatchQueue.main.async {
                         let granted = CGRequestScreenCaptureAccess()
-                        
+
                         if !granted {
                             continuation.resume(throwing: OCRError.permissionDenied("Screen recording permission was denied. Please enable screen recording for this app in System Settings > Privacy & Security > Screen Recording"))
                             return
                         }
-                        
+
                         Task.detached {
                             do {
                                 let _ = try await SCShareableContent.excludingDesktopWindows(
