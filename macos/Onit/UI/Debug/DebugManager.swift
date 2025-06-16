@@ -302,7 +302,7 @@ class DebugManager: ObservableObject {
         let initializationEndTime = CFAbsoluteTimeGetCurrent()
         print("ocrTiming - Initialization parse took: \(initializationEndTime - initializationStartTime) seconds")
 
-        // Get accessibility data first (must be on MainActor)
+        // Get accessibility data first (must be on MainActor) using AccessibilityParsingManager
         let axParseStartTime = CFAbsoluteTimeGetCurrent()
         var results: [String: String] = [:]
         var boundingBoxes: [TextBoundingBox]? = nil 
@@ -354,7 +354,9 @@ class DebugManager: ObservableObject {
         }.value
         
         // Only add result if computation completed successfully and wasn't cancelled
-        self.addOCRComparisonResult(computationResult)
+        await MainActor.run {
+            self.addOCRComparisonResult(computationResult)
+        }
 
         AnalyticsManager.Debug.ocrComparisonCompleted(appName: appName, matchPercentage: computationResult.matchPercentage, documentRootDomain: documentRootDomain)
         // Send failure event if match percentage is less than 50%
