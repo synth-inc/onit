@@ -197,14 +197,14 @@ class DebugManager: ObservableObject {
         
         ocrComparisonResults.append(result)
         
-        // Keep only the last 1000 results to prevent memory issues
-        if ocrComparisonResults.count > 1000 {
+        // Keep only the last 500 results to prevent memory issues
+        if ocrComparisonResults.count > 500 {
             // Clean up files before removing old results
-            let resultsToRemove = ocrComparisonResults.prefix(ocrComparisonResults.count - 1000)
+            let resultsToRemove = ocrComparisonResults.prefix(ocrComparisonResults.count - 500)
             for result in resultsToRemove {
                 result.cleanupFiles()
             }
-            ocrComparisonResults.removeFirst(ocrComparisonResults.count - 1000)
+            ocrComparisonResults.removeFirst(ocrComparisonResults.count - 500)
         }
         
         // Save after adding
