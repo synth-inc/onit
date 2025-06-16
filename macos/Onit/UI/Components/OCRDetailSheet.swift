@@ -11,7 +11,9 @@ struct OCRDetailSheet: View {
     let result: OCRComparisonResult
     @Environment(\.dismiss) private var dismiss
     @State private var showImageViewer = false
-    
+    @State private var thumbnailImage: NSImage?
+    @State private var isLoadingThumbnail = true
+
     var missingText: String {
         let ocrWords = result.ocrObservations
             .filter { !$0.isFoundInAccessibility }
@@ -62,11 +64,20 @@ struct OCRDetailSheet: View {
                     Text("Screenshots")
                         .font(.headline)
                     
-                    if let debugImage = result.debugScreenshot ?? result.screenshot {
+                    if isLoadingThumbnail {
+                        RoundedRectangle(cornerRadius: 8)
+                            .fill(Color.gray.opacity(0.1))
+                            .frame(height: 200)
+                            .overlay(
+                                ProgressView()
+                                    .progressViewStyle(CircularProgressViewStyle())
+                            )
+                    } else if let thumbnailImage = thumbnailImage {
                         Button {
                             showImageViewer = true
                         } label: {
-                            Image(nsImage: debugImage)
+                            Image(nsImage: thumbnailImage
+)
                                 .resizable()
                                 .aspectRatio(contentMode: .fit)
                                 .frame(maxHeight: 200)
@@ -82,6 +93,9 @@ struct OCRDetailSheet: View {
                     }
                 }
                 .padding(.horizontal)
+                .onAppear {
+                    loadThumbnail()
+                }
                 
                 Divider()
                 
@@ -199,6 +213,48 @@ struct OCRDetailSheet: View {
         }
     }
     
+    // MARK: - Thumbnail Loading
+    
+    private func loadThumbnail() {
+        guard let originalImage = result.debugScreenshot ?? result.screenshot else {
+            return
+        }
+        
+        Task {
+            let thumbnail = await generateThumbnail(from: originalImage, maxSize: CGSize(width: 400, height: 300))
+            
+            await MainActor.run {
+                self.thumbnailImage = thumbnail
+                self.isLoadingThumbnail = false
+            }
+        }
+    }
+    
+    private func generateThumbnail(from image: NSImage, maxSize: CGSize) async -> NSImage {
+        return await withCheckedContinuation { continuation in
+            DispatchQueue.global(qos: .userInitiated).async {
+                let originalSize = image.size
+                let aspectRatio = originalSize.width / originalSize.height
+                
+                var newSize: CGSize
+                if aspectRatio > maxSize.width / maxSize.height {
+                    // Width is the limiting factor
+                    newSize = CGSize(width: maxSize.width, height: maxSize.width / aspectRatio)
+                } else {
+                    // Height is the limiting factor
+                    newSize = CGSize(width: maxSize.height * aspectRatio, height: maxSize.height)
+                }
+                
+                let thumbnail = NSImage(size: newSize)
+                thumbnail.lockFocus()
+                image.draw(in: NSRect(origin: .zero, size: newSize))
+                thumbnail.unlockFocus()
+                
+                continuation.resume(returning: thumbnail)
+            }
+        }
+    }
+
     // MARK: - Export Functions
     
     private func exportText(_ text: String, filename: String) {
