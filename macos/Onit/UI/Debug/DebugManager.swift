@@ -186,6 +186,8 @@ class DebugManager: ObservableObject {
         }) {
             // Update the existing result if the new one has a lower match percentage
             if result.matchPercentage < ocrComparisonResults[existingIndex].matchPercentage {
+                // Clean up old files before replacing
+                ocrComparisonResults[existingIndex].cleanupFiles()
                 ocrComparisonResults[existingIndex] = result
             }
             // Save after update
@@ -197,6 +199,11 @@ class DebugManager: ObservableObject {
         
         // Keep only the last 1000 results to prevent memory issues
         if ocrComparisonResults.count > 1000 {
+            // Clean up files before removing old results
+            let resultsToRemove = ocrComparisonResults.prefix(ocrComparisonResults.count - 1000)
+            for result in resultsToRemove {
+                result.cleanupFiles()
+            }
             ocrComparisonResults.removeFirst(ocrComparisonResults.count - 1000)
         }
         
@@ -252,8 +259,8 @@ class DebugManager: ObservableObject {
     }
     
     func cleanupOldScreenshots() {
-        let documentsPath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
-        let ocrFolder = documentsPath.appendingPathComponent("OCRScreenshots")
+        let tempPath = URL(fileURLWithPath: NSTemporaryDirectory())
+        let ocrFolder = tempPath.appendingPathComponent("OCRScreenshots")
         
         guard let files = try? FileManager.default.contentsOfDirectory(at: ocrFolder, includingPropertiesForKeys: [.creationDateKey]) else {
             return

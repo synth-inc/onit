@@ -99,8 +99,8 @@ struct OCRComparisonResult: Codable, Identifiable, Hashable {
             return nil
         }
         
-        let documentsPath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
-        let ocrFolder = documentsPath.appendingPathComponent("OCRScreenshots")
+        let tempPath = URL(fileURLWithPath: NSTemporaryDirectory())
+        let ocrFolder = tempPath.appendingPathComponent("OCRScreenshots")
         try? FileManager.default.createDirectory(at: ocrFolder, withIntermediateDirectories: true)
         
         let fileName = "\(prefix)_\(Date().timeIntervalSince1970).png"
