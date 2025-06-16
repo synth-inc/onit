@@ -21,7 +21,7 @@ class AccessibilityObserversManager {
     weak var delegate: AccessibilityObserversDelegate?
     
 #if DEBUG
-    private let ignoredAppNames : [String] = ["Xcode", "Preview", "Finder"]
+    private let ignoredAppNames : [String] = ["Xcode"]
 #else
     private let ignoredAppNames : [String] = []
 #endif

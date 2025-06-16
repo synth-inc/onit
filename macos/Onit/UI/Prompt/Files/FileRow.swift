@@ -299,13 +299,7 @@ extension FileRow {
     private func updateCurrentTrackedWindow() {
         let windowsManager = AccessibilityNotificationsManager.shared.windowsManager
         currentTrackedWindow = windowsManager.activeTrackedWindow
-        
-        // When window changes, check if we have an OCR result for it
-        if let trackedWindow = currentTrackedWindow {
-            updateOCRComparisonResult(from: debugManager.ocrComparisonResults)
-        } else {
-            ocrComparisonResult = nil
-        }
+        updateOCRComparisonResult(from: debugManager.ocrComparisonResults)
     }
     
     private func updateOCRComparisonResult(from results: [OCRComparisonResult]) {
