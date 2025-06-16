@@ -74,7 +74,6 @@ class WhisperService {
         let decoder = JSONDecoder()
         let responseDecoded = try decoder.decode(WhisperServiceVerbose.self, from: responseData)
         
-        
         let transcribedText = responseDecoded.segments.filter { segment in
             let speechConfidence = 1 - segment.no_speech_prob
             let passesSpeechPassThreshold = speechConfidence >= Defaults[.voiceSpeechPassThreshold]
