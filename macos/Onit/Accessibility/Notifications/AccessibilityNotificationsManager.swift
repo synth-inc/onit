@@ -97,6 +97,9 @@ class AccessibilityNotificationsManager: ObservableObject {
         // timedOutWindowHash.removeAll()
         
         lastActiveWindowPid = nil
+        
+        // Cancel any ongoing parsing operations
+        AccessibilityParsingManager.shared.cancelAllOperations()
     }
     
     func fetchAutoContext(pid: pid_t? = nil, state: OnitPanelState? = nil) {
@@ -138,6 +141,10 @@ class AccessibilityNotificationsManager: ObservableObject {
     private func handleAppDeactivation(appName: String?, processID: pid_t) {
         print("Application deactivated: \(appName ?? "Unknown") \(processID)")
         
+        // When an app is deactivated, its cached accessibility data may become stale
+        // Clear cache for this PID to ensure fresh data when the app is reactivated
+        AccessibilityParsingManager.shared.invalidateCache(for: processID, reason: "application deactivated")
+        
         Task.detached {
             await self.highlightedTextCoordinator.stopPolling(pid: processID)
         }
@@ -156,6 +163,8 @@ class AccessibilityNotificationsManager: ObservableObject {
             self.handleSelectionChange(for: element)
         case kAXValueChangedNotification:
             self.handleValueChanged(for: element)
+            // Invalidate cache when content values change
+            AccessibilityParsingManager.shared.invalidateCache(for: element, reason: "value changed")
         case kAXWindowMovedNotification:
             self.handleWindowMoved(for: element, elementPid: elementPid)
         case kAXWindowResizedNotification:
@@ -164,6 +173,8 @@ class AccessibilityNotificationsManager: ObservableObject {
             self.handleCreatedWindowElement(for: element, elementPid: elementPid)
         case kAXUIElementDestroyedNotification:
             self.handleDetroyedElement(for: element)
+            // Invalidate cache when UI elements are destroyed
+            AccessibilityParsingManager.shared.invalidateCache(for: element, reason: "element destroyed")
         case kAXWindowMiniaturizedNotification:
             self.handleMinimizedElement(for: element)
         case kAXWindowDeminiaturizedNotification:
@@ -172,6 +183,35 @@ class AccessibilityNotificationsManager: ObservableObject {
             self.handleTitleChanged(for: element, elementPid: elementPid)
         case kAXFocusedUIElementChangedNotification:
             self.handleFocusedUIElementChanged(for: element, elementPid: elementPid)
+        // Additional notifications that indicate content/structure changes
+        
+        case kAXCreatedNotification:
+            // New UI element created - invalidate cache
+            AccessibilityParsingManager.shared.invalidateCache(for: element, reason: "element created")
+        case kAXLayoutChangedNotification:
+            // Layout changed - invalidate cache as content positioning may have changed
+            AccessibilityParsingManager.shared.invalidateCache(for: element, reason: "layout changed")
+        case kAXSelectedChildrenChangedNotification:
+            // Selection changes may affect visible content
+            AccessibilityParsingManager.shared.invalidateCache(for: element, reason: "selected children changed")
+        case kAXRowCountChangedNotification:
+            // Table/list content changed
+            AccessibilityParsingManager.shared.invalidateCache(for: element, reason: "row count changed")
+        case kAXRowExpandedNotification, kAXRowCollapsedNotification:
+            // Tree/outline content visibility changed
+            AccessibilityParsingManager.shared.invalidateCache(for: element, reason: "row expansion changed")
+        case kAXSelectedCellsChangedNotification:
+            // Table selection changed, may affect visible content
+            AccessibilityParsingManager.shared.invalidateCache(for: element, reason: "cell selection changed")
+        case kAXSelectedRowsChangedNotification, kAXSelectedColumnsChangedNotification:
+            // Table/grid selection changed
+            AccessibilityParsingManager.shared.invalidateCache(for: element, reason: "table selection changed")
+        case kAXMenuOpenedNotification, kAXMenuClosedNotification:
+            // Menu state changed - affects visible content
+            AccessibilityParsingManager.shared.invalidateCache(for: element, reason: "menu state changed")
+        case kAXSheetCreatedNotification, kAXDrawerCreatedNotification, kAXHelpTagCreatedNotification:
+            // New overlay elements created
+            AccessibilityParsingManager.shared.invalidateCache(for: element, reason: "overlay element created")
         default:
             break
         }
@@ -180,17 +220,26 @@ class AccessibilityNotificationsManager: ObservableObject {
     private func handleTitleChanged(for element: AXUIElement, elementPid: pid_t) {
         guard let trackedWindow = self.windowsManager.append(element, pid: elementPid) else { return }
         
+        // Invalidate cached parsing results when window title changes as content may have changed
+        AccessibilityParsingManager.shared.invalidateCache(for: element, reason: "title changed")
+        
         notifyDelegates { $0.accessibilityManager(self, didChangeWindowTitle: trackedWindow) }
     }
     
     private func handleWindowMoved(for element: AXUIElement, elementPid: pid_t) {
         guard let trackedWindow = self.windowsManager.append(element, pid: elementPid) else { return }
         
+        // Invalidate cached parsing results when window moves as frame-based hashing may be affected
+        AccessibilityParsingManager.shared.invalidateCache(for: element, reason: "window moved")
+        
         notifyDelegates { $0.accessibilityManager(self, didMoveWindow: trackedWindow) }
     }
     
     private func handleWindowResized(for element: AXUIElement, elementPid: pid_t) {
         guard let trackedWindow = self.windowsManager.append(element, pid: elementPid) else { return }
+        
+        // Invalidate cached parsing results when window resizes as content layout may have changed
+        AccessibilityParsingManager.shared.invalidateCache(for: element, reason: "window resized")
         
         notifyDelegates { $0.accessibilityManager(self, didResizeWindow: trackedWindow) }
     }
@@ -404,7 +453,8 @@ class AccessibilityNotificationsManager: ObservableObject {
                         group.addTask {
                             guard let mainWindow = pid.firstMainWindow else { return nil }
                             
-                            return await AccessibilityParser.shared.getAllTextInElement(windowElement: mainWindow)
+                            // Use AccessibilityParsingManager for coordinated parsing
+                            return await AccessibilityParsingManager.shared.parseElement(mainWindow)
                         }
                         group.addTask {
                             try await Task.sleep(nanoseconds: 10_000_000_000) // 10 second timeout
@@ -426,7 +476,7 @@ class AccessibilityNotificationsManager: ObservableObject {
                         self.screenResult = .init()
                         self.screenResult.errorMessage = "Timeout occurred, could not read application in reasonable amount of time."
                         self.showDebug()
-                    }   
+                    }
                 }
             }
         }

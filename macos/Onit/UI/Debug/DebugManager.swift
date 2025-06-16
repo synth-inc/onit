@@ -300,9 +300,9 @@ class DebugManager: ObservableObject {
         let initializationEndTime = CFAbsoluteTimeGetCurrent()
         print("ocrTiming - Initialization parse took: \(initializationEndTime - initializationStartTime) seconds")
 
-        // Get accessibility data first (must be on MainActor)
+        // Get accessibility data first (must be on MainActor) using AccessibilityParsingManager
         let axParseStartTime = CFAbsoluteTimeGetCurrent()
-        let (results, boundingBoxes) = await AccessibilityParser.shared.getAllTextInElement(windowElement: windowElement, includeBoundingBoxes: true)
+        let (results, boundingBoxes) = await AccessibilityParsingManager.shared.parseElementWithBoundingBoxes(windowElement)
         accessibilityResults = results
         accessibilityBoundingBoxes = boundingBoxes
         guard !Task.isCancelled else {
@@ -345,7 +345,9 @@ class DebugManager: ObservableObject {
         }.value
         
         // Only add result if computation completed successfully and wasn't cancelled
-        self.addOCRComparisonResult(computationResult)
+        await MainActor.run {
+            self.addOCRComparisonResult(computationResult)
+        }
 
         AnalyticsManager.ocrComparisonCompleted(appName: appName, matchPercentage: computationResult.matchPercentage, documentRootDomain: documentRootDomain)
         // Send failure event if match percentage is less than 50%
