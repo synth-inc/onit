@@ -284,6 +284,7 @@ class DebugManager: ObservableObject {
         let appName = windowElement.appName() ?? "Unknown"
         let appTitle = windowElement.title() ?? appName
         let windowFrame = windowElement.frame()
+        let documentRootDomain = windowElement.documentRootDomain()
 
         var accessibilityResults: [String: String] = [:]
         var accessibilityBoundingBoxes: [TextBoundingBox]? = nil
@@ -338,6 +339,12 @@ class DebugManager: ObservableObject {
         
         // Only add result if computation completed successfully and wasn't cancelled
         self.addOCRComparisonResult(computationResult)
+
+        AnalyticsManager.ocrComparisonCompleted(appName: appName, matchPercentage: computationResult.matchPercentage, documentRootDomain: documentRootDomain)
+        // Send failure event if match percentage is less than 50%
+        if computationResult.matchPercentage < 50 {
+            AnalyticsManager.ocrComparisonFailed(appName: appName, matchPercentage: computationResult.matchPercentage, documentRootDomain: documentRootDomain)
+        }
         
         let heavy2EndTime = CFAbsoluteTimeGetCurrent()
         print("ocrTiming - Heavy2 took: \(heavy2EndTime - heavy2StartTime) seconds")
@@ -420,16 +427,6 @@ class DebugManager: ObservableObject {
         print("ocrTiming - performHeavyComputation - Debug image creation took: \(imageEndTime - imageStartTime) seconds")
         
         print("Total words: \(totalWords), Matched: \(matchedWords), Percentage: \(matchPercentage)%")
-        
-        // Send analytics events
-        await MainActor.run {
-            AnalyticsManager.ocrComparisonCompleted(appName: appName, matchPercentage: matchPercentage)
-            
-            // Send failure event if match percentage is less than 50%
-            if matchPercentage < 50 {
-                AnalyticsManager.ocrComparisonFailed(appName: appName, matchPercentage: matchPercentage)
-            }
-        }
         
         let nsScreenshot = NSImage(cgImage: screenshot!, size: NSSize(width: screenshot!.width, height: screenshot!.height))
         let endTime = CFAbsoluteTimeGetCurrent()
