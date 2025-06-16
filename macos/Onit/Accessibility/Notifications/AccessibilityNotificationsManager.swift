@@ -127,6 +127,11 @@ class AccessibilityNotificationsManager: ObservableObject {
         
         if let mainWindow = processID.firstMainWindow {
             handleWindowBounds(for: mainWindow, elementPid: processID)
+            // When we activate a new application, we dont get a focusedUIElementChanged notification, because it hasn't "changed"
+            // Instead, we need to scan the hierarchy for the focused element and then handle it, if found!
+            if let focusedElement = FocusedElementWorker.shared.scanElementHierarchyForFocusedElement(window: mainWindow) {
+                self.handleFocusedUIElementChanged(for: focusedElement, elementPid: processID)
+            }
         }
     }
     
@@ -165,6 +170,8 @@ class AccessibilityNotificationsManager: ObservableObject {
             self.handleDeminimizedElement(for: element)
         case kAXTitleChangedNotification:
             self.handleTitleChanged(for: element, elementPid: elementPid)
+        case kAXFocusedUIElementChangedNotification:
+            self.handleFocusedUIElementChanged(for: element, elementPid: elementPid)
         default:
             break
         }
@@ -235,7 +242,7 @@ class AccessibilityNotificationsManager: ObservableObject {
         guard let role = element.role(), [kAXTextFieldRole, kAXTextAreaRole].contains(role) else {
             return
         }
-
+        
         valueDebounceWorkItem?.cancel()
 
         let workItem = DispatchWorkItem { [weak self] in
@@ -247,6 +254,13 @@ class AccessibilityNotificationsManager: ObservableObject {
         DispatchQueue.main.asyncAfter(deadline: .now() + Config.debounceInterval, execute: workItem)
     }
 
+    private func handleFocusedUIElementChanged(for element: AXUIElement, elementPid: pid_t) {
+        guard let role = element.role(), [kAXTextFieldRole, kAXTextAreaRole].contains(role) else {
+            return
+        }
+        // TODO, we'll use this for typeahead.
+    }
+    
     private func handleSelectionChange(for element: AXUIElement) {
         guard HighlightedTextValidator.isValid(element: element) else { return }
         

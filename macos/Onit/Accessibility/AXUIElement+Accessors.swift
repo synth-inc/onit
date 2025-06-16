@@ -302,6 +302,13 @@ extension AXUIElement {
         return self.attribute(forAttribute: kAXFocusedAttribute as CFString) as? Bool
     }
     
+    public func focusedUIElement() -> AXUIElement? {
+        if let value = self.attribute(forAttribute: kAXFocusedUIElementAttribute as CFString) {
+            return (value as! AXUIElement)
+        }
+        return nil
+    }
+    
     func documentURL() -> String? {
         return self.attribute(forAttribute: kAXDocumentAttribute as CFString) as? String
     }
