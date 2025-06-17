@@ -283,7 +283,7 @@ class AccessibilityNotificationsManager: ObservableObject {
                 )
                 // TODO: KNA - uncomment this to use WebContentFetchService with AXURL
             } else if let url = findUrl(in: mainWindow), url.absoluteString.contains("docs.google.com") {
-                // 
+                //
 //                handleWindowContent(urlInfo, for: state)
                 
             }  else {
