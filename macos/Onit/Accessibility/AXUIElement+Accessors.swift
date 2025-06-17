@@ -306,35 +306,10 @@ extension AXUIElement {
         let supportedRoles = [
             kAXTextFieldRole,
             kAXTextAreaRole,
-            kAXStaticTextRole
+            // kAXStaticTextRole
         ]
         
         return supportedRoles.contains(role)
-    }
-    
-    // TODO: KNA - Should be removed after debugging
-    func findFocusedTextElement() -> AXUIElement? {
-        if focused() == true && supportsCaretTracking() {
-            return self
-        }
-        
-        if role() == kAXApplicationRole {
-            if let focusedElementValue = self.attribute(forAttribute: kAXFocusedUIElementAttribute as CFString) {
-                let focusedElement = focusedElementValue as! AXUIElement
-                
-                return focusedElement.findFocusedTextElement()
-            }
-        }
-        
-        if let children = children() {
-            for child in children {
-                if let focusedChild = child.findFocusedTextElement() {
-                    return focusedChild
-                }
-            }
-        }
-        
-        return nil
     }
 }
 

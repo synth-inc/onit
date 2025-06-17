@@ -119,13 +119,15 @@ class AccessibilityNotificationsManager: ObservableObject {
                 guard let self = self else { return }
                 
                 Task { @MainActor in
-                    self.processSelectedText(text, elementFrame: frame)
+                    self.processSelectedText(text)
                 }
             })
         }
 
         currentSource = appName
         lastActiveWindowPid = processID
+        
+        caretPositionManager.updateCaretLost()
         
         if let mainWindow = processID.firstMainWindow {
             handleWindowBounds(for: mainWindow, elementPid: processID)
@@ -151,7 +153,7 @@ class AccessibilityNotificationsManager: ObservableObject {
             self.handleWindowBounds(for: element, elementPid: elementPid)
         case kAXSelectedTextChangedNotification:
             self.handleSelectionChange(for: element)
-            self.handleCaretPositionChange(for: element)
+            //self.handleCaretPositionChange(for: element)
         case kAXValueChangedNotification:
             self.handleValueChanged(for: element)
             self.handleCaretPositionChange(for: element)
@@ -449,7 +451,7 @@ class AccessibilityNotificationsManager: ObservableObject {
         results?.removeValue(forKey: AccessibilityParsedElements.applicationTitle)
         results?.removeValue(forKey: AccessibilityParsedElements.highlightedText)
         
-        self.processSelectedText(highlightedText, elementFrame: nil)
+        self.processSelectedText(highlightedText)
         
         self.screenResult.elapsedTime = elapsedTime
         self.screenResult.applicationName = appName
@@ -484,14 +486,21 @@ class AccessibilityNotificationsManager: ObservableObject {
         // Ensure we're on the main thread
         dispatchPrecondition(condition: .onQueue(.main))
 
-        let selectedTextExtracted = element.selectedText()
-        let elementBounds = element.selectedTextBound()
+        let selectedText = element.selectedText()
         
-        processSelectedText(selectedTextExtracted, elementFrame: elementBounds)
+        processSelectedText(selectedText)
+        
+        if let selectedText = selectedText, HighlightedTextValidator.isValid(text: selectedText) {
+            _ = HighlightedTextBoundsExtractor.shared.getBounds(for: element, selectedText: selectedText)
+        } else {
+            HighlightedTextBoundsExtractor.shared.reset()
+        }
+        
         showDebug()
     }
+    
 
-    private func processSelectedText(_ text: String?, elementFrame: CGRect?) {
+    private func processSelectedText(_ text: String?) {
         guard Defaults[.autoContextFromHighlights],
               let selectedText = text,
               HighlightedTextValidator.isValid(text: selectedText) else {

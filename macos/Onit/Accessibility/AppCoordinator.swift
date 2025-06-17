@@ -21,6 +21,7 @@ class AppCoordinator {
     private let notificationsManager: AccessibilityNotificationsManager
     private let panelStateCoordinator: PanelStateCoordinator
     private let featureFlagManager: FeatureFlagManager
+    private let quickEditManager: QuickEditManager
     
     private var stateChangesCancellable: AnyCancellable?
     
@@ -33,6 +34,7 @@ class AppCoordinator {
         notificationsManager = AccessibilityNotificationsManager.shared
         panelStateCoordinator = PanelStateCoordinator.shared
         featureFlagManager = FeatureFlagManager.shared
+        quickEditManager = QuickEditManager.shared
         
         observerManager.delegate = notificationsManager
         

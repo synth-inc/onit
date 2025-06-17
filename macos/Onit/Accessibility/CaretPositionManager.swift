@@ -55,31 +55,52 @@ class CaretPositionManager: ObservableObject {
     
     func updateCaretPosition(for element: AXUIElement) {
         guard let caretRect = element.selectedTextBound() else {
-            handleCaretLost()
+            updateCaretLost()
             return
         }
         
         let isValidCaretRect = caretRect.width > 0 && caretRect.height > 0
-        let finalCaretRect: CGRect
+        let baseCaretRect: CGRect
         
         if isValidCaretRect {
-            finalCaretRect = caretRect
+            baseCaretRect = caretRect
         } else {
-            finalCaretRect = calculateCaretFromElement(element, originalRect: caretRect)
+            baseCaretRect = calculateCaretFromElement(element, originalRect: caretRect)
         }
         
-        let screenCaretRect = CaretCoordinateConverter.convertToScreenCoordinates(finalCaretRect, fromElement: element)
+        let adjustedCaretRect = adjustCaretToElementBounds(baseCaretRect, element: element)
+        let screenCaretRect = convertToScreenCoordinates(adjustedCaretRect, fromElement: element)
         let appName = element.appName() ?? "Unknown"
         
         processCaretPosition(screenCaretRect, element: element, app: appName)
     }
     
-    // TODO: KNA - Should be removed after debugging
-    func debugCaretDetection() -> String {
-        return CaretDebugger.debugCaretDetection()
+    func updateCaretLost() {
+        if isCaretVisible {
+            isCaretVisible = false
+            currentCaretPosition = nil
+            currentElement = nil
+            
+            notifyDelegates { delegate in
+                delegate.caretDidDisappear()
+            }
+        }
     }
     
     // MARK: - Private Functions
+    
+    private func adjustCaretToElementBounds(_ caretRect: CGRect, element: AXUIElement) -> CGRect {
+        guard let elementFrame = element.getFrame() else {
+            return caretRect
+        }
+        
+        return CGRect(
+            x: elementFrame.origin.x,
+            y: caretRect.origin.y,
+            width: elementFrame.width,
+            height: caretRect.height
+        )
+    }
     
     private func calculateCaretFromElement(_ element: AXUIElement, originalRect: CGRect) -> CGRect {
         guard let elementFrame = element.getFrame() else {
@@ -100,22 +121,43 @@ class CaretPositionManager: ObservableObject {
             )
         }
         
-        let value = element.value() ?? ""
-        let textLength = value.count
-        let caretX: CGFloat
+        let caretX = elementFrame.origin.x
+        let caretY = elementFrame.origin.y
+        log.error("FINAL")
+        return CGRect(x: caretX, y: caretY, width: 2, height: 16)
+    }
+    
+    private func convertToScreenCoordinates(_ rect: CGRect, fromElement element: AXUIElement) -> CGRect {
+        let screenRect = centerCaretCoordinates(rect)
         
-        if textLength > 0 {
-            // Estimate caret position based on text length (rough approximation)
-            let charWidth: CGFloat = 6 // Average character width
-            let estimatedTextWidth = min(CGFloat(textLength) * charWidth, elementFrame.width - 10)
-            caretX = elementFrame.origin.x + 5 + estimatedTextWidth // 5px padding from left
-        } else {
-            caretX = elementFrame.origin.x + 5 // Start with small padding
+        return convertAccessibilityToMacOSCoordinates(screenRect)
+    }
+    
+    private func centerCaretCoordinates(_ rect: CGRect) -> CGRect {
+        let centeredY = rect.height > 0 ? rect.origin.y + (rect.height / 2) : rect.origin.y
+        
+        return CGRect(
+            x: rect.origin.x,
+            y: centeredY,
+            width: max(rect.width, 2),
+            height: max(rect.height, 20)
+        )
+    }
+    
+    private func convertAccessibilityToMacOSCoordinates(_ rect: CGRect) -> CGRect {
+        guard let mainScreen = NSScreen.primary else {
+            return rect
         }
         
-        let caretY = elementFrame.origin.y + (elementFrame.height / 2) - 8
+        let screenHeight = mainScreen.frame.height
+        let convertedY = screenHeight - rect.origin.y - rect.height
         
-        return CGRect(x: caretX, y: caretY, width: 2, height: 16)
+        return CGRect(
+            x: rect.origin.x,
+            y: convertedY,
+            width: rect.width,
+            height: rect.height
+        )
     }
     
     private func processCaretPosition(_ position: CGRect, element: AXUIElement, app: String) {
@@ -135,18 +177,6 @@ class CaretPositionManager: ObservableObject {
         
         notifyDelegates { delegate in
             delegate.caretPositionDidUpdate(position, in: app, element: element)
-        }
-    }
-    
-    private func handleCaretLost() {
-        if isCaretVisible {
-            isCaretVisible = false
-            currentCaretPosition = nil
-            currentElement = nil
-            
-            notifyDelegates { delegate in
-                delegate.caretDidDisappear()
-            }
         }
     }
 }
