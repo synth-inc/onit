@@ -5,8 +5,10 @@
 //  Created by Kévin Naudin on 03/02/2025.
 //
 
+#if DEBUG
 #if canImport(Darwin)
 import Darwin
+#endif
 #endif
 
 import SwiftUI
