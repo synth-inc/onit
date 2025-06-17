@@ -300,6 +300,21 @@ class AccessibilityNotificationsManager: ObservableObject {
         DispatchQueue.main.asyncAfter(deadline: .now() + Config.debounceInterval, execute: workItem)
     }
 
+    private func handleFocusedUIElementChanged(for element: AXUIElement, elementPid: pid_t) {
+        guard let role = element.role(), [kAXTextFieldRole, kAXTextAreaRole].contains(role) else {
+            return
+        }
+        
+        Task {
+            let (precedingText, followingText) = await AccessibilityParsingManager.shared.splitTextAroundElement(element)
+
+            // This needs to go in the AXContext History.
+            print("splittingAccessibilityText - AX text before \(precedingText) \n\n\n after \(followingText)")
+        }
+        
+        // TODO, we'll use this for typeahead.
+    }
+    
     private func handleSelectionChange(for element: AXUIElement) {
         guard HighlightedTextValidator.isValid(element: element) else { return }
         

@@ -123,7 +123,7 @@ final class AccessibilityParsingManager {
         requester: AnyObject,
         completion: @escaping SimpleCompletionHandler
     ) {
-        let elementHash = generateElementHash(windowElement)
+        let elementHash = CFHash(windowElement)
         
         // Check if we have valid cached results
         if let cachedResult = validateAndCleanExpiredResult(for: elementHash) {
@@ -152,7 +152,7 @@ final class AccessibilityParsingManager {
         requester: AnyObject,
         completion: @escaping EnhancedCompletionHandler
     ) {
-        let elementHash = generateElementHash(windowElement)
+        let elementHash = CFHash(windowElement)
         
         // Check if we have valid cached results with bounding boxes
         if let cachedResult = validateAndCleanExpiredResult(for: elementHash),
@@ -199,7 +199,7 @@ final class AccessibilityParsingManager {
     
     /// Clear cached results for a specific window element
     func clearCache(for windowElement: AXUIElement) {
-        let elementHash = generateElementHash(windowElement)
+        let elementHash = CFHash(windowElement)
         cachedResults.removeValue(forKey: elementHash)
         print("AccessibilityParsingManager: Cleared cached results for element hash \(elementHash)")
     }
@@ -207,7 +207,7 @@ final class AccessibilityParsingManager {
     /// Invalidate cached results for accessibility tree changes
     /// This should be called when the accessibility tree structure or content changes
     func invalidateCache(for windowElement: AXUIElement, reason: String) {
-        let elementHash = generateElementHash(windowElement)
+        let elementHash = CFHash(windowElement)
         if cachedResults.removeValue(forKey: elementHash) != nil {
             print("AccessibilityParsingManager: Invalidated cached results for element hash \(elementHash), reason: \(reason)")
         }
@@ -311,41 +311,238 @@ final class AccessibilityParsingManager {
             }
         }
     }
-    
-    private func generateElementHash(_ element: AXUIElement) -> UInt {
-        // Create a hash based on the element's properties that uniquely identify it
-        var hasher = Hasher()
-        
-        // Use element's PID
-        if let pid = element.pid() {
-            hasher.combine(pid)
-        }
-        
-        // Use element's role and title if available
-        if let role = element.role() {
-            hasher.combine(role)
-        }
-        
-        if let title = element.title() {
-            hasher.combine(title)
-        }
-        
-        // Use element's frame if available for more specificity
-        if let frame = element.frame() {
-            hasher.combine(frame.origin.x)
-            hasher.combine(frame.origin.y)
-            hasher.combine(frame.size.width)
-            hasher.combine(frame.size.height)
-        }
-        
-        return UInt(hasher.finalize())
-    }
+
     
     // MARK: - Direct Access Methods (for simple one-off usage)
     
+    /// Split accessibility text around a target element
+    /// - Parameter targetElement: The element to split text around
+    /// - Returns: A tuple containing (precedingText, followingText) split around the target element
+    func splitTextAroundElement(_ targetElement: AXUIElement) async -> (precedingText: String, followingText: String) {
+        // Get the window element for the target by traversing up the parent hierarchy
+        guard let windowElement = findWindowElement(for: targetElement) else {
+            print("AccessibilityParsingManager: Could not find window for target element")
+            return ("", "")
+        }
+        
+        let elementHash = CFHash(windowElement)
+        
+        // Get cached or fresh parsing results
+        let fullText: String
+        if let cachedResult = validateAndCleanExpiredResult(for: elementHash) {
+            print("AccessibilityParsingManager: Using cached results for text splitting")
+            fullText = cachedResult.results["screen"] ?? ""
+        } else {
+            print("AccessibilityParsingManager: Parsing fresh results for text splitting")
+            let results = await AccessibilityParser.shared.getAllTextInElement(windowElement: windowElement)
+            let pid = windowElement.pid()
+            let cachedResult = CachedResult(results: results, boundingBoxes: nil, hasBoundingBoxes: false, pid: pid)
+            cachedResults[elementHash] = cachedResult
+            fullText = results["screen"] ?? ""
+        }
+        
+        // Find the target element's value or closest element with value
+        let (elementValue, isBeforeTarget) = await findElementValueForSplitting(targetElement: targetElement, windowElement: windowElement)
+        
+        guard !elementValue.isEmpty else {
+            print("AccessibilityParsingManager: No element value found for splitting")
+            return ("", fullText)
+        }
+        
+        // Split the text around the element value
+        return splitTextAroundValue(fullText: fullText, elementValue: elementValue, isElementBeforeTarget: isBeforeTarget)
+    }
+    
+    /// Find the window element by traversing up the parent hierarchy
+    private func findWindowElement(for element: AXUIElement) -> AXUIElement? {
+        var currentElement = element
+        
+        // Traverse up the parent hierarchy looking for a window
+        while true {
+            let role = currentElement.role()
+            
+            // Check if this element is a window
+            if role == kAXWindowRole || role == "AXWindow" {
+                return currentElement
+            }
+            
+            // Move to parent element
+            guard let parent = currentElement.parent() else {
+                break
+            }
+            
+            currentElement = parent
+        }
+        
+        // If we didn't find a window, try to use the element itself if it's an application
+        let role = element.role()
+        if role == kAXApplicationRole || role == "AXApplication" {
+            // For application elements, try to get the main window
+            return element.mainWindow() ?? element
+        }
+        
+        return nil
+    }
+    
+    /// Find the value to use for text splitting - either from the target element or closest element with value
+    private func findElementValueForSplitting(targetElement: AXUIElement, windowElement: AXUIElement) async -> (value: String, isBeforeTarget: Bool) {
+        // First try to get value from the target element itself
+        if let targetValue = targetElement.value(), !targetValue.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            print("AccessibilityParsingManager: Using target element's own value for splitting")
+            return (targetValue, false) // Element's own value, so neither before nor after
+        }
+        
+        // If target element has no value, traverse the accessibility hierarchy to find closest element with value
+        return await traverseForClosestValue(from: targetElement, in: windowElement)
+    }
+    
+    /// Traverse accessibility hierarchy to find the closest element with a value
+    private func traverseForClosestValue(from targetElement: AXUIElement, in windowElement: AXUIElement) async -> (value: String, isBeforeTarget: Bool) {
+        // Strategy: Expand outward from target element
+        // 1. Check siblings before and after target
+        // 2. Move up to parent and check its siblings
+        // 3. Continue up the hierarchy until we find a value or reach the window
+        
+        return await expandSearchFromElement(targetElement)
+    }
+    
+    /// Expand search outward from the target element level by level
+    private func expandSearchFromElement(_ element: AXUIElement) async -> (value: String, isBeforeTarget: Bool) {
+        var currentElement = element
+        
+        // Track the path we took to get here, so we know which direction elements are in
+        var pathFromTarget: [AXUIElement] = [element]
+        
+        while true {
+            // Check siblings of current element
+            if let result = await checkSiblingsForValue(of: currentElement, pathFromTarget: pathFromTarget) {
+                return result
+            }
+            
+            // Move up to parent
+            guard let parent = currentElement.parent() else {
+                break
+            }
+            
+            // Stop if we've reached the window or application level
+            let parentRole = parent.role()
+            if parentRole == kAXWindowRole || parentRole == "AXWindow" ||
+               parentRole == kAXApplicationRole || parentRole == "AXApplication" {
+                break
+            }
+            
+            pathFromTarget.append(parent)
+            currentElement = parent
+        }
+        
+        return ("", false)
+    }
+    
+    /// Check siblings of an element for values, determining their position relative to target
+    private func checkSiblingsForValue(of element: AXUIElement, pathFromTarget: [AXUIElement]) async -> (value: String, isBeforeTarget: Bool)? {
+        guard let parent = element.parent(),
+              let siblings = parent.children() else {
+            return nil
+        }
+        
+        // Find the index of our element among its siblings
+        guard let elementIndex = findElementIndexInArray(element, in: siblings) else {
+            return nil
+        }
+        
+        // Search siblings before our element (these are "before" the target)
+        for i in stride(from: elementIndex - 1, through: 0, by: -1) {
+            if let value = await searchElementAndChildrenForValue(siblings[i]) {
+                print("AccessibilityParsingManager: Found preceding sibling with value")
+                return (value, true) // Element is before target
+            }
+        }
+        
+        // Search siblings after our element (these are "after" the target)
+        for i in (elementIndex + 1)..<siblings.count {
+            if let value = await searchElementAndChildrenForValue(siblings[i]) {
+                print("AccessibilityParsingManager: Found following sibling with value")
+                return (value, false) // Element is after target
+            }
+        }
+        
+        return nil
+    }
+    
+    /// Search an element and its descendants for a value (depth-first)
+    private func searchElementAndChildrenForValue(_ element: AXUIElement) async -> String? {
+        // Check the element itself first
+        if let value = element.value(), !value.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            return value
+        }
+        
+        // Search children depth-first
+        guard let children = element.children() else {
+            return nil
+        }
+        
+        for child in children {
+            if let value = await searchElementAndChildrenForValue(child) {
+                return value
+            }
+        }
+        
+        return nil
+    }
+    
+    /// Find the index of an element in an array by comparing properties
+    private func findElementIndexInArray(_ targetElement: AXUIElement, in elements: [AXUIElement]) -> Int? {
+        let targetRole = targetElement.role()
+        let targetTitle = targetElement.title()
+        let targetValue = targetElement.value()
+        let targetFrame = targetElement.frame()
+        
+        for (index, element) in elements.enumerated() {
+            // Compare multiple properties to identify the same element
+            let elementRole = element.role()
+            let elementTitle = element.title()
+            let elementValue = element.value()
+            let elementFrame = element.frame()
+            
+            // Elements match if all comparable properties are equal
+            let roleMatch = targetRole == elementRole
+            let titleMatch = targetTitle == elementTitle
+            let valueMatch = targetValue == elementValue
+            let frameMatch = targetFrame == elementFrame
+            
+            if roleMatch && titleMatch && valueMatch && frameMatch {
+                return index
+            }
+        }
+        
+        return nil
+    }
+    
+    /// Split the full text around the element value
+    private func splitTextAroundValue(fullText: String, elementValue: String, isElementBeforeTarget: Bool) -> (precedingText: String, followingText: String) {
+        // Find the element value in the full text
+        guard let range = fullText.range(of: elementValue) else {
+            print("AccessibilityParsingManager: Element value '\(elementValue)' not found in full text")
+            return ("", fullText)
+        }
+        
+        let precedingText = String(fullText[..<range.lowerBound])
+        let followingText = String(fullText[range.upperBound...])
+        
+        if isElementBeforeTarget {
+            // Element value should be included with preceding text
+            let adjustedPrecedingText = precedingText + elementValue
+            return (adjustedPrecedingText, followingText)
+        } else {
+            // Element value should be included with following text
+            let adjustedFollowingText = elementValue + followingText
+            return (precedingText, adjustedFollowingText)
+        }
+    }
+    
     /// Direct parsing method that bypasses the request system for simple cases
     func parseElement(_ windowElement: AXUIElement) async -> [String: String] {
-        let elementHash = generateElementHash(windowElement)
+        let elementHash = CFHash(windowElement)
         
         // Check cache first
         if let cachedResult = validateAndCleanExpiredResult(for: elementHash) {
@@ -365,7 +562,7 @@ final class AccessibilityParsingManager {
     
     /// Direct parsing method that bypasses the request system for enhanced cases
     func parseElementWithBoundingBoxes(_ windowElement: AXUIElement) async -> ([String: String], [TextBoundingBox]?) {
-        let elementHash = generateElementHash(windowElement)
+        let elementHash = CFHash(windowElement)
         
         // Check cache first (must have bounding boxes)
         if let cachedResult = validateAndCleanExpiredResult(for: elementHash),
