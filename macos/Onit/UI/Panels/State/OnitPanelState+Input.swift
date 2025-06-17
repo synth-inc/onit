@@ -9,7 +9,7 @@ import AppKit
 import Defaults
 
 extension OnitPanelState {
-    func addAutoContext() {
+    func addAutoContext(trackedWindow: TrackedWindow? = nil) {
         guard Defaults[.autoContextFromCurrentWindow] else { return }
 
         let appName = AccessibilityNotificationsManager.shared.screenResult.applicationName ?? "AutoContext"
@@ -24,13 +24,15 @@ extension OnitPanelState {
             pendingContextList.insert(errorContext, at: 0)
             return
         }
+        
         guard let activeTrackedWindow = AccessibilityNotificationsManager.shared.windowsManager.activeTrackedWindow else {
             let errorContext = Context(appName: "Unable to add \(appName)", appHash: 0, appTitle: "", appContent: ["error": "Cannot identify context"])
             pendingContextList.insert(errorContext, at: 0)
             return
         }
-        let appHash = CFHash(activeTrackedWindow.element)
-        let appTitle = activeTrackedWindow.title
+        
+        let appHash = trackedWindow?.hash ?? CFHash(activeTrackedWindow.element)
+        let appTitle = trackedWindow?.title ?? activeTrackedWindow.title
 
         if let existingIndex = pendingContextList.firstIndex(where: { context in
             if case .auto(let autoContext) = context {
@@ -56,8 +58,10 @@ extension OnitPanelState {
                 pendingContextList[existingIndex] = newContext
             }
             
-            cleanupAutoContextTask(windowName: appTitle)
+            cleanupWindowContextTask(uniqueWindowIdentifier: appHash)
+            
             return
+            
             /** Merge result for existing autoContext */
 //            if case .auto(let autoContext) = pendingContextList[existingIndex] {
 //                var existingContent = autoContext.appContent
@@ -86,39 +90,44 @@ extension OnitPanelState {
         
         pendingContextList.insert(autoContext, at: 0)
         
-        cleanupAutoContextTask(windowName: appTitle)
+        cleanupWindowContextTask(uniqueWindowIdentifier: appHash)
     }
     
-    func cleanupAutoContextTask(windowName: String) {
-        addAutoContextTasks[windowName]?.cancel()
-        addAutoContextTasks.removeValue(forKey: windowName)
+    func cleanupWindowContextTask(uniqueWindowIdentifier: UInt) {
+        windowContextTasks[uniqueWindowIdentifier]?.cancel()
+        windowContextTasks.removeValue(forKey: uniqueWindowIdentifier)
     }
     
-    func addWindowToContext(
-        windowName: String,
-        pid: pid_t,
-        appBundleUrl: URL?
-    ) {
-        addAutoContextTasks[windowName]?.cancel()
+    func cleanUpPendingWindowContextTasks() {
+        for (_, task) in windowContextTasks {
+            task.cancel()
+        }
         
-        addAutoContextTasks[windowName] = Task {
-            guard let focusedWindow = pid.firstMainWindow
-            else {
-                await MainActor.run {
-                    self.cleanupAutoContextTask(windowName: windowName)
-                }
-                return
-            }
+        windowContextTasks = [:]
+    }
+    
+    func addWindowToContext(window: AXUIElement) {
+        guard let windowPid = window.pid() else { return }
+        
+        guard let trackedWindow = AccessibilityNotificationsManager.shared.windowsManager.append(
+            window,
+            pid: windowPid
+        ) else {
+            return
+        }
+        
+        windowContextTasks[trackedWindow.hash]?.cancel()
+        
+        windowContextTasks[trackedWindow.hash] = Task {
             
-            let _ = AccessibilityNotificationsManager.shared.windowsManager.append(
-                focusedWindow,
-                pid: pid
-            )
             
-            // No need to clean up `addAutoContextTasks` here, because `fetchAutoContext` ultimately leads to `addAutoContext()` down the stack, which will handle the cleanup.
+            // No need to clean up `uniqueWindowIdentifier` here, because `fetchAutoContext` ultimately leads to `addAutoContext()` down the stack, which will handle the cleanup.
+            let windowApp = getWindowApp(pid: trackedWindow.pid)
+            let appBundleUrl = windowApp?.bundleURL
+            
             AccessibilityNotificationsManager.shared.fetchAutoContext(
-                pid: pid,
                 state: self,
+                trackedWindow: trackedWindow,
                 customAppBundleUrl: appBundleUrl
             )
         }
@@ -128,48 +137,58 @@ extension OnitPanelState {
         return NSRunningApplication(processIdentifier: pid)
     }
     
+    func getWindowAppBundleUrl(window: AXUIElement) -> URL? {
+        if let pid = window.pid(),
+           let windowApp = getWindowApp(pid: pid)
+        {
+            return windowApp.bundleURL
+        } else {
+            return nil
+        }
+    }
+    
     func convertAppBundleUrlToNSImage(_ appBundleUrl: URL) -> NSImage {
         return NSWorkspace.shared.icon(forFile: appBundleUrl.path)
     }
     
-    func getWindowIconAndName(window: AXUIElement, pid: pid_t) -> (NSImage?, String) {
-        var windowIcon: NSImage? = nil
-        
-        let windowApp = getWindowApp(pid: pid)
-        
-        if let appBundleUrl = windowApp?.bundleURL {
-            windowIcon = convertAppBundleUrlToNSImage(appBundleUrl)
+    func getWindowIcon(window: AXUIElement) -> NSImage? {
+        if let appBundleUrl = getWindowAppBundleUrl(window: window) {
+            return convertAppBundleUrlToNSImage(appBundleUrl)
+        } else {
+            return nil
         }
+    }
+    
+    func getWindowName(window: AXUIElement) -> String {
+        let fallbackName: String = "Unknown"
         
-        let windowName = window.title() ?? window.appName() ?? windowApp?.localizedName ?? "Unknown"
-        
+        if let pid = window.pid() {
+            let windowApp = getWindowApp(pid: pid)
+            let windowName = window.title() ?? window.appName() ?? windowApp?.localizedName ?? fallbackName
+            return windowName
+        } else {
+            return fallbackName
+        }
+    }
+    
+    func getWindowIconAndName(window: AXUIElement, windowPid: pid_t) -> (NSImage?, String) {
+        let windowIcon = getWindowIcon(window: window)
+        let windowName = getWindowName(window: window)
         return (windowIcon, windowName)
     }
     
-    func getCurrentWindowDetails() -> (String?, pid_t?, URL?) {
+    func getForegroundWindow() -> TrackedWindow? {
         let windowsManager = AccessibilityNotificationsManager.shared.windowsManager
         
-        if let currentWindow = windowsManager.activeTrackedWindow,
-           let windowPid = currentWindow.element.pid(),
-           let windowApp = NSRunningApplication(processIdentifier: windowPid)
-        {
-            let windowName = currentWindow.element.title() ?? currentWindow.element.appName() ?? "Unknown"
-            let windowAppBundleUrl = windowApp.bundleURL
-            
-            return (windowName, windowPid, windowAppBundleUrl)
+        if let trackedWindow = windowsManager.activeTrackedWindow {
+            return trackedWindow
         } else {
-            return (nil, nil, nil)
+            return nil
         }
     }
     
-    func setCurrentWindowDetails(
-        windowName: String? = nil,
-        windowPid: pid_t? = nil,
-        windowAppBundleUrl: URL? = nil
-    ) {
-        self.currentWindowName = windowName
-        self.currentWindowPid = windowPid
-        self.currentWindowAppBundleUrl = windowAppBundleUrl
+    func updateForegroundWindow() {
+        self.foregroundWindow = getForegroundWindow()
     }
 
     func getPendingContextList() -> [Context] {

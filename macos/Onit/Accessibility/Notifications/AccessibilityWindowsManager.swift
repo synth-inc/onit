@@ -41,17 +41,30 @@ class AccessibilityWindowsManager {
             if !trackedWindows.contains(trackedWindow) {
                 trackedWindows.append(trackedWindow)
             }
+            
             activeTrackedWindow = trackedWindow
             
             return trackedWindow
-        } else if let window = pid.firstMainWindow {
-
+        }
+        
+        var targetWindow: AXUIElement?
+        
+        if element.isMain() == true && element.isTargetWindow() {
+            targetWindow = element
+        } else if element.isTargetWindow() {
+            targetWindow = element
+        } else {
+            targetWindow = findContainingWindow(element: element, pid: pid)
+        }
+        
+        if let window = targetWindow {
             let title = window.title() ?? "NA"
             let trackedWindow = TrackedWindow(element: window, pid: pid, hash: CFHash(window), title: title)
             
             if !trackedWindows.contains(trackedWindow) {
                 trackedWindows.append(trackedWindow)
             }
+            
             activeTrackedWindow = trackedWindow
             return trackedWindow
         } else {
@@ -59,6 +72,19 @@ class AccessibilityWindowsManager {
         }
         
         return nil
+    }
+    
+    private func findContainingWindow(element: AXUIElement, pid: pid_t) -> AXUIElement? {
+        var currentElement = element
+        
+        while let parent = currentElement.parent() {
+            if parent.isTargetWindow() {
+                return parent
+            }
+            currentElement = parent
+        }
+        
+        return pid.firstMainWindow
     }
     
     func remove(_ trackedWindow: TrackedWindow) -> TrackedWindow? {

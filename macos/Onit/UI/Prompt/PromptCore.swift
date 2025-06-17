@@ -236,7 +236,7 @@ extension PromptCore {
 
 extension PromptCore {
     private var shouldIndicateDisabled: Bool {
-        !windowState.websiteUrlsScrapeQueue.isEmpty || !windowState.addAutoContextTasks.isEmpty
+        !windowState.websiteUrlsScrapeQueue.isEmpty || !windowState.windowContextTasks.isEmpty
     }
     
     private var showingAlert: Bool {

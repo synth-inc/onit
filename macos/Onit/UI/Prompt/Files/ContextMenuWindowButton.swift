@@ -8,27 +8,34 @@
 import SwiftUI
 
 struct ContextMenuWindowButton: View {
+    @Environment(\.windowState) private var windowState
+    
     private let isLoadingIntoContext: Bool
     private let selected: Bool
-    private let windowName: String
+    private let window: AXUIElement
     private let windowContextItem: Context?
-    private let windowIcon: NSImage?
     private let action: () -> Void
     
     init(
         isLoadingIntoContext: Bool,
         selected: Bool,
-        windowName: String,
+        window: AXUIElement,
         windowContextItem: Context?,
-        windowIcon: NSImage? = nil,
         action: @escaping () -> Void
     ) {
         self.isLoadingIntoContext = isLoadingIntoContext
         self.selected = selected
-        self.windowName = windowName
+        self.window = window
         self.windowContextItem = windowContextItem
-        self.windowIcon = windowIcon
         self.action = action
+    }
+    
+    private var windowName: String {
+        windowState.getWindowName(window: window)
+    }
+    
+    private var windowIcon: NSImage? {
+        windowState.getWindowIcon(window: window)
     }
     
     var body: some View {
@@ -38,9 +45,11 @@ struct ContextMenuWindowButton: View {
             iconImage: windowIcon,
             text: windowName
         ){
-            if isLoadingIntoContext {
-                LoaderPulse()
-            } else if windowContextItem == nil {
+//            if isLoadingIntoContext {
+//                LoaderPulse()
+//            }
+            
+            if windowContextItem == nil {
                 checkEmpty
             } else {
                 checkFilled

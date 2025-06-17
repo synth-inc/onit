@@ -139,12 +139,10 @@ class OnitPanelState: NSObject {
     var websiteUrlsScrapeQueue: [String: WebsiteUrlScrapeTask] = [:]
     
     // Auto-context states
-    typealias TaskWindowName = String
-    var addAutoContextTasks: [TaskWindowName: Task<Void, Never>] = [:]
+    typealias UniqueWindowIdentifier = UInt
+    var windowContextTasks: [UniqueWindowIdentifier: Task<Void, Never>] = [:]
     
-    var currentWindowName: String? = nil
-    var currentWindowPid: pid_t? = nil
-    var currentWindowAppBundleUrl: URL? = nil
+    var foregroundWindow: TrackedWindow? = nil
     
     // Menu States
     var showContextMenu: Bool = false

@@ -17,30 +17,18 @@ struct FileRow: View {
     @State private var windowDelegate: WindowChangeDelegate? = nil
     @State private var windowAlreadyInContext: Bool = false
     
-    @State private var addingAutoContext: Bool = false
+    @State private var addingWindowContext: Bool = false
     
     var accessibilityEnabled: Bool {
         accessibilityPermissionManager.accessibilityPermissionStatus == .granted
     }
     
-    var windowName: String? {
-        if accessibilityEnabled,
+    var foregroundWindowName: String? {
+        if let foregroundWindow = windowState.foregroundWindow,
+           accessibilityEnabled,
            !windowAlreadyInContext
         {
-            return windowState.currentWindowName
-        } else {
-            return nil
-        }
-    }
-    
-    var appIcon: (any View)? {
-        if let appBundleUrl = windowState.currentWindowAppBundleUrl {
-            let iconUrl = NSWorkspace.shared.icon(forFile: appBundleUrl.path)
-            
-            return Image(nsImage: iconUrl)
-                .resizable()
-                .frame(width: 16, height: 16)
-                .cornerRadius(4)
+            return windowState.getWindowName(window: foregroundWindow.element)
         } else {
             return nil
         }
@@ -50,24 +38,21 @@ struct FileRow: View {
 
     var body: some View {
         FlowLayout(spacing: 6) {
-            PaperclipButton(
-                currentWindowBundleUrl: windowState.currentWindowAppBundleUrl,
-                currentWindowName: windowState.currentWindowName,
-                currentWindowPid: windowState.currentWindowPid
-            )
+            PaperclipButton()
             
             if autoContextFromCurrentWindow,
-               let windowName = windowName
+               let foregroundWindow = windowState.foregroundWindow,
+               let foregroundWindowName = foregroundWindowName
             {
                 ContextTag(
-                    text: windowName,
+                    text: foregroundWindowName,
                     hoverTextColor: .T_2,
                     background: .clear,
                     hoverBackground: .clear,
                     hasHoverBorder: true,
                     shouldFadeIn: true,
-                    iconBundleURL: windowState.currentWindowAppBundleUrl,
-                    tooltip: "Add \(windowName) Context"
+                    iconBundleURL: windowState.getWindowAppBundleUrl(window: foregroundWindow.element),
+                    tooltip: "Add \(foregroundWindowName) Context"
                 ) {
                     addWindowToContext()
                 }
@@ -93,24 +78,24 @@ struct FileRow: View {
             AccessibilityNotificationsManager.shared.addDelegate(delegate)
         }
         .onDisappear {
-            cleanUpPendingAutoContextTasks()
+            windowState.cleanUpPendingWindowContextTasks()
             cleanUpWindowDelegateIfExists()
         }
-        .onChange(of: windowState.currentWindowName) { _, _ in
+        .onChange(of: windowState.foregroundWindow) { _, _ in
             windowAlreadyInContext = detectCurrentWindowAlreadyInContext()
         }
         .onChange(of: contextList) { _, _ in
             windowAlreadyInContext = detectCurrentWindowAlreadyInContext()
         }
-        .onChange(of: windowState.addAutoContextTasks) { _, _ in
-            if let windowName = windowState.currentWindowName,
-               let _ = windowState.addAutoContextTasks[windowName]
-            {
-                windowAlreadyInContext = true
-            }
-            
-            addingAutoContext = !windowState.addAutoContextTasks.isEmpty
-        }
+//        .onChange(of: windowState.windowContextTasks) { _, new in
+//            if let foregroundWindow = windowState.foregroundWindow,
+//               let _ = new[foregroundWindow.hash]
+//            {
+//                windowAlreadyInContext = true
+//            }
+//            
+//            addingWindowContext = !new.isEmpty
+//        }
     }
 }
 
@@ -118,15 +103,21 @@ struct FileRow: View {
 
 extension FileRow {
     private var pendingAutoContextItems: some View {
-        ForEach(Array(windowState.addAutoContextTasks.keys), id: \.self) { windowName in
-            ContextTag(
-                text: windowName,
-                background: .clear,
-                hoverBackground: .clear,
-                isLoading: true,
-                iconView: LoaderPulse(),
-                removeAction: { deleteAutoContextTask(windowName) }
-            )
+        ForEach(Array(windowState.windowContextTasks.keys), id: \.self) { uniqueWindowIdentifier in
+            if let foregroundWindowName = foregroundWindowName { // Placeholder. Still need to work this out. Should be the window task's name.
+                ContextTag(
+                    text: foregroundWindowName,
+                    background: .clear,
+                    hoverBackground: .clear,
+                    isLoading: true,
+                    iconView: LoaderPulse(),
+                    removeAction: {
+                        windowState.cleanupWindowContextTask(
+                            uniqueWindowIdentifier: uniqueWindowIdentifier
+                        )
+                    }
+                )
+            }
         }
     }
 }
@@ -135,29 +126,22 @@ extension FileRow {
 
 extension FileRow {
     private func initializeCurrentWindowInfo() {
-        let (
-            currentWindowName,
-            currentWindowPid,
-            currentWindowAppBundleUrl
-        ) = windowState.getCurrentWindowDetails()
-        
-        windowState.setCurrentWindowDetails(
-            windowName: currentWindowName,
-            windowPid: currentWindowPid,
-            windowAppBundleUrl: currentWindowAppBundleUrl
-        )
+        windowState.updateForegroundWindow()
     }
     
     private func detectCurrentWindowAlreadyInContext() -> Bool {
-        if let windowName = windowState.currentWindowName,
-            !contextList.isEmpty
+        if let foregroundWindow = windowState.foregroundWindow,
+           !contextList.isEmpty
         {
+            
             for context in contextList {
                 if case .auto(let autoContext) = context {
-                    if windowName == autoContext.appTitle {
-                        deleteAutoContextTask(windowName)
-                        return true
+                    if autoContext.appHash == foregroundWindow.hash {
+                        windowState.cleanupWindowContextTask(
+                            uniqueWindowIdentifier: foregroundWindow.hash
+                        )
                         
+                        return true
                     }
                 }
             }
@@ -169,28 +153,11 @@ extension FileRow {
     }
     
     private func addWindowToContext() {
-        if let windowName = windowState.currentWindowName,
-           let pid = windowState.currentWindowPid
-        {
+        if let foregroundWindow = windowState.foregroundWindow {
             windowState.addWindowToContext(
-                windowName: windowName,
-                pid: pid,
-                appBundleUrl: windowState.currentWindowAppBundleUrl
+                window: foregroundWindow.element
             )
         }
-    }
-    
-    private func deleteAutoContextTask(_ windowName: String) {
-        windowState.addAutoContextTasks[windowName]?.cancel()
-        windowState.addAutoContextTasks.removeValue(forKey: windowName)
-    }
-    
-    private func cleanUpPendingAutoContextTasks() {
-        for (_, task) in windowState.addAutoContextTasks {
-            task.cancel()
-        }
-        
-        windowState.addAutoContextTasks = [:]
     }
     
     private func cleanUpWindowDelegateIfExists() {
@@ -238,26 +205,11 @@ private final class WindowChangeDelegate: AccessibilityNotificationsDelegate {
         
         // We don't want to track XCode in accessibility in DEBUG mode because it causes issues when launching Onit.
         if doNotTrackXCode {
-            windowState.setCurrentWindowDetails()
+            windowState.foregroundWindow = nil
         } else {
-            var title: String? = nil
-            var appName: String? = nil
+//            windowState.foregroundWindow = app.processIdentifier.getAXUIElement()
             
-            if let window = app.processIdentifier.firstMainWindow {
-                title = window.title()
-                appName = window.appName()
-            } else {
-                appName = app.processIdentifier.getAXUIElement().appName()
-            }
-            
-            let currentWindowName = title ?? appName ?? app.localizedName ?? "Unknown"
-            let currentWindowAppBundleUrl = app.bundleURL
-            
-            windowState.setCurrentWindowDetails(
-                windowName: currentWindowName,
-                windowPid: app.processIdentifier,
-                windowAppBundleUrl: currentWindowAppBundleUrl
-            )
+            // Placeholder. Still need to work this out. Need to properly set foregroundWindow as the newly opened window.
         }
     }
     
@@ -266,17 +218,9 @@ private final class WindowChangeDelegate: AccessibilityNotificationsDelegate {
         _ manager: AccessibilityNotificationsManager,
         didActivateWindow window: TrackedWindow
     ) {
-        let (
-            currentWindowName,
-            currentWindowPid,
-            currentWindowAppBundleUrl
-        ) = windowState.getCurrentWindowDetails()
-        
-        windowState.setCurrentWindowDetails(
-            windowName: currentWindowName,
-            windowPid: currentWindowPid,
-            windowAppBundleUrl: currentWindowAppBundleUrl
-        )
+        if windowState.windowContextTasks[window.hash] == nil {
+            windowState.updateForegroundWindow()
+        }
     }
     
     // Tracks when changing focused sub-window in the current window (switching browser tabs, etc.).
@@ -284,17 +228,9 @@ private final class WindowChangeDelegate: AccessibilityNotificationsDelegate {
         _ manager: AccessibilityNotificationsManager,
         didChangeWindowTitle window: TrackedWindow
     ) {
-        let (
-            currentWindowName,
-            currentWindowPid,
-            currentWindowAppBundleUrl
-        ) = windowState.getCurrentWindowDetails()
-        
-        windowState.setCurrentWindowDetails(
-            windowName: currentWindowName,
-            windowPid: currentWindowPid,
-            windowAppBundleUrl: currentWindowAppBundleUrl
-        )
+        if windowState.windowContextTasks[window.hash] == nil {
+            windowState.updateForegroundWindow()
+        }
     }
     
     // Below is required to conform to AccessibilityNotificationsDelegate protocol but aren't needed in this implementation.

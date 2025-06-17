@@ -9,18 +9,10 @@ import SwiftUI
 
 struct CapturedOpenWindow: Identifiable {
     let id = UUID()
-    let pid: pid_t
-    let name: String
-    let icon: NSImage?
+    let window: AXUIElement
     
-    init(
-        pid: pid_t,
-        name: String,
-        icon: NSImage? = nil
-    ) {
-        self.pid = pid
-        self.name = name
-        self.icon = icon
+    init(window: AXUIElement) {
+        self.window = window
     }
 }
 
@@ -59,15 +51,15 @@ struct ContextMenuWindows: View {
         if searchQuery.isEmpty {
             return capturedOpenWindows
         } else {
-            return capturedOpenWindows.filter { $0.name.localizedCaseInsensitiveContains(searchQuery) }
+            return capturedOpenWindows.filter { capturedWindow in
+                let name = windowState.getWindowName(window: capturedWindow.window)
+                return name.localizedCaseInsensitiveContains(searchQuery)
+            }
         }
     }
     
     private var foregroundWindowCaptured: Bool {
-        return
-            windowState.currentWindowName != nil &&
-            windowState.currentWindowPid != nil &&
-            windowState.currentWindowAppBundleUrl != nil
+        return windowState.foregroundWindow != nil
     }
     
     private var allBrowserTabsButtonIndex: Int {
@@ -108,26 +100,27 @@ extension ContextMenuWindows {
 extension ContextMenuWindows {
     @ViewBuilder
     private var currentForegroundWindowButton: some View {
-        if let currentWindowName = windowState.currentWindowName,
-           let currentWindowPid = windowState.currentWindowPid,
-           let currentWindowAppBundleUrl = windowState.currentWindowAppBundleUrl,
-           !checkWindowShouldBeIgnored(currentWindowName),
-           (searchQuery.isEmpty || currentWindowName.contains(searchQuery))
-        {
-            let windowContextItem = getWindowContextItem(currentWindowName)
+        if let foregroundWindow = windowState.foregroundWindow {
+            let foregroundWindowName = windowState.getWindowName(window: foregroundWindow.element)
+            let doNotIgnoreWindow = !checkWindowShouldBeIgnored(foregroundWindowName)
+            let currentWindowIsInFilter = (searchQuery.isEmpty || foregroundWindowName.contains(searchQuery))
+            let showCurrentWindowButton = doNotIgnoreWindow && currentWindowIsInFilter
             
-            ContextMenuWindowButton(
-                isLoadingIntoContext: getIsLoadingWindowIntoContext(currentWindowName),
-                selected: currentArrowKeyIndex == 0,
-                windowName: currentWindowName,
-                windowContextItem: windowContextItem,
-                windowIcon: windowState.convertAppBundleUrlToNSImage(currentWindowAppBundleUrl)
-            ) {
-                windowButtonAction(
-                    windowName: currentWindowName,
-                    windowPid: currentWindowPid,
+            if showCurrentWindowButton {
+                let windowContextItem = getWindowContextItem(foregroundWindow.hash)
+                
+                ContextMenuWindowButton(
+                    isLoadingIntoContext: getIsLoadingWindowIntoContext(foregroundWindow.hash),
+                    selected: currentArrowKeyIndex == 0,
+                    window: foregroundWindow.element,
                     windowContextItem: windowContextItem
-                )
+                ) {
+                    windowButtonAction(
+                        window: foregroundWindow.element,
+                        uniqueWindowIdentifier: foregroundWindow.hash,
+                        windowContextItem: windowContextItem
+                    )
+                }
             }
         }
     }
@@ -138,18 +131,18 @@ extension ContextMenuWindows {
             let indexOffset = foregroundWindowCaptured ? index + 1 : index
             let selected = currentArrowKeyIndex == indexOffset
             
-            let windowContextItem = getWindowContextItem(capturedOpenWindow.name)
+            let uniqueWindowIdentifier = CFHash(capturedOpenWindow.window) // Placeholder. Still need to work this out.
+            let windowContextItem = getWindowContextItem(uniqueWindowIdentifier)
             
             ContextMenuWindowButton(
-                isLoadingIntoContext: getIsLoadingWindowIntoContext(capturedOpenWindow.name),
+                isLoadingIntoContext: getIsLoadingWindowIntoContext(uniqueWindowIdentifier),
                 selected: selected,
-                windowName: capturedOpenWindow.name,
+                window: capturedOpenWindow.window,
                 windowContextItem: windowContextItem,
-                windowIcon: capturedOpenWindow.icon
             ) {
                 windowButtonAction(
-                    windowName: capturedOpenWindow.name,
-                    windowPid: capturedOpenWindow.pid,
+                    window: capturedOpenWindow.window,
+                    uniqueWindowIdentifier: uniqueWindowIdentifier,
                     windowContextItem: windowContextItem
                 )
             }
@@ -231,16 +224,16 @@ extension ContextMenuWindows {
         closeContextMenu()
     }
     
-    private func getWindowContextItem(_ windowName: String) -> Context? {
+    private func getWindowContextItem(_ uniqueWindowIdentifier: UInt) -> Context? {
         return windowState.getPendingContextList().first { context in
             guard case .auto(let autoContext) = context else { return false }
             
-            return windowName == autoContext.appTitle || windowName == autoContext.appName
+            return uniqueWindowIdentifier == autoContext.appHash
         }
     }
     
-    private func getIsLoadingWindowIntoContext(_ windowName: String) -> Bool {
-        return windowState.addAutoContextTasks[windowName] != nil
+    private func getIsLoadingWindowIntoContext(_ uniqueWindowIdentifier: UInt) -> Bool {
+        return windowState.windowContextTasks[uniqueWindowIdentifier] != nil
     }
     
     private func removeWindowFromContext(_ contextItem: Context) {
@@ -250,35 +243,23 @@ extension ContextMenuWindows {
         windowState.removeContext(context: contextItem)
     }
     
-    private func addWindowToContext(
-        windowName: String,
-        windowPid: pid_t
-    ) {
-        let appBundleUrl = NSRunningApplication(processIdentifier: windowPid)?.bundleURL
-        
-        windowState.addWindowToContext(
-            windowName: windowName,
-            pid: windowPid,
-            appBundleUrl: appBundleUrl
-        )
-    }
-    
     private func windowButtonAction(
-        windowName: String,
-        windowPid: pid_t,
+        window: AXUIElement,
+        uniqueWindowIdentifier: UInt,
         windowContextItem: Context?
     ) {
-        let isLoadingWindowIntoContext = getIsLoadingWindowIntoContext(windowName)
+//        let isLoadingWindowIntoContext = getIsLoadingWindowIntoContext(uniqueWindowIdentifier)
+//        
+//        if isLoadingWindowIntoContext {
+//            windowState.cleanupWindowContextTask(
+//                uniqueWindowIdentifier: uniqueWindowIdentifier
+//            )
+//        }
         
-        if isLoadingWindowIntoContext {
-            windowState.cleanupAutoContextTask(windowName: windowName)
-        } else if let contextItem = windowContextItem {
+        if let contextItem = windowContextItem {
             removeWindowFromContext(contextItem)
         } else {
-            addWindowToContext(
-                windowName: windowName,
-                windowPid: windowPid
-            )
+            windowState.addWindowToContext(window: window)
         }
     }
     
@@ -290,23 +271,22 @@ extension ContextMenuWindows {
         
         if currentArrowKeyIndex == uploadFileButtonIndex {
             openFilePicker()
-        } else if foregroundWindowCaptured && currentArrowKeyIndex == 0,
-                  let currentWindowName = windowState.currentWindowName,
-                  let currentWindowPid = windowState.currentWindowPid
+        } else if let foregroundWindow = windowState.foregroundWindow,
+                  foregroundWindowCaptured && currentArrowKeyIndex == 0
         {
             windowButtonAction(
-                windowName: currentWindowName,
-                windowPid: currentWindowPid,
-                windowContextItem: getWindowContextItem(currentWindowName)
+                window: foregroundWindow.element,
+                uniqueWindowIdentifier: foregroundWindow.hash,
+                windowContextItem: getWindowContextItem(foregroundWindow.hash)
             )
         } else if !filteredCapturedOpenWindows.isEmpty {
             let index = foregroundWindowCaptured ? currentArrowKeyIndex - 1 : currentArrowKeyIndex
             let capturedOpenWindow = filteredCapturedOpenWindows[index]
             
             windowButtonAction(
-                windowName: capturedOpenWindow.name,
-                windowPid: capturedOpenWindow.pid,
-                windowContextItem: getWindowContextItem(capturedOpenWindow.name)
+                window: capturedOpenWindow.window,
+                uniqueWindowIdentifier: CFHash(capturedOpenWindow.window), // Placeholder. Still need to work this out.
+                windowContextItem: getWindowContextItem(CFHash(capturedOpenWindow.window))
             )
         }
     }
@@ -333,28 +313,15 @@ extension ContextMenuWindows {
             let windows = pid.findTargetWindows()
             
             for window in windows {
-                let (windowIcon, windowName) = windowState.getWindowIconAndName(
-                    window: window,
-                    pid: pid
-                )
-                
-                let notIgnoredApp = !checkWindowShouldBeIgnored(windowName)
-                
-                // Only capturing valid windows:
-                //   1. Has a PID.
-                //   2. Isn't the current window (this is handled by `currentForegroundWindowButton`).
-                //   3. Not in the list of ignored apps.
-                if let windowPid = window.pid(),
-                   windowPid != windowState.currentWindowPid,
-                   windowName != windowState.currentWindowName,
-                   notIgnoredApp
-                {
-                    capturedWindowsList.append(
-                        CapturedOpenWindow(
-                            pid: windowPid,
-                            name: windowName,
-                            icon: windowIcon
+                if let foregroundWindow = windowState.foregroundWindow {
+                    if window != foregroundWindow.element {
+                        capturedWindowsList.append(
+                            CapturedOpenWindow(window: window)
                         )
+                    }
+                } else {
+                    capturedWindowsList.append(
+                        CapturedOpenWindow(window: window)
                     )
                 }
             }
