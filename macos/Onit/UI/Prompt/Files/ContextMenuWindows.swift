@@ -108,7 +108,7 @@ extension ContextMenuWindows {
             let showCurrentWindowButton = doNotIgnoreWindow && currentWindowIsInFilter
             
             if showCurrentWindowButton {
-                let windowContextItem = getWindowContextItem(foregroundWindow.hash)
+                let windowContextItem = getWindowContextItem(foregroundWindowName)
                 
                 ContextMenuWindowButton(
                     isLoadingIntoContext: getIsLoadingWindowIntoContext(foregroundWindow.hash),
@@ -131,7 +131,8 @@ extension ContextMenuWindows {
             let selected = currentArrowKeyIndex == indexOffset
              
             let uniqueWindowIdentifier = capturedWindow.trackedWindow.hash
-            let windowContextItem = getWindowContextItem(uniqueWindowIdentifier)
+            let windowName = WindowHelpers.getWindowName(window: capturedWindow.trackedWindow.element)
+            let windowContextItem = getWindowContextItem(windowName)
             
             ContextMenuWindowButton(
                 isLoadingIntoContext: getIsLoadingWindowIntoContext(uniqueWindowIdentifier),
@@ -221,11 +222,11 @@ extension ContextMenuWindows {
         closeContextMenu()
     }
     
-    private func getWindowContextItem(_ uniqueWindowIdentifier: UInt) -> Context? {
+    private func getWindowContextItem(_ windowName: String) -> Context? {
         return windowState.getPendingContextList().first { context in
             guard case .auto(let autoContext) = context else { return false }
             
-            return uniqueWindowIdentifier == autoContext.appHash
+            return windowName == autoContext.appTitle
         }
     }
     
@@ -242,7 +243,9 @@ extension ContextMenuWindows {
     
     private func windowButtonAction(trackedWindow: TrackedWindow) {
         let isLoadingWindowIntoContext = getIsLoadingWindowIntoContext(trackedWindow.hash)
-        let windowContextItem = getWindowContextItem(trackedWindow.hash)
+        let windowContextItem = getWindowContextItem(
+            WindowHelpers.getWindowName(window: trackedWindow.element)
+        )
         
         if isLoadingWindowIntoContext {
             windowState.cleanupWindowContextTask(

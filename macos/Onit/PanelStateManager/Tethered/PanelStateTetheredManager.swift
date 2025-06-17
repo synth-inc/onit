@@ -128,7 +128,7 @@ class PanelStateTetheredManager: PanelStateBaseManager, ObservableObject {
             $0.1 === self.state
         }) else { return }
         
-        AccessibilityNotificationsManager.shared.fetchAutoContext(pid: trackedWindow.pid)
+        AccessibilityNotificationsManager.shared.retrieveWindowContent(pid: trackedWindow.pid)
     }
     
     // MARK: - Functions

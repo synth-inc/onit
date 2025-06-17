@@ -123,7 +123,7 @@ extension OnitPanelState {
             let windowApp = WindowHelpers.getWindowApp(pid: trackedWindow.pid)
             let appBundleUrl = windowApp?.bundleURL
             
-            AccessibilityNotificationsManager.shared.fetchAutoContext(
+            AccessibilityNotificationsManager.shared.retrieveWindowContent(
                 state: self,
                 trackedWindow: trackedWindow,
                 customAppBundleUrl: appBundleUrl

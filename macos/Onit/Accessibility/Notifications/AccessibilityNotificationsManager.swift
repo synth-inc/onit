@@ -98,34 +98,6 @@ class AccessibilityNotificationsManager: ObservableObject {
         
         lastActiveWindowPid = nil
     }
-    
-    func fetchAutoContext(
-        pid: pid_t? = nil,
-        state: OnitPanelState? = nil,
-        trackedWindow: TrackedWindow? = nil,
-        customAppBundleUrl: URL? = nil
-    ) {
-        if let trackedWindow = trackedWindow {
-            retrieveWindowContent(
-                pid: trackedWindow.pid,
-                state: state,
-                trackedWindow: trackedWindow,
-                customAppBundleUrl: customAppBundleUrl
-            )
-        } else if let pid = pid {
-            retrieveWindowContent(
-                pid: pid,
-                state: state,
-                customAppBundleUrl: customAppBundleUrl
-            )
-        } else if let pid = lastActiveWindowPid {
-            retrieveWindowContent(
-                pid: pid,
-                state: state,
-                customAppBundleUrl: customAppBundleUrl
-            )
-        }
-    }
 
     // MARK: Handling app activated/deactived
 
@@ -289,14 +261,18 @@ class AccessibilityNotificationsManager: ObservableObject {
     
     // MARK: Parsing
     
-    private func retrieveWindowContent(
-        pid: pid_t,
-        state: OnitPanelState?,
+    func retrieveWindowContent(
+        pid: pid_t? = nil,
+        state: OnitPanelState? = nil,
         trackedWindow: TrackedWindow? = nil,
         customAppBundleUrl: URL? = nil
     ) {
-        guard let mainWindow = trackedWindow?.element ?? pid.firstMainWindow,
-              let state = state ?? PanelStateCoordinator.shared.getState(for: CFHash(mainWindow)) else { return }
+        guard let pid = trackedWindow?.pid ?? pid ?? lastActiveWindowPid,
+              let mainWindow = trackedWindow?.element ?? pid.firstMainWindow,
+              let state = state ?? PanelStateCoordinator.shared.getState(for: CFHash(mainWindow))
+        else {
+            return
+        }
         
         Task { @MainActor in
             if let documentInfo = findDocument(in: mainWindow) {
