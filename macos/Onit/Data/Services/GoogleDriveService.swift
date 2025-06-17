@@ -224,9 +224,9 @@ class GoogleDriveService: ObservableObject {
         for pattern in patterns {
             if let regex = try? NSRegularExpression(pattern: pattern),
                 let match = regex.firstMatch(
-                    in: url, range: NSRange(location: 0, length: url.count))
+                    in: url, range: NSRange(location: 0, length: url.count)),
+                let fileIdRange = Range(match.range(at: 1), in: url)
             {
-                let fileIdRange = Range(match.range(at: 1), in: url)!
                 return String(url[fileIdRange])
             }
         }
