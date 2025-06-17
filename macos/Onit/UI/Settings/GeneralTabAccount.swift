@@ -7,6 +7,7 @@
 
 import Defaults
 import SwiftUI
+import GoogleSignIn
 
 struct GeneralTabAccount: View {
     @Environment(\.appState) var appState
@@ -138,6 +139,7 @@ extension GeneralTabAccount {
         TokenManager.token = nil
         appState.account = nil
         Defaults[.authFlowStatus] = .showSignIn
+        GIDSignIn.sharedInstance.signOut()
         
         // Reset all chat state
         for windowState in PanelStateCoordinator.shared.states {
