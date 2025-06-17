@@ -12,30 +12,30 @@ struct ContextMenuWindowButton: View {
     
     private let isLoadingIntoContext: Bool
     private let selected: Bool
-    private let window: AXUIElement
+    private let trackedWindow: TrackedWindow
     private let windowContextItem: Context?
     private let action: () -> Void
     
     init(
         isLoadingIntoContext: Bool,
         selected: Bool,
-        window: AXUIElement,
+        trackedWindow: TrackedWindow,
         windowContextItem: Context?,
         action: @escaping () -> Void
     ) {
         self.isLoadingIntoContext = isLoadingIntoContext
         self.selected = selected
-        self.window = window
+        self.trackedWindow = trackedWindow
         self.windowContextItem = windowContextItem
         self.action = action
     }
     
     private var windowName: String {
-        windowState.getWindowName(window: window)
+        WindowHelpers.getWindowName(window: trackedWindow.element)
     }
     
     private var windowIcon: NSImage? {
-        windowState.getWindowIcon(window: window)
+        WindowHelpers.getWindowIcon(window: trackedWindow.element)
     }
     
     var body: some View {
@@ -45,11 +45,9 @@ struct ContextMenuWindowButton: View {
             iconImage: windowIcon,
             text: windowName
         ){
-//            if isLoadingIntoContext {
-//                LoaderPulse()
-//            }
-            
-            if windowContextItem == nil {
+            if isLoadingIntoContext {
+                LoaderPulse()
+            } else if windowContextItem == nil {
                 checkEmpty
             } else {
                 checkFilled

@@ -62,7 +62,7 @@ extension ContextPickerView {
             return "Click to enable"
         } else {
             if let foregroundWindow = windowState.foregroundWindow {
-                return windowState.getWindowName(window: foregroundWindow.element)
+                return WindowHelpers.getWindowName(window: foregroundWindow.element)
             } else {
                 return "Current window"
             }

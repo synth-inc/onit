@@ -118,11 +118,9 @@ extension OnitPanelState {
         
         windowContextTasks[trackedWindow.hash]?.cancel()
         
+        // This task will automatically be cleaned up way down the call stack when it hits `addAutoContext()`.
         windowContextTasks[trackedWindow.hash] = Task {
-            
-            
-            // No need to clean up `uniqueWindowIdentifier` here, because `fetchAutoContext` ultimately leads to `addAutoContext()` down the stack, which will handle the cleanup.
-            let windowApp = getWindowApp(pid: trackedWindow.pid)
+            let windowApp = WindowHelpers.getWindowApp(pid: trackedWindow.pid)
             let appBundleUrl = windowApp?.bundleURL
             
             AccessibilityNotificationsManager.shared.fetchAutoContext(
@@ -131,50 +129,6 @@ extension OnitPanelState {
                 customAppBundleUrl: appBundleUrl
             )
         }
-    }
-    
-    func getWindowApp(pid: pid_t) -> NSRunningApplication? {
-        return NSRunningApplication(processIdentifier: pid)
-    }
-    
-    func getWindowAppBundleUrl(window: AXUIElement) -> URL? {
-        if let pid = window.pid(),
-           let windowApp = getWindowApp(pid: pid)
-        {
-            return windowApp.bundleURL
-        } else {
-            return nil
-        }
-    }
-    
-    func convertAppBundleUrlToNSImage(_ appBundleUrl: URL) -> NSImage {
-        return NSWorkspace.shared.icon(forFile: appBundleUrl.path)
-    }
-    
-    func getWindowIcon(window: AXUIElement) -> NSImage? {
-        if let appBundleUrl = getWindowAppBundleUrl(window: window) {
-            return convertAppBundleUrlToNSImage(appBundleUrl)
-        } else {
-            return nil
-        }
-    }
-    
-    func getWindowName(window: AXUIElement) -> String {
-        let fallbackName: String = "Unknown"
-        
-        if let pid = window.pid() {
-            let windowApp = getWindowApp(pid: pid)
-            let windowName = window.title() ?? window.appName() ?? windowApp?.localizedName ?? fallbackName
-            return windowName
-        } else {
-            return fallbackName
-        }
-    }
-    
-    func getWindowIconAndName(window: AXUIElement, windowPid: pid_t) -> (NSImage?, String) {
-        let windowIcon = getWindowIcon(window: window)
-        let windowName = getWindowName(window: window)
-        return (windowIcon, windowName)
     }
     
     func getForegroundWindow() -> TrackedWindow? {

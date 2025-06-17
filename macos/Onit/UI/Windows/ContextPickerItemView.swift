@@ -35,7 +35,7 @@ struct ContextPickerItemView: View {
     
     private var windowIcon: NSImage? {
         guard let foregroundWindow = windowState.foregroundWindow,
-              let bundleUrl = windowState.getWindowAppBundleUrl(window: foregroundWindow.element)
+              let bundleUrl = WindowHelpers.getWindowAppBundleUrl(window: foregroundWindow.element)
         else {
             return nil
         }

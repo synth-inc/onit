@@ -17,8 +17,6 @@ struct FileRow: View {
     @State private var windowDelegate: WindowChangeDelegate? = nil
     @State private var windowAlreadyInContext: Bool = false
     
-    @State private var addingWindowContext: Bool = false
-    
     var accessibilityEnabled: Bool {
         accessibilityPermissionManager.accessibilityPermissionStatus == .granted
     }
@@ -28,7 +26,7 @@ struct FileRow: View {
            accessibilityEnabled,
            !windowAlreadyInContext
         {
-            return windowState.getWindowName(window: foregroundWindow.element)
+            return WindowHelpers.getWindowName(window: foregroundWindow.element)
         } else {
             return nil
         }
@@ -40,23 +38,7 @@ struct FileRow: View {
         FlowLayout(spacing: 6) {
             PaperclipButton()
             
-            if autoContextFromCurrentWindow,
-               let foregroundWindow = windowState.foregroundWindow,
-               let foregroundWindowName = foregroundWindowName
-            {
-                ContextTag(
-                    text: foregroundWindowName,
-                    hoverTextColor: .T_2,
-                    background: .clear,
-                    hoverBackground: .clear,
-                    hasHoverBorder: true,
-                    shouldFadeIn: true,
-                    iconBundleURL: windowState.getWindowAppBundleUrl(window: foregroundWindow.element),
-                    tooltip: "Add \(foregroundWindowName) Context"
-                ) {
-                    addWindowToContext()
-                }
-            }
+            addForegroundWindowToContextButton
             
             pendingAutoContextItems
             
@@ -87,26 +69,49 @@ struct FileRow: View {
         .onChange(of: contextList) { _, _ in
             windowAlreadyInContext = detectCurrentWindowAlreadyInContext()
         }
-//        .onChange(of: windowState.windowContextTasks) { _, new in
-//            if let foregroundWindow = windowState.foregroundWindow,
-//               let _ = new[foregroundWindow.hash]
-//            {
-//                windowAlreadyInContext = true
-//            }
-//            
-//            addingWindowContext = !new.isEmpty
-//        }
+        .onChange(of: windowState.windowContextTasks) { _, new in
+            if let foregroundWindow = windowState.foregroundWindow,
+               let _ = new[foregroundWindow.hash]
+            {
+                windowAlreadyInContext = true
+            }
+        }
     }
 }
 
 // MARK: - Child Components
 
 extension FileRow {
+    @ViewBuilder
+    private var addForegroundWindowToContextButton: some View {
+        if autoContextFromCurrentWindow,
+           let foregroundWindow = windowState.foregroundWindow,
+           let foregroundWindowName = foregroundWindowName
+        {
+            ContextTag(
+                text: foregroundWindowName,
+                hoverTextColor: .T_2,
+                background: .clear,
+                hoverBackground: .clear,
+                hasHoverBorder: true,
+                shouldFadeIn: true,
+                iconBundleURL: WindowHelpers.getWindowAppBundleUrl(window: foregroundWindow.element),
+                tooltip: "Add \(foregroundWindowName) Context"
+            ) {
+                addWindowToContext()
+            }
+        }
+    }
+    
     private var pendingAutoContextItems: some View {
         ForEach(Array(windowState.windowContextTasks.keys), id: \.self) { uniqueWindowIdentifier in
-            if let foregroundWindowName = foregroundWindowName { // Placeholder. Still need to work this out. Should be the window task's name.
+            let trackedWindow = AccessibilityNotificationsManager.shared.windowsManager.findTrackedWindow(
+                trackedWindowHash: uniqueWindowIdentifier
+            )
+            
+            if let trackedWindow = trackedWindow {
                 ContextTag(
-                    text: foregroundWindowName,
+                    text: WindowHelpers.getWindowName(window: trackedWindow.element),
                     background: .clear,
                     hoverBackground: .clear,
                     isLoading: true,
@@ -207,9 +212,16 @@ private final class WindowChangeDelegate: AccessibilityNotificationsDelegate {
         if doNotTrackXCode {
             windowState.foregroundWindow = nil
         } else {
-//            windowState.foregroundWindow = app.processIdentifier.getAXUIElement()
+            let window = app.processIdentifier.getAXUIElement()
             
-            // Placeholder. Still need to work this out. Need to properly set foregroundWindow as the newly opened window.
+            let trackedWindow = TrackedWindow(
+                element: window,
+                pid: app.processIdentifier,
+                hash: CFHash(window),
+                title: WindowHelpers.getWindowName(window: window)
+            )
+            
+            windowState.foregroundWindow = trackedWindow
         }
     }
     

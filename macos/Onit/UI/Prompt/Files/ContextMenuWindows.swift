@@ -7,12 +7,12 @@
 
 import SwiftUI
 
-struct CapturedOpenWindow: Identifiable {
+struct CapturedWindow: Identifiable {
     let id = UUID()
-    let window: AXUIElement
+    let trackedWindow: TrackedWindow
     
-    init(window: AXUIElement) {
-        self.window = window
+    init(trackedWindow: TrackedWindow) {
+        self.trackedWindow = trackedWindow
     }
 }
 
@@ -41,18 +41,18 @@ struct ContextMenuWindows: View {
         self.showBrowserTabsSubMenu = showBrowserTabsSubMenu
     }
     
-    @State private var isCapturingOpenWindows: Bool = false
-    @State private var capturingOpenWindowsTask: Task<Void, Never>? = nil
-    @State private var capturedOpenWindows: [CapturedOpenWindow] = []
+    @State private var isCapturingWindows: Bool = false
+    @State private var capturingWindowsTask: Task<Void, Never>? = nil
+    @State private var capturedWindows: [CapturedWindow] = []
     
     private let ignoredApps: [String] = ["desktop", "finder"]
     
-    private var filteredCapturedOpenWindows: [CapturedOpenWindow] {
+    private var filteredCapturedWindows: [CapturedWindow] {
         if searchQuery.isEmpty {
-            return capturedOpenWindows
+            return capturedWindows
         } else {
-            return capturedOpenWindows.filter { capturedWindow in
-                let name = windowState.getWindowName(window: capturedWindow.window)
+            return capturedWindows.filter { capturedWindow in
+                let name = WindowHelpers.getWindowName(window: capturedWindow.trackedWindow.element)
                 return name.localizedCaseInsensitiveContains(searchQuery)
             }
         }
@@ -63,15 +63,15 @@ struct ContextMenuWindows: View {
     }
     
     private var allBrowserTabsButtonIndex: Int {
-        return foregroundWindowCaptured ? filteredCapturedOpenWindows.count + 1 : filteredCapturedOpenWindows.count
+        return foregroundWindowCaptured ? filteredCapturedWindows.count + 1 : filteredCapturedWindows.count
     }
     
     private var uploadFileButtonIndex: Int {
-        return foregroundWindowCaptured ? filteredCapturedOpenWindows.count + 1 : filteredCapturedOpenWindows.count
+        return foregroundWindowCaptured ? filteredCapturedWindows.count + 1 : filteredCapturedWindows.count
     }
     
     var body: some View {
-        if isCapturingOpenWindows {
+        if isCapturingWindows {
             ContextMenuLoading()
         } else {
             Group {
@@ -101,7 +101,7 @@ extension ContextMenuWindows {
     @ViewBuilder
     private var currentForegroundWindowButton: some View {
         if let foregroundWindow = windowState.foregroundWindow {
-            let foregroundWindowName = windowState.getWindowName(window: foregroundWindow.element)
+            let foregroundWindowName = WindowHelpers.getWindowName(window: foregroundWindow.element)
             let doNotIgnoreWindow = !checkWindowShouldBeIgnored(foregroundWindowName)
             let currentWindowIsInFilter = (searchQuery.isEmpty || foregroundWindowName.contains(searchQuery))
             let showCurrentWindowButton = doNotIgnoreWindow && currentWindowIsInFilter
@@ -112,11 +112,11 @@ extension ContextMenuWindows {
                 ContextMenuWindowButton(
                     isLoadingIntoContext: getIsLoadingWindowIntoContext(foregroundWindow.hash),
                     selected: currentArrowKeyIndex == 0,
-                    window: foregroundWindow.element,
+                    trackedWindow: foregroundWindow,
                     windowContextItem: windowContextItem
                 ) {
                     windowButtonAction(
-                        window: foregroundWindow.element,
+                        trackedWindow: foregroundWindow,
                         uniqueWindowIdentifier: foregroundWindow.hash,
                         windowContextItem: windowContextItem
                     )
@@ -126,22 +126,22 @@ extension ContextMenuWindows {
     }
     
     private var capturedOpenWindowsButtons: some View {
-        ForEach(filteredCapturedOpenWindows.indices, id: \.self) { index in
-            let capturedOpenWindow = filteredCapturedOpenWindows[index]
+        ForEach(filteredCapturedWindows.indices, id: \.self) { index in
+            let capturedWindow = filteredCapturedWindows[index]
             let indexOffset = foregroundWindowCaptured ? index + 1 : index
             let selected = currentArrowKeyIndex == indexOffset
-            
-            let uniqueWindowIdentifier = CFHash(capturedOpenWindow.window) // Placeholder. Still need to work this out.
+             
+            let uniqueWindowIdentifier = capturedWindow.trackedWindow.hash
             let windowContextItem = getWindowContextItem(uniqueWindowIdentifier)
             
             ContextMenuWindowButton(
                 isLoadingIntoContext: getIsLoadingWindowIntoContext(uniqueWindowIdentifier),
                 selected: selected,
-                window: capturedOpenWindow.window,
+                trackedWindow: capturedWindow.trackedWindow,
                 windowContextItem: windowContextItem,
             ) {
                 windowButtonAction(
-                    window: capturedOpenWindow.window,
+                    trackedWindow: capturedWindow.trackedWindow,
                     uniqueWindowIdentifier: uniqueWindowIdentifier,
                     windowContextItem: windowContextItem
                 )
@@ -170,19 +170,19 @@ extension ContextMenuWindows {
             }
         }
         .onAppear {
-            capturingOpenWindowsTask?.cancel()
+            capturingWindowsTask?.cancel()
             
-            capturingOpenWindowsTask = Task {
-                capturedOpenWindows = await captureOpenWindows()
+            capturingWindowsTask = Task {
+                capturedWindows = await captureOpenWindows()
                 
                 await MainActor.run {
-                    capturingOpenWindowsTask = nil
+                    capturingWindowsTask = nil
                 }
             }
         }
         .onDisappear {
-            capturingOpenWindowsTask?.cancel()
-            capturingOpenWindowsTask = nil
+            capturingWindowsTask?.cancel()
+            capturingWindowsTask = nil
         }
         .onChange(of: uploadFileButtonIndex) { _, new in
             maxArrowKeyIndex = uploadFileButtonIndex
@@ -244,22 +244,20 @@ extension ContextMenuWindows {
     }
     
     private func windowButtonAction(
-        window: AXUIElement,
+        trackedWindow: TrackedWindow,
         uniqueWindowIdentifier: UInt,
         windowContextItem: Context?
     ) {
-//        let isLoadingWindowIntoContext = getIsLoadingWindowIntoContext(uniqueWindowIdentifier)
-//        
-//        if isLoadingWindowIntoContext {
-//            windowState.cleanupWindowContextTask(
-//                uniqueWindowIdentifier: uniqueWindowIdentifier
-//            )
-//        }
+        let isLoadingWindowIntoContext = getIsLoadingWindowIntoContext(uniqueWindowIdentifier)
         
-        if let contextItem = windowContextItem {
+        if isLoadingWindowIntoContext {
+            windowState.cleanupWindowContextTask(
+                uniqueWindowIdentifier: uniqueWindowIdentifier
+            )
+        } else if let contextItem = windowContextItem {
             removeWindowFromContext(contextItem)
         } else {
-            windowState.addWindowToContext(window: window)
+            windowState.addWindowToContext(window: trackedWindow.element)
         }
     }
     
@@ -275,18 +273,18 @@ extension ContextMenuWindows {
                   foregroundWindowCaptured && currentArrowKeyIndex == 0
         {
             windowButtonAction(
-                window: foregroundWindow.element,
+                trackedWindow: foregroundWindow,
                 uniqueWindowIdentifier: foregroundWindow.hash,
                 windowContextItem: getWindowContextItem(foregroundWindow.hash)
             )
-        } else if !filteredCapturedOpenWindows.isEmpty {
+        } else if !filteredCapturedWindows.isEmpty {
             let index = foregroundWindowCaptured ? currentArrowKeyIndex - 1 : currentArrowKeyIndex
-            let capturedOpenWindow = filteredCapturedOpenWindows[index]
+            let capturedWindow = filteredCapturedWindows[index]
             
             windowButtonAction(
-                window: capturedOpenWindow.window,
-                uniqueWindowIdentifier: CFHash(capturedOpenWindow.window), // Placeholder. Still need to work this out.
-                windowContextItem: getWindowContextItem(CFHash(capturedOpenWindow.window))
+                trackedWindow: capturedWindow.trackedWindow,
+                uniqueWindowIdentifier: capturedWindow.trackedWindow.hash,
+                windowContextItem: getWindowContextItem(capturedWindow.trackedWindow.hash)
             )
         }
     }
@@ -297,8 +295,8 @@ extension ContextMenuWindows {
         }
     }
     
-    private func captureOpenWindows() async -> [CapturedOpenWindow] {
-        isCapturingOpenWindows = true
+    private func captureOpenWindows() async -> [CapturedWindow] {
+        isCapturingWindows = true
         
         let onitName = Bundle.main.object(forInfoDictionaryKey: "CFBundleName") as? String
         
@@ -307,27 +305,36 @@ extension ContextMenuWindows {
             .filter { $0.localizedName != onitName }
             .map { $0.processIdentifier }
         
-        var capturedWindowsList: [CapturedOpenWindow] = []
+        var capturedOpenWindows: [CapturedWindow] = []
         
         for pid in windowPids {
             let windows = pid.findTargetWindows()
             
             for window in windows {
+                let trackedWindow = TrackedWindow(
+                    element: window,
+                    pid: pid,
+                    hash: CFHash(window),
+                    title: WindowHelpers.getWindowName(window: window)
+                )
+                
+                AccessibilityNotificationsManager.shared.windowsManager.addToTrackedWindows(trackedWindow)
+                
                 if let foregroundWindow = windowState.foregroundWindow {
-                    if window != foregroundWindow.element {
-                        capturedWindowsList.append(
-                            CapturedOpenWindow(window: window)
+                    if trackedWindow != foregroundWindow {
+                        capturedOpenWindows.append(
+                            CapturedWindow(trackedWindow: trackedWindow)
                         )
                     }
                 } else {
-                    capturedWindowsList.append(
-                        CapturedOpenWindow(window: window)
+                    capturedOpenWindows.append(
+                        CapturedWindow(trackedWindow: trackedWindow)
                     )
                 }
             }
         }
         
-        isCapturingOpenWindows = false
-        return capturedWindowsList
+        isCapturingWindows = false
+        return capturedOpenWindows
     }
 }
