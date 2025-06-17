@@ -67,6 +67,7 @@ struct ContextMenuWindows: View {
     }
     
     private var uploadFileButtonIndex: Int {
+        // This should be updated to be +2, +1 when bringing the browser tab button back in.
         return foregroundWindowCaptured ? filteredCapturedWindows.count + 1 : filteredCapturedWindows.count
     }
     
@@ -116,9 +117,7 @@ extension ContextMenuWindows {
                     windowContextItem: windowContextItem
                 ) {
                     windowButtonAction(
-                        trackedWindow: foregroundWindow,
-                        uniqueWindowIdentifier: foregroundWindow.hash,
-                        windowContextItem: windowContextItem
+                        trackedWindow: foregroundWindow
                     )
                 }
             }
@@ -141,9 +140,7 @@ extension ContextMenuWindows {
                 windowContextItem: windowContextItem,
             ) {
                 windowButtonAction(
-                    trackedWindow: capturedWindow.trackedWindow,
-                    uniqueWindowIdentifier: uniqueWindowIdentifier,
-                    windowContextItem: windowContextItem
+                    trackedWindow: capturedWindow.trackedWindow
                 )
             }
         }
@@ -243,16 +240,13 @@ extension ContextMenuWindows {
         windowState.removeContext(context: contextItem)
     }
     
-    private func windowButtonAction(
-        trackedWindow: TrackedWindow,
-        uniqueWindowIdentifier: UInt,
-        windowContextItem: Context?
-    ) {
-        let isLoadingWindowIntoContext = getIsLoadingWindowIntoContext(uniqueWindowIdentifier)
+    private func windowButtonAction(trackedWindow: TrackedWindow) {
+        let isLoadingWindowIntoContext = getIsLoadingWindowIntoContext(trackedWindow.hash)
+        let windowContextItem = getWindowContextItem(trackedWindow.hash)
         
         if isLoadingWindowIntoContext {
             windowState.cleanupWindowContextTask(
-                uniqueWindowIdentifier: uniqueWindowIdentifier
+                uniqueWindowIdentifier: trackedWindow.hash
             )
         } else if let contextItem = windowContextItem {
             removeWindowFromContext(contextItem)
@@ -273,18 +267,14 @@ extension ContextMenuWindows {
                   foregroundWindowCaptured && currentArrowKeyIndex == 0
         {
             windowButtonAction(
-                trackedWindow: foregroundWindow,
-                uniqueWindowIdentifier: foregroundWindow.hash,
-                windowContextItem: getWindowContextItem(foregroundWindow.hash)
+                trackedWindow: foregroundWindow
             )
         } else if !filteredCapturedWindows.isEmpty {
             let index = foregroundWindowCaptured ? currentArrowKeyIndex - 1 : currentArrowKeyIndex
             let capturedWindow = filteredCapturedWindows[index]
             
             windowButtonAction(
-                trackedWindow: capturedWindow.trackedWindow,
-                uniqueWindowIdentifier: capturedWindow.trackedWindow.hash,
-                windowContextItem: getWindowContextItem(capturedWindow.trackedWindow.hash)
+                trackedWindow: capturedWindow.trackedWindow
             )
         }
     }

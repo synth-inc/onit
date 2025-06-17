@@ -407,6 +407,7 @@ class AccessibilityNotificationsManager: ObservableObject {
     ) {
         let windowHash = trackedWindow?.hash ?? CFHash(window)
         let appName = trackedWindow?.element.parent()?.title() ?? window.parent()?.title() ?? "Unknown"
+        let mainWindow = trackedWindow?.element ?? window
         
         if timedOutWindowHash.contains(windowHash) {
             print("Skipping parsing for window's hash \(windowHash) due to previous timeout.")
@@ -427,7 +428,6 @@ class AccessibilityNotificationsManager: ObservableObject {
                 do {
                     let results = try await withThrowingTaskGroup(of: [String: String]?.self) { group in
                         group.addTask {
-                            guard let mainWindow = pid.firstMainWindow else { return nil }
                             return await AccessibilityParser.shared.getAllTextInElement(windowElement: mainWindow)
                         }
                         
@@ -612,3 +612,12 @@ extension AccessibilityNotificationsManager: AccessibilityObserversDelegate {
         handleAppDeactivation(appName: appName, processID: processID)
     }
 }
+
+// MARK: - Extending AXUIElement
+
+// Making AXUIElement conform to Sendable with an unchecked conformance
+//   so that it can safely cross concurrency boundaries inside task-group
+//   closures (e.g. passing `mainWindow` into the `parseAccessibility` Task)
+//
+// We're only passing references between tasks as read-only, so this is safe.
+extension AXUIElement: @unchecked @retroactive Sendable {}
