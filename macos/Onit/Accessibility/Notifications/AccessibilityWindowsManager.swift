@@ -17,6 +17,14 @@ struct TrackedWindow: Hashable {
     static func == (lhs: TrackedWindow, rhs: TrackedWindow) -> Bool {
         return lhs.pid == rhs.pid && lhs.hash == rhs.hash
     }
+    
+    // When a hashed TrackedWindow is required (e.g. in Sets or Dictionary keys):
+    //   1. Make it so that `title` and `element` updates don't contribute to the hash value.
+    //   2. Make hashes consistent with == above.
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(pid)
+        hasher.combine(hash)
+    }
 }
 
 enum TrackedWindowAction {
@@ -79,7 +87,11 @@ class AccessibilityWindowsManager {
     }
     
     func addToTrackedWindows(_ trackedWindow: TrackedWindow) {
-        if !trackedWindows.contains(trackedWindow) {
+        if let existingTrackedWindowsIndex = trackedWindows.firstIndex(where: {
+            $0.pid == trackedWindow.pid && $0.hash == trackedWindow.hash
+        }) {
+            trackedWindows[existingTrackedWindowsIndex] = trackedWindow
+        } else {
             trackedWindows.append(trackedWindow)
         }
     }
