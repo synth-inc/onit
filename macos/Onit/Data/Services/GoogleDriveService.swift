@@ -51,73 +51,48 @@ class GoogleDriveService: ObservableObject {
             return
         }
 
+        let completion: (GIDSignInResult?, Error?) -> Void = { result, error in
+            self.handleAuthorizationResult(result: result, error: error)
+        }
+
         if let googleUser = GIDSignIn.sharedInstance.currentUser {
             googleUser.addScopes(
-                ["https://www.googleapis.com/auth/drive.readonly"], presenting: window
-            ) { result, error in
-                Task { @MainActor in
-                    guard let result = result else {
-                        if let error = error as? NSError, error.domain == "com.google.GIDSignIn",
-                            error.code == -5
-                        {
-                            // The user canceled the auth flow
-                            self.isAuthorizing = false
-                            return
-                        } else if let error = error {
-                            let errorMsg = error.localizedDescription
-
-                            self.authorizationError = errorMsg
-                            self.isAuthorizing = false
-                        } else {
-                            let errorMsg = "Unknown Google auth error"
-
-                            self.authorizationError = errorMsg
-                            self.isAuthorizing = false
-                        }
-                        return
-                    }
-
-                    self.isAuthorized = true
-                    self.userEmail = result.user.profile?.email
-                    self.authorizationError = nil
-                    self.isAuthorizing = false
-                }
-            }
+                ["https://www.googleapis.com/auth/drive.readonly"],
+                presenting: window,
+                completion: completion
+            )
         } else {
             GIDSignIn.sharedInstance.signIn(
                 withPresenting: window,
                 hint: nil,
-                additionalScopes: ["https://www.googleapis.com/auth/drive.readonly"]
-            ) { result, error in
-                Task { @MainActor in
-                    guard let result = result else {
-                        if let error = error as? NSError, error.domain == "com.google.GIDSignIn",
-                            error.code == -5
-                        {
-                            // The user canceled the auth flow
-                            self.isAuthorizing = false
-                            return
-                        } else if let error = error {
-                            let errorMsg = error.localizedDescription
-
-                            self.authorizationError = errorMsg
-                            self.isAuthorizing = false
-                        } else {
-                            let errorMsg = "Unknown Google auth error"
-
-                            self.authorizationError = errorMsg
-                            self.isAuthorizing = false
-                        }
-                        return
-                    }
-
-                    self.isAuthorized = true
-                    self.userEmail = result.user.profile?.email
-                    self.authorizationError = nil
-                    self.isAuthorizing = false
-                }
-            }
+                additionalScopes: ["https://www.googleapis.com/auth/drive.readonly"],
+                completion: completion
+            )
         }
+    }
+
+    private func handleAuthorizationResult(result: GIDSignInResult?, error: Error?) {
+        guard let result = result else {
+            if let error = error as? NSError, error.domain == "com.google.GIDSignIn",
+                error.code == -5
+            {
+                // The user canceled the auth flow
+                self.isAuthorizing = false
+                return
+            } else if let error = error {
+                self.authorizationError = error.localizedDescription
+                self.isAuthorizing = false
+            } else {
+                self.authorizationError = "Unknown Google auth error"
+                self.isAuthorizing = false
+            }
+            return
+        }
+
+        self.isAuthorized = true
+        self.userEmail = result.user.profile?.email
+        self.authorizationError = nil
+        self.isAuthorizing = false
     }
 
     func disconnectGoogleDrive() {
