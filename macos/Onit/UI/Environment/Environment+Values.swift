@@ -7,13 +7,28 @@
 
 import SwiftUI
 
-private struct OnitPanelStateKey: @preconcurrency EnvironmentKey {
+private struct OnitPanelStateKey: EnvironmentKey {
     
-    @MainActor
     static let defaultValue: OnitPanelState = {
-        let state = OnitPanelState()
-        state.defaultEnvironmentSource = "EnvironmentKey"
-        return state
+        if Thread.isMainThread {
+            return MainActor.assumeIsolated {
+                let state = OnitPanelState()
+                state.defaultEnvironmentSource = "EnvironmentKey"
+                return state
+            }
+        } else {
+            var state: OnitPanelState?
+            let semaphore = DispatchSemaphore(value: 0)
+            
+            Task { @MainActor in
+                state = OnitPanelState()
+                state?.defaultEnvironmentSource = "EnvironmentKey"
+                semaphore.signal()
+            }
+            
+            semaphore.wait()
+            return state!
+        }
     }()
 }
 
