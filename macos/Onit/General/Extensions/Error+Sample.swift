@@ -12,13 +12,3 @@ extension Error where Self == NSError {
         NSError(domain: message, code: 0)
     }
 }
-
-extension Bundle {
-    var appVersion: String {
-        infoDictionary?["CFBundleShortVersionString"] as? String ?? "N/A"
-    }
-
-    var appBuild: String {
-        infoDictionary?["CFBundleVersion"] as? String ?? "N/A"
-    }
-}
