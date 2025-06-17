@@ -8,6 +8,7 @@
 import FirebaseCore
 import PostHog
 import SwiftUI
+import GoogleSignIn
 
 class AppDelegate: NSObject, NSApplicationDelegate {
 
@@ -16,6 +17,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         if let darkAppearance = NSAppearance(named: .darkAqua) {
             NSApp.appearance = darkAppearance
         }
+        GIDSignIn.sharedInstance.restorePreviousSignIn()
         // This is helpful for debugging the new user experience, but should never be committed!
         //        if let appDomain = Bundle.main.bundleIdentifier {
         //            UserDefaults.standard.removePersistentDomain(forName: appDomain)
