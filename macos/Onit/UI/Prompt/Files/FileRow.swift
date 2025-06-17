@@ -81,7 +81,7 @@ struct FileRow: View {
             }
         }
         .onAppear {
-            initializeCurrentWindowInfo()
+            windowState.updateForegroundWindow()
             
             let delegate = WindowChangeDelegate(windowState: windowState)
             
@@ -147,10 +147,6 @@ extension FileRow {
 // MARK: - Private Functions
 
 extension FileRow {
-    private func initializeCurrentWindowInfo() {
-        windowState.updateForegroundWindow()
-    }
-    
     private func addWindowToContext() {
         if let foregroundWindow = windowState.foregroundWindow {
             windowState.addWindowToContext(
@@ -219,14 +215,18 @@ private final class WindowChangeDelegate: AccessibilityNotificationsDelegate {
         }
     }
     
+    private func handleUpdateForegroundWindow(_ uniqueWindowIdentifier: UInt) {
+        if windowState.windowContextTasks[uniqueWindowIdentifier] == nil {
+            windowState.updateForegroundWindow()
+        }
+    }
+    
     // Tracks when changing focused window.
     func accessibilityManager(
         _ manager: AccessibilityNotificationsManager,
         didActivateWindow window: TrackedWindow
     ) {
-        if windowState.windowContextTasks[window.hash] == nil {
-            windowState.updateForegroundWindow()
-        }
+        handleUpdateForegroundWindow(window.hash)
     }
     
     // Tracks when changing focused sub-window in the current window (switching browser tabs, etc.).
@@ -234,9 +234,7 @@ private final class WindowChangeDelegate: AccessibilityNotificationsDelegate {
         _ manager: AccessibilityNotificationsManager,
         didChangeWindowTitle window: TrackedWindow
     ) {
-        if windowState.windowContextTasks[window.hash] == nil {
-            windowState.updateForegroundWindow()
-        }
+        handleUpdateForegroundWindow(window.hash)
     }
     
     // Below is required to conform to AccessibilityNotificationsDelegate protocol but aren't needed in this implementation.
