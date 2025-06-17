@@ -227,6 +227,8 @@ extension OnitPanelState {
                     #endif
                 }
             }
+        case .auto(let autoContextItem):
+            cleanupWindowContextTask(uniqueWindowIdentifier: autoContextItem.appHash)
         default:
             break
         }

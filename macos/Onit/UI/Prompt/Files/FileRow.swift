@@ -15,16 +15,46 @@ struct FileRow: View {
     @Default(.autoContextFromCurrentWindow) var autoContextFromCurrentWindow
     
     @State private var windowDelegate: WindowChangeDelegate? = nil
-    @State private var windowAlreadyInContext: Bool = false
     
     var accessibilityEnabled: Bool {
         accessibilityPermissionManager.accessibilityPermissionStatus == .granted
     }
     
+    var windowBeingAddedToContext: Bool {
+        if let foregroundWindow = windowState.foregroundWindow {
+            return windowState.windowContextTasks[foregroundWindow.hash] != nil
+        } else {
+            return false
+        }
+    }
+    
+    var windowAlreadyInContext: Bool {
+        if let foregroundWindow = windowState.foregroundWindow,
+           !contextList.isEmpty
+        {
+            let windowName = WindowHelpers.getWindowName(window: foregroundWindow.element)
+            
+            for contextItem in contextList {
+                if case .auto(let autoContext) = contextItem {
+                    if windowName == autoContext.appTitle {
+                        windowState.cleanupWindowContextTask(
+                            uniqueWindowIdentifier: foregroundWindow.hash
+                        )
+                        return true
+                    }
+                }
+            }
+            
+            return false
+        } else {
+            return false
+        }
+    }
+    
     var foregroundWindowName: String? {
         if let foregroundWindow = windowState.foregroundWindow,
            accessibilityEnabled,
-           !windowAlreadyInContext
+           !(windowBeingAddedToContext || windowAlreadyInContext)
         {
             return WindowHelpers.getWindowName(window: foregroundWindow.element)
         } else {
@@ -62,19 +92,6 @@ struct FileRow: View {
         .onDisappear {
             windowState.cleanUpPendingWindowContextTasks()
             cleanUpWindowDelegateIfExists()
-        }
-        .onChange(of: windowState.foregroundWindow) { _, _ in
-            windowAlreadyInContext = detectCurrentWindowAlreadyInContext()
-        }
-        .onChange(of: contextList) { _, _ in
-            windowAlreadyInContext = detectCurrentWindowAlreadyInContext()
-        }
-        .onChange(of: windowState.windowContextTasks) { _, new in
-            if let foregroundWindow = windowState.foregroundWindow,
-               let _ = new[foregroundWindow.hash]
-            {
-                windowAlreadyInContext = true
-            }
         }
     }
 }
@@ -132,29 +149,6 @@ extension FileRow {
 extension FileRow {
     private func initializeCurrentWindowInfo() {
         windowState.updateForegroundWindow()
-    }
-    
-    private func detectCurrentWindowAlreadyInContext() -> Bool {
-        if let foregroundWindow = windowState.foregroundWindow,
-           !contextList.isEmpty
-        {
-            
-            for context in contextList {
-                if case .auto(let autoContext) = context {
-                    if autoContext.appHash == foregroundWindow.hash {
-                        windowState.cleanupWindowContextTask(
-                            uniqueWindowIdentifier: foregroundWindow.hash
-                        )
-                        
-                        return true
-                    }
-                }
-            }
-            
-            return false
-        } else {
-            return false
-        }
     }
     
     private func addWindowToContext() {

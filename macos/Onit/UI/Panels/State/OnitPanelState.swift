@@ -138,7 +138,7 @@ class OnitPanelState: NSObject {
     typealias WebsiteUrlScrapeTask = Task<Void, Never>
     var websiteUrlsScrapeQueue: [String: WebsiteUrlScrapeTask] = [:]
     
-    // Auto-context states
+    // Window context states
     typealias UniqueWindowIdentifier = UInt
     var windowContextTasks: [UniqueWindowIdentifier: Task<Void, Never>] = [:]
     
