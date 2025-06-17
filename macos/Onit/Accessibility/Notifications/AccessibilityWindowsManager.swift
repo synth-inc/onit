@@ -87,13 +87,12 @@ class AccessibilityWindowsManager {
     }
     
     func addToTrackedWindows(_ trackedWindow: TrackedWindow) {
-        if let existingTrackedWindowsIndex = trackedWindows.firstIndex(where: {
-            $0.pid == trackedWindow.pid && $0.hash == trackedWindow.hash
-        }) {
-            trackedWindows[existingTrackedWindowsIndex] = trackedWindow
-        } else {
+        guard let trackedWindowIndex = trackedWindows.firstIndex(of: trackedWindow) else {
             trackedWindows.append(trackedWindow)
+            return
         }
+        
+        trackedWindows[trackedWindowIndex] = trackedWindow
     }
     
     func findTrackedWindow(trackedWindowHash: UInt) -> TrackedWindow? {
