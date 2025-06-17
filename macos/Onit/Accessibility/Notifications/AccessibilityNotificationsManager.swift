@@ -282,9 +282,11 @@ class AccessibilityNotificationsManager: ObservableObject {
                     customAppBundleUrl: customAppBundleUrl
                 )
                 // TODO: KNA - uncomment this to use WebContentFetchService with AXURL
-            } /* else if let urlInfo = await findUrl(in: focusedWindow) {
-                handleWindowContent(urlInfo, for: state)
-            } */ else {
+            } else if let url = findUrl(in: mainWindow), url.absoluteString.contains("docs.google.com") {
+                // 
+//                handleWindowContent(urlInfo, for: state)
+                
+            }  else {
                 parseAccessibility(
                     for: pid,
                     in: mainWindow,
@@ -323,7 +325,7 @@ class AccessibilityNotificationsManager: ObservableObject {
         return nil
     }
     
-    private func findUrl(in focusedWindow: AXUIElement) async -> [String: String]? {
+    private func findUrl(in element: AXUIElement, maxDepth: Int = 5) -> URL? {
         func findURLInChildren(element: AXUIElement, depth: Int = 0) -> URL? {
             if depth >= maxDepth {
                 return nil
@@ -343,7 +345,10 @@ class AccessibilityNotificationsManager: ObservableObject {
             
             return nil
         }
-        
+        return findURLInChildren(element: element)
+    }
+    
+    private func findUrlAndProcessURL(in focusedWindow: AXUIElement) async -> [String: String]? {
         func processUrl(_ url: URL, from element: AXUIElement) async -> [String: String]? {
             do {
                 let appName = element.parent()?.title() ?? ""
@@ -367,10 +372,9 @@ class AccessibilityNotificationsManager: ObservableObject {
         let maxDepth = 5
         let startTime = CFAbsoluteTimeGetCurrent()
         
-        if let url = findURLInChildren(element: focusedWindow) {
+        if let url = findUrl(in: focusedWindow) {
             return await processUrl(url, from: focusedWindow)
         }
-        
         return nil
     }
 

@@ -145,7 +145,7 @@ extension ContextMenuWindows {
                 isLoadingIntoContext: getIsLoadingWindowIntoContext(uniqueWindowIdentifier),
                 selected: selected,
                 trackedWindow: capturedWindow.trackedWindow,
-                windowContextItem: windowContextItem,
+                windowContextItem: windowContextItem
             ) {
                 windowButtonAction(
                     trackedWindow: capturedWindow.trackedWindow
