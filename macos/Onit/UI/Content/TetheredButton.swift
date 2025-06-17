@@ -62,6 +62,11 @@ struct TetheredButton: View {
             .tooltip(prompt: fitActiveWindowPrompt)
             Spacer()
         }
+        .onAppear {
+            if let defaultEnvironmentSource = state.defaultEnvironmentSource {
+                AnalyticsManager.Technical.defaultWindowState(source: defaultEnvironmentSource)
+            }
+        }
         .edgesIgnoringSafeArea(.top)
         .frame(maxHeight: .infinity, alignment: .top)
         .zIndex(1)

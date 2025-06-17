@@ -124,6 +124,9 @@ extension Defaults.Keys {
     
     // Notifications
     static let footerNotifications = Key<[FooterNotification]>("footerNotifications", default: [FooterNotification.discord])
+
+    // Stop generation behavior
+    static let stopMode = Key<StopMode>("stopMode", default: .removePartial)
 }
 
 extension NSRect: Defaults.Serializable {

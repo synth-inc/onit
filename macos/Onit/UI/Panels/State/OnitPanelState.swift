@@ -23,6 +23,8 @@ import SwiftUI
 @Observable
 class OnitPanelState: NSObject {
     
+    @ObservationIgnored var defaultEnvironmentSource: String? = nil
+    
     /// Clients
     let client = FetchingClient()
     let streamingClient = StreamingClient()
@@ -127,6 +129,7 @@ class OnitPanelState: NSObject {
     var generateTask: Task<Void, Never>? = nil
     var generatingPrompt: Prompt?
     var generatingPromptPriorState: GenerationState?
+    var generationStopped: Bool = false
     
     /// Don't leave this text empty to ensure the first scroll works.
     var streamedResponse: String = " "
