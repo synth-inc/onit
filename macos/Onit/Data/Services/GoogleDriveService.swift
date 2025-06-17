@@ -168,9 +168,12 @@ class GoogleDriveService: ObservableObject {
         // Get the access token (tokens are automatically refreshed by Google Sign-In SDK)
         let accessToken = user.accessToken.tokenString
 
-        // Use Google Drive API to export the document as plain text
+        // Determine document type and appropriate MIME type for export
+        let mimeType = getMimeTypeForUrl(driveUrl)
+
+        // Use Google Drive API to export the document
         let exportUrl =
-            "https://www.googleapis.com/drive/v3/files/\(fileId)/export?mimeType=text/plain"
+            "https://www.googleapis.com/drive/v3/files/\(fileId)/export?mimeType=\(mimeType)"
 
         guard let url = URL(string: exportUrl) else {
             self.extractionError = "Invalid export URL"
@@ -218,6 +221,19 @@ class GoogleDriveService: ObservableObject {
         } catch {
             self.extractionError = "Network error: \(error.localizedDescription)"
             self.isExtracting = false
+        }
+    }
+
+    private func getMimeTypeForUrl(_ url: String) -> String {
+        if url.contains("docs.google.com/document") {
+            return "text/plain"
+        } else if url.contains("docs.google.com/spreadsheets") {
+            return "text/csv"
+        } else if url.contains("docs.google.com/presentation") {
+            return "text/plain"
+        } else {
+            // Default to text/plain for generic drive URLs
+            return "text/plain"
         }
     }
 
