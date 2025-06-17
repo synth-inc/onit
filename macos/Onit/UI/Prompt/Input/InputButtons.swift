@@ -8,39 +8,59 @@
 import SwiftUI
 
 struct InputButtons: View {
-    @Environment(\.windowState) private var state
-    
     @Binding var inputExpanded: Bool
 
     var input: Input
+    var close: (() -> Void)? = nil
 
     var body: some View {
-        @Bindable var state = state
-
-        Group {
-            if input == state.pendingInput {
-                Button {
-                    state.pendingInput = nil
-                } label: {
-                    Image(.smallRemove)
-                        .renderingMode(.template)
-                }
-                .buttonStyle(DarkerButtonStyle())
-            }
-
-            Button {
+        HStack(alignment: .center, spacing: 4) {
+            ActionButton(
+                icon: .smallChevRight,
+                iconSize: 20,
+                rotation: inputExpanded ? .degrees(90) : .zero
+            ) {
                 inputExpanded.toggle()
-            } label: {
-                Color.clear
-                    .frame(width: 20, height: 20)
-                    .overlay {
-                        Image(.smallChevRight)
-                            .renderingMode(.template)
-                            .rotationEffect(inputExpanded ? .degrees(90) : .zero)
-                    }
+            }
+            
+            if let close = close {
+                ActionButton(
+                    icon: .cross,
+                    iconSize: 9
+                ) {
+                    close()
+                }
             }
         }
-        .foregroundStyle(.gray200)
+    }
+}
+
+// MARK: - Child Components
+
+private struct ActionButton: View {
+    var icon: ImageResource
+    var iconSize: CGFloat
+    var rotation: Angle = .zero
+    var action: () -> Void
+    
+    @State private var isHovered: Bool = false
+    @State private var isPressed: Bool = false
+    
+    var body: some View {
+        Image(icon)
+            .addIconStyles(
+                foregroundColor: .gray100,
+                iconSize: iconSize
+            )
+            .frame(width: 20, height: 20)
+            .rotationEffect(rotation)
+            .addButtonEffects(
+                hoverBackground: .gray400,
+                cornerRadius: 5,
+                isHovered: $isHovered,
+                isPressed: $isPressed,
+                action: action
+            )
     }
 }
 

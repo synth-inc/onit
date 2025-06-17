@@ -95,6 +95,7 @@ extension OnitPanelState {
             var instructionsHistory: [String] = [curInstruction]
             var autoContextsHistory: [[String: String]] = [prompt.contextList.autoContexts]
             var webSearchContextsHistory: [[(title: String, content: String, source: String, url: URL?)]] = [prompt.contextList.webSearchContexts]
+            var textsContextsHistory: [[Input]] = [prompt.contextList.texts]
             var responsesHistory: [String] = []
 
             // Go through prior prompts and add them to the history
@@ -114,6 +115,7 @@ extension OnitPanelState {
                         imagesHistory.insert(currentPrompt!.contextList.images, at: 0)
                         autoContextsHistory.insert(currentPrompt!.contextList.autoContexts, at: 0)
                         webSearchContextsHistory.insert(currentPrompt!.contextList.webSearchContexts, at: 0)
+                        textsContextsHistory.insert(currentPrompt!.contextList.texts, at: 0)
                         responsesHistory.insert(
                             currentPrompt!.sortedResponses[currentPrompt!.generationIndex].text, at: 0)
                     } else {
@@ -182,6 +184,7 @@ extension OnitPanelState {
                             images: imagesHistory,
                             autoContexts: autoContextsHistory,
                             webSearchContexts: webSearchContextsHistory,
+                            textsContexts: textsContextsHistory,
                             responses: responsesHistory,
                             useOnitServer: useOnitChat,
                             model: model,
@@ -199,6 +202,7 @@ extension OnitPanelState {
                             images: imagesHistory,
                             autoContexts: autoContextsHistory,
                             webSearchContexts: webSearchContextsHistory,
+                            textsContexts: textsContextsHistory,
                             responses: responsesHistory,
                             model: model,
                             apiToken: apiToken)
@@ -219,6 +223,7 @@ extension OnitPanelState {
                             images: imagesHistory,
                             autoContexts: autoContextsHistory,
                             webSearchContexts: webSearchContextsHistory,
+                            textsContexts: textsContextsHistory,
                             responses: responsesHistory,
                             model: model)
                         for try await response in asyncText {
@@ -234,6 +239,7 @@ extension OnitPanelState {
                             images: imagesHistory,
                             autoContexts: autoContextsHistory,
                             webSearchContexts: webSearchContextsHistory,
+                            textsContexts: textsContextsHistory,
                             responses: responsesHistory,
                             model: model)
                     }
