@@ -23,6 +23,9 @@ struct SystemPromptView: View {
     @State var size: CGSize = .zero
     @State var selectedPrompt: SystemPrompt = .outputOnly
     
+    @State private var showErrorAlert = false
+    @State private var errorMessage = ""
+    
     private var editPromptBinding: Binding<SystemPrompt> {
         Binding {
             selectedPrompt
@@ -88,7 +91,8 @@ struct SystemPromptView: View {
             guard let prompts = try? modelContext.fetch(FetchDescriptor<SystemPrompt>()),
                   let prompt = prompts.first(where: { $0.id == systemPromptId }) else {
                 selectedPrompt = .outputOnly
-                print("Could not find prompt")
+                errorMessage = "Could not find the selected prompt. Using default prompt instead."
+                showErrorAlert = true
                 return
             }
             
@@ -107,18 +111,25 @@ struct SystemPromptView: View {
         .padding(.horizontal, 12)
         .padding(.top, 8)
         .saveSize(in: $size)
+        .alert("Error", isPresented: $showErrorAlert) {
+            Button("OK") { }
+        } message: {
+            Text(errorMessage)
+        }
     }
     
     private func addPrompt() {
         modelContext.insert(promptToAdd)
-        try! modelContext.save()
-        
-        KeyboardShortcutsManager.register(systemPrompt: promptToAdd)
-        
-        windowState.systemPromptId = promptToAdd.id
-        
-        promptToAdd = SystemPrompt()
-        shouldSavePrompt = false
+        do {
+            try modelContext.save()
+            KeyboardShortcutsManager.register(systemPrompt: promptToAdd)
+            windowState.systemPromptId = promptToAdd.id
+            promptToAdd = SystemPrompt()
+            shouldSavePrompt = false
+        } catch {
+            errorMessage = "Unable to save the prompt: \(error.localizedDescription)"
+            showErrorAlert = true
+        }
     }
 }
 
