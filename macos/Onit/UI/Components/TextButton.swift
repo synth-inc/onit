@@ -11,6 +11,7 @@ struct TextButton<Child: View>: View {
     private let iconSize: CGFloat
     private let iconImageSize: CGFloat
     private let iconColor: Color
+    private let hoverIconColor: Color
     private let disabled: Bool
     private let selected: Bool
     
@@ -38,7 +39,8 @@ struct TextButton<Child: View>: View {
     init(
         iconSize: CGFloat = 20,
         iconImageSize: CGFloat = 18,
-        iconColor: Color = .white,
+        iconColor: Color = Color.primary,
+        hoverIconColor: Color = Color.primary,
         disabled: Bool = false,
         selected: Bool = false,
 
@@ -66,6 +68,7 @@ struct TextButton<Child: View>: View {
         self.iconSize = iconSize
         self.iconImageSize = iconImageSize
         self.iconColor = iconColor
+        self.hoverIconColor = hoverIconColor
         self.disabled = disabled
         self.selected = selected
         
@@ -99,7 +102,7 @@ struct TextButton<Child: View>: View {
             if let icon = icon {
                 Image(icon)
                     .addIconStyles(
-                        foregroundColor: selected ? .blue300 : iconColor,
+                        foregroundColor: selected ? .blue300 : isHovered ? hoverIconColor : iconColor,
                         iconSize: iconSize
                     )
             }

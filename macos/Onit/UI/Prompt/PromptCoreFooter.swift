@@ -37,8 +37,10 @@ struct PromptCoreFooter: View {
                 MicrophoneButton(audioRecorder: audioRecorder)
                 
                 PromptCoreFooterButton(
-                    text: "􀅇 Send",
-                    disabled: disableSend,
+                    iconColor: .gray200,
+                    icon: .send2,
+                    text: "Send",
+                    disabled: windowState.pendingInstruction.isEmpty,
                     action: handleSend
                 )
             }

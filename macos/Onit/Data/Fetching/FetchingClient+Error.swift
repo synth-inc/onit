@@ -19,6 +19,7 @@ public enum FetchingError: Error {
     case networkError(Error)
     case invalidURL
     case noContent
+    case timeout
 }
 
 extension FetchingError: LocalizedError {
@@ -46,6 +47,8 @@ extension FetchingError: LocalizedError {
             "Invalid URL"
         case .noContent:
             "No content"
+        case .timeout:
+            "The request timed out."
         }
     }
 }
@@ -85,7 +88,7 @@ extension FetchingError: Codable {
 
     enum FetchingErrorType: String, Codable {
         case invalidResponse, invalidRequest, unauthorized, forbidden, notFound, failedRequest,
-            serverError, decodingError, networkError, invalidURL, noContent
+            serverError, decodingError, networkError, invalidURL, noContent, timeout
     }
 
     public init(from decoder: Decoder) throws {
@@ -129,6 +132,8 @@ extension FetchingError: Codable {
             self = .invalidURL
         case .noContent:
             self = .noContent
+        case .timeout:
+            self = .timeout
         }
     }
 
@@ -168,6 +173,8 @@ extension FetchingError: Codable {
             try container.encode(FetchingErrorType.invalidURL, forKey: .type)
         case .noContent:
             try container.encode(FetchingErrorType.noContent, forKey: .type)
+        case .timeout:
+            try container.encode(FetchingErrorType.timeout, forKey: .type)
         }
     }
 }

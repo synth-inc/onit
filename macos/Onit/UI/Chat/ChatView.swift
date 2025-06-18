@@ -2,7 +2,10 @@ import Defaults
 import SwiftUI
 
 struct ChatView: View {
+    @Environment(\.appState) private var appState
     @Environment(\.windowState) private var state
+    
+    @Default(.footerNotifications) var footerNotifications
     
     @State private var hasUserManuallyScrolled: Bool = false
     @State private var chatChangeTask: Task<Void, Never>?
@@ -44,26 +47,42 @@ struct ChatView: View {
                                 }
                         }
                     }
-                    
-                    if hasUserManuallyScrolled {
+                    // Floating action buttons area
+                    if state.generatingPrompt != nil || hasUserManuallyScrolled {
                         HStack {
                             Spacer()
-                            IconButton(
-                                icon: .arrowDown,
-                                buttonSize: 36,
-                                action: {
-                                    hasUserManuallyScrolled = false
-                                },
-                                activeColor: .white,
-                                inactiveColor: .white,
-                                tooltipPrompt: "Scroll to bottom",
-                                hoverBackgroundColor: .gray400
-                            )
-                            .background(.gray600)
-                            .addBorder(cornerRadius: 18, stroke: .gray400)
-                            .transition(.scale.combined(with: .opacity))
-                            .padding(.trailing, 20)
+                            
+                            if state.generatingPrompt != nil {
+                                StopGenerationButton()
+                                    .offset(x: 18, y: 0) // This centers it to account for the scroll button frame
+                            }
+                            
+                            Spacer()
+                            
+                            if hasUserManuallyScrolled {
+                                IconButton(
+                                    icon: .arrowDown,
+                                    buttonSize: 36,
+                                    action: {
+                                        hasUserManuallyScrolled = false
+                                    },
+                                    activeColor: .white,
+                                    inactiveColor: .white,
+                                    tooltipPrompt: "Scroll to bottom",
+                                    hoverBackgroundColor: .gray400
+                                )
+                                .background(.gray600)
+                                .addBorder(cornerRadius: 18, stroke: .gray400)
+                                .transition(.scale.combined(with: .opacity))
+                                .padding(.trailing, 20)
+                            } else {
+                                // Placeholders.
+                                Color.clear
+                                    .frame(width: 36, height: 36)
+                                    .padding(.trailing, 20)
+                            }
                         }
+                        .background(.clear)
                         .padding(.bottom, 4)
                     }
                 }
@@ -86,9 +105,15 @@ struct ChatView: View {
             
             PromptCore()
             
-            if currentPromptsCount <= 0 { Spacer() }
+            if currentPromptsCount <= 0 {
+                Spacer()
+                footerNotificationsList
+            }
         }
         .drag()
+        .onAppear {
+            appState.checkForAvailableUpdate()
+        }
     }
 }
 
@@ -101,6 +126,19 @@ extension ChatView {
                 ChatSystemPromptView(systemPrompt: systemPrompt)
             }
             if shouldShowSystemPrompt { SystemPromptView() }
+        }
+    }
+    
+    @ViewBuilder
+    private var footerNotificationsList: some View {
+        if !footerNotifications.isEmpty {
+            ZStack {
+                ForEach(footerNotifications, id: \.self) { footerNotification in
+                    ContentViewFooterNotification(
+                        footerNotification: footerNotification
+                    )
+                }
+            }
         }
     }
 }
