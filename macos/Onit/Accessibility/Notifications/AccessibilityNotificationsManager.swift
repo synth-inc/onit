@@ -32,6 +32,7 @@ class AccessibilityNotificationsManager: ObservableObject {
         var userInteraction: UserInteractions = .init()
         var others: [String: String]?
         var errorMessage: String?  // Renamed field for error message
+        var errorCode: Int32?
         var appBundleUrl: URL?
     }
 
@@ -283,9 +284,23 @@ class AccessibilityNotificationsManager: ObservableObject {
                 )
                 // TODO: KNA - uncomment this to use WebContentFetchService with AXURL
             } else if let url = findUrl(in: mainWindow), url.absoluteString.contains("docs.google.com") {
-                //
-//                handleWindowContent(urlInfo, for: state)
+                let appName = mainWindow.parent()?.title() ?? ""
+                let appTitle = mainWindow.title() ?? ""
                 
+                var appBundleUrl = customAppBundleUrl
+                if appBundleUrl == nil {
+                    if let pid = lastActiveWindowPid,
+                       let app = NSRunningApplication(processIdentifier: pid) {
+                        appBundleUrl = app.bundleURL
+                    }
+                }
+                self.screenResult = .init()
+                self.screenResult.applicationName = appName
+                self.screenResult.applicationTitle = appTitle
+                self.screenResult.appBundleUrl = appBundleUrl
+                self.screenResult.errorMessage = "Google Drive Plugin Required"
+                self.screenResult.errorCode = 1500
+                state.addAutoContext(trackedWindow: trackedWindow)
             }  else {
                 parseAccessibility(
                     for: pid,

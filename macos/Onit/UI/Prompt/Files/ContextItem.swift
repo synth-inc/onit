@@ -27,13 +27,14 @@ struct ContextItem: View {
                 ContextTag(
                     text: name,
                     textColor: isEditing ? .T_2 : .white,
-                    background: isEditing ? .gray500 : .clear,
-                    hoverBackground: isEditing ? .gray400 : .gray600,
+                    background: isEditing ? (hasError ? .redDisabled : .gray500) : .clear,
+                    hoverBackground: isEditing ? (hasError ? .redDisabledHover : .gray400) : .gray600,
                     maxWidth: isEditing ? 155 : .infinity,
                     iconBundleURL: autoContext.appBundleUrl,
-                    tooltip: isEditing ? name : "View auto-context file",
+                    tooltip: isEditing ? (hasError ? errorMessage : name) : "View auto-context file",
+                    errorDotColor: hasError ? .red : nil,
                     action: showContextWindow,
-                    removeAction: isEditing ? { removeContextItem() } : nil
+                    removeAction: isEditing ? { removeContextItem() } : nil   
                 )
             default:
                 ContextTag(
@@ -68,6 +69,22 @@ struct ContextItem: View {
             websiteTitle.isEmpty ? websiteUrl.host() ?? websiteUrl.absoluteString : websiteTitle
         }
     }
+    
+    
+     private var hasError: Bool {
+         if case .auto(let autoContext) = item {
+             return autoContext.appContent["error"] != nil
+         }
+         return false
+     }
+     
+     private var errorMessage: String {
+         if case .auto(let autoContext) = item,
+            let error = autoContext.appContent["error"] as? String {
+             return error
+         }
+         return name
+     }
 }
 
 // MARK: - Private Functions

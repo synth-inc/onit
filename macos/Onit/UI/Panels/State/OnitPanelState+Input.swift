@@ -13,21 +13,31 @@ extension OnitPanelState {
         guard Defaults[.autoContextFromCurrentWindow] else { return }
 
         let appName = AccessibilityNotificationsManager.shared.screenResult.applicationName ?? "AutoContext"
+        let trackedWindowTitle = trackedWindow?.title
+        let trackedWindowHash = trackedWindow?.hash ?? 0 // This is all all horrible. There's no reason why we should be putting these things on the 'screenResult"
         if let errorMessage = AccessibilityNotificationsManager.shared.screenResult.errorMessage {
-            let errorContext = Context(appName: "Unable to add \(appName)", appHash: 0, appTitle: "", appContent: ["error": errorMessage])
+            let errorContext = Context(
+                appName: appName,
+                appHash: trackedWindow?.hash ?? 0,
+                appTitle: trackedWindowTitle ?? "Unknown",
+                appContent: ["error": errorMessage, "errorCode" : String(AccessibilityNotificationsManager.shared.screenResult.errorCode ?? 0)],
+                appBundleUrl: AccessibilityNotificationsManager.shared.screenResult.appBundleUrl)
             pendingContextList.insert(errorContext, at: 0)
+            cleanupWindowContextTask(uniqueWindowIdentifier: trackedWindowHash)
             return
         }
 
         guard let appContent = AccessibilityNotificationsManager.shared.screenResult.others else {
             let errorContext = Context(appName: "Unable to add \(appName)", appHash: 0, appTitle: "", appContent: ["error": "Empty text"])
             pendingContextList.insert(errorContext, at: 0)
+            cleanupWindowContextTask(uniqueWindowIdentifier: trackedWindowHash)
             return
         }
         
         guard let activeTrackedWindow = AccessibilityNotificationsManager.shared.windowsManager.activeTrackedWindow else {
             let errorContext = Context(appName: "Unable to add \(appName)", appHash: 0, appTitle: "", appContent: ["error": "Cannot identify context"])
             pendingContextList.insert(errorContext, at: 0)
+            cleanupWindowContextTask(uniqueWindowIdentifier: trackedWindowHash)
             return
         }
         
