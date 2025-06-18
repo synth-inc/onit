@@ -40,7 +40,7 @@ struct PromptCoreFooter: View {
                     iconColor: .gray200,
                     icon: .send2,
                     text: "Send",
-                    disabled: windowState.pendingInstruction.isEmpty,
+                    disabled: disableSend,
                     action: handleSend
                 )
             }

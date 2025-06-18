@@ -13,15 +13,17 @@ struct WindowHelpers {
     }
     
     static func getWindowName(window: AXUIElement) -> String {
-        var fallbackName: String = "Unknown"
+        var localizedName: String? = nil
         
         if let pid = window.pid(),
            let appLocalizedName = getWindowApp(pid: pid)?.localizedName
         {
-            fallbackName = appLocalizedName
+            localizedName = appLocalizedName
         }
         
-        let windowName = window.title() ?? window.appName() ?? fallbackName
+        let windowTitle = window.title() ?? "Unknown Title"
+        let windowAppName = window.appName() ?? localizedName ?? "Unknown App"
+        let windowName = "\(windowTitle) - \(windowAppName)"
         return windowName
     }
     

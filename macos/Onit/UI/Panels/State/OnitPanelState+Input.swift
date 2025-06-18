@@ -109,7 +109,7 @@ extension OnitPanelState {
     func addWindowToContext(window: AXUIElement) {
         guard let windowPid = window.pid() else { return }
         
-        guard let trackedWindow = AccessibilityNotificationsManager.shared.windowsManager.append(
+        guard let trackedWindow = AccessibilityNotificationsManager.shared.windowsManager.trackWindowForElement(
             window,
             pid: windowPid
         ) else {

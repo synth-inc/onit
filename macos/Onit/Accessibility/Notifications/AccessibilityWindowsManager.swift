@@ -19,7 +19,7 @@ struct TrackedWindow: Hashable {
     }
     
     // When a hashed TrackedWindow is required (e.g. in Sets or Dictionary keys):
-    //   1. Make it so that `title` and `element` updates don't contribute to the hash value.
+    //   1. Make it so that only `hash` contributes to the hash value.
     //   2. Make hashes consistent with == above.
     func hash(into hasher: inout Hasher) {
         hasher.combine(hash)
@@ -41,7 +41,11 @@ class AccessibilityWindowsManager {
     
     private var trackedWindows: [TrackedWindow] = []
     
-    func append(_ element: AXUIElement, pid: pid_t) -> TrackedWindow? {
+    func trackWindowForElement(
+        _ element: AXUIElement,
+        pid: pid_t,
+        updateActiveTrackedWindow: Bool = true
+    ) -> TrackedWindow? {
         if element.isDesktopFinder {
             let trackedWindow = TrackedWindow(
                 element: element,
@@ -51,7 +55,10 @@ class AccessibilityWindowsManager {
             )
             
             addToTrackedWindows(trackedWindow)
-            activeTrackedWindow = trackedWindow
+            
+            if updateActiveTrackedWindow {
+                activeTrackedWindow = trackedWindow
+            }
             
             return trackedWindow
         }
@@ -75,7 +82,10 @@ class AccessibilityWindowsManager {
             )
             
             addToTrackedWindows(trackedWindow)
-            activeTrackedWindow = trackedWindow
+            
+            if updateActiveTrackedWindow {
+                activeTrackedWindow = trackedWindow
+            }
             
             return trackedWindow
         } else {
@@ -85,7 +95,7 @@ class AccessibilityWindowsManager {
         return nil
     }
     
-    func addToTrackedWindows(_ trackedWindow: TrackedWindow) {
+    private func addToTrackedWindows(_ trackedWindow: TrackedWindow) {
         guard let trackedWindowIndex = trackedWindows.firstIndex(of: trackedWindow) else {
             trackedWindows.append(trackedWindow)
             return

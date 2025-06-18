@@ -163,31 +163,31 @@ class AccessibilityNotificationsManager: ObservableObject {
     }
     
     private func handleTitleChanged(for element: AXUIElement, elementPid: pid_t) {
-        guard let trackedWindow = self.windowsManager.append(element, pid: elementPid) else { return }
+        guard let trackedWindow = self.windowsManager.trackWindowForElement(element, pid: elementPid) else { return }
         
         notifyDelegates { $0.accessibilityManager(self, didChangeWindowTitle: trackedWindow) }
     }
     
     private func handleWindowMoved(for element: AXUIElement, elementPid: pid_t) {
-        guard let trackedWindow = self.windowsManager.append(element, pid: elementPid) else { return }
+        guard let trackedWindow = self.windowsManager.trackWindowForElement(element, pid: elementPid) else { return }
         
         notifyDelegates { $0.accessibilityManager(self, didMoveWindow: trackedWindow) }
     }
     
     private func handleWindowResized(for element: AXUIElement, elementPid: pid_t) {
-        guard let trackedWindow = self.windowsManager.append(element, pid: elementPid) else { return }
+        guard let trackedWindow = self.windowsManager.trackWindowForElement(element, pid: elementPid) else { return }
         
         notifyDelegates { $0.accessibilityManager(self, didResizeWindow: trackedWindow) }
     }
     
     private func handleWindowBounds(for element: AXUIElement, elementPid: pid_t) {
-        guard let trackedWindow = self.windowsManager.append(element, pid: elementPid) else { return }
+        guard let trackedWindow = self.windowsManager.trackWindowForElement(element, pid: elementPid) else { return }
         
         notifyDelegates { $0.accessibilityManager(self, didActivateWindow: trackedWindow) }
     }
     
     private func handleCreatedWindowElement(for element: AXUIElement, elementPid: pid_t) {
-        guard let trackedWindow = self.windowsManager.append(element, pid: elementPid) else { return }
+        guard let trackedWindow = self.windowsManager.trackWindowForElement(element, pid: elementPid) else { return }
         
         self.notifyDelegates { $0.accessibilityManager(self, didActivateWindow: trackedWindow) }
     }

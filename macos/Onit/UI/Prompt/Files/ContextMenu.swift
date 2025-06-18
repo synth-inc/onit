@@ -14,6 +14,7 @@ struct ContextMenu: View {
     @State private var currentArrowKeyIndex: Int = 0
     @State private var maxArrowKeyIndex: Int = 0
     
+    // TODO: LOYD - Might want to delete later, as browser tabs are currently not implemented?
     var showBrowserTabs: Bool {
         return windowState.showContextMenuBrowserTabs
     }
@@ -26,20 +27,14 @@ struct ContextMenu: View {
                 placeholder: "Search windows, tabs & files"
             )
         ) {
-            if showBrowserTabs {
-                ContextMenuBrowserTabs {
-                    closeContextMenu()
-                }
-            } else {
-                ContextMenuWindows(
-                    searchQuery: $searchQuery,
-                    currentArrowKeyIndex: $currentArrowKeyIndex,
-                    maxArrowKeyIndex: $maxArrowKeyIndex
-                ) {
-                    closeContextMenu()
-                } showBrowserTabsSubMenu: {
-                    showBrowserTabsSubMenu()
-                }
+            ContextMenuWindows(
+                searchQuery: $searchQuery,
+                currentArrowKeyIndex: $currentArrowKeyIndex,
+                maxArrowKeyIndex: $maxArrowKeyIndex
+            ) {
+                closeContextMenu()
+            } showBrowserTabsSubMenu: {
+                showBrowserTabsSubMenu()
             }
         }
         .background {

@@ -42,8 +42,13 @@ struct ContextMenuWindows: View {
     }
     
     @State private var isCapturingWindows: Bool = false
-    @State private var capturingWindowsTask: Task<Void, Never>? = nil
     @State private var capturedWindows: [CapturedWindow] = []
+    
+    @State private var capturingWindowsTask: Task<Void, Never>? = nil {
+        willSet {
+            capturingWindowsTask?.cancel()
+        }
+    }
     
     private let ignoredApps: [String] = ["desktop", "finder"]
     
@@ -67,7 +72,7 @@ struct ContextMenuWindows: View {
     }
     
     private var uploadFileButtonIndex: Int {
-        // This should be updated to be +2, +1 when bringing the browser tab button back in.
+        // TODO: LOYD - This should be updated to be +2, +1 when bringing the browser tab button back in.
         return foregroundWindowCaptured ? filteredCapturedWindows.count + 1 : filteredCapturedWindows.count
     }
     
@@ -186,7 +191,6 @@ extension ContextMenuWindows {
             }
         }
         .onDisappear {
-            capturingWindowsTask?.cancel()
             capturingWindowsTask = nil
         }
         .onChange(of: uploadFileButtonIndex) { _, new in
@@ -272,7 +276,8 @@ extension ContextMenuWindows {
     }
     
     private func handleReturnKeyPress() {
-        /// Bring this back when implementing in-memory hashmap cache of browser tab contexts.
+        // TODO: LOYD - Bring this back when implementing in-memory hashmap cache of browser tab contexts.
+        //
 //        if currentArrowKeyIndex == allBrowserTabsButtonIndex {
 //            showBrowserTabsSubMenu()
 //        }
@@ -317,25 +322,22 @@ extension ContextMenuWindows {
             let windows = pid.findTargetWindows()
             
             for window in windows {
-                let trackedWindow = TrackedWindow(
-                    element: window,
+                if let trackedWindow = AccessibilityNotificationsManager.shared.windowsManager.trackWindowForElement(
+                    window,
                     pid: pid,
-                    hash: CFHash(window),
-                    title: WindowHelpers.getWindowName(window: window)
-                )
-                
-                AccessibilityNotificationsManager.shared.windowsManager.addToTrackedWindows(trackedWindow)
-                
-                if let foregroundWindow = windowState.foregroundWindow {
-                    if trackedWindow != foregroundWindow {
+                    updateActiveTrackedWindow: false
+                ) {
+                    if let foregroundWindow = windowState.foregroundWindow {
+                        if trackedWindow != foregroundWindow {
+                            capturedOpenWindows.append(
+                                CapturedWindow(trackedWindow: trackedWindow)
+                            )
+                        }
+                    } else {
                         capturedOpenWindows.append(
                             CapturedWindow(trackedWindow: trackedWindow)
                         )
                     }
-                } else {
-                    capturedOpenWindows.append(
-                        CapturedWindow(trackedWindow: trackedWindow)
-                    )
                 }
             }
         }

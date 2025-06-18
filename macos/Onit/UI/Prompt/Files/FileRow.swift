@@ -202,13 +202,9 @@ private final class WindowChangeDelegate: AccessibilityNotificationsDelegate {
         if doNotTrackXCode {
             windowState.foregroundWindow = nil
         } else {
-            let window = app.processIdentifier.getAXUIElement()
-            
-            let trackedWindow = TrackedWindow(
-                element: window,
-                pid: app.processIdentifier,
-                hash: CFHash(window),
-                title: WindowHelpers.getWindowName(window: window)
+            let trackedWindow = AccessibilityNotificationsManager.shared.windowsManager.trackWindowForElement(
+                app.processIdentifier.getAXUIElement(),
+                pid: app.processIdentifier
             )
             
             windowState.foregroundWindow = trackedWindow
@@ -237,11 +233,27 @@ private final class WindowChangeDelegate: AccessibilityNotificationsDelegate {
         handleUpdateForegroundWindow(window.hash)
     }
     
+    func accessibilityManager(
+        _ manager: AccessibilityNotificationsManager,
+        didMinimizeWindow window: TrackedWindow
+    ) {
+        if windowState.foregroundWindow == window {
+            windowState.foregroundWindow = nil
+        } else {
+            handleUpdateForegroundWindow(window.hash)
+        }
+    }
+    
+    func accessibilityManager(
+        _ manager: AccessibilityNotificationsManager,
+        didDeminimizeWindow window: TrackedWindow
+    ) {
+        handleUpdateForegroundWindow(window.hash)
+    }
+    
     // Below is required to conform to AccessibilityNotificationsDelegate protocol but aren't needed in this implementation.
     func accessibilityManager(_ manager: AccessibilityNotificationsManager, didMoveWindow window: TrackedWindow) {}
     func accessibilityManager(_ manager: AccessibilityNotificationsManager, didResizeWindow window: TrackedWindow) {}
-    func accessibilityManager(_ manager: AccessibilityNotificationsManager, didMinimizeWindow window: TrackedWindow) {}
-    func accessibilityManager(_ manager: AccessibilityNotificationsManager, didDeminimizeWindow window: TrackedWindow) {}
     func accessibilityManager(_ manager: AccessibilityNotificationsManager, didActivateIgnoredWindow window: TrackedWindow?) {}
     func accessibilityManager(_ manager: AccessibilityNotificationsManager, didDestroyWindow window: TrackedWindow) {}
 }
