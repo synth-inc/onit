@@ -141,7 +141,7 @@ struct ContextView: View {
     private func getErrorDialogInfo() -> (String, String) {
         switch errorCode {
         case "1500":
-            return ("Install the Google Drive Plugin to fetch your Google documents as window context!", "Install Plugin: Google Drive")
+            return ("To fetch your Google Drive tabs as window context, you'll need to connect your account. Please authenticate with Google Drive and try again.", "Connect Google Drive")
         case "1501":
             return ("Give permission to Onit to view this drive file.", "Grant Permission")
         default:
@@ -167,8 +167,13 @@ struct ContextView: View {
 
     var errorDialog: some View {
         let (subtitle, buttonText) = getErrorDialogInfo()
-        
-        return SetUpDialog(title: errorTitle, buttonText: buttonText, showCloseButton: false) {
+        return SetUpDialog(
+            title: errorTitle,
+            icon: "warning",
+            titleColor: .red,
+            buttonText: buttonText,
+            buttonStyle: .default
+        ) {
             Text(subtitle)
         } action: {
             if errorCode == "1500" {
