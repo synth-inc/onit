@@ -284,23 +284,62 @@ class AccessibilityNotificationsManager: ObservableObject {
                 )
                 // TODO: KNA - uncomment this to use WebContentFetchService with AXURL
             } else if let url = findUrl(in: mainWindow), url.absoluteString.contains("docs.google.com") {
+                
                 let appName = mainWindow.parent()?.title() ?? ""
                 let appTitle = mainWindow.title() ?? ""
-                
-                var appBundleUrl = customAppBundleUrl
-                if appBundleUrl == nil {
-                    if let pid = lastActiveWindowPid,
-                       let app = NSRunningApplication(processIdentifier: pid) {
-                        appBundleUrl = app.bundleURL
+                let startTime = CFAbsoluteTimeGetCurrent()
+                if GoogleDriveService.shared.checkAuthorizationStatus() {
+                    do {
+                        let documentContent = try await GoogleDriveService.shared.extractTextFromGoogleDrive(driveUrl: url.absoluteString)
+                        let contentArray = [
+                            AccessibilityParsedElements.applicationName: appName,
+                            AccessibilityParsedElements.applicationTitle: appTitle,
+                            AccessibilityParsedElements.elapsedTime: "\(CFAbsoluteTimeGetCurrent() - startTime)",
+                            "document": documentContent
+                        ]
+                        handleWindowContent(
+                            contentArray,
+                            for: state,
+                            customAppBundleUrl: customAppBundleUrl
+                        )
+                    } catch {
+                        // Handle error case
+                        var appBundleUrl = customAppBundleUrl
+                        if appBundleUrl == nil {
+                            if let pid = lastActiveWindowPid,
+                            let app = NSRunningApplication(processIdentifier: pid) {
+                                appBundleUrl = app.bundleURL
+                            }
+                        }
+                        self.screenResult = .init()
+                        self.screenResult.applicationName = appName
+                        self.screenResult.applicationTitle = appTitle
+                        self.screenResult.appBundleUrl = appBundleUrl
+                        if let googleDriveError = error as? GoogleDriveError {
+                            self.screenResult.errorMessage = "Failed to extract Google Drive document content: \(googleDriveError.localizedDescription)"
+                        } else {
+                            self.screenResult.errorMessage = "Failed to extract Google Drive document content: \(error.localizedDescription)"
+                        }
+                        self.screenResult.errorCode = 1500
+                        state.addAutoContext(trackedWindow: trackedWindow)
                     }
+                } else {
+                    // This creates an error state for when google drive is not authorized
+                    var appBundleUrl = customAppBundleUrl
+                    if appBundleUrl == nil {
+                        if let pid = lastActiveWindowPid,
+                        let app = NSRunningApplication(processIdentifier: pid) {
+                            appBundleUrl = app.bundleURL
+                        }
+                    }
+                    self.screenResult = .init()
+                    self.screenResult.applicationName = appName
+                    self.screenResult.applicationTitle = appTitle
+                    self.screenResult.appBundleUrl = appBundleUrl
+                    self.screenResult.errorMessage = "Google Drive Plugin Required"
+                    self.screenResult.errorCode = 1500
+                    state.addAutoContext(trackedWindow: trackedWindow)
                 }
-                self.screenResult = .init()
-                self.screenResult.applicationName = appName
-                self.screenResult.applicationTitle = appTitle
-                self.screenResult.appBundleUrl = appBundleUrl
-                self.screenResult.errorMessage = "Google Drive Plugin Required"
-                self.screenResult.errorCode = 1500
-                state.addAutoContext(trackedWindow: trackedWindow)
             }  else {
                 parseAccessibility(
                     for: pid,

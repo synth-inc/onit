@@ -11,6 +11,13 @@ import SwiftUI
 
 @MainActor
 class GoogleDriveService: ObservableObject {
+
+    static let shared = GoogleDriveService()
+
+//    func init() {
+//        GIDSignIn.sharedInstance.restorePreviousSignIn()
+//    }
+
     // Auth states
     @Published var isAuthorized = false
     @Published var userEmail: String?
@@ -23,21 +30,23 @@ class GoogleDriveService: ObservableObject {
     @Published var isExtracting = false
     @Published var extractionError: String?
 
-    func checkAuthorizationStatus() {
+    func checkAuthorizationStatus() -> Bool {
         guard let googleUser = GIDSignIn.sharedInstance.currentUser else {
             self.isAuthorized = false
             self.userEmail = nil
-            return
+            return false
         }
 
         if let grantedScopes = googleUser.grantedScopes,
-            grantedScopes.contains("https://www.googleapis.com/auth/drive.readonly")
+            grantedScopes.contains("https://www.googleapis.com/auth/drive.file")
         {
             self.isAuthorized = true
             self.userEmail = googleUser.profile?.email
+            return true
         } else {
             self.isAuthorized = false
             self.userEmail = nil
+            return false
         }
     }
 
@@ -57,7 +66,7 @@ class GoogleDriveService: ObservableObject {
 
         if let googleUser = GIDSignIn.sharedInstance.currentUser {
             googleUser.addScopes(
-                ["https://www.googleapis.com/auth/drive.readonly"],
+                ["https://www.googleapis.com/auth/drive.file"],
                 presenting: window,
                 completion: completion
             )
@@ -65,7 +74,7 @@ class GoogleDriveService: ObservableObject {
             GIDSignIn.sharedInstance.signIn(
                 withPresenting: window,
                 hint: nil,
-                additionalScopes: ["https://www.googleapis.com/auth/drive.readonly"],
+                additionalScopes: ["https://www.googleapis.com/auth/drive.file"],
                 completion: completion
             )
         }
@@ -117,27 +126,30 @@ class GoogleDriveService: ObservableObject {
         }
     }
 
-    func extractTextFromGoogleDrive(driveUrl: String) async {
+    func extractTextFromGoogleDrive(driveUrl: String) async throws -> String {
         self.isExtracting = true
         self.extractionError = nil
 
         guard !driveUrl.isEmpty else {
-            self.extractionError = "Please enter a Google Drive URL"
+            let error = "Please enter a Google Drive URL"
+            self.extractionError = error
             self.isExtracting = false
-            return
+            throw GoogleDriveError.invalidUrl(error)
         }
 
         // Extract file ID from Google Drive URL
         guard let fileId = extractFileIdFromUrl(driveUrl) else {
-            self.extractionError = "Invalid Google Drive URL format"
+            let error = "Invalid Google Drive URL format"
+            self.extractionError = error
             self.isExtracting = false
-            return
+            throw GoogleDriveError.invalidUrl(error)
         }
 
         guard let user = GIDSignIn.sharedInstance.currentUser else {
-            self.extractionError = "Not authenticated with Google Drive"
+            let error = "Not authenticated with Google Drive"
+            self.extractionError = error
             self.isExtracting = false
-            return
+            throw GoogleDriveError.notAuthenticated(error)
         }
 
         // Get the access token (tokens are automatically refreshed by Google Sign-In SDK)
@@ -151,9 +163,10 @@ class GoogleDriveService: ObservableObject {
             "https://www.googleapis.com/drive/v3/files/\(fileId)/export?mimeType=\(mimeType)"
 
         guard let url = URL(string: exportUrl) else {
-            self.extractionError = "Invalid export URL"
+            let error = "Invalid export URL"
+            self.extractionError = error
             self.isExtracting = false
-            return
+            throw GoogleDriveError.invalidUrl(error)
         }
 
         var request = URLRequest(url: url)
@@ -165,37 +178,40 @@ class GoogleDriveService: ObservableObject {
             self.isExtracting = false
 
             guard let httpResponse = response as? HTTPURLResponse else {
-                self.extractionError = "Invalid response"
-                return
+                let error = "Invalid response"
+                self.extractionError = error
+                throw GoogleDriveError.invalidResponse(error)
             }
 
             if httpResponse.statusCode == 403 {
-                var extractionError =
-                    "Access denied. Make sure the document is publicly accessible or you have permission to view it."
-                if let errorMessage = String(data: data, encoding: .utf8) {
-                    extractionError += "\n\nError message: \(errorMessage)"
+                var errorMessage = "Access denied. Make sure the document is publicly accessible or you have permission to view it."
+                if let errorData = String(data: data, encoding: .utf8) {
+                    errorMessage += "\n\nError message: \(errorData)"
                 }
-                self.extractionError = extractionError
-                return
+                self.extractionError = errorMessage
+                throw GoogleDriveError.accessDenied(errorMessage)
             } else if httpResponse.statusCode != 200 {
-                self.extractionError =
-                    "Failed to retrieve document (HTTP \(httpResponse.statusCode))"
-                return
+                let error = "Failed to retrieve document (HTTP \(httpResponse.statusCode))"
+                self.extractionError = error
+                throw GoogleDriveError.httpError(httpResponse.statusCode, error)
             }
 
             guard let text = String(data: data, encoding: .utf8) else {
-                self.extractionError = "Failed to decode document content"
-                return
+                let error = "Failed to decode document content"
+                self.extractionError = error
+                throw GoogleDriveError.decodingError(error)
             }
 
             if text.isEmpty {
-                self.extractedText = "(Document appears to be empty)"
+                return "(Document appears to be empty)"
             } else {
-                self.extractedText = text
+                return text
             }
         } catch {
-            self.extractionError = "Network error: \(error.localizedDescription)"
+            let errorMessage = "Network error: \(error.localizedDescription)"
+            self.extractionError = errorMessage
             self.isExtracting = false
+            throw GoogleDriveError.networkError(errorMessage)
         }
     }
 
@@ -232,5 +248,51 @@ class GoogleDriveService: ObservableObject {
         }
 
         return nil
+    }
+
+    
+}
+
+enum GoogleDriveError: Error, LocalizedError {
+    case notAuthenticated(String)
+    case networkError(String)
+    case decodingError(String)
+    case authorizationError(String)
+    case fileNotFound(String)
+    case invalidUrl(String)
+    case extractionError(String)
+    case unsupportedFileType(String)
+    case invalidFileId(String)
+    case httpError(Int, String)
+    case accessDenied(String)
+    case invalidResponse(String)
+    
+    var errorDescription: String? {
+        switch self {
+        case .notAuthenticated(let message):
+            return "Not Authenticated: \(message)"
+        case .networkError(let message):
+            return "Network Error: \(message)"
+        case .decodingError(let message):
+            return "Decoding Error: \(message)"
+        case .authorizationError(let message):
+            return "Authorization Error: \(message)"
+        case .fileNotFound(let message):
+            return "File Not Found: \(message)"
+        case .invalidUrl(let message):
+            return "Invalid URL: \(message)"
+        case .extractionError(let message):
+            return "Extraction Error: \(message)"
+        case .unsupportedFileType(let message):
+            return "Unsupported File Type: \(message)"
+        case .invalidFileId(let message):
+            return "Invalid File ID: \(message)"
+        case .httpError(let code, let message):
+            return "HTTP Error (\(code)): \(message)"
+        case .accessDenied(let message):
+            return "Access Denied: \(message)"
+        case .invalidResponse(let message):
+            return "Invalid Response: \(message)"
+        }
     }
 }

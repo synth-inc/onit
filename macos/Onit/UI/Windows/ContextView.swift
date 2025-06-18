@@ -7,6 +7,7 @@
 
 import Defaults
 import SwiftUI
+import GoogleSignIn
 
 struct ContextView: View {
     @Default(.closedAutoContextDialog) var closedAutoContextDialog
@@ -18,14 +19,16 @@ struct ContextView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading) {
-                if !closedAutoContextDialog {
+                if hasError {
+                    errorDialog
+                } else if !closedAutoContextDialog {
                     dialog
                 }
 
                 if let text = text {
                     Text(text)
                         .appFont(.medium14)
-                        .padding(.top, !closedAutoContextDialog ? 0 : 16)
+                        .padding(.top, (!closedAutoContextDialog && !hasError) ? 0 : 16)
                         .padding(.bottom, 16)
                         .padding(.horizontal, 16)
                         .frame(maxWidth: .infinity, alignment: .leading)
@@ -89,6 +92,53 @@ struct ContextView: View {
         default:
             return ""
         }
+    }
+    
+    private var hasError: Bool {
+        if case .auto(let autoContext) = context {
+            return autoContext.appContent["error"] != nil
+        }
+        return false
+    }
+    
+    private var errorTitle: String {
+        if case .auto(let autoContext) = context,
+           let error = autoContext.appContent["error"] as? String {
+            return error
+        }
+        return "Error"
+    }
+    
+    private var errorCode: String? {
+        if case .auto(let autoContext) = context {
+            return autoContext.appContent["errorCode"] as? String
+        }
+        return nil
+    }
+    
+    private func getErrorDialogInfo() -> (String, String) {
+        switch errorCode {
+        case "1500":
+            return ("Install the Google Drive Plugin to fetch your Google documents as window context!", "Install Plugin: Google Drive")
+        default:
+            return ("An error occurred while fetching context.", "OK")
+        }
+    }
+    
+    var errorDialog: some View {
+        let (subtitle, buttonText) = getErrorDialogInfo()
+        
+        return SetUpDialog(title: errorTitle, buttonText: buttonText) {
+            Text(subtitle)
+        } action: {
+            if errorCode == "1500" {
+                GoogleDriveService.shared.authorizeGoogleDrive()
+            }
+            // TODO: Handle other error dialog actions if needed
+        } closeAction: {
+            // TODO: Handle error dialog close action
+        }
+        .fixedSize(horizontal: false, vertical: true)
     }
 }
 

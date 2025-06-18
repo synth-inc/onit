@@ -38,7 +38,16 @@ struct ContentView: View {
             set: { state.showFileImporter = $0 }
         )
     }
-
+    
+    private var errorContext: Context? {
+        state.pendingContextList.first { context in
+            if case .auto(let autoContext) = context {
+                return autoContext.appContent["error"] != nil
+            }
+            return false
+        }
+    }
+    
     // MARK: - Private Functions
     
     @ViewBuilder
