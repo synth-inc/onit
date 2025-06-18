@@ -177,8 +177,13 @@ extension PanelStateTetheredManager {
     }
     
     private func appKey(for window: AXUIElement) -> String? {
-        guard let pid = window.pid() else { return nil }
+        let appNamesByWindow = ["Safari", "Google Chrome", "Arc", "Brave Browser", "Opera", "Vivaldi"]
+        guard let appName = window.appName() else { return nil }
         
-        return "\(pid)-\(CFHash(window))"
+        if appNamesByWindow.contains(appName) {
+            return "\(CFHash(window))"
+        }
+        
+        return appName
     }
 }
