@@ -389,7 +389,7 @@ class AccessibilityNotificationsManager: ObservableObject {
             print("Skipping parsing for window's hash \(windowHash) due to previous timeout.")
             return
         }
-
+        
         guard Defaults[.autoContextFromCurrentWindow] else {
             self.screenResult = .init()
             return
@@ -399,23 +399,10 @@ class AccessibilityNotificationsManager: ObservableObject {
         
         let workItem = DispatchWorkItem { [weak self] in
             guard let self = self else { return }
-                
+            
             Task {
                 do {
-                    let results = try await withThrowingTaskGroup(of: [String: String]?.self) { group in
-                        group.addTask {
-                            return await AccessibilityParser.shared.getAllTextInElement(windowElement: mainWindow)
-                        }
-                        
-                        group.addTask {
-                            try await Task.sleep(nanoseconds: 10_000_000_000) // 10 second timeout
-                            throw NSError(domain: "AccessibilityParsingTimeout", code: 1, userInfo: nil)
-                        }
-                        
-                        let firstCompleted = try await group.next()!
-                        group.cancelAll()
-                        return firstCompleted
-                    }
+                    let results = try await AccessibilityParser.shared.getAllTextInElement(windowElement: mainWindow)
                     
                     self.handleWindowContent(
                         results,
@@ -588,12 +575,3 @@ extension AccessibilityNotificationsManager: AccessibilityObserversDelegate {
         handleAppDeactivation(appName: appName, processID: processID)
     }
 }
-
-// MARK: - Extending AXUIElement
-
-// Making AXUIElement conform to Sendable with an unchecked conformance
-//   so that it can safely cross concurrency boundaries inside task-group
-//   closures (e.g. passing `mainWindow` into the `parseAccessibility` Task)
-//
-// We're only passing references between tasks as read-only, so this is safe.
-extension AXUIElement: @unchecked @retroactive Sendable {}

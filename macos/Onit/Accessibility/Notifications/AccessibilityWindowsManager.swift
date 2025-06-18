@@ -22,7 +22,6 @@ struct TrackedWindow: Hashable {
     //   1. Make it so that `title` and `element` updates don't contribute to the hash value.
     //   2. Make hashes consistent with == above.
     func hash(into hasher: inout Hasher) {
-        hasher.combine(pid)
         hasher.combine(hash)
     }
 }
