@@ -54,6 +54,62 @@ struct DebugModeTab: View {
                             }
                     }
                     
+                    HStack {
+                        Text("Collect local typeahead test cases")
+                            .font(.system(size: 13))
+                        Spacer()
+                        Toggle("", isOn: $debugManager.collectTypeaheadTestCases)
+                            .toggleStyle(.switch)
+                            .controlSize(.small)
+                    }
+                    
+                    #if DEBUG
+                    if !debugManager.cacheInvalidationStats.isEmpty {
+                        Divider()
+                        
+                        VStack(alignment: .leading, spacing: 12) {
+                            HStack {
+                                Text("Cache Invalidation Statistics")
+                                    .font(.system(size: 14, weight: .medium))
+                                Spacer()
+                                
+                                HStack(spacing: 8) {
+                                    Button("Refresh") {
+                                        debugManager.refreshCacheInvalidationStats()
+                                    }
+                                    .buttonStyle(.plain)
+                                    .font(.system(size: 12))
+                                    .foregroundColor(.blue)
+                                    
+                                    Button("Clear Stats") {
+                                        debugManager.clearCacheInvalidationStats()
+                                    }
+                                    .buttonStyle(.plain)
+                                    .font(.system(size: 12))
+                                    .foregroundColor(.red)
+                                }
+                            }
+                            
+                            VStack(alignment: .leading, spacing: 4) {
+                                ForEach(debugManager.cacheInvalidationStats.sorted(by: { $0.value > $1.value }), id: \.key) { reason, count in
+                                    HStack {
+                                        Text(reason)
+                                            .font(.system(size: 12, design: .monospaced))
+                                        Spacer()
+                                        Text("\(count)")
+                                            .font(.system(size: 12, weight: .medium))
+                                            .foregroundColor(.secondary)
+                                    }
+                                    .padding(.horizontal, 8)
+                                    .padding(.vertical, 2)
+                                    .background(Color.gray.opacity(0.05))
+                                    .cornerRadius(4)
+                                }
+                            }
+                        }
+                    }
+                    #endif
+
                     if !debugManager.ocrComparisonResults.isEmpty {
                         Divider()
                         
@@ -179,6 +235,11 @@ struct DebugModeTab: View {
             .padding(.vertical, 20)
             .padding(.horizontal, 86)
         }
+        #if DEBUG
+        .onAppear {
+            debugManager.refreshCacheInvalidationStats()
+        }
+        #endif
     }
     
     private var filteredResults: [OCRComparisonResult] {

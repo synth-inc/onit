@@ -8,6 +8,10 @@
 import Foundation
 import ApplicationServices
 
+#if DEBUG
+import Defaults
+#endif
+
 /// Manages accessibility parsing requests and prevents duplicate parsing operations
 @MainActor
 final class AccessibilityParsingManager {
@@ -106,6 +110,13 @@ final class AccessibilityParsingManager {
     
     /// Map of window element hash to cached results
     private var cachedResults: [UInt: CachedResult] = [:]
+    
+    #if DEBUG
+    private var invalidationCounts: [String: Int] {
+        get { Defaults[.cacheInvalidationCounts] }
+        set { Defaults[.cacheInvalidationCounts] = newValue }
+    }
+    #endif
     
     // MARK: - Initialization
     
@@ -210,6 +221,10 @@ final class AccessibilityParsingManager {
         let elementHash = CFHash(windowElement)
         if cachedResults.removeValue(forKey: elementHash) != nil {
             print("AccessibilityParsingManager: Invalidated cached results for element hash \(elementHash), reason: \(reason)")
+            
+            #if DEBUG
+            trackInvalidationReason(reason)
+            #endif
         }
     }
     
@@ -225,8 +240,34 @@ final class AccessibilityParsingManager {
         
         if !keysToRemove.isEmpty {
             print("AccessibilityParsingManager: Invalidated \(keysToRemove.count) cached results for PID \(pid), reason: \(reason)")
+            
+            #if DEBUG
+            for _ in keysToRemove {
+                trackInvalidationReason(reason)
+            }
+            #endif
         }
     }
+    
+    #if DEBUG
+    private func trackInvalidationReason(_ reason: String) {
+        var counts = invalidationCounts
+        counts[reason, default: 0] += 1
+        invalidationCounts = counts
+        print("AccessibilityParsingManager: Cache invalidation tracking - \(reason): \(counts[reason] ?? 0)")
+    }
+    
+    /// Get cache invalidation statistics (debug only)
+    func getCacheInvalidationStats() -> [String: Int] {
+        return invalidationCounts
+    }
+    
+    /// Clear cache invalidation statistics (debug only)
+    func clearCacheInvalidationStats() {
+        invalidationCounts = [:]
+        print("AccessibilityParsingManager: Cleared cache invalidation statistics")
+    }
+    #endif
     
     // MARK: - Private Methods
     

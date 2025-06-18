@@ -20,8 +20,15 @@ class DebugManager: ObservableObject {
     @Published var showDebugWindow = false
     @Default(.enableOCRComparison) var enableOCRComparison
     @Default(.enableAutoOCRComparison) var enableAutoOCRComparison
+    
+    @Default(.collectTypeaheadTestCases) var collectTypeaheadTestCases
+    
     @Published var debugText: String = ""
     @Published var ocrComparisonResults: [OCRComparisonResult] = []
+    
+    #if DEBUG
+    @Published var cacheInvalidationStats: [String: Int] = [:]
+    #endif
     
     var debugPanel: NSPanel? = nil
     
@@ -48,6 +55,10 @@ class DebugManager: ObservableObject {
         if enableAutoOCRComparison {
             startAutoOCRComparison()
         }
+        
+        #if DEBUG
+        loadCacheInvalidationStats()
+        #endif
     }
     
     // MARK: - Functions
@@ -570,4 +581,19 @@ class DebugManager: ObservableObject {
     
         return min(5, length / 4)
     }
+    
+    #if DEBUG
+    private func loadCacheInvalidationStats() {
+        cacheInvalidationStats = AccessibilityParsingManager.shared.getCacheInvalidationStats()
+    }
+    
+    func refreshCacheInvalidationStats() {
+        cacheInvalidationStats = AccessibilityParsingManager.shared.getCacheInvalidationStats()
+    }
+    
+    func clearCacheInvalidationStats() {
+        AccessibilityParsingManager.shared.clearCacheInvalidationStats()
+        cacheInvalidationStats = [:]
+    }
+    #endif
 }
