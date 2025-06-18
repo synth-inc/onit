@@ -160,6 +160,13 @@ extension Defaults.Keys {
     
     // Screen recording
     static let screenRecordingPermissionAsked = Key<Bool>("screenRecordingPermissionAsked", default: false)
+    
+    static let collectTypeaheadTestCases = Key<Bool>("collectTypeaheadTestCases", default: false)
+    
+    #if DEBUG
+    static let cacheInvalidationCounts = Key<[String: Int]>("cacheInvalidationCounts", default: [:])
+    #endif
+
 }
 
 extension NSRect: Defaults.Serializable {
