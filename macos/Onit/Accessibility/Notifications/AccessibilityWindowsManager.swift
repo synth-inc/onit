@@ -65,9 +65,7 @@ class AccessibilityWindowsManager {
         
         var targetWindow: AXUIElement?
         
-        if element.isMain() == true && element.isTargetWindow() {
-            targetWindow = element
-        } else if element.isTargetWindow() {
+        if element.isMain() == true || element.isTargetWindow() {
             targetWindow = element
         } else {
             targetWindow = findContainingWindow(element: element, pid: pid)
