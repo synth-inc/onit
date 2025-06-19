@@ -156,6 +156,7 @@ class AccessibilityNotificationsManager: ObservableObject {
         dispatchPrecondition(condition: .onQueue(.main))
         
         log.debug("Received notification: \(notification) \(element.role() ?? "") \(element.title() ?? "")")
+        
         switch notification {
         case kAXFocusedWindowChangedNotification, kAXMainWindowChangedNotification:
             self.handleWindowBounds(for: element, elementPid: elementPid)
@@ -308,14 +309,8 @@ class AccessibilityNotificationsManager: ObservableObject {
             return
         }
         
-        Task {
-            let (precedingText, followingText) = await AccessibilityParsingManager.shared.splitTextAroundElement(element)
-
-            // This needs to go in the AXContext History.
-            print("splittingAccessibilityText - AX text before \(precedingText) \n\n\n after \(followingText)")
-        }
-        
-        // TODO, we'll use this for typeahead.
+        let window = self.windowsManager.trackedWindows(for: element).first
+        self.notifyDelegates { $0.accessibilityManager(self, didFocusTextElement: element, window: window) }
     }
     
     private func handleSelectionChange(for element: AXUIElement) {
@@ -534,14 +529,13 @@ class AccessibilityNotificationsManager: ObservableObject {
         // Ensure we're on the main thread
         dispatchPrecondition(condition: .onQueue(.main))
 
-        guard let value = element.value() else {
-            screenResult.userInteraction.input = nil
-            showDebug()
-            return
-        }
-
+        let value = element.value()
+        
         screenResult.userInteraction.input = value
         showDebug()
+        
+        let window = windowsManager.trackedWindows(for: element).first
+        notifyDelegates { $0.accessibilityManager(self, didChangeValue: element, newValue: value, window: window) }
     }
 
     // MARK: Text Selection

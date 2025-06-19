@@ -75,9 +75,9 @@ final class WindowChangeDelegate: AccessibilityNotificationsDelegate {
         
         let currentAppIsXCode = app.localizedName?.lowercased() == "xcode"
         var isDev: Bool = false
-        #if DEBUG
+#if DEBUG
         isDev = true
-        #endif
+#endif
         
         let doNotTrackXCode = currentAppIsXCode && isDev
         
@@ -148,4 +148,7 @@ final class WindowChangeDelegate: AccessibilityNotificationsDelegate {
     func accessibilityManager(_ manager: AccessibilityNotificationsManager, didDeminimizeWindow window: TrackedWindow) {}
     func accessibilityManager(_ manager: AccessibilityNotificationsManager, didActivateIgnoredWindow window: TrackedWindow?) {}
     func accessibilityManager(_ manager: AccessibilityNotificationsManager, didDestroyWindow window: TrackedWindow) {}
+    
+    func accessibilityManager(_ manager: AccessibilityNotificationsManager, didChangeValue element: AXUIElement, newValue: String?, window: TrackedWindow?) {}
+    func accessibilityManager(_ manager: AccessibilityNotificationsManager, didFocusTextElement element: AXUIElement, window: TrackedWindow?) {}
 }
