@@ -90,7 +90,7 @@ class CaretPositionManager: ObservableObject {
     // MARK: - Private Functions
     
     private func adjustCaretToElementBounds(_ caretRect: CGRect, element: AXUIElement) -> CGRect {
-        guard let elementFrame = element.getFrame() else {
+        guard let elementFrame = element.firstGroupParent()?.getFrame() ?? element.getFrame() else {
             return caretRect
         }
         
@@ -123,7 +123,7 @@ class CaretPositionManager: ObservableObject {
         
         let caretX = elementFrame.origin.x
         let caretY = elementFrame.origin.y
-        log.error("FINAL")
+        
         return CGRect(x: caretX, y: caretY, width: 2, height: 16)
     }
     

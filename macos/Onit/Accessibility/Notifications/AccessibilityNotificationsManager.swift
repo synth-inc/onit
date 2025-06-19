@@ -488,13 +488,13 @@ class AccessibilityNotificationsManager: ObservableObject {
 
         let selectedText = element.selectedText()
         
-        processSelectedText(selectedText)
-        
         if let selectedText = selectedText, HighlightedTextValidator.isValid(text: selectedText) {
             _ = HighlightedTextBoundsExtractor.shared.getBounds(for: element, selectedText: selectedText)
         } else {
             HighlightedTextBoundsExtractor.shared.reset()
         }
+        
+        processSelectedText(selectedText)
         
         showDebug()
     }
@@ -505,6 +505,7 @@ class AccessibilityNotificationsManager: ObservableObject {
               let selectedText = text,
               HighlightedTextValidator.isValid(text: selectedText) else {
             
+            screenResult.userInteraction.selectedText = nil
             PanelStateCoordinator.shared.state.pendingInput = nil
             return
         }

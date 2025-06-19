@@ -16,6 +16,11 @@ class QuickEditManager: ObservableObject, CaretPositionDelegate {
     
     static let shared = QuickEditManager()
     
+    // MARK: - Window Configuration
+    
+    static let estimatedWindowSize = CGSize(width: 360, height: 120)
+    static let minimumSpacing: CGFloat = 10
+    
     // MARK: - Properties
     
     private let windowController = QuickEditWindowController()
@@ -23,6 +28,7 @@ class QuickEditManager: ObservableObject, CaretPositionDelegate {
     private let caretPositionManager = CaretPositionManager.shared
     private let accessibilityManager = AccessibilityNotificationsManager.shared
     private var cancellables = Set<AnyCancellable>()
+    private var currentHintPosition: CGPoint?
     
     // MARK: - Private initializer
     
@@ -33,44 +39,97 @@ class QuickEditManager: ObservableObject, CaretPositionDelegate {
     // MARK: - Functions
     
     func show() {
-        windowController.show()
+        if let hintPosition = currentHintPosition {
+            let correctPosition = calculateWindowPosition(for: hintPosition)
+            
+            windowController.show(at: correctPosition)
+        }
     }
     
     func hide() {
         windowController.hide()
     }
     
-    func showHint(at position: CGPoint) {
-        hintWindowController.show(at: position)
+    func showHint(at position: CGPoint, appName: String) {
+        currentHintPosition = position
+        hintWindowController.show(at: position, appName: appName)
     }
     
     func hideHint() {
+        currentHintPosition = nil
         hintWindowController.hide()
     }
     
-    // MARK: - Private functions
+    // MARK: - Private Functions
+    
+    // MARK: Setup
     
     private func setupMonitoring() {
-        caretPositionManager.addDelegate(self)
-        
+        setupTextSelectionMonitoring()
+        setupCaretPositionMonitoring()
+    }
+    
+    private func setupTextSelectionMonitoring() {
         accessibilityManager.$screenResult
             .map(\.userInteraction.selectedText)
             .removeDuplicates()
             .sink { [weak self] selectedText in
-                log.error("")
                 self?.handleTextSelectionChange(selectedText)
             }
             .store(in: &cancellables)
     }
     
-    private func handleTextSelectionChange(_ selectedText: String?) {
-        checkForTextSelection()
+    private func setupCaretPositionMonitoring() {
+        caretPositionManager.addDelegate(self)
     }
     
-    private func checkForTextSelection() {
-        if hasTextSelection() || hasCaretPosition() {
-            if let position = getTextSelectionPosition() {
-                showHint(at: position)
+    // MARK: Text Selection Handling
+    
+    private func handleTextSelectionChange(_ selectedText: String?) {
+        log.error("handleTextSelectionChange: \(selectedText ?? "nil")")
+        
+        if hasTextSelection(selectedText) {
+            if let (position, appName) = getTextSelectionPosition(selectedText) {
+                log.error("Showing hint for text selection at: \(position)")
+                showHint(at: position, appName: appName)
+            } else {
+                log.error("No position found for text selection")
+                hideHint()
+            }
+        }
+    }
+    
+    private func hasTextSelection(_ selectedText: String?) -> Bool {
+        guard let selectedText = selectedText,
+              HighlightedTextValidator.isValid(text: selectedText) else {
+            return false
+        }
+        
+        return true
+    }
+    
+    private func getTextSelectionPosition(_ selectedText: String?) -> (CGPoint, String)? {
+        guard let selectedText = selectedText else {
+            return nil
+        }
+        
+        if let lastResult = HighlightedTextBoundsExtractor.shared.getLastResult(),
+           lastResult.highlightedText == selectedText {
+            let screenFrame = convertAccessibilityToMacOSCoordinates(lastResult.highlightedTextFrame)
+            log.error("Bounds found for selected text: \(lastResult.highlightedTextFrame) in MacOS coordinates: \(screenFrame)")
+            return (CGPoint(x: screenFrame.origin.x, y: screenFrame.origin.y), lastResult.appName)
+        }
+        
+        log.error("No bounds found for selected text")
+        return nil
+    }
+    
+    // MARK: Caret Position Handling
+    
+    private func handleCaretPositionChange(appName: String) {
+        if hasCaretPosition() {
+            if let position = getCaretPosition() {
+                showHint(at: position, appName: appName)
             } else {
                 hideHint()
             }
@@ -79,34 +138,24 @@ class QuickEditManager: ObservableObject, CaretPositionDelegate {
         }
     }
     
-    private func hasTextSelection() -> Bool {
-        return accessibilityManager.screenResult.userInteraction.selectedText != nil &&
-               !accessibilityManager.screenResult.userInteraction.selectedText!.isEmpty
-    }
-    
     private func hasCaretPosition() -> Bool {
-        return caretPositionManager.isCaretVisible
+        let hasCaretPosition = caretPositionManager.isCaretVisible
+        
+        return hasCaretPosition
     }
     
-    private func getTextSelectionPosition() -> CGPoint? {
-        if hasTextSelection(),
-           let selectedText = accessibilityManager.screenResult.userInteraction.selectedText,
-           let lastResult = HighlightedTextBoundsExtractor.shared.getLastResult(),
-		   lastResult.highlightedText == selectedText {
-            let screenFrame = convertAccessibilityToMacOSCoordinates(lastResult.highlightedTextFrame)
-            
-            return CGPoint(x: screenFrame.origin.x, y: screenFrame.origin.y)
+    private func getCaretPosition() -> CGPoint? {
+        guard let caretPosition = caretPositionManager.currentCaretPosition else {
+            return nil
         }
         
-        if let caretPosition = caretPositionManager.currentCaretPosition {
-            return CGPoint(x: caretPosition.origin.x, y: caretPosition.origin.y)
-        }
-        
-        return nil
+        return CGPoint(x: caretPosition.origin.x, y: caretPosition.origin.y)
     }
+    
+    // MARK: Utilities
     
     private func convertAccessibilityToMacOSCoordinates(_ rect: CGRect) -> CGRect {
-        guard let mainScreen = NSScreen.main else {
+        guard let mainScreen = NSScreen.primary else {
             return rect
         }
         
@@ -120,24 +169,54 @@ class QuickEditManager: ObservableObject, CaretPositionDelegate {
             height: rect.height
         )
     }
+    
+    private func calculateWindowPosition(for hintPosition: CGPoint) -> CGPoint {
+        guard let hintScreen = hintWindowController.window?.screen ?? NSScreen.main else {
+            return hintPosition
+        }
+        
+        let hintSize = QuickEditHintWindowController.hintSize
+        let actualHintPosition = CGPoint(
+            x: hintPosition.x + QuickEditHintWindowController.hintOffset.x,
+            y: hintPosition.y + QuickEditHintWindowController.hintOffset.y
+        )
+        
+        let windowSize = Self.estimatedWindowSize
+        let screenFrame = hintScreen.visibleFrame
+        let hintTopY = actualHintPosition.y + hintSize.height
+        let spaceAbove = screenFrame.maxY - hintTopY
+        
+        let windowPosition: CGPoint
+        if spaceAbove >= windowSize.height {
+            windowPosition = CGPoint(
+                x: hintPosition.x - 10,
+                y: hintTopY
+            )
+        } else {
+            windowPosition = CGPoint(
+                x: hintPosition.x - 10,
+                y: actualHintPosition.y - windowSize.height
+            )
+        }
+        
+        return windowPosition
+    }
 }
 
 // MARK: - CaretPositionDelegate
 
 extension QuickEditManager {
     func caretPositionDidChange(_ position: CGRect, in application: String, element: AXUIElement) {
-        checkForTextSelection()
+        handleCaretPositionChange(appName: application)
     }
     
     func caretPositionDidUpdate(_ position: CGRect, in application: String, element: AXUIElement) {
-        if let hintPosition = getTextSelectionPosition() {
-            showHint(at: hintPosition)
-        }
+        handleCaretPositionChange(appName: application)
     }
     
     func caretDidDisappear() {
-        if !hasTextSelection() {
+        if !hasTextSelection(accessibilityManager.screenResult.userInteraction.selectedText) {
             hideHint()
         }
     }
-} 
+}

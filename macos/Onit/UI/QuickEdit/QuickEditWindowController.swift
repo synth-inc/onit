@@ -57,14 +57,16 @@ class QuickEditWindowController: NSObject, NSWindowDelegate {
     
     // MARK: - Properties
     
-    private var window: NSWindow?
+    var window: NSWindow?
+    
     private var globalEventMonitor: Any?
     private var localEventMonitor: Any?
     
     // MARK: - Functions
     
-    func show() {
+    func show(at position: CGPoint) {
         if window != nil {
+			window?.setFrameOrigin(position)
             window?.orderFront(nil)
             window?.makeKey()
             
@@ -74,7 +76,7 @@ class QuickEditWindowController: NSObject, NSWindowDelegate {
             return
         }
         
-        createWindow()
+        createWindow(at: position)
     }
     
     func hide() {
@@ -85,7 +87,7 @@ class QuickEditWindowController: NSObject, NSWindowDelegate {
     
     // MARK: - Private functions
     
-    private func createWindow() {
+    private func createWindow(at position: CGPoint) {
         let windowState = PanelStateCoordinator.shared.state
 		
         let contentView = QuickEditView()
@@ -116,12 +118,12 @@ class QuickEditWindowController: NSObject, NSWindowDelegate {
         window?.backgroundColor = NSColor.clear
         
         window?.contentView?.needsLayout = true
-        window?.center()
         window?.level = .floating
         window?.delegate = self
         window?.isReleasedWhenClosed = false
         window?.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
         
+		window?.setFrameOrigin(position)
         window?.alphaValue = 0.0
         window?.orderFront(nil)
         window?.makeKey()
@@ -208,8 +210,6 @@ class QuickEditWindowController: NSObject, NSWindowDelegate {
                 context.timingFunction = CAMediaTimingFunction(name: .easeInEaseOut)
                 
                 window.animator().setContentSize(fittingSize)
-            } completionHandler: {
-                window.center()
             }
         }
     }

@@ -112,6 +112,19 @@ extension AXUIElement {
         }
         return nil
     }
+    
+    func firstGroupParent() -> AXUIElement? {
+        var currentElement: AXUIElement? = self
+        
+        while let current = currentElement {
+            if current.role() == kAXGroupRole, current.subrole() == nil {
+                return current
+            }
+            currentElement = current.parent()
+        }
+        
+        return nil
+    }
 
     func children() -> [AXUIElement]? {
         return self.attribute(forAttribute: kAXChildrenAttribute as CFString) as? [AXUIElement]
