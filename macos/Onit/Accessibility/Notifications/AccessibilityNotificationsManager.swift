@@ -279,6 +279,7 @@ class AccessibilityNotificationsManager: ObservableObject {
                 handleWindowContent(
                     documentInfo,
                     for: state,
+                    trackedWindow: trackedWindow,
                     customAppBundleUrl: customAppBundleUrl
                 )
                 // TODO: KNA - uncomment this to use WebContentFetchService with AXURL

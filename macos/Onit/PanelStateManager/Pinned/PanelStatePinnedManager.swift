@@ -162,6 +162,11 @@ class PanelStatePinnedManager: PanelStateBaseManager, ObservableObject {
         guard let app = (userInfo[NSWorkspace.applicationUserInfoKey] as? NSRunningApplication) ??
                 (userInfo["NSWorkspaceApplicationKey"] as? NSRunningApplication) else { return }
         
+        state.foregroundWindow = AccessibilityNotificationsManager.shared.windowsManager.trackWindowForElement(
+            app.processIdentifier.getAXUIElement(),
+            pid: app.processIdentifier
+        )
+        
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { [weak self] in
             let windows = app.processIdentifier.getWindows()
             

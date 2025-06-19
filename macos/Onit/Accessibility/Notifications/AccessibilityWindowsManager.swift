@@ -37,15 +37,9 @@ enum TrackedWindowAction {
 
 @MainActor
 class AccessibilityWindowsManager {
-    var activeTrackedWindow: TrackedWindow?
-    
     private var trackedWindows: [TrackedWindow] = []
     
-    func trackWindowForElement(
-        _ element: AXUIElement,
-        pid: pid_t,
-        updateActiveTrackedWindow: Bool = true
-    ) -> TrackedWindow? {
+    func trackWindowForElement(_ element: AXUIElement, pid: pid_t) -> TrackedWindow? {
         if element.isDesktopFinder {
             let trackedWindow = TrackedWindow(
                 element: element,
@@ -56,16 +50,12 @@ class AccessibilityWindowsManager {
             
             addToTrackedWindows(trackedWindow)
             
-            if updateActiveTrackedWindow {
-                activeTrackedWindow = trackedWindow
-            }
-            
             return trackedWindow
         }
         
         var targetWindow: AXUIElement?
         
-        if element.isMain() == true || element.isTargetWindow() {
+        if element.isTargetWindow() {
             targetWindow = element
         } else {
             targetWindow = findContainingWindow(element: element, pid: pid)
@@ -80,10 +70,6 @@ class AccessibilityWindowsManager {
             )
             
             addToTrackedWindows(trackedWindow)
-            
-            if updateActiveTrackedWindow {
-                activeTrackedWindow = trackedWindow
-            }
             
             return trackedWindow
         } else {
@@ -132,7 +118,6 @@ class AccessibilityWindowsManager {
     }
     
     func reset() {
-        activeTrackedWindow = nil
         trackedWindows.removeAll()
     }
 }

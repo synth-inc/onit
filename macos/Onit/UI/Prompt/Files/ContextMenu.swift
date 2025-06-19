@@ -56,7 +56,7 @@ extension ContextMenu {
     private var upListener: some View {
         KeyListener(key: .upArrow, modifiers: []) {
             if currentArrowKeyIndex - 1 < 0 {
-                currentArrowKeyIndex = 0
+                currentArrowKeyIndex = maxArrowKeyIndex
             } else {
                 currentArrowKeyIndex -= 1
             }
@@ -65,8 +65,8 @@ extension ContextMenu {
     
     private var downListener: some View {
         KeyListener(key: .downArrow, modifiers: []) {
-            if currentArrowKeyIndex + 1 >= maxArrowKeyIndex {
-                currentArrowKeyIndex = maxArrowKeyIndex
+            if currentArrowKeyIndex + 1 > maxArrowKeyIndex {
+                currentArrowKeyIndex = 0
             } else {
                 currentArrowKeyIndex += 1
             }

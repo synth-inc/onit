@@ -32,7 +32,8 @@ extension OnitPanelState {
                 }
                 
                 let systemPromptCopy = systemPrompt
-                let trackedWindow = AccessibilityNotificationsManager.shared.windowsManager.activeTrackedWindow
+                let trackedWindow = self.foregroundWindow
+                
                 currentChat = Chat(
                     systemPrompt: systemPromptCopy,
                     prompts: [],

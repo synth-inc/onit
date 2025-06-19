@@ -5,6 +5,7 @@
 //  Created by Loyd Kim on 6/5/25.
 //
 
+import Defaults
 import SwiftUI
 
 struct CapturedWindow: Identifiable {
@@ -20,6 +21,8 @@ struct CapturedWindow: Identifiable {
 
 struct ContextMenuWindows: View {
     @Environment(\.windowState) private var windowState
+    
+    @Default(.windowContextMostRecents) var windowContextMostRecents
     
     @Binding private var searchQuery: String
     @Binding private var currentArrowKeyIndex: Int
@@ -104,39 +107,9 @@ extension ContextMenuWindows {
 // MARK: - Child Components (Windows)
 
 extension ContextMenuWindows {
-    @ViewBuilder
-    private var currentForegroundWindowButton: some View {
-        if let foregroundWindow = windowState.foregroundWindow {
-            let foregroundWindowName = WindowHelpers.getWindowName(window: foregroundWindow.element)
-            let doNotIgnoreWindow = !checkWindowShouldBeIgnored(foregroundWindowName)
-            let currentWindowIsInFilter = (searchQuery.isEmpty || foregroundWindowName.contains(searchQuery))
-            let showCurrentWindowButton = doNotIgnoreWindow && currentWindowIsInFilter
-            
-            if showCurrentWindowButton {
-                let windowContextItem = getWindowContextItem(
-                    uniqueWindowIdentifier: foregroundWindow.hash,
-                    windowName: foregroundWindowName
-                )
-                
-                ContextMenuWindowButton(
-                    isLoadingIntoContext: getIsLoadingWindowIntoContext(foregroundWindow.hash),
-                    selected: currentArrowKeyIndex == 0,
-                    trackedWindow: foregroundWindow,
-                    windowContextItem: windowContextItem
-                ) {
-                    windowButtonAction(
-                        trackedWindow: foregroundWindow
-                    )
-                }
-            }
-        }
-    }
-    
     private var capturedOpenWindowsButtons: some View {
         ForEach(filteredCapturedWindows.indices, id: \.self) { index in
             let capturedWindow = filteredCapturedWindows[index]
-            let indexOffset = foregroundWindowCaptured ? index + 1 : index
-            let selected = currentArrowKeyIndex == indexOffset
              
             let uniqueWindowIdentifier = capturedWindow.trackedWindow.hash
             let windowName = WindowHelpers.getWindowName(window: capturedWindow.trackedWindow.element)
@@ -148,7 +121,7 @@ extension ContextMenuWindows {
             
             ContextMenuWindowButton(
                 isLoadingIntoContext: getIsLoadingWindowIntoContext(uniqueWindowIdentifier),
-                selected: selected,
+                selected: currentArrowKeyIndex == index,
                 trackedWindow: capturedWindow.trackedWindow,
                 windowContextItem: windowContextItem,
             ) {
@@ -175,7 +148,6 @@ extension ContextMenuWindows {
     private var windowOptions: some View {
         MenuSection(contentTopPadding: 0) {
             VStack(alignment: .leading, spacing: 2) {
-                currentForegroundWindowButton // The current foreground window is always the first option.
                 capturedOpenWindowsButtons
             }
         }
@@ -259,6 +231,7 @@ extension ContextMenuWindows {
     
     private func windowButtonAction(trackedWindow: TrackedWindow) {
         let isLoadingWindowIntoContext = getIsLoadingWindowIntoContext(trackedWindow.hash)
+        
         let windowContextItem = getWindowContextItem(
             uniqueWindowIdentifier: trackedWindow.hash,
             windowName: WindowHelpers.getWindowName(window: trackedWindow.element)
@@ -271,6 +244,16 @@ extension ContextMenuWindows {
         } else if let contextItem = windowContextItem {
             removeWindowFromContext(contextItem)
         } else {
+            let windowContextMostRecent = WindowContextMostRecent(
+                pid: trackedWindow.pid,
+                hash: trackedWindow.hash
+            )
+            
+            windowContextMostRecents.removeAll { existingContext in
+                existingContext == windowContextMostRecent
+            }
+            windowContextMostRecents.insert(windowContextMostRecent, at: 0)
+            
             windowState.addWindowToContext(window: trackedWindow.element)
         }
     }
@@ -284,15 +267,8 @@ extension ContextMenuWindows {
         
         if currentArrowKeyIndex == uploadFileButtonIndex {
             openFilePicker()
-        } else if let foregroundWindow = windowState.foregroundWindow,
-                  foregroundWindowCaptured && currentArrowKeyIndex == 0
-        {
-            windowButtonAction(
-                trackedWindow: foregroundWindow
-            )
         } else if !filteredCapturedWindows.isEmpty {
-            let index = foregroundWindowCaptured ? currentArrowKeyIndex - 1 : currentArrowKeyIndex
-            let capturedWindow = filteredCapturedWindows[index]
+            let capturedWindow = filteredCapturedWindows[currentArrowKeyIndex]
             
             windowButtonAction(
                 trackedWindow: capturedWindow.trackedWindow
@@ -304,6 +280,36 @@ extension ContextMenuWindows {
         return ignoredApps.contains { ignoredApp in
             windowName.lowercased().contains(ignoredApp)
         }
+    }
+    
+    private func orderCapturedWindowsByMostRecent(_ capturedWindows: [CapturedWindow]) -> [CapturedWindow] {
+        var mostRecentWindows: [CapturedWindow] = []
+        var otherWindows: [CapturedWindow] = []
+        
+        // This is required to get the proper order of `mostRecentWindows`.
+        var windowMapping: [WindowContextMostRecent: CapturedWindow] = [:]
+        
+        for capturedWindow in capturedWindows {
+            let windowContextMostRecent = WindowContextMostRecent(
+                pid: capturedWindow.trackedWindow.pid,
+                hash: capturedWindow.trackedWindow.hash
+            )
+            
+            if windowContextMostRecents.contains(windowContextMostRecent) {
+                windowMapping[windowContextMostRecent] = capturedWindow
+            } else {
+                otherWindows.append(capturedWindow)
+            }
+        }
+        
+        // Adding elements to `mostRecentWindows` in the order they appear in `windowContextMostRecents`.
+        for recentWindowContext in windowContextMostRecents {
+            if let capturedWindow = windowMapping[recentWindowContext] {
+                mostRecentWindows.append(capturedWindow)
+            }
+        }
+        
+        return mostRecentWindows + otherWindows
     }
     
     private func captureOpenWindows() async -> [CapturedWindow] {
@@ -324,25 +330,14 @@ extension ContextMenuWindows {
             for window in windows {
                 if let trackedWindow = AccessibilityNotificationsManager.shared.windowsManager.trackWindowForElement(
                     window,
-                    pid: pid,
-                    updateActiveTrackedWindow: false
+                    pid: pid
                 ) {
-                    if let foregroundWindow = windowState.foregroundWindow {
-                        if trackedWindow != foregroundWindow {
-                            capturedOpenWindows.append(
-                                CapturedWindow(trackedWindow: trackedWindow)
-                            )
-                        }
-                    } else {
-                        capturedOpenWindows.append(
-                            CapturedWindow(trackedWindow: trackedWindow)
-                        )
-                    }
+                    capturedOpenWindows.append(CapturedWindow(trackedWindow: trackedWindow))
                 }
             }
         }
         
         isCapturingWindows = false
-        return capturedOpenWindows
+        return orderCapturedWindowsByMostRecent(capturedOpenWindows)
     }
 }

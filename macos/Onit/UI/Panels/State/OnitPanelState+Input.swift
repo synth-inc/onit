@@ -25,13 +25,14 @@ extension OnitPanelState {
             return
         }
         
-        guard let activeTrackedWindow = AccessibilityNotificationsManager.shared.windowsManager.activeTrackedWindow else {
+        guard let activeTrackedWindow = trackedWindow ?? self.foregroundWindow else {
             let errorContext = Context(appName: "Unable to add \(appName)", appHash: 0, appTitle: "", appContent: ["error": "Cannot identify context"])
             pendingContextList.insert(errorContext, at: 0)
             return
         }
         
-        let appHash = trackedWindow?.hash ?? CFHash(activeTrackedWindow.element)
+        let appHash = activeTrackedWindow.hash
+        
         let appTitle = trackedWindow?.title ?? activeTrackedWindow.title
 
         if let existingIndex = pendingContextList.firstIndex(where: { context in
@@ -129,20 +130,6 @@ extension OnitPanelState {
                 customAppBundleUrl: appBundleUrl
             )
         }
-    }
-    
-    func getForegroundWindow() -> TrackedWindow? {
-        let windowsManager = AccessibilityNotificationsManager.shared.windowsManager
-        
-        if let trackedWindow = windowsManager.activeTrackedWindow {
-            return trackedWindow
-        } else {
-            return nil
-        }
-    }
-    
-    func updateForegroundWindow() {
-        self.foregroundWindow = getForegroundWindow()
     }
 
     func getPendingContextList() -> [Context] {

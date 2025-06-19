@@ -47,7 +47,8 @@ class OnitPanelState: NSObject {
     var promptSuggestionService: SystemPromptSuggestionService?
     
     // TODO: KNA - Refacto: Should be removed at the end
-    var trackedWindow: TrackedWindow?
+    var trackedWindow: TrackedWindow? // Used only in Tethered Mode. Corresponds to the specific window that's tethered to the panel.
+    var foregroundWindow: TrackedWindow? = nil // Used for window context tracking (required for all modes).
     // TODO: KNA - Refacto: Should be removed at the end
     var trackedScreen: NSScreen?
     var isWindowDragging: Bool = false
@@ -147,8 +148,6 @@ class OnitPanelState: NSObject {
     // Window context states
     typealias UniqueWindowIdentifier = UInt
     var windowContextTasks: [UniqueWindowIdentifier: Task<Void, Never>] = [:]
-    
-    var foregroundWindow: TrackedWindow? = nil
     
     // Menu States
     var showContextMenu: Bool = false
