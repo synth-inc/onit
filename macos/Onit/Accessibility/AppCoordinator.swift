@@ -25,8 +25,8 @@ class AppCoordinator {
     #if DEBUG || BETA
     private let debugManager : DebugManager
     private let quickEditManager: QuickEditManager
+    private let typeAheadManager: TypeaheadLearningService
     #endif
-    
     
     private var stateChangesCancellable: AnyCancellable?
     
@@ -42,7 +42,10 @@ class AppCoordinator {
         #if DEBUG || BETA
         debugManager = DebugManager.shared
         quickEditManager = QuickEditManager.shared
+        typeAheadManager = TypeaheadLearningService.shared
         #endif
+        
+
         
         observerManager.delegate = notificationsManager
         
