@@ -57,6 +57,14 @@ struct SettingsView: View {
                 .tag(SettingsTab.webSearch)
 
             #if DEBUG
+            DatabaseSettingsView()
+                .tabItem {
+                    Label("Database", systemImage: "externaldrive")
+                }
+                .tag(SettingsTab.database)
+            #endif
+
+            #if DEBUG
                 DebugModeTab()
                     .tabItem {
                         Label("Debug", systemImage: "wrench.and.screwdriver")
