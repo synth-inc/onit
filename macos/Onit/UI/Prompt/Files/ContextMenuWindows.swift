@@ -22,8 +22,6 @@ struct CapturedWindow: Identifiable {
 struct ContextMenuWindows: View {
     @Environment(\.windowState) private var windowState
     
-    @Default(.windowContextMostRecents) var windowContextMostRecents
-    
     @Binding private var searchQuery: String
     @Binding private var currentArrowKeyIndex: Int
     @Binding private var maxArrowKeyIndex: Int
@@ -123,7 +121,7 @@ extension ContextMenuWindows {
                 isLoadingIntoContext: getIsLoadingWindowIntoContext(uniqueWindowIdentifier),
                 selected: currentArrowKeyIndex == index,
                 trackedWindow: capturedWindow.trackedWindow,
-                windowContextItem: windowContextItem,
+                windowContextItem: windowContextItem
             ) {
                 windowButtonAction(
                     trackedWindow: capturedWindow.trackedWindow
@@ -229,24 +227,6 @@ extension ContextMenuWindows {
         windowState.removeContext(context: contextItem)
     }
     
-    private func updateRecentlyUsedWindowContext(_ trackedWindow: TrackedWindow) {
-        let windowContextMostRecent = WindowContextMostRecent(
-            pid: trackedWindow.pid,
-            hash: trackedWindow.hash
-        )
-        
-        // Re-ordering `windowContextMostRecents` array to properly store "most recent" window context history.
-        windowContextMostRecents.removeAll { existingContext in
-            existingContext == windowContextMostRecent
-        }
-        windowContextMostRecents.insert(windowContextMostRecent, at: 0)
-        
-        // Making sure that `windowContextMostRecents` contains, at most, 50 elements in history.
-        if windowContextMostRecents.count > 50 {
-            windowContextMostRecents = Array(windowContextMostRecents.prefix(50))
-        }
-    }
-    
     private func windowButtonAction(trackedWindow: TrackedWindow) {
         let isLoadingWindowIntoContext = getIsLoadingWindowIntoContext(trackedWindow.hash)
         
@@ -262,8 +242,6 @@ extension ContextMenuWindows {
         } else if let contextItem = windowContextItem {
             removeWindowFromContext(contextItem)
         } else {
-            updateRecentlyUsedWindowContext(trackedWindow)
-            
             windowState.addWindowToContext(window: trackedWindow.element)
         }
     }
@@ -297,24 +275,21 @@ extension ContextMenuWindows {
         var otherWindows: [CapturedWindow] = []
         
         // This is required to get the proper order of `mostRecentWindows`.
-        var windowMapping: [WindowContextMostRecent: CapturedWindow] = [:]
+        var windowMapping: [UInt: CapturedWindow] = [:]
         
         for capturedWindow in capturedWindows {
-            let windowContextMostRecent = WindowContextMostRecent(
-                pid: capturedWindow.trackedWindow.pid,
-                hash: capturedWindow.trackedWindow.hash
-            )
+            let windowHash = capturedWindow.trackedWindow.hash
             
-            if windowContextMostRecents.contains(windowContextMostRecent) {
-                windowMapping[windowContextMostRecent] = capturedWindow
+            if windowState.foregroundedWindowHistory.contains(windowHash) {
+                windowMapping[windowHash] = capturedWindow
             } else {
                 otherWindows.append(capturedWindow)
             }
         }
         
-        // Adding elements to `mostRecentWindows` in the order they appear in `windowContextMostRecents`.
-        for recentWindowContext in windowContextMostRecents {
-            if let capturedWindow = windowMapping[recentWindowContext] {
+        // Adding elements to `mostRecentWindows` in reverse order (most recent first)
+        for windowHash in windowState.foregroundedWindowHistory.reversed() {
+            if let windowHash = windowHash, let capturedWindow = windowMapping[windowHash] {
                 mostRecentWindows.append(capturedWindow)
             }
         }

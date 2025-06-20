@@ -138,9 +138,7 @@ extension Defaults.Keys {
 
     // Stop generation behavior
     static let stopMode = Key<StopMode>("stopMode", default: .removePartial)
-    
-    // Cache
-    static let windowContextMostRecents = Key<[WindowContextMostRecent]>("windowContextMostRecents", default: [])
+
 }
 
 extension NSRect: Defaults.Serializable {
