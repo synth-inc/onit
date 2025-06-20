@@ -17,6 +17,13 @@ struct TrackedWindow: Hashable {
     static func == (lhs: TrackedWindow, rhs: TrackedWindow) -> Bool {
         return lhs.pid == rhs.pid && lhs.hash == rhs.hash
     }
+    
+    // When a hashed TrackedWindow is required (e.g. in Sets or Dictionary keys):
+    //   1. Make it so that only `hash` contributes to the hash value.
+    //   2. Make hashes consistent with == above.
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(hash)
+    }
 }
 
 enum TrackedWindowAction {
@@ -30,35 +37,72 @@ enum TrackedWindowAction {
 
 @MainActor
 class AccessibilityWindowsManager {
-    var activeTrackedWindow: TrackedWindow?
-    
     private var trackedWindows: [TrackedWindow] = []
     
-    func append(_ element: AXUIElement, pid: pid_t) -> TrackedWindow? {
+    func trackWindowForElement(_ element: AXUIElement, pid: pid_t) -> TrackedWindow? {
         if element.isDesktopFinder {
-            let trackedWindow = TrackedWindow(element: element, pid: pid, hash: CFHash(element), title: "")
+            let trackedWindow = TrackedWindow(
+                element: element,
+                pid: pid,
+                hash: CFHash(element),
+                title: ""
+            )
             
-            if !trackedWindows.contains(trackedWindow) {
-                trackedWindows.append(trackedWindow)
-            }
-            activeTrackedWindow = trackedWindow
+            addToTrackedWindows(trackedWindow)
             
             return trackedWindow
-        } else if let window = pid.firstMainWindow {
-
-            let title = window.title() ?? "NA"
-            let trackedWindow = TrackedWindow(element: window, pid: pid, hash: CFHash(window), title: title)
+        }
+        
+        var targetWindow: AXUIElement?
+        
+        if element.isTargetWindow() {
+            targetWindow = element
+        } else {
+            targetWindow = findContainingWindow(element: element, pid: pid)
+        }
+        
+        if let window = targetWindow {
+            let trackedWindow = TrackedWindow(
+                element: window,
+                pid: pid,
+                hash: CFHash(window),
+                title: WindowHelpers.getWindowName(window: window)
+            )
             
-            if !trackedWindows.contains(trackedWindow) {
-                trackedWindows.append(trackedWindow)
-            }
-            activeTrackedWindow = trackedWindow
+            addToTrackedWindows(trackedWindow)
+            
             return trackedWindow
         } else {
             log.debug("Skipping append for element with role \(element.role() ?? "") title: \(element.title() ?? "")")
         }
         
         return nil
+    }
+    
+    private func addToTrackedWindows(_ trackedWindow: TrackedWindow) {
+        guard let trackedWindowIndex = trackedWindows.firstIndex(of: trackedWindow) else {
+            trackedWindows.append(trackedWindow)
+            return
+        }
+        
+        trackedWindows[trackedWindowIndex] = trackedWindow
+    }
+    
+    func findTrackedWindow(trackedWindowHash: UInt) -> TrackedWindow? {
+        return trackedWindows.first(where: { $0.hash == trackedWindowHash })
+    }
+    
+    private func findContainingWindow(element: AXUIElement, pid: pid_t) -> AXUIElement? {
+        var currentElement = element
+        
+        while let parent = currentElement.parent() {
+            if parent.isTargetWindow() {
+                return parent
+            }
+            currentElement = parent
+        }
+        
+        return pid.firstMainWindow
     }
     
     func remove(_ trackedWindow: TrackedWindow) -> TrackedWindow? {
@@ -74,7 +118,6 @@ class AccessibilityWindowsManager {
     }
     
     func reset() {
-        activeTrackedWindow = nil
         trackedWindows.removeAll()
     }
 }

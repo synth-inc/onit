@@ -53,6 +53,11 @@ class PanelStateTetheredManager: PanelStateBaseManager, ObservableObject {
                 }
             }
         
+        NSWorkspace.shared.notificationCenter.addObserver(
+            self,
+            selector: #selector(appLaunchedReceived),
+            name: NSWorkspace.didLaunchApplicationNotification,
+            object: nil)
         NotificationCenter.default.addObserver(
             self,
             selector: #selector(appDidBecomeActive),
@@ -131,7 +136,7 @@ class PanelStateTetheredManager: PanelStateBaseManager, ObservableObject {
             $0.1 === self.state
         }) else { return }
         
-        AccessibilityNotificationsManager.shared.fetchAutoContext(pid: trackedWindow.pid)
+        AccessibilityNotificationsManager.shared.retrieveWindowContent(pid: trackedWindow.pid)
     }
     
     // MARK: - Functions
@@ -293,5 +298,17 @@ class PanelStateTetheredManager: PanelStateBaseManager, ObservableObject {
         }
         
         return nil
+    }
+    
+    @objc private func appLaunchedReceived(notification: Notification) {
+        guard state.panelOpened, let userInfo = notification.userInfo else { return }
+        
+        guard let app = (userInfo[NSWorkspace.applicationUserInfoKey] as? NSRunningApplication) ??
+                (userInfo["NSWorkspaceApplicationKey"] as? NSRunningApplication) else { return }
+        
+        state.foregroundWindow = AccessibilityNotificationsManager.shared.windowsManager.trackWindowForElement(
+            app.processIdentifier.getAXUIElement(),
+            pid: app.processIdentifier
+        )
     }
 }

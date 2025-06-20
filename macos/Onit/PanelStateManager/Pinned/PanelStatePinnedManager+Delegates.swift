@@ -8,7 +8,11 @@
 import AppKit
 
 extension PanelStatePinnedManager: AccessibilityNotificationsDelegate {
+    //  MARK: - DID ACTIVATE WINDOW
+    
     func accessibilityManager(_ manager: AccessibilityNotificationsManager, didActivateWindow window: TrackedWindow) {
+        state.foregroundWindow = window
+        
         guard state.panelOpened, let screen = state.panel?.screen else { return }
         
         /// Introduce a delay, as changing spaces causes simultaneous resizing, resulting in a visual glitch:
@@ -18,10 +22,25 @@ extension PanelStatePinnedManager: AccessibilityNotificationsDelegate {
             self?.resizeWindow(for: screen, window: window.element)
         }
     }
+    
+    //  MARK: - DID ACTIVATE IGNORED WINDOW
+    
     func accessibilityManager(_ manager: AccessibilityNotificationsManager, didActivateIgnoredWindow window: TrackedWindow?) {}
+    
+    //  MARK: - DID MINIMIZE WINDOW
+    
     func accessibilityManager(_ manager: AccessibilityNotificationsManager, didMinimizeWindow window: TrackedWindow) {}
+    
+    //  MARK: - DID DEMINIMIZE WINDOW
+    
     func accessibilityManager(_ manager: AccessibilityNotificationsManager, didDeminimizeWindow window: TrackedWindow) {}
+    
+    //  MARK: - DID DESTROY WINDOW
+    
     func accessibilityManager(_ manager: AccessibilityNotificationsManager, didDestroyWindow window: TrackedWindow) {}
+    
+    //  MARK: - DID MOVE WINDOW
+    
     func accessibilityManager(_ manager: AccessibilityNotificationsManager, didMoveWindow window: TrackedWindow) {
         guard state.panelOpened else { return }
 
@@ -32,6 +51,9 @@ extension PanelStatePinnedManager: AccessibilityNotificationsDelegate {
             resizeWindow(for: panelScreen, window: window.element)
         }
     }
+    
+    //  MARK: - DID RESIZE WINDOW
+    
     func accessibilityManager(_ manager: AccessibilityNotificationsManager, didResizeWindow window: TrackedWindow) {
         guard state.panelOpened, let screen = state.panel?.screen else { return }
         
@@ -44,7 +66,17 @@ extension PanelStatePinnedManager: AccessibilityNotificationsDelegate {
         resizeWindow(for: screen, window: window.element, windowFrameChanged: true)
     }
     
-    func accessibilityManager(_ manager: AccessibilityNotificationsManager, didChangeWindowTitle window: TrackedWindow) {}
+    //  MARK: - DID CHANGE WINDOW TITLE
+    
+    func accessibilityManager(_ manager: AccessibilityNotificationsManager, didChangeWindowTitle window: TrackedWindow) {
+        if let foregroundWindow = state.foregroundWindow,
+           window.element == foregroundWindow.element,
+           window.pid == foregroundWindow.pid,
+           window.hash == foregroundWindow.hash
+        {
+            state.foregroundWindow = window
+        }
+    }
 }
 
 extension PanelStatePinnedManager: OnitPanelStateDelegate {

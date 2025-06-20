@@ -20,6 +20,15 @@ enum FooterNotification: String, Defaults.Serializable {
     case update
 }
 
+struct WindowContextMostRecent: Codable, Hashable, Equatable, Defaults.Serializable {
+    let pid: pid_t
+    let hash: UInt
+    
+    static func == (lhs: WindowContextMostRecent, rhs: WindowContextMostRecent) -> Bool {
+        return lhs.pid == rhs.pid && lhs.hash == rhs.hash
+    }
+}
+
 extension Defaults.Keys {
     
     // Remote model tokens
@@ -129,6 +138,7 @@ extension Defaults.Keys {
 
     // Stop generation behavior
     static let stopMode = Key<StopMode>("stopMode", default: .removePartial)
+
 }
 
 extension NSRect: Defaults.Serializable {

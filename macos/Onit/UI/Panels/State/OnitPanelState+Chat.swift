@@ -32,7 +32,8 @@ extension OnitPanelState {
                 }
                 
                 let systemPromptCopy = systemPrompt
-                let trackedWindow = AccessibilityNotificationsManager.shared.windowsManager.activeTrackedWindow
+                let trackedWindow = self.foregroundWindow
+                
                 currentChat = Chat(
                     systemPrompt: systemPromptCopy,
                     prompts: [],
@@ -373,7 +374,7 @@ extension OnitPanelState {
     }
     
     func sendAction(accountId: Int?) {
-        if websiteUrlsScrapeQueue.isEmpty && addAutoContextTasks.isEmpty {
+        if websiteUrlsScrapeQueue.isEmpty && windowContextTasks.isEmpty {
             let inputText = (pendingInstruction).trimmingCharacters(in: .whitespacesAndNewlines)
             guard !inputText.isEmpty else { return }
             createAndSavePrompt(accountId: accountId)

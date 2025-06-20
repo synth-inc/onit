@@ -58,5 +58,6 @@ struct PromptCoreFooterButton: View {
             text: text,
             action: action
         )
+        .allowsHitTesting(!disabled)
     }
 }

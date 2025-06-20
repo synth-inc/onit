@@ -11,30 +11,24 @@ import Defaults
 
 struct PaperclipButton: View {
     @Environment(\.appState) private var appState
-    @Environment(\.windowState) private var state
+    @Environment(\.windowState) private var windowState
     @ObservedObject private var accessibilityPermissionManager = AccessibilityPermissionManager.shared
     @AppStorage("closedAutocontext") private var closedAutocontext = false
 
     @Default(.closedAutoContextTag) var closedAutoContextTag
     @Default(.autoContextFromCurrentWindow) var autoContextFromCurrentWindow
     
-    private let currentWindowBundleUrl: URL?
-    private let currentWindowName: String?
-    private let currentWindowPid: pid_t?
-    
-    init(
-        currentWindowBundleUrl: URL? = nil,
-        currentWindowName: String? = nil,
-        currentWindowPid: pid_t? = nil
-    ) {
-        self.currentWindowBundleUrl = currentWindowBundleUrl
-        self.currentWindowName = currentWindowName
-        self.currentWindowPid = currentWindowPid
-    }
-    
-    var accessibilityAutoContextEnabled: Bool {
+    private var accessibilityAutoContextEnabled: Bool {
         accessibilityPermissionManager.accessibilityPermissionStatus == .granted
     }
+    
+    private var showContextMenuBinding: Binding<Bool> {
+          Binding(
+              get: { windowState.showContextMenu },
+              set: { windowState.showContextMenu = $0 }
+          )
+      }
+
 
     var body: some View {
         HStack(spacing: 4) {
@@ -43,12 +37,17 @@ struct PaperclipButton: View {
                 iconSize: 18,
                 action: {
                     AnalyticsManager.Chat.paperclipPressed()
-                    handleAddContext()
+                    
+                    if accessibilityAutoContextEnabled && autoContextFromCurrentWindow {
+                        windowState.showContextMenu = true
+                    } else {
+                        handleAddContext()
+                    }
                 },
                 tooltipPrompt: accessibilityAutoContextEnabled ? "Add context" : "Upload file"
             )
 
-            if state.pendingContextList.isEmpty {
+            if windowState.pendingContextList.isEmpty {
                 if !accessibilityAutoContextEnabled && !closedAutoContextTag {
                     EnableAutocontextTag()
                 }
@@ -71,6 +70,9 @@ struct PaperclipButton: View {
         .onAppear {
             resetClosedAutocontext()
         }
+        .popover(isPresented: showContextMenuBinding) {
+            ContextMenu()
+        }
     }
 
     private func resetClosedAutocontext() {
@@ -79,7 +81,7 @@ struct PaperclipButton: View {
 
     private func handleAddContext() {
         if accessibilityAutoContextEnabled {
-            if let panel = state.panel {
+            if let panel = windowState.panel {
                 if !panel.isKeyWindow {
                     panel.makeKey()
                 }
@@ -87,17 +89,13 @@ struct PaperclipButton: View {
             
             OverlayManager.shared.captureClickPosition()
             
-            let view = ContextPickerView(
-                currentWindowBundleUrl: currentWindowBundleUrl,
-                currentWindowName: currentWindowName,
-                currentWindowPid: currentWindowPid
-            )
+            let view = ContextPickerView()
                 .environment(\.appState, appState)
-                .environment(\.windowState, state)
+                .environment(\.windowState, windowState)
             
             OverlayManager.shared.showOverlay(content: view)
         } else {
-            state.showFileImporter = true
+            windowState.showFileImporter = true
         }
     }
 }

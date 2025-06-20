@@ -98,14 +98,6 @@ class AccessibilityNotificationsManager: ObservableObject {
         
         lastActiveWindowPid = nil
     }
-    
-    func fetchAutoContext(pid: pid_t? = nil, state: OnitPanelState? = nil) {
-        if let pid = pid {
-            retrieveWindowContent(for: pid, state: state)
-        } else if let pid = lastActiveWindowPid {
-            retrieveWindowContent(for: pid, state: state)
-        }
-    }
 
     // MARK: Handling app activated/deactived
 
@@ -171,31 +163,31 @@ class AccessibilityNotificationsManager: ObservableObject {
     }
     
     private func handleTitleChanged(for element: AXUIElement, elementPid: pid_t) {
-        guard let trackedWindow = self.windowsManager.append(element, pid: elementPid) else { return }
+        guard let trackedWindow = self.windowsManager.trackWindowForElement(element, pid: elementPid) else { return }
         
         notifyDelegates { $0.accessibilityManager(self, didChangeWindowTitle: trackedWindow) }
     }
     
     private func handleWindowMoved(for element: AXUIElement, elementPid: pid_t) {
-        guard let trackedWindow = self.windowsManager.append(element, pid: elementPid) else { return }
+        guard let trackedWindow = self.windowsManager.trackWindowForElement(element, pid: elementPid) else { return }
         
         notifyDelegates { $0.accessibilityManager(self, didMoveWindow: trackedWindow) }
     }
     
     private func handleWindowResized(for element: AXUIElement, elementPid: pid_t) {
-        guard let trackedWindow = self.windowsManager.append(element, pid: elementPid) else { return }
+        guard let trackedWindow = self.windowsManager.trackWindowForElement(element, pid: elementPid) else { return }
         
         notifyDelegates { $0.accessibilityManager(self, didResizeWindow: trackedWindow) }
     }
     
     private func handleWindowBounds(for element: AXUIElement, elementPid: pid_t) {
-        guard let trackedWindow = self.windowsManager.append(element, pid: elementPid) else { return }
+        guard let trackedWindow = self.windowsManager.trackWindowForElement(element, pid: elementPid) else { return }
         
         notifyDelegates { $0.accessibilityManager(self, didActivateWindow: trackedWindow) }
     }
     
     private func handleCreatedWindowElement(for element: AXUIElement, elementPid: pid_t) {
-        guard let trackedWindow = self.windowsManager.append(element, pid: elementPid) else { return }
+        guard let trackedWindow = self.windowsManager.trackWindowForElement(element, pid: elementPid) else { return }
         
         self.notifyDelegates { $0.accessibilityManager(self, didActivateWindow: trackedWindow) }
     }
@@ -269,18 +261,38 @@ class AccessibilityNotificationsManager: ObservableObject {
     
     // MARK: Parsing
     
-    private func retrieveWindowContent(for pid: pid_t, state: OnitPanelState?) {
-        guard let mainWindow = pid.firstMainWindow,
-              let state = state ?? PanelStateCoordinator.shared.getState(for: CFHash(mainWindow)) else { return }
+    func retrieveWindowContent(
+        pid: pid_t? = nil,
+        state: OnitPanelState? = nil,
+        trackedWindow: TrackedWindow? = nil,
+        customAppBundleUrl: URL? = nil
+    ) {
+        guard let pid = trackedWindow?.pid ?? pid ?? lastActiveWindowPid,
+              let mainWindow = trackedWindow?.element ?? pid.firstMainWindow,
+              let state = state ?? PanelStateCoordinator.shared.getState(for: CFHash(mainWindow))
+        else {
+            return
+        }
         
         Task { @MainActor in
             if let documentInfo = findDocument(in: mainWindow) {
-                handleWindowContent(documentInfo, for: state)
+                handleWindowContent(
+                    documentInfo,
+                    for: state,
+                    trackedWindow: trackedWindow,
+                    customAppBundleUrl: customAppBundleUrl
+                )
                 // TODO: KNA - uncomment this to use WebContentFetchService with AXURL
             } /* else if let urlInfo = await findUrl(in: focusedWindow) {
                 handleWindowContent(urlInfo, for: state)
             } */ else {
-                parseAccessibility(for: pid, in: mainWindow, state: state)
+                parseAccessibility(
+                    for: pid,
+                    in: mainWindow,
+                    state: state,
+                    trackedWindow: trackedWindow,
+                    customAppBundleUrl: customAppBundleUrl
+                )
             }
         }
     }
@@ -363,15 +375,22 @@ class AccessibilityNotificationsManager: ObservableObject {
         return nil
     }
 
-    private func parseAccessibility(for pid: pid_t, in window: AXUIElement, state: OnitPanelState) {
-        let windowHash = CFHash(window)
-        let appName = window.parent()?.title() ?? "Unknown"
+    private func parseAccessibility(
+        for pid: pid_t,
+        in window: AXUIElement,
+        state: OnitPanelState,
+        trackedWindow: TrackedWindow? = nil,
+        customAppBundleUrl: URL? = nil
+    ) {
+        let windowHash = trackedWindow?.hash ?? CFHash(window)
+        let appName = trackedWindow?.element.parent()?.title() ?? window.parent()?.title() ?? "Unknown"
+        let mainWindow = trackedWindow?.element ?? window
         
         if timedOutWindowHash.contains(windowHash) {
             print("Skipping parsing for window's hash \(windowHash) due to previous timeout.")
             return
         }
-
+        
         guard Defaults[.autoContextFromCurrentWindow] else {
             self.screenResult = .init()
             return
@@ -382,28 +401,16 @@ class AccessibilityNotificationsManager: ObservableObject {
         let workItem = DispatchWorkItem { [weak self] in
             guard let self = self else { return }
             
-            Task.detached(priority: .background) { [weak self] in
-                guard let self = self else { return }
-                
+            Task {
                 do {
-                    let results = try await withThrowingTaskGroup(of: [String: String]?.self) { group -> [String: String]? in
-                        group.addTask {
-                            guard let mainWindow = pid.firstMainWindow else { return nil }
-                            
-                            return await AccessibilityParser.shared.getAllTextInElement(windowElement: mainWindow)
-                        }
-                        group.addTask {
-                            try await Task.sleep(nanoseconds: 10_000_000_000) // 10 second timeout
-                            throw NSError(domain: "AccessibilityParsingTimeout", code: 1, userInfo: nil)
-                        }
-                        let firstCompleted = try await group.next()!
-                        group.cancelAll()
-                        return firstCompleted
-                    }
+                    let results = try await AccessibilityParser.shared.getAllTextInElement(windowElement: mainWindow)
                     
-                    await MainActor.run {
-                        self.handleWindowContent(results, for: state)
-                    }
+                    self.handleWindowContent(
+                        results,
+                        for: state,
+                        trackedWindow: trackedWindow,
+                        customAppBundleUrl: customAppBundleUrl
+                    )
                 } catch {
                     await MainActor.run {
                         print("Accessibility timeout")
@@ -412,7 +419,7 @@ class AccessibilityNotificationsManager: ObservableObject {
                         self.screenResult = .init()
                         self.screenResult.errorMessage = "Timeout occurred, could not read application in reasonable amount of time."
                         self.showDebug()
-                    }   
+                    }
                 }
             }
         }
@@ -422,10 +429,16 @@ class AccessibilityNotificationsManager: ObservableObject {
         DispatchQueue.main.asyncAfter(deadline: .now() + Config.debounceInterval, execute: workItem)
     }
     
-    private func handleWindowContent(_ results: [String: String]?, for state: OnitPanelState) {
-        var appBundleUrl: URL? = nil
+    private func handleWindowContent(
+        _ results: [String: String]?,
+        for state: OnitPanelState,
+        trackedWindow: TrackedWindow? = nil,
+        customAppBundleUrl: URL? = nil
+    ) {
+        var appBundleUrl: URL? = customAppBundleUrl
         
-        if let pid = lastActiveWindowPid,
+        if appBundleUrl == nil,
+           let pid = lastActiveWindowPid,
            let app = NSRunningApplication(processIdentifier: pid)
         {
             appBundleUrl = app.bundleURL
@@ -453,7 +466,7 @@ class AccessibilityNotificationsManager: ObservableObject {
         self.screenResult.appBundleUrl = appBundleUrl
         self.showDebug()
         
-        state.addAutoContext()
+        state.addAutoContext(trackedWindow: trackedWindow)
     }
 
     // MARK: Value Changed

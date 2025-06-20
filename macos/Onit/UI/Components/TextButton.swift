@@ -9,6 +9,7 @@ import SwiftUI
 
 struct TextButton<Child: View>: View {
     private let iconSize: CGFloat
+    private let iconImageSize: CGFloat
     private let iconColor: Color
     private let hoverIconColor: Color
     private let disabled: Bool
@@ -28,6 +29,7 @@ struct TextButton<Child: View>: View {
     private let fontColor: Color
     
     private let icon: ImageResource?
+    private let iconImage: NSImage?
     private let text: String?
     private let width: CGFloat?
     
@@ -36,6 +38,7 @@ struct TextButton<Child: View>: View {
     
     init(
         iconSize: CGFloat = 20,
+        iconImageSize: CGFloat = 18,
         iconColor: Color = Color.primary,
         hoverIconColor: Color = Color.primary,
         disabled: Bool = false,
@@ -43,7 +46,7 @@ struct TextButton<Child: View>: View {
 
         gap: CGFloat = 10,
         maxWidth: CGFloat = 0,
-        height: CGFloat = 32,
+        height: CGFloat = ButtonConstants.textButtonHeight,
         fillContainer: Bool = true,
         horizontalPadding: CGFloat = 8,
         cornerRadius: CGFloat = 8,
@@ -52,9 +55,10 @@ struct TextButton<Child: View>: View {
         hoverBackground: Color = .gray600,
         fontSize: CGFloat = 14,
         fontWeight: Font.Weight = Font.Weight.medium,
-        fontColor: Color = Color.white,
+        fontColor: Color = Color.primary,
 
         icon: ImageResource? = nil,
+        iconImage: NSImage? = nil,
         text: String? = nil,
         width: CGFloat? = nil,
         
@@ -62,6 +66,7 @@ struct TextButton<Child: View>: View {
         action: @escaping () -> Void
     ) {
         self.iconSize = iconSize
+        self.iconImageSize = iconImageSize
         self.iconColor = iconColor
         self.hoverIconColor = hoverIconColor
         self.disabled = disabled
@@ -81,6 +86,7 @@ struct TextButton<Child: View>: View {
         self.fontColor = fontColor
         
         self.icon = icon
+        self.iconImage = iconImage
         self.text = text
         self.width = width
         
@@ -94,10 +100,18 @@ struct TextButton<Child: View>: View {
     var body: some View {
         HStack(alignment: .center, spacing: gap) {
             if let icon = icon {
-                Image(icon).addIconStyles(
-                    foregroundColor: selected ? .blue300 : isHovered ? hoverIconColor : iconColor,
-                    iconSize: iconSize
-                )
+                Image(icon)
+                    .addIconStyles(
+                        foregroundColor: selected ? .blue300 : isHovered ? hoverIconColor : iconColor,
+                        iconSize: iconSize
+                    )
+            }
+            
+            if let iconImage = iconImage {
+                Image(nsImage: iconImage)
+                    .resizable()
+                    .frame(width: iconImageSize, height: iconImageSize)
+                    .cornerRadius(4)
             }
             
             if let text = text {

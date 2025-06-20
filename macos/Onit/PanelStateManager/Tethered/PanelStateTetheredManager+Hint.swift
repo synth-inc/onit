@@ -120,7 +120,7 @@ extension PanelStateTetheredManager {
     }
     
     private func tetheredWindowMoved(y: CGFloat) {
-        guard let trackedWindow = AccessibilityNotificationsManager.shared.windowsManager.activeTrackedWindow,
+        guard let trackedWindow = state.foregroundWindow,
               var windowFrame = trackedWindow.element.getFrame(convertedToGlobalCoordinateSpace: true) else {
             return
         }
