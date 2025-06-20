@@ -20,7 +20,7 @@ class QuickEditHintWindowController: NSObject, NSWindowDelegate, ObservableObjec
     
     // MARK: - Properties
     
-    @Published var currentAppName: String = ""
+    @Published var currentAppName: String?
 
     var window: NSWindow?
     var menuWindow: NSWindow?
@@ -31,7 +31,7 @@ class QuickEditHintWindowController: NSObject, NSWindowDelegate, ObservableObjec
     
     // MARK: - Functions
     
-    func show(at position: CGPoint, appName: String) {
+    func show(at position: CGPoint, appName: String?) {
         currentAppName = appName
         
         if window != nil {

@@ -8,6 +8,7 @@
 import Foundation
 import AppKit
 import Combine
+import Defaults
 
 @MainActor
 class QuickEditManager: ObservableObject, CaretPositionDelegate {
@@ -50,7 +51,7 @@ class QuickEditManager: ObservableObject, CaretPositionDelegate {
         windowController.hide()
     }
     
-    func showHint(at position: CGPoint, appName: String) {
+    func showHint(at position: CGPoint, appName: String?) {
         currentHintPosition = position
         hintWindowController.show(at: position, appName: appName)
     }
@@ -86,12 +87,19 @@ class QuickEditManager: ObservableObject, CaretPositionDelegate {
     // MARK: Text Selection Handling
     
     private func handleTextSelectionChange(_ selectedText: String?) {
+		guard Defaults[.quickEditConfig].isEnabled else { return }
+        
         log.error("handleTextSelectionChange: \(selectedText ?? "nil")")
         
         if hasTextSelection(selectedText) {
             if let (position, appName) = getTextSelectionPosition(selectedText) {
-                log.error("Showing hint for text selection at: \(position)")
-                showHint(at: position, appName: appName)
+                if shouldShowQuickEdit(for: appName) {
+                    log.error("Showing hint for text selection at: \(position)")
+                    showHint(at: position, appName: appName)
+                } else {
+                    log.error("QuickEdit disabled/paused for \(appName)")
+                    hideHint()
+                }
             } else {
                 log.error("No position found for text selection")
                 hideHint()
@@ -126,7 +134,15 @@ class QuickEditManager: ObservableObject, CaretPositionDelegate {
     
     // MARK: Caret Position Handling
     
-    private func handleCaretPositionChange(appName: String) {
+    private func handleCaretPositionChange(appName: String?) {
+		guard Defaults[.quickEditConfig].isEnabled else { return }
+
+        if let appName = appName, !shouldShowQuickEdit(for: appName) {
+            log.error("QuickEdit disabled/paused for \(appName)")
+            hideHint()
+            return
+        }
+        
         if hasCaretPosition() {
             if let position = getCaretPosition() {
                 showHint(at: position, appName: appName)
@@ -153,6 +169,37 @@ class QuickEditManager: ObservableObject, CaretPositionDelegate {
     }
     
     // MARK: Utilities
+    
+    private func isQuickEditDisabled(for appName: String?) -> Bool {
+        guard let appName = appName else { return false }
+
+        let config = Defaults[.quickEditConfig]
+
+        return config.excludedApps.contains(appName)
+    }
+    
+    private func isQuickEditPaused(for appName: String?) -> Bool {
+        guard let appName = appName else { return false }
+
+        let config = Defaults[.quickEditConfig]
+
+        guard let pauseEndDate = config.pausedApps[appName] else {
+            return false
+        }
+        
+        if Date() > pauseEndDate {
+            Defaults[.quickEditConfig].pausedApps.removeValue(forKey: appName)
+            return false
+        }
+        
+        return true
+    }
+    
+    private func shouldShowQuickEdit(for appName: String?) -> Bool {
+        guard let appName = appName else { return true }
+		
+        return !isQuickEditDisabled(for: appName) && !isQuickEditPaused(for: appName)
+    }
     
     private func convertAccessibilityToMacOSCoordinates(_ rect: CGRect) -> CGRect {
         guard let mainScreen = NSScreen.primary else {

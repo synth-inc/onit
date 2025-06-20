@@ -6,10 +6,16 @@
 //
 
 import SwiftUI
+import Defaults
 
 struct QuickEditHintMenuView: View {
     @EnvironmentObject private var windowController: QuickEditHintWindowController
     @State private var hoveredItem: Int? = nil
+	@Default(.quickEditConfig) private var config
+    
+    private var currentAppName: String {
+        windowController.currentAppName ?? "Unknown"
+    }
     
     var body: some View {
         VStack(spacing: 4) {
@@ -26,14 +32,14 @@ struct QuickEditHintMenuView: View {
                 menuItem(
                     index: 0,
                     icon: Image(.circleX),
-                    title: "Turn Off in \(windowController.currentAppName)",
+                    title: "Turn Off in \(currentAppName)",
                     action: turnOffAction
                 )
                 
                 menuItem(
                     index: 1,
                     icon: Image(.clockSnooze),
-                    title: "Hide in \(windowController.currentAppName) for 1h",
+                    title: "Hide in \(currentAppName) for 1h",
                     action: hideAction
                 )
             }
@@ -90,21 +96,18 @@ struct QuickEditHintMenuView: View {
     // MARK: - Actions
     
     private func turnOffAction() {
-        print("Turn off in \(windowController.currentAppName)")
-        // TODO: KNA - Implement the feature
+        guard let appName = windowController.currentAppName else { return }
+        
+        config.excludedApps.insert(appName)
+        
+        QuickEditManager.shared.hideHint()
     }
     
     private func hideAction() {
-        print("Hide in \(windowController.currentAppName) for 1h")
-        // TODO: KNA - Implement the feature
+        guard let appName = windowController.currentAppName else { return }
+        
+        config.pausedApps[appName] = Date().addingTimeInterval(3600)
+        
+        QuickEditManager.shared.hideHint()
     }
 }
-
-#Preview {
-    QuickEditHintMenuView()
-        .environmentObject({
-            let controller = QuickEditHintWindowController()
-            controller.currentAppName = "Notes"
-            return controller
-        }())
-} 

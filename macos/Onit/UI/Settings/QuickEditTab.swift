@@ -1,0 +1,139 @@
+//
+//  QuickEditTab.swift
+//  Onit
+//
+//  Created by Kévin Naudin on 06/20/2025.
+//
+
+import SwiftUI
+import Defaults
+
+struct QuickEditTab: View {
+    @Default(.quickEditConfig) private var config
+    
+    var body: some View {
+        Form {
+            Section {
+
+            } header: {
+                Text("Quick Edit")
+                    .font(.system(size: 14))
+                    .padding(.vertical, 2)
+                Text(
+                    "Quick Edit enhances your text editing experience by providing instant access to Onit's AI capabilities. When you highlight text in any application, a subtle hint appears, allowing you to quickly transform, analyze, or act upon the selected content. You can customize which applications can trigger Quick Edit, and temporarily pause it for specific apps when needed. All text processing happens locally on your device, ensuring your data remains private."
+                )
+                .font(.system(size: 12))
+                .foregroundStyle(.gray200)
+                .lineSpacing(2)
+            }
+            
+            enable
+            
+            if config.isEnabled {
+                if !config.excludedApps.isEmpty {
+                    excludedApps
+                }
+                
+                if !config.pausedApps.isEmpty {
+                    pausedApps
+                }
+            }
+        }
+        .formStyle(.grouped)
+    }
+    
+    private var enable: some View {
+        Section {
+            VStack(alignment: .leading, spacing: 4) {
+                HStack {
+                    Text("Enable Quick Edit")
+                        .font(.system(size: 13))
+                    Spacer()
+                    Toggle("", isOn: $config.isEnabled)
+                        .toggleStyle(.switch)
+                        .controlSize(.small)
+                    SettingInfoButton(
+                        title: "Quick Edit",
+                        description:
+                            "When enabled, Onit displays a small indicator next to any text you highlight across applications. Press ⌘K or click the indicator to instantly access Onit's AI features for that text.",
+                        defaultValue: "on",
+                        valueType: "Bool"
+                    )
+                }
+                
+                Text("Display quick edit anywhere")
+                    .font(.system(size: 12))
+                    .foregroundStyle(.gray200)
+            }
+        }
+    }
+    
+    private var excludedApps: some View {
+        Section {
+            VStack(alignment: .leading) {
+                Text("Excluded Applications")
+                    .font(.system(size: 13))
+                
+                VStack(alignment: .leading, spacing: 4) {
+                    ForEach(Array(config.excludedApps.sorted()), id: \.self) { app in
+                        HStack(alignment: .center) {
+                            Text(app)
+                                .font(.system(size: 12))
+                            
+                            Spacer()
+                            
+                            Button(action: {
+                                config.excludedApps.remove(app)
+                            }) {
+                                Image(.bin)
+                                    .resizable()
+                                    .renderingMode(.template)
+                                    .aspectRatio(contentMode: .fit)
+                                    .frame(width: 16, height: 16)
+                                    .foregroundColor(.red)
+                            }
+                            .buttonStyle(.borderless)
+                        }
+                        .frame(height: 24)
+                    }
+                }
+            }
+        }
+    }
+    
+    private var pausedApps: some View {
+        Section {
+            VStack(alignment: .leading) {
+                Text("Paused Applications")
+                    .font(.system(size: 13))
+                
+                VStack(alignment: .leading, spacing: 4) {
+                    ForEach(Array(config.pausedApps), id: \.key) { appName, pauseEndDate in
+                        HStack(alignment: .center, spacing: 4) {
+                            Text(appName)
+                                .font(.system(size: 12))
+                            Text("(until \(pauseEndDate.formatted(date: .omitted, time: .shortened)))")
+                                .font(.system(size: 12))
+                                .foregroundColor(.gray)
+                            
+                            Spacer()
+                            
+                            Button(action: {
+                                config.pausedApps.removeValue(forKey: appName)
+                            }) {
+                                Image(.bin)
+                                    .resizable()
+                                    .renderingMode(.template)
+                                    .aspectRatio(contentMode: .fit)
+                                    .frame(width: 16, height: 16)
+                                    .foregroundColor(.red)
+                            }
+                            .buttonStyle(.borderless)
+                        }
+                        .frame(height: 24)
+                    }
+                }
+            }
+        }
+    }
+}

@@ -16,7 +16,8 @@ struct QuickEditHintView: View {
     
     private var shouldShowDotsIcon: Bool {
         let allowedApps = ["Notes", "Pages", "Slack"]
-        return allowedApps.contains(windowController.currentAppName)
+        
+        return allowedApps.contains(windowController.currentAppName ?? "")
     }
     
     // MARK: - Custom Menu Methods
