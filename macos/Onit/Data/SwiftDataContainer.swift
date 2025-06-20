@@ -7,6 +7,7 @@
 
 import SwiftData
 import Defaults
+import Foundation
 
 actor SwiftDataContainer {
     
@@ -17,8 +18,19 @@ actor SwiftDataContainer {
                 Chat.self,
                 SystemPrompt.self,
             ])
-                        
-            let container = try ModelContainer(for: schema) // , migrationPlan: migrationPlan)
+            
+            // This handles legacy clients before we added the sandbox entitlement. 
+            // Their data will be stored in the public ~/Library/Application Support/default.store, 
+            // which is accessible to other apps. This function copies that data to a new, private location.
+            DatabaseMigrationService.shared.performMigrationIfNeeded()
+            
+            // Create container with default secure storage (sandboxed location)
+            var configurations : [ModelConfiguration] = []
+            if let secureStorageURL = DatabaseMigrationService.shared.getSecureStorageURL() {
+                configurations.append(ModelConfiguration(url: secureStorageURL))
+            }
+            let container = try ModelContainer(for: schema, configurations: configurations)
+                
             maybeUpdatePromptPriorInstructions(container: container)
             
             let itemFetchDescriptor = FetchDescriptor<SystemPrompt>()
@@ -77,7 +89,9 @@ actor SwiftDataContainer {
             // Mark migration as performed
             Defaults[.hasPerformedInstructionResponseMigration] = true
         } catch {
-            print("Error updating prior instructions: \(error)")
+            print("SwiftDataContainer - Error updating prior instructions: \(error)")
         }
     }
+    
+
 }
