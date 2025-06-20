@@ -21,13 +21,13 @@ actor SwiftDataContainer {
             let container = try ModelContainer(for: schema) // , migrationPlan: migrationPlan)
             maybeUpdatePromptPriorInstructions(container: container)
             
-            // Make sure the persistent store is empty. If it's not, return the non-empty container.
-            var itemFetchDescriptor = FetchDescriptor<SystemPrompt>()
-            itemFetchDescriptor.fetchLimit = 1
-            guard try container.mainContext.fetch(itemFetchDescriptor).count == 0 else { return container }
+            let itemFetchDescriptor = FetchDescriptor<SystemPrompt>()
+            let existingPrompts = try container.mainContext.fetch(itemFetchDescriptor)
             
-            container.mainContext.insert(SystemPrompt.outputOnly)
-            try container.mainContext.save()
+            if existingPrompts.isEmpty {
+                container.mainContext.insert(SystemPrompt.outputOnly)
+                try container.mainContext.save()
+            }
             
             return container
         } catch {

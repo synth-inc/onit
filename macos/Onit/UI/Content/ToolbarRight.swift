@@ -90,8 +90,9 @@ struct ToolbarRight: View {
         .popover(
             isPresented: showHistoryBinding,
             arrowEdge: .bottom
-        )  {
+        ) {
             HistoryView()
+                .modelContainer(state.container)
         }
     }
 
