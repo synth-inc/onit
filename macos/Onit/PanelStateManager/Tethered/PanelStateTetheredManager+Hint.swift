@@ -41,7 +41,6 @@ extension PanelStateTetheredManager {
         
         let buttonView = NSHostingView(rootView: tetherView)
         tetherHintDetails.tetherWindow.contentView = buttonView
-        tetherHintDetails.lastYComputed = nil
         tetherButtonPanelState = state
 
         updateTetherWindowPosition(for: activeWindow, action: action, lastYComputed: tetherHintDetails.lastYComputed)
@@ -81,10 +80,13 @@ extension PanelStateTetheredManager {
         let windowFrame = optionalWindowFrame ?? activeWindowFrame
         
         var positionY: CGFloat
-        if lastYComputed == nil {
-            positionY = windowFrame.minY + (windowFrame.height / 2) - (ExternalTetheredButton.containerHeight / 2)
+        
+        if let appKey = appKey(for: activeWindow),
+           let relativePosition = relativeHintPositionsByApp[appKey] {
+            positionY = windowFrame.minY + (relativePosition * windowFrame.height) - (ExternalTetheredButton.containerHeight / 2)
+            positionY = max(windowFrame.minY, min(positionY, windowFrame.maxY - ExternalTetheredButton.containerHeight))
         } else {
-            positionY = computeTetheredWindowY(windowFrame: windowFrame, offset: lastYComputed)
+            positionY = windowFrame.minY + (windowFrame.height / 2) - (ExternalTetheredButton.containerHeight / 2)
         }
         
         let activeScreen = action == .move ? NSScreen.mouse : windowFrame.findScreen()
@@ -101,10 +103,10 @@ extension PanelStateTetheredManager {
             }
         }
 
-        if let state = tetherButtonPanelState {
-            state.tetheredButtonYPosition = windowFrame.height -
-                (positionY - windowFrame.minY) -
-                ExternalTetheredButton.containerHeight + (TetheredButton.height / 2)
+        if let state = tetherButtonPanelState,
+           let appKey = appKey(for: activeWindow),
+           let relativePosition = relativeHintPositionsByApp[appKey] {
+            state.tetheredButtonYRelativePosition = relativePosition
         }
 
         let frame = NSRect(
@@ -130,10 +132,15 @@ extension PanelStateTetheredManager {
         let lastYComputed = computeTetheredWindowY(windowFrame: windowFrame, offset: y)
         tetherHintDetails.lastYComputed = lastYComputed
         
-        if let state = tetherButtonPanelState {
-            state.tetheredButtonYPosition = windowFrame.height -
-                (lastYComputed - windowFrame.minY) -
-                ExternalTetheredButton.containerHeight + (TetheredButton.height / 2)
+        if let appKey = appKey(for: trackedWindow.element) {
+            let relativeY = (lastYComputed + (ExternalTetheredButton.containerHeight / 2) - windowFrame.minY) / windowFrame.height
+            relativeHintPositionsByApp[appKey] = max(0.0, min(1.0, relativeY))
+        }
+        
+        if let state = tetherButtonPanelState,
+           let appKey = appKey(for: trackedWindow.element),
+           let relativePosition = relativeHintPositionsByApp[appKey] {
+            state.tetheredButtonYRelativePosition = relativePosition
         }
 
         let frame = NSRect(
@@ -167,5 +174,16 @@ extension PanelStateTetheredManager {
         }
 
         return finalOffset
+    }
+    
+    private func appKey(for window: AXUIElement) -> String? {
+        let appNamesByWindow = ["Safari", "Google Chrome", "Arc", "Brave Browser", "Opera", "Vivaldi"]
+        guard let appName = window.appName() else { return nil }
+        
+        if appNamesByWindow.contains(appName) {
+            return "\(CFHash(window))"
+        }
+        
+        return appName
     }
 }
