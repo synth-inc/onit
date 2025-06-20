@@ -54,7 +54,7 @@ class DatabaseMigrationService {
         
         if let legacyURL = storageInfo.legacyLocation,
            let newURL = storageInfo.secureLocation,
-           storageInfo.legacyExists {
+           storageInfo.legacyExists,
            !storageInfo.secureExists,
            !storageInfo.migrationCompleted {
             
