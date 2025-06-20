@@ -60,7 +60,7 @@ struct DatabaseSettingsView: View {
                     Spacer()
                 }
                 
-                Text(info.secureLocation.path)
+                Text(info.secureLocation?.path ?? "")
                     .font(.caption)
                     .textSelection(.enabled)
                     .padding(8)
@@ -113,7 +113,7 @@ struct DatabaseSettingsView: View {
                 .font(.caption)
                 .foregroundColor(.secondary)
             
-            Text(info.legacyLocation.appendingPathExtension("backup").path)
+            Text(info.legacyLocation?.appendingPathExtension("backup").path ?? "")
                 .font(.caption)
                 .textSelection(.enabled)
                 .padding(8)

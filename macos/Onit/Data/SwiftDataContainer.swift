@@ -25,8 +25,12 @@ actor SwiftDataContainer {
             DatabaseMigrationService.shared.performMigrationIfNeeded()
             
             // Create container with default secure storage (sandboxed location)
-            let container = try ModelContainer(for: schema)
-            
+            var configurations : [ModelConfiguration] = []
+            if let secureStorageURL = DatabaseMigrationService.shared.getSecureStorageURL() {
+                configurations.append(ModelConfiguration(url: secureStorageURL))
+            }
+            let container = try ModelContainer(for: schema, configurations: configurations)
+                
             maybeUpdatePromptPriorInstructions(container: container)
             
             // Make sure the persistent store is empty. If it's not, return the non-empty container.
