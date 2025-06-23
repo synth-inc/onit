@@ -134,6 +134,8 @@ struct ContextView: View {
 
         state?.removeContext(context: context)
 
+        ContextWindowsManager.shared.closeContextWindow(context: context)
+
         let trackedWindow = AccessibilityNotificationsManager.shared.windowsManager.findTrackedWindow(trackedWindowHash: autoContext.appHash)
 
         AccessibilityNotificationsManager.shared.retrieveWindowContent(
