@@ -31,6 +31,7 @@ class AccessibilityParser {
         let parser = parsers[appName] ?? genericParser
         
         return try await withThrowingTaskGroup(of: [String: String].self) { group in
+            // Using `@Sendable` here is okay, because we're allocating all operations to a single thread (main).
             group.addTask { @MainActor @Sendable in
                 let startTime = CFAbsoluteTimeGetCurrent()
 
