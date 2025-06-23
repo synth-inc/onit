@@ -148,7 +148,11 @@ struct ContextView: View {
             Text(subtitle)
         } action: {
             if errorCode == "1500" {
-                GoogleDriveService.shared.authorizeGoogleDrive()
+                GoogleDriveService.shared.authorizeGoogleDrive {
+                    Task { @MainActor in
+                        self.retryContextExtraction()
+                    }
+                }
             } else if errorCode == "1501" {
                 Task {
                     await GoogleDriveService.shared.showGoogleDrivePicker {

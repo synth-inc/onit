@@ -57,7 +57,7 @@ class GoogleDriveService: NSObject, ObservableObject {
         }
     }
 
-    func authorizeGoogleDrive() {
+    func authorizeGoogleDrive(onSuccess: (() -> Void)? = nil) {
         self.isAuthorizing = true
         self.authorizationError = nil
 
@@ -68,7 +68,7 @@ class GoogleDriveService: NSObject, ObservableObject {
         }
 
         let completion: (GIDSignInResult?, Error?) -> Void = { result, error in
-            self.handleAuthorizationResult(result: result, error: error)
+            self.handleAuthorizationResult(result: result, error: error, onSuccess: onSuccess)
         }
 
         if let googleUser = GIDSignIn.sharedInstance.currentUser {
@@ -87,7 +87,7 @@ class GoogleDriveService: NSObject, ObservableObject {
         }
     }
 
-    private func handleAuthorizationResult(result: GIDSignInResult?, error: Error?) {
+    private func handleAuthorizationResult(result: GIDSignInResult?, error: Error?, onSuccess: (() -> Void)? = nil) {
         guard let result = result else {
             if let error = error as? NSError, error.domain == "com.google.GIDSignIn",
                 error.code == -5
@@ -109,6 +109,8 @@ class GoogleDriveService: NSObject, ObservableObject {
         self.userEmail = result.user.profile?.email
         self.authorizationError = nil
         self.isAuthorizing = false
+
+        onSuccess?()
     }
 
     func disconnectGoogleDrive() {
