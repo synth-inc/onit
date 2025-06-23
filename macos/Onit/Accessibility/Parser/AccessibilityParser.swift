@@ -31,10 +31,10 @@ class AccessibilityParser {
         let parser = parsers[appName] ?? genericParser
         
         return try await withThrowingTaskGroup(of: [String: String].self) { group in
-            group.addTask { @MainActor in
+            group.addTask { @MainActor @Sendable in
                 let startTime = CFAbsoluteTimeGetCurrent()
 
-                var results = parser.parse(element: windowElement)
+                var results = await parser.parse(element: windowElement)
 
                 let endTime = CFAbsoluteTimeGetCurrent()
                 let elapsedTime = endTime - startTime

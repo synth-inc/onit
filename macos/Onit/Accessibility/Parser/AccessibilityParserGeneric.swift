@@ -13,18 +13,18 @@ class AccessibilityParserGeneric: AccessibilityParserBase {
     // MARK: - AccessibilityParserLogic
 
     /** See ``AccessibilityParserLogic`` parse function */
-    override func parse(element: AXUIElement) -> [String: String] {
+    override func parse(element: AXUIElement) async -> [String: String] {
         var result: [String: String] = [:]
         var screen: String = ""
         var highlightedTextFound = false
         
-        _ = AccessibilityParserUtility.recursivelyParse(
+        _ = await AccessibilityParserUtility.recursivelyParse(
             element: element,
             maxDepth: AccessibilityParserConfig.recursiveDepthMax
         ) { element, depth in
             
             if !highlightedTextFound {
-                let parentResult = super.parse(element: element)
+                let parentResult = await super.parse(element: element)
                 
                 if !parentResult.isEmpty {
                     highlightedTextFound = true

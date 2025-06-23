@@ -14,7 +14,7 @@ class AccessibilityParserBase: AccessibilityParserLogic {
     // MARK: - AccessibilityParserLogic
 
     /** See ``AccessibilityParserLogic`` parse function */
-    func parse(element: AXUIElement) -> [String: String] {
+    func parse(element: AXUIElement) async -> [String: String] {
         var results: [String: String] = [:]
         
         if let selectedText = element.selectedText(),

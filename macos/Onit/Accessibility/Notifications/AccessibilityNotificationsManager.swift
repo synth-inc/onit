@@ -274,7 +274,10 @@ class AccessibilityNotificationsManager: ObservableObject {
             return
         }
         
-        Task { @MainActor in
+        let windowHash = trackedWindow?.hash ?? CFHash(mainWindow)
+        
+        // This task will automatically be cleaned up way down the call stack when it hits `addAutoContext()`.
+        state.windowContextTasks[windowHash] = Task {
             if let documentInfo = findDocument(in: mainWindow) {
                 handleWindowContent(
                     documentInfo,

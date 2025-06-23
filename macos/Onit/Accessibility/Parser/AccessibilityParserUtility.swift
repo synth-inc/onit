@@ -44,9 +44,13 @@ class AccessibilityParserUtility {
     static func recursivelyParse(
         element: AXUIElement,
         maxDepth: Int,
-        handler: (AXUIElement, Int) -> AccessibilityParseResult
-    ) -> [String: String] {
+        childNodeProcessingInterval: Int = 128,
+        // handler: (AXUIElement, Int) -> AccessibilityParseResult
+//        handler: @escaping (AXUIElement) async -> [String: String]?
+        handler: @escaping (AXUIElement, Int) async -> AccessibilityParseResult
+    ) async -> [String: String] {
         var results: [String: String] = [:]
+        var processedChildNodes = 0
 
         guard let currentScreen = element.getFrame(convertedToGlobalCoordinateSpace: true)?.findScreen() else {
             log.error("Cannot find screen for element")
@@ -60,7 +64,7 @@ class AccessibilityParserUtility {
             return [:]
         }
 
-        func helper(currentElement: AXUIElement, currentDepth: Int) {
+        func helper(currentElement: AXUIElement, currentDepth: Int) async {
             // Check if the current depth exceeds maxDepth
             guard currentDepth <= maxDepth else { return }
 
@@ -72,21 +76,43 @@ class AccessibilityParserUtility {
             }
 
             // Apply parsing handler on element and merge results
-            let parseResult = handler(currentElement, currentDepth)
-            if let result = parseResult.results {
-                results.merge(result) { _, new in new }
-            }
+             let parseResult = await handler(currentElement, currentDepth)
+             if let result = parseResult.results {
+                 results.merge(result) { _, new in new }
+             }
+            
+//            if let result = await handler(currentElement, currentDepth) {
+//                results.merge(result) { _, new in new }
+//            }
 
             // Only recursively parse children if handler didn't return .stopRecursing
             if parseResult.shouldContinue, let children = currentElement.children() {
                 for child in children {
-                    helper(currentElement: child, currentDepth: currentDepth + 1)
+                    
+                    /// Recursively traversing child nodes can get very expensive, resulting in a sub-optimal
+                    /// UX (frozen/stuck UI and slower UI as more windows are simultaneously processed).
+                    ///
+                    /// By yielding the parent task at multiples of `childNodeProcessingInterval`, we
+                    /// can allocate other tasks back to the main thread and then get back into processing child nodes.
+                    ///
+                    /// So, rather than processing one large operation, this allows us to chunk and yield window
+                    /// parsing at regular intervals, turning window parsing into many short bursts that respect
+                    /// sibling operations on the shared main thread and keeping the UI fluid as a result.
+                    ///
+                    /// Adjust `childNodeProcessingInterval` for custom processing intervals.
+
+                    processedChildNodes += 1
+                    
+                    if processedChildNodes.isMultiple(of: childNodeProcessingInterval) {
+                        await Task.yield()
+                    }
+                    
+                    await helper(currentElement: child, currentDepth: currentDepth + 1)
                 }
             }
         }
 
-        helper(currentElement: element, currentDepth: 0)
-
+        await helper(currentElement: element, currentDepth: 0)
         return results
     }
 

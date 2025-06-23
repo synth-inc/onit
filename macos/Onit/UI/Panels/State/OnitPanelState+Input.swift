@@ -119,17 +119,14 @@ extension OnitPanelState {
         
         windowContextTasks[trackedWindow.hash]?.cancel()
         
-        // This task will automatically be cleaned up way down the call stack when it hits `addAutoContext()`.
-        windowContextTasks[trackedWindow.hash] = Task {
-            let windowApp = WindowHelpers.getWindowApp(pid: trackedWindow.pid)
-            let appBundleUrl = windowApp?.bundleURL
-            
-            AccessibilityNotificationsManager.shared.retrieveWindowContent(
-                state: self,
-                trackedWindow: trackedWindow,
-                customAppBundleUrl: appBundleUrl
-            )
-        }
+        let windowApp = WindowHelpers.getWindowApp(pid: trackedWindow.pid)
+        let appBundleUrl = windowApp?.bundleURL
+        
+        AccessibilityNotificationsManager.shared.retrieveWindowContent(
+            state: self,
+            trackedWindow: trackedWindow,
+            customAppBundleUrl: appBundleUrl
+        )
     }
 
     func getPendingContextList() -> [Context] {
