@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import KeyboardShortcuts
 
 struct QuickEditHintView: View {
     @State private var isHovered: Bool = false
@@ -45,7 +46,7 @@ struct QuickEditHintView: View {
         .onHover { hovering in
             isHovered = hovering
         }
-        .tooltip(prompt: "⌘ K", background: false)
+        .tooltip(prompt: KeyboardShortcuts.Name.quickEdit.shortcutText, background: false)
         .transition(.scale.combined(with: .opacity))
         .scaleEffect(isHovered ? hoverScale : 1.0)
         .opacity(isHovered ? 1.0 : 0.7)

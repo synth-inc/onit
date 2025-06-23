@@ -7,9 +7,11 @@
 
 import SwiftUI
 import Defaults
+import KeyboardShortcuts
 
 struct QuickEditTab: View {
     @Default(.quickEditConfig) private var config
+    @State private var shortcutText: String = KeyboardShortcuts.Name.quickEdit.shortcutText
     
     var body: some View {
         Form {
@@ -55,7 +57,7 @@ struct QuickEditTab: View {
                     SettingInfoButton(
                         title: "Quick Edit",
                         description:
-                            "When enabled, Onit displays a small indicator next to any text you highlight across applications. Press ⌘K or click the indicator to instantly access Onit's AI features for that text.",
+                            "When enabled, Onit displays a small indicator next to any text you highlight across applications. Press \"\(shortcutText)\" or click the indicator to instantly access Onit's AI features for that text.",
                         defaultValue: "on",
                         valueType: "Bool"
                     )
@@ -64,6 +66,15 @@ struct QuickEditTab: View {
                 Text("Display quick edit anywhere")
                     .font(.system(size: 12))
                     .foregroundStyle(.gray200)
+            }
+            
+            if config.isEnabled {
+                KeyboardShortcuts.Recorder(
+                    "Shortcut", name: .quickEdit
+                ) { _ in
+                    shortcutText = KeyboardShortcuts.Name.quickEdit.shortcutText
+                }
+                .padding(.vertical, 8)
             }
         }
     }
