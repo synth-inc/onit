@@ -24,12 +24,16 @@ extension PanelStateTetheredManager: AccessibilityNotificationsDelegate {
     
     //  MARK: - DID ACIVATE IGNORED WINDOW
     
-    func accessibilityManager(_ manager: AccessibilityNotificationsManager, didActivateIgnoredWindow window: TrackedWindow?) {
+    func accessibilityManager(_ manager: AccessibilityNotificationsManager, didActivateIgnoredWindow window: TrackedWindow) {
         log.debug("activate ignored window")
         hideTetherWindow()
         updateLevelState(trackedWindow: window)
     }
+
+    //  MARK: - DID ACTIVATE ONIT
     
+    func accessibilityManager(_ manager: AccessibilityNotificationsManager, didActivateOnit window: TrackedWindow) {}
+
     //  MARK: - DID MINIMIZE WINDOW
     
     func accessibilityManager(_ manager: AccessibilityNotificationsManager, didMinimizeWindow window: TrackedWindow) {

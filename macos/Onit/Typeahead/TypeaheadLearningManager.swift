@@ -114,13 +114,6 @@ final class TypeaheadLearningService: @unchecked Sendable {
         print("TypeaheadLearningService - Text element focused")
         
         activeTypingElementHash = CFHash(element)
-        
-        // We should get the AXScrape if it doesn't already exist.
-//        Task {
-//            AccessibilityParsingManager.shared.requestParsing(for: windowElement, requester: self, completion: { _ in
-//                // No-op - just establishing cache
-//            })
-//        }
     }
     
     func stopTypeaheadLearning() {

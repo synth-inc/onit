@@ -26,9 +26,13 @@ extension PanelStatePinnedManager: AccessibilityNotificationsDelegate {
     //  MARK: - DID ACTIVATE IGNORED WINDOW
     
     func accessibilityManager(_ manager: AccessibilityNotificationsManager, didActivateIgnoredWindow window: TrackedWindow?) {}
+
+    //  MARK: - DID ACTIVATE ONIT
     
+    func accessibilityManager(_ manager: AccessibilityNotificationsManager, didActivateOnit window: TrackedWindow) {}
+
     //  MARK: - DID MINIMIZE WINDOW
-    
+
     func accessibilityManager(_ manager: AccessibilityNotificationsManager, didMinimizeWindow window: TrackedWindow) {}
     
     //  MARK: - DID DEMINIMIZE WINDOW

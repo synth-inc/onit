@@ -75,9 +75,21 @@ class AccessibilityObserversManager {
         
         let appName = pid.appName ?? "Unknown"
         log.info("Observers automatically started for `\(appName)` (\(pid))")
-        delegate?.accessibilityObserversManager(didActivateApplication: pid.appName, processID: pid)
-        startNotificationsObserver(for: pid)
-        startPersistentNotificationsObserver(for: pid)
+        
+        
+        
+        switch authorizationState(for: pid) {
+        case .ownProcess:
+            delegate?.accessibilityObserversManager(didActivateOnit: pid.appName, processID: pid)
+            startNotificationsObserver(for: pid, notifications: Config.onitNotifications)
+        case .ignoreProcess:
+            delegate?.accessibilityObserversManager(didActivateIgnoredApplication: pid.appName, processID: pid)
+            startNotificationsObserver(for: pid, notifications: Config.untrackedAppNotifications)
+        case .eligible:
+            delegate?.accessibilityObserversManager(didActivateApplication: pid.appName, processID: pid)
+            startNotificationsObserver(for: pid, notifications: Config.notifications)
+            startPersistentNotificationsObserver(for: pid)
+        }
     }
     
     private func startAppActivationObservers() {
@@ -108,9 +120,18 @@ class AccessibilityObserversManager {
         switch authorizationState(for: app.processIdentifier) {
         case .ownProcess:
             log.debug("Ignoring activation of Onit (\(app.processIdentifier))")
+            delegate?.accessibilityObserversManager(
+                didActivateOnit: app.localizedName,
+                processID: app.processIdentifier
+            )
+            startNotificationsObserver(for: app.processIdentifier, notifications: Config.onitNotifications)
         case .ignoreProcess:
             log.debug("Ignoring activation of `\(app.localizedName ?? "Unknown")` (\(app.processIdentifier))")
-            delegate?.accessibilityObserversManager(didActivateIgnoredApplication: app.localizedName)
+            delegate?.accessibilityObserversManager(
+                didActivateIgnoredApplication: app.localizedName,
+                processID: app.processIdentifier
+            )
+             startNotificationsObserver(for: app.processIdentifier, notifications: Config.untrackedAppNotifications)
         case .eligible:
             log.info("Application `\(app.localizedName ?? "Unknown")` (\(app.processIdentifier)) activated")
             
@@ -124,7 +145,7 @@ class AccessibilityObserversManager {
                 processID: app.processIdentifier
             )
             
-            startNotificationsObserver(for: app.processIdentifier)
+            startNotificationsObserver(for: app.processIdentifier, notifications: Config.notifications)
             startPersistentNotificationsObserver(for: app.processIdentifier)
         }
     }
@@ -137,11 +158,11 @@ class AccessibilityObserversManager {
         }
         
         // Check if Onit is activated so we don't deactivate the active app
-        if let activeApp = NSWorkspace.shared.frontmostApplication,
-           authorizationState(for: activeApp.processIdentifier) == .ownProcess {
-            log.debug("Onit is active, ignoring deactivation of `\(app.localizedName ?? "Unknown")` (\(app.processIdentifier))")
-            return
-        }
+//        if let activeApp = NSWorkspace.shared.frontmostApplication,
+//           authorizationState(for: activeApp.processIdentifier) == .ownProcess {
+//            log.debug("Onit is active, ignoring deactivation of `\(app.localizedName ?? "Unknown")` (\(app.processIdentifier))")
+//            return
+//        }//
         
         if authorizationState(for: app.processIdentifier) == .eligible {
             log.info("Application `\(app.localizedName ?? "Unknown")` (\(app.processIdentifier)) deactivated")
@@ -149,14 +170,15 @@ class AccessibilityObserversManager {
                 didDeactivateApplication: app.localizedName,
                 processID: app.processIdentifier
             )
-            stopNotificationsObserver(for: app.processIdentifier)
+            
         }
+        stopNotificationsObserver(for: app.processIdentifier)
     }
     
-    private func startNotificationsObserver(for pid: pid_t) {
+    private func startNotificationsObserver(for pid: pid_t, notifications: [String]) {
         guard Thread.isMainThread else {
             DispatchQueue.main.async {
-                self.startNotificationsObserver(for: pid)
+                self.startNotificationsObserver(for: pid, notifications: notifications)
             }
             return
         }
@@ -188,8 +210,7 @@ class AccessibilityObserversManager {
             
             let refCon = Unmanaged.passUnretained(self).toOpaque()
             
-            var notifications = Config.notifications
-            
+            var notifications = notifications
             if HighlightedTextCoordinator.appNames.contains(pid.appName ?? "") {
                 notifications.removeAll(where: { $0 == kAXSelectedTextChangedNotification })
             }
