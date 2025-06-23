@@ -20,6 +20,7 @@ struct QuickEditView: View {
     @Default(.autoContextFromCurrentWindow) var autoContextFromCurrentWindow
     
     @ObservedObject private var accessibilityPermissionManager = AccessibilityPermissionManager.shared
+    @ObservedObject private var quickEditManager = QuickEditManager.shared
     
     @State private var currentWindowInfo: (
         appBundleUrl: URL?,
@@ -64,7 +65,10 @@ struct QuickEditView: View {
             headerView
             
             if let prompt = displayedPrompt {
-                QuickEditResponseView(prompt: prompt)
+                QuickEditResponseView(
+                    prompt: prompt,
+                    isEditableElement: quickEditManager.isEditableElement
+                )
                 
                 Color.gray500
                     .frame(height: 1)

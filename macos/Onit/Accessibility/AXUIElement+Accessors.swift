@@ -318,8 +318,7 @@ extension AXUIElement {
         
         let supportedRoles = [
             kAXTextFieldRole,
-            kAXTextAreaRole,
-            // kAXStaticTextRole
+            kAXTextAreaRole
         ]
         
         return supportedRoles.contains(role)

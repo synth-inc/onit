@@ -10,6 +10,7 @@ enum HighlightedTextBoundsMethod {
 
 struct HighlightedTextBoundsResult {
     let appName: String
+    let element: AXUIElement
     let elementFrame: CGRect
     let elementRole: String
     let highlightedText: String
@@ -22,7 +23,6 @@ class HighlightedTextBoundsExtractor {
     
     static let shared = HighlightedTextBoundsExtractor()
     
-    private var lastUsedElement: AXUIElement?
     private var lastSelectedText: String?
     private var lastResult: HighlightedTextBoundsResult?
     
@@ -37,15 +37,10 @@ class HighlightedTextBoundsExtractor {
         
         let result = calculateBounds(for: textElement, selectedText: selectedText)
         
-        lastUsedElement = textElement
         lastSelectedText = selectedText
         lastResult = result
         
         return result
-    }
-    
-    func getLastUsedElement() -> AXUIElement? {
-        return lastUsedElement
     }
     
     func getLastResult() -> HighlightedTextBoundsResult? {
@@ -53,7 +48,6 @@ class HighlightedTextBoundsExtractor {
     }
     
     func reset() {
-        lastUsedElement = nil
         lastSelectedText = nil
         lastResult = nil
     }
@@ -137,6 +131,7 @@ class HighlightedTextBoundsExtractor {
         
         return HighlightedTextBoundsResult(
             appName: appName,
+            element: element,
             elementFrame: elementFrame,
             elementRole: elementRole,
             highlightedText: selectedText,

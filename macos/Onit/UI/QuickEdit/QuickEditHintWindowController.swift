@@ -19,8 +19,6 @@ class QuickEditHintWindowController: NSObject, NSWindowDelegate, ObservableObjec
     }
     
     // MARK: - Properties
-    
-    @Published var currentAppName: String?
 
     var window: NSWindow?
     var menuWindow: NSWindow?
@@ -29,11 +27,12 @@ class QuickEditHintWindowController: NSObject, NSWindowDelegate, ObservableObjec
     static let hintOffset = CGPoint(x: -20, y: -10)
     static let menuSize = CGSize(width: 240, height: 120)
     
+    private var rightClickMonitor: Any?
+    private var menuEventMonitor: Any?
+    
     // MARK: - Functions
     
-    func show(at position: CGPoint, appName: String?) {
-        currentAppName = appName
-        
+    func show(at position: CGPoint) {
         if window != nil {
             updatePosition(position)
             window?.orderFront(nil)
@@ -46,18 +45,19 @@ class QuickEditHintWindowController: NSObject, NSWindowDelegate, ObservableObjec
     func hide() {
         window?.orderOut(nil)
         window = nil
+        stopRightClickMonitoring()
     }
     
     // MARK: - Menu Functions
     
-    func showMenu(at position: CGPoint) {
+    func showMenu() {
         if menuWindow != nil {
-            updateMenuPosition(position)
+            updateMenuPosition()
             menuWindow?.orderFront(nil)
             return
         }
         
-        createMenuWindow(at: position)
+        createMenuWindow()
     }
     
     func hideMenu() {
@@ -70,7 +70,6 @@ class QuickEditHintWindowController: NSObject, NSWindowDelegate, ObservableObjec
     
     private func createWindow(at position: CGPoint) {
         let contentView = QuickEditHintView()
-            .environmentObject(self)
         let hostingController = NSHostingController(rootView: contentView)
         
         window = QuickEditHintWindow()
@@ -95,6 +94,8 @@ class QuickEditHintWindowController: NSObject, NSWindowDelegate, ObservableObjec
         NSAnimationContext.runAnimationGroup { context in
             context.duration = 0.2
             window?.animator().alphaValue = 1.0
+            
+            startRightClickMonitoring()
         }
     }
     
@@ -107,11 +108,27 @@ class QuickEditHintWindowController: NSObject, NSWindowDelegate, ObservableObjec
         window.setFrameOrigin(finalPosition)
     }
     
+    private func startRightClickMonitoring() {
+        rightClickMonitor = NSEvent.addLocalMonitorForEvents(matching: [.rightMouseDown]) { [weak self] event in
+            guard let self = self else { return event }
+            
+            showMenu()
+
+            return event
+        }
+    }
+    
+    private func stopRightClickMonitoring() {
+        if let rightClickMonitor = rightClickMonitor {
+            NSEvent.removeMonitor(rightClickMonitor)
+            self.rightClickMonitor = nil
+        }
+    }
+    
     // MARK: - Private Menu Functions
     
-    private func createMenuWindow(at position: CGPoint) {
+    private func createMenuWindow() {
         let contentView = QuickEditHintMenuView()
-            .environmentObject(self)
         let hostingController = NSHostingController(rootView: contentView)
         
         menuWindow = QuickEditHintWindow()
@@ -127,7 +144,7 @@ class QuickEditHintWindowController: NSObject, NSWindowDelegate, ObservableObjec
         let size = Self.menuSize
         menuWindow?.setContentSize(size)
         
-        updateMenuPosition(position)
+        updateMenuPosition()
         
         menuWindow?.alphaValue = 0.0
         menuWindow?.orderFront(nil)
@@ -140,18 +157,29 @@ class QuickEditHintWindowController: NSObject, NSWindowDelegate, ObservableObjec
         startMenuEventMonitoring()
     }
     
-    private func updateMenuPosition(_ position: CGPoint) {
-        guard let menuWindow = menuWindow else { return }
+    private func updateMenuPosition() {
+        guard let menuWindow = menuWindow,
+              let window = window,
+              let hintScreen = window.screen else { return }
         
-        let finalPosition = CGPoint(
-            x: position.x - 10,
-            y: position.y - Self.menuSize.height - 10
-        )
+        let hintFrame = window.frame
+        let spaceBelow = hintFrame.minY - hintScreen.visibleFrame.minY
+        let finalPosition: CGPoint
+        
+        if spaceBelow >= Self.menuSize.height {
+            finalPosition = CGPoint(
+                x: hintFrame.minX,
+                y: hintFrame.minY - Self.menuSize.height
+            )
+        } else {
+            finalPosition = CGPoint(
+                x: hintFrame.minX,
+                y: hintFrame.maxY
+            )
+        }
         
         menuWindow.setFrameOrigin(finalPosition)
     }
-    
-    private var menuEventMonitor: Any?
     
     private func startMenuEventMonitoring() {
         menuEventMonitor = NSEvent.addGlobalMonitorForEvents(

@@ -17,6 +17,10 @@ class QuickEditManager: ObservableObject, CaretPositionDelegate {
     
     static let shared = QuickEditManager()
     
+    // MARK: - Published Properties
+    @Published private(set) var currentAppName: String?
+    @Published private(set) var isEditableElement: Bool = false
+    
     // MARK: - Window Configuration
     
     static let estimatedWindowSize = CGSize(width: 360, height: 120)
@@ -30,6 +34,7 @@ class QuickEditManager: ObservableObject, CaretPositionDelegate {
     private let accessibilityManager = AccessibilityNotificationsManager.shared
     private var cancellables = Set<AnyCancellable>()
     private var currentHintPosition: CGPoint?
+    private var lastElement: AXUIElement?
     
     // MARK: - Private initializer
     
@@ -44,6 +49,8 @@ class QuickEditManager: ObservableObject, CaretPositionDelegate {
             let correctPosition = calculateWindowPosition(for: hintPosition)
             
             windowController.show(at: correctPosition)
+        } else {
+            log.error("Can't find currentHintPosition")
         }
     }
     
@@ -51,14 +58,31 @@ class QuickEditManager: ObservableObject, CaretPositionDelegate {
         windowController.hide()
     }
     
-    func showHint(at position: CGPoint, appName: String?) {
+    func showHint(at position: CGPoint) {
         currentHintPosition = position
-        hintWindowController.show(at: position, appName: appName)
+        hintWindowController.show(at: position)
     }
     
     func hideHint() {
         currentHintPosition = nil
+		isEditableElement = false
         hintWindowController.hide()
+    }
+    
+    func showMenu() {
+        hintWindowController.showMenu()
+    }
+    
+    func hideMenu() {
+        hintWindowController.hideMenu()
+    }
+    
+    func activateLastApp() {
+        guard let element = lastElement, let pid = element.pid() else { return }
+        
+        if let runningApp = NSRunningApplication(processIdentifier: pid) {
+            runningApp.activate()
+        }
     }
     
     // MARK: - Private Functions
@@ -92,12 +116,15 @@ class QuickEditManager: ObservableObject, CaretPositionDelegate {
         log.error("handleTextSelectionChange: \(selectedText ?? "nil")")
         
         if hasTextSelection(selectedText) {
-            if let (position, appName) = getTextSelectionPosition(selectedText) {
-                if shouldShowQuickEdit(for: appName) {
+            if let (position, highlightedResult) = getTextSelectionPosition(selectedText) {
+                if shouldShowQuickEdit(for: highlightedResult.appName) {
                     log.error("Showing hint for text selection at: \(position)")
-                    showHint(at: position, appName: appName)
+                    isEditableElement = highlightedResult.elementRole == kAXTextFieldRole || highlightedResult.elementRole == kAXTextAreaRole
+                    currentAppName = highlightedResult.appName
+                    lastElement = highlightedResult.element
+                    showHint(at: position)
                 } else {
-                    log.error("QuickEdit disabled/paused for \(appName)")
+                    log.error("QuickEdit disabled/paused for \(highlightedResult.appName)")
                     hideHint()
                 }
             } else {
@@ -116,7 +143,7 @@ class QuickEditManager: ObservableObject, CaretPositionDelegate {
         return true
     }
     
-    private func getTextSelectionPosition(_ selectedText: String?) -> (CGPoint, String)? {
+    private func getTextSelectionPosition(_ selectedText: String?) -> (CGPoint, HighlightedTextBoundsResult)? {
         guard let selectedText = selectedText else {
             return nil
         }
@@ -125,7 +152,7 @@ class QuickEditManager: ObservableObject, CaretPositionDelegate {
            lastResult.highlightedText == selectedText {
             let screenFrame = convertAccessibilityToMacOSCoordinates(lastResult.highlightedTextFrame)
             log.error("Bounds found for selected text: \(lastResult.highlightedTextFrame) in MacOS coordinates: \(screenFrame)")
-            return (CGPoint(x: screenFrame.origin.x, y: screenFrame.origin.y), lastResult.appName)
+            return (CGPoint(x: screenFrame.origin.x, y: screenFrame.origin.y), lastResult)
         }
         
         log.error("No bounds found for selected text")
@@ -134,7 +161,7 @@ class QuickEditManager: ObservableObject, CaretPositionDelegate {
     
     // MARK: Caret Position Handling
     
-    private func handleCaretPositionChange(appName: String?) {
+    private func handleCaretPositionChange(element: AXUIElement, appName: String?) {
 		guard Defaults[.quickEditConfig].isEnabled else { return }
 
         if let appName = appName, !shouldShowQuickEdit(for: appName) {
@@ -145,7 +172,10 @@ class QuickEditManager: ObservableObject, CaretPositionDelegate {
         
         if hasCaretPosition() {
             if let position = getCaretPosition() {
-                showHint(at: position, appName: appName)
+                isEditableElement = true
+                currentAppName = appName
+                lastElement = element
+                showHint(at: position)
             } else {
                 hideHint()
             }
@@ -254,11 +284,11 @@ class QuickEditManager: ObservableObject, CaretPositionDelegate {
 
 extension QuickEditManager {
     func caretPositionDidChange(_ position: CGRect, in application: String, element: AXUIElement) {
-        handleCaretPositionChange(appName: application)
+        handleCaretPositionChange(element: element, appName: application)
     }
     
     func caretPositionDidUpdate(_ position: CGRect, in application: String, element: AXUIElement) {
-        handleCaretPositionChange(appName: application)
+        handleCaretPositionChange(element: element, appName: application)
     }
     
     func caretDidDisappear() {

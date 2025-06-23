@@ -9,12 +9,12 @@ import SwiftUI
 import Defaults
 
 struct QuickEditHintMenuView: View {
-    @EnvironmentObject private var windowController: QuickEditHintWindowController
+    @ObservedObject private var quickEditManager = QuickEditManager.shared
     @State private var hoveredItem: Int? = nil
 	@Default(.quickEditConfig) private var config
     
     private var currentAppName: String {
-        windowController.currentAppName ?? "Unknown"
+        quickEditManager.currentAppName ?? "Unknown"
     }
     
     var body: some View {
@@ -63,7 +63,7 @@ struct QuickEditHintMenuView: View {
     ) -> some View {
         Button(action: {
             action()
-            windowController.hideMenu()
+            quickEditManager.hideMenu()
         }) {
             HStack(spacing: 12) {
                 icon
@@ -96,7 +96,7 @@ struct QuickEditHintMenuView: View {
     // MARK: - Actions
     
     private func turnOffAction() {
-        guard let appName = windowController.currentAppName else { return }
+        guard let appName = quickEditManager.currentAppName else { return }
         
         config.excludedApps.insert(appName)
         
@@ -104,7 +104,7 @@ struct QuickEditHintMenuView: View {
     }
     
     private func hideAction() {
-        guard let appName = windowController.currentAppName else { return }
+        guard let appName = quickEditManager.currentAppName else { return }
         
         config.pausedApps[appName] = Date().addingTimeInterval(3600)
         

@@ -35,6 +35,16 @@ struct QuickEditResponseView: View {
     @Default(.lineHeight) var lineHeight
     
     let prompt: Prompt
+    let isEditableElement: Bool
+    
+    var insertShortcut: KeyboardShortcut {
+        .init(.return, modifiers: [.command])
+    }
+    
+    init(prompt: Prompt, isEditableElement: Bool = false) {
+        self.prompt = prompt
+        self.isEditableElement = isEditableElement
+    }
     
     private var textToDisplay: String {
         guard !prompt.responses.isEmpty else {
@@ -243,6 +253,25 @@ extension QuickEditResponseView {
     private var generatedToolbar: some View {
         HStack(spacing: 8) {
             if let generation = prompt.generation {
+                if isEditableElement {
+                    Button(
+                        action: {
+                            insertGeneratedText(generation)
+                        },
+                        label: {
+                            HStack {
+                                KeyboardShortcutView(shortcut: insertShortcut)
+                                Text("Insert")
+                            }
+                            .padding(.horizontal, 8)
+                        }
+                    )
+                    .buttonStyle(.plain)
+                    .frame(height: 24)
+                    .background(.blue400)
+                    .clipShape(RoundedRectangle(cornerRadius: 5))
+                }
+                
                 CopyButton(text: generation, stripMarkdown: true)
             }
             
@@ -270,9 +299,27 @@ extension QuickEditResponseView {
     private func codeAction(code: String) {
         // TODO: Implement code action if needed
     }
+    
+    private func insertGeneratedText(_ text: String) {
+        QuickEditManager.shared.activateLastApp()
+        
+        let textToInsert = text.stripMarkdown()
+        let source = CGEventSource(stateID: .hidSystemState)
+        let pasteDown = CGEvent(keyboardEventSource: source, virtualKey: 0x09, keyDown: true)
+        let pasteUp = CGEvent(keyboardEventSource: source, virtualKey: 0x09, keyDown: false)
+        
+        pasteDown?.flags = .maskCommand
+        pasteUp?.flags = .maskCommand
+        
+        NSPasteboard.general.clearContents()
+        NSPasteboard.general.setString(textToInsert, forType: .string)
+        
+        pasteDown?.post(tap: .cghidEventTap)
+        pasteUp?.post(tap: .cghidEventTap)
+    }
 }
 
 #Preview {
-    QuickEditResponseView(prompt: Prompt.sample)
+    QuickEditResponseView(prompt: Prompt.sample, isEditableElement: true)
         .background(.black)
 } 
