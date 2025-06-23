@@ -44,11 +44,16 @@ struct TypedInputEntry {
     let applicationName: String
     let applicationTitle: String?
     let screenContent: String
+    
     let currentText: String
-    let precedingText: String
-    let followingText: String
-    let aiCompletion: String?
-    let similarityScore: Double?
+    
+    let precedingInputText: String
+    let followingInputText: String
+    let preceedingWindowText: String
+    let followingWindowText: String
+
+    let changeText: String?
+    let changeType: String?
     let timestamp: Date
 }
 
@@ -65,7 +70,8 @@ final class TypeaheadHistoryManager: ObservableObject, @unchecked Sendable {
     lazy var pasteboard = PasteboardHistoryManager(manager: self)
     lazy var highlightedText = HighlightedTextHistoryManager(manager: self)
     lazy var content = ContentHistoryManager(manager: self)
-    lazy var typedInput = TypedInputHistoryManager(manager: self)
+    lazy var typedPhrase = TypedPhraseHistoryManager(manager: self)
+    lazy var typedWord = TypedWordHistoryManager(manager: self)
 
     private init() {
         // Store DB in Application Support
@@ -119,17 +125,35 @@ final class TypeaheadHistoryManager: ObservableObject, @unchecked Sendable {
             timestamp REAL NOT NULL
         );
         """
-        let createTypedInput = """
-        CREATE TABLE IF NOT EXISTS typed_input_history (
+        let createTypedPhraseHistory = """
+        CREATE TABLE IF NOT EXISTS typed_phrase_history (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             applicationName TEXT NOT NULL,
             applicationTitle TEXT,
             screenContent TEXT,
             currentText TEXT,
-            precedingText TEXT,
-            followingText TEXT,
-            aiCompletion TEXT,
-            similarityScore REAL,
+            precedingInputText TEXT,
+            followingInputText TEXT,
+            preceedingWindowText TEXT,
+            followingWindowText TEXT,
+            changeText TEXT,
+            changeType TEXT,
+            timestamp REAL NOT NULL
+        );
+        """
+        let createTypedWordHistory = """
+        CREATE TABLE IF NOT EXISTS typed_word_history (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            applicationName TEXT NOT NULL,
+            applicationTitle TEXT,
+            screenContent TEXT,
+            currentText TEXT,
+            precedingInputText TEXT,
+            followingInputText TEXT,
+            preceedingWindowText TEXT,
+            followingWindowText TEXT,
+            changeText TEXT,
+            changeType TEXT,
             timestamp REAL NOT NULL
         );
         """
@@ -137,7 +161,17 @@ final class TypeaheadHistoryManager: ObservableObject, @unchecked Sendable {
             _ = execute(createPasteboard)
             _ = execute(createHighlighted)
             _ = execute(createContent)
-            _ = execute(createTypedInput)
+            _ = execute(createTypedPhraseHistory)
+            _ = execute(createTypedWordHistory)
+            
+            // Add migration for new columns if they don't exist
+            _ = execute("ALTER TABLE typed_phrase_history ADD COLUMN changeText TEXT")
+            _ = execute("ALTER TABLE typed_phrase_history ADD COLUMN changeType TEXT")
+            _ = execute("ALTER TABLE typed_word_history ADD COLUMN changeText TEXT")
+            _ = execute("ALTER TABLE typed_word_history ADD COLUMN changeType TEXT")
+            
+            // Migrate old typed_input_history table to typed_phrase_history if it exists
+            _ = execute("INSERT OR IGNORE INTO typed_phrase_history SELECT * FROM typed_input_history WHERE EXISTS (SELECT name FROM sqlite_master WHERE type='table' AND name='typed_input_history')")
         }
     }
 
@@ -315,21 +349,31 @@ final class ContentHistoryManager {
     }
 }
 
-final class TypedInputHistoryManager {
+final class TypedPhraseHistoryManager {
     private unowned let manager: TypeaheadHistoryManager
     init(manager: TypeaheadHistoryManager) { self.manager = manager }
 
-    func add(applicationName: String, applicationTitle: String?, screenContent: String, currentText: String, precedingText: String, followingText: String, aiCompletion: String?, similarityScore: Double?, timestamp: Date = Date()) {
+    func add(applicationName: String,
+             applicationTitle: String?,
+             screenContent: String,
+             currentText: String,
+             precedingInputText:String,
+             followingInputText: String,
+             preceedingWindowText: String,
+             followingWindowText: String,
+             changeText: String?,
+             changeType: String?,
+             timestamp: Date = Date()) {
         guard Defaults[.collectTypeaheadTestCases] else { return }
-        print("historyManager - TypedInputHistoryManager.add | applicationName: \(applicationName) applicationTitle: \(applicationTitle ?? "nil") screenContent: \(screenContent.prefix(20)) currentText: \(currentText.prefix(20)) precedingText: \(precedingText.prefix(20)) followingText: \(followingText.prefix(20)) aiCompletion: \(aiCompletion ?? "nil") similarityScore: \(similarityScore?.description ?? "nil") timestamp: \(timestamp)")
-        let sql = "INSERT INTO typed_input_history (applicationName, applicationTitle, screenContent, currentText, precedingText, followingText, aiCompletion, similarityScore, timestamp) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)"
+        print("historyManager - TypedPhraseHistoryManager.add | applicationName: \(applicationName) applicationTitle: \(applicationTitle ?? "nil") screenContent: \(screenContent.prefix(20)) currentText: \(currentText.prefix(20)) precedingInputText: \(precedingInputText.prefix(20)) followingInputText: \(followingInputText.prefix(20)) preceedingWindowText: \(preceedingWindowText.prefix(20)) followingWindowText: \(followingWindowText.prefix(20)) changeText: \(changeText?.prefix(20) ?? "nil") changeType: \(changeType ?? "nil") timestamp: \(timestamp)")
+        let sql = "INSERT INTO typed_phrase_history (applicationName, applicationTitle, screenContent, currentText, precedingInputText, followingInputText, preceedingWindowText, followingWindowText, changeText, changeType, timestamp) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
         manager.queue.async {
-            _ = self.manager.execute(sql, args: [applicationName, applicationTitle, screenContent, currentText, precedingText, followingText, aiCompletion, similarityScore, timestamp.timeIntervalSince1970])
+            _ = self.manager.execute(sql, args: [applicationName, applicationTitle, screenContent, currentText, precedingInputText, followingInputText, preceedingWindowText, followingWindowText, changeText, changeType, timestamp.timeIntervalSince1970])
         }
     }
 
     func fetchAll() -> [TypedInputEntry] {
-        let sql = "SELECT * FROM typed_input_history ORDER BY timestamp DESC"
+        let sql = "SELECT * FROM typed_phrase_history ORDER BY timestamp DESC"
         var result: [TypedInputEntry] = []
         manager.queue.sync {
             let rows = manager.query(sql)
@@ -340,11 +384,62 @@ final class TypedInputHistoryManager {
                     let applicationTitle = row["applicationTitle"] as? String
                     let screenContent = row["screenContent"] as? String ?? ""
                     let currentText = row["currentText"] as? String ?? ""
-                    let precedingText = row["precedingText"] as? String ?? ""
-                    let followingText = row["followingText"] as? String ?? ""
-                    let aiCompletion = row["aiCompletion"] as? String
-                    let similarityScore = row["similarityScore"] as? Double
-                    result.append(TypedInputEntry(id: id, applicationName: applicationName, applicationTitle: applicationTitle, screenContent: screenContent, currentText: currentText, precedingText: precedingText, followingText: followingText, aiCompletion: aiCompletion, similarityScore: similarityScore, timestamp: Date(timeIntervalSince1970: ts)))
+                    let precedingInputText = row["precedingInputText"] as? String ?? ""
+                    let followingInputText = row["followingInputText"] as? String ?? ""
+                    let preceedingWindowText = row["preceedingWindowText"] as? String ?? ""
+                    let followingWindowText = row["followingWindowText"] as? String ?? ""
+                    let changeText = row["changeText"] as? String
+                    let changeType = row["changeType"] as? String
+                    result.append(TypedInputEntry(id: id, applicationName: applicationName, applicationTitle: applicationTitle, screenContent: screenContent, currentText: currentText, precedingInputText: precedingInputText, followingInputText: followingInputText, preceedingWindowText: preceedingWindowText, followingWindowText: followingWindowText, changeText: changeText, changeType: changeType, timestamp: Date(timeIntervalSince1970: ts)))
+                }
+            }
+        }
+        return result
+    }
+}
+
+final class TypedWordHistoryManager {
+    private unowned let manager: TypeaheadHistoryManager
+    init(manager: TypeaheadHistoryManager) { self.manager = manager }
+
+    func add(applicationName: String,
+             applicationTitle: String?,
+             screenContent: String,
+             currentText: String,
+             precedingInputText:String,
+             followingInputText: String,
+             preceedingWindowText: String,
+             followingWindowText: String,
+             changeText: String?,
+             changeType: String?,
+             timestamp: Date = Date()) {
+        guard Defaults[.collectTypeaheadTestCases] else { return }
+        print("historyManager - TypedWordHistoryManager.add | applicationName: \(applicationName) applicationTitle: \(applicationTitle ?? "nil") screenContent: \(screenContent.prefix(20)) currentText: \(currentText.prefix(20)) precedingInputText: \(precedingInputText.prefix(20)) followingInputText: \(followingInputText.prefix(20)) preceedingWindowText: \(preceedingWindowText.prefix(20)) followingWindowText: \(followingWindowText.prefix(20)) changeText: \(changeText?.prefix(20) ?? "nil") changeType: \(changeType ?? "nil") timestamp: \(timestamp)")
+        let sql = "INSERT INTO typed_word_history (applicationName, applicationTitle, screenContent, currentText, precedingInputText, followingInputText, preceedingWindowText, followingWindowText, changeText, changeType, timestamp) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+        manager.queue.async {
+            _ = self.manager.execute(sql, args: [applicationName, applicationTitle, screenContent, currentText, precedingInputText, followingInputText, preceedingWindowText, followingWindowText, changeText, changeType, timestamp.timeIntervalSince1970])
+        }
+    }
+
+    func fetchAll() -> [TypedInputEntry] {
+        let sql = "SELECT * FROM typed_word_history ORDER BY timestamp DESC"
+        var result: [TypedInputEntry] = []
+        manager.queue.sync {
+            let rows = manager.query(sql)
+            for row in rows {
+                if let id = row["id"] as? Int64,
+                   let applicationName = row["applicationName"] as? String,
+                   let ts = row["timestamp"] as? Double {
+                    let applicationTitle = row["applicationTitle"] as? String
+                    let screenContent = row["screenContent"] as? String ?? ""
+                    let currentText = row["currentText"] as? String ?? ""
+                    let precedingInputText = row["precedingInputText"] as? String ?? ""
+                    let followingInputText = row["followingInputText"] as? String ?? ""
+                    let preceedingWindowText = row["preceedingWindowText"] as? String ?? ""
+                    let followingWindowText = row["followingWindowText"] as? String ?? ""
+                    let changeText = row["changeText"] as? String
+                    let changeType = row["changeType"] as? String
+                    result.append(TypedInputEntry(id: id, applicationName: applicationName, applicationTitle: applicationTitle, screenContent: screenContent, currentText: currentText, precedingInputText: precedingInputText, followingInputText: followingInputText, preceedingWindowText: preceedingWindowText, followingWindowText: followingWindowText, changeText: changeText, changeType: changeType, timestamp: Date(timeIntervalSince1970: ts)))
                 }
             }
         }

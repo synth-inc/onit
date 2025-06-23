@@ -180,6 +180,10 @@ extension AXUIElement {
         return rect
     }
 
+    public func selectedTextRange() -> [CFRange]? {
+        return self.attribute(forAttribute: kAXSelectedTextRangeAttribute as CFString) as? [CFRange]
+    }
+    
     func setPosition(_ point: CGPoint) -> Bool {
         var point = point
         if let axValue = AXValueCreate(.cgPoint, &point) {

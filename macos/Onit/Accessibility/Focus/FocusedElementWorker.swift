@@ -25,22 +25,27 @@ final class FocusedElementWorker  {
     
     // MARK: - Public Functions
     
-    func scanElementHierarchyForFocusedElement(window: AXUIElement) -> AXUIElement? {
+    func scanElementHierarchyForAllFocusedElements(window: AXUIElement) -> [AXUIElement] {
+        var focusedElements: [AXUIElement] = []
+        
         var documentValue: AnyObject?
         let error = AXUIElementCopyAttributeValue(window, kAXDocumentAttribute as CFString, &documentValue)
         
         if error == .success, let document = documentValue {
-            if let focusedElement = focusedElementFound(for: document as! AXUIElement) {
-                return focusedElement
+            if let focusedElement = checkIfElementFocused(document as! AXUIElement) {
+                focusedElements.append(focusedElement)
             }
         }
 
-        return focusedElementFound(in: window, element: window)
+        let windowFocusedElements = findAllFocusedElements(in: window, element: window)
+        focusedElements.append(contentsOf: windowFocusedElements)
+        
+        return focusedElements
     }
     
     // MARK: - Private Functions
     
-    private func focusedElementFound(for element: AXUIElement) -> AXUIElement? {
+    private func checkIfElementFocused(_ element: AXUIElement) -> AXUIElement? {
         if let isFocused = element.focused(),
            isFocused {
             return element
@@ -49,19 +54,24 @@ final class FocusedElementWorker  {
         return nil
     }
     
-    private func focusedElementFound(in focusedWindow: AXUIElement, element: AXUIElement, depth: Int = 0) -> AXUIElement? {
-        guard depth < maxSearchDepth else { return nil }
+    private func findAllFocusedElements(in focusedWindow: AXUIElement, element: AXUIElement, depth: Int = 0) -> [AXUIElement] {
+        guard depth < maxSearchDepth else { return [] }
         
+        var focusedElements: [AXUIElement] = []
+        
+        // Check if current element is focused
+        if let focusedElement = checkIfElementFocused(element) {
+            focusedElements.append(focusedElement)
+        }
+        
+        // Continue searching children regardless of whether current element is focused
         if let children = element.visibleChildren() ?? element.children() {
             for child in children {
-                if let focusedElement = focusedElementFound(for: child) {
-                    return focusedElement
-                }
-                if let focusedElement = focusedElementFound(in: focusedWindow, element: child, depth: depth + 1) {
-                    return focusedElement
-                }
+                let childFocusedElements = findAllFocusedElements(in: focusedWindow, element: child, depth: depth + 1)
+                focusedElements.append(contentsOf: childFocusedElements)
             }
         }
-        return nil
+        
+        return focusedElements
     }
 }

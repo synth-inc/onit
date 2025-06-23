@@ -131,10 +131,13 @@ class AccessibilityNotificationsManager: ObservableObject {
         if let mainWindow = processID.firstMainWindow {
             handleWindowBounds(for: mainWindow, elementPid: processID)
             // When we activate a new application, we dont get a focusedUIElementChanged notification, because it hasn't "changed"
-            // Instead, we need to scan the hierarchy for the focused element and then handle it, if found!
-            if let focusedElement = FocusedElementWorker.shared.scanElementHierarchyForFocusedElement(window: mainWindow) {
+            // Instead, we need to scan the hierarchy for the focused elements and then handle it, if found!
+            // Note - focusedElements is plural here, because some applications will have many.
+            // On my (Tim's) computer Notes gives 21 focusedElements. 20 of the are "AXCell" and one is the "AXTextArea" that we care about.
+            let focusedElements = FocusedElementWorker.shared.scanElementHierarchyForAllFocusedElements(window: mainWindow)
+            for focusedElement in focusedElements {
                 self.handleFocusedUIElementChanged(for: focusedElement, elementPid: processID)
-            }
+            }   
         }
     }
     
@@ -293,18 +296,21 @@ class AccessibilityNotificationsManager: ObservableObject {
             return
         }
         
+        let value = element.value()
+        let window = windowsManager.trackedWindows(for: element).first
+        notifyDelegates { $0.accessibilityManager(self, didChangeValue: element, newValue: value, window: window) }
+        
+        // print("typeaheadDebug - value changed \(element.value() ?? "") \(role)")
         valueDebounceWorkItem?.cancel()
-
         let workItem = DispatchWorkItem { [weak self] in
             self?.processValueChanged(for: element)
         }
-
         valueDebounceWorkItem = workItem
-
         DispatchQueue.main.asyncAfter(deadline: .now() + Config.debounceInterval, execute: workItem)
     }
 
     private func handleFocusedUIElementChanged(for element: AXUIElement, elementPid: pid_t) {
+        print("handleFocusedUIElementChanged \(element.role() ?? "") \(element.value() ?? "")")
         guard let role = element.role(), [kAXTextFieldRole, kAXTextAreaRole].contains(role) else {
             return
         }
@@ -530,12 +536,8 @@ class AccessibilityNotificationsManager: ObservableObject {
         dispatchPrecondition(condition: .onQueue(.main))
 
         let value = element.value()
-        
         screenResult.userInteraction.input = value
         showDebug()
-        
-        let window = windowsManager.trackedWindows(for: element).first
-        notifyDelegates { $0.accessibilityManager(self, didChangeValue: element, newValue: value, window: window) }
     }
 
     // MARK: Text Selection
