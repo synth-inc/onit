@@ -17,6 +17,8 @@ final class TypeaheadLearningService: @unchecked Sendable {
     
     private var typingChangeDelegate: TypingChangeDelegate?
     private var cancellables = Set<AnyCancellable>()
+    private var activeTypingElementHash: UInt = 0
+
     @Default(.collectTypeaheadTestCases) var collectTypeaheadTestCases
     
     private init() {
@@ -51,8 +53,8 @@ final class TypeaheadLearningService: @unchecked Sendable {
         print("TypeaheadLearningService: Starting typeahead learning")
         
         typingChangeDelegate = TypingChangeDelegate(
-            onValueChanged: { [weak self] element, newValue in
-                self?.handleValueChanged(element: element, newValue: newValue)
+            onPhraseEntered: { [weak self] element, newValue, textChange in
+                self?.handlePhraseEntered(element: element, newValue: newValue, textChange: textChange)
             },
             onTextFocused: { [weak self] element in
                 self?.handleTextFocused(element: element)
@@ -62,32 +64,45 @@ final class TypeaheadLearningService: @unchecked Sendable {
         AccessibilityNotificationsManager.shared.addDelegate(typingChangeDelegate!)
     }
     
-    private func handleValueChanged(element: AXUIElement?, newValue: String?) {
+    private func handlePhraseEntered(element: AXUIElement?, newValue: String?, textChange: TextChange?) {
         guard let element = element else { return }
         
-        print("TypeaheadLearningService - Value changed: \(newValue ?? "nil")")
+        let changeText = textChange?.addedText ?? ""
+        let changeTypeString = textChange?.type.rawValue ?? "unknown"
+        //print("typeaheadPhraseDebug - Phrase Cange: \(changeTypeString) - \(textChange?.trigger ?? "") - added: \(textChange?.addedText ?? "") deleted: \(textChange?.deletedText ?? ""))")
+        
+        // Extract prefix and suffix text from ranges
+        var prefixText = ""
+        var suffixText = ""
+        
+        if let textChange = textChange, let newValue = newValue {
+            prefixText = textChange.textPrefixRange != nil ? (newValue as NSString).substring(with: textChange.textPrefixRange!) : ""
+            suffixText = textChange.textSuffixRange != nil ? (newValue as NSString).substring(with: textChange.textSuffixRange!) : ""
+            print("typeaheadPhraseDebugPrefix - \(changeTypeString): prefix='\(prefixText)', suffix='\(suffixText)'")
+        }
         
         // TODO: Process the value change for typeahead learning
         // This is where you would:
-        // 1. Extract the typing context (preceding text, current text, following text)
         // 2. Store this information for learning
-        // 3. Generate typeahead suggestions based on learned patterns
         
         Task {
-            let (precedingText, followingText) = await AccessibilityParsingManager.shared.splitTextAroundElement(element)
+            let (precedingWindowText, followingWindowText) = await AccessibilityParsingManager.shared.splitTextAroundElement(element)
+            
             
             // Store this typing pattern in the history manager
-            if let app = element.appName(),
-               let windowTitle = element.title() {
-                TypeaheadHistoryManager.shared.typedInput.add(
+            if let app = element.appName() {
+                let windowTitle = element.title() ?? ""
+                TypeaheadHistoryManager.shared.typedPhrase.add(
                     applicationName: app,
                     applicationTitle: windowTitle,
                     screenContent: "", // Could add more context here
                     currentText: newValue ?? "",
-                    precedingText: precedingText ?? "",
-                    followingText: followingText ?? "",
-                    aiCompletion: nil,
-                    similarityScore: nil
+                    precedingInputText: prefixText,
+                    followingInputText: suffixText,
+                    preceedingWindowText: precedingWindowText,
+                    followingWindowText: followingWindowText,
+                    changeText: changeText,
+                    changeType: changeTypeString
                 )
             }
         }
@@ -98,10 +113,14 @@ final class TypeaheadLearningService: @unchecked Sendable {
         
         print("TypeaheadLearningService - Text element focused")
         
-        // TODO: Process the text focus event for typeahead learning
-        // This is where you would:
-        // 1. Initialize context for the focused text element
-        // 2. Prepare for capturing typing patterns
+        activeTypingElementHash = CFHash(element)
+        
+        // We should get the AXScrape if it doesn't already exist.
+//        Task {
+//            AccessibilityParsingManager.shared.requestParsing(for: windowElement, requester: self, completion: { _ in
+//                // No-op - just establishing cache
+//            })
+//        }
     }
     
     func stopTypeaheadLearning() {

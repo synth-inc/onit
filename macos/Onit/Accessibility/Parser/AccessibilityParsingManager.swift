@@ -22,6 +22,13 @@ final class AccessibilityParsingManager {
     
     // MARK: - Types
     
+    /// Position of an element relative to the target element
+    enum ElementPosition {
+        case beforeTarget
+        case afterTarget
+        case isTarget
+    }
+    
     /// Completion handler for parsing results without bounding boxes
     typealias SimpleCompletionHandler = @MainActor ([String: String]) -> Void
     
@@ -383,7 +390,7 @@ final class AccessibilityParsingManager {
         }
         
         // Find the target element's value or closest element with value
-        let (elementValue, isBeforeTarget) = await findElementValueForSplitting(targetElement: targetElement, windowElement: windowElement)
+        let (elementValue, elementPosition) = await findElementValueForSplitting(targetElement: targetElement, windowElement: windowElement)
         
         guard !elementValue.isEmpty else {
             print("AccessibilityParsingManager: No element value found for splitting")
@@ -391,7 +398,7 @@ final class AccessibilityParsingManager {
         }
         
         // Split the text around the element value
-        return splitTextAroundValue(fullText: fullText, elementValue: elementValue, isElementBeforeTarget: isBeforeTarget)
+        return splitTextAroundValue(fullText: fullText, elementValue: elementValue, elementPosition: elementPosition)
     }
     
     /// Find the window element by traversing up the parent hierarchy
@@ -426,11 +433,11 @@ final class AccessibilityParsingManager {
     }
     
     /// Find the value to use for text splitting - either from the target element or closest element with value
-    private func findElementValueForSplitting(targetElement: AXUIElement, windowElement: AXUIElement) async -> (value: String, isBeforeTarget: Bool) {
+    private func findElementValueForSplitting(targetElement: AXUIElement, windowElement: AXUIElement) async -> (value: String, position: ElementPosition) {
         // First try to get value from the target element itself
         if let targetValue = targetElement.value(), !targetValue.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
             print("AccessibilityParsingManager: Using target element's own value for splitting")
-            return (targetValue, false) // Element's own value, so neither before nor after
+            return (targetValue, .isTarget) // Element is the target itself
         }
         
         // If target element has no value, traverse the accessibility hierarchy to find closest element with value
@@ -438,7 +445,7 @@ final class AccessibilityParsingManager {
     }
     
     /// Traverse accessibility hierarchy to find the closest element with a value
-    private func traverseForClosestValue(from targetElement: AXUIElement, in windowElement: AXUIElement) async -> (value: String, isBeforeTarget: Bool) {
+    private func traverseForClosestValue(from targetElement: AXUIElement, in windowElement: AXUIElement) async -> (value: String, position: ElementPosition) {
         // Strategy: Expand outward from target element
         // 1. Check siblings before and after target
         // 2. Move up to parent and check its siblings
@@ -448,7 +455,7 @@ final class AccessibilityParsingManager {
     }
     
     /// Expand search outward from the target element level by level
-    private func expandSearchFromElement(_ element: AXUIElement) async -> (value: String, isBeforeTarget: Bool) {
+    private func expandSearchFromElement(_ element: AXUIElement) async -> (value: String, position: ElementPosition) {
         var currentElement = element
         
         // Track the path we took to get here, so we know which direction elements are in
@@ -476,11 +483,11 @@ final class AccessibilityParsingManager {
             currentElement = parent
         }
         
-        return ("", false)
+        return ("", .afterTarget)
     }
     
     /// Check siblings of an element for values, determining their position relative to target
-    private func checkSiblingsForValue(of element: AXUIElement, pathFromTarget: [AXUIElement]) async -> (value: String, isBeforeTarget: Bool)? {
+    private func checkSiblingsForValue(of element: AXUIElement, pathFromTarget: [AXUIElement]) async -> (value: String, position: ElementPosition)? {
         guard let parent = element.parent(),
               let siblings = parent.children() else {
             return nil
@@ -495,7 +502,7 @@ final class AccessibilityParsingManager {
         for i in stride(from: elementIndex - 1, through: 0, by: -1) {
             if let value = await searchElementAndChildrenForValue(siblings[i]) {
                 print("AccessibilityParsingManager: Found preceding sibling with value")
-                return (value, true) // Element is before target
+                return (value, .beforeTarget) // Element is before target
             }
         }
         
@@ -503,7 +510,7 @@ final class AccessibilityParsingManager {
         for i in (elementIndex + 1)..<siblings.count {
             if let value = await searchElementAndChildrenForValue(siblings[i]) {
                 print("AccessibilityParsingManager: Found following sibling with value")
-                return (value, false) // Element is after target
+                return (value, .afterTarget) // Element is after target
             }
         }
         
@@ -560,7 +567,7 @@ final class AccessibilityParsingManager {
     }
     
     /// Split the full text around the element value
-    private func splitTextAroundValue(fullText: String, elementValue: String, isElementBeforeTarget: Bool) -> (precedingText: String, followingText: String) {
+    private func splitTextAroundValue(fullText: String, elementValue: String, elementPosition: ElementPosition) -> (precedingText: String, followingText: String) {
         // Find the element value in the full text
         guard let range = fullText.range(of: elementValue) else {
             print("AccessibilityParsingManager: Element value '\(elementValue)' not found in full text")
@@ -570,14 +577,18 @@ final class AccessibilityParsingManager {
         let precedingText = String(fullText[..<range.lowerBound])
         let followingText = String(fullText[range.upperBound...])
         
-        if isElementBeforeTarget {
+        switch elementPosition {
+        case .beforeTarget:
             // Element value should be included with preceding text
             let adjustedPrecedingText = precedingText + elementValue
             return (adjustedPrecedingText, followingText)
-        } else {
+        case .afterTarget:
             // Element value should be included with following text
             let adjustedFollowingText = elementValue + followingText
             return (precedingText, adjustedFollowingText)
+        case .isTarget:
+            // Element is the target itself - split text around it, excluding the element from both sides
+            return (precedingText, followingText)
         }
     }
     
