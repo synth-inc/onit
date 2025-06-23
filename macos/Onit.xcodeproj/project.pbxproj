@@ -375,7 +375,7 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = ./Onit/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = onit;
+				INFOPLIST_KEY_CFBundleDisplayName = "onit - history";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -411,7 +411,7 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = ./Onit/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = onit;
+				INFOPLIST_KEY_CFBundleDisplayName = "onit - history";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",

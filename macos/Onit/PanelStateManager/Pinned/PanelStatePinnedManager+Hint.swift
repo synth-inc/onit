@@ -25,23 +25,24 @@ extension PanelStatePinnedManager {
         }
     }
 
-    func showTetherWindow(activeScreen: NSScreen) {
-         let tetherView = ExternalTetheredButton(
-
-            onClick: { [weak self] in
-                self?.tetherHintClicked(screen: activeScreen)
-            },
-            onDrag: { [weak self] translation in
-                self?.tetheredWindowMoved(screen: activeScreen, y: translation)
-            }
-        ).environment(\.windowState, state)
-
-        let buttonView = OnitHostingView(rootView: tetherView)
-        tetherHintDetails.tetherWindow.contentView = buttonView
-        tetherButtonPanelState = state
-
-        updateTetherWindowPosition(for: activeScreen, lastYComputed: tetherHintDetails.lastYComputed)
-        tetherHintDetails.tetherWindow.orderFrontRegardless()
+    private func showTetherWindow(activeScreen: NSScreen) {
+        // TIM TODO: This is for HISTORY building mode DO NOT COMMIT
+//         let tetherView = ExternalTetheredButton(
+//            onClick: { [weak self] in
+//                self?.tetherHintClicked(screen: activeScreen)
+//            },
+//            onDrag: { [weak self] translation in
+//                self?.tetheredWindowMoved(screen: activeScreen, y: translation)
+//            }
+//         ).environment(\.windowState, state)
+//
+//        let buttonView = NSHostingView(rootView: tetherView)
+//        tetherHintDetails.tetherWindow.contentView = buttonView
+//        tetherHintDetails.lastYComputed = nil
+//        tetherButtonPanelState = state
+//
+//        updateTetherWindowPosition(for: activeScreen, lastYComputed: tetherHintDetails.lastYComputed)
+//        tetherHintDetails.tetherWindow.orderFrontRegardless()
     }
     
     private func tetherHintClicked(screen: NSScreen) {

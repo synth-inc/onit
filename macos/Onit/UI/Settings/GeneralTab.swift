@@ -24,6 +24,7 @@ struct GeneralTab: View {
     @State var currentTime: Date = Date()
     @State var timerUpdateTask: Task<Void, Never>? = nil
     
+    @ObservedObject private var debugManager = DebugManager.shared
     @ObservedObject private var accessibilityPermissionManager = AccessibilityPermissionManager.shared
     @ObservedObject private var featureFlagsManager = FeatureFlagManager.shared
     
@@ -382,6 +383,15 @@ struct GeneralTab: View {
                         }
                         .controlSize(.small)
                     }
+                }
+                
+                HStack {
+                    Text("Collect local typeahead test cases")
+                        .font(.system(size: 13))
+                    Spacer()
+                    Toggle("", isOn: $debugManager.collectTypeaheadTestCases)
+                        .toggleStyle(.switch)
+                        .controlSize(.small)
                 }
                 
                 //                VStack(alignment: .leading, spacing: 8) {
