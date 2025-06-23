@@ -117,8 +117,6 @@ extension OnitPanelState {
             return
         }
         
-        windowContextTasks[trackedWindow.hash]?.cancel()
-        
         let windowApp = WindowHelpers.getWindowApp(pid: trackedWindow.pid)
         let appBundleUrl = windowApp?.bundleURL
         
