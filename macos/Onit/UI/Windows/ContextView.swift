@@ -130,9 +130,11 @@ struct ContextView: View {
     private func retryContextExtraction() {
         guard case .auto(let autoContext) = context else { return }
 
-        let trackedWindow = AccessibilityNotificationsManager.shared.windowsManager.findTrackedWindow(trackedWindowHash: autoContext.appHash)
-
         let state = PanelStateCoordinator.shared.getState(for: autoContext.appHash)
+
+        state?.removeContext(context: context)
+
+        let trackedWindow = AccessibilityNotificationsManager.shared.windowsManager.findTrackedWindow(trackedWindowHash: autoContext.appHash)
 
         AccessibilityNotificationsManager.shared.retrieveWindowContent(
             state: state,
