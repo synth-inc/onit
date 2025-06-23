@@ -36,6 +36,7 @@ struct ContentEntry {
     let applicationName: String
     let applicationTitle: String
     let method: String
+    let elapsedTime: Double?
     let timestamp: Date
 }
 
@@ -122,6 +123,7 @@ final class TypeaheadHistoryManager: ObservableObject, @unchecked Sendable {
             app TEXT NOT NULL,
             window TEXT,
             method TEXT,
+            elapsedTime REAL,
             timestamp REAL NOT NULL
         );
         """
@@ -169,6 +171,7 @@ final class TypeaheadHistoryManager: ObservableObject, @unchecked Sendable {
             _ = execute("ALTER TABLE typed_phrase_history ADD COLUMN changeType TEXT")
             _ = execute("ALTER TABLE typed_word_history ADD COLUMN changeText TEXT")
             _ = execute("ALTER TABLE typed_word_history ADD COLUMN changeType TEXT")
+            _ = execute("ALTER TABLE content_history ADD COLUMN elapsedTime REAL")
             
             // Migrate old typed_input_history table to typed_phrase_history if it exists
             _ = execute("INSERT OR IGNORE INTO typed_phrase_history SELECT * FROM typed_input_history WHERE EXISTS (SELECT name FROM sqlite_master WHERE type='table' AND name='typed_input_history')")
@@ -320,12 +323,12 @@ final class ContentHistoryManager {
     private unowned let manager: TypeaheadHistoryManager
     init(manager: TypeaheadHistoryManager) { self.manager = manager }
 
-    func add(content: String, applicationName: String, applicationTitle: String, method: String, timestamp: Date = Date()) {
+    func add(content: String, applicationName: String, applicationTitle: String, method: String, elapsedTime: Double? = nil, timestamp: Date = Date()) {
         guard Defaults[.collectTypeaheadTestCases] else { return }
-        print("historyManager - ContentHistoryManager.add | content: \(content.prefix(40)) applicationName: \(applicationName) applicationTitle: \(applicationTitle) method: \(method) timestamp: \(timestamp)")
-        let sql = "INSERT INTO content_history (content, app, window, method, timestamp) VALUES (?, ?, ?, ?, ?)"
+        print("historyManager - ContentHistoryManager.add | content: \(content.prefix(40)) applicationName: \(applicationName) applicationTitle: \(applicationTitle) method: \(method) elapsedTime: \(elapsedTime ?? -1) timestamp: \(timestamp)")
+        let sql = "INSERT INTO content_history (content, app, window, method, elapsedTime, timestamp) VALUES (?, ?, ?, ?, ?, ?)"
         manager.queue.async {
-            _ = self.manager.execute(sql, args: [content, applicationName, applicationTitle, method, timestamp.timeIntervalSince1970])
+            _ = self.manager.execute(sql, args: [content, applicationName, applicationTitle, method, elapsedTime, timestamp.timeIntervalSince1970])
         }
     }
 
@@ -341,7 +344,8 @@ final class ContentHistoryManager {
                    let ts = row["timestamp"] as? Double {
                     let window = row["window"] as? String ?? ""
                     let method = row["method"] as? String ?? ""
-                    result.append(ContentEntry(id: id, content: content, applicationName: app, applicationTitle: window, method: method, timestamp: Date(timeIntervalSince1970: ts)))
+                    let elapsedTime = row["elapsedTime"] as? Double
+                    result.append(ContentEntry(id: id, content: content, applicationName: app, applicationTitle: window, method: method, elapsedTime: elapsedTime, timestamp: Date(timeIntervalSince1970: ts)))
                 }
             }
         }

@@ -7,6 +7,7 @@
 
 import Foundation
 import AppKit
+import Defaults
 
 // MARK: - Typing Change Info
 
@@ -68,6 +69,12 @@ final class TypingChangeDelegate: AccessibilityNotificationsDelegate {
     
     private var valueDebounceWorkItem: DispatchWorkItem?
     
+    // MARK: - Rate Limiting for Excessive Notifications
+    
+    private var elementNotificationCounts: [UInt: (count: Int, firstNotificationTime: Date)] = [:]
+    private var elementCharacterCounts: [UInt: (characters: Int, firstNotificationTime: Date)] = [:]
+    private var ignoredElements: Set<UInt> = []
+    
     private let onPhraseEntered: (AXUIElement?, String?, TextChange?) -> Void
     private let onTextFocused: (AXUIElement?) -> Void
     
@@ -91,6 +98,60 @@ final class TypingChangeDelegate: AccessibilityNotificationsDelegate {
         }
     }
     
+    // MARK: - Rate Limiting Logic
+    
+    private func shouldIgnoreElement(_ elementId: UInt, addedText: String?) -> Bool {
+        // If already ignored, continue ignoring
+        if ignoredElements.contains(elementId) {
+            return true
+        }
+
+        let now = Date()
+        // Check if this might be a paste operation
+        if let addedText = addedText, !addedText.isEmpty {
+            let pasteboard = NSPasteboard.general
+            if let pasteboardString = pasteboard.string(forType: .string),
+               pasteboardString.contains(addedText) {
+                // This appears to be a paste operation, don't ignore
+                print("typeaheadDebug - paste operation, not ignoring")
+                return false
+            }
+        }
+        
+        // Get or create tracking info for this element
+        if let existing = elementCharacterCounts[elementId] {
+            let timeSinceFirst = now.timeIntervalSince(existing.firstNotificationTime)
+            let characterCount = existing.characters + (addedText?.count ?? 0)
+            
+            // Check if we've received too many characters in a short time period
+            if timeSinceFirst <= TypingChangeDelegate.Config.rateLimitWindow &&
+               characterCount >= TypingChangeDelegate.Config.maxCharactersPerWindow {
+                
+                print("typeaheadDebug - Element \(elementId) generating excessive characters (\(characterCount) in \(timeSinceFirst)s), ignoring future notifications")
+                ignoredElements.insert(elementId)
+                elementCharacterCounts.removeValue(forKey: elementId)
+                return true
+            }
+            
+            // Update character count
+            elementCharacterCounts[elementId] = (characters: characterCount, firstNotificationTime: existing.firstNotificationTime)
+        } else {
+            // First notification from this element
+            elementCharacterCounts[elementId] = (characters: addedText?.count ?? 0, firstNotificationTime: now)
+        }
+        
+        return false
+    }
+    
+    private func cleanupOldElementTracking() {
+        let now = Date()
+        let cutoffTime = now.addingTimeInterval(-TypingChangeDelegate.Config.rateLimitWindow)
+        
+        elementCharacterCounts = elementCharacterCounts.filter { _, value in
+            value.firstNotificationTime > cutoffTime
+        }
+    }
+    
     // LLM - NOTE
     // If we read the elements value() field there's a chance it's changed since the initial read.
     // To make sure we get all of the updates, we need to ONLY process the newValue that is passed through the function.
@@ -100,11 +161,17 @@ final class TypingChangeDelegate: AccessibilityNotificationsDelegate {
         newValue: String?,
         window: TrackedWindow?
     ) {
-        // This is an edge case where value changed notifications start coming from a textfield that we haven't
-        // received a 'didFocusTextElement'
         let elementId = CFHash(element)
+        if ignoredElements.contains(elementId) {
+            print("typeaheadDebug - element \(element.description()) is ignored, skipping")
+            return
+        }
+        
+        // This is an edge case where value changed notifications start coming from a textfield that we haven't
+        // received a 'didFocusTextElement'        
         if let currentId = focusedTextFieldId, currentId != elementId, initialValue != nil {
-            print("typeaheadDebug - element changed, finishing current phrase")
+//            print("typeaheadDebug - ignoring from non-focused element \(element.description())")
+//            return
             finishPhrase(element: focusedTextElement, endValue: mostRecentValue, trigger: "elementChange")
             initialValue = nil
             initialInsertionIndex = nil
@@ -125,6 +192,12 @@ final class TypingChangeDelegate: AccessibilityNotificationsDelegate {
         // Fast difference calculation for every character change
         let textChange = calculateTextChangeFast(from: mostRecentValue, to: newValue)
         if let change = textChange {
+
+            // TIM TODO: resume this project and ignore apps that are spamming.
+//            if shouldIgnoreElement(elementId, addedText: change.addedText) {
+//                return
+//            }
+            
             print("typeaheadDebug - Change: \(change.type.rawValue) at position \(change.insertionIndex ?? -1), textAdded: \(change.addedText ?? "") textRemoved: \(change.deletedText ?? "")")
             if initialInsertionIndex == nil {
                 initialInsertionIndex = change.insertionIndex
@@ -278,11 +351,46 @@ final class TypingChangeDelegate: AccessibilityNotificationsDelegate {
 
     // MARK: - AccessibilityNotificationsDelegate - Required Methods (Empty Implementations)
     
-    func accessibilityManager(_ manager: AccessibilityNotificationsManager, didActivateWindow window: TrackedWindow) {
+    private func addToContentHistoryIfNeeded(_ window: TrackedWindow) {
+        if Defaults[.collectTypeaheadTestCases] {
+            // We should get the AXScrape if it doesn't already exist.
+            Task {
+                AccessibilityParsingManager.shared.requestParsing(for: window.element, requester: self, completion: { result in
+                    print("typeaheadDebugParsing - loaded context from window named: \(window.title)")
+                    
+                    // Extract data from parsing result
+                    let screenContent = result["screen"] ?? ""
+                    let applicationName = result["applicationName"] ?? window.pid.appName ?? "Unknown"
+                    let applicationTitle = result["applicationTitle"] ?? window.title
+                    let elapsedTime = Double(result["elapsedTime"] ?? "0") ?? 0.0
+                    
+                    // Store in content history
+                    TypeaheadHistoryManager.shared.content.add(
+                        content: screenContent,
+                        applicationName: applicationName,
+                        applicationTitle: applicationTitle,
+                        method: "accessibility",
+                        elapsedTime: elapsedTime
+                    )
+                })
+            }
+        }
         focusedTextFieldId = nil
         focusedTextElement = nil
     }
-    func accessibilityManager(_ manager: AccessibilityNotificationsManager, didActivateIgnoredWindow window: TrackedWindow?) {}
+    
+    func accessibilityManager(_ manager: AccessibilityNotificationsManager, didActivateWindow window: TrackedWindow) {
+        addToContentHistoryIfNeeded(window)
+    }
+    
+    func accessibilityManager(_ manager: AccessibilityNotificationsManager, didActivateIgnoredWindow window: TrackedWindow) {
+        addToContentHistoryIfNeeded(window)
+    }
+    
+    func accessibilityManager(_ manager: AccessibilityNotificationsManager, didActivateOnit window: TrackedWindow) {
+        addToContentHistoryIfNeeded(window)
+    }
+    
     func accessibilityManager(_ manager: AccessibilityNotificationsManager, didMinimizeWindow window: TrackedWindow) {}
     func accessibilityManager(_ manager: AccessibilityNotificationsManager, didDeminimizeWindow window: TrackedWindow) {}
     func accessibilityManager(_ manager: AccessibilityNotificationsManager, didDestroyWindow window: TrackedWindow) {}
@@ -294,5 +402,7 @@ final class TypingChangeDelegate: AccessibilityNotificationsDelegate {
 extension TypingChangeDelegate {
     struct Config {
         static let typingDebounceInterval: TimeInterval = 3.0 // 1s
+        static let rateLimitWindow: TimeInterval = 1.0 // 1 second window
+        static let maxCharactersPerWindow: Int = 20 // Maximum 20 characters per second
     }
 }

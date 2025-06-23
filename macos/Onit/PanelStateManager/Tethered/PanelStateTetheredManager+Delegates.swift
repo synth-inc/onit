@@ -17,11 +17,13 @@ extension PanelStateTetheredManager: AccessibilityNotificationsDelegate {
         handlePanelStateChange(state: panelState, action: .activate)
     }
     
-    func accessibilityManager(_ manager: AccessibilityNotificationsManager, didActivateIgnoredWindow window: TrackedWindow?) {
+    func accessibilityManager(_ manager: AccessibilityNotificationsManager, didActivateIgnoredWindow window: TrackedWindow) {
         log.debug("activate ignored window")
         hideTetherWindow()
         updateLevelState(trackedWindow: window)
     }
+    
+    func accessibilityManager(_ manager: AccessibilityNotificationsManager, didActivateOnit window: TrackedWindow) {}
     
     func accessibilityManager(_ manager: AccessibilityNotificationsManager, didMinimizeWindow window: TrackedWindow) {
         log.debug("minimize window")

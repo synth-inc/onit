@@ -10,7 +10,8 @@ import Foundation
 
 @MainActor protocol AccessibilityObserversDelegate: AnyObject {
     func accessibilityObserversManager(didActivateApplication appName: String?, processID: pid_t)
-    func accessibilityObserversManager(didActivateIgnoredApplication appName: String?)
+    func accessibilityObserversManager(didActivateIgnoredApplication appName: String?, processID: pid_t)
+    func accessibilityObserversManager(didActivateOnit appName: String?, processID: pid_t)
     func accessibilityObserversManager(didReceiveNotification notification: String,
                                        element: AXUIElement,
                                        elementPid: pid_t,

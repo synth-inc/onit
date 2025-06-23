@@ -137,7 +137,7 @@ class AccessibilityNotificationsManager: ObservableObject {
             let focusedElements = FocusedElementWorker.shared.scanElementHierarchyForAllFocusedElements(window: mainWindow)
             for focusedElement in focusedElements {
                 self.handleFocusedUIElementChanged(for: focusedElement, elementPid: processID)
-            }   
+            }
         }
     }
     
@@ -187,8 +187,8 @@ class AccessibilityNotificationsManager: ObservableObject {
             self.handleTitleChanged(for: element, elementPid: elementPid)
         case kAXFocusedUIElementChangedNotification:
             self.handleFocusedUIElementChanged(for: element, elementPid: elementPid)
+
         // Additional notifications that indicate content/structure changes
-        
         case kAXCreatedNotification:
             // New UI element created - invalidate cache
             AccessibilityParsingManager.shared.invalidateCache(for: element, reason: "element created")
@@ -295,7 +295,7 @@ class AccessibilityNotificationsManager: ObservableObject {
         guard let role = element.role(), [kAXTextFieldRole, kAXTextAreaRole].contains(role) else {
             return
         }
-        
+        print("handleValueChanged - element with role \(role), description: \(element.description()), frame: \(element.frame())")
         let value = element.value()
         let window = windowsManager.trackedWindows(for: element).first
         notifyDelegates { $0.accessibilityManager(self, didChangeValue: element, newValue: value, window: window) }
@@ -617,9 +617,21 @@ extension AccessibilityNotificationsManager: AccessibilityObserversDelegate {
         handleAppActivation(appName: appName, processID: processID)
     }
     
-    func accessibilityObserversManager(didActivateIgnoredApplication appName: String?) {
-        notifyDelegates { delegate in
-            delegate.accessibilityManager(self, didActivateIgnoredWindow: nil)
+    func accessibilityObserversManager(didActivateOnit appName: String?, processID: pid_t) {
+        if let mainWindow = processID.firstMainWindow {
+            guard let trackedWindow = self.windowsManager.append(mainWindow, pid: processID) else { return }
+            notifyDelegates { delegate in
+                delegate.accessibilityManager(self, didActivateOnit: trackedWindow)
+            }
+        }
+    }
+    
+    func accessibilityObserversManager(didActivateIgnoredApplication appName: String?, processID: pid_t) {
+        if let mainWindow = processID.firstMainWindow {
+            guard let trackedWindow = self.windowsManager.append(mainWindow, pid: processID) else { return }
+            notifyDelegates { delegate in
+                delegate.accessibilityManager(self, didActivateIgnoredWindow: trackedWindow)
+            }
         }
     }
     

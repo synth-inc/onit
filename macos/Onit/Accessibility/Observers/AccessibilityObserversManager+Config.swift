@@ -51,7 +51,21 @@ extension AccessibilityObserversManager {
 //            kAXWindowDeminiaturizedNotification,
 //            kAXWindowMiniaturizedNotification
         ]
+        
+        // We want to collect typeahead tests from both Onit and ignore processes.
+        static let onitNotifications: [String] = [
+            kAXValueChangedNotification,
+            kAXFocusedUIElementChangedNotification,
+        ]
 
+        static let untrackedAppNotifications: [String] = [
+            // I wanted to collect typeahead test cases for xcode, but we still can't due to the console causing infinite loops.
+            // Some value change, which causes print statements in console, which creates more 'value changed' events, which cause more print statements, etc etc.
+            // This creates infinite loops. So we'll have to do the typeahead history without xcode.
+//            kAXValueChangedNotification,
+//            kAXFocusedUIElementChangedNotification,
+        ]
+        
         static let persistentNotifications: [String] = [
             kAXWindowDeminiaturizedNotification,
             kAXWindowMiniaturizedNotification,
