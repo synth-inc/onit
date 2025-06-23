@@ -46,9 +46,9 @@ class QuickEditManager: ObservableObject, CaretPositionDelegate {
     
     func show() {
         if let hintPosition = currentHintPosition {
-            let correctPosition = calculateWindowPosition(for: hintPosition)
+            let newPosition = CGPoint(x: hintPosition.x - 10, y: hintPosition.y)
             
-            windowController.show(at: correctPosition)
+            windowController.show(at: newPosition)
         } else {
             log.error("Can't find currentHintPosition")
         }
@@ -245,38 +245,6 @@ class QuickEditManager: ObservableObject, CaretPositionDelegate {
             width: rect.width,
             height: rect.height
         )
-    }
-    
-    private func calculateWindowPosition(for hintPosition: CGPoint) -> CGPoint {
-        guard let hintScreen = hintWindowController.window?.screen ?? NSScreen.main else {
-            return hintPosition
-        }
-        
-        let hintSize = QuickEditHintWindowController.hintSize
-        let actualHintPosition = CGPoint(
-            x: hintPosition.x + QuickEditHintWindowController.hintOffset.x,
-            y: hintPosition.y + QuickEditHintWindowController.hintOffset.y
-        )
-        
-        let windowSize = Self.estimatedWindowSize
-        let screenFrame = hintScreen.visibleFrame
-        let hintTopY = actualHintPosition.y + hintSize.height
-        let spaceAbove = screenFrame.maxY - hintTopY
-        
-        let windowPosition: CGPoint
-        if spaceAbove >= windowSize.height {
-            windowPosition = CGPoint(
-                x: hintPosition.x - 10,
-                y: hintTopY
-            )
-        } else {
-            windowPosition = CGPoint(
-                x: hintPosition.x - 10,
-                y: actualHintPosition.y - windowSize.height
-            )
-        }
-        
-        return windowPosition
     }
 }
 

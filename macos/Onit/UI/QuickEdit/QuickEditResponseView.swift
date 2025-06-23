@@ -202,7 +202,7 @@ extension QuickEditResponseView {
                 }
             }
             .coordinateSpace(name: "scroll")
-            .frame(maxHeight: 300)
+            .frame(maxHeight: 340)
             .onAppear {
                 scrollProxy = proxy
             }

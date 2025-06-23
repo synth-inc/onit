@@ -11,6 +11,21 @@ import SwiftUI
 @MainActor
 class QuickEditWindowController: NSObject, NSWindowDelegate {
     
+    // MARK: - Constants
+    
+    private enum Constants {
+        static let escapeKeyCode: UInt16 = 53
+        static let sizeToleranceThreshold: CGFloat = 1.0
+        static let sizeDifferenceThreshold: CGFloat = 2.0
+        static let resizeTimerInterval: TimeInterval = 0.05
+        static let activationDelay: TimeInterval = 0.05
+        static let transparencyAnimationDuration: TimeInterval = 0.3
+        static let resizeAnimationDuration: TimeInterval = 0.1
+        static let mouseInAlpha: CGFloat = 1.0
+        static let mouseOutAlpha: CGFloat = 0.7
+        static let estimatedWindowSize = CGSize(width: 360, height: 120)
+    }
+    
     // MARK: - QuickEditWindow
     
     class QuickEditWindow: NSWindow {
@@ -61,14 +76,23 @@ class QuickEditWindowController: NSObject, NSWindowDelegate {
     
     private var globalEventMonitor: Any?
     private var localEventMonitor: Any?
+    private var hintPosition: CGPoint = .zero
+    private var resizeTimer: Timer?
+    private var pendingSize: CGSize?
+    private var isResizing: Bool = false
+    private var lastProcessedSize: CGSize = .zero
+    private var isInitialDisplay: Bool = true
     
     // MARK: - Functions
     
     func show(at position: CGPoint) {
-        if window != nil {
-			window?.setFrameOrigin(position)
-            window?.orderFront(nil)
-            window?.makeKey()
+        hintPosition = position
+        
+        if let window = window {
+            let newPosition = calculateOptimalPosition()
+            window.setFrameOrigin(newPosition)
+            window.orderFront(nil)
+            window.makeKey()
             
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
                 self.forceActivation()
@@ -76,13 +100,14 @@ class QuickEditWindowController: NSObject, NSWindowDelegate {
             return
         }
         
-        createWindow(at: position)
+        createWindow(at: hintPosition)
     }
     
     func hide() {
         window?.orderOut(nil)
         window = nil
         stopEventMonitoring()
+        cleanupResizeState()
     }
     
     // MARK: - Private functions
@@ -123,7 +148,9 @@ class QuickEditWindowController: NSObject, NSWindowDelegate {
         window?.isReleasedWhenClosed = false
         window?.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
         
-		window?.setFrameOrigin(position)
+        let optimalPosition = calculateTargetPosition(for: Constants.estimatedWindowSize)
+        
+		window?.setFrameOrigin(optimalPosition)
         window?.alphaValue = 0.0
         window?.orderFront(nil)
         window?.makeKey()
@@ -138,10 +165,8 @@ class QuickEditWindowController: NSObject, NSWindowDelegate {
     }
     
     private func startEventMonitoring() {
-		let escapeKeyCode = 53
-		
         localEventMonitor = NSEvent.addLocalMonitorForEvents(matching: [.keyDown]) { [weak self] event in
-            if event.keyCode == escapeKeyCode {
+            if event.keyCode == Constants.escapeKeyCode {
                 self?.hide()
                 return nil
             }
@@ -149,7 +174,7 @@ class QuickEditWindowController: NSObject, NSWindowDelegate {
         }
         
         globalEventMonitor = NSEvent.addGlobalMonitorForEvents(matching: [.keyDown]) { [weak self] event in
-            if event.keyCode == escapeKeyCode {
+            if event.keyCode == Constants.escapeKeyCode {
                 self?.hide()
             }
         }
@@ -183,35 +208,156 @@ class QuickEditWindowController: NSObject, NSWindowDelegate {
     private func setWindowTransparency(isMouseInside: Bool) {
         guard let window = window else { return }
         
-        let targetAlpha: CGFloat = isMouseInside ? 1.0 : 0.7
+        let targetAlpha: CGFloat = isMouseInside ? Constants.mouseInAlpha : Constants.mouseOutAlpha
         
         NSAnimationContext.runAnimationGroup { context in
-            context.duration = 0.3
+            context.duration = Constants.transparencyAnimationDuration
             context.timingFunction = CAMediaTimingFunction(name: .easeInEaseOut)
             window.animator().alphaValue = targetAlpha
         }
     }
     
+    private func cleanupResizeState() {
+        resizeTimer?.invalidate()
+        resizeTimer = nil
+        pendingSize = nil
+        isResizing = false
+        lastProcessedSize = .zero
+        isInitialDisplay = true
+    }
+    
+    private func shouldSkipSizeUpdate(fittingSize: CGSize, currentFrame: CGRect) -> Bool {
+        let hasMinimalChange = abs(fittingSize.width - lastProcessedSize.width) <= Constants.sizeToleranceThreshold &&
+                              abs(fittingSize.height - lastProcessedSize.height) <= Constants.sizeToleranceThreshold &&
+                              abs(currentFrame.width - lastProcessedSize.width) <= Constants.sizeToleranceThreshold &&
+                              abs(currentFrame.height - lastProcessedSize.height) <= Constants.sizeToleranceThreshold
+        
+        let widthDiff = abs(fittingSize.width - currentFrame.width)
+        let heightDiff = abs(fittingSize.height - currentFrame.height)
+        let hasSmallDifference = widthDiff <= Constants.sizeDifferenceThreshold && heightDiff <= Constants.sizeDifferenceThreshold
+        
+        return hasMinimalChange || hasSmallDifference
+    }
+    
     func updateWindowSize() {
         guard let window = window,
-              let contentView = window.contentView else { return }
+              let contentView = window.contentView,
+			  !isResizing else {
+            return
+        }
         
         contentView.needsLayout = true
         contentView.layoutSubtreeIfNeeded()
         
         let fittingSize = contentView.fittingSize
-        let currentSize = window.frame.size
+        let currentFrame = window.frame
         
-        if abs(fittingSize.width - currentSize.width) > 1 || 
-           abs(fittingSize.height - currentSize.height) > 1 {
-            
-            NSAnimationContext.runAnimationGroup { context in
-                context.duration = 0.15
-                context.timingFunction = CAMediaTimingFunction(name: .easeInEaseOut)
-                
-                window.animator().setContentSize(fittingSize)
+        if shouldSkipSizeUpdate(fittingSize: fittingSize, currentFrame: currentFrame) {
+            return
+        }
+        
+        lastProcessedSize = fittingSize
+        
+        if isInitialDisplay {
+            isInitialDisplay = false
+            let targetPosition = calculateTargetPosition(for: fittingSize)
+            let newFrame = NSRect(
+                x: targetPosition.x,
+                y: targetPosition.y,
+                width: fittingSize.width,
+                height: fittingSize.height
+            )
+            window.setFrame(newFrame, display: true)
+            return
+        }
+        
+        isResizing = true
+        pendingSize = fittingSize
+        
+        if resizeTimer != nil {
+            resizeTimer?.invalidate()
+        }
+        
+        resizeTimer = Timer.scheduledTimer(withTimeInterval: Constants.resizeTimerInterval, repeats: false) { [weak self] _ in
+            Task { @MainActor in
+                self?.performResize()
             }
         }
+    }
+    
+    func forceUpdateWindowSizeIfNeeded() {
+        guard !isResizing else {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+                self.forceUpdateWindowSizeIfNeeded()
+            }
+            return
+        }
+        
+        updateWindowSize()
+    }
+    
+    private func performResize() {
+        guard let window = window, let pendingSize = pendingSize else {
+            return
+        }
+        
+        let targetPosition = calculateTargetPosition(for: pendingSize)
+        let newFrame = NSRect(
+            x: window.frame.origin.x,
+            y: targetPosition.y,
+            width: pendingSize.width,
+            height: pendingSize.height
+        )
+        
+        NSAnimationContext.runAnimationGroup { context in
+            context.duration = Constants.resizeAnimationDuration
+            context.timingFunction = CAMediaTimingFunction(name: .easeOut)
+            window.animator().setFrame(newFrame, display: true)
+        } completionHandler: {
+            self.isResizing = false
+            
+            DispatchQueue.main.asyncAfter(deadline: .now() + Constants.activationDelay) {
+                self.forceUpdateWindowSizeIfNeeded()
+            }
+        }
+        
+        self.pendingSize = nil
+        resizeTimer?.invalidate()
+        resizeTimer = nil
+    }
+    
+    private func calculateOptimalPosition() -> CGPoint {
+        guard let window = window else {
+            return hintPosition
+        }
+        
+        return calculateTargetPosition(for: window.frame.size)
+    }
+    
+    private func calculateTargetPosition(for size: CGSize) -> CGPoint {
+        let hintFrame = CGRect(origin: hintPosition, size: QuickEditHintWindowController.hintSize)
+        
+        guard let screen = hintFrame.findScreen() else {
+            return hintPosition
+        }
+        
+        let screenFrame = screen.visibleFrame
+        let hintSize = QuickEditHintWindowController.hintSize
+        let hintOffset = QuickEditHintWindowController.hintOffset
+        let actualHintY = hintPosition.y + hintOffset.y
+        let hintTop = actualHintY + hintSize.height
+        let hintBottom = actualHintY
+        let spaceAbove = screenFrame.maxY - hintTop
+        
+        let targetY: CGFloat
+        
+        if spaceAbove >= size.height {
+            targetY = hintTop
+        } else {
+            targetY = hintBottom - size.height
+        }
+        
+        return CGPoint(x: hintPosition.x, y: targetY)
     }
     
     private func checkInitialMousePosition() {
@@ -228,6 +374,7 @@ class QuickEditWindowController: NSObject, NSWindowDelegate {
     
     func windowWillClose(_ notification: Notification) {
         stopEventMonitoring()
+        cleanupResizeState()
         window = nil
     }
     
