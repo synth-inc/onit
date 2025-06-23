@@ -8,9 +8,10 @@
 import Foundation
 import GoogleSignIn
 import SwiftUI
+import WebKit
 
 @MainActor
-class GoogleDriveService: ObservableObject {
+class GoogleDriveService: NSObject, ObservableObject {
     // Auth states
     @Published var isAuthorized = false
     @Published var userEmail: String?
@@ -23,6 +24,16 @@ class GoogleDriveService: ObservableObject {
     @Published var isExtracting = false
     @Published var extractionError: String?
 
+    // Picker states
+    @Published var isShowingPicker = false
+    @Published var pickerError: String?
+
+    // Internal picker state
+    private var pickerAPIKey: String?
+    private var pendingExtractionUrl: String?
+    private var pickerWindow: NSWindow?
+    private var pickerWebView: WKWebView?
+
     func checkAuthorizationStatus() {
         guard let googleUser = GIDSignIn.sharedInstance.currentUser else {
             self.isAuthorized = false
@@ -31,7 +42,7 @@ class GoogleDriveService: ObservableObject {
         }
 
         if let grantedScopes = googleUser.grantedScopes,
-            grantedScopes.contains("https://www.googleapis.com/auth/drive.readonly")
+            grantedScopes.contains("https://www.googleapis.com/auth/drive.file")
         {
             self.isAuthorized = true
             self.userEmail = googleUser.profile?.email
@@ -57,7 +68,9 @@ class GoogleDriveService: ObservableObject {
 
         if let googleUser = GIDSignIn.sharedInstance.currentUser {
             googleUser.addScopes(
-                ["https://www.googleapis.com/auth/drive.readonly"],
+                [
+                    "https://www.googleapis.com/auth/drive.file"
+                ],
                 presenting: window,
                 completion: completion
             )
@@ -65,7 +78,9 @@ class GoogleDriveService: ObservableObject {
             GIDSignIn.sharedInstance.signIn(
                 withPresenting: window,
                 hint: nil,
-                additionalScopes: ["https://www.googleapis.com/auth/drive.readonly"],
+                additionalScopes: [
+                    "https://www.googleapis.com/auth/drive.file"
+                ],
                 completion: completion
             )
         }
@@ -169,7 +184,12 @@ class GoogleDriveService: ObservableObject {
                 return
             }
 
-            if httpResponse.statusCode == 403 {
+            if httpResponse.statusCode == 404 {
+                // File not found or no permission - trigger Google Drive picker
+                self.pendingExtractionUrl = driveUrl
+                await self.showGoogleDrivePicker()
+                return
+            } else if httpResponse.statusCode == 403 {
                 var extractionError =
                     "Access denied. Make sure the document is publicly accessible or you have permission to view it."
                 if let errorMessage = String(data: data, encoding: .utf8) {
@@ -178,8 +198,12 @@ class GoogleDriveService: ObservableObject {
                 self.extractionError = extractionError
                 return
             } else if httpResponse.statusCode != 200 {
-                self.extractionError =
+                var extractionError =
                     "Failed to retrieve document (HTTP \(httpResponse.statusCode))"
+                if let errorMessage = String(data: data, encoding: .utf8) {
+                    extractionError += "\n\nError message: \(errorMessage)"
+                }
+                self.extractionError = extractionError
                 return
             }
 
@@ -232,5 +256,254 @@ class GoogleDriveService: ObservableObject {
         }
 
         return nil
+    }
+
+    // MARK: - Google Drive Picker
+
+    private func showGoogleDrivePicker() async {
+        guard let user = GIDSignIn.sharedInstance.currentUser else {
+            self.extractionError = "Not authenticated with Google Drive"
+            return
+        }
+
+        self.isShowingPicker = true
+        self.pickerError = nil
+
+        let accessToken = user.accessToken.tokenString
+        let clientId = GIDSignIn.sharedInstance.configuration?.clientID ?? ""
+
+        // Create picker window
+        let windowRect = NSRect(x: 0, y: 0, width: 800, height: 600)
+        pickerWindow = NSWindow(
+            contentRect: windowRect,
+            styleMask: [.titled, .closable, .resizable],
+            backing: .buffered,
+            defer: false
+        )
+
+        pickerWindow?.title = "Select Google Drive File"
+        pickerWindow?.center()
+        pickerWindow?.isReleasedWhenClosed = false
+
+        // Create WebView with picker
+        let webViewConfig = WKWebViewConfiguration()
+
+        // Add message handlers for JavaScript communication
+        let contentController = WKUserContentController()
+        contentController.add(self, name: "fileSelected")
+        contentController.add(self, name: "pickerCancelled")
+        webViewConfig.userContentController = contentController
+
+        pickerWebView = WKWebView(frame: windowRect, configuration: webViewConfig)
+        pickerWebView?.navigationDelegate = self
+
+        if let webView = pickerWebView {
+            pickerWindow?.contentView = webView
+
+            if pickerAPIKey == nil {
+                let client = FetchingClient()
+                do {
+                    pickerAPIKey = try await client.getGooglePickerAPIKey()
+                } catch {
+                    pickerError = "Failed to fetch Google Picker API key: \(error)"
+                }
+            }
+
+            guard let apiKey = pickerAPIKey else {
+                self.pickerError = "Failed to fetch Google Picker API key"
+                return
+            }
+
+            // Load Google Drive Picker
+            let pickerHTML = createPickerHTML(
+                accessToken: accessToken, clientId: clientId, apiKey: apiKey)
+            webView.loadHTMLString(pickerHTML, baseURL: URL(string: "https://www.google.com"))
+        }
+
+        // Show window
+        if let window = pickerWindow {
+            NSApp.keyWindow?.addChildWindow(window, ordered: .above)
+            window.makeKeyAndOrderFront(nil)
+        }
+    }
+
+    private func createPickerHTML(accessToken: String, clientId: String, apiKey: String) -> String {
+        return """
+            <!DOCTYPE html>
+            <html>
+                <head>
+                    <title>Google Drive Picker</title>
+                    <script src="https://apis.google.com/js/api.js"></script>
+                    <script src="https://accounts.google.com/gsi/client"></script>
+                    <style>
+                        body {
+                            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+                            padding: 20px;
+                            background-color: #f5f5f5;
+                        }
+                        .container {
+                            text-align: center;
+                            padding: 40px;
+                        }
+                        .button {
+                            background-color: #4285f4;
+                            color: white;
+                            border: none;
+                            padding: 12px 24px;
+                            border-radius: 6px;
+                            font-size: 16px;
+                            cursor: pointer;
+                            margin: 10px;
+                        }
+                        .button:hover {
+                            background-color: #3367d6;
+                        }
+                        .message {
+                            margin: 20px 0;
+                            padding: 15px;
+                            background-color: #e3f2fd;
+                            border-radius: 6px;
+                            color: #1976d2;
+                        }
+                    </style>
+                </head>
+                <body>
+                    <div class="container">
+                        <h2>Google Drive File Access</h2>
+                        <div class="message">
+                            The file you're trying to access requires explicit permission. Please select the file from your Google Drive to grant access.
+                        </div>
+                        <button id="pick" class="button">Select File from Google Drive</button>
+                        <button id="cancel" class="button" style="background-color: #666;">Cancel</button>
+                        <div id="result"></div>
+                    </div>
+
+                    <script>
+                        let accessToken = "\(accessToken)";
+                        let clientId = "\(clientId)";
+                        let pickerApiLoaded = false;
+
+                        function onApiLoad() {
+                            gapi.load("picker", onPickerApiLoad);
+                        }
+
+                        function onPickerApiLoad() {
+                            pickerApiLoaded = true;
+                            document.getElementById("pick").disabled = false;
+                        }
+
+                        function createPicker() {
+                            if (pickerApiLoaded && accessToken) {
+                                const picker = new google.picker.PickerBuilder()
+                                    .addView(google.picker.ViewId.DOCS)
+                                    .setOAuthToken(accessToken)
+                                    .setDeveloperKey("\(apiKey)")
+                                    .setAppId("\(clientId)")
+                                    .setCallback(pickerCallback)
+                                    .build();
+                                picker.setVisible(true);
+                            }
+                        }
+
+                        function pickerCallback(data) {
+                            if (data[google.picker.Response.ACTION] == google.picker.Action.PICKED) {
+                                const file = data[google.picker.Response.DOCUMENTS][0];
+                                const fileId = file[google.picker.Document.ID];
+                                const fileName = file[google.picker.Document.NAME];
+
+                                // Notify Swift code about the selected file
+                                window.webkit.messageHandlers.fileSelected.postMessage({
+                                    fileId: fileId,
+                                    fileName: fileName,
+                                    url: "https://docs.google.com/document/d/" + fileId,
+                                });
+                            } else if (data[google.picker.Response.ACTION] == google.picker.Action.CANCEL) {
+                                window.webkit.messageHandlers.pickerCancelled.postMessage({});
+                            }
+                        }
+
+                        document.getElementById("pick").addEventListener("click", createPicker);
+                        document.getElementById("pick").disabled = true;
+
+                        document.getElementById("cancel").addEventListener("click", function () {
+                            window.webkit.messageHandlers.pickerCancelled.postMessage({});
+                        });
+
+                        // Load the API
+                        onApiLoad();
+                    </script>
+                </body>
+            </html>
+            """
+    }
+
+    private func handlePickerFileSelection(fileId: String, fileName: String, url: String) {
+        // Retry extraction with the selected file
+        if let pendingUrl = pendingExtractionUrl,
+            extractFileIdFromUrl(pendingUrl) == extractFileIdFromUrl(url)
+        {
+            Task {
+                await self.extractTextFromGoogleDrive(driveUrl: url)
+            }
+        }
+
+        // Close picker
+        closePicker()
+    }
+
+    private func closePicker() {
+        self.isShowingPicker = false
+
+        // Clean up message handlers
+        if let webView = pickerWebView {
+            webView.configuration.userContentController.removeScriptMessageHandler(
+                forName: "fileSelected")
+            webView.configuration.userContentController.removeScriptMessageHandler(
+                forName: "pickerCancelled")
+        }
+
+        if let window = pickerWindow {
+            window.orderOut(nil)
+            NSApp.keyWindow?.removeChildWindow(window)
+        }
+
+        pickerWindow = nil
+        pickerWebView = nil
+        pendingExtractionUrl = nil
+    }
+}
+
+// MARK: - WKNavigationDelegate
+extension GoogleDriveService: WKNavigationDelegate {
+    func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
+        // WebView finished loading
+    }
+
+    func webView(_ webView: WKWebView, didFail navigation: WKNavigation!, withError error: Error) {
+        self.pickerError = "Failed to load Google Drive picker: \(error.localizedDescription)"
+        closePicker()
+    }
+}
+
+// MARK: - WKScriptMessageHandler
+extension GoogleDriveService: WKScriptMessageHandler {
+    func userContentController(
+        _ userContentController: WKUserContentController, didReceive message: WKScriptMessage
+    ) {
+        switch message.name {
+        case "fileSelected":
+            if let body = message.body as? [String: Any],
+                let fileId = body["fileId"] as? String,
+                let fileName = body["fileName"] as? String,
+                let url = body["url"] as? String
+            {
+                handlePickerFileSelection(fileId: fileId, fileName: fileName, url: url)
+            }
+        case "pickerCancelled":
+            self.extractionError = "Google Drive file selection was cancelled"
+            closePicker()
+        default:
+            break
+        }
     }
 }
