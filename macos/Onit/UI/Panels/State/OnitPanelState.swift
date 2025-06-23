@@ -48,8 +48,7 @@ class OnitPanelState: NSObject {
     
     // TODO: KNA - Refacto: Should be removed at the end
     var trackedWindow: TrackedWindow? // Used only in Tethered Mode. Corresponds to the specific window that's tethered to the panel.
-    var foregroundWindow: TrackedWindow? = nil
-    {
+    var foregroundWindow: TrackedWindow? = nil {
         didSet {
             if let newWindow = foregroundWindow {
                 foregroundedWindowHistory.removeAll { $0 == newWindow.hash }
