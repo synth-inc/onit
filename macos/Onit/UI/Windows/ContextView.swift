@@ -127,6 +127,20 @@ struct ContextView: View {
         }
     }
     
+    private func retryContextExtraction() {
+        guard case .auto(let autoContext) = context else { return }
+
+        let trackedWindow = AccessibilityNotificationsManager.shared.windowsManager.findTrackedWindow(trackedWindowHash: autoContext.appHash)
+
+        let state = PanelStateCoordinator.shared.getState(for: autoContext.appHash)
+
+        AccessibilityNotificationsManager.shared.retrieveWindowContent(
+            state: state,
+            trackedWindow: trackedWindow,
+            customAppBundleUrl: autoContext.appBundleUrl
+        )
+    }
+
     var errorDialog: some View {
         let (subtitle, buttonText) = getErrorDialogInfo()
         
@@ -137,7 +151,11 @@ struct ContextView: View {
                 GoogleDriveService.shared.authorizeGoogleDrive()
             } else if errorCode == "1501" {
                 Task {
-                    await GoogleDriveService.shared.showGoogleDrivePicker()
+                    await GoogleDriveService.shared.showGoogleDrivePicker {
+                        Task { @MainActor in
+                            self.retryContextExtraction()
+                        }
+                    }
                 }
             }
             // TODO: Handle other error dialog actions if needed

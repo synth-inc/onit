@@ -35,6 +35,7 @@ class GoogleDriveService: NSObject, ObservableObject {
     private var pendingExtractionUrl: String?
     private var pickerWindow: NSWindow?
     private var pickerWebView: WKWebView?
+    private var successCallback: (() -> Void)?
 
     func checkAuthorizationStatus() -> Bool {
         guard let googleUser = GIDSignIn.sharedInstance.currentUser else {
@@ -261,7 +262,7 @@ class GoogleDriveService: NSObject, ObservableObject {
 
     // MARK: - Google Drive Picker
 
-    public func showGoogleDrivePicker() async {
+    public func showGoogleDrivePicker(onSuccess: (() -> Void)? = nil) async {
         guard let user = GIDSignIn.sharedInstance.currentUser else {
             self.extractionError = "Not authenticated with Google Drive"
             return
@@ -326,6 +327,8 @@ class GoogleDriveService: NSObject, ObservableObject {
             NSApp.keyWindow?.addChildWindow(window, ordered: .above)
             window.makeKeyAndOrderFront(nil)
         }
+
+        self.successCallback = onSuccess
     }
 
     private func createPickerHTML(accessToken: String, clientId: String, apiKey: String) -> String {
@@ -389,6 +392,9 @@ class GoogleDriveService: NSObject, ObservableObject {
             }
         }
 
+        // Call the success callback if provided
+        successCallback?()
+
         // Close picker
         closePicker()
     }
@@ -412,6 +418,7 @@ class GoogleDriveService: NSObject, ObservableObject {
         pickerWindow = nil
         pickerWebView = nil
         pendingExtractionUrl = nil
+        successCallback = nil
     }
 }
 
