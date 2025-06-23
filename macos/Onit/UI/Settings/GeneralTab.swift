@@ -16,7 +16,8 @@ struct GeneralTab: View {
     
     @State var isLaunchAtStartupEnabled: Bool = SMAppService.mainApp.status == .enabled
     @State var isAnalyticsEnabled: Bool = PostHogSDK.shared.isOptOut() == false
-    
+
+    @ObservedObject private var debugManager = DebugManager.shared
     @ObservedObject private var accessibilityPermissionManager = AccessibilityPermissionManager.shared
     
     private var accessibilityGranted: Bool {
@@ -262,6 +263,16 @@ struct GeneralTab: View {
                         .controlSize(.small)
                     }
                 }
+                
+                HStack {
+                    Text("Collect local typeahead test cases")
+                        .font(.system(size: 13))
+                    Spacer()
+                    Toggle("", isOn: $debugManager.collectTypeaheadTestCases)
+                        .toggleStyle(.switch)
+                        .controlSize(.small)
+                }
+                
                 //                VStack(alignment: .leading, spacing: 8) {
                 //                    Text("Panel Position")
                 //                        .font(.system(size: 13))

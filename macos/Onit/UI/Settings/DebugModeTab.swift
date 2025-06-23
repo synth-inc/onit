@@ -54,15 +54,6 @@ struct DebugModeTab: View {
                             }
                     }
                     
-                    HStack {
-                        Text("Collect local typeahead test cases")
-                            .font(.system(size: 13))
-                        Spacer()
-                        Toggle("", isOn: $debugManager.collectTypeaheadTestCases)
-                            .toggleStyle(.switch)
-                            .controlSize(.small)
-                    }
-                    
                     #if DEBUG
                     if !debugManager.cacheInvalidationStats.isEmpty {
                         Divider()

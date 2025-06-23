@@ -32,32 +32,33 @@ struct KeyboardShortcutsManager {
     }
     
     static func enable(modelContainer: ModelContainer) {
-        var names = KeyboardShortcuts.Name.allCases
-            .filter { ![.launch, .launchWithAutoContext].contains($0) }
-        
-        // Remove ESC if needed for pinned mode
-        let isPinned = FeatureFlagManager.shared.usePinnedMode
-        let isForeground = NSApp.isActive
-        let escDisabled = Defaults[.escapeShortcutDisabled]
-        if isPinned {
-            if !isForeground || escDisabled {
-                names.removeAll { $0 == .escape }
-            }
-        } else {
-            if escDisabled {
-                names.removeAll { $0 == .escape }
-            }
-        }
-        
-        do {
-            let storedPrompts = try modelContainer.mainContext.fetch(FetchDescriptor<SystemPrompt>())
-            for systemPrompt in storedPrompts {
-                names.append(KeyboardShortcuts.Name(systemPrompt.id))
-            }
-        } catch {
-            print("Enabling keyboard shortcuts - Can't fetch local system prompts: \(error)")
-        }
-        KeyboardShortcuts.enable(names)
+        // TIM TODO: this is for history building mode DO NOT COMMIT
+//        var names = KeyboardShortcuts.Name.allCases
+//            .filter { ![.launch, .launchWithAutoContext].contains($0) }
+//        
+//        // Remove ESC if needed for pinned mode
+//        let isPinned = FeatureFlagManager.shared.usePinnedMode
+//        let isForeground = NSApp.isActive
+//        let escDisabled = Defaults[.escapeShortcutDisabled]
+//        if isPinned {
+//            if !isForeground || escDisabled {
+//                names.removeAll { $0 == .escape }
+//            }
+//        } else {
+//            if escDisabled {
+//                names.removeAll { $0 == .escape }
+//            }
+//        }
+//        
+//        do {
+//            let storedPrompts = try modelContainer.mainContext.fetch(FetchDescriptor<SystemPrompt>())
+//            for systemPrompt in storedPrompts {
+//                names.append(KeyboardShortcuts.Name(systemPrompt.id))
+//            }
+//        } catch {
+//            print("Enabling keyboard shortcuts - Can't fetch local system prompts: \(error)")
+//        }
+//        KeyboardShortcuts.enable(names)
     }
 
     static func disable(modelContainer: ModelContainer) {
