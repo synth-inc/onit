@@ -317,10 +317,17 @@ class AccessibilityNotificationsManager: ObservableObject {
                         self.screenResult.appBundleUrl = appBundleUrl
                         if let googleDriveError = error as? GoogleDriveError {
                             self.screenResult.errorMessage = "Failed to extract Google Drive document content: \(googleDriveError.localizedDescription)"
+                            switch googleDriveError {
+                            case .notFound:
+                                self.screenResult.errorCode = 1501
+                                break
+                            default:
+                                self.screenResult.errorCode = 1500
+                            }
                         } else {
                             self.screenResult.errorMessage = "Failed to extract Google Drive document content: \(error.localizedDescription)"
+                            self.screenResult.errorCode = 1500
                         }
-                        self.screenResult.errorCode = 1500
                         state.addAutoContext(trackedWindow: trackedWindow)
                     }
                 } else {

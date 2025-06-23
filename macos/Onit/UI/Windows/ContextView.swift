@@ -120,6 +120,8 @@ struct ContextView: View {
         switch errorCode {
         case "1500":
             return ("Install the Google Drive Plugin to fetch your Google documents as window context!", "Install Plugin: Google Drive")
+        case "1501":
+            return ("Give permission to Onit to view this drive file.", "Grant Permission")
         default:
             return ("An error occurred while fetching context.", "OK")
         }
@@ -133,6 +135,10 @@ struct ContextView: View {
         } action: {
             if errorCode == "1500" {
                 GoogleDriveService.shared.authorizeGoogleDrive()
+            } else if errorCode == "1501" {
+                Task {
+                    await GoogleDriveService.shared.showGoogleDrivePicker()
+                }
             }
             // TODO: Handle other error dialog actions if needed
         } closeAction: {
