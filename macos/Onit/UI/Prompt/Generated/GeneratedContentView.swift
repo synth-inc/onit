@@ -46,14 +46,13 @@ struct GeneratedContentView: View {
                           onCodeAction: codeAction)
                 .padding(.horizontal, 12)
 
-            let response = currentResponse
-            if let response = response, response.hasToolCall {
+            if let response = currentResponse, response.hasToolCall {
                 ToolCallView(response: response)
                     .padding(.horizontal, 12)
             }
 
             Spacer()
-            if textToRead.isEmpty && !(state.isSearchingWeb[prompt.id] ?? false) && response?.hasToolCall != true {
+            if textToRead.isEmpty && !(state.isSearchingWeb[prompt.id] ?? false) && currentResponse?.hasToolCall != true {
                 HStack {
                     Spacer()
                     QLImage("loader_rotated-200")
