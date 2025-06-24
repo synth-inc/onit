@@ -57,9 +57,10 @@ struct HistoryView: View {
             header: MenuHeader(title: "History") {
                 IconButton(
                     icon: .cross,
-                    iconSize: 10,
-                    action: { windowState.showHistory = false }
-                )
+                    iconSize: 10
+                ) {
+                    windowState.showHistory = false
+                }
             },
             search: MenuList.Search(query: $searchQuery)
         ) {

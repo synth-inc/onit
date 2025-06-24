@@ -29,8 +29,6 @@ struct ToolbarRight: View {
             }
         }
         .padding(.trailing, 6)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .frame(height: 32, alignment: .center)
         .foregroundStyle(.gray200)
         .padding(.horizontal, 0)
         .background { escListener }
@@ -53,21 +51,25 @@ struct ToolbarRight: View {
         IconButton(
             icon: mode == .local ? .localModeActive : .localMode,
             iconSize: 22,
-            action: { toggleMode() },
             isActive: mode == .local,
             activeColor: .limeGreen,
+            activeBackground: .clear,
+            activeBorderColor: .clear,
             tooltipPrompt: "Local Mode",
-            tooltipShortcut: .keyboardShortcuts(.toggleLocalMode)
-        )
+            tooltipShortcut: .keyboardShortcuts(.toggleLocalMode),
+        ) {
+            toggleMode()
+        }
     }
 
     var discord: some View {
         IconButton(
             icon: .logoDiscord,
             iconSize: 21,
-            action: { MenuJoinDiscord.openDiscord(appState) },
             tooltipPrompt: "Join Discord"
-        )
+        ) {
+            MenuJoinDiscord.openDiscord(appState)
+        }
     }
 
     var showHistoryBinding: Binding<Bool> {
@@ -80,13 +82,12 @@ struct ToolbarRight: View {
         IconButton(
             icon: .history,
             iconSize: 22,
-            action: {
-                AnalyticsManager.Toolbar.historyPressed(displayed: state.showHistory)
-                state.showHistory.toggle()
-            },
             isActive: state.showHistory,
             tooltipPrompt: "History"
-        )
+        ) {
+            AnalyticsManager.Toolbar.historyPressed(displayed: state.showHistory)
+            state.showHistory.toggle()
+        }
         .popover(
             isPresented: showHistoryBinding,
             arrowEdge: .bottom
@@ -109,20 +110,22 @@ struct ToolbarRight: View {
         IconButton(
             icon: .settingsCog,
             iconSize: 22,
-            action: { openSettingsWindow() },
             tooltipPrompt: "Settings"
-        )
+        ) {
+            openSettingsWindow()
+        }
     }
     
     var installUpdate: some View {
         IconButton(
             icon: .lightning,
             iconSize: 21,
-            action: appState.checkForAvailableUpdateWithDownload,
             inactiveColor: .blue300,
-            tooltipPrompt: "Install Update",
-            hoverBackgroundColor: .blue300.opacity(0.2)
-        )
+            hoverBackground: .blue300.opacity(0.2),
+            tooltipPrompt: "Install Update"
+        ) {
+            appState.checkForAvailableUpdateWithDownload()
+        }
     }
 }
 
