@@ -245,7 +245,13 @@ extension GeneralTabPlanAndBilling {
                 }
                 
                 captionText("\(usage)/\(quota) generations used.")
-                
+
+                if appState.hasUserAPITokens {
+                    captionText(
+                        "Prompts sent using your own API tokens do not count against your free quota."
+                    )
+                }
+
                 captionText(handleRenewalDate(renewalDate))
             }
         }

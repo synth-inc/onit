@@ -306,7 +306,13 @@ private class CustomTextView: NSTextView {
             if let recordingIndicator = recordingIndicator {
                 let glyphRange = layoutManager?.glyphRange(forCharacterRange: NSRange(location: parentCursorPosition, length: 0), actualCharacterRange: nil)
                 let glyphRect = layoutManager?.boundingRect(forGlyphRange: glyphRange!, in: textContainer!)
-                recordingIndicator.frame = NSRect(x: glyphRect!.maxX, y: glyphRect!.minY, width: 33, height: 20)
+                
+                recordingIndicator.frame = NSRect(
+                    x: glyphRect!.maxX,
+                    y: glyphRect!.minY,
+                    width: 33,
+                    height: RecordingIndicator.maxHeight
+                )
                 if recordingIndicator.superview == nil {
                     addSubview(recordingIndicator)
                 }
@@ -326,9 +332,24 @@ private class CustomTextView: NSTextView {
         layoutManager.ensureLayout(for: container)
         
         let usedRect = layoutManager.usedRect(for: container)
+        var height = ceil(usedRect.height + textContainerInset.height * 2)
+        
+        if audioRecorder.isRecording || audioRecorder.isTranscribing {
+            let glyphRange = layoutManager.glyphRange(
+                forCharacterRange: NSRange(location: parentCursorPosition, length: 0),
+                actualCharacterRange: nil
+            )
+            let glyphRect = layoutManager.boundingRect(forGlyphRange: glyphRange, in: container)
+            let recordingIndicatorBottom = glyphRect.minY + RecordingIndicator.maxHeight + textContainerInset.height
+            
+            if recordingIndicatorBottom > height {
+                height = ceil(recordingIndicatorBottom)
+            }
+        }
+        
         return NSSize(
             width: frame.width,
-            height: ceil(usedRect.height + textContainerInset.height * 2)
+            height: height
         )
     }
     

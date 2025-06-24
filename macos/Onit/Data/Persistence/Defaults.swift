@@ -15,6 +15,20 @@ enum AuthFlowStatus: String, Defaults.Serializable {
     case showSignIn
 }
 
+enum FooterNotification: String, Defaults.Serializable {
+    case discord
+    case update
+}
+
+struct WindowContextMostRecent: Codable, Hashable, Equatable, Defaults.Serializable {
+    let pid: pid_t
+    let hash: UInt
+    
+    static func == (lhs: WindowContextMostRecent, rhs: WindowContextMostRecent) -> Bool {
+        return lhs.pid == rhs.pid && lhs.hash == rhs.hash
+    }
+}
+
 extension Defaults.Keys {
     
     // Remote model tokens
@@ -80,6 +94,7 @@ extension Defaults.Keys {
     
     static let autoContextFromCurrentWindow = Key<Bool>("autoContextFromCurrentWindow", default: true)
     static let autoContextFromHighlights = Key<Bool>("autoContextFromHighlights", default: true)
+    static let autoContextOnLaunchTethered = Key<Bool>("autoContextOnLaunchTethered", default: true)
 
     // Web search
     static let webSearchEnabled = Key<Bool>("webSearchEnabled", default: false)
@@ -93,6 +108,8 @@ extension Defaults.Keys {
     static let launchOnStartupRequested = Key<Bool>("launchOnStartupRequested", default: false)
     static let fontSize = Key<Double>("fontSize", default: 14.0)
     static let lineHeight = Key<Double>("lineHeight", default: 1.5)
+    static let voiceSilenceThreshold = Key<Float>("voiceSilenceThreshold", default: -40)
+    static let voiceSpeechPassThreshold = Key<Double>("voiceSpeechPassThreshold", default: 0.7)
 
     // Local model advanced options
     static let localKeepAlive = Key<String?>("localKeepAlive", default: nil)
@@ -115,6 +132,13 @@ extension Defaults.Keys {
     // Alerts
     static let showTwoWeekProTrialEndedAlert = Key<Bool>("showTwoWeekProTrialEndedAlert", default: false)
     static let hasClosedTrialEndedAlert = Key<Bool>("hasClosedTrialEndedAlert", default: false)
+    
+    // Notifications
+    static let footerNotifications = Key<[FooterNotification]>("footerNotifications", default: [FooterNotification.discord])
+
+    // Stop generation behavior
+    static let stopMode = Key<StopMode>("stopMode", default: .removePartial)
+
 }
 
 extension NSRect: Defaults.Serializable {

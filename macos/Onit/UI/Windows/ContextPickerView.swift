@@ -9,26 +9,12 @@ import Defaults
 import SwiftUI
 
 struct ContextPickerView: View {
-    @Environment(\.windowState) private var state
+    @Environment(\.windowState) private var windowState
     
     @Default(.autoContextFromCurrentWindow) var autoContextFromCurrentWindow
-
-    private let currentWindowName: String?
-    private let currentWindowBundleUrl: URL?
-    private let currentWindowPid: pid_t?
-    
-    init(
-        currentWindowBundleUrl: URL? = nil,
-        currentWindowName: String?,
-        currentWindowPid: pid_t?
-    ) {
-        self.currentWindowBundleUrl = currentWindowBundleUrl
-        self.currentWindowName = currentWindowName
-        self.currentWindowPid = currentWindowPid
-    }
     
     var autoContextDisabled: Bool {
-        return autoContextFromCurrentWindow && (currentWindowName == nil || currentWindowPid == nil)
+        return autoContextFromCurrentWindow && windowState.foregroundWindow != nil
     }
     
     var body: some View {
@@ -40,20 +26,19 @@ struct ContextPickerView: View {
             ) {
                 AnalyticsManager.ContextPicker.uploadFilePressed()
                 OverlayManager.shared.dismissOverlay()
-                state.showFileImporter = true
+                windowState.showFileImporter = true
             }
             
             ContextPickerItemView(
                 showEmptyIcon: !autoContextFromCurrentWindow,
                 imageRes: .stars,
                 title: "Current Window",
-                subtitle: getAutoContextTitle(),
-                currentWindowBundleUrl: currentWindowBundleUrl
+                subtitle: getAutoContextTitle()
             ) {
                 OverlayManager.shared.dismissOverlay()
                 
                 if autoContextFromCurrentWindow {
-                    addAutoContext()
+                    addWindowToContext()
                 } else {
                     enableCurrentWindowSetting()
                 }
@@ -73,26 +58,24 @@ extension ContextPickerView {
     private func getAutoContextTitle() -> String {
         if autoContextDisabled {
             return "Could not determine window"
-        } else if autoContextFromCurrentWindow {
-            return currentWindowName ?? "Current window"
-        } else {
+        } else if !autoContextFromCurrentWindow {
             return "Click to enable"
+        } else {
+            if let foregroundWindow = windowState.foregroundWindow {
+                return WindowHelpers.getWindowName(window: foregroundWindow.element)
+            } else {
+                return "Current window"
+            }
         }
     }
     
-    private func addAutoContext() {
+    private func addWindowToContext() {
         AnalyticsManager.ContextPicker.autoContextPressed()
         
-        if let windowName = currentWindowName,
-           let pid = currentWindowPid,
-           let focusedWindow = pid.firstMainWindow
-        {
-            state.addAutoContextTasks[windowName]?.cancel()
-            
-            state.addAutoContextTasks[windowName] = Task {
-                let _ = AccessibilityNotificationsManager.shared.windowsManager.append(focusedWindow, pid: pid)
-                AccessibilityNotificationsManager.shared.fetchAutoContext(pid: pid, state: state)
-            }
+        if let foregroundWindow = windowState.foregroundWindow {
+            windowState.addWindowToContext(
+                window: foregroundWindow.element
+            )
         }
     }
     

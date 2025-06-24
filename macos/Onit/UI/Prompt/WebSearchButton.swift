@@ -2,8 +2,7 @@ import SwiftUI
 import Defaults
 
 struct WebSearchButton: View {
-    @Default(.tavilyAPIToken) var tavilyAPIToken
-    @Default(.isTavilyAPITokenValidated) var isTavilyAPITokenValidated
+    @Environment(\.appState) var appState
     @Default(.webSearchEnabled) var webSearchEnabled
     
     var body: some View {
@@ -18,8 +17,7 @@ struct WebSearchButton: View {
     }
     
     private func toggleWebSearch() {
-        AnalyticsManager.Chat.webSearchToggled(isAvailable: true,
-                                               oldValue: webSearchEnabled,
+        AnalyticsManager.Chat.webSearchToggled(oldValue: webSearchEnabled,
                                                newValue: !webSearchEnabled)
         webSearchEnabled.toggle()
     }

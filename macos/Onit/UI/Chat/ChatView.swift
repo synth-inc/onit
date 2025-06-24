@@ -2,11 +2,13 @@ import Defaults
 import SwiftUI
 
 struct ChatView: View {
+    @Environment(\.appState) private var appState
     @Environment(\.windowState) private var state
     
-    @State private var autoScrollTimer: Timer?
-    @State private var autoScrollTimeoutTimer: Timer?
-    @State private var isAutoScrolling: Bool = false
+    @Default(.footerNotifications) var footerNotifications
+    
+    @State private var hasUserManuallyScrolled: Bool = false
+    @State private var chatChangeTask: Task<Void, Never>?
     
     private var chatsID: Int? {
         state.currentChat?.hashValue
@@ -30,25 +32,72 @@ struct ChatView: View {
             SetUpDialogs()
             
             if currentPromptsCount > 0 {
-                ScrollViewReader { proxy in
-                    ScrollView {
-                        systemPrompt
-                        ChatsView()
-                            .id(chatsID)
-                            .onAppear {
-                                startAutoScrolling(using: proxy)
+                ZStack(alignment: .bottom) {
+                    ChatScrollViewRepresentable(
+                        hasUserManuallyScrolled: $hasUserManuallyScrolled,
+                        streamedResponse: state.streamedResponse,
+                        currentChat: state.currentChat
+                    ) {
+                        VStack(alignment: .leading, spacing: 0) {
+                            systemPrompt
+                            ChatsView()
+                                .id(chatsID)
+                                .onAppear {
+                                    hasUserManuallyScrolled = false
+                                }
+                        }
+                    }
+                    // Floating action buttons area
+                    if state.generatingPrompt != nil || hasUserManuallyScrolled {
+                        HStack {
+                            Spacer()
+                            
+                            if state.generatingPrompt != nil {
+                                StopGenerationButton()
+                                    .offset(x: 18, y: 0) // This centers it to account for the scroll button frame
                             }
-                            .onDisappear {
-                                stopAutoScrolling()
+                            
+                            Spacer()
+                            
+                            if hasUserManuallyScrolled {
+                                IconButton(
+                                    icon: .arrowDown,
+                                    buttonSize: 36,
+                                    action: {
+                                        hasUserManuallyScrolled = false
+                                    },
+                                    activeColor: .white,
+                                    inactiveColor: .white,
+                                    tooltipPrompt: "Scroll to bottom",
+                                    hoverBackgroundColor: .gray400
+                                )
+                                .background(.gray600)
+                                .addBorder(cornerRadius: 18, stroke: .gray400)
+                                .transition(.scale.combined(with: .opacity))
+                                .padding(.trailing, 20)
+                            } else {
+                                // Placeholders.
+                                Color.clear
+                                    .frame(width: 36, height: 36)
+                                    .padding(.trailing, 20)
                             }
+                        }
+                        .background(.clear)
+                        .padding(.bottom, 4)
                     }
-                    .onChange(of: state.streamedResponse) { old, new in
-                        startAutoScrolling(using: proxy)
+                }
+                .onChange(of: state.currentChat) { old, new in
+					chatChangeTask?.cancel()
+                    hasUserManuallyScrolled = true
+                    chatChangeTask = Task {
+                        try? await Task.sleep(for: .milliseconds(300))
+                        
+                        if !Task.isCancelled {
+                            await MainActor.run {
+                                hasUserManuallyScrolled = false
+                            }
+                        }
                     }
-                    .onChange(of: state.currentChat) { old, new in
-                        startAutoScrolling(using: proxy)
-                    }
-                    .padding(.top, 0)
                 }
             } else {
                 systemPrompt
@@ -56,9 +105,15 @@ struct ChatView: View {
             
             PromptCore()
             
-            if currentPromptsCount <= 0 { Spacer() }
+            if currentPromptsCount <= 0 {
+                Spacer()
+                footerNotificationsList
+            }
         }
         .drag()
+        .onAppear {
+            appState.checkForAvailableUpdate()
+        }
     }
 }
 
@@ -73,57 +128,18 @@ extension ChatView {
             if shouldShowSystemPrompt { SystemPromptView() }
         }
     }
-}
-
-// MARK: - Private Functions
-
-extension ChatView {
-    @MainActor
-    private func startAutoScrolling(using proxy: ScrollViewProxy) {
-        if isAutoScrolling {
-            resetAutoScrollTimeout(using: proxy)
-            return
-        }
-        
-        stopAutoScrolling()
-        isAutoScrolling = true
-        autoScrollTimer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { _ in
-            Task { @MainActor in
-                self.scrollToBottom(using: proxy)
+    
+    @ViewBuilder
+    private var footerNotificationsList: some View {
+        if !footerNotifications.isEmpty {
+            ZStack {
+                ForEach(footerNotifications, id: \.self) { footerNotification in
+                    ContentViewFooterNotification(
+                        footerNotification: footerNotification
+                    )
+                }
             }
         }
-        
-        scrollToBottom(using: proxy)
-        resetAutoScrollTimeout(using: proxy)
-    }
-    
-    @MainActor
-    private func resetAutoScrollTimeout(using proxy: ScrollViewProxy) {
-        autoScrollTimeoutTimer?.invalidate()
-        autoScrollTimeoutTimer = Timer.scheduledTimer(withTimeInterval: 0.3, repeats: false) { _ in
-            Task { @MainActor in
-                self.stopAutoScrolling()
-                self.scrollToBottom(using: proxy)
-            }
-        }
-    }
-    
-    @MainActor
-    private func scrollToBottom(using proxy: ScrollViewProxy) {
-        withAnimation(.smooth(duration: 0.1)) {
-            if let id = chatsID {
-                proxy.scrollTo(id, anchor: .bottom)
-            }
-        }
-    }
-    
-    @MainActor
-    private func stopAutoScrolling() {
-        autoScrollTimer?.invalidate()
-        autoScrollTimer = nil
-        autoScrollTimeoutTimer?.invalidate()
-        autoScrollTimeoutTimer = nil
-        isAutoScrolling = false
     }
 }
 

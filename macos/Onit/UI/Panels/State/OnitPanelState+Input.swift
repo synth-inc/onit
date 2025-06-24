@@ -9,7 +9,7 @@ import AppKit
 import Defaults
 
 extension OnitPanelState {
-    func addAutoContext() {
+    func addAutoContext(trackedWindow: TrackedWindow? = nil) {
         guard Defaults[.autoContextFromCurrentWindow] else { return }
 
         let appName = AccessibilityNotificationsManager.shared.screenResult.applicationName ?? "AutoContext"
@@ -24,13 +24,16 @@ extension OnitPanelState {
             pendingContextList.insert(errorContext, at: 0)
             return
         }
-        guard let activeTrackedWindow = AccessibilityNotificationsManager.shared.windowsManager.activeTrackedWindow else {
+        
+        guard let activeTrackedWindow = trackedWindow ?? self.foregroundWindow else {
             let errorContext = Context(appName: "Unable to add \(appName)", appHash: 0, appTitle: "", appContent: ["error": "Cannot identify context"])
             pendingContextList.insert(errorContext, at: 0)
             return
         }
-        let appHash = CFHash(activeTrackedWindow.element)
-        let appTitle = activeTrackedWindow.title
+        
+        let appHash = activeTrackedWindow.hash
+        
+        let appTitle = trackedWindow?.title ?? activeTrackedWindow.title
 
         if let existingIndex = pendingContextList.firstIndex(where: { context in
             if case .auto(let autoContext) = context {
@@ -42,14 +45,24 @@ extension OnitPanelState {
             /// Later on, we should implement a data aggregator.
             
             let oldContext = pendingContextList[existingIndex]
-            let newContext = Context(appName: appName, appHash: appHash, appTitle: appTitle, appContent: appContent)
+            
+            let newContext = Context(
+                appName: appName,
+                appHash: appHash,
+                appTitle: appTitle,
+                appContent: appContent,
+                appBundleUrl: AccessibilityNotificationsManager.shared.screenResult.appBundleUrl
+            )
             
             if oldContext != newContext {
                 ContextWindowsManager.shared.deleteContextItem(item: oldContext)
                 pendingContextList[existingIndex] = newContext
             }
             
+            cleanupWindowContextTask(uniqueWindowIdentifier: appHash)
+            
             return
+            
             /** Merge result for existing autoContext */
 //            if case .auto(let autoContext) = pendingContextList[existingIndex] {
 //                var existingContent = autoContext.appContent
@@ -77,8 +90,48 @@ extension OnitPanelState {
         )
         
         pendingContextList.insert(autoContext, at: 0)
+        
+        cleanupWindowContextTask(uniqueWindowIdentifier: appHash)
     }
     
+    func cleanupWindowContextTask(uniqueWindowIdentifier: UInt) {
+        windowContextTasks[uniqueWindowIdentifier]?.cancel()
+        windowContextTasks.removeValue(forKey: uniqueWindowIdentifier)
+    }
+    
+    func cleanUpPendingWindowContextTasks() {
+        for (_, task) in windowContextTasks {
+            task.cancel()
+        }
+        
+        windowContextTasks = [:]
+    }
+    
+    func addWindowToContext(window: AXUIElement) {
+        guard let windowPid = window.pid() else { return }
+        
+        guard let trackedWindow = AccessibilityNotificationsManager.shared.windowsManager.trackWindowForElement(
+            window,
+            pid: windowPid
+        ) else {
+            return
+        }
+        
+        windowContextTasks[trackedWindow.hash]?.cancel()
+        
+        // This task will automatically be cleaned up way down the call stack when it hits `addAutoContext()`.
+        windowContextTasks[trackedWindow.hash] = Task {
+            let windowApp = WindowHelpers.getWindowApp(pid: trackedWindow.pid)
+            let appBundleUrl = windowApp?.bundleURL
+            
+            AccessibilityNotificationsManager.shared.retrieveWindowContent(
+                state: self,
+                trackedWindow: trackedWindow,
+                customAppBundleUrl: appBundleUrl
+            )
+        }
+    }
+
     func getPendingContextList() -> [Context] {
         return pendingContextList
     }
@@ -161,6 +214,8 @@ extension OnitPanelState {
                     #endif
                 }
             }
+        case .auto(let autoContextItem):
+            cleanupWindowContextTask(uniqueWindowIdentifier: autoContextItem.appHash)
         default:
             break
         }

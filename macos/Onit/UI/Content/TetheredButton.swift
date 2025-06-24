@@ -21,7 +21,19 @@ struct TetheredButton: View {
     }
     
     private var spacerHeight: CGFloat? {
-        state.tetheredButtonYPosition
+        guard let relativePosition = state.tetheredButtonYRelativePosition else { return nil }
+        
+        let windowHeight: CGFloat
+        if let trackedWindow = state.trackedWindow,
+           let frame = trackedWindow.element.getFrame(convertedToGlobalCoordinateSpace: true) {
+            windowHeight = frame.height
+        } else if let trackedScreen = state.trackedScreen {
+            windowHeight = trackedScreen.visibleFrame.height
+        } else {
+            return nil
+        }
+        
+        return windowHeight * (1.0 - relativePosition) - (Self.height / 2)
     }
 
     private var arrowRotation: Angle {
@@ -61,6 +73,11 @@ struct TetheredButton: View {
             }
             .tooltip(prompt: fitActiveWindowPrompt)
             Spacer()
+        }
+        .onAppear {
+            if let defaultEnvironmentSource = state.defaultEnvironmentSource {
+                AnalyticsManager.Technical.defaultWindowState(source: defaultEnvironmentSource)
+            }
         }
         .edgesIgnoringSafeArea(.top)
         .frame(maxHeight: .infinity, alignment: .top)
