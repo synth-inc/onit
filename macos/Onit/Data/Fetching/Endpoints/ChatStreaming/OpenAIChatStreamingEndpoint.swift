@@ -32,7 +32,10 @@ struct OpenAIChatStreamingEndpoint: StreamingEndpoint {
         if let data = event.data?.data(using: .utf8) {
             let response = try JSONDecoder().decode(Response.self, from: data)
             
-            return response.delta
+            if response.type == "response.output_text.delta" {
+                return response.delta
+            }
+            return nil
         }
         
         return nil
@@ -46,6 +49,7 @@ struct OpenAIChatStreamingEndpoint: StreamingEndpoint {
 }
 
 struct OpenAIChatStreamingResponse: Codable {
+    let type: String?
     let delta: String?
 }
 
