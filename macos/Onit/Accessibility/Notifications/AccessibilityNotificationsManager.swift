@@ -489,12 +489,14 @@ class AccessibilityNotificationsManager: ObservableObject {
         let selectedText = element.selectedText()
         
         if let selectedText = selectedText, HighlightedTextValidator.isValid(text: selectedText) {
-            _ = HighlightedTextBoundsExtractor.shared.getBounds(for: element, selectedText: selectedText)
+            Task {
+                _ = await HighlightedTextBoundsExtractor.shared.getBounds(for: element, selectedText: selectedText)
+                
+                processSelectedText(selectedText)
+            }
         } else {
             HighlightedTextBoundsExtractor.shared.reset()
         }
-        
-        processSelectedText(selectedText)
         
         showDebug()
     }

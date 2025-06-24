@@ -77,6 +77,7 @@ class QuickEditWindowController: NSObject, NSWindowDelegate {
     private var globalEventMonitor: Any?
     private var localEventMonitor: Any?
     private var hintPosition: CGPoint = .zero
+    private var hintHeight: CGFloat?
     private var resizeTimer: Timer?
     private var pendingSize: CGSize?
     private var isResizing: Bool = false
@@ -85,8 +86,9 @@ class QuickEditWindowController: NSObject, NSWindowDelegate {
     
     // MARK: - Functions
     
-    func show(at position: CGPoint) {
+    func show(at position: CGPoint, hintHeight: CGFloat?) {
         hintPosition = position
+        self.hintHeight = hintHeight
         
         if let window = window {
             let newPosition = calculateOptimalPosition()
@@ -106,6 +108,7 @@ class QuickEditWindowController: NSObject, NSWindowDelegate {
     func hide() {
         window?.orderOut(nil)
         window = nil
+        hintHeight = nil
         stopEventMonitoring()
         cleanupResizeState()
     }
@@ -224,6 +227,7 @@ class QuickEditWindowController: NSObject, NSWindowDelegate {
         isResizing = false
         lastProcessedSize = .zero
         isInitialDisplay = true
+        hintHeight = nil
     }
     
     private func shouldSkipSizeUpdate(fittingSize: CGSize, currentFrame: CGRect) -> Bool {
@@ -335,18 +339,17 @@ class QuickEditWindowController: NSObject, NSWindowDelegate {
     }
     
     private func calculateTargetPosition(for size: CGSize) -> CGPoint {
-        let hintFrame = CGRect(origin: hintPosition, size: QuickEditHintWindowController.hintSize)
+        let actualHintHeight = hintHeight ?? QuickEditHintWindowController.hintSize.height
+        let hintSize = CGSize(width: QuickEditHintWindowController.hintSize.width, height: actualHintHeight)
+        let hintFrame = CGRect(origin: hintPosition, size: hintSize)
         
         guard let screen = hintFrame.findScreen() else {
             return hintPosition
         }
         
         let screenFrame = screen.visibleFrame
-        let hintSize = QuickEditHintWindowController.hintSize
-        let hintOffset = QuickEditHintWindowController.hintOffset
-        let actualHintY = hintPosition.y + hintOffset.y
-        let hintTop = actualHintY + hintSize.height
-        let hintBottom = actualHintY
+        let hintTop = hintPosition.y + actualHintHeight
+        let hintBottom = hintPosition.y
         let spaceAbove = screenFrame.maxY - hintTop
         
         let targetY: CGFloat

@@ -34,6 +34,7 @@ class QuickEditManager: ObservableObject, CaretPositionDelegate {
     private let accessibilityManager = AccessibilityNotificationsManager.shared
     private var cancellables = Set<AnyCancellable>()
     private var currentHintPosition: CGPoint?
+    private var currentHintHeight: CGFloat?
     private var lastElement: AXUIElement?
     
     // MARK: - Private initializer
@@ -46,9 +47,13 @@ class QuickEditManager: ObservableObject, CaretPositionDelegate {
     
     func show() {
         if let hintPosition = currentHintPosition {
-            let newPosition = CGPoint(x: hintPosition.x - 10, y: hintPosition.y)
+            let hintOffset = QuickEditHintWindowController.hintOffset
+            let hintPositionWithOffset = CGPoint(
+                x: hintPosition.x + hintOffset.x,
+                y: hintPosition.y + hintOffset.y
+            )
             
-            windowController.show(at: newPosition)
+            windowController.show(at: hintPositionWithOffset, hintHeight: currentHintHeight)
         } else {
             log.error("Can't find currentHintPosition")
         }
@@ -58,13 +63,18 @@ class QuickEditManager: ObservableObject, CaretPositionDelegate {
         windowController.hide()
     }
     
-    func showHint(at position: CGPoint) {
-        currentHintPosition = position
-        hintWindowController.show(at: position)
+    func showHint(at position: CGPoint, height: CGFloat? = nil) {
+		let realHeight = height ?? QuickEditHintWindowController.hintSize.height
+        let finalHeight = max(realHeight, QuickEditHintWindowController.hintSize.height)
+
+		currentHintPosition = position
+        currentHintHeight = finalHeight
+        hintWindowController.show(at: position, height: finalHeight)
     }
     
     func hideHint() {
         currentHintPosition = nil
+        currentHintHeight = nil
 		isEditableElement = false
         hintWindowController.hide()
     }
@@ -116,13 +126,13 @@ class QuickEditManager: ObservableObject, CaretPositionDelegate {
         log.error("handleTextSelectionChange: \(selectedText ?? "nil")")
         
         if hasTextSelection(selectedText) {
-            if let (position, highlightedResult) = getTextSelectionPosition(selectedText) {
+            if let (frame, highlightedResult) = getTextSelectionPosition(selectedText) {
                 if shouldShowQuickEdit(for: highlightedResult.appName) {
-                    log.error("Showing hint for text selection at: \(position)")
+                    log.error("Showing hint for text selection at: \(frame)")
                     isEditableElement = highlightedResult.elementRole == kAXTextFieldRole || highlightedResult.elementRole == kAXTextAreaRole
                     currentAppName = highlightedResult.appName
                     lastElement = highlightedResult.element
-                    showHint(at: position)
+                    showHint(at: frame.origin, height: frame.height)
                 } else {
                     log.error("QuickEdit disabled/paused for \(highlightedResult.appName)")
                     hideHint()
@@ -143,16 +153,16 @@ class QuickEditManager: ObservableObject, CaretPositionDelegate {
         return true
     }
     
-    private func getTextSelectionPosition(_ selectedText: String?) -> (CGPoint, HighlightedTextBoundsResult)? {
+    private func getTextSelectionPosition(_ selectedText: String?) -> (CGRect, HighlightedTextBoundsResult)? {
         guard let selectedText = selectedText else {
             return nil
         }
         
         if let lastResult = HighlightedTextBoundsExtractor.shared.getLastResult(),
            lastResult.highlightedText == selectedText {
-            let screenFrame = convertAccessibilityToMacOSCoordinates(lastResult.highlightedTextFrame)
-            log.error("Bounds found for selected text: \(lastResult.highlightedTextFrame) in MacOS coordinates: \(screenFrame)")
-            return (CGPoint(x: screenFrame.origin.x, y: screenFrame.origin.y), lastResult)
+            let convertedFrame = convertAccessibilityToMacOSCoordinates(lastResult.highlightedTextFrame)
+            log.error("Bounds found for selected text: \(lastResult.highlightedTextFrame) in MacOS coordinates: \(convertedFrame)")
+            return (convertedFrame, lastResult)
         }
         
         log.error("No bounds found for selected text")

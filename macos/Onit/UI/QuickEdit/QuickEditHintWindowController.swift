@@ -23,8 +23,8 @@ class QuickEditHintWindowController: NSObject, NSWindowDelegate, ObservableObjec
     var window: NSWindow?
     var menuWindow: NSWindow?
     
-    static let hintSize = CGSize(width: 40, height: 40)
-    static let hintOffset = CGPoint(x: -20, y: -10)
+    static let hintSize = CGSize(width: QuickEditHintView.hintWidth + 2, height: 24)
+    static let hintOffset = CGPoint(x: -(QuickEditHintView.hintWidth + 2) * 1.2, y: 0)
     static let menuSize = CGSize(width: 240, height: 120)
     
     private var rightClickMonitor: Any?
@@ -32,14 +32,14 @@ class QuickEditHintWindowController: NSObject, NSWindowDelegate, ObservableObjec
     
     // MARK: - Functions
     
-    func show(at position: CGPoint) {
+    func show(at position: CGPoint, height: CGFloat) {
         if window != nil {
-            updatePosition(position)
+            updateWindow(at: position, height: height)
             window?.orderFront(nil)
             return
         }
         
-        createWindow(at: position)
+        createWindow(at: position, height: height)
     }
     
     func hide() {
@@ -68,9 +68,12 @@ class QuickEditHintWindowController: NSObject, NSWindowDelegate, ObservableObjec
     
     // MARK: - Private functions
     
-    private func createWindow(at position: CGPoint) {
-        let contentView = QuickEditHintView()
-        let hostingController = NSHostingController(rootView: contentView)
+    private func createWindow(at position: CGPoint, height: CGFloat) {
+        let contentView = QuickEditHintView(height: height)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .clipped(antialiased: false)
+        let hostingController = NSHostingController(rootView: AnyView(contentView))
+        hostingController.view.clipsToBounds = false
         
         window = QuickEditHintWindow()
         window?.contentViewController = hostingController
@@ -83,10 +86,7 @@ class QuickEditHintWindowController: NSObject, NSWindowDelegate, ObservableObjec
         window?.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
         window?.hasShadow = false
         
-        let size = Self.hintSize
-        window?.setContentSize(size)
-        
-        updatePosition(position)
+        updateWindow(at: position, height: height)
         
         window?.alphaValue = 0.0
         window?.orderFront(nil)
@@ -99,13 +99,43 @@ class QuickEditHintWindowController: NSObject, NSWindowDelegate, ObservableObjec
         }
     }
     
-    private func updatePosition(_ position: CGPoint) {
+    private func updateWindow(at position: CGPoint, height: CGFloat) {
         guard let window = window else { return }
         
-        let finalPosition = CGPoint(x: position.x + Self.hintOffset.x,
-                                    y: position.y + Self.hintOffset.y)
+        let windowSize = calculateWindowSize(for: height)
+        
+        window.setContentSize(windowSize)
+        
+        if let hostingController = window.contentViewController as? NSHostingController<AnyView> {
+            let newContentView = QuickEditHintView(height: height)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .clipped(antialiased: false)
+            hostingController.rootView = AnyView(newContentView)
+        }
+        
+        let iconWidth = QuickEditHintView.hintWidth + (QuickEditHintView.hozizontalPadding * 2)
+        let adjustedOffset = CGPoint(
+            x: Self.hintOffset.x - (windowSize.width - iconWidth) / 2,
+            y: Self.hintOffset.y - (windowSize.height - height) / 2
+        )
+        let finalPosition = CGPoint(x: position.x + adjustedOffset.x,
+                                    y: position.y + adjustedOffset.y)
         
         window.setFrameOrigin(finalPosition)
+    }
+    
+    private func calculateWindowSize(for height: CGFloat) -> CGSize {
+        let iconWidth = QuickEditHintView.hintWidth
+        let horizontalPadding: CGFloat = QuickEditHintView.hozizontalPadding * 2
+        let verticalPadding: CGFloat = QuickEditHintView.verticalPadding * 2
+        
+        let realViewWidth = iconWidth + horizontalPadding
+        let realViewHeight = height + verticalPadding
+        
+        return CGSize(
+            width: realViewWidth * QuickEditHintView.hoverScale,
+            height: realViewHeight * QuickEditHintView.hoverScale
+        )
     }
     
     private func startRightClickMonitoring() {
