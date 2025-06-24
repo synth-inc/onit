@@ -39,7 +39,7 @@ class Response {
     }
 
     var hasToolCall: Bool {
-        toolCallFunctionName != nil && !toolCallFunctionName!.isEmpty
+        toolCallFunctionName?.isEmpty == false
     }
 }
 
