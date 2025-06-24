@@ -43,7 +43,7 @@ struct PerplexityChatStreamingEndpoint: StreamingEndpoint {
             for (index, citation) in citations.enumerated() {
                 let realIndex = index + 1
                 let citation = "[CITATION, \(realIndex), \(citation)]"
-                content.replace("[\(realIndex)]", with: citation)
+                content = content.replacingOccurrences(of: "[\(realIndex)]", with: citation)
             }
             
             return StreamingEndpointResponse(content: content, functionName: nil, functionArguments: nil)
