@@ -30,7 +30,7 @@ actor ToolRouter {
                 toolName: toolName, arguments: functionArguments)
         default:
             return .failure(
-                ToolCallError(toolName: functionName, message: "Unregonized app name: \(appName)"))
+                ToolCallError(toolName: functionName, message: "Unrecognized app name: \(appName)"))
         }
     }
 }
