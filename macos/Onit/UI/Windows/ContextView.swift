@@ -12,9 +12,29 @@ import GoogleSignIn
 struct ContextView: View {
     @Default(.closedAutoContextDialog) var closedAutoContextDialog
     @State private var text: String? = nil
+    @State var windowState: OnitPanelState
 
-    var context: Context
+    let initialContext: Context
     var webFileContents: String
+
+    // Computed property to get the current context from state
+    private var context: Context {
+        guard case .auto(let autoContext) = initialContext else { return initialContext }
+
+        // Find the current context in the window state that matches our appHash
+        if let currentContext = windowState.pendingContextList.first(where: { ctx in
+            if case .auto(let currentAutoContext) = ctx {
+                return currentAutoContext.appHash == autoContext.appHash &&
+                       currentAutoContext.appTitle == autoContext.appTitle
+            }
+            return false
+        }) {
+            return currentContext
+        }
+
+        // Fallback to initial context if not found in state
+        return initialContext
+    }
 
     var body: some View {
         ScrollView {
@@ -37,7 +57,7 @@ struct ContextView: View {
                         .controlSize(.small)
                 }
             }
-            .task {
+            .task(id: context.hashValue) {
                 text = readableContent
             }
         }
@@ -134,8 +154,6 @@ struct ContextView: View {
 
         state?.removeContext(context: context)
 
-        ContextWindowsManager.shared.closeContextWindow(context: context)
-
         let trackedWindow = AccessibilityNotificationsManager.shared.windowsManager.findTrackedWindow(trackedWindowHash: autoContext.appHash)
 
         AccessibilityNotificationsManager.shared.retrieveWindowContent(
@@ -175,5 +193,9 @@ struct ContextView: View {
 }
 
 #Preview {
-    ContextView(context: .init(appName: "Test", appHash: 0, appTitle: "", appContent: [:]), webFileContents: "Test")
+    ContextView(
+        windowState: OnitPanelState(),
+        initialContext: .init(appName: "Test", appHash: 0, appTitle: "", appContent: [:]),
+        webFileContents: "Test"
+    )
 }

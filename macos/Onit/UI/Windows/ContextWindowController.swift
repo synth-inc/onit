@@ -69,7 +69,11 @@ class ContextWindowController: NSObject, NSWindowDelegate {
 
         self.context = context
 
-        self.contentView = ContextView(context: context, webFileContents: self.webFileContents)
+        self.contentView = ContextView(
+            windowState: windowState,
+            initialContext: context,
+            webFileContents: self.webFileContents
+        )
 
         super.init()
 
