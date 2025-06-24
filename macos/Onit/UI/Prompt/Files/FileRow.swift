@@ -18,16 +18,27 @@ struct FileRow: View {
         accessibilityPermissionManager.accessibilityPermissionStatus == .granted
     }
     
-    var windowBeingAddedToContext: Bool {
+    private var isWindowBeingTracked: Bool {
+        guard let windowState = windowState else { return false }
+        
         if let foregroundWindow = windowState.foregroundWindow {
             return windowState.windowContextTasks[foregroundWindow.hash] != nil
-        } else {
-            return false
+        }
+        return false
+    }
+    
+    private func showProgressIndicator() {
+        guard let windowState = windowState else { return }
+        
+        if let foregroundWindow = windowState.foregroundWindow {
+            windowState.cleanupWindowContextTask(
+                uniqueWindowIdentifier: foregroundWindow.hash
+            )
         }
     }
     
     var windowAlreadyInContext: Bool {
-        if let foregroundWindow = windowState.foregroundWindow,
+        if let foregroundWindow = windowState?.foregroundWindow,
            !contextList.isEmpty
         {
             let windowName = WindowHelpers.getWindowName(window: foregroundWindow.element)
@@ -35,7 +46,7 @@ struct FileRow: View {
             for contextItem in contextList {
                 if case .auto(let autoContext) = contextItem {
                     if windowName == autoContext.appTitle {
-                        windowState.cleanupWindowContextTask(
+                        windowState?.cleanupWindowContextTask(
                             uniqueWindowIdentifier: foregroundWindow.hash
                         )
                         return true
@@ -60,7 +71,7 @@ struct FileRow: View {
             addedWindowContextItems
         }
         .onDisappear {
-            windowState.cleanUpPendingWindowContextTasks()
+            cleanUpPendingWindowContextTasks()
         }
     }
 }
@@ -72,8 +83,8 @@ extension FileRow {
     private var addForegroundWindowToContextButton: some View {
         if accessibilityEnabled,
            autoContextFromCurrentWindow,
-           !(windowBeingAddedToContext || windowAlreadyInContext),
-           let foregroundWindow = windowState.foregroundWindow
+           !(isWindowBeingTracked || windowAlreadyInContext),
+           let foregroundWindow = windowState?.foregroundWindow
         {
             let foregroundWindowName = WindowHelpers.getWindowName(window: foregroundWindow.element)
             let iconBundleURL = WindowHelpers.getWindowAppBundleUrl(window: foregroundWindow.element)
@@ -88,32 +99,34 @@ extension FileRow {
                 iconBundleURL: iconBundleURL,
                 tooltip: "Add \(foregroundWindowName) Context"
             ) {
-                windowState.addWindowToContext(
-                    window: foregroundWindow.element
-                )
+                addWindowToContext()
             }
         }
     }
     
     private var pendingWindowContextItems: some View {
-        ForEach(Array(windowState.windowContextTasks.keys), id: \.self) { uniqueWindowIdentifier in
-            let trackedWindow = AccessibilityNotificationsManager.shared.windowsManager.findTrackedWindow(
-                trackedWindowHash: uniqueWindowIdentifier
-            )
-            
-            if let trackedWindow = trackedWindow {
-                ContextTag(
-                    text: WindowHelpers.getWindowName(window: trackedWindow.element),
-                    background: .clear,
-                    hoverBackground: .clear,
-                    isLoading: true,
-                    iconView: LoaderPulse(),
-                    removeAction: {
-                        windowState.cleanupWindowContextTask(
-                            uniqueWindowIdentifier: uniqueWindowIdentifier
+        Group {
+            if let windowState = windowState {
+                ForEach(Array(windowState.windowContextTasks.keys), id: \.self) { uniqueWindowIdentifier in
+                    let trackedWindow = AccessibilityNotificationsManager.shared.windowsManager.findTrackedWindow(
+                        trackedWindowHash: uniqueWindowIdentifier
+                    )
+                    
+                    if let trackedWindow = trackedWindow {
+                        ContextTag(
+                            text: WindowHelpers.getWindowName(window: trackedWindow.element),
+                            background: .clear,
+                            hoverBackground: .clear,
+                            isLoading: true,
+                            iconView: LoaderPulse(),
+                            removeAction: {
+                                windowState.cleanupWindowContextTask(
+                                    uniqueWindowIdentifier: uniqueWindowIdentifier
+                                )
+                            }
                         )
                     }
-                )
+                }
             }
         }
     }
@@ -137,3 +150,23 @@ extension FileRow {
         FileRow(contextList: [])
     }
 #endif
+
+// MARK: - Helper Functions
+
+extension FileRow {
+    private func cleanUpPendingWindowContextTasks() {
+        windowState?.cleanUpPendingWindowContextTasks()
+    }
+    
+    private func addWindowToContext() {
+        guard let windowState = windowState else { return }
+        
+        let foregroundWindow = windowState.foregroundWindow
+        
+        if let foregroundWindow = foregroundWindow {
+            windowState.addWindowToContext(
+                window: foregroundWindow.element
+            )
+        }
+    }
+}

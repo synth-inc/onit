@@ -33,7 +33,7 @@ struct ExternalTetheredButton: View {
     }
     
     private var containsInput: Bool {
-        return windowState.pendingInput != nil
+        return windowState?.pendingInput != nil
     }
     
     private var containsInputBinding: Binding<Bool> {

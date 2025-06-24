@@ -11,7 +11,7 @@ struct TetheredToAppView: View {
     @Environment(\.windowState) private var state
     
     private var pid: pid_t? {
-        state.trackedWindow?.pid
+        state?.trackedWindow?.pid
     }
     
     private var appIcon: NSImage? {
@@ -21,7 +21,7 @@ struct TetheredToAppView: View {
     }
     
     private var appTitle: String? {
-        state.trackedWindow?.title
+        state?.trackedWindow?.title
     }
     
     var body: some View {

@@ -45,7 +45,7 @@ struct ToolbarLeft: View {
             iconSize: 22,
             action: {
                 AnalyticsManager.Toolbar.newChatPressed()
-                state.newChat()
+                state?.newChat()
             },
             tooltipPrompt: "New Chat",
             tooltipShortcut: .keyboardShortcuts(.newChat)
@@ -57,15 +57,15 @@ struct ToolbarLeft: View {
             icon: .smallChevDown,
             action: {
                 AnalyticsManager.Toolbar.systemPromptPressed()
-                state.newChat()
-                state.systemPromptState.shouldShowSelection = true
-                state.systemPromptState.shouldShowSystemPrompt = true
+                state?.newChat()
+                state?.systemPromptState.shouldShowSelection = true
+                state?.systemPromptState.shouldShowSystemPrompt = true
             },
             tooltipPrompt: "Start new Chat with system prompt"
         )
         .onHover(perform: { isHovered in
-            if isHovered && state.currentChat?.systemPrompt == nil && !state.systemPromptState.shouldShowSystemPrompt {
-                state.systemPromptState.shouldShowSystemPrompt = true
+            if isHovered && state?.currentChat?.systemPrompt == nil && state?.systemPromptState.shouldShowSystemPrompt != true {
+                state?.systemPromptState.shouldShowSystemPrompt = true
             }
         })
     }

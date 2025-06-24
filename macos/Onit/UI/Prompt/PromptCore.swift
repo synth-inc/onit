@@ -65,12 +65,12 @@ struct PromptCore: View {
     )
     
     private var text: String {
-        editingText?.wrappedValue ?? windowState.pendingInstruction
+        editingText?.wrappedValue ?? windowState?.pendingInstruction ?? ""
     }
     
     var body: some View {
         VStack(spacing: 0) {
-            if let pendingInput = windowState.pendingInput {
+            if let windowState = windowState, let pendingInput = windowState.pendingInput {
                 InputView(input: pendingInput)
             }
             
@@ -85,7 +85,7 @@ struct PromptCore: View {
         }
         .background {
             if !isEditing {
-                if !showSlashMenu && !windowState.showContextMenu && !windowState.isTyping {
+                if !showSlashMenu && (windowState?.showContextMenu != true) && (windowState?.isTyping != true) {
                     upListener
                     downListener
                 }
@@ -108,24 +108,24 @@ struct PromptCore: View {
             if text.isEmpty { disableSend = true }
             
             notificationDelegate = delegate
-            windowState.addDelegate(delegate)
+            windowState?.addDelegate(delegate)
         }
         .onDisappear {
             if let delegate = notificationDelegate {
-                windowState.removeDelegate(delegate)
+                windowState?.removeDelegate(delegate)
             }
         }
         .onChange(of: text) { old, new in
             let slashMenuOpened = new == "/" && old != "/ "
             showSlashMenu = slashMenuOpened
-            windowState.showContextMenu = slashMenuOpened // This should be removed later when the Slash Menu is developed.
+            windowState?.showContextMenu = slashMenuOpened // This should be removed later when the Slash Menu is developed.
             disableSend = slashMenuOpened || new.isEmpty
             
-            windowState.detectIsTyping()
+            windowState?.detectIsTyping()
         }
-        .onChange(of: windowState.pendingInstructionCursorPosition) {
+        .onChange(of: windowState?.pendingInstructionCursorPosition) {
             if !isEditing {
-                windowState.detectIsTyping()
+                windowState?.detectIsTyping()
             }
         }
     }
@@ -136,39 +136,40 @@ struct PromptCore: View {
 extension PromptCore {
     @ViewBuilder
     private var textField: some View {
-        @Bindable var windowState = windowState
-        
-        TextViewWrapper(
-            text: editingText ?? $windowState.pendingInstruction,
-            cursorPosition: $windowState.pendingInstructionCursorPosition,
-            dynamicHeight: $textHeight,
-            onSubmit: handleSend,
-            maxHeight: maxHeightLimit,
-            placeholder: placeholderText,
-            audioRecorder: audioRecorder,
-            isDisabled: showingAlert,
-            detectLinks: true
-        )
-        .frame(height: min(textHeight, maxHeightLimit))
-        .appFont(.medium16)
-        .foregroundStyle(.white)
-        .opacity(shouldIndicateDisabled ? 0.5 : 1)
-        .focused($isFocused)
-        .onAppear { isFocused = true }
-        .onChange(of: windowState.textFocusTrigger) { _, _ in
-            isFocused = true
+        if let windowState = windowState {
+            @Bindable var bindableWindowState = windowState
+            
+            TextViewWrapper(
+                text: editingText ?? $bindableWindowState.pendingInstruction,
+                cursorPosition: $bindableWindowState.pendingInstructionCursorPosition,
+                dynamicHeight: $textHeight,
+                onSubmit: handleSend,
+                maxHeight: maxHeightLimit,
+                placeholder: placeholderText,
+                audioRecorder: audioRecorder,
+                isDisabled: showingAlert,
+                detectLinks: true
+            )
+            .frame(height: min(textHeight, maxHeightLimit))
+            .appFont(.medium16)
+            .foregroundStyle(.white)
+            .opacity(shouldIndicateDisabled ? 0.5 : 1)
+            .focused($isFocused)
+            .onAppear { isFocused = true }
+            .onChange(of: windowState.textFocusTrigger) { _, _ in
+                isFocused = true
+            }
+            .onChange(of: showingAlert) { _, new in
+                isFocused = !new
+            }
+            .disabled(showingAlert)
+            .allowsHitTesting(!showingAlert)
+        } else {
+            Text("Loading...")
+                .appFont(.medium16)
+                .foregroundStyle(.gray500)
+                .frame(height: min(textHeight, maxHeightLimit))
         }
-        .onChange(of: showingAlert) { _, new in
-            isFocused = !new
-        }
-        .disabled(showingAlert)
-        .allowsHitTesting(!showingAlert)
-        // TODO: LOYD - This should be commented in when the Slash Menu is built.
-//        .popover(
-//            isPresented: $showSlashMenu
-//        ) {
-//            SlashMenu()
-//        }
     }
     
     private var contextAndInput: some View {
@@ -182,7 +183,7 @@ extension PromptCore {
                     )
             }
             
-            FileRow(contextList: windowState.pendingContextList)
+            FileRow(contextList: windowState?.pendingContextList ?? [])
             textField
         }
         .padding(12)
@@ -207,7 +208,7 @@ extension PromptCore {
 extension PromptCore {
     private var upListener: some View {
         KeyListener(key: .upArrow, modifiers: []) {
-            guard !chats.isEmpty else { return }
+            guard !chats.isEmpty, let windowState = windowState else { return }
 
             if windowState.historyIndex + 1 < chats.count {
                 windowState.historyIndex += 1
@@ -219,6 +220,8 @@ extension PromptCore {
 
     private var downListener: some View {
         KeyListener(key: .downArrow, modifiers: []) {
+            guard let windowState = windowState else { return }
+            
             if windowState.historyIndex > 0 {
                 windowState.historyIndex -= 1
                 windowState.currentChat = chats[windowState.historyIndex]
@@ -233,7 +236,7 @@ extension PromptCore {
     
     private var newListener: some View {
         KeyListener(key: "n") {
-            windowState.newChat()
+            windowState?.newChat()
         }
     }
 }
@@ -242,7 +245,8 @@ extension PromptCore {
 
 extension PromptCore {
     private var shouldIndicateDisabled: Bool {
-        !windowState.websiteUrlsScrapeQueue.isEmpty || !windowState.windowContextTasks.isEmpty
+        guard let windowState = windowState else { return false }
+        return !windowState.websiteUrlsScrapeQueue.isEmpty || !windowState.windowContextTasks.isEmpty
     }
     
     private var showingAlert: Bool {
@@ -257,22 +261,26 @@ extension PromptCore {
     }
     
     private var placeholderText: String {
+        guard let windowState = windowState else {
+            return "Loading..."
+        }
+        
         if let currentChat = windowState.currentChat {
             if !currentChat.isEmpty {
 
                 if let keyboardShortcutString = KeyboardShortcuts.getShortcut(for: .newChat)?
                     .description
                 {
-                    "Follow-up... (" + keyboardShortcutString + " for new), / for actions"
+                    return "Follow-up... (" + keyboardShortcutString + " for new), / for actions"
                 } else {
-                    "Follow-up..., / for actions"
+                    return "Follow-up..., / for actions"
                 }
 
             } else {
-                "New instructions, / for actions"
+                return "New instructions, / for actions"
             }
         } else {
-            "New instructions, / for actions"
+            return "New instructions, / for actions"
         }
     }
 }
@@ -283,7 +291,7 @@ extension PromptCore {
     private func handleSend() {
         Task {
             await appState.checkSubscriptionAlerts {
-                windowState.sendAction(accountId: appState.account?.id)
+                windowState?.sendAction(accountId: appState.account?.id)
             }
         }
     }

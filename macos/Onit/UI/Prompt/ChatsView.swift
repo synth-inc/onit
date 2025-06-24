@@ -12,13 +12,18 @@ struct ChatsView: View {
     @Environment(\.windowState) private var state
     
     var body: some View {
-        VStack(spacing: 0) {
-            ForEach(state.currentPrompts ?? []) { prompt in
-                Rectangle() // This is very odd. Without this, we get about 20px of vertical padding that I can't explain.
-                    .frame(maxWidth: .infinity, minHeight: 0, maxHeight: 0)
-                    .padding(0)
-                PromptView(prompt: prompt)
+        // Only show content if windowState is available
+        if let state = state {
+            VStack(spacing: 0) {
+                ForEach(state.currentPrompts ?? []) { prompt in
+                    Rectangle() // This is very odd. Without this, we get about 20px of vertical padding that I can't explain.
+                        .frame(maxWidth: .infinity, minHeight: 0, maxHeight: 0)
+                        .padding(0)
+                    PromptView(prompt: prompt)
+                }
             }
+        } else {
+            EmptyView()
         }
     }
 }
