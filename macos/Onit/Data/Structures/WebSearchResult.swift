@@ -16,6 +16,17 @@ struct WebSearchResult: Identifiable, Codable {
         case score
     }
     
+    // Custom initializer for decoding
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.id = UUID() // Always generate a new UUID
+        self.title = try container.decode(String.self, forKey: .title)
+        self.url = try container.decode(String.self, forKey: .url)
+        self.content = try container.decode(String.self, forKey: .content)
+        self.rawContent = try container.decodeIfPresent(String.self, forKey: .rawContent)
+        self.score = try container.decode(Double.self, forKey: .score)
+    }
+    
     // Initialize from Tavily API response
     init(from tavilyResult: [String: Any]) {
         self.title = tavilyResult["title"] as? String ?? "Unknown Title"
