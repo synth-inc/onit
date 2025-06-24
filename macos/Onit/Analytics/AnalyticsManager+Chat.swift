@@ -54,10 +54,9 @@ extension AnalyticsManager {
             PostHogSDK.shared.capture("chat_model_pressed", properties: properties)
         }
         
-        static func webSearchToggled(isAvailable: Bool, oldValue: Bool, newValue: Bool) {
+        static func webSearchToggled(oldValue: Bool, newValue: Bool) {
             var properties = AnalyticsManager.getCommonProperties()
             
-            properties["web_search_available"] = isAvailable
             properties["old_value"] = oldValue
             properties["new_value"] = newValue
             
