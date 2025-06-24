@@ -18,8 +18,7 @@ struct WebSearchButton: View {
     }
     
     private func toggleWebSearch() {
-        AnalyticsManager.Chat.webSearchToggled(isAvailable: true,
-                                               oldValue: webSearchEnabled,
+        AnalyticsManager.Chat.webSearchToggled(oldValue: webSearchEnabled,
                                                newValue: !webSearchEnabled)
         webSearchEnabled.toggle()
     }
