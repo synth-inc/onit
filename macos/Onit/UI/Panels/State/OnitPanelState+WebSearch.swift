@@ -11,6 +11,7 @@ extension OnitPanelState {
             if !isTavilyAPITokenValidated || tavilyAPIToken.isEmpty {
                 let client = FetchingClient()
                 let response = try await client.getChatSearch(query: query)
+                webSearchError = nil
                 return response.results
             } else {
                 let (_, results) = try await TavilyService.search(
