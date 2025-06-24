@@ -24,11 +24,11 @@ struct OnitChatStreamingEndpoint: StreamingEndpoint {
     var token: String? { TokenManager.token }
 
     let model: String
-
     let messages: [OnitChatMessage]
+    let includeSearch: Bool?
 
     var requestBody: OnitChatRequest? {
-        OnitChatRequest(model: model, messages: messages)
+        OnitChatRequest(model: model, messages: messages, includeSearch: includeSearch)
     }
 
     var additionalHeaders: [String : String]? { nil }
@@ -52,6 +52,7 @@ struct OnitChatStreamingEndpoint: StreamingEndpoint {
 struct OnitChatRequest: Codable {
     let model: String
     let messages: [OnitChatMessage]
+    let includeSearch: Bool?
 }
 
 struct OnitChatMessage: Codable {

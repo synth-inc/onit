@@ -12,8 +12,7 @@ struct WebSearchButton: View {
             action: { toggleWebSearch() },
             isActive: webSearchEnabled,
             activeColor: .white,
-            inactiveColor:
-                webSearchEnabled ? .blue400 : nil
+            inactiveColor: webSearchEnabled ? .blue400 : nil
         )
     }
     

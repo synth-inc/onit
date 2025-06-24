@@ -48,6 +48,14 @@ struct WebSearchTab: View {
                         .padding(.vertical, 4)
                         .background(Color.green.opacity(0.2))
                         .cornerRadius(4)
+                } else {
+                    Text("Using Onit Server")
+                        .font(.system(size: 12))
+                        .foregroundStyle(.blue)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 4)
+                        .background(Color.blue.opacity(0.2))
+                        .cornerRadius(4)
                 }
             }
             
