@@ -5,20 +5,28 @@ struct WebSearchResult: Identifiable, Codable {
     var title: String
     var url: String
     var content: String
-    var rawContent: String
+    var rawContent: String?
     var score: Double
+    
+    enum CodingKeys: String, CodingKey {
+        case title
+        case url
+        case content
+        case rawContent = "raw_content"
+        case score
+    }
     
     // Initialize from Tavily API response
     init(from tavilyResult: [String: Any]) {
         self.title = tavilyResult["title"] as? String ?? "Unknown Title"
         self.url = tavilyResult["url"] as? String ?? ""
         self.content = tavilyResult["content"] as? String ?? ""
-        self.rawContent = tavilyResult["rawContent"] as? String ?? ""
+        self.rawContent = tavilyResult["raw_content"] as? String ?? ""
         self.score = tavilyResult["score"] as? Double ?? 0.0
     }
     
     public var fullContent: String {
-        return content + " " + rawContent
+        return content + " " + (rawContent ?? "")
     }
     
     // Convert to Context
