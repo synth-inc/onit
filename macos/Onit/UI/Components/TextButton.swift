@@ -148,7 +148,7 @@ struct TextButton<Child: View>: View {
                 if isHovering {
                     TooltipManager.shared.setTooltip(
                         Tooltip(
-                            prompt: tooltipPrompt ?? "",
+                            prompt: tooltipPrompt!,
                             shortcut: tooltipShortcut ?? .none
                         ),
                         delayStart: 0.4,

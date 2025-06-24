@@ -75,47 +75,45 @@ struct IconButton: View {
     }
     
     var body: some View {
-        HStack(alignment: .center, spacing: 0) {
-            Image(icon)
-                .resizable()
-                .renderingMode(.template)
-                .foregroundColor(iconColor)
-                .aspectRatio(contentMode: .fit)
-                .frame(width: iconSize, height: iconSize)
-        }
-        .frame(width: buttonSize, height: buttonSize)
-        .addButtonEffects(
-            background: background,
-            hoverBackground: hoverBackground,
-            cornerRadius: cornerRadius,
-            isHovered: $isHovered,
-            isPressed: $isPressed
-        ) {
-            action()
-        }
-        .addBorder(
-            cornerRadius: cornerRadius,
-            stroke: isActive ? activeBorderColor : .clear
-        )
-        .addAnimation(dependency: isActive)
-        .onChange(of: isHovered) { _, new in
-            if tooltipPrompt != nil {
-                if new {
-                    TooltipManager.shared.setTooltip(
-                        Tooltip(
-                            prompt: tooltipPrompt ?? "",
-                            shortcut: tooltipShortcut ?? .none
-                        ),
-                        delayStart: 0.4,
-                        delayEnd: 0
-                    )
-                } else {
-                    TooltipManager.shared.setTooltip(
-                        nil,
-                        delayEnd: 0
-                    )
+        Image(icon)
+            .resizable()
+            .renderingMode(.template)
+            .foregroundColor(iconColor)
+            .aspectRatio(contentMode: .fit)
+            .frame(width: iconSize, height: iconSize)
+            .frame(width: buttonSize, height: buttonSize)
+            .addButtonEffects(
+                background: background,
+                hoverBackground: hoverBackground,
+                cornerRadius: cornerRadius,
+                isHovered: $isHovered,
+                isPressed: $isPressed
+            ) {
+                action()
+            }
+            .addBorder(
+                cornerRadius: cornerRadius,
+                stroke: isActive ? activeBorderColor : .clear
+            )
+            .addAnimation(dependency: isActive)
+            .onChange(of: isHovered) { _, new in
+                if tooltipPrompt != nil {
+                    if new {
+                        TooltipManager.shared.setTooltip(
+                            Tooltip(
+                                prompt: tooltipPrompt!,
+                                shortcut: tooltipShortcut ?? .none
+                            ),
+                            delayStart: 0.4,
+                            delayEnd: 0
+                        )
+                    } else {
+                        TooltipManager.shared.setTooltip(
+                            nil,
+                            delayEnd: 0
+                        )
+                    }
                 }
             }
-        }
     }
 }
