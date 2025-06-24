@@ -45,16 +45,18 @@ struct ContextView: View {
                     dialog
                 }
 
-                if let text = text {
-                    Text(text)
-                        .appFont(.medium14)
-                        .padding(.top, (!closedAutoContextDialog && !hasError) ? 0 : 16)
-                        .padding(.bottom, 16)
-                        .padding(.horizontal, 16)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                } else {
-                    ProgressView("Loading context from \(readableTitle)...")
-                        .controlSize(.small)
+                if !hasError {
+                    if let text = text {
+                        Text(text)
+                            .appFont(.medium14)
+                            .padding(.top, !closedAutoContextDialog ? 0 : 16)
+                            .padding(.bottom, 16)
+                            .padding(.horizontal, 16)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                    } else {
+                        ProgressView("Loading context from \(readableTitle)...")
+                            .controlSize(.small)
+                    }
                 }
             }
             .task(id: context.hashValue) {
@@ -166,7 +168,7 @@ struct ContextView: View {
     var errorDialog: some View {
         let (subtitle, buttonText) = getErrorDialogInfo()
         
-        return SetUpDialog(title: errorTitle, buttonText: buttonText) {
+        return SetUpDialog(title: errorTitle, buttonText: buttonText, showCloseButton: false) {
             Text(subtitle)
         } action: {
             if errorCode == "1500" {
@@ -184,9 +186,6 @@ struct ContextView: View {
                     }
                 }
             }
-            // TODO: Handle other error dialog actions if needed
-        } closeAction: {
-            // TODO: Handle error dialog close action
         }
         .fixedSize(horizontal: false, vertical: true)
     }

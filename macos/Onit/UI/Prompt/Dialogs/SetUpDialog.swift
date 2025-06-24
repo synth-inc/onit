@@ -12,9 +12,10 @@ struct SetUpDialog<Subtitle: View>: View {
     var showButton: Bool = true
     var buttonText: String? = nil
     var showArrow: Bool = true
+    var showCloseButton: Bool = true
     @ViewBuilder var subtitle: () -> Subtitle
     var action: () -> Void
-    var closeAction: () -> Void
+    var closeAction: (() -> Void)? = nil
 
     var borderGrad: LinearGradient {
         .init(
@@ -61,13 +62,15 @@ struct SetUpDialog<Subtitle: View>: View {
 
             Spacer()
 
-            Button {
-                closeAction()
-            } label: {
-                Image(.smallCross)
-                    .padding(2)
+            if showCloseButton {
+                Button {
+                    closeAction?()
+                } label: {
+                    Image(.smallCross)
+                        .padding(2)
+                }
+                .buttonStyle(HoverableButtonStyle(background: true))
             }
-            .buttonStyle(HoverableButtonStyle(background: true))
         }
     }
 
