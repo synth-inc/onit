@@ -8,7 +8,7 @@ extension OnitPanelState {
         @Default(.tavilyAPIToken) var tavilyAPIToken
         @Default(.isTavilyAPITokenValidated) var isTavilyAPITokenValidated
         do {
-            if !isTavilyAPITokenValidated, !tavilyAPIToken.isEmpty {
+            if !isTavilyAPITokenValidated || tavilyAPIToken.isEmpty {
                 let client = FetchingClient()
                 let response = try await client.getChatSearch(query: query)
                 return response.results
