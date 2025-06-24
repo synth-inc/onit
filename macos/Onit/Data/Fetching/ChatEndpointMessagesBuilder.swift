@@ -194,19 +194,16 @@ struct ChatEndpointMessagesBuilder {
                 openAIMessageStack.append(openAIMessage)
             } else {
                 var parts = [
-                    OpenAIChatContentPart(type: "text", text: userMessage, image_url: nil)
+                    OpenAIChatContentPart(type: "input_text", text: userMessage, image_url: nil)
                 ]
                 for url in images[index] {
                     if let imageData = try? Data(contentsOf: url) {
                         let base64EncodedData = imageData.base64EncodedString()
                         let mimeType = url.mimeType
                         let imagePart = OpenAIChatContentPart(
-                            type: "image_url",
+                            type: "input_image",
                             text: nil,
-                            image_url: .init(
-                                url:
-                                    "data:\(mimeType);base64,\(base64EncodedData)"
-                            )
+                            image_url: "data:\(mimeType);base64,\(base64EncodedData)"
                         )
                         parts.append(imagePart)
                     } else {
@@ -539,32 +536,32 @@ struct ChatEndpointMessagesBuilder {
         responses: [String],
         systemMessage: String,
         userMessages: [String]
-    ) -> [OpenAIChatMessage] {
-        var openAIMessageStack: [OpenAIChatMessage] = []
+    ) -> [CustomChatMessage] {
+        var customMessageStack: [CustomChatMessage] = []
 
         // Initialize messages with system prompt if needed
         // if model.supportsSystemPrompts {
 
         // 3rd Party model providers don't tell us if system prompts are enabled or not...
         // How to handle? I guess the user needs to be able to toggle system prompts for each custom provider model.
-        openAIMessageStack.append(
-            OpenAIChatMessage(role: "system", content: .text(systemMessage)))
+        customMessageStack.append(
+            CustomChatMessage(role: "system", content: .text(systemMessage)))
 
         for (index, userMessage) in userMessages.enumerated() {
             if images[index].isEmpty {
-                let openAIMessage = OpenAIChatMessage(
+                let customMessage = CustomChatMessage(
                     role: "user", content: .text(userMessage))
-                openAIMessageStack.append(openAIMessage)
+                customMessageStack.append(customMessage)
             } else {
                 var parts = [
-                    OpenAIChatContentPart(
+                    CustomChatContentPart(
                         type: "text", text: userMessage, image_url: nil)
                 ]
                 for url in images[index] {
                     if let imageData = try? Data(contentsOf: url) {
                         let base64EncodedData = imageData.base64EncodedString()
                         let mimeType = url.mimeType
-                        let imagePart = OpenAIChatContentPart(
+                        let imagePart = CustomChatContentPart(
                             type: "image_url",
                             text: nil,
                             image_url: .init(
@@ -577,19 +574,19 @@ struct ChatEndpointMessagesBuilder {
                         print("Unable to read image data from URL: \(url)")
                     }
                 }
-                let openAIMessage = OpenAIChatMessage(
+                let customMessage = CustomChatMessage(
                     role: "user", content: .multiContent(parts))
-                openAIMessageStack.append(openAIMessage)
+                customMessageStack.append(customMessage)
             }
 
             // If there is a corresponding response, add it as an assistant message
             if index < responses.count {
-                let responseMessage = OpenAIChatMessage(
+                let responseMessage = CustomChatMessage(
                     role: "assistant", content: .text(responses[index]))
-                openAIMessageStack.append(responseMessage)
+                customMessageStack.append(responseMessage)
             }
         }
 
-        return openAIMessageStack
+        return customMessageStack
     }
 }
