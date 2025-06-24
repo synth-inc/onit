@@ -38,7 +38,7 @@ struct WebContextItem: View {
     }
     
     var body: some View {
-        let websiteUndergoingScrape = windowState.websiteUrlsScrapeQueue.keys.contains(websiteUrl.absoluteString)
+        let websiteUndergoingScrape = isWebsiteBeingScrapeOrScrapeCompleted
 
         ContextTag(
             text: getCurrentWebsiteTitle(),
@@ -46,8 +46,8 @@ struct WebContextItem: View {
             background: websiteUndergoingScrape || !isEditing ? .clear : .gray500,
             hoverBackground: isEditing ? .gray400 : .gray600,
             maxWidth: isEditing ? 155 : .infinity,
-            isLoading: websiteUndergoingScrape,
-            iconView: websiteUndergoingScrape ? LoaderPulse() : favicon,
+            isLoading: shouldShowProgressView,
+            iconView: shouldShowProgressView ? LoaderPulse() : favicon,
             caption: item.fileType,
             tooltip: getCurrentWebsiteTitle(),
             action: action,
@@ -86,7 +86,9 @@ extension WebContextItem {
 
 extension WebContextItem {
     private func getCurrentWebsiteTitle() -> String {
-        let pendingContextList = windowState.getPendingContextList()
+        guard let pendingContextList = windowState?.getPendingContextList() else {
+            return websiteTitle
+        }
 
         if let updatedWebContext = pendingContextList.first(where: { context in
             if case .web(let contextWebsiteUrl, _, _) = context,
@@ -103,5 +105,26 @@ extension WebContextItem {
         }
 
         return websiteTitle
+    }
+    
+    private var isWebsiteBeingScrapeOrScrapeCompleted: Bool {
+        guard let windowState = windowState else { return false }
+        
+        let websiteUndergoingScrape = windowState.websiteUrlsScrapeQueue.keys.contains(websiteUrl.absoluteString)
+        
+        return websiteUndergoingScrape
+    }
+    
+    private var shouldShowProgressView: Bool {
+        guard let windowState = windowState else { return false }
+        
+        let pendingContextList = windowState.getPendingContextList()
+        
+        return pendingContextList.contains { context in
+            if case .web(let existingWebsiteUrl, _, _) = context {
+                return existingWebsiteUrl.absoluteString == websiteUrl.absoluteString
+            }
+            return false
+        }
     }
 }

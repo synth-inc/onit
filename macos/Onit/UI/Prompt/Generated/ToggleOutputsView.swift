@@ -34,7 +34,7 @@ struct ToggleOutputsView: View {
         .foregroundStyle(prompt.canDecrementGeneration ? .FG : .gray300)
         .disabled(!prompt.canDecrementGeneration)
         .background {
-            if !windowState.isTyping {
+            if windowState?.isTyping != true {
                 Button { decrementGenerationIndex() }
                 label: { EmptyView() }
                     .keyboardShortcut(.leftArrow, modifiers: [])
@@ -64,7 +64,7 @@ struct ToggleOutputsView: View {
         .foregroundStyle(prompt.canIncrementGeneration ? .FG : .gray300)
         .disabled(!prompt.canIncrementGeneration)
         .background {
-            if !windowState.isTyping {
+            if windowState?.isTyping != true {
                 Button { incrementGenerationIndex() }
                 label: { EmptyView() }
                     .keyboardShortcut(.rightArrow, modifiers: [])

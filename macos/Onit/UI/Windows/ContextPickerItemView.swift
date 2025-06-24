@@ -34,7 +34,8 @@ struct ContextPickerItemView: View {
     @State private var isPressed: Bool = false
     
     private var windowIcon: NSImage? {
-        guard let foregroundWindow = windowState.foregroundWindow,
+        guard let windowState = windowState,
+              let foregroundWindow = windowState.foregroundWindow,
               let bundleUrl = WindowHelpers.getWindowAppBundleUrl(window: foregroundWindow.element)
         else {
             return nil

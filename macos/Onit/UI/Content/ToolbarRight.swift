@@ -74,26 +74,28 @@ struct ToolbarRight: View {
 
     var showHistoryBinding: Binding<Bool> {
         Binding(
-            get: { self.state.showHistory },
-            set: { self.state.showHistory = $0 }
+            get: { self.state?.showHistory ?? false },
+            set: { self.state?.showHistory = $0 }
         )
     }
     var history: some View {
         IconButton(
             icon: .history,
             iconSize: 22,
-            isActive: state.showHistory,
+            isActive: state?.showHistory ?? false,
             tooltipPrompt: "History"
         ) {
-            AnalyticsManager.Toolbar.historyPressed(displayed: state.showHistory)
-            state.showHistory.toggle()
+            AnalyticsManager.Toolbar.historyPressed(displayed: state?.showHistory ?? false)
+            state?.showHistory.toggle()
         }
         .popover(
             isPresented: showHistoryBinding,
             arrowEdge: .bottom
         ) {
-            HistoryView()
-                .modelContainer(state.container)
+            if let state = state {
+                HistoryView()
+                    .modelContainer(state.container)
+            }
         }
     }
 

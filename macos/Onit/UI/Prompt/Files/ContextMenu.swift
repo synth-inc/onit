@@ -14,38 +14,45 @@ struct ContextMenu: View {
     @State private var currentArrowKeyIndex: Int = 0
     @State private var maxArrowKeyIndex: Int = 0
     
-    // TODO: LOYD - Might want to delete later, as browser tabs are currently not implemented?
-    var showBrowserTabs: Bool {
-        return windowState.showContextMenuBrowserTabs
+    private var showBrowserTabsContextMenu: Bool {
+        return windowState?.showContextMenuBrowserTabs ?? false
     }
     
     var body: some View {
-        MenuList(
-            header: menuHeader,
-            search: MenuList.Search(
-                query: $searchQuery,
-                placeholder: "Search windows, tabs & files"
-            )
-        ) {
-            ContextMenuWindows(
-                searchQuery: $searchQuery,
-                currentArrowKeyIndex: $currentArrowKeyIndex,
-                maxArrowKeyIndex: $maxArrowKeyIndex
-            ) {
-                closeContextMenu()
-            } showBrowserTabsSubMenu: {
-                showBrowserTabsSubMenu()
+        VStack(spacing: 0) {
+            if windowState?.showContextMenu == true {
+                MenuList(
+                    header: menuHeader,
+                    search: MenuList.Search(
+                        query: $searchQuery,
+                        placeholder: "Search windows, tabs & files"
+                    )
+                ) {
+                    ContextMenuWindows(
+                        searchQuery: $searchQuery,
+                        currentArrowKeyIndex: $currentArrowKeyIndex,
+                        maxArrowKeyIndex: $maxArrowKeyIndex
+                    ) {
+                        closeContextMenu()
+                    } showBrowserTabsSubMenu: {
+                        showBrowserTabsSubMenu()
+                    }
+                }
+            }
+            
+            Button("Close") {
+                windowState?.showContextMenuBrowserTabs = false
             }
         }
-        .background {
-            if windowState.showContextMenu {
-                upListener
-                downListener
-            }
+        .background(Color.gray800)
+        .cornerRadius(12)
+        .onTapGesture {
+            windowState?.showContextMenu = false
         }
-        .onChange(of: showBrowserTabs) { _, _ in
-            searchQuery = ""
-            currentArrowKeyIndex = 0
+        .onChange(of: showBrowserTabsContextMenu) { _, new in
+            if new {
+                windowState?.showContextMenuBrowserTabs = true
+            }
         }
     }
 }
@@ -82,7 +89,7 @@ extension ContextMenu {
             icon: .chevLeft
         ) {
             searchQuery = ""
-            windowState.showContextMenuBrowserTabs = false
+            windowState?.showContextMenuBrowserTabs = false
         }
     }
     
@@ -96,8 +103,8 @@ extension ContextMenu {
     }
     
     private var menuHeader: MenuHeader<IconButton> {
-        MenuHeader(title: showBrowserTabs ? "Browser tabs" : "Add context") {
-            showBrowserTabs ? backButton : closeButton
+        MenuHeader(title: showBrowserTabsContextMenu ? "Browser tabs" : "Add context") {
+            showBrowserTabsContextMenu ? backButton : closeButton
         }
     }
 }
@@ -106,11 +113,11 @@ extension ContextMenu {
 
 extension ContextMenu {
     private func closeContextMenu() {
-        windowState.showContextMenu = false
+        windowState?.showContextMenu = false
     }
     
     private func showBrowserTabsSubMenu() {
         searchQuery = ""
-        windowState.showContextMenuBrowserTabs = true
+        windowState?.showContextMenuBrowserTabs = true
     }
 }

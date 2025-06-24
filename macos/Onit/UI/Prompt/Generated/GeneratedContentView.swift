@@ -25,7 +25,7 @@ struct GeneratedContentView: View {
             return ""
         }
         let response = prompt.sortedResponses[safeIndex]
-        return response.isPartial ? state.streamedResponse : response.text
+        return response.isPartial ? (state?.streamedResponse ?? "") : response.text
     }
     
     var configuration: LLMStreamConfiguration {
@@ -46,7 +46,7 @@ struct GeneratedContentView: View {
                           onCodeAction: codeAction)
                 .padding(.horizontal, 12)
             Spacer()
-            if textToRead.isEmpty && !(state.isSearchingWeb[prompt.id] ?? false) {
+            if textToRead.isEmpty && !(state?.isSearchingWeb[prompt.id] ?? false) {
                 HStack {
                     Spacer()
                     QLImage("loader_rotated-200")
