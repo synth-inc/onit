@@ -15,7 +15,7 @@ struct GeneralTabAudio: View {
     var body: some View {
         VStack(spacing: 8) {
             HStack {
-                Text("Voice Silence Threshold")
+                Text("Voice Ambient Noise Filter")
                 Slider(
                     value: $voiceSilenceThreshold,
                     in: -100...0,
@@ -37,7 +37,7 @@ struct GeneralTabAudio: View {
         
         VStack(spacing: 8) {
             HStack {
-                Text("Voice Speech Pass Threshold")
+                Text("Voice Confidence Threshold")
                 Slider(
                     value: $voiceSpeechPassThreshold,
                     in: 0...1,
