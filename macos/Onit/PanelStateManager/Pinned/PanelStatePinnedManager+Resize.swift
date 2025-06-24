@@ -64,9 +64,6 @@ extension PanelStatePinnedManager {
                     let newWidth = windowFrame.width - overlapAmount
                     let newFrame = CGRect(x: windowFrame.origin.x, y: windowFrame.origin.y, width: newWidth, height: windowFrame.height)
                     _ = window.setFrame(newFrame)
-                } else if availableSpace > panelWidth, windowFrameChanged {
-                    // The user reduced the window, we should remove the initial frame
-                    targetInitialFrames.removeValue(forKey: window)
                 }
             } else {
                 // If we're already tracking it, then make it move.

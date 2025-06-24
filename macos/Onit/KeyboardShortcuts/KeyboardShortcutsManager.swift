@@ -98,7 +98,9 @@ struct KeyboardShortcutsManager {
                     PanelStateCoordinator.shared.launchPanel()
                 case .escape:
                     if state.panel != nil {
-                        if state.pendingInput != nil {
+                        if state.showContextMenuBrowserTabs {
+                            state.showContextMenuBrowserTabs = false
+                        } else if state.pendingInput != nil {
                             state.pendingInput = nil
                         } else {
                             PanelStateCoordinator.shared.closePanel()

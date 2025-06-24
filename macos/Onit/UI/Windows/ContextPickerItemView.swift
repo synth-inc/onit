@@ -8,11 +8,12 @@
 import SwiftUI
 
 struct ContextPickerItemView: View {
+    @Environment(\.windowState) private var windowState
+    
     private let showEmptyIcon: Bool
     private let imageRes: ImageResource
     private let title: String
     private let subtitle: String
-    private let currentWindowBundleUrl: URL?
     private let action: () -> Void
     
     init(
@@ -20,14 +21,12 @@ struct ContextPickerItemView: View {
         imageRes: ImageResource,
         title: String,
         subtitle: String,
-        currentWindowBundleUrl: URL? = nil,
         action: @escaping () -> Void
     ) {
         self.showEmptyIcon = showEmptyIcon
         self.imageRes = imageRes
         self.title = title
         self.subtitle = subtitle
-        self.currentWindowBundleUrl = currentWindowBundleUrl
         self.action = action
     }
     
@@ -35,7 +34,12 @@ struct ContextPickerItemView: View {
     @State private var isPressed: Bool = false
     
     private var windowIcon: NSImage? {
-        guard let bundleUrl = currentWindowBundleUrl else { return nil }
+        guard let foregroundWindow = windowState.foregroundWindow,
+              let bundleUrl = WindowHelpers.getWindowAppBundleUrl(window: foregroundWindow.element)
+        else {
+            return nil
+        }
+        
         return NSWorkspace.shared.icon(forFile: bundleUrl.path)
     }
 
@@ -86,7 +90,6 @@ struct ContextPickerItemView: View {
         imageRes: .arrowsSpin,
         title: "",
         subtitle: "",
-        currentWindowBundleUrl: nil,
         action: { print("Preview") }
     )
 }

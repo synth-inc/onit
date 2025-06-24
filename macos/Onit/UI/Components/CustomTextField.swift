@@ -56,7 +56,6 @@ struct CustomTextField: View {
                     .textFieldStyle(.plain)
                     .font(.system(size: 14, weight: .medium))
                     .foregroundColor(.white)
-                    .tint(.blue600.opacity(0.2))
                     .fixedSize(horizontal: false, vertical: true)
                     .focused($focused)
                 

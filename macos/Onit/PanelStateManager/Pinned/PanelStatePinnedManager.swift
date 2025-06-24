@@ -21,6 +21,7 @@ class PanelStatePinnedManager: PanelStateBaseManager, ObservableObject {
     // MARK: - Properties
     
     var isResizingWindows: Bool = false
+    var hintYRelativePosition: CGFloat?
     
     private var lastScreenFrame = CGRect.zero
     private var globalMouseMonitor: Any?
@@ -115,6 +116,8 @@ class PanelStatePinnedManager: PanelStateBaseManager, ObservableObject {
         
         state.removeDelegate(self)
         
+        hintYRelativePosition = nil
+        
         super.stop()
     }
     
@@ -151,7 +154,7 @@ class PanelStatePinnedManager: PanelStateBaseManager, ObservableObject {
     }
 
     override func fetchWindowContext() {
-        AccessibilityNotificationsManager.shared.fetchAutoContext()
+        AccessibilityNotificationsManager.shared.retrieveWindowContent()
     }
     
     // MARK: - Functions
@@ -161,6 +164,11 @@ class PanelStatePinnedManager: PanelStateBaseManager, ObservableObject {
         
         guard let app = (userInfo[NSWorkspace.applicationUserInfoKey] as? NSRunningApplication) ??
                 (userInfo["NSWorkspaceApplicationKey"] as? NSRunningApplication) else { return }
+        
+        state.foregroundWindow = AccessibilityNotificationsManager.shared.windowsManager.trackWindowForElement(
+            app.processIdentifier.getAXUIElement(),
+            pid: app.processIdentifier
+        )
         
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { [weak self] in
             let windows = app.processIdentifier.getWindows()
@@ -226,5 +234,26 @@ class PanelStatePinnedManager: PanelStateBaseManager, ObservableObject {
         } else {
             targetInitialFrames.removeValue(forKey: window)
         }
+    }
+
+    override func resetFramesOnAppChange() {
+        let panelWidth = state.panelWidth - (TetheredButton.width / 2) + 1
+        targetInitialFrames.forEach { element, initialFrame in
+            // In Pinned mode, we should only reset the frame if it's still bordering the panel.
+            // Instead of using the initial frame, we should add panelWidth back to the window, so it goes all the way to the edge of the screen.
+            if let currentFrame = element.getFrame() {
+                let screenFrame = attachedScreen?.visibleFrame ?? NSScreen.main?.visibleFrame ?? .zero
+                let isNearPanel = abs((screenFrame.maxX - panelWidth) - currentFrame.maxX) <= 2
+
+                if !isNearPanel {
+                    return
+                }
+                let newWidth = currentFrame.width + panelWidth
+                let newFrame = NSRect(origin: currentFrame.origin,
+                                        size: NSSize(width: newWidth, height: currentFrame.height))
+                _ = element.setFrame(newFrame)
+            }
+        }
+        targetInitialFrames.removeAll()
     }
 }

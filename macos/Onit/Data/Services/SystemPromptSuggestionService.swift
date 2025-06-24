@@ -153,11 +153,10 @@ class SystemPromptSuggestionService {
     }
     
     private func updateSuggestions(text: String, apps: String) {
-        let context = ModelContext(state.container)
         let fetchDescriptor = FetchDescriptor<SystemPrompt>(
             sortBy: [SortDescriptor(\.lastUsed, order: .reverse)]
         )
-        let allPrompts = (try? context.fetch(fetchDescriptor)) ?? []
+        let allPrompts = (try? state.container.mainContext.fetch(fetchDescriptor)) ?? []
         lastPromptUsed = allPrompts.first ?? .outputOnly
         
         let scoredPrompts = allPrompts.map { prompt -> (SystemPrompt, Int) in

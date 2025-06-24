@@ -2,8 +2,7 @@ import SwiftUI
 import Defaults
 
 struct WebSearchButton: View {
-    @Default(.tavilyAPIToken) var tavilyAPIToken
-    @Default(.isTavilyAPITokenValidated) var isTavilyAPITokenValidated
+    @Environment(\.appState) var appState
     @Default(.webSearchEnabled) var webSearchEnabled
     
     var body: some View {

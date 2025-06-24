@@ -13,11 +13,13 @@ struct GeneralTab: View {
     @Default(.createNewChatOnPanelOpen) var createNewChatOnPanelOpen
     @Default(.openOnMouseMonitor) var openOnMouseMonitor
     @Default(.usePinnedMode) var usePinnedMode
+    @Default(.autoContextOnLaunchTethered) var autoContextOnLaunchTethered
     
     @State var isLaunchAtStartupEnabled: Bool = SMAppService.mainApp.status == .enabled
     @State var isAnalyticsEnabled: Bool = PostHogSDK.shared.isOptOut() == false
     
     @ObservedObject private var accessibilityPermissionManager = AccessibilityPermissionManager.shared
+    @ObservedObject private var featureFlagsManager = FeatureFlagManager.shared
     
     private var accessibilityGranted: Bool {
         accessibilityPermissionManager.accessibilityPermissionStatus == .granted
@@ -121,7 +123,6 @@ struct GeneralTab: View {
                     .buttonStyle(.plain)
                     .disabled(!accessibilityGranted)
                 }
-                
                 if !accessibilityGranted {
                     VStack(alignment: .leading, spacing: 8) {
                         Text("To use Pinned or Tethered mode, enable Accessibility permission for Onit.")
@@ -153,6 +154,30 @@ struct GeneralTab: View {
                                 .foregroundStyle(.gray200)
                         } else {
                             Text("Onit will attach to your applications. There can be one Onit panel for each application window. If you move your app, Onit will move with it.")
+                                .font(.system(size: 12))
+                                .foregroundStyle(.gray200)
+                        }
+                    }
+                }
+                if !featureFlagsManager.usePinnedMode {
+                    Section {
+                        VStack(alignment: .leading, spacing: 4) {
+                            HStack {
+                                Text("Add Current Window on Launch")
+                                    .font(.system(size: 13))
+                                Spacer()
+                                Toggle("", isOn: $autoContextOnLaunchTethered)
+                                    .toggleStyle(.switch)
+                                    .controlSize(.small)
+                                SettingInfoButton(
+                                    title: "Add Current Window on Launch",
+                                    description:
+                                        "When enabled, Onit automatically reads the tethered window and adds its text as context whenever the panel opens.",
+                                    defaultValue: "on",
+                                    valueType: "Bool"
+                                )
+                            }
+                            Text("Adds context from the current window whenever Onit opens in Tethered mode.")
                                 .font(.system(size: 12))
                                 .foregroundStyle(.gray200)
                         }
@@ -262,6 +287,9 @@ struct GeneralTab: View {
                         .controlSize(.small)
                     }
                 }
+                
+                GeneralTabAudio()
+                
                 //                VStack(alignment: .leading, spacing: 8) {
                 //                    Text("Panel Position")
                 //                        .font(.system(size: 13))

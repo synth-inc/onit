@@ -14,7 +14,11 @@ class PanelStateBaseManager: PanelStateManagerLogic {
     
     // MARK: - Properties
     
-    let defaultState = OnitPanelState()
+    let defaultState: OnitPanelState = {
+        let state = OnitPanelState()
+        state.defaultEnvironmentSource = "PanelStateBaseManager"
+        return state
+    }()
     let animationDuration: TimeInterval = 0.2
     
     @Published var state: OnitPanelState
@@ -81,7 +85,6 @@ class PanelStateBaseManager: PanelStateManagerLogic {
 
         tetherHintDetails.tetherWindow.orderOut(nil)
         tetherHintDetails.tetherWindow.contentView = nil
-        tetherHintDetails.lastYComputed = nil
     }
     
     func resetFramesOnAppChange() {

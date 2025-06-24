@@ -8,19 +8,26 @@
 // MARK: - AccessibilityNotificationsDelegate
 
 extension PanelStateTetheredManager: AccessibilityNotificationsDelegate {
+    //  MARK: - DID ACTIVATE WINDOW
     
     func accessibilityManager(_ manager: AccessibilityNotificationsManager, didActivateWindow window: TrackedWindow) {
+        state.foregroundWindow = window
+        
         log.debug("activate window")
         let panelState = getState(for: window)
         
         handlePanelStateChange(state: panelState, action: .activate)
     }
     
+    //  MARK: - DID ACIVATE IGNORED WINDOW
+    
     func accessibilityManager(_ manager: AccessibilityNotificationsManager, didActivateIgnoredWindow window: TrackedWindow?) {
         log.debug("activate ignored window")
         hideTetherWindow()
         updateLevelState(trackedWindow: window)
     }
+    
+    //  MARK: - DID MINIMIZE WINDOW
     
     func accessibilityManager(_ manager: AccessibilityNotificationsManager, didMinimizeWindow window: TrackedWindow) {
         log.debug("minimize window")
@@ -33,6 +40,8 @@ extension PanelStateTetheredManager: AccessibilityNotificationsDelegate {
         }
     }
     
+    //  MARK: - DID DEMINIMIZE WINDOW
+    
     func accessibilityManager(_ manager: AccessibilityNotificationsManager, didDeminimizeWindow window: TrackedWindow) {
         log.debug("deminimize window")
         if let (_, state) = statesByWindow.first(where: { (key: TrackedWindow, value: OnitPanelState) in
@@ -43,6 +52,8 @@ extension PanelStateTetheredManager: AccessibilityNotificationsDelegate {
             state.panelWasHidden = false
         }
     }
+    
+    // MARK: - DID DESTROY WINDOW
         
     func accessibilityManager(_ manager: AccessibilityNotificationsManager, didDestroyWindow window: TrackedWindow) {
         log.debug("destroy window")
@@ -57,12 +68,16 @@ extension PanelStateTetheredManager: AccessibilityNotificationsDelegate {
         hideTetherWindow()
     }
     
+    // MARK: - DID MOVE WINDOW
+    
     func accessibilityManager(_ manager: AccessibilityNotificationsManager, didMoveWindow window: TrackedWindow) {
         log.debug("move window")
         let panelState = getState(for: window)
         
         handlePanelStateChange(state: panelState, action: .move)
     }
+    
+    // MARK: - DID RESIZE WINDOW
     
     func accessibilityManager(_ manager: AccessibilityNotificationsManager, didResizeWindow window: TrackedWindow) {
         log.debug("resize window")
@@ -71,7 +86,17 @@ extension PanelStateTetheredManager: AccessibilityNotificationsDelegate {
         handlePanelStateChange(state: panelState, action: .resize)
     }
     
-    func accessibilityManager(_ manager: AccessibilityNotificationsManager, didChangeWindowTitle window: TrackedWindow) {}
+    // MARK: - DID CHANGE WINDOW TITLE
+    
+    func accessibilityManager(_ manager: AccessibilityNotificationsManager, didChangeWindowTitle window: TrackedWindow) {
+        if let foregroundWindow = state.foregroundWindow,
+           window.element == foregroundWindow.element,
+           window.pid == foregroundWindow.pid,
+           window.hash == foregroundWindow.hash
+        {
+            state.foregroundWindow = window
+        }
+    }
 }
 
 // MARK: - OnitPanelStateDelegate
@@ -92,7 +117,9 @@ extension PanelStateTetheredManager: OnitPanelStateDelegate {
         self.state = state
         foregroundTrackedWindowIfNeeded(state: state)
     }
-    func panelResignKey(state: OnitPanelState) { }
+    
+    func panelResignKey(state: OnitPanelState) {}
+    
     func panelStateDidChange(state: OnitPanelState) {
         handlePanelStateChange(state: state, action: .undefined)
     }

@@ -22,6 +22,9 @@ struct SystemPromptTab: View {
     
     @State private var shortcutChanged = false
     
+    @State private var showErrorAlert = false
+    @State private var errorMessage = ""
+    
     private let detailsWidthRatio: CGFloat = 0.40
     
     private var unwrappedSelectedPrompt: Binding<SystemPrompt> {
@@ -80,16 +83,12 @@ struct SystemPromptTab: View {
             }
             .onChange(of: shouldDeleteSelectedPrompt) { _, new in
                 if new {
-                    Task { @MainActor in
-                        deleteSelectedPrompt()
-                    }
+                    deleteSelectedPrompt()
                 }
             }
             .onChange(of: shouldSavePrompt) { _, new in
                 if new {
-                    Task { @MainActor in
-                        addPrompt()
-                    }
+                    addPrompt()
                 }
             }
             .sheet(isPresented: $showAdd) {
@@ -97,17 +96,25 @@ struct SystemPromptTab: View {
                                     isSaved: $shouldSavePrompt,
                                     shortcutChanged: .constant(false))
             }
+            .alert("Error", isPresented: $showErrorAlert) {
+                Button("OK") { }
+            } message: {
+                Text(errorMessage)
+            }
         }
     }
     
     private func addPrompt() {
         modelContext.insert(promptToAdd)
-        try! modelContext.save()
-        
-        KeyboardShortcutsManager.register(systemPrompt: promptToAdd)
-        
-        promptToAdd = SystemPrompt()
-        shouldSavePrompt = false
+        do {
+            try modelContext.save()
+            KeyboardShortcutsManager.register(systemPrompt: promptToAdd)
+            promptToAdd = SystemPrompt()
+            shouldSavePrompt = false
+        } catch {
+            errorMessage = "Unable to save the prompt: \(error.localizedDescription)"
+            showErrorAlert = true
+        }
     }
     
     private func deleteSelectedPrompt() {
@@ -120,7 +127,12 @@ struct SystemPromptTab: View {
             KeyboardShortcutsManager.unregister(systemPrompt: systemPrompt)
             
             modelContext.delete(systemPrompt)
-            try! modelContext.save()
+            do {
+                try modelContext.save()
+            } catch {
+                errorMessage = "Unable to delete the prompt: \(error.localizedDescription)"
+                showErrorAlert = true
+            }
         }
         
         shouldDeleteSelectedPrompt = false
@@ -136,7 +148,6 @@ struct SystemPromptTab: View {
         for state in PanelStateCoordinator.shared.states {
             if state.systemPromptId == deletedId {
                 do {
-                    let modelContext = ModelContext(state.container)
                     let result = try modelContext.fetch(fetchDescriptor)
                     
                     if let systemPrompt = result.first {
@@ -145,6 +156,7 @@ struct SystemPromptTab: View {
                         state.systemPromptId = SystemPrompt.outputOnly.id
                     }
                 } catch {
+                    print("Failed to fetch replacement prompt: \(error)")
                     state.systemPromptId = SystemPrompt.outputOnly.id
                 }
             }

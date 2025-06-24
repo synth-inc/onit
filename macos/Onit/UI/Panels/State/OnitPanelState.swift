@@ -23,6 +23,8 @@ import SwiftUI
 @Observable
 class OnitPanelState: NSObject {
     
+    @ObservationIgnored var defaultEnvironmentSource: String? = nil
+    
     /// Clients
     let client = FetchingClient()
     let streamingClient = StreamingClient()
@@ -45,7 +47,19 @@ class OnitPanelState: NSObject {
     var promptSuggestionService: SystemPromptSuggestionService?
     
     // TODO: KNA - Refacto: Should be removed at the end
-    var trackedWindow: TrackedWindow?
+    var trackedWindow: TrackedWindow? // Used only in Tethered Mode. Corresponds to the specific window that's tethered to the panel.
+    var foregroundWindow: TrackedWindow? = nil {
+        didSet {
+            if let newWindow = foregroundWindow {
+                foregroundedWindowHistory.append(newWindow.hash)
+                if foregroundedWindowHistory.count > 50 {
+                    foregroundedWindowHistory.removeFirst()
+                }
+            }
+        }
+    } // Used for window context tracking (required for all modes).
+    var foregroundedWindowHistory : [UInt?] = []
+    
     // TODO: KNA - Refacto: Should be removed at the end
     var trackedScreen: NSScreen?
     var isWindowDragging: Bool = false
@@ -87,7 +101,7 @@ class OnitPanelState: NSObject {
         }
     }
     
-    var tetheredButtonYPosition: CGFloat?
+    var tetheredButtonYRelativePosition: CGFloat?
     
     var panelWidth: CGFloat 
     
@@ -96,6 +110,9 @@ class OnitPanelState: NSObject {
     
     var pendingInstruction = "" {
         didSet {
+            if pendingInstruction.isEmpty {
+                pendingInstructionCursorPosition = 0
+            }
             notifyDelegateInputsChange()
         }
     }
@@ -127,19 +144,25 @@ class OnitPanelState: NSObject {
     var generateTask: Task<Void, Never>? = nil
     var generatingPrompt: Prompt?
     var generatingPromptPriorState: GenerationState?
+    var generationStopped: Bool = false
     
     /// Don't leave this text empty to ensure the first scroll works.
     var streamedResponse: String = " "
     
-    // Web search state
+    // Web search states
     var webSearchError: Error? = nil
     var isSearchingWeb: [PersistentIdentifier: Bool] = [:]
 
     typealias WebsiteUrlScrapeTask = Task<Void, Never>
     var websiteUrlsScrapeQueue: [String: WebsiteUrlScrapeTask] = [:]
     
-    typealias TaskWindowName = String
-    var addAutoContextTasks: [TaskWindowName: Task<Void, Never>] = [:]
+    // Window context states
+    typealias UniqueWindowIdentifier = UInt
+    var windowContextTasks: [UniqueWindowIdentifier: Task<Void, Never>] = [:]
+    
+    // Menu States
+    var showContextMenu: Bool = false
+    var showContextMenuBrowserTabs: Bool = false
 
     var deleteChatFailed: Bool = false
     

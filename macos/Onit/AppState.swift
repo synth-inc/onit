@@ -12,7 +12,7 @@ import SwiftUI
 
 @MainActor
 @Observable
-class AppState: NSObject {
+class AppState: NSObject, SPUUpdaterDelegate {
     
     // MARK: - Properties
     
@@ -78,6 +78,13 @@ class AppState: NSObject {
     
     override init() {
         super.init()
+        
+        // Used for showing/removing update available footer notification.
+        updater = SPUStandardUpdaterController(
+            startingUpdater: true,
+            updaterDelegate: self,
+            userDriverDelegate: nil
+        )
 
         Task {
             await fetchLocalModels()
@@ -469,7 +476,97 @@ class AppState: NSObject {
         return models
     }
 
+    var hasUserAPITokens: Bool {
+        if let token = Defaults[.openAIToken],
+           !token.isEmpty,
+           isOpenAITokenValidated {
+            return true
+        }
+        if let token = Defaults[.anthropicToken],
+           !token.isEmpty,
+           isAnthropicTokenValidated {
+            return true
+        }
+        if let token = Defaults[.xAIToken],
+           !token.isEmpty,
+           isXAITokenValidated {
+            return true
+        }
+        if let token = Defaults[.googleAIToken],
+           !token.isEmpty,
+           isGoogleAITokenValidated {
+            return true
+        }
+        if let token = Defaults[.deepSeekToken],
+           !token.isEmpty,
+           isDeepSeekTokenValidated {
+            return true
+        }
+        if let token = Defaults[.perplexityToken],
+           !token.isEmpty,
+           isPerplexityTokenValidated {
+            return true
+        }
+        for provider in availableCustomProvider {
+            if !provider.token.isEmpty && provider.isTokenValidated {
+                return true
+            }
+        }
+        return false
+    }
+
 //    var remoteNeedsSetup: Bool {
 //        listedModels.isEmpty
 //    }
+}
+
+// MARK: - App Update Listeners
+
+extension AppState {
+    func removeDiscordFooterNotifications() {
+        Defaults[.footerNotifications].removeAll { notification in
+            if case .discord = notification {
+                return true
+            }
+            return false
+        }
+    }
+    
+    func checkForAvailableUpdate() {
+        self.updater.updater.checkForUpdateInformation()
+    }
+    
+    func checkForAvailableUpdateWithDownload() {
+        self.updater.updater.checkForUpdates()
+    }
+    
+    private func addUpdateFooterNotification() {
+        if !Defaults[.footerNotifications].contains(.update) {
+            Defaults[.footerNotifications].append(.update)
+        }
+    }
+    
+    nonisolated func updater(
+        _ updater: SPUUpdater,
+        didFindValidUpdate item: SUAppcastItem
+    ) {
+        Task { @MainActor in
+            addUpdateFooterNotification()
+        }
+    }
+    
+    func removeUpdateFooterNotifications() {
+        Defaults[.footerNotifications].removeAll { notification in
+            if case .update = notification {
+                return true
+            }
+            return false
+        }
+    }
+    
+    nonisolated func updaterDidNotFindUpdate(_ updater: SPUUpdater) {
+        Task { @MainActor in
+            removeUpdateFooterNotifications()
+        }
+    }
 }

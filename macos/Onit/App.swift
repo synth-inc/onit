@@ -27,6 +27,7 @@ struct App: SwiftUI.App {
     @Default(.launchOnStartupRequested) var launchOnStartupRequested
     @Default(.autoContextFromCurrentWindow) var autoContextFromCurrentWindow
     @Default(.autoContextFromHighlights) var autoContextFromHighlights
+    @Default(.autoContextOnLaunchTethered) var autoContextOnLaunchTethered
     @Default(.authFlowStatus) var authFlowStatus
     
     private let appCoordinator: AppCoordinator
@@ -55,7 +56,8 @@ struct App: SwiftUI.App {
                 }
                 .onChange(of: [
                     autoContextFromCurrentWindow,
-                    autoContextFromHighlights
+                    autoContextFromHighlights,
+                    autoContextOnLaunchTethered
                 ], initial: true) { oldValue, newValue in
                     AnalyticsManager.Accessibility.flagsChanges()
                 }
