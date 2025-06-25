@@ -19,7 +19,8 @@ class AccessibilityParser {
     private let parsers: [String: AccessibilityParserLogic] = [
         "Xcode": AccessibilityParserXCode(),
         "Calendar": AccessibilityParserCalendar(),
-        "Pages": ClipboardParser()
+        "Pages": ClipboardParser(),
+        "Messages": AccessibilityParserMessages()
     ]
 
     // MARK: - Functions

@@ -21,7 +21,7 @@ class AccessibilityParserCalendar: AccessibilityParserBase {
         _ = AccessibilityParserUtility.recursivelyParse(
             element: element,
             maxDepth: AccessibilityParserConfig.recursiveDepthMax
-        ) { element in
+        ) { element, depth in
             
             if !highlightedTextFound {
                 let parentResult = super.parse(element: element)
@@ -36,12 +36,12 @@ class AccessibilityParserCalendar: AccessibilityParserBase {
                   let description = element.description(),
                   !description.isEmpty,
                   !screen.contains(description) else {
-                return nil
+                return .continueRecursing(nil)
             }
             
             screen += "\(description)\n"
 
-            return nil
+            return .continueRecursing(nil)
         }
         
         result[AccessibilityParsedElements.screen] = screen

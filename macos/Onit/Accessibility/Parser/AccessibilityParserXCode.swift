@@ -20,7 +20,7 @@ class AccessibilityParserXCode: AccessibilityParserBase {
         return AccessibilityParserUtility.recursivelyParse(
             element: element,
             maxDepth: AccessibilityParserConfig.recursiveDepthMax
-        ) { element in
+        ) { element, depth in
             
             if !highlightedTextFound {
                 let parentResult = super.parse(element: element)
@@ -32,13 +32,17 @@ class AccessibilityParserXCode: AccessibilityParserBase {
             }
             
             guard let description = element.description(),
-                  description != "Console",
                   let role = element.role(),
                   role == kAXTextAreaRole,
                   let value = element.value(),
                   !value.isEmpty
             else {
-                return result
+                return .continueRecursing(result.isEmpty ? nil : result)
+            }
+            
+            // Stop recursing if we hit "Console" but don't process this element
+            if description == "Console" {
+                return .stopRecursing(result.isEmpty ? nil : result)
             }
 
             switch description {
@@ -48,7 +52,7 @@ class AccessibilityParserXCode: AccessibilityParserBase {
                 break
             }
 
-            return result
+            return .continueRecursing(result.isEmpty ? nil : result)
         }
     }
 }

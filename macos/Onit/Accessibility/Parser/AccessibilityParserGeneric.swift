@@ -21,7 +21,7 @@ class AccessibilityParserGeneric: AccessibilityParserBase {
         _ = AccessibilityParserUtility.recursivelyParse(
             element: element,
             maxDepth: AccessibilityParserConfig.recursiveDepthMax
-        ) { element in
+        ) { element, depth in
             
             if !highlightedTextFound {
                 let parentResult = super.parse(element: element)
@@ -31,12 +31,12 @@ class AccessibilityParserGeneric: AccessibilityParserBase {
                     result.merge(parentResult) { _, new in new }
                 }
             }
-            
+
             if let value = element.value(), !value.isEmpty {
                 screen += "\(value) "
             }
-
-            return nil
+            
+            return .continueRecursing(nil)
         }
 
         result[AccessibilityParsedElements.screen] = screen
