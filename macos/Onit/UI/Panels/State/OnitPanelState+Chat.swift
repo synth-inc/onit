@@ -287,7 +287,7 @@ extension OnitPanelState {
         pendingInstruction = prompt.instruction
         textFocusTrigger.toggle()
 
-        if Defaults[.stopMode] == .removePartial { removePartialResponse(prompt: prompt) }
+        if FeatureFlagManager.shared.stopMode == .removePartial { removePartialResponse(prompt: prompt) }
         generatingPrompt = nil
     }
     
@@ -371,7 +371,7 @@ extension OnitPanelState {
             prompt.responses.remove(at: partialResponseIndex)
         }
         // We don't need to add the response if the generation was stopped we're removing the partial responses.
-        if generationStopped == false || Defaults[.stopMode] != .removePartial {
+        if generationStopped == false || FeatureFlagManager.shared.stopMode != .removePartial {
             prompt.responses.append(response)
             prompt.generationState = .done
             do { try container.mainContext.save() } catch {

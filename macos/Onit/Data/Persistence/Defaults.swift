@@ -140,6 +140,7 @@ extension Defaults.Keys {
 
     // Stop generation behavior
     static let stopMode = Key<StopMode>("stopMode", default: .removePartial)
+    static let stopModeUserConfigured = Key<Bool>("stopModeUserConfigured", default: false)
 
 }
 

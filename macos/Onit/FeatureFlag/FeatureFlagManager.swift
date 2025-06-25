@@ -22,6 +22,7 @@ class FeatureFlagManager: ObservableObject {
 
     @Published private(set) var autocontextDemoVideoUrl: String? = nil
     @Published private(set) var usePinnedMode: Bool = true
+    @Published private(set) var stopMode: StopMode = .removePartial
 
     // MARK: - Private initializer
     
@@ -54,6 +55,17 @@ class FeatureFlagManager: ObservableObject {
         usePinnedMode = enabled
     }
 
+    func setStopMode(_ mode: StopMode) {
+        Defaults[.stopMode] = mode
+        stopMode = mode
+    }
+
+    func setStopModeByUser(_ mode: StopMode) {
+        Defaults[.stopMode] = mode
+        Defaults[.stopModeUserConfigured] = true
+        stopMode = mode
+    }
+
     // MARK: - Objective-C Functions
 
     @objc private func receiveFeatureFlags() {
@@ -74,12 +86,30 @@ class FeatureFlagManager: ObservableObject {
             autocontextDemoVideoUrl = nil
         }
         
+        // Handle pinned mode feature flag
         if let pinnedModeEnabled = Defaults[.usePinnedMode] {
             usePinnedMode = pinnedModeEnabled
         } else {
             let pinnedModeFlag = PostHogSDK.shared.isFeatureEnabled("pinned_mode")
             
             togglePinnedMode(pinnedModeFlag)
+        }
+
+        // Handle stop mode feature flag
+        // Only use remote flag if user hasn't manually configured their preference
+        if Defaults[.stopModeUserConfigured] {
+            // User has manually set their preference, respect it
+            let localStopMode = Defaults[.stopMode]
+            stopMode = localStopMode
+        } else {
+            // User hasn't configured it, use remote feature flag
+            if PostHogSDK.shared.isFeatureEnabled("stop_mode_leave_partial") {
+                // Remote flag is enabled, use leavePartial
+                setStopMode(.leavePartial)
+            } else {
+                // No remote override, use default
+                setStopMode(.removePartial)
+            }
         }
     }
 }
