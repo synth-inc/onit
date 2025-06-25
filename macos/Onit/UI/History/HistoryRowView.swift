@@ -2,66 +2,65 @@
 //  HistoryRowView.swift
 //  Onit
 //
-//  Created by Benjamin Sage on 11/4/24.
+//  Created by Benjamin Sage on 11/3/24.
 //
 
 import SwiftUI
 
 struct HistoryRowView: View {
     @Environment(\.windowState) private var windowState
+    let chat: Chat
+    let index: Int
     
-    @State private var showDelete: Bool = false
-
-    var chat: Chat
-    var index: Int
+    @State private var isHovered: Bool = false
+    @State private var isPressed: Bool = false
 
     var body: some View {
-        TextButton(
-            text: getPromptText()
-        ) {
-            Group {
-                if showDelete { deleteButton }
-                else { chatResponseCount }
+        HStack {
+            VStack(alignment: .leading, spacing: 4) {
+                Text(chat.prompts.first?.instruction ?? "Empty chat")
+                    .appFont(.medium14)
+                    .foregroundStyle(.white)
+                    .truncateText()
+                
+                Text("\(chat.prompts.count) messages")
+                    .appFont(.medium12)
+                    .foregroundStyle(.white.opacity(0.6))
             }
-        } action: {
-            windowState.setChat(chat: chat, index: index)
-        }
-        .onHover { hovering in showDelete = hovering }
-    }
-    
-    var chatResponseCount: some View {
-        Text("\(chat.responseCount)")
-            .appFont(.medium13)
-            .monospacedDigit()
-            .foregroundStyle(.gray200)
-    }
-    
-    var deleteButton: some View {
-        HStack(alignment: .center) {
-            Text(windowState.deleteChatFailed ? "Delete failed" : "")
-                .foregroundColor(Color.red)
-            
-            Image(systemName: "trash")
-                .frame(width: 14, height: 14)
-        }
-        .frame(height: 34)
-        .contentShape(Rectangle())
-        .onTapGesture {
-            // We want the padding around the button to also be a tap target
-            if !windowState.deleteChatFailed {
-                windowState.deleteChat(chat: chat)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .onTapGesture {
+                windowState?.setChat(chat: chat, index: index)
+            }
+
+            HStack(spacing: 4) {
+                IconButton(
+                    icon: .remove,
+                    iconSize: 12,
+                    action: {
+                        // Only proceed if windowState is available and deletion hasn't failed
+                        guard let windowState = windowState else { return }
+                        
+                        if !windowState.deleteChatFailed {
+                            windowState.deleteChat(chat: chat)
+                        }
+                    },
+                    tooltipPrompt: "Delete"
+                )
             }
         }
-    }
-    
-    private func getPromptText() -> String {
-        guard let firstPrompt = chat.prompts.first,
-              !firstPrompt.responses.isEmpty,
-              firstPrompt.generationIndex < firstPrompt.responses.count else {
-            return "Empty"
-        }
-        
-        return firstPrompt.responses[firstPrompt.generationIndex].instruction ?? ""
+        .padding(.horizontal, 8)
+        .padding(.vertical, 8)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .addButtonEffects(
+            background: .gray700,
+            hoverBackground: .gray600,
+            cornerRadius: 6,
+            isHovered: $isHovered,
+            isPressed: $isPressed,
+            action: {
+                windowState?.setChat(chat: chat, index: index)
+            }
+        )
     }
 }
 

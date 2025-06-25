@@ -44,7 +44,7 @@ struct FinalContextView: View {
                         get: { prompt.instruction },
                         set: {
                             prompt.instruction = $0
-                            windowState.detectIsTyping()
+                            windowState?.detectIsTyping()
                         }
                     ),
                     cursorPosition: $cursorPosition,
@@ -73,7 +73,7 @@ struct FinalContextView: View {
                 .background(.gray800) // To match the TextField style
                 .padding(0) // To match the TextField padding
                 .onChange(of: cursorPosition) {
-                    windowState.detectIsTyping()
+                    windowState?.detectIsTyping()
                 }
 
                 if isEditing {
@@ -81,7 +81,7 @@ struct FinalContextView: View {
                         Spacer()
                         Button("Cancel") {
                             isEditing = false
-                            windowState.textFocusTrigger.toggle()
+                            windowState?.textFocusTrigger.toggle()
                         }
                         .padding(.vertical, 6)
                         .padding(.horizontal, 8)
@@ -97,7 +97,7 @@ struct FinalContextView: View {
                                 await handleSend()
                             }
                             
-                            windowState.textFocusTrigger.toggle()
+                            windowState?.textFocusTrigger.toggle()
                         }
                         .padding(.vertical, 6)
                         .padding(.horizontal, 8)
@@ -133,7 +133,7 @@ struct FinalContextView: View {
                 isHoveringInstruction = hovering
             }
             
-            if windowState.isSearchingWeb[prompt.id] ?? false {
+            if windowState?.isSearchingWeb[prompt.id] ?? false {
                 HStack {
                     Image(.web)
                         .resizable()
@@ -173,7 +173,9 @@ struct FinalContextView: View {
                             if context.isWebSearchContext, let url = context.webURL {
                                 NSWorkspace.shared.open(url)
                             } else {
-                                ContextWindowsManager.shared.showContextWindow(windowState: windowState, context: context)
+                                if let windowState = windowState {
+                                    ContextWindowsManager.shared.showContextWindow(windowState: windowState, context: context)
+                                }
                             }
                         })
                             .background {
@@ -195,7 +197,7 @@ struct FinalContextView: View {
 extension FinalContextView {
     private func handleSend() async {
         await appState.checkSubscriptionAlerts {
-            windowState.generate(prompt)
+            windowState?.generate(prompt)
         }
     }
 }

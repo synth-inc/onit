@@ -15,7 +15,7 @@ struct SystemPromptSelectionRowView: View {
     var prompt: SystemPrompt
     
     var body: some View {
-        let isSelected: Bool = windowState.systemPromptId == prompt.id
+        let isSelected: Bool = windowState?.systemPromptId == prompt.id
         
         TextButton(
             selected: isSelected,
@@ -37,8 +37,8 @@ struct SystemPromptSelectionRowView: View {
 extension SystemPromptSelectionRowView {
     func selectPrompt() {
         prompt.lastUsed = Date()
-        windowState.systemPromptId = prompt.id
-        windowState.systemPromptState.userSelectedPrompt = true
+        windowState?.systemPromptId = prompt.id
+        windowState?.systemPromptState.userSelectedPrompt = true
     }
 }
 

@@ -142,6 +142,8 @@ extension MicrophoneButton {
     private func handleTranscriptionSuccess(_ transcription: String) {
         removeSpacesAtCursor()
         
+        guard let windowState = windowState else { return }
+        
         let cursorPosition = windowState.pendingInstructionCursorPosition
         let cursorPositionWithinBounds = min(max(0, cursorPosition), windowState.pendingInstruction.count)
         
@@ -272,6 +274,7 @@ extension MicrophoneButton {
     
     private func addSpacesAtCursor() {
         guard !addedRecordingSpaces else { return }
+        guard let windowState = windowState else { return }
         
         let cursorPosition = windowState.pendingInstructionCursorPosition
         let spaces = String(repeating: " ", count: recordingSpacesCount)
@@ -287,6 +290,7 @@ extension MicrophoneButton {
     
     private func removeSpacesAtCursor() {
         guard addedRecordingSpaces else { return }
+        guard let windowState = windowState else { return }
         
         let cursorPosition = windowState.pendingInstructionCursorPosition
         
@@ -309,5 +313,33 @@ extension MicrophoneButton {
         windowState.pendingInstruction.removeSubrange(startIndex..<endIndex)
         
         addedRecordingSpaces = false
+    }
+    
+    private func insertTranscriptAtCursor(_ transcript: String) {
+        guard let windowState = windowState else { return }
+        
+        let cursorPosition = windowState.pendingInstructionCursorPosition
+        let cursorPositionWithinBounds = min(max(0, cursorPosition), windowState.pendingInstruction.count)
+        
+        windowState.pendingInstruction.insert(
+            contentsOf: transcript,
+            at: windowState.pendingInstruction.index(
+                windowState.pendingInstruction.startIndex,
+                offsetBy: cursorPositionWithinBounds
+            )
+        )
+    }
+    
+    private func insertSpacesAtCursor() {
+        guard let windowState = windowState else { return }
+        
+        let cursorPosition = windowState.pendingInstructionCursorPosition
+        let spaces = "    " // 4 spaces for indentation
+        
+        let targetIndex = windowState.pendingInstruction.index(
+            windowState.pendingInstruction.startIndex,
+            offsetBy: min(max(0, cursorPosition), windowState.pendingInstruction.count)
+        )
+        windowState.pendingInstruction.insert(contentsOf: spaces, at: targetIndex)
     }
 }
