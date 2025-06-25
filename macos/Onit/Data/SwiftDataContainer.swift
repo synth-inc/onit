@@ -32,8 +32,9 @@ actor SwiftDataContainer {
             let container = try ModelContainer(for: schema, configurations: configurations)
                 
             maybeUpdatePromptPriorInstructions(container: container)
+            maybeCleanupHangingPromptReferences(container: container)
             
-            let itemFetchDescriptor = FetchDescriptor<SystemPrompt>()
+                let itemFetchDescriptor = FetchDescriptor<SystemPrompt>()
             let existingPrompts = try container.mainContext.fetch(itemFetchDescriptor)
             
             if existingPrompts.isEmpty {
@@ -56,6 +57,7 @@ actor SwiftDataContainer {
         let configuration = ModelConfiguration(isStoredInMemoryOnly: true)
         let container = try ModelContainer(for: schema, configurations: [configuration])
         maybeUpdatePromptPriorInstructions(container: container)
+        maybeCleanupHangingPromptReferences(container: container)
 
         let sampleData: [any PersistentModel] = [
             Chat.sample,
@@ -93,5 +95,84 @@ actor SwiftDataContainer {
         }
     }
     
+    @MainActor
+    static func maybeCleanupHangingPromptReferences(container: ModelContainer) {
+        // Check if migration has already been performed
+        guard Defaults[.needsHangingPromptCleanup] else { return }
+        
+        let context = container.mainContext
+        
+        do {
+            // Instead of trying to detect invalid references (which causes fatal errors),
+            // we'll rebuild all prompt chains from scratch based on chat membership and timestamps
+            let chatDescriptor = FetchDescriptor<Chat>()
+            let chats = try context.fetch(chatDescriptor)
+            
+            var cleanupCount = 0
+            
+            // First pass builds a look up table of valid ids.
+            var validPromptIds : [PersistentIdentifier] = []
+            for chat in chats {
+                let prompts = chat.prompts.sorted { $0.timestamp < $1.timestamp }
+                for prompt in prompts {
+                    validPromptIds.append(prompt.persistentModelID)
+                }
+            }
 
+            for chat in chats {
+                // Clear all existing chain references (some may be invalid)
+                let prompts = chat.prompts.sorted { $0.timestamp < $1.timestamp }
+                var foundInvalid = false
+                for prompt in prompts {
+                    if let priorPromptId = prompt.priorPrompt?.persistentModelID {
+                        if !validPromptIds.contains(priorPromptId) {
+                            foundInvalid = true
+                            break
+                        }
+                    }
+                    if let nextPromptId = prompt.nextPrompt?.persistentModelID {
+                        if !validPromptIds.contains(nextPromptId) {
+                            foundInvalid = true
+                            break
+                        }
+                    }
+                }
+                
+                if foundInvalid {
+                    // Rebuild the chain based on timestamp order
+                    for (index, prompt) in prompts.enumerated() {
+                        // Set prior prompt if this isn't the first prompt
+                        if index == 0 {
+                            prompt.priorPrompt = nil
+                        }
+                        if index > 0 {
+                            prompt.priorPrompt = prompts[index - 1]
+                        }
+                        // Set next prompt if this isn't the last prompt
+                        if index < prompts.count - 1 {
+                            prompt.nextPrompt = prompts[index + 1]
+                        }
+                        if index == prompts.count - 1 {
+                            prompt.nextPrompt = nil
+                        }
+                    }
+                    cleanupCount += 1
+                }
+            }
+            
+            if cleanupCount > 0 {
+                do {
+                    try context.save()
+                } catch {
+                    print("SwiftDataContainer - Error saving after prompt chain cleanup: \(error)")
+                }
+                print("SwiftDataContainer - Rebuilt prompt chains for \(cleanupCount) chats")
+            }
+        } catch {
+            print("SwiftDataContainer - Error during hanging prompt cleanup migration: \(error)")
+        }   
+        Defaults[.needsHangingPromptCleanup] = false
+    }
 }
+
+
