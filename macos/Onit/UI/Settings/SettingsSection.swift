@@ -13,6 +13,7 @@ struct SettingsSection<Child: View>: View {
     private let iconImage: ImageResource?
     private let iconSize: CGFloat
     private let title: String
+    private let spacing: CGFloat
     @ViewBuilder private let child: () -> Child
     
     init(
@@ -21,6 +22,7 @@ struct SettingsSection<Child: View>: View {
         iconImage: ImageResource? = nil,
         iconSize: CGFloat = 14,
         title: String,
+        spacing: CGFloat = 8,
         @ViewBuilder child: @escaping () -> Child
     ) {
         self.iconText = iconText
@@ -28,6 +30,7 @@ struct SettingsSection<Child: View>: View {
         self.iconImage = iconImage
         self.iconSize = iconSize
         self.title = title
+        self.spacing = spacing
         self.child = child
     }
     
@@ -43,7 +46,7 @@ struct SettingsSection<Child: View>: View {
 
 extension SettingsSection {
     private var header: some View {
-        HStack(alignment: .center) {
+        HStack(alignment: .center, spacing: spacing) {
             if let iconText = iconText {
                 Text(iconText)
                     .styleText(weight: .regular)

@@ -40,8 +40,10 @@ struct GeneralTab: View {
             displayModeSection
             
             analyticsSection
-                        
+            
             appearanceSection
+            
+            GeneralTabVoice()
             
             // experimentalSection
         }
@@ -57,9 +59,9 @@ struct GeneralTab: View {
                 HStack {
                     Text("Run onit when my computer starts")
                         .font(.system(size: 13))
-
+                    
                     Spacer()
-
+                    
                     Toggle("", isOn: $isLaunchAtStartupEnabled)
                         .toggleStyle(.switch)
                         .controlSize(.small)
@@ -70,7 +72,7 @@ struct GeneralTab: View {
             }
         }
     }
-
+    
     var displayModeSection: some View {
         Section {
             VStack(alignment: .leading, spacing: 16) {
@@ -215,7 +217,7 @@ struct GeneralTab: View {
             }
         }
     }
-
+    
     var appearanceSection: some View {
         SettingsSection(
             iconSystem: "paintbrush",
@@ -234,16 +236,16 @@ struct GeneralTab: View {
                             .monospacedDigit()
                             .frame(width: 40)
                     }
-           
+                    
                     HStack {
                         Spacer()
                         Button("Restore Default") {
                             _panelWidth.reset()
                         }
                         .controlSize(.small)
-                    }   
+                    }
                 }
-
+                
                 VStack(spacing: 8) {
                     HStack {
                         Text("Font Size")
@@ -287,8 +289,6 @@ struct GeneralTab: View {
                         .controlSize(.small)
                     }
                 }
-                
-                GeneralTabAudio()
                 
                 //                VStack(alignment: .leading, spacing: 8) {
                 //                    Text("Panel Position")
