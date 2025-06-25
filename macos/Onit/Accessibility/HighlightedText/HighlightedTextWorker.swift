@@ -12,7 +12,7 @@ import Foundation
 final class HighlightedTextWorker {
     private let pid: pid_t
     private let interval: TimeInterval
-    private let selectionChangedHandler: @Sendable (String?, CGRect?) -> Void
+    private let selectionChangedHandler: @Sendable (AXUIElement?, String?) -> Void
     private let queue = DispatchQueue(label: "inc.synth.onit.HighlightedTextWorker", qos: .userInteractive)
     
     private var timer: DispatchSourceTimer?
@@ -22,7 +22,7 @@ final class HighlightedTextWorker {
 
     init(pid: pid_t,
          interval: TimeInterval,
-         selectionChangedHandler: @escaping @Sendable (String?, CGRect?) -> Void) {
+         selectionChangedHandler: @escaping @Sendable (AXUIElement?, String?) -> Void) {
         self.pid = pid
         self.interval = interval
         self.selectionChangedHandler = selectionChangedHandler
@@ -69,7 +69,8 @@ final class HighlightedTextWorker {
     
     private func highlightedTextFound(for element: AXUIElement) -> Bool {
         if let selectedText = element.selectedText(),
-           HighlightedTextValidator.isValid(element: element) {
+           HighlightedTextValidator.isValid(element: element),
+           element.isTextElement() {
             
             processSelectedText(selectedText, in: element)
             
@@ -113,10 +114,11 @@ final class HighlightedTextWorker {
             lastSelectedText = selectedText
 
             let handler = self.selectionChangedHandler
-            let elementBounds = element.selectedTextBound()
+            
+            nonisolated(unsafe) let unsafeElement = element
             
             Task { @MainActor in
-                handler(selectedText, elementBounds)
+                handler(unsafeElement, selectedText)
             }
         }
     }

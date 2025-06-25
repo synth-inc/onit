@@ -313,6 +313,18 @@ extension AXUIElement {
     
     // MARK: - Caret Position Methods
     
+    func isTextElement() -> Bool {
+        guard let role = role() else { return false }
+        
+        let supportedRoles = [
+            kAXTextFieldRole,
+            kAXTextAreaRole,
+            kAXStaticTextRole
+        ]
+        
+        return supportedRoles.contains(role)
+    }
+    
     func supportsCaretTracking() -> Bool {
         guard let role = role() else { return false }
         

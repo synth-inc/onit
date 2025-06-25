@@ -20,7 +20,7 @@ actor HighlightedTextCoordinator {
     func startPollingIfNeeded(
         pid: pid_t,
         interval: TimeInterval = 0.5,
-        selectionChangedHandler: @escaping @Sendable (String?, CGRect?) -> Void
+        selectionChangedHandler: @escaping @Sendable (AXUIElement?, String?) -> Void
     ) {
         stopPolling(pid: pid)
 
