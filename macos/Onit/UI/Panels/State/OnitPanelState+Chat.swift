@@ -211,7 +211,8 @@ extension OnitPanelState {
                             webSearchContexts: webSearchContextsHistory,
                             responses: responsesHistory,
                             model: model,
-                            apiToken: apiToken)
+                            apiToken: apiToken,
+                            includeSearch: shouldUseServerSideWebSearch ? true : nil)
                     }
                 
                 case .local:

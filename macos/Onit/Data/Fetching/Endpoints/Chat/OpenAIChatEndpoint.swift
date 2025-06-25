@@ -15,12 +15,17 @@ struct OpenAIChatEndpoint: Endpoint {
     let messages: [OpenAIChatMessage]
     let token: String?
     let model: String
+    let includeSearch: Bool?
 
     var path: String { "/v1/responses" }
     var getParams: [String: String]? { nil }
     var method: HTTPMethod { .post }
     var requestBody: OpenAIChatRequest? {
-        OpenAIChatRequest(model: model, input: messages, stream: false)
+        var tools: [OpenAIChatTool] = []
+        if includeSearch == true {
+            tools.append(OpenAIChatTool(type: "web_search_preview"))
+        }
+        return OpenAIChatRequest(model: model, input: messages, tools: tools, stream: false)
     }
     var additionalHeaders: [String: String]? {
         ["Authorization": "Bearer \(token ?? "")"]
@@ -73,7 +78,12 @@ struct OpenAIChatContentPart: Codable {
 struct OpenAIChatRequest: Codable {
     let model: String
     let input: [OpenAIChatMessage]
+    let tools: [OpenAIChatTool]
     let stream: Bool
+}
+
+struct OpenAIChatTool: Codable {
+    let type: String
 }
 
 struct OpenAIChatResponse: Codable {
