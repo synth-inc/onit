@@ -119,6 +119,9 @@ extension Defaults.Keys {
     
     // QuickEdit
     static let quickEditConfig = Key<QuickEditConfig>("quickEditConfig", default: .default)
+    
+    // Screen recording
+    static let screenRecordingPermissionAsked = Key<Bool>("screenRecordingPermissionAsked", default: false)
 }
 
 extension NSRect: Defaults.Serializable {
