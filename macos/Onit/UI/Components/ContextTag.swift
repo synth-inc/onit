@@ -140,7 +140,6 @@ struct ContextTag: View {
                 }
             }
         }
-        .addAnimation(dependency: isHoveredBody)
         .addBorder(
             cornerRadius: 4,
             stroke: isHoveredBody ? hoverBorderColor : borderColor,
@@ -151,6 +150,7 @@ struct ContextTag: View {
             hoverBackground: hoverBackground,
             cornerRadius: 4,
             shouldFadeOnClick: false,
+            animationDuration: 0,
             isHovered: $isHoveredBody,
             isPressed: $isPressedBody,
             action: action

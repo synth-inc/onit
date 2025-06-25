@@ -11,7 +11,6 @@ import SwiftUI
 struct InputBody: View {
     @Binding var inputExpanded: Bool
     @State var text: String?
-    @State var textHeight: CGFloat = 0
 
     var input: Input
 
@@ -43,25 +42,15 @@ struct InputBody: View {
 
 extension InputBody {
     private func textScrollView(_ text: String) -> some View {
-        ScrollView {
+        DynamicScrollView(
+            maxHeight: 222,
+            gradientColor: .gray500
+        ) {
             Text(text)
                 .styleText(size: 13, weight: .regular)
                 .padding(.top, 4)
                 .padding([.horizontal, .bottom], 12)
-                .background {
-                    GeometryReader { proxy in
-                        Color.clear
-                            .onAppear {
-                                textHeight = proxy.size.height
-                            }
-                            .onChange(of: proxy.size.height) { _, newHeight in
-                                textHeight = newHeight
-                            }
-                    }
-                }
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .frame(maxHeight: min(textHeight, 222))
     }
     
     private var loader: some View {
