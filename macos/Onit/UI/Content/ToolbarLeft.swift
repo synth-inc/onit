@@ -30,7 +30,7 @@ struct ToolbarLeft: View {
             fontColor: .gray200,
             text: "ESC",
             tooltipPrompt: "Close Onit",
-            tooltipShortcut: .keyboardShortcuts(.escape),
+            tooltipShortcut: .keyboardShortcuts(.escape)
         ) {
             AnalyticsManager.Toolbar.escapePressed()
             PanelStateCoordinator.shared.closePanel()

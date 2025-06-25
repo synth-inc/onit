@@ -12,7 +12,6 @@ struct Toolbar: View {
         VStack(alignment: .leading, spacing: 0) {
             HStack(alignment: .center) {
                 ToolbarLeft()
-                TetheredToAppView()
                 Spacer()
                 ToolbarRight()
             }

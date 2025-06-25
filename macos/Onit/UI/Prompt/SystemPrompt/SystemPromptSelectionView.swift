@@ -55,7 +55,7 @@ struct SystemPromptSelectionView: View {
             header: MenuHeader(title: "System Prompts") {
                 IconButton(
                     icon: .cross,
-                    iconSize: 10,
+                    iconSize: 10
                 ) {
                     state.systemPromptState.shouldShowSelection = false
                 }
