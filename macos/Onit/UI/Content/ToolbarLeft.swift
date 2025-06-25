@@ -11,7 +11,7 @@ struct ToolbarLeft: View {
     @Environment(\.windowState) private var state
     
     var body: some View {
-        HStack(alignment: .center, spacing: 4) {
+        HStack(alignment: .center, spacing: 0) {
             esc
             
             HStack(alignment: .center, spacing: 0) {
@@ -26,7 +26,7 @@ struct ToolbarLeft: View {
             height: ToolbarButtonStyle.height,
             fillContainer: false,
             cornerRadius: ToolbarButtonStyle.cornerRadius,
-            fontSize: 11,
+            fontSize: 13,
             fontColor: .gray200,
             text: "ESC",
             tooltipPrompt: "Close Onit",

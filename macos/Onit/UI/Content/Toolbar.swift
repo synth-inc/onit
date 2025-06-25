@@ -18,7 +18,7 @@ struct Toolbar: View {
             .padding(.top, 1)
             .padding(.trailing, 8)
             .padding(.leading, 12)
-            .frame(height: 37)
+            .frame(height: 31)
             
             PromptDivider()
         }

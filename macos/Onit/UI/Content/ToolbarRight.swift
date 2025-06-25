@@ -18,7 +18,7 @@ struct ToolbarRight: View {
     @Default(.footerNotifications) var footerNotifications
 
     var body: some View {
-        HStack(alignment: .center, spacing: 4) {
+        HStack(alignment: .center, spacing: 6) {
             discord
             localMode
             history
