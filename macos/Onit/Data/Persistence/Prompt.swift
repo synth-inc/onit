@@ -16,7 +16,11 @@ import SwiftData
     var contextList: [Context] = []
 
     //    @Relationship(deleteRule: .cascade, inverse: \Response.prompt)
-    var responses: [Response] = []
+    var responses: [Response] = [] {
+        didSet {
+            validateGenerationIndex()
+        }
+    }
     var priorInstructions: [String] = []
 
     var priorPrompt: Prompt?
@@ -39,6 +43,23 @@ import SwiftData
 
     var sortedResponses: [Response] {
         return responses.sorted { $0.timestamp < $1.timestamp }
+    }
+    
+    /// Safe generation index that's always within bounds
+    var safeGenerationIndex: Int {
+        guard !sortedResponses.isEmpty else { return -1 }
+        return max(0, min(generationIndex, sortedResponses.count - 1))
+    }
+    
+    /// Ensures generationIndex is always valid when responses change
+    private func validateGenerationIndex() {
+        if sortedResponses.isEmpty {
+            generationIndex = -1
+        } else if generationIndex >= sortedResponses.count {
+            generationIndex = sortedResponses.count - 1
+        } else if generationIndex < 0 && !sortedResponses.isEmpty {
+            generationIndex = 0
+        }
     }
 
     var generation: String? {
@@ -71,6 +92,20 @@ import SwiftData
         if generationIndex >= 0 && generationIndex < sortedResponses.count {
             instruction = sortedResponses[generationIndex].instruction ?? ""
         }
+    }
+    
+    /// Safely removes a response while maintaining valid generationIndex
+    func removeResponse(at index: Int) {
+        guard index >= 0 && index < responses.count else { return }
+        responses.remove(at: index)
+        // validateGenerationIndex() is called automatically via didSet
+    }
+    
+    /// Safely removes the last response while maintaining valid generationIndex  
+    func removeLastResponse() {
+        guard !responses.isEmpty else { return }
+        responses.removeLast()
+        // validateGenerationIndex() is called automatically via didSet
     }
 }
 

@@ -20,8 +20,11 @@ struct GeneratedContentView: View {
     var prompt: Prompt
     
     var textToRead: String {
-        let response = prompt.sortedResponses[prompt.generationIndex]
-        
+        let safeIndex = prompt.safeGenerationIndex
+        guard safeIndex >= 0 && safeIndex < prompt.sortedResponses.count else {
+            return ""
+        }
+        let response = prompt.sortedResponses[safeIndex]
         return response.isPartial ? state.streamedResponse : response.text
     }
     
