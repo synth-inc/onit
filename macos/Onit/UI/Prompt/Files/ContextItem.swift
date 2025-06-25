@@ -35,8 +35,8 @@ struct ContextItem: View {
             case .text(let text):
                 tagButton(
                     text: "Text: \(name)",
-                    iconView: ContextImage(context: item),
                     tooltip: "Highlighted text",
+                    iconView: ContextImage(context: item),
                     action: { state.selectedHighlightedText = text },
                     removeAction: isEditing ? {
                         removeContextItem()
@@ -49,8 +49,8 @@ struct ContextItem: View {
             default:
                 tagButton(
                     text: name,
-                    iconView: ContextImage(context: item),
                     tooltip: isEditing ? name : "View \(item.fileType ?? "") file",
+                    iconView: ContextImage(context: item),
                     action: showContextWindow,
                     removeAction: isEditing ? { removeContextItem() } : nil
                 )
@@ -99,9 +99,9 @@ struct ContextItem: View {
 extension ContextItem {
     private func tagButton(
         text: String,
+        tooltip: String,
         iconBundleURL: URL? = nil,
         iconView: (any View)? = nil,
-        tooltip: String,
         action: @escaping () -> Void,
         removeAction: (() -> Void)? = nil
     ) -> some View {

@@ -204,8 +204,7 @@ extension PromptCore {
                 isRemote ? remoteBorder :
                 localBorder
         )
-        .addAnimation(dependency: isRemote, duration: 0.3)
-        .addAnimation(dependency: isFocused, duration: 0.3)
+        .addAnimation(dependency: [isRemote, isFocused], duration: 0.3)
         .padding(.top, 8)
         .padding(.horizontal, 12)
     }

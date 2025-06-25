@@ -113,6 +113,7 @@ extension View {
         disabled: Bool = false,
         allowsHitTesting: Bool = true,
         shouldFadeOnClick: Bool = true,
+        animationDuration: Double = AnimationStyle.animationDuration,
         isHovered: Binding<Bool>,
         isPressed: Binding<Bool>,
         action: (() -> Void)?
@@ -143,7 +144,8 @@ extension View {
                 dependency: [
                     isHovered.wrappedValue,
                     disabled
-                ]
+                ],
+                duration: animationDuration
             )
     }
 }
