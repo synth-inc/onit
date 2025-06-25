@@ -49,13 +49,26 @@ struct FileRow: View {
         }
     }
     
+    var highlightedTextAlreadyInContext: Bool {
+        if let highlightedText = windowState.highlightedText {
+            let pendingContextList = windowState.getPendingContextList()
+            
+            return checkContextTextAlreadyAdded(
+                contextList: pendingContextList,
+                text: highlightedText.selectedText
+            )
+        } else {
+            return false
+        }
+    }
+    
     var contextList: [Context]
 
     var body: some View {
         FlowLayout(spacing: 6) {
             PaperclipButton()
             
-            addForegroundWindowToContextButton
+            addAutoContextButton
             pendingWindowContextItems
             addedWindowContextItems
         }
@@ -68,29 +81,60 @@ struct FileRow: View {
 // MARK: - Child Components
 
 extension FileRow {
-    @ViewBuilder
-    private var addForegroundWindowToContextButton: some View {
-        if accessibilityEnabled,
-           autoContextFromCurrentWindow,
-           !(windowBeingAddedToContext || windowAlreadyInContext),
-           let foregroundWindow = windowState.foregroundWindow
-        {
-            let foregroundWindowName = WindowHelpers.getWindowName(window: foregroundWindow.element)
-            let iconBundleURL = WindowHelpers.getWindowAppBundleUrl(window: foregroundWindow.element)
-            
+    private struct AddAutoContextButton: View {
+        var text: String
+        var iconBundleURL: URL?
+        var iconView: (any View)?
+        var tooltip: String
+        let action: () -> Void
+
+        var body: some View {
             ContextTag(
-                text: foregroundWindowName,
+                text: text,
                 hoverTextColor: .T_2,
                 background: .clear,
                 hoverBackground: .clear,
-                hasHoverBorder: true,
+                hoverBorderColor: .T_4,
+                hasDottedBorder: true,
                 shouldFadeIn: true,
                 iconBundleURL: iconBundleURL,
-                tooltip: "Add \(foregroundWindowName) Context"
+                iconView: iconView,
+                tooltip: tooltip
             ) {
-                windowState.addWindowToContext(
-                    window: foregroundWindow.element
-                )
+                action()
+            }
+        }
+    }
+    
+    @ViewBuilder
+    private var addAutoContextButton: some View {
+        if accessibilityEnabled && autoContextFromCurrentWindow {
+            if let highlightedText = windowState.highlightedText,
+               !highlightedTextAlreadyInContext
+            {
+                AddAutoContextButton(
+                    text: highlightedText.selectedText,
+                    iconView: Image(.text).addIconStyles(iconSize: 14),
+                    tooltip: "Add Highlighted Text Content"
+                ) {
+                    addHighlightedTextToContext(highlightedText)
+                }
+            } else if !(windowBeingAddedToContext || windowAlreadyInContext),
+                      let foregroundWindow = windowState.foregroundWindow
+            {
+                let window = foregroundWindow.element
+                let windowName = WindowHelpers.getWindowName(window: window)
+                let iconBundleURL = WindowHelpers.getWindowAppBundleUrl(window: window)
+                
+                AddAutoContextButton(
+                    text: windowName,
+                    iconBundleURL: iconBundleURL,
+                    tooltip: "Add \(windowName) Context"
+                ) {
+                    windowState.addWindowToContext(
+                        window: foregroundWindow.element
+                    )
+                }
             }
         }
     }
@@ -116,38 +160,6 @@ extension FileRow {
                 )
             }
         }
-            
-            return false
-        } else {
-            return false
-        }
-    }
-    
-    private func addHighlightedTextToContext(_ highlightedText: Input) {
-        let pendingContextList = windowState.getPendingContextList()
-        
-        let textAlreadyAdded = checkContextTextAlreadyAdded(
-            contextList: pendingContextList,
-            text: highlightedText.selectedText
-        )
-        
-        if !textAlreadyAdded {
-            windowState.addContext(texts: [highlightedText])
-        }
-    }
-    
-    private func addWindowToContext() {
-        if let windowName = currentWindowInfo.name,
-           let pid = currentWindowInfo.pid,
-           let focusedWindow = pid.firstMainWindow
-        {
-            windowState.addAutoContextTasks[windowName]?.cancel()
-            
-            windowState.addAutoContextTasks[windowName] = Task {
-                let _ = AccessibilityNotificationsManager.shared.windowsManager.append(focusedWindow, pid: pid)
-                AccessibilityNotificationsManager.shared.fetchAutoContext(pid: pid, state: windowState)
-            }
-        }
     }
     
     @ViewBuilder
@@ -158,6 +170,23 @@ extension FileRow {
                     .scrollTargetLayout()
                     .contentShape(Rectangle())
             }
+        }
+    }
+}
+
+// MARK: - Private Functions
+
+extension FileRow {
+    private func addHighlightedTextToContext(_ highlightedText: Input) {
+        let pendingContextList = windowState.getPendingContextList()
+        
+        let textAlreadyAdded = checkContextTextAlreadyAdded(
+            contextList: pendingContextList,
+            text: highlightedText.selectedText
+        )
+        
+        if !textAlreadyAdded {
+            windowState.addContext(texts: [highlightedText])
         }
     }
 }
