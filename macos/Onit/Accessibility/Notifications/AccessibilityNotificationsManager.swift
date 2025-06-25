@@ -48,6 +48,7 @@ class AccessibilityNotificationsManager: ObservableObject {
     private var currentSource: String?
 
     private var lastHighlightingProcessedAt: Date?
+	private var lastCaretPositionChangeTimestamp: Date?
 
     private var valueDebounceWorkItem: DispatchWorkItem?
     private var selectionDebounceWorkItem: DispatchWorkItem?
@@ -91,6 +92,7 @@ class AccessibilityNotificationsManager: ObservableObject {
         
         currentSource = nil
         lastHighlightingProcessedAt = nil
+		lastCaretPositionChangeTimestamp = nil
         valueDebounceWorkItem?.cancel()
         selectionDebounceWorkItem?.cancel()
         parseDebounceWorkItem?.cancel()
@@ -272,7 +274,7 @@ class AccessibilityNotificationsManager: ObservableObject {
 
         selectionDebounceWorkItem = workItem
 
-        DispatchQueue.main.asyncAfter(deadline: .now() + Config.debounceInterval, execute: workItem)
+        DispatchQueue.main.asyncAfter(deadline: .now() + Config.textSelectionDebounceInterval, execute: workItem)
     }
     
     // MARK: Parsing
@@ -495,12 +497,23 @@ class AccessibilityNotificationsManager: ObservableObject {
                 processSelectedText(selectedText)
             }
         } else {
-            HighlightedTextBoundsExtractor.shared.reset()
+            // On every apps, when caret position changed, we receive AXSelectedTextChanged notification with nil value.
+            // This code is used to hide the QuickEdit hint for a real deselection
+            let now = Date()
+            let caretPositionChangeRecently = lastCaretPositionChangeTimestamp?.timeIntervalSince(now) ?? -1000 > -0.5
+            let isEditableField = element.role() == kAXTextFieldRole || element.role() == kAXTextAreaRole
+            
+            if !caretPositionChangeRecently && !isEditableField {
+                processSelectedText(nil)
+                HighlightedTextBoundsExtractor.shared.reset()
+                QuickEditManager.shared.hideHint()
+            } else if isEditableField {
+                handleCaretPositionChange(for: element)
+            }
         }
         
         showDebug()
     }
-    
 
     private func processSelectedText(_ text: String?) {
         guard Defaults[.autoContextFromHighlights],
@@ -523,6 +536,10 @@ class AccessibilityNotificationsManager: ObservableObject {
     private func handleCaretPositionChange(for element: AXUIElement) {
         guard element.supportsCaretTracking() else { return }
         
+        selectionDebounceWorkItem?.cancel()
+        selectionDebounceWorkItem = nil
+        processSelectedText(nil)
+		lastCaretPositionChangeTimestamp = Date()
         caretPositionManager.updateCaretPosition(for: element)
     }
 

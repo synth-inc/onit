@@ -77,6 +77,7 @@ class QuickEditManager: ObservableObject, CaretPositionDelegate {
         currentHintHeight = nil
 		isEditableElement = false
         hintWindowController.hide()
+        hideMenu()
     }
     
     func showMenu() {
