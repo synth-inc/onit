@@ -51,7 +51,10 @@ class OnitPanelState: NSObject {
     var foregroundWindow: TrackedWindow? = nil {
         didSet {
             if let newWindow = foregroundWindow {
+                foregroundedWindowHistory.removeAll { $0 == newWindow.hash }
+                
                 foregroundedWindowHistory.append(newWindow.hash)
+                
                 if foregroundedWindowHistory.count > 50 {
                     foregroundedWindowHistory.removeFirst()
                 }
