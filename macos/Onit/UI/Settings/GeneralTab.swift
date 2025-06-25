@@ -379,8 +379,7 @@ struct GeneralTab: View {
     
     var experimentalSection: some View {
         SettingsSection(
-            iconSystem: "paintbrush",
-            title: "Appearance"
+            title: "Experimental"
         ) {
             Section {
                 VStack(alignment: .leading, spacing: 4) {
