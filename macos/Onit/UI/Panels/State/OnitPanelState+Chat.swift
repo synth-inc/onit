@@ -144,12 +144,21 @@ extension OnitPanelState {
 
                 // Determine web search strategy
                 let webSearchEnabled = Defaults[.webSearchEnabled]
+                let useWebSearch = webSearchEnabled && isNewInstruction
+
                 let hasTavilyToken = !Defaults[.tavilyAPIToken].isEmpty && Defaults[.isTavilyAPITokenValidated]
-                let shouldPerformClientSideWebSearch = webSearchEnabled && hasTavilyToken && isNewInstruction
-                let shouldUseServerSideWebSearch = webSearchEnabled && !hasTavilyToken && isNewInstruction
+
+                var hasValidProviderSearchToken = false
+                if Defaults[.mode] == .remote, let model = Defaults[.remoteModel] {
+                    let apiToken = TokenValidationManager.getTokenForModel(model)
+                    let hasValidToken = apiToken != nil && !apiToken!.isEmpty
+                    hasValidProviderSearchToken = hasValidToken && (model.provider == .openAI || model.provider == .anthropic)
+                }
+
+                let useTavilySearch = useWebSearch && !hasValidProviderSearchToken && hasTavilyToken
 
                 // Perform client-side web search with Tavily if available
-                if shouldPerformClientSideWebSearch {
+                if useTavilySearch {
                     isSearchingWeb[prompt.id] = true
                     let searchResults = await performWebSearch(query: curInstruction)
                     if !searchResults.isEmpty {
@@ -195,7 +204,7 @@ extension OnitPanelState {
                             useOnitServer: useOnitChat,
                             model: model,
                             apiToken: apiToken,
-                            includeSearch: shouldUseServerSideWebSearch ? true : nil)
+                            includeSearch: (useWebSearch && !useTavilySearch) ? true : nil)
                         for try await response in asyncText {
                             streamedResponse += response
                         }
@@ -212,7 +221,7 @@ extension OnitPanelState {
                             responses: responsesHistory,
                             model: model,
                             apiToken: apiToken,
-                            includeSearch: shouldUseServerSideWebSearch ? true : nil)
+                            includeSearch: (useWebSearch && !useTavilySearch) ? true : nil)
                     }
                 
                 case .local:
