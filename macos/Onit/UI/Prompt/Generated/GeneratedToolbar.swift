@@ -42,11 +42,10 @@ struct GeneratedToolbar: View {
     var regenerate: some View {
         IconButton(
             icon: .arrowsSpin,
-            action: {
-                state.generate(prompt)
-            },
             tooltipPrompt: "Retry"
-        )
+        ) {
+            state.generate(prompt)
+        }
     }
 
     @ViewBuilder

@@ -9,11 +9,12 @@ struct WebSearchButton: View {
         IconButton(
             icon: .web,
             iconSize: 17,
-            action: { toggleWebSearch() },
             isActive: webSearchEnabled,
             activeColor: .white,
-            inactiveColor: webSearchEnabled ? .blue400 : nil
-        )
+            inactiveColor: webSearchEnabled ? .blue400 : .gray200
+        ) {
+            toggleWebSearch()
+        }
     }
     
     private func toggleWebSearch() {

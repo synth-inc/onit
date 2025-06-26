@@ -79,20 +79,20 @@ extension ContextMenu {
 extension ContextMenu {
     private var backButton: IconButton {
         IconButton(
-            icon: .chevLeft,
-            action: {
-                searchQuery = ""
-                windowState.showContextMenuBrowserTabs = false
-            }
-        )
+            icon: .chevLeft
+        ) {
+            searchQuery = ""
+            windowState.showContextMenuBrowserTabs = false
+        }
     }
     
     private var closeButton: IconButton {
         IconButton(
             icon: .cross,
-            iconSize: 10,
-            action: closeContextMenu
-        )
+            iconSize: 10
+        ) {
+            closeContextMenu()
+        }
     }
     
     private var menuHeader: MenuHeader<IconButton> {

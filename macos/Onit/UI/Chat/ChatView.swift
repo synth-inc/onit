@@ -63,14 +63,13 @@ struct ChatView: View {
                                 IconButton(
                                     icon: .arrowDown,
                                     buttonSize: 36,
-                                    action: {
-                                        hasUserManuallyScrolled = false
-                                    },
                                     activeColor: .white,
                                     inactiveColor: .white,
-                                    tooltipPrompt: "Scroll to bottom",
-                                    hoverBackgroundColor: .gray400
-                                )
+                                    hoverBackground: .gray400,
+                                    tooltipPrompt: "Scroll to bottom"
+                                ) {
+                                    hasUserManuallyScrolled = false
+                                }
                                 .background(.gray600)
                                 .addBorder(cornerRadius: 18, stroke: .gray400)
                                 .transition(.scale.combined(with: .opacity))

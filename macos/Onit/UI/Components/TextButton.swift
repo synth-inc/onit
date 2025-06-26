@@ -33,6 +33,9 @@ struct TextButton<Child: View>: View {
     private let text: String?
     private let width: CGFloat?
     
+    private let tooltipPrompt: String?
+    private let tooltipShortcut: Tooltip.Shortcut?
+    
     @ViewBuilder private let child: () -> Child
     private let action: () -> Void
     
@@ -62,6 +65,9 @@ struct TextButton<Child: View>: View {
         text: String? = nil,
         width: CGFloat? = nil,
         
+        tooltipPrompt: String? = nil,
+        tooltipShortcut: Tooltip.Shortcut? = nil,
+        
         @ViewBuilder child: @escaping () -> Child = { EmptyView() },
         action: @escaping () -> Void
     ) {
@@ -89,6 +95,9 @@ struct TextButton<Child: View>: View {
         self.iconImage = iconImage
         self.text = text
         self.width = width
+        
+        self.tooltipPrompt = tooltipPrompt
+        self.tooltipShortcut = tooltipShortcut
         
         self.child = child
         self.action = action
@@ -132,7 +141,27 @@ struct TextButton<Child: View>: View {
         .frame(width: width ?? nil)
         .frame(maxWidth: fillContainer ? .infinity : maxWidth > 0 ? maxWidth : nil)
         .frame(height: height)
-        .onHover{ isHovering in isHovered = isHovering }
+        .onHover{ isHovering in
+            isHovered = isHovering
+            
+            if tooltipPrompt != nil {
+                if isHovering {
+                    TooltipManager.shared.setTooltip(
+                        Tooltip(
+                            prompt: tooltipPrompt!,
+                            shortcut: tooltipShortcut ?? .none
+                        ),
+                        delayStart: 0.4,
+                        delayEnd: 0
+                    )
+                } else {
+                    TooltipManager.shared.setTooltip(
+                        nil,
+                        delayEnd: 0
+                    )
+                }
+            }
+        }
         .addButtonEffects(
             background: disabled ? .clear : background,
             hoverBackground: disabled ? .clear : hoverBackground,
