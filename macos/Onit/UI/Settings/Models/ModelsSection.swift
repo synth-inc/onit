@@ -17,7 +17,6 @@ struct ModelsSection<Content: View>: View {
                 .font(.system(size: 14))
             content()
         }
-        .fontWeight(.medium)
         .frame(maxWidth: .infinity, alignment: .leading)
     }
 }

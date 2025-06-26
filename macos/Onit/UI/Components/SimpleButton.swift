@@ -8,47 +8,67 @@
 import SwiftUI
 
 struct SimpleButton: View {
-    let iconText: String?
-    let iconImage: ImageResource?
     let text: String
+    let loading: Bool
+    let disabled: Bool
     let textColor: Color
-    let action: () -> Void
     let background: Color
+    let iconText: String?
+    let iconSystem: String?
+    let iconImage: ImageResource?
+    let action: (() -> Void)?
     
     init(
-        iconText: String? = nil,
-        iconImage: ImageResource? = nil,
         text: String,
-        textColor: Color = Color.white,
-        action: @escaping () -> Void,
-        background: Color = Color.gray400
+        loading: Bool = false,
+        disabled: Bool = false,
+        textColor: Color = Color.primary,
+        background: Color = Color.gray400,
+        iconText: String? = nil,
+        iconSystem: String? = nil,
+        iconImage: ImageResource? = nil,
+        action: (() -> Void)? = nil
     ) {
-        self.iconText = iconText
-        self.iconImage = iconImage
         self.text = text
+        self.loading = loading
+        self.disabled = disabled
         self.textColor = textColor
-        self.action = action
         self.background = background
+        self.iconText = iconText
+        self.iconSystem = iconSystem
+        self.iconImage = iconImage
+        self.action = action
     }
     
     @State private var isHovered: Bool = false
     @State private var isPressed: Bool = false
     
     var body: some View {
-        HStack(alignment: .center, spacing: 3) {
-            if let iconText = iconText {
+        HStack(alignment: .center, spacing: 4) {
+            if loading {
+                ProgressView()
+                    .controlSize(.small)
+            } else if let iconText = iconText {
                 Text(iconText).styleText(size: 12)
+            } else if let iconSystem = iconSystem {
+                Image(systemName: iconSystem)
             } else if let iconImage = iconImage {
                 Image(iconImage)
             }
             
-            Text(text).styleText(size: 13, weight: .light, color: textColor)
+            Text(text)
+                .styleText(
+                    size: 13,
+                    weight: .light,
+                    color: textColor
+                )
         }
         .padding(.horizontal, 7)
         .padding(.vertical, 3)
         .background(background)
         .cornerRadius(5)
-        .opacity(isPressed ? 0.7 : 1)
+        .opacity(disabled ? 0.5 : isPressed && action != nil ? 0.7 : 1)
+        .allowsHitTesting(!disabled)
         .shadow(color: .black.opacity(0.05), radius: 0, x: 0, y: 0)
         .shadow(color: .black.opacity(0.3), radius: 1.25, x: 0, y: 0.5)
         .addAnimation(dependency: isHovered)
@@ -58,7 +78,7 @@ struct SimpleButton: View {
                 .onChanged {_ in isPressed = true }
                 .onEnded{ _ in
                     isPressed = false
-                    action()
+                    action?()
                 }
         )
     }

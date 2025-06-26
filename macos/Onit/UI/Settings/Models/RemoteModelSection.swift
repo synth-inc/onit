@@ -11,13 +11,6 @@ import SwiftUI
 struct RemoteModelSection: View {
     @Environment(\.appState) var appState
 
-    @State private var use = false
-    @State private var key = ""
-    @State private var validated = false
-    @State private var loading = false
-    @State private var showAdvanced: Bool = false  
-    @State private var localState: TokenValidationState.ValidationState = .notValidated
-
     @Default(.mode) var mode
     @Default(.remoteModel) var remoteModel
     @Default(.availableRemoteModels) var availableRemoteModels
@@ -40,12 +33,24 @@ struct RemoteModelSection: View {
     @Default(.isDeepSeekTokenValidated) var isDeepSeekTokenValidated
     @Default(.isPerplexityTokenValidated) var isPerplexityTokenValidated
     @Default(.streamResponse) var streamResponse
+    
+    @State private var use = false
+    @State private var key = ""
+    @State private var validated = false
+    @State private var loading = false
+    @State private var showAdvanced: Bool = false
+    @State private var showAPIKeyInput: Bool = false
+    @State private var localState: TokenValidationState.ValidationState = .notValidated
 
     private let tokenManager = TokenValidationManager.shared
 
     var provider: AIModel.ModelProvider
+    
+    private var isLoggedIn: Bool {
+        appState.account != nil
+    }
 
-    var state: TokenValidationState.ValidationState {
+    private var tokenValidationState: TokenValidationState.ValidationState {
         let state = tokenManager.tokenValidation.state(for: provider)
         if state != localState {
             DispatchQueue.main.async {
@@ -56,11 +61,11 @@ struct RemoteModelSection: View {
         return state
     }
 
-    var models: [AIModel] {
+    private var models: [AIModel] {
         availableRemoteModels.filter { $0.provider == provider }
     }
     
-    var streamResponseBinding: Binding<Bool> {
+    private var streamResponseBinding: Binding<Bool> {
         switch provider {
         case .openAI:
             return $streamResponse.openAI
@@ -79,17 +84,19 @@ struct RemoteModelSection: View {
         }
     }
 
-    // MARK: - Body
+// MARK: - Body
 
     
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
             titleView
-            textField
             errorView
-            caption
             modelsView
             advancedSettings
+            apiKeyDropdown
+            
+            PromptDivider()
+                .padding(.top, 8)
         }
         .onAppear {
             fetchKey()
@@ -111,47 +118,55 @@ struct RemoteModelSection: View {
         }
     }
 
-    // MARK: - Subviews
-
-    var titleView: some View {
-        ModelTitle(title: provider.title, isOn: $use)
-    }
-
-    var textField: some View {
-        HStack(spacing: 7) {
-            TextField("Enter your \(provider.title) API key", text: $key)
-                .textFieldStyle(.roundedBorder)
-                .frame(height: 22)
-                .font(.system(size: 13, weight: .regular))
-                .foregroundColor(.primary)  // Ensure placeholder text is not dimmed
-
-            Button {
-                Task {
-                    loading = true
-                    save(key: key)
-                    tokenManager.tokenValidation.setNotValidated(provider: provider)
-                    TokenValidationManager.setTokenIsValid(false, provider: provider)
-                    await validate()
-                    loading = false
-                }
-            } label: {
-                if validated {
-                    Text("Verified")
-                } else {
-                    buttonOverlay
-                }
-            }
-            .disabled(loading || state.isValidating)
-            .foregroundStyle(.white)
-            .buttonStyle(.borderedProminent)
-            .frame(height: 22)
-            .fontWeight(.regular)
-        }
-        .font(.system(size: 13).weight(.regular))
+// MARK: - Child Components
+    
+    private var titleView: some View {
+        ModelTitle(
+            title: provider.title,
+            isOn: $use,
+            showToggle: isLoggedIn || validated
+        )
     }
 
     @ViewBuilder
-    var buttonOverlay: some View {
+    private var errorView: some View {
+        if case .invalid(let error) = tokenValidationState {
+            ModelErrorView(errorMessage: error.localizedDescription)
+        }
+    }
+    
+    @ViewBuilder
+    private var modelsView: some View {
+        // If user is logged in, allow them to select models (available through free/paid plans).
+        if use && (isLoggedIn || validated) {
+            GroupBox {
+                VStack(alignment: .leading, spacing: 0) {
+                    ForEach(models) { model in
+                        ModelToggle(aiModel: model)
+                            .frame(height: 36)
+                    }
+                }
+                .padding(.vertical, -4)
+                .padding(.horizontal, 4)
+                .frame(maxWidth: .infinity, alignment: .leading)
+            }
+        }
+    }
+    
+    @ViewBuilder
+    private var advancedSettings: some View {
+        // We only support streaming vs. non-streaming for direct-requests
+        if use && isLoggedIn && validated {
+            DisclosureGroup("Advanced", isExpanded: $showAdvanced) {
+                StreamingToggle(isOn: streamResponseBinding)
+                    .padding(.leading, 8)
+                    .padding(.top, 4)
+            }
+        }
+    }
+    
+    @ViewBuilder
+    private var buttonOverlay: some View {
         if loading {
             ProgressView()
                 .controlSize(.small)
@@ -171,31 +186,72 @@ struct RemoteModelSection: View {
             }
         }
     }
-
-    @ViewBuilder
-    var errorView: some View {
-        if case .invalid(let error) = state {
-            HStack(spacing: 8) {
-                Image(.warningSettings)
-                Text(error.localizedDescription)
-                    .opacity(0.65)
-                    .fontWeight(.regular)
-                    .font(.system(size: 12))
+    
+    private var verifiedButton: some View {
+        SimpleButton(
+            text: "Verified",
+            disabled: true,
+            textColor: .black,
+            background: .white
+        )
+    }
+    
+    private var removeApiKeyButton: some View {
+        SimpleButton(text: "Remove") {
+            removeApiKey()
+        }
+    }
+    
+    private var disableVerifyButton: Bool {
+        loading || tokenValidationState.isValidating
+    }
+    
+    private var verifyButton: some View {
+        SimpleButton(
+            text: loading ? "Verifying" : "Verify →",
+            loading: loading,
+            disabled: disableVerifyButton,
+            background: .blue
+        ) {
+            Task {
+                loading = true
+                save(key: key)
+                tokenManager.tokenValidation.setNotValidated(provider: provider)
+                TokenValidationManager.setTokenIsValid(false, provider: provider)
+                await validate()
+                setValidated(isValid: true)
+                loading = false
             }
         }
     }
-
-    var link: String {
+    
+    private var apiKeyInputField: some View {
+        HStack(alignment: .center, spacing: 8) {
+            SecureField("Enter your \(provider.title) API key", text: $key)
+                .textFieldStyle(.roundedBorder)
+                .frame(height: 22)
+                .styleText(size: 13, weight: .regular)
+            
+            if validated {
+                verifiedButton
+                removeApiKeyButton
+            } else {
+                verifyButton
+            }
+        }
+        .font(.system(size: 13).weight(.regular))
+    }
+    
+    private var providerLinkText: String {
         "[your \(provider.title) key](\(provider.url))"
     }
 
-    var caption: some View {
-        (Text("Add ")
-            + Text(.init(link))
+    private var apiKeyCaption: some View {
+        (Text("You can put in ")
+            + Text(.init(providerLinkText))
             + Text(
                 """
-                 to use Onit with \(provider.title) \
-                models like \(provider.sample).
+                 to use \(provider.title) models at cost.
                 """
             ))
             .foregroundStyle(.foreground.opacity(0.65))
@@ -203,43 +259,26 @@ struct RemoteModelSection: View {
             .font(.system(size: 12))
     }
     
-    @ViewBuilder
-    var advancedSettings: some View {
-        // We only support streaming vs. non-streaming for direct-requests
-        if use && validated {
-            DisclosureGroup("Advanced", isExpanded: $showAdvanced) {
-                StreamingToggle(isOn: streamResponseBinding)
-                    .padding(.leading, 8)
-                    .padding(.top, 4)
+    private var apiKeyDropdown: some View {
+        DisclosureGroup(
+            "\(provider.title) API Key\(validated ? " ✅" : "")",
+            isExpanded: $showAPIKeyInput
+        ) {
+            VStack(alignment: .leading, spacing: 8) {
+                apiKeyInputField
+                apiKeyCaption
             }
+            .padding(.top, 8)
         }
     }
 
-    @ViewBuilder
-    var modelsView: some View {
-        // If their logged in, we shoudl show these since they can always use them through the free plan.
-        if use && (appState.account != nil || validated) {
-            GroupBox {
-                VStack(alignment: .leading, spacing: 0) {
-                    ForEach(models) { model in
-                        ModelToggle(aiModel: model)
-                            .frame(height: 36)
-                    }
-                }
-                .padding(.vertical, -4)
-                .padding(.horizontal, 4)
-                .frame(maxWidth: .infinity, alignment: .leading)
-            }
-        }
-    }
+// MARK: - Private Functions
 
-    // MARK: - Functions
-
-    func validate() async {
+    private func validate() async {
         await tokenManager.validateToken(provider: provider, token: key)
     }
 
-    func save(key: String) {
+    private func save(key: String) {
         switch provider {
         case .openAI:
             openAIToken = key.isEmpty ? nil : key
@@ -258,7 +297,7 @@ struct RemoteModelSection: View {
         }
     }
 
-    func fetchKey() {
+    private func fetchKey() {
         switch provider {
         case .openAI:
             key = openAIToken ?? ""
@@ -277,7 +316,7 @@ struct RemoteModelSection: View {
         }
     }
 
-    func checkUse() {
+    private func checkUse() {
         switch provider {
         case .openAI:
             use = useOpenAI
@@ -295,8 +334,29 @@ struct RemoteModelSection: View {
             break
         }
     }
+    
+    private func setValidated(isValid: Bool) {
+        switch provider {
+        case .openAI:
+            isOpenAITokenValidated = isValid
+        case .anthropic:
+            isAnthropicTokenValidated = isValid
+        case .xAI:
+            isXAITokenValidated = isValid
+        case .googleAI:
+            isGoogleAITokenValidated = isValid
+        case .deepSeek:
+            isDeepSeekTokenValidated = isValid
+        case .perplexity:
+            isPerplexityTokenValidated = isValid
+        case .custom:
+            break
+        }
+        
+        validated = isValid
+    }
 
-    func checkValidated() {
+    private func checkValidated() {
         switch provider {
         case .openAI:
             validated = isOpenAITokenValidated
@@ -315,7 +375,7 @@ struct RemoteModelSection: View {
         }
     }
 
-    func save(use: Bool) {
+    private func save(use: Bool) {
         switch provider {
         case .openAI:
             useOpenAI = use
@@ -334,7 +394,7 @@ struct RemoteModelSection: View {
         }
     }
 
-    func save(validated: Bool) {
+    private func save(validated: Bool) {
         switch provider {
         case .openAI:
             isOpenAITokenValidated = validated
@@ -352,12 +412,40 @@ struct RemoteModelSection: View {
             break
         }
     }
+    
+    private func removeApiKey() {
+        switch provider {
+        case .openAI:
+            openAIToken = nil
+            isOpenAITokenValidated = false
+        case .anthropic:
+            anthropicToken = nil
+            isAnthropicTokenValidated = false
+        case .xAI:
+            xAIToken = nil
+            isXAITokenValidated = false
+        case .googleAI:
+            googleAIToken = nil
+            isGoogleAITokenValidated = false
+        case .deepSeek:
+            deepSeekToken = nil
+            isDeepSeekTokenValidated = false
+        case .perplexity:
+            perplexityToken = nil
+            isPerplexityTokenValidated = false
+        case .custom:
+            break
+        }
+        
+        key = ""
+        validated = false
+    }
 
-    func updateUse() {
-        if state == .valid {
+    private func updateUse() {
+        if tokenValidationState == .valid {
             use = true
             validated = true
-        } else if case .invalid(_) = state {
+        } else if case .invalid(_) = tokenValidationState {
             use = false
             validated = false
         }

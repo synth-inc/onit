@@ -7,25 +7,32 @@ struct WebSearchTab: View {
     @Default(.tavilyCostSavingMode) var tavilyCostSavingMode
     @Default(.allowWebSearchInLocalMode) var allowWebSearchInLocalMode
     
+    @State private var openApiKeyDropdown: Bool = false
     @State private var isValidating = false
     @State private var validationError: String? = nil
     
     var body: some View {
         Form {
-            Section {
+            SettingsAuthCTA(
+                caption: "Create an account to access all web search providers without API Keys.",
+                fitContainer: true
+            )
+            .padding(3)
+            
+            SettingsSection(
+                iconSystem: "magnifyingglass",
+                title: "Web Search Providers"
+            ) {
                 VStack(alignment: .leading, spacing: 16) {
-                    Text("Configure web search providers to enhance your AI responses with real-time information from the internet.")
-                        .font(.system(size: 13))
-                        .foregroundStyle(.gray200)
+                    Text("Web search can enhance your AI responses with real-time information from the internet.")
+                        .styleText(
+                            size: 13,
+                            color: .gray200
+                        )
                     
                     Divider()
                     
                     tavilySection
-                }
-            } header: {
-                HStack {
-                    Image(systemName: "magnifyingglass")
-                    Text("Web Search Providers")
                 }
             }
 
@@ -41,10 +48,125 @@ struct WebSearchTab: View {
             }
         }
         .formStyle(.grouped)
-        .padding()
     }
     
-    var localModeSection: some View {
+//  MARK: - Child Components
+    
+    private func connectedStatus(connected: Bool) -> some View {
+        Text(connected ? "Connected" : "Using Onit Server")
+            .font(.system(size: 12))
+            .foregroundStyle(connected ? .green : .blue)
+            .padding(.horizontal, 8)
+            .padding(.vertical, 4)
+            .background(connected ? Color.green.opacity(0.2) : Color.blue.opacity(0.2))
+            .cornerRadius(4)
+    }
+    
+    private var caption: some View {
+        Text("Tavily is a powerful search API that provides real-time information from the web.")
+            .styleText(
+                size: 13,
+                color: .gray200
+            )
+    }
+    
+    private var validatedButton: some View {
+        SimpleButton(
+            text: "Validated",
+            disabled: true,
+            textColor: .black,
+            background: .white
+        )
+    }
+    
+    private var removeApiKeyButton: some View {
+        SimpleButton(text: "Remove") {
+            tavilyAPIToken = ""
+            isTavilyAPITokenValidated = false
+        }
+    }
+    
+    private var validateButton: some View {
+        SimpleButton(
+            text: "Validate",
+            loading: isValidating,
+            disabled: tavilyAPIToken.isEmpty || isValidating
+        ) {
+            validateTavilyAPIToken()
+        }
+    }
+    
+    private var apiKeyDropdown: some View {
+        DisclosureGroup(
+            "Tavily API Key\(isTavilyAPITokenValidated ? " ✅" : "")",
+            isExpanded: $openApiKeyDropdown
+        ) {
+            VStack(alignment: .leading, spacing: 8) {
+                HStack(alignment: .center, spacing: 8) {
+                    SecureField("Enter API key:", text: $tavilyAPIToken)
+                        .textFieldStyle(.roundedBorder)
+                        .styleText(size: 13, weight: .regular)
+                    
+                    if isTavilyAPITokenValidated {
+                        validatedButton
+                        removeApiKeyButton
+                    } else {
+                        validateButton
+                    }
+                }
+                
+                if let error = validationError {
+                    Text(error)
+                        .font(.system(size: 12))
+                        .foregroundStyle(.red)
+                }
+                
+                Text("You can put in [your Tavily API key](https://app.tavily.com) to use Tavily web search at cost.")
+                    .styleText(
+                        size: 13,
+                        color: .gray200
+                    )
+                
+                if isTavilyAPITokenValidated {
+                    Divider()
+
+                    VStack(alignment: .leading, spacing: 8) {
+                        HStack {
+                            Toggle("Cost Saving Mode", isOn: $tavilyCostSavingMode)
+                                .font(.system(size: 13))
+                        }
+
+                        Text("When enabled, Onit will use your Tavily token to perform searches instead of Onit credits. By default, Onit uses model provider search tools when available for optimal quality.")
+                            .font(.system(size: 12))
+                            .foregroundStyle(.gray200)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                }
+            }
+            .padding(.top, 8)
+        }
+    }
+    
+    private var tavilySection: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack {
+                Text("Tavily")
+                    .styleText(
+                        size: 13,
+                        weight: .semibold
+                    )
+                
+                Spacer()
+                
+                connectedStatus(connected: isTavilyAPITokenValidated)
+            }
+            
+            caption
+            apiKeyDropdown
+        }
+    }
+    
+    private var localModeSection: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
                 Toggle("Enable Web Search in Local Mode", isOn: $allowWebSearchInLocalMode)
@@ -57,74 +179,8 @@ struct WebSearchTab: View {
                 .fixedSize(horizontal: false, vertical: true)
         }
     }
-
-    var tavilySection: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            HStack {
-                Text("Tavily")
-                    .font(.system(size: 15, weight: .semibold))
-                
-                Spacer()
-                
-                if isTavilyAPITokenValidated {
-                    Text("Connected")
-                        .font(.system(size: 12))
-                        .foregroundStyle(.green)
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 4)
-                        .background(Color.green.opacity(0.2))
-                        .cornerRadius(4)
-                }
-            }
-            
-            Text("Tavily is a powerful search API that provides real-time information from the web. Get your API key at [tavily.com](https://app.tavily.com).")
-                .font(.system(size: 13))
-                .foregroundStyle(.gray200)
-            
-            VStack(alignment: .leading, spacing: 8) {
-                Text("API Key")
-                    .font(.system(size: 13))
-                
-                HStack {
-                    SecureField("Enter your Tavily API key", text: $tavilyAPIToken)
-                        .textFieldStyle(.roundedBorder)
-                        .font(.system(size: 13))
-                    
-                    Button(action: validateTavilyAPIToken) {
-                        if isValidating {
-                            ProgressView()
-                                .controlSize(.small)
-                        } else {
-                            Text("Validate")
-                        }
-                    }
-                    .disabled(tavilyAPIToken.isEmpty || isValidating)
-                }
-                
-                if let error = validationError {
-                    Text(error)
-                        .font(.system(size: 12))
-                        .foregroundStyle(.red)
-                }
-            }
-
-            if isTavilyAPITokenValidated {
-                Divider()
-
-                VStack(alignment: .leading, spacing: 8) {
-                    HStack {
-                        Toggle("Cost Saving Mode", isOn: $tavilyCostSavingMode)
-                            .font(.system(size: 13))
-                    }
-
-                    Text("When enabled, Onit will use your Tavily token to perform searches instead of Onit credits. By default, Onit uses model provider search tools when available for optimal quality.")
-                        .font(.system(size: 12))
-                        .foregroundStyle(.gray200)
-                        .fixedSize(horizontal: false, vertical: true)
-                }
-            }
-        }
-    }
+    
+//  MARK: - Private Functions
     
     private func validateTavilyAPIToken() {
         guard !tavilyAPIToken.isEmpty else { return }

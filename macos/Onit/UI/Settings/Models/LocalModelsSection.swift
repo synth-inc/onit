@@ -13,7 +13,7 @@ struct LocalModelsSection: View {
 
     @State private var isOn: Bool = false
     @State private var fetching: Bool = false
-    @State private var message: String? = nil
+    @State private var fetchSuccessMessage: String? = nil
     @State private var localEndpointString: String = ""
     @State private var showAdvanced: Bool = false
     @State private var keepAlive: String = ""
@@ -24,6 +24,7 @@ struct LocalModelsSection: View {
     @State private var timeout: String = ""
 
     // Validation states and errors
+    @State private var fetchError: String? = nil
     @State private var keepAliveError: String? = nil
     @State private var numCtxError: String? = nil
     @State private var temperatureError: String? = nil
@@ -54,11 +55,15 @@ struct LocalModelsSection: View {
         ModelsSection(title: "Local Models") {
             VStack(alignment: .leading, spacing: 10) {
                 title
-                if let message = message {
-                    Text(message)
+                
+                if let fetchError = fetchError {
+                    ModelErrorView(errorMessage: fetchError)
+                } else if let fetchSuccessMessage = fetchSuccessMessage {
+                    Text(fetchSuccessMessage)
                         .font(.system(size: 12))
                         .padding(.top, 5)
                 }
+                
                 content
             }
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -83,17 +88,23 @@ struct LocalModelsSection: View {
             // The implementation to turn off local models doesn't exist, so we never show the toggle.
             ModelTitle(title: "Ollama", isOn: $isOn, showToggle: false)
 
-            HStack {
+            HStack(alignment: .center, spacing: 8) {
                 Text("Endpoint URL:")
                     .foregroundStyle(.primary.opacity(0.65))
                     .font(.system(size: 12))
                     .fontWeight(.regular)
+                
                 TextField("", text: $localEndpointString)
                     .textFieldStyle(.roundedBorder)
                     .font(.system(size: 12))
                     .frame(maxWidth: 250)
-                Spacer()
-                Button {
+                
+                SimpleButton(
+                    text: "Set",
+                    loading: fetching,
+                    disabled: fetching,
+                    background: .blue
+                ) {
                     Task {
                         fetching = true
                         if let localEndpointURL = URL(string: localEndpointString) {
@@ -102,23 +113,20 @@ struct LocalModelsSection: View {
                             await appState.fetchLocalModels()
 
                             if appState.localFetchFailed {
-                                message = "Couldn't find any models at the provided URL."
+                                fetchSuccessMessage = nil
+                                fetchError = "Couldn't find any models at the provided URL."
                             } else {
-                                message = "Models loaded successfully!"
+                                fetchSuccessMessage = "✅ Models loaded successfully!"
+                                fetchError = nil
                             }
                         } else {
-                            message = "Local endpoint must be a valid URL"
+                            fetchSuccessMessage = nil
+                            fetchError = "Local endpoint must be a valid URL"
                         }
+                        
                         fetching = false
                     }
-                } label: {
-                    Text("Set")
                 }
-                .disabled(fetching)
-                .foregroundStyle(.white)
-                .buttonStyle(.borderedProminent)
-                .frame(height: 22)
-                .fontWeight(.regular)
             }
             
             DisclosureGroup("Advanced", isExpanded: $showAdvanced) {
@@ -151,7 +159,9 @@ struct LocalModelsSection: View {
                                 valueType: "Duration string (e.g. '10m', '24h') or integer seconds"
                             )
                         }
-                        SettingErrorMessage(message: keepAliveError)
+                        if let errorMessage = keepAliveError {
+                            ModelErrorView(errorMessage: errorMessage)
+                        }
 
                         HStack {
                             Text("Request timeout (seconds):")
@@ -179,7 +189,9 @@ struct LocalModelsSection: View {
                                 valueType: "Integer (seconds)"
                             )
                         }
-                        SettingErrorMessage(message: timeoutError)
+                        if let errorMessage = timeoutError {
+                            ModelErrorView(errorMessage: errorMessage)
+                        }
 
                         HStack {
                             Text("Context window:")
@@ -207,7 +219,9 @@ struct LocalModelsSection: View {
                                 valueType: "Integer"
                             )
                         }
-                        SettingErrorMessage(message: numCtxError)
+                        if let errorMessage = numCtxError {
+                            ModelErrorView(errorMessage: errorMessage)
+                        }
 
                         HStack {
                             Text("Temperature:")
@@ -237,7 +251,9 @@ struct LocalModelsSection: View {
                                 valueType: "Float (0.0 - 2.0)"
                             )
                         }
-                        SettingErrorMessage(message: temperatureError)
+                        if let errorMessage = temperatureError {
+                            ModelErrorView(errorMessage: errorMessage)
+                        }
 
                         HStack {
                             Text("Top K:")
@@ -265,7 +281,9 @@ struct LocalModelsSection: View {
                                 valueType: "Integer"
                             )
                         }
-                        SettingErrorMessage(message: topKError)
+                        if let errorMessage = topKError {
+                            ModelErrorView(errorMessage: errorMessage)
+                        }
 
                         HStack {
                             Text("Top P:")
@@ -295,7 +313,9 @@ struct LocalModelsSection: View {
                                 valueType: "Float (0.0 - 1.0)"
                             )
                         }
-                        SettingErrorMessage(message: topPError)
+                        if let errorMessage = topPError {
+                            ModelErrorView(errorMessage: errorMessage)
+                        }
 
                         Divider()
                             .padding(.vertical, 4)
@@ -343,10 +363,9 @@ struct LocalModelsSection: View {
     @ViewBuilder
     var content: some View {
         if availableLocalModels.isEmpty {
-            HStack(spacing: 0) {
+            HStack(alignment: .top, spacing: 8) {
                 text
-                Spacer(minLength: 8)
-                button
+                reloadButton
             }
         } else {
             modelsView
@@ -391,22 +410,20 @@ struct LocalModelsSection: View {
         }
     }
 
-    var button: some View {
-        Button(action: {
+    var reloadButton: some View {
+        SimpleButton(
+            text: "Reload",
+            loading: fetching,
+            disabled: fetching,
+            background: .blue
+        ) {
             fetching = true
+            
             Task {
                 await appState.fetchLocalModels()
                 fetching = false
             }
-        }) {
-            if fetching {
-                ProgressView()
-                    .controlSize(.small)
-            } else {
-                Text("Reload")
-            }
         }
-        .buttonStyle(.borderedProminent)
     }
 }
 

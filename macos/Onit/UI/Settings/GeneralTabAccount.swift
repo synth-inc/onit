@@ -28,8 +28,8 @@ struct GeneralTabAccount: View {
                 
                 HStack(spacing: 9) {
                     if appState.account == nil {
-                        createAnAccountButton
-                        signInButton
+                        GeneralTabAccount.createAnAccountButton
+                        GeneralTabAccount.signInButton
                     } else {
                         logoutButton
                         deleteAccountButton
@@ -78,26 +78,31 @@ extension GeneralTabAccount {
         }
     }
     
-    private var createAnAccountButton: some View {
+    static var createAnAccountButton: some View {
         SimpleButton(
-            iconText: "👤",
             text: "Create an account",
-            action: {
-                AnalyticsManager.AccountEvents.createAccountPressed()
-                authFlowStatus = .showSignUp
-                openPanel()
-            },
-            background: .blue
-        )
+            background: .blue,
+            iconSystem: "person.crop.circle"
+        ) {
+            AnalyticsManager.AccountEvents.createAccountPressed()
+            Defaults[.authFlowStatus] = .showSignUp
+            
+            if !PanelStateCoordinator.shared.state.panelOpened {
+                PanelStateCoordinator.shared.launchPanel()
+            }
+        }
     }
     
-    private var signInButton: some View {
+    static var signInButton: some View {
         SimpleButton(
             text: "Sign in",
             action: {
                 AnalyticsManager.AccountEvents.signInPressed()
-                authFlowStatus = .showSignIn
-                openPanel()
+                Defaults[.authFlowStatus] = .showSignIn
+                
+                if !PanelStateCoordinator.shared.state.panelOpened {
+                    PanelStateCoordinator.shared.launchPanel()
+                }
             }
         )
     }
@@ -116,12 +121,11 @@ extension GeneralTabAccount {
         SimpleButton(
             text: "Delete account",
             textColor: .red,
-            action: {
-                AnalyticsManager.AccountEvents.deletePressed()
-                showDeleteAccountAlert = true
-            },
             background: .redBrick
-        )
+        ) {
+            AnalyticsManager.AccountEvents.deletePressed()
+            showDeleteAccountAlert = true
+        }
         .sheet(isPresented: $showDeleteAccountAlert) {
             GeneralTabAccountAlert(
                 show: $showDeleteAccountAlert,

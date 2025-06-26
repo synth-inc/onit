@@ -112,70 +112,65 @@ struct GeneralTabPlanAndBilling: View {
 extension GeneralTabPlanAndBilling {
     private var upgradeToProButton: some View {
         SimpleButton(
-            iconText: "🚀",
             text: "Upgrade to PRO",
-            action: {
-                AnalyticsManager.Billing.upgradeProPressed()
-                Task {
-                    if let error = await Stripe.openSubscriptionForm(openURL) {
-                        subscriptionDataErrorMessage = error
-                    }
+            background: .blue,
+            iconText: "🚀"
+        ) {
+            AnalyticsManager.Billing.upgradeProPressed()
+            Task {
+                if let error = await Stripe.openSubscriptionForm(openURL) {
+                    subscriptionDataErrorMessage = error
                 }
-            },
-            background: .blue
-        )
+            }
+        }
     }
     
     private var startTwoWeekProTrialButton: some View {
         SimpleButton(
-            iconText: "🚀",
             text: "Start 2-Week PRO Trial",
-            action: {
-                AnalyticsManager.Billing.startFreeTrialPressed()
-                Task {
-                    if let error = await Stripe.openSubscriptionForm(openURL) {
-                        subscriptionDataErrorMessage = error
-                    }
+            background: .blue,
+            iconText: "🚀"
+        ) {
+            AnalyticsManager.Billing.startFreeTrialPressed()
+            Task {
+                if let error = await Stripe.openSubscriptionForm(openURL) {
+                    subscriptionDataErrorMessage = error
                 }
-            },
-            background: .blue
-        )
+            }
+        }
     }
     
     private var renewSubscriptionButton: some View {
         SimpleButton(
-            iconText: "💫",
             text: "Renew Subscription",
-            action: {
-                AnalyticsManager.Billing.renewSubscriptionPressed()
-                Task {
-                    await renewSubscription()
-                }
-            },
-            background: .blue
-        )
+            background: .blue,
+            iconText: "💫"
+        ) {
+            AnalyticsManager.Billing.renewSubscriptionPressed()
+            Task {
+                await renewSubscription()
+            }
+        }
     }
     
     private var manageSubscriptionButton: some View {
         SimpleButton(
-            iconText: "⚙️",
             text: "Manage Subscription",
-            action: {
-                AnalyticsManager.Billing.manageSubscriptionPressed()
-                Task { await openBillingPortal() }
-            }
-        )
+            iconText: "⚙️"
+        ) {
+            AnalyticsManager.Billing.manageSubscriptionPressed()
+            Task { await openBillingPortal() }
+        }
     }
     
     private var viewPastBillingInfoButton: some View {
         SimpleButton(
-            iconText: "⚙️",
             text: "View Past Billing Info",
-            action: {
-                AnalyticsManager.Billing.viewPastBillingsPressed()
-                Task { await openBillingPortal() }
-            }
-        )
+            iconText: "⚙️"
+        ) {
+            AnalyticsManager.Billing.viewPastBillingsPressed()
+            Task { await openBillingPortal() }
+        }
     }
     
     private var shimmers: some View {
