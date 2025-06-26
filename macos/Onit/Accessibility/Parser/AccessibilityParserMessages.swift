@@ -31,17 +31,6 @@ class AccessibilityParserMessages: AccessibilityParserBase {
                 }
             }
           
-            // Get all accessibility attributes for the element
-//             if let attributes = element.attributes() {
-//                 let indent = String(repeating: "  ", count: depth)
-//                 print("\(indent)Element attributes for \(element.title() ?? "unknown"):")
-//                 for attribute in attributes {
-//                     if let value = element.attribute(forAttribute: attribute as CFString) {
-//                         print("\(indent)  \(attribute): \(value)")
-//                     }
-//                 }
-//                 print("\(indent)---")
-//             }
             
             guard let role = element.role(),
                   (role == kAXStaticTextRole || role == kAXGroupRole),
