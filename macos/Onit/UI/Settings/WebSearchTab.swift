@@ -5,6 +5,7 @@ struct WebSearchTab: View {
     @Default(.tavilyAPIToken) var tavilyAPIToken
     @Default(.isTavilyAPITokenValidated) var isTavilyAPITokenValidated
     @Default(.tavilyCostSavingMode) var tavilyCostSavingMode
+    @Default(.allowWebSearchInLocalMode) var allowWebSearchInLocalMode
     
     @State private var isValidating = false
     @State private var validationError: String? = nil
@@ -27,11 +28,36 @@ struct WebSearchTab: View {
                     Text("Web Search Providers")
                 }
             }
+
+            Section {
+                VStack(alignment: .leading, spacing: 16) {
+                    localModeSection
+                }
+            } header: {
+                HStack {
+                    Image(systemName: "lock.shield")
+                    Text("Local Mode")
+                }
+            }
         }
         .formStyle(.grouped)
         .padding()
     }
     
+    var localModeSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                Toggle("Enable Web Search in Local Mode", isOn: $allowWebSearchInLocalMode)
+                    .font(.system(size: 13))
+            }
+
+            Text("When enabled, web search will be available in local mode. Please note that your queries will be sent to the search provider's servers, and we cannot guarantee that your data won't be stored or logged by the provider.")
+                .font(.system(size: 12))
+                .foregroundStyle(.gray200)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+    }
+
     var tavilySection: some View {
         VStack(alignment: .leading, spacing: 16) {
             HStack {

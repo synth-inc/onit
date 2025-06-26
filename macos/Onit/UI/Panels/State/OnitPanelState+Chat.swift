@@ -144,20 +144,22 @@ extension OnitPanelState {
 
                 // Determine web search strategy
                 let webSearchEnabled = Defaults[.webSearchEnabled]
-                let useWebSearch = webSearchEnabled && isNewInstruction
+                let localWebSearchAllowed = Defaults[.mode] != .local || Defaults[.allowWebSearchInLocalMode]
+                let useWebSearch = webSearchEnabled && localWebSearchAllowed && isNewInstruction
 
                 var hasValidProviderSearchToken = false
+                var onitSupportsSearchProvider = false
                 if Defaults[.mode] == .remote, let model = Defaults[.remoteModel] {
                     let apiToken = TokenValidationManager.getTokenForModel(model)
                     let hasValidToken = apiToken != nil && !apiToken!.isEmpty
                     hasValidProviderSearchToken = hasValidToken && (model.provider == .openAI || model.provider == .anthropic)
-                }
 
-                let providers = try? await FetchingClient().getChatSearchProviders()
+                    let providers = try? await FetchingClient().getChatSearchProviders()
 
-                var onitSupportsSearchProvider = false
-                if let providers = providers, let provider = Defaults[.remoteModel]?.provider.rawValue {
-                    onitSupportsSearchProvider = providers.contains(where: { $0.lowercased() == provider })
+                    if let providers = providers {
+                        let provider = model.provider.rawValue
+                        onitSupportsSearchProvider = providers.contains(where: { $0.lowercased() == provider })
+                    }
                 }
 
                 let tavilyCostSavingMode = Defaults[.tavilyCostSavingMode]
