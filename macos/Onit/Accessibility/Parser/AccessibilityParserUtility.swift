@@ -45,8 +45,6 @@ class AccessibilityParserUtility {
         element: AXUIElement,
         maxDepth: Int,
         childNodeProcessingInterval: Int = 128,
-        // handler: (AXUIElement, Int) -> AccessibilityParseResult
-//        handler: @escaping (AXUIElement) async -> [String: String]?
         handler: @escaping (AXUIElement, Int) async -> AccessibilityParseResult
     ) async -> [String: String] {
         var results: [String: String] = [:]
@@ -80,10 +78,6 @@ class AccessibilityParserUtility {
              if let result = parseResult.results {
                  results.merge(result) { _, new in new }
              }
-            
-//            if let result = await handler(currentElement, currentDepth) {
-//                results.merge(result) { _, new in new }
-//            }
 
             // Only recursively parse children if handler didn't return .stopRecursing
             if parseResult.shouldContinue, let children = currentElement.children() {
