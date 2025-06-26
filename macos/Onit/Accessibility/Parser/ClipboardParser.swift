@@ -18,7 +18,7 @@ class ClipboardParser: AccessibilityParserLogic {
     // MARK: - AccessibilityParserLogic
 
     /** See ``AccessibilityParserLogic`` parse function */
-    func parse(element: AXUIElement) -> [String: String] {
+    func parse(element: AXUIElement) async -> [String: String] {
         /// Prevent the system from looping because highlighting text emits a new event.
         if let lastParsingDate = lastParsingDate,
            let lastParsingScreen = lastParsingScreen,
