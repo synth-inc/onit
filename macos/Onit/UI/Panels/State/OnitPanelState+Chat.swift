@@ -294,9 +294,8 @@ extension OnitPanelState {
     func removePartialResponse(prompt: Prompt) {
         // If the prompt already has a response, we can just remove the last, partial response.
         if prompt.responses.count > 1, let lastResponse = prompt.responses.last, let lastInstruction = prompt.priorInstructions.last {
-            prompt.responses.removeLast()
+            prompt.removeLastResponse()  // Use safe removal method
             prompt.priorInstructions.removeLast()
-            prompt.generationIndex = (prompt.responses.count - 1)
             do {
                 try container.mainContext.save()
             } catch {

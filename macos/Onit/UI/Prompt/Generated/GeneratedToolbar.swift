@@ -22,9 +22,9 @@ struct GeneratedToolbar: View {
             
             Spacer()
             
-            if prompt.generationIndex >= 0 &&
-                prompt.generationIndex < prompt.responses.count,
-                let model = prompt.sortedResponses[prompt.generationIndex].model {
+            if prompt.safeGenerationIndex >= 0 &&
+                prompt.safeGenerationIndex < prompt.responses.count,
+                let model = prompt.sortedResponses[prompt.safeGenerationIndex].model {
                 Text("\(model)")
                     .foregroundColor(Color.gray300)
             }
