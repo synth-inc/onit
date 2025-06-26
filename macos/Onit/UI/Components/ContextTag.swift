@@ -21,6 +21,7 @@ struct ContextTag: View {
     private let iconView: (any View)?
     private let caption: String?
     private let tooltip: String?
+    private let errorDotColor: Color?
     private let action: (() -> Void)?
     private let removeAction: (() -> Void)?
     
@@ -38,6 +39,7 @@ struct ContextTag: View {
         iconView: (any View)? = nil,
         caption: String? = nil,
         tooltip: String? = nil,
+        errorDotColor: Color? = nil,
         action: (() -> Void)? = nil,
         removeAction: (() -> Void)? = nil
     ) {
@@ -54,6 +56,7 @@ struct ContextTag: View {
         self.iconView = iconView
         self.caption = caption
         self.tooltip = tooltip
+        self.errorDotColor = errorDotColor
         self.action = action
         self.removeAction = removeAction
     }
@@ -73,10 +76,24 @@ struct ContextTag: View {
         ZStack(alignment: .leading) {
             HStack(alignment: .center, spacing: 6) {
                 if let bundleUrlIcon = bundleUrlIcon {
-                    Image(nsImage: bundleUrlIcon)
-                        .resizable()
-                        .frame(width: 16, height: 16)
-                        .cornerRadius(4)
+                    ZStack(alignment: .bottomTrailing) {
+                        Image(nsImage: bundleUrlIcon)
+                            .resizable()
+                            .frame(width: 16, height: 16)
+                            .cornerRadius(4)
+                        
+                        if let errorDotColor = errorDotColor {
+                            Circle()
+                                .fill(isHoveredBody ? hoverBackground : background)
+                                .frame(width: 11, height: 11)
+                                .overlay(
+                                    Circle()
+                                        .fill(errorDotColor.opacity(1.0))
+                                        .frame(width: 7, height: 7)
+                                )
+                                .offset(x: 2, y: 2)
+                        }
+                    }
                 }
                 
                 if let iconView = iconView {

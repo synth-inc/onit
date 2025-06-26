@@ -9,12 +9,15 @@ import SwiftUI
 
 struct SetUpDialog<Subtitle: View>: View {
     var title: String
+    var icon: String? = nil
+    var titleColor: Color? = nil
     var showButton: Bool = true
     var buttonText: String? = nil
+    var buttonStyle: SetUpButtonVariant = .default
     var showArrow: Bool = true
     @ViewBuilder var subtitle: () -> Subtitle
-    var action: () -> Void
-    var closeAction: () -> Void
+    var action: (() -> Void)? = nil
+    var closeAction: (() -> Void)? = nil
 
     var borderGrad: LinearGradient {
         .init(
@@ -36,7 +39,7 @@ struct SetUpDialog<Subtitle: View>: View {
             main
             Spacer().frame(height: 11)
 
-            if showButton {
+            if showButton && action != nil {
                 button
             }
         }
@@ -54,20 +57,31 @@ struct SetUpDialog<Subtitle: View>: View {
 
     var titleView: some View {
         HStack {
+            if let icon = icon {
+                Image(icon)
+                    .renderingMode(.template)
+                    .resizable()
+                    .frame(width: 16, height: 16)
+                    .padding(0)
+                    .foregroundStyle(titleColor ?? .FG)
+            }
+            
             Text(title)
                 .fontWeight(.semibold)
                 .appFont(.medium14)
-                .foregroundStyle(.FG)
+                .foregroundStyle(titleColor ?? .FG)
 
             Spacer()
 
-            Button {
-                closeAction()
-            } label: {
-                Image(.smallCross)
-                    .padding(2)
+            if let closeAction = closeAction {
+                Button {
+                    closeAction()
+                } label: {
+                    Image(.smallCross)
+                        .padding(2)
+                }
+                .buttonStyle(HoverableButtonStyle(background: true))
             }
-            .buttonStyle(HoverableButtonStyle(background: true))
         }
     }
 
@@ -76,13 +90,15 @@ struct SetUpDialog<Subtitle: View>: View {
             .appFont(.medium13)
             .foregroundStyle(.gray100)
             .fixedSize(horizontal: false, vertical: true)
-            .lineLimit(10) // This prevents a re-draw that messes up the height of the OnitPanel in Regular mode.
+            .lineLimit(10)
+            .padding(.leading, icon != nil ? 28 : 0)
     }
 
     var button: some View {
         Button(buttonText ?? "Set up") {
-            action()
+            action?()
         }
-        .buttonStyle(SetUpButtonStyle(showArrow: showArrow))
+        .buttonStyle(SetUpButtonStyle(showArrow: showArrow, variant: buttonStyle))
+        .padding(.leading, icon != nil ? 28 : 0)
     }
 }

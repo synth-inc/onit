@@ -7,8 +7,14 @@
 
 import SwiftUI
 
+enum SetUpButtonVariant {
+    case primary
+    case `default`
+}
+
 struct SetUpButtonStyle: ButtonStyle {
     var showArrow: Bool
+    var variant: SetUpButtonVariant = .default
 
     @State private var hovering = false
 
@@ -22,8 +28,8 @@ struct SetUpButtonStyle: ButtonStyle {
         }
 
         .padding(8)
-        .foregroundStyle(.FG)
-        .background(.blue400.opacity(hovering ? 0.9 : 1), in: .rect(cornerRadius: 8))
+        .foregroundStyle(foregroundColor)
+        .background(backgroundColor.opacity(hovering ? 0.9 : 1), in: .rect(cornerRadius: 8))
         .opacity(configuration.isPressed ? 0.9 : 1)
         .animation(.spring(duration: 1 / 3), value: hovering)
         .fontWeight(.semibold)
@@ -33,6 +39,24 @@ struct SetUpButtonStyle: ButtonStyle {
             } else {
                 hovering = false
             }
+        }
+    }
+    
+    private var foregroundColor: Color {
+        switch variant {
+        case .primary:
+            return .FG
+        case .default:
+            return .FG
+        }
+    }
+    
+    private var backgroundColor: Color {
+        switch variant {
+        case .primary:
+            return .blue400
+        case .default:
+            return .gray700
         }
     }
 }
