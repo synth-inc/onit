@@ -19,6 +19,16 @@ extension AXUIElement {
         }
     }
 
+    func allAttributes() -> [String]? {
+        var value: CFArray?
+        let result = AXUIElementCopyAttributeNames(self, &value)
+        if result == .success {
+            return value as? [String]
+        } else {
+            return nil
+        }
+    }
+    
     func value() -> String? {
         return self.attribute(forAttribute: kAXValueAttribute as CFString) as? String
     }

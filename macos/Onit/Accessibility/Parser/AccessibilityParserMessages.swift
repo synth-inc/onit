@@ -1,28 +1,27 @@
 //
-//  AccessibilityParserCalendar.swift
+//  AccessibilityParserMessages.swift
 //  Onit
 //
-//  Created by Kévin Naudin on 28/04/2025.
+//  Created by Assistant on 23/01/2025.
 //
 
 import ApplicationServices.HIServices
 
-/// Implementation of `AccessibilityParserLogic` for Calendar app
-class AccessibilityParserCalendar: AccessibilityParserBase {
+/// Implementation of `AccessibilityParserLogic` for Messages app
+class AccessibilityParserMessages: AccessibilityParserBase {
 
     // MARK: - AccessibilityParserLogic
 
     /** See ``AccessibilityParserLogic`` parse function */
     override func parse(element: AXUIElement) -> [String: String] {
         var result: [String: String] = [:]
-        var screen: String = ""
+        var messagesContent: String = ""
         var highlightedTextFound = false
 
         _ = AccessibilityParserUtility.recursivelyParse(
             element: element,
             maxDepth: AccessibilityParserConfig.recursiveDepthMax
         ) { element, depth in
-            
             if !highlightedTextFound {
                 let parentResult = super.parse(element: element)
                 
@@ -31,21 +30,32 @@ class AccessibilityParserCalendar: AccessibilityParserBase {
                     result.merge(parentResult) { _, new in new }
                 }
             }
+          
             
-            guard let role = element.role(), role == kAXStaticTextRole,
+            guard let role = element.role(),
+                  (role == kAXStaticTextRole || role == kAXGroupRole),
                   let description = element.description(),
                   !description.isEmpty,
-                  !screen.contains(description) else {
+                  !messagesContent.contains(description)
+            else {
                 return .continueRecursing(nil)
             }
-            
-            screen += "\(description)\n"
+
+            // Stop recursing if we hit "Conversations" but still process this element
+            if description == "Conversations" {
+                return .stopRecursing(nil)
+            }
+        
+            print("Adding \(description)")
+            messagesContent += "\(description)\n"
 
             return .continueRecursing(nil)
         }
         
-        result[AccessibilityParsedElements.screen] = screen
+        if !messagesContent.isEmpty {
+            result[AccessibilityParsedElements.screen] = messagesContent
+        }
         
         return result
     }
-}
+} 
