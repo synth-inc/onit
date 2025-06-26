@@ -18,7 +18,7 @@ class ScreenRecordingPermissionManager: ObservableObject {
     
     // MARK: - Published Properties
     @Published private(set) var isScreenRecordingEnabled: Bool
-    @Published private(set) var isRequestingPermission: Bool = false
+	@Published private(set) var messageToShow: String?
     
     // MARK: - Private Init
     private init() {
@@ -42,13 +42,6 @@ class ScreenRecordingPermissionManager: ObservableObject {
     // MARK: - Permission Request
     
     func requestScreenRecordingPermission() -> Bool {
-        isRequestingPermission = true
-        
-        defer {
-            isRequestingPermission = false
-            Defaults[.screenRecordingPermissionAsked] = true
-        }
-        
         let wasAlreadyRequested = Defaults[.screenRecordingPermissionAsked]
         let requestResult = CGRequestScreenCaptureAccess()
         
@@ -59,7 +52,12 @@ class ScreenRecordingPermissionManager: ObservableObject {
         
         if wasAlreadyRequested {
             openScreenRecordingSettings()
-        }
+            messageToShow = "Opening System Settings...\nPlease enable Screen Recording access for Onit, then click 'Quit & Reopen' to apply the changes."
+        } else {
+			messageToShow = "Opening Screen Recording permission alert...\nOpen System Settings, enable Screen Recording for Onit, then click 'Quit & Reopen' to restart the app with the new permission."
+		}
+        
+        Defaults[.screenRecordingPermissionAsked] = true
         
         return false
     }

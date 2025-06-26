@@ -13,7 +13,6 @@ struct QuickEditTab: View {
     @Default(.quickEditConfig) private var config
     @State private var shortcutText: String = KeyboardShortcuts.Name.quickEdit.shortcutText
     @ObservedObject private var permissionManager = ScreenRecordingPermissionManager.shared
-    @State private var showingSettingsRedirect = false
     
     var body: some View {
         Form {
@@ -46,54 +45,6 @@ struct QuickEditTab: View {
         .formStyle(.grouped)
         .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
             permissionManager.refreshPermissionStatus()
-			showingSettingsRedirect = false
-        }
-    }
-    
-    private var screenRecordingPermission: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            HStack {
-                Text("Screen Recording Permission")
-                    .font(.system(size: 13))
-                Spacer()
-                
-                if permissionManager.isRequestingPermission {
-                    ProgressView()
-                        .controlSize(.small)
-                } else {
-                    Toggle("", isOn: Binding(
-                        get: { permissionManager.isScreenRecordingEnabled },
-                        set: { newValue in
-                            if newValue && !permissionManager.isScreenRecordingEnabled {
-                                let granted = permissionManager.requestScreenRecordingPermission()
-                                if !granted {
-                                    showingSettingsRedirect = true
-                                }
-                            }
-                        }
-                    ))
-                    .toggleStyle(.switch)
-                    .controlSize(.small)
-                }
-                
-                SettingInfoButton(
-                    title: "Screen Recording Permission",
-                    description: "Required for precise hint positioning. This allows Onit to capture screenshots of selected text to accurately position the Quick Edit hint next to your selection.",
-                    defaultValue: "off",
-                    valueType: "Bool"
-                )
-            }
-            
-            if showingSettingsRedirect {
-                Text("Opening System Settings... Please enable Screen Recording for Onit and return to this app.")
-                    .font(.system(size: 12))
-                    .foregroundStyle(.orange)
-                    .transition(.opacity)
-            } else {
-                Text("Required for precise hint positioning. This allows Onit to capture screenshots of highlighted text to accurately position the Quick Edit hint next to your selection.")
-                    .font(.system(size: 12))
-                    .foregroundStyle(.gray200)
-            }
         }
     }
     
@@ -163,6 +114,45 @@ struct QuickEditTab: View {
                         .frame(height: 24)
                     }
                 }
+            }
+        }
+    }
+
+	private var screenRecordingPermission: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            HStack {
+                Text("Screen Recording Permission")
+                    .font(.system(size: 13))
+                Spacer()
+                
+                Toggle("", isOn: Binding(
+                    get: { permissionManager.isScreenRecordingEnabled },
+                    set: { newValue in
+                        if newValue && !permissionManager.isScreenRecordingEnabled {
+                            _ = permissionManager.requestScreenRecordingPermission()
+                        }
+                    }
+                ))
+                .toggleStyle(.switch)
+                .controlSize(.small)
+                
+                SettingInfoButton(
+                    title: "Screen Recording Permission",
+                    description: "Required for precise hint positioning. This allows Onit to capture screenshots of selected text to accurately position the Quick Edit hint next to your selection.",
+                    defaultValue: "off",
+                    valueType: "Bool"
+                )
+            }
+            
+            if let messageToShow = permissionManager.messageToShow {
+                Text(messageToShow)
+                    .font(.system(size: 12))
+                    .foregroundStyle(.orange)
+                    .transition(.opacity)
+            } else {
+                Text("Required for precise hint positioning. This allows Onit to capture screenshots of highlighted text to accurately position the Quick Edit hint next to your selection.")
+                    .font(.system(size: 12))
+                    .foregroundStyle(.gray200)
             }
         }
     }
