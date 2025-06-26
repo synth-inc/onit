@@ -300,13 +300,7 @@ extension ContextMenuWindows {
     private func captureOpenWindows() async -> [CapturedWindow] {
         isCapturingWindows = true
         
-        let onitName = Bundle.main.object(forInfoDictionaryKey: "CFBundleName") as? String
-        
-        let windowPids = NSWorkspace.shared.runningApplications
-            .filter { $0.activationPolicy == .regular }
-            .filter { $0.localizedName != onitName }
-            .map { $0.processIdentifier }
-        
+        let windowPids = WindowHelpers.getAllOtherAppPids()
         var capturedOpenWindows: [CapturedWindow] = []
         
         for pid in windowPids {

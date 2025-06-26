@@ -238,22 +238,22 @@ class PanelStatePinnedManager: PanelStateBaseManager, ObservableObject {
 
     override func resetFramesOnAppChange() {
         let panelWidth = state.panelWidth - (TetheredButton.width / 2) + 1
-        targetInitialFrames.forEach { element, initialFrame in
-            // In Pinned mode, we should only reset the frame if it's still bordering the panel.
-            // Instead of using the initial frame, we should add panelWidth back to the window, so it goes all the way to the edge of the screen.
-            if let currentFrame = element.getFrame() {
+        
+        let windows = WindowHelpers.getAllOtherAppWindows()
+        
+        for window in windows {
+            if let currentFrame = window.getFrame() {
                 let screenFrame = attachedScreen?.visibleFrame ?? NSScreen.main?.visibleFrame ?? .zero
                 let isNearPanel = abs((screenFrame.maxX - panelWidth) - currentFrame.maxX) <= 2
-
-                if !isNearPanel {
-                    return
+                if isNearPanel {
+                    let newWidth = currentFrame.width + panelWidth
+                    let newFrame = NSRect(origin: currentFrame.origin,
+                                            size: NSSize(width: newWidth, height: currentFrame.height))
+                    _ = window.setFrame(newFrame)
                 }
-                let newWidth = currentFrame.width + panelWidth
-                let newFrame = NSRect(origin: currentFrame.origin,
-                                        size: NSSize(width: newWidth, height: currentFrame.height))
-                _ = element.setFrame(newFrame)
             }
         }
+        
         targetInitialFrames.removeAll()
     }
 }
