@@ -127,7 +127,7 @@ struct ChatStreamingEndpointBuilder {
             userMessages: userMessages)
 
         return OpenAIChatStreamingEndpoint(
-            messages: messages, token: apiToken, model: model.id,includeSearch: includeSearch)
+            messages: messages, token: apiToken, model: model.id, includeSearch: includeSearch)
     }
 
     private static func anthropic(
