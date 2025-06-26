@@ -144,12 +144,29 @@ extension OnitPanelState {
 
                 // Determine web search strategy
                 let webSearchEnabled = Defaults[.webSearchEnabled]
-                let hasTavilyToken = !Defaults[.tavilyAPIToken].isEmpty && Defaults[.isTavilyAPITokenValidated]
-                let shouldPerformClientSideWebSearch = webSearchEnabled && hasTavilyToken && isNewInstruction
-                let shouldUseServerSideWebSearch = webSearchEnabled && !hasTavilyToken && isNewInstruction
+                let localWebSearchAllowed = Defaults[.mode] != .local || Defaults[.allowWebSearchInLocalMode]
+                let useWebSearch = webSearchEnabled && localWebSearchAllowed && isNewInstruction
+
+                var hasValidProviderSearchToken = false
+                var onitSupportsSearchProvider = false
+                if Defaults[.mode] == .remote, let model = Defaults[.remoteModel] {
+                    let apiToken = TokenValidationManager.getTokenForModel(model)
+                    let hasValidToken = apiToken?.isEmpty == false
+                    hasValidProviderSearchToken = hasValidToken && (model.provider == .openAI || model.provider == .anthropic)
+
+                    let providers = try? await FetchingClient().getChatSearchProviders()
+
+                    if let providers = providers {
+                        let provider = model.provider.rawValue
+                        onitSupportsSearchProvider = providers.contains(where: { $0.lowercased() == provider })
+                    }
+                }
+
+                let tavilyCostSavingMode = Defaults[.tavilyCostSavingMode]
+                let useTavilySearch = useWebSearch && !hasValidProviderSearchToken && (tavilyCostSavingMode || !onitSupportsSearchProvider)
 
                 // Perform client-side web search with Tavily if available
-                if shouldPerformClientSideWebSearch {
+                if useTavilySearch {
                     isSearchingWeb[prompt.id] = true
                     let searchResults = await performWebSearch(query: curInstruction)
                     if !searchResults.isEmpty {
@@ -195,7 +212,7 @@ extension OnitPanelState {
                             useOnitServer: useOnitChat,
                             model: model,
                             apiToken: apiToken,
-                            includeSearch: shouldUseServerSideWebSearch ? true : nil)
+                            includeSearch: (useWebSearch && !useTavilySearch) ? true : nil)
                         for try await response in asyncText {
                             streamedResponse += response
                         }
@@ -211,7 +228,8 @@ extension OnitPanelState {
                             webSearchContexts: webSearchContextsHistory,
                             responses: responsesHistory,
                             model: model,
-                            apiToken: apiToken)
+                            apiToken: apiToken,
+                            includeSearch: (useWebSearch && !useTavilySearch) ? true : nil)
                     }
                 
                 case .local:

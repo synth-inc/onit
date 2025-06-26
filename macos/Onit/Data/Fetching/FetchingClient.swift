@@ -29,7 +29,8 @@ actor FetchingClient {
         webSearchContexts: [[(title: String, content: String, source: String, url: URL?)]],
         responses: [String],
         model: AIModel,
-        apiToken: String?
+        apiToken: String?,
+        includeSearch: Bool? = nil
     ) async throws -> String {
         let userMessages = ChatEndpointMessagesBuilder.user(
             instructions: instructions,
@@ -44,7 +45,8 @@ actor FetchingClient {
             responses: responses,
             apiToken: apiToken,
             systemMessage: systemMessage,
-            userMessages: userMessages)
+            userMessages: userMessages,
+            includeSearch: includeSearch)
         
         return try await fetchChatContent(from: endpoint)
     }
