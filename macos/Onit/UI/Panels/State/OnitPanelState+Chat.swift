@@ -151,7 +151,7 @@ extension OnitPanelState {
                 var onitSupportsSearchProvider = false
                 if Defaults[.mode] == .remote, let model = Defaults[.remoteModel] {
                     let apiToken = TokenValidationManager.getTokenForModel(model)
-                    let hasValidToken = apiToken != nil && !apiToken!.isEmpty
+                    let hasValidToken = apiToken?.isEmpty == false
                     hasValidProviderSearchToken = hasValidToken && (model.provider == .openAI || model.provider == .anthropic)
 
                     let providers = try? await FetchingClient().getChatSearchProviders()
