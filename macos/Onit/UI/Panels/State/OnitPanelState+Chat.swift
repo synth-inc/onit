@@ -146,8 +146,6 @@ extension OnitPanelState {
                 let webSearchEnabled = Defaults[.webSearchEnabled]
                 let useWebSearch = webSearchEnabled && isNewInstruction
 
-                let hasTavilyToken = !Defaults[.tavilyAPIToken].isEmpty && Defaults[.isTavilyAPITokenValidated]
-
                 var hasValidProviderSearchToken = false
                 if Defaults[.mode] == .remote, let model = Defaults[.remoteModel] {
                     let apiToken = TokenValidationManager.getTokenForModel(model)
@@ -155,7 +153,14 @@ extension OnitPanelState {
                     hasValidProviderSearchToken = hasValidToken && (model.provider == .openAI || model.provider == .anthropic)
                 }
 
-                let useTavilySearch = useWebSearch && !hasValidProviderSearchToken && hasTavilyToken
+                let providers = try? await FetchingClient().getChatSearchProviders()
+
+                var onitSupportsSearchProvider = false
+                if let providers = providers, let provider = Defaults[.remoteModel]?.provider.rawValue {
+                    onitSupportsSearchProvider = providers.contains(where: { $0.lowercased() == provider })
+                }
+
+                let useTavilySearch = useWebSearch && !hasValidProviderSearchToken && !onitSupportsSearchProvider
 
                 // Perform client-side web search with Tavily if available
                 if useTavilySearch {
