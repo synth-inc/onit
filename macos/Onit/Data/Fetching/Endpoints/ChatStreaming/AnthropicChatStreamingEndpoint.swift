@@ -26,7 +26,7 @@ struct AnthropicChatStreamingEndpoint: StreamingEndpoint {
     var requestBody: AnthropicChatRequest? {
         var tools: [AnthropicChatTool] = []
         if includeSearch == true {
-            tools.append(AnthropicChatTool(type: "web_search_20250305", name: "web_search", maxUses: 5))
+            tools.append(AnthropicChatTool.search(maxUses: 5))
         }
         return AnthropicChatRequest(
             model: model,

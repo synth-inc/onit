@@ -23,7 +23,7 @@ struct OpenAIChatStreamingEndpoint: StreamingEndpoint {
     var requestBody: OpenAIChatRequest? {
         var tools: [OpenAIChatTool] = []
         if includeSearch == true {
-            tools.append(OpenAIChatTool(type: "web_search_preview"))
+            tools.append(OpenAIChatTool.search())
         }
         return OpenAIChatRequest(model: model, input: messages, tools: tools, stream: true)
     }
