@@ -48,6 +48,7 @@ extension InputBody {
         ) {
             Text(text)
                 .styleText(size: 13, weight: .regular)
+                .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(.top, 4)
                 .padding([.horizontal, .bottom], 12)
         }

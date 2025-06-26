@@ -8,10 +8,6 @@ struct GeneralTab: View {
     @Default(.fontSize) var fontSize
     @Default(.lineHeight) var lineHeight
     @Default(.panelWidth) var panelWidth
-    
-    @Default(.launchShortcutToggleEnabled) var launchShortcutToggleEnabled
-    @Default(.createNewChatOnPanelOpen) var createNewChatOnPanelOpen
-    @Default(.openOnMouseMonitor) var openOnMouseMonitor
     @Default(.usePinnedMode) var usePinnedMode
     @Default(.autoContextOnLaunchTethered) var autoContextOnLaunchTethered
     @Default(.stopMode) var stopMode
@@ -49,9 +45,8 @@ struct GeneralTab: View {
             
             GeneralTabVoice()
             
-            // experimentalSection
             #if DEBUG || BETA
-            experimentalSection
+            GeneralTabExperimental()
             #endif
         }
         .formStyle(.grouped)
@@ -373,35 +368,6 @@ struct GeneralTab: View {
                 //                        }
                 //                    }
                 //                }
-            }
-        }
-    }
-    
-    var experimentalSection: some View {
-        SettingsSection(
-            title: "Experimental"
-        ) {
-            Section {
-                VStack(alignment: .leading, spacing: 4) {
-                    HStack {
-                        Text("New Highlighted Text Experience")
-                            .font(.system(size: 13))
-                        Spacer()
-                        Toggle("", isOn: $useTextHighlightContext)
-                            .toggleStyle(.switch)
-                            .controlSize(.small)
-                        SettingInfoButton(
-                            title: "New Highlighted Text Experience",
-                            description:
-                                "When enabled, Onit will use the new fancy UI for highlighted text and will allow to add multiple Highlighted Text items to your conversation.",
-                            defaultValue: "off",
-                            valueType: "Bool"
-                        )
-                    }
-                    Text("New highlighted text experience.")
-                        .font(.system(size: 12))
-                        .foregroundStyle(.gray200)
-                }
             }
         }
     }

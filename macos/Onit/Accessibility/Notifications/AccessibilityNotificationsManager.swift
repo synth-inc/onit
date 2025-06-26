@@ -256,8 +256,18 @@ class AccessibilityNotificationsManager: ObservableObject {
         }
 
         selectionDebounceWorkItem = workItem
+        
+        var debounceInterval = Config.debounceInterval
+        
+        // This allows for a more accurate experience when text highlights are set to auto-add to context.
+        if Defaults[.useTextHighlightContext] {
+            debounceInterval = 0.6
+        }
 
-        DispatchQueue.main.asyncAfter(deadline: .now() + Config.debounceInterval, execute: workItem)
+        DispatchQueue.main.asyncAfter(
+            deadline: .now() + debounceInterval,
+            execute: workItem
+        )
     }
     
     // MARK: Parsing
@@ -567,7 +577,7 @@ class AccessibilityNotificationsManager: ObservableObject {
         processSelectedText(selectedTextExtracted, elementFrame: elementBounds)
         showDebug()
     }
-
+    
     private func processSelectedText(_ text: String?, elementFrame: CGRect?) {
         guard Defaults[.autoContextFromHighlights],
               let selectedText = text,
@@ -583,18 +593,16 @@ class AccessibilityNotificationsManager: ObservableObject {
         if Defaults[.useTextHighlightContext] {
             let pendingContextList = PanelStateCoordinator.shared.state.getPendingContextList()
             
-            let textAlreadyAdded = checkContextTextAlreadyAdded(
+            let textAlreadyAddedToContext = checkContextTextAlreadyAdded(
                 contextList: pendingContextList,
                 text: selectedText
             )
             
-            if !textAlreadyAdded {
-                let alreadyHasTextContext = pendingContextList.contains { $0.text != nil }
-                
-                if alreadyHasTextContext {
-                    PanelStateCoordinator.shared.state.highlightedText = input
-                } else {
+            if !textAlreadyAddedToContext {
+                if Defaults[.autoAddHighlightedTextToContext] {
                     PanelStateCoordinator.shared.state.addContext(texts: [input])
+                } else {
+                    PanelStateCoordinator.shared.state.highlightedText = input
                 }
             }
         } else {
