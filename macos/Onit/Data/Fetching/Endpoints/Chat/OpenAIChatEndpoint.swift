@@ -23,7 +23,7 @@ struct OpenAIChatEndpoint: Endpoint {
     var requestBody: OpenAIChatRequest? {
         var tools: [OpenAIChatTool] = []
         if includeSearch == true {
-            tools.append(OpenAIChatTool(type: "web_search_preview"))
+            tools.append(OpenAIChatTool.search())
         }
         return OpenAIChatRequest(model: model, input: messages, tools: tools, stream: false)
     }
@@ -84,6 +84,10 @@ struct OpenAIChatRequest: Codable {
 
 struct OpenAIChatTool: Codable {
     let type: String
+
+    static func search() -> OpenAIChatTool {
+        return OpenAIChatTool(type: "web_search_preview")
+    }
 }
 
 struct OpenAIChatResponse: Codable {

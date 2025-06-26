@@ -26,7 +26,7 @@ struct AnthropicChatEndpoint: Endpoint {
     var requestBody: AnthropicChatRequest? {
         var tools: [AnthropicChatTool] = []
         if includeSearch == true {
-            tools.append(AnthropicChatTool(type: "web_search_20250305", name: "web_search", maxUses: 5))
+            tools.append(AnthropicChatTool.search(maxUses: 5))
         }
         return AnthropicChatRequest(
             model: model,
@@ -85,6 +85,10 @@ struct AnthropicChatTool: Codable {
         case type
         case name
         case maxUses = "max_uses"
+    }
+
+    static func search(maxUses: Int) -> AnthropicChatTool {
+        return AnthropicChatTool(type: "web_search_20250305", name: "web_search", maxUses: maxUses)
     }
 }
 
