@@ -24,27 +24,32 @@ struct ContextItem: View {
                     removeAction: removeContextItem
                 )
             case .auto(let autoContext):
-                ContextTag(
+                tagButton(
                     text: name,
-                    textColor: isEditing ? .T_2 : .white,
-                    background: isEditing ? .gray500 : .clear,
-                    hoverBackground: isEditing ? .gray400 : .gray600,
-                    maxWidth: isEditing ? 155 : .infinity,
-                    iconBundleURL: autoContext.appBundleUrl,
                     tooltip: isEditing ? name : "View auto-context file",
+                    iconBundleURL: autoContext.appBundleUrl,
                     action: showContextWindow,
                     removeAction: isEditing ? { removeContextItem() } : nil
                 )
-            default:
-                ContextTag(
-                    text: name,
-                    textColor: isEditing ? .T_2 : .white,
-                    background: isEditing ? .gray500 : .clear,
-                    hoverBackground: isEditing ? .gray400 : .gray600,
-                    maxWidth: isEditing ? 155 : .infinity,
+            case .text(let text):
+                tagButton(
+                    text: "Text: \(name)",
+                    tooltip: "Highlighted text",
                     iconView: ContextImage(context: item),
-                    caption: item.fileType,
+                    action: { state.selectedHighlightedText = text },
+                    removeAction: isEditing ? {
+                        removeContextItem()
+                        
+                        if state.selectedHighlightedText == text {
+                            state.selectedHighlightedText = nil
+                        }
+                    } : nil
+                )
+            default:
+                tagButton(
+                    text: name,
                     tooltip: isEditing ? name : "View \(item.fileType ?? "") file",
+                    iconView: ContextImage(context: item),
                     action: showContextWindow,
                     removeAction: isEditing ? { removeContextItem() } : nil
                 )
@@ -66,13 +71,54 @@ struct ContextItem: View {
             title
         case .web(let websiteUrl, let websiteTitle, _):
             websiteTitle.isEmpty ? websiteUrl.host() ?? websiteUrl.absoluteString : websiteTitle
+        case .text(let text):
+            text.selectedText
         }
+    }
+}
+
+// MARK: - Child Components
+
+extension ContextItem {
+    private func tagButton(
+        text: String,
+        tooltip: String,
+        iconBundleURL: URL? = nil,
+        iconView: (any View)? = nil,
+        action: @escaping () -> Void,
+        removeAction: (() -> Void)? = nil
+    ) -> some View {
+        ContextTag(
+            text: text,
+            textColor: isEditing ? .T_2 : Color.primary,  
+            background: isEditing ? .gray500 : .clear,
+            hoverBackground: isEditing ? .gray400 : .gray600,
+            iconBundleURL: iconBundleURL,
+            iconView: iconView,
+            tooltip: tooltip,
+            action: action,
+            removeAction: removeAction
+        )
     }
 }
 
 // MARK: - Private Functions
 
 extension ContextItem {
+    private func getTextContextBorderColor(_ text: String) -> Color {
+        if let selectedHighlightedText = state.selectedHighlightedText,
+           selectedHighlightedText.selectedText == text
+        {
+            if isEditing {
+                return .gray400
+            } else {
+                return .gray600
+            }
+        } else {
+            return .clear
+        }
+    }
+    
     private func showContextWindow() {
         ContextWindowsManager.shared.showContextWindow(
             windowState: state,

@@ -7,12 +7,14 @@
 
 import SwiftUI
 
-let animationDuration: Double = 0.15
+struct AnimationStyle {
+    static let animationDuration: Double = 0.15
+}
 
 extension View {
     func addAnimation<Dependency: Equatable>(
         dependency: Dependency,
-        duration: Double = animationDuration
+        duration: Double = AnimationStyle.animationDuration
     ) -> some View {
         self.animation(
             .easeIn(duration: duration),

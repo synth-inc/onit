@@ -11,7 +11,6 @@ import SwiftUI
 struct InputBody: View {
     @Binding var inputExpanded: Bool
     @State var text: String?
-    @State var textHeight: CGFloat = 0
 
     var input: Input
 
@@ -21,53 +20,50 @@ struct InputBody: View {
         self.input = input
     }
 
-    var height: CGFloat {
-        min(textHeight, 73)
-    }
-
     var body: some View {
-        ViewThatFits(in: .vertical) {
+        Group {
             if let text = text {
-                textView(text: text)
-                ScrollView {
-                    textView(text: text)
+                if inputExpanded {
+                    textScrollView(text)
                 }
             } else {
-                ProgressView("Loading highlighted text...")
-                    .controlSize(.small)
-                    .padding(.vertical, 16)
-                    .background {
-                        geometryReader
-                    }
+                loader
             }
         }
-        .frame(height: inputExpanded ? height : 0)
         .onChange(of: input.selectedText, initial: true) {
             DispatchQueue.main.async {
                 text = input.selectedText
             }
         }
     }
+}
 
-    func textView(text: String) -> some View {
-        Text(text)
-            .multilineTextAlignment(.leading)
-            .foregroundColor(.FG)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .fixedSize(horizontal: false, vertical: true)
-            .padding(10)
-            .background {
-                geometryReader
-            }
-    }
+// MARK: - Child Components
 
-    var geometryReader: some View {
-        GeometryReader { proxy in
-            Color.clear
-                .onAppear {
-                    textHeight = proxy.size.height
-                }
+extension InputBody {
+    private func textScrollView(_ text: String) -> some View {
+        DynamicScrollView(
+            maxHeight: 222,
+            gradientColor: .gray500
+        ) {
+            Text(text)
+                .styleText(size: 13, weight: .regular)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.top, 4)
+                .padding([.horizontal, .bottom], 12)
         }
+    }
+    
+    private var loader: some View {
+        VStack(alignment: .center, spacing: 12) {
+            ProgressView()
+                .controlSize(.small)
+            
+            Text("Loading highlighted text...")
+                .styleText(size: 13, weight: .regular)
+        }
+        .frame(maxWidth: .infinity)
+        .padding(12)
     }
 }
 

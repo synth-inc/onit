@@ -8,10 +8,6 @@ struct GeneralTab: View {
     @Default(.fontSize) var fontSize
     @Default(.lineHeight) var lineHeight
     @Default(.panelWidth) var panelWidth
-    
-    @Default(.launchShortcutToggleEnabled) var launchShortcutToggleEnabled
-    @Default(.createNewChatOnPanelOpen) var createNewChatOnPanelOpen
-    @Default(.openOnMouseMonitor) var openOnMouseMonitor
     @Default(.usePinnedMode) var usePinnedMode
     @Default(.autoContextOnLaunchTethered) var autoContextOnLaunchTethered
     @Default(.stopMode) var stopMode
@@ -48,7 +44,9 @@ struct GeneralTab: View {
             
             GeneralTabVoice()
             
-            // experimentalSection
+            #if DEBUG || BETA
+            GeneralTabExperimental()
+            #endif
         }
         .formStyle(.grouped)
     }
@@ -372,74 +370,6 @@ struct GeneralTab: View {
             }
         }
     }
-    
-//    var experimentalSection: some View {
-//        Section {
-//            VStack(spacing: 16) {
-//                HStack {
-//                    Text("Use launch shortcut as a toggle")
-//                        .font(.system(size: 13))
-//                    SettingInfoButton(
-//                        title: "Use Launch Shortcut as a Toggle",
-//                        description:
-//                            "Enable this to use the launch shortcut (CMD+Zero by default) as a toggle: press once to show the panel, press again to hide it.",
-//                        defaultValue: "off",
-//                        valueType: "Bool"
-//                    )
-//                    Spacer()
-//                    Toggle(
-//                        "",
-//                        isOn: $launchShortcutToggleEnabled
-//                    )
-//                    .toggleStyle(.switch)
-//                    .controlSize(.small)
-//                }
-//
-//                HStack {
-//                    Text("Create new chat on panel open")
-//                        .font(.system(size: 13))
-//                    SettingInfoButton(
-//                        title: "Create New Chat on Panel Open",
-//                        description:
-//                            "Enable this to start a new chat each time the panel opens. You still access your previous conversations with the up arrow.",
-//                        defaultValue: "off",
-//                        valueType: "Bool"
-//                    )
-//                    Spacer()
-//                    Toggle(
-//                        "",
-//                        isOn: $createNewChatOnPanelOpen
-//                    )
-//                    .toggleStyle(.switch)
-//                    .controlSize(.small)
-//                }
-//
-//                HStack {
-//                    Text("Open on mouse monitor")
-//                        .font(.system(size: 13))
-//                    SettingInfoButton(
-//                        title: "Open on Mouse Monitor",
-//                        description:
-//                            "Enable this to open Onit on the monitor where your mouse cursor is currently located. This can help ensure Onit appears where your attention is focused.",
-//                        defaultValue: "off",
-//                        valueType: "Bool"
-//                    )
-//                    Spacer()
-//                    Toggle(
-//                        "",
-//                        isOn: $openOnMouseMonitor
-//                    )
-//                    .toggleStyle(.switch)
-//                    .controlSize(.small)
-//                }
-//            }
-//        } header: {
-//            HStack {
-//                Image(systemName: "gearshape")
-//                Text("Experimental Features")
-//            }
-//        }
-//    }
 
     private func toggleLaunchAtStartup() {
         do {
