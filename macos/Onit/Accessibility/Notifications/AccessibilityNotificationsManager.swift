@@ -316,7 +316,7 @@ class AccessibilityNotificationsManager: ObservableObject {
                         self.screenResult.applicationTitle = appTitle
                         self.screenResult.appBundleUrl = appBundleUrl
                         if let googleDriveError = error as? GoogleDriveError {
-                            self.screenResult.errorMessage = "Failed to extract Google Drive document content: \(googleDriveError.localizedDescription)"
+                            self.screenResult.errorMessage = "\(googleDriveError.localizedDescription)"
                             switch googleDriveError {
                             case .notFound:
                                 self.screenResult.errorCode = 1501

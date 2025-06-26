@@ -193,12 +193,12 @@ class GoogleDriveService: NSObject, ObservableObject {
 
         if httpResponse.statusCode == 404 {
             let extractionError =
-                "Document not found. If you haven't opened this document with Onit before, please select it and try again."
+                "Onit needs permission to access this file."
             self.extractionError = extractionError
             throw GoogleDriveError.notFound(extractionError)
         } else if httpResponse.statusCode == 403 {
             var extractionError =
-                "Access denied. Make sure the document is publicly accessible or you have permission to view it."
+                "Onit can't access this file."
             if let errorMessage = String(data: data, encoding: .utf8) {
                 extractionError += "\n\nError message: \(errorMessage)"
             }
