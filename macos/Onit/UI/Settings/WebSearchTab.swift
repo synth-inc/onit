@@ -4,6 +4,7 @@ import Defaults
 struct WebSearchTab: View {
     @Default(.tavilyAPIToken) var tavilyAPIToken
     @Default(.isTavilyAPITokenValidated) var isTavilyAPITokenValidated
+    @Default(.tavilyCostSavingMode) var tavilyCostSavingMode
     
     @State private var isValidating = false
     @State private var validationError: String? = nil
@@ -47,14 +48,6 @@ struct WebSearchTab: View {
                         .padding(.vertical, 4)
                         .background(Color.green.opacity(0.2))
                         .cornerRadius(4)
-                } else {
-                    Text("Using Onit Server")
-                        .font(.system(size: 12))
-                        .foregroundStyle(.blue)
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 4)
-                        .background(Color.blue.opacity(0.2))
-                        .cornerRadius(4)
                 }
             }
             
@@ -86,6 +79,22 @@ struct WebSearchTab: View {
                     Text(error)
                         .font(.system(size: 12))
                         .foregroundStyle(.red)
+                }
+            }
+
+            if isTavilyAPITokenValidated {
+                Divider()
+
+                VStack(alignment: .leading, spacing: 8) {
+                    HStack {
+                        Toggle("Cost Saving Mode", isOn: $tavilyCostSavingMode)
+                            .font(.system(size: 13))
+                    }
+
+                    Text("When enabled, Onit will use your Tavily token to perform searches instead of Onit credits. By default, Onit uses model provider search tools when available for optimal quality.")
+                        .font(.system(size: 12))
+                        .foregroundStyle(.gray200)
+                        .fixedSize(horizontal: false, vertical: true)
                 }
             }
         }

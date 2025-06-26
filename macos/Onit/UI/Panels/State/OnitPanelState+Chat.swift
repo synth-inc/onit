@@ -160,7 +160,8 @@ extension OnitPanelState {
                     onitSupportsSearchProvider = providers.contains(where: { $0.lowercased() == provider })
                 }
 
-                let useTavilySearch = useWebSearch && !hasValidProviderSearchToken && !onitSupportsSearchProvider
+                let tavilyCostSavingMode = Defaults[.tavilyCostSavingMode]
+                let useTavilySearch = useWebSearch && !hasValidProviderSearchToken && (tavilyCostSavingMode || !onitSupportsSearchProvider)
 
                 // Perform client-side web search with Tavily if available
                 if useTavilySearch {

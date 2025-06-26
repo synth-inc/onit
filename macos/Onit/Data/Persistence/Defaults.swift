@@ -100,6 +100,7 @@ extension Defaults.Keys {
     static let webSearchEnabled = Key<Bool>("webSearchEnabled", default: false)
     static let tavilyAPIToken = Key<String>("tavilyAPIToken", default: "")
     static let isTavilyAPITokenValidated = Key<Bool>("tavilyAPITokenValidated", default: false)
+    static let tavilyCostSavingMode = Key<Bool>("tavilyCostSavingMode", default: false)
 
     // Window state
     static let panelWidth = Key<Double>("panelWidth", default: 400)
