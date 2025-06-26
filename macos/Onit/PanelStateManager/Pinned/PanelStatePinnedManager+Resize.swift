@@ -13,21 +13,10 @@ extension PanelStatePinnedManager {
         guard !isResizingWindows else { return }
 
         isResizingWindows = true
-        
-        let onitName = Bundle.main.object(forInfoDictionaryKey: "CFBundleName") as? String
-        let appPids = NSWorkspace.shared.runningApplications
-            .filter { $0.activationPolicy == .regular }
-            .filter { $0.localizedName != onitName }
-            .map { $0.processIdentifier }
-         
-        for pid in appPids {
-            let windows = pid.findTargetWindows()
-            
-            for window in windows {
-                resizeWindow(for: screen, window: window, isPanelResized: isPanelResized)
-            }
+        let windows = WindowHelpers.getAllOtherAppWindows()
+        for window in windows {
+            resizeWindow(for: screen, window: window, isPanelResized: isPanelResized)
         }
-        
         isResizingWindows = false
     }
     
@@ -64,9 +53,6 @@ extension PanelStatePinnedManager {
                     let newWidth = windowFrame.width - overlapAmount
                     let newFrame = CGRect(x: windowFrame.origin.x, y: windowFrame.origin.y, width: newWidth, height: windowFrame.height)
                     _ = window.setFrame(newFrame)
-                } else if availableSpace > panelWidth, windowFrameChanged {
-                    // The user reduced the window, we should remove the initial frame
-                    targetInitialFrames.removeValue(forKey: window)
                 }
             } else {
                 // If we're already tracking it, then make it move.

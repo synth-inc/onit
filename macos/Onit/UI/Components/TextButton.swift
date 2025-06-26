@@ -11,6 +11,7 @@ struct TextButton<Child: View>: View {
     private let iconSize: CGFloat
     private let iconImageSize: CGFloat
     private let iconColor: Color
+    private let hoverIconColor: Color
     private let disabled: Bool
     private let selected: Bool
     
@@ -32,13 +33,17 @@ struct TextButton<Child: View>: View {
     private let text: String?
     private let width: CGFloat?
     
+    private let tooltipPrompt: String?
+    private let tooltipShortcut: Tooltip.Shortcut?
+    
     @ViewBuilder private let child: () -> Child
     private let action: () -> Void
     
     init(
         iconSize: CGFloat = 20,
         iconImageSize: CGFloat = 18,
-        iconColor: Color = .white,
+        iconColor: Color = Color.primary,
+        hoverIconColor: Color = Color.primary,
         disabled: Bool = false,
         selected: Bool = false,
 
@@ -60,12 +65,16 @@ struct TextButton<Child: View>: View {
         text: String? = nil,
         width: CGFloat? = nil,
         
+        tooltipPrompt: String? = nil,
+        tooltipShortcut: Tooltip.Shortcut? = nil,
+        
         @ViewBuilder child: @escaping () -> Child = { EmptyView() },
         action: @escaping () -> Void
     ) {
         self.iconSize = iconSize
         self.iconImageSize = iconImageSize
         self.iconColor = iconColor
+        self.hoverIconColor = hoverIconColor
         self.disabled = disabled
         self.selected = selected
         
@@ -87,6 +96,9 @@ struct TextButton<Child: View>: View {
         self.text = text
         self.width = width
         
+        self.tooltipPrompt = tooltipPrompt
+        self.tooltipShortcut = tooltipShortcut
+        
         self.child = child
         self.action = action
     }
@@ -99,7 +111,7 @@ struct TextButton<Child: View>: View {
             if let icon = icon {
                 Image(icon)
                     .addIconStyles(
-                        foregroundColor: selected ? .blue300 : iconColor,
+                        foregroundColor: selected ? .blue300 : isHovered ? hoverIconColor : iconColor,
                         iconSize: iconSize
                     )
             }
@@ -129,7 +141,27 @@ struct TextButton<Child: View>: View {
         .frame(width: width ?? nil)
         .frame(maxWidth: fillContainer ? .infinity : maxWidth > 0 ? maxWidth : nil)
         .frame(height: height)
-        .onHover{ isHovering in isHovered = isHovering }
+        .onHover{ isHovering in
+            isHovered = isHovering
+            
+            if tooltipPrompt != nil {
+                if isHovering {
+                    TooltipManager.shared.setTooltip(
+                        Tooltip(
+                            prompt: tooltipPrompt!,
+                            shortcut: tooltipShortcut ?? .none
+                        ),
+                        delayStart: 0.4,
+                        delayEnd: 0
+                    )
+                } else {
+                    TooltipManager.shared.setTooltip(
+                        nil,
+                        delayEnd: 0
+                    )
+                }
+            }
+        }
         .addButtonEffects(
             background: disabled ? .clear : background,
             hoverBackground: disabled ? .clear : hoverBackground,

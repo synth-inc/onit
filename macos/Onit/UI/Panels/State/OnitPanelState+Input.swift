@@ -34,14 +34,15 @@ extension OnitPanelState {
             return
         }
         
-        guard let activeTrackedWindow = AccessibilityNotificationsManager.shared.windowsManager.activeTrackedWindow else {
+        guard let activeTrackedWindow = trackedWindow ?? self.foregroundWindow else {
             let errorContext = Context(appName: "Unable to add \(appName)", appHash: 0, appTitle: "", appContent: ["error": "Cannot identify context"])
             pendingContextList.insert(errorContext, at: 0)
             cleanupWindowContextTask(uniqueWindowIdentifier: trackedWindowHash)
             return
         }
         
-        let appHash = trackedWindow?.hash ?? CFHash(activeTrackedWindow.element)
+        let appHash = activeTrackedWindow.hash
+        
         let appTitle = trackedWindow?.title ?? activeTrackedWindow.title
 
         if let existingIndex = pendingContextList.firstIndex(where: { context in
@@ -119,40 +120,21 @@ extension OnitPanelState {
     func addWindowToContext(window: AXUIElement) {
         guard let windowPid = window.pid() else { return }
         
-        guard let trackedWindow = AccessibilityNotificationsManager.shared.windowsManager.append(
+        guard let trackedWindow = AccessibilityNotificationsManager.shared.windowsManager.trackWindowForElement(
             window,
             pid: windowPid
         ) else {
             return
         }
         
-        windowContextTasks[trackedWindow.hash]?.cancel()
+        let windowApp = WindowHelpers.getWindowApp(pid: trackedWindow.pid)
+        let appBundleUrl = windowApp?.bundleURL
         
-        // This task will automatically be cleaned up way down the call stack when it hits `addAutoContext()`.
-        windowContextTasks[trackedWindow.hash] = Task {
-            let windowApp = WindowHelpers.getWindowApp(pid: trackedWindow.pid)
-            let appBundleUrl = windowApp?.bundleURL
-            
-            AccessibilityNotificationsManager.shared.retrieveWindowContent(
-                state: self,
-                trackedWindow: trackedWindow,
-                customAppBundleUrl: appBundleUrl
-            )
-        }
-    }
-    
-    func getForegroundWindow() -> TrackedWindow? {
-        let windowsManager = AccessibilityNotificationsManager.shared.windowsManager
-        
-        if let trackedWindow = windowsManager.activeTrackedWindow {
-            return trackedWindow
-        } else {
-            return nil
-        }
-    }
-    
-    func updateForegroundWindow() {
-        self.foregroundWindow = getForegroundWindow()
+        AccessibilityNotificationsManager.shared.retrieveWindowContent(
+            state: self,
+            trackedWindow: trackedWindow,
+            customAppBundleUrl: appBundleUrl
+        )
     }
 
     func getPendingContextList() -> [Context] {

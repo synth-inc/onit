@@ -5,6 +5,7 @@
 //  Created by Jay Swanson on 5/30/25.
 //
 
+import Defaults
 import Foundation
 
 class TranscriptionService {
@@ -47,8 +48,20 @@ class TranscriptionService {
             let message = HTTPURLResponse.localizedString(forStatusCode: httpResponse.statusCode)
             throw FetchingError.invalidResponse(message: message)
         }
-        let responseDecoded = try JSONDecoder().decode(TranscriptionResponse.self, from: responseData)
-        return responseDecoded.text
+        
+        let decoder = JSONDecoder()
+        let responseDecoded = try decoder.decode(TranscriptionServiceVerbose.self, from: responseData)
+        
+        let transcribedText = responseDecoded.segments.filter { segment in
+            let speechConfidence = 1 - segment.no_speech_prob
+            let passesSpeechPassThreshold = speechConfidence >= Defaults[.voiceSpeechPassThreshold]
+            return passesSpeechPassThreshold
+        }
+            .map { $0.text }
+            .joined()
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        
+        return transcribedText
     }
 }
 

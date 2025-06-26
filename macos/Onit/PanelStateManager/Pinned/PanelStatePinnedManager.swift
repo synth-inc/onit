@@ -21,6 +21,7 @@ class PanelStatePinnedManager: PanelStateBaseManager, ObservableObject {
     // MARK: - Properties
     
     var isResizingWindows: Bool = false
+    var hintYRelativePosition: CGFloat?
     
     private var lastScreenFrame = CGRect.zero
     private var globalMouseMonitor: Any?
@@ -115,6 +116,8 @@ class PanelStatePinnedManager: PanelStateBaseManager, ObservableObject {
         
         state.removeDelegate(self)
         
+        hintYRelativePosition = nil
+        
         super.stop()
     }
     
@@ -161,6 +164,11 @@ class PanelStatePinnedManager: PanelStateBaseManager, ObservableObject {
         
         guard let app = (userInfo[NSWorkspace.applicationUserInfoKey] as? NSRunningApplication) ??
                 (userInfo["NSWorkspaceApplicationKey"] as? NSRunningApplication) else { return }
+        
+        state.foregroundWindow = AccessibilityNotificationsManager.shared.windowsManager.trackWindowForElement(
+            app.processIdentifier.getAXUIElement(),
+            pid: app.processIdentifier
+        )
         
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { [weak self] in
             let windows = app.processIdentifier.getWindows()
@@ -226,5 +234,26 @@ class PanelStatePinnedManager: PanelStateBaseManager, ObservableObject {
         } else {
             targetInitialFrames.removeValue(forKey: window)
         }
+    }
+
+    override func resetFramesOnAppChange() {
+        let panelWidth = state.panelWidth - (TetheredButton.width / 2) + 1
+        
+        let windows = WindowHelpers.getAllOtherAppWindows()
+        
+        for window in windows {
+            if let currentFrame = window.getFrame() {
+                let screenFrame = attachedScreen?.visibleFrame ?? NSScreen.main?.visibleFrame ?? .zero
+                let isNearPanel = abs((screenFrame.maxX - panelWidth) - currentFrame.maxX) <= 2
+                if isNearPanel {
+                    let newWidth = currentFrame.width + panelWidth
+                    let newFrame = NSRect(origin: currentFrame.origin,
+                                            size: NSSize(width: newWidth, height: currentFrame.height))
+                    _ = window.setFrame(newFrame)
+                }
+            }
+        }
+        
+        targetInitialFrames.removeAll()
     }
 }

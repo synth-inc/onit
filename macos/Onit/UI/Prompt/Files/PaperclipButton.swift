@@ -35,17 +35,16 @@ struct PaperclipButton: View {
             IconButton(
                 icon: .paperclip,
                 iconSize: 18,
-                action: {
-                    AnalyticsManager.Chat.paperclipPressed()
-                    
-                    if accessibilityAutoContextEnabled && autoContextFromCurrentWindow {
-                        windowState.showContextMenu = true
-                    } else {
-                        handleAddContext()
-                    }
-                },
                 tooltipPrompt: accessibilityAutoContextEnabled ? "Add context" : "Upload file"
-            )
+            ) {
+                AnalyticsManager.Chat.paperclipPressed()
+                
+                if accessibilityAutoContextEnabled && autoContextFromCurrentWindow {
+                    windowState.showContextMenu = true
+                } else {
+                    handleAddContext()
+                }
+            }
 
             if windowState.pendingContextList.isEmpty {
                 if !accessibilityAutoContextEnabled && !closedAutoContextTag {

@@ -16,7 +16,8 @@ struct ChatEndpointBuilder {
         responses: [String],
         apiToken: String?,
         systemMessage: String,
-        userMessages: [String]
+        userMessages: [String],
+        includeSearch: Bool? = nil
     ) throws -> any Endpoint {
         switch model.provider {
         case .openAI:
@@ -26,7 +27,8 @@ struct ChatEndpointBuilder {
                 responses: responses,
                 apiToken: apiToken,
                 systemMessage: systemMessage,
-                userMessages: userMessages)
+                userMessages: userMessages,
+                includeSearch: includeSearch)
         case .anthropic:
             return ChatEndpointBuilder.anthropic(
                 model: model,
@@ -34,7 +36,8 @@ struct ChatEndpointBuilder {
                 responses: responses,
                 apiToken: apiToken,
                 systemMessage: systemMessage,
-                userMessages: userMessages)
+                userMessages: userMessages,
+                includeSearch: includeSearch)
         case .xAI:
             return ChatEndpointBuilder.xAI(
                 model: model,
@@ -83,7 +86,8 @@ struct ChatEndpointBuilder {
         responses: [String],
         apiToken: String?,
         systemMessage: String,
-        userMessages: [String]
+        userMessages: [String],
+        includeSearch: Bool? = nil
     ) -> OpenAIChatEndpoint {
         let messages = ChatEndpointMessagesBuilder.openAI(
             model: model,
@@ -93,7 +97,7 @@ struct ChatEndpointBuilder {
             userMessages: userMessages)
 
         return OpenAIChatEndpoint(
-            messages: messages, token: apiToken, model: model.id)
+            messages: messages, token: apiToken, model: model.id, includeSearch: includeSearch)
     }
 
     private static func anthropic(
@@ -102,7 +106,8 @@ struct ChatEndpointBuilder {
         responses: [String],
         apiToken: String?,
         systemMessage: String,
-        userMessages: [String]
+        userMessages: [String],
+        includeSearch: Bool? = nil
     ) -> AnthropicChatEndpoint {
         let messages = ChatEndpointMessagesBuilder.anthropic(
             model: model,
@@ -115,7 +120,8 @@ struct ChatEndpointBuilder {
             system: model.supportsSystemPrompts ? systemMessage : "",
             token: apiToken,
             messages: messages,
-            maxTokens: 4096
+            maxTokens: 4096,
+            includeSearch: includeSearch
         )
     }
 

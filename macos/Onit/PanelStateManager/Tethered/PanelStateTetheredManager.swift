@@ -26,6 +26,8 @@ class PanelStateTetheredManager: PanelStateBaseManager, ObservableObject {
         }
     }
     
+    var relativeHintPositionsByApp: [String: CGFloat] = [:]
+    
     /// Dragging
     private let dragManager = GlobalDragManager()
     private var dragManagerCancellable: AnyCancellable?
@@ -51,6 +53,11 @@ class PanelStateTetheredManager: PanelStateBaseManager, ObservableObject {
                 }
             }
         
+        NSWorkspace.shared.notificationCenter.addObserver(
+            self,
+            selector: #selector(appLaunchedReceived),
+            name: NSWorkspace.didLaunchApplicationNotification,
+            object: nil)
         NotificationCenter.default.addObserver(
             self,
             selector: #selector(appDidBecomeActive),
@@ -77,6 +84,7 @@ class PanelStateTetheredManager: PanelStateBaseManager, ObservableObject {
         super.stop()
         
         statesByWindow = [:]
+        relativeHintPositionsByApp = [:]
     }
     
     override func getState(for windowHash: UInt) -> OnitPanelState? {
@@ -165,11 +173,7 @@ class PanelStateTetheredManager: PanelStateBaseManager, ObservableObject {
                     tempShowPanel(state: state)
                 }
                 
-                // TODO: KNA - We need to store the frame used to calculate the tetheredButtonYPosition and apply a diff
-                // Quick fix - when resizing, center the TetheredButton
-                if action == .resize {
-                    state.tetheredButtonYPosition = nil
-                } else if action == .move {
+                if action == .move {
                     action = checkIfDragStarted(state: state)
                 }
                 
@@ -294,5 +298,17 @@ class PanelStateTetheredManager: PanelStateBaseManager, ObservableObject {
         }
         
         return nil
+    }
+    
+    @objc private func appLaunchedReceived(notification: Notification) {
+        guard state.panelOpened, let userInfo = notification.userInfo else { return }
+        
+        guard let app = (userInfo[NSWorkspace.applicationUserInfoKey] as? NSRunningApplication) ??
+                (userInfo["NSWorkspaceApplicationKey"] as? NSRunningApplication) else { return }
+        
+        state.foregroundWindow = AccessibilityNotificationsManager.shared.windowsManager.trackWindowForElement(
+            app.processIdentifier.getAXUIElement(),
+            pid: app.processIdentifier
+        )
     }
 }

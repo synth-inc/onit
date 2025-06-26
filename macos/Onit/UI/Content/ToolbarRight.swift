@@ -15,16 +15,20 @@ struct ToolbarRight: View {
     @Environment(\.windowState) private var state
     
     @Default(.mode) var mode
+    @Default(.footerNotifications) var footerNotifications
 
     var body: some View {
-        HStack(alignment: .center, spacing: 4) {
+        HStack(alignment: .center, spacing: 6) {
             discord
             localMode
             history
             settings
+            
+            if footerNotifications.contains(.update) {
+                installUpdate
+            }
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .frame(height: 32, alignment: .center)
+        .padding(.trailing, 6)
         .foregroundStyle(.gray200)
         .padding(.horizontal, 0)
         .background { escListener }
@@ -47,27 +51,25 @@ struct ToolbarRight: View {
         IconButton(
             icon: mode == .local ? .localModeActive : .localMode,
             iconSize: 22,
-            action: { toggleMode() },
             isActive: mode == .local,
             activeColor: .limeGreen,
+            activeBackground: .clear,
+            activeBorderColor: .clear,
             tooltipPrompt: "Local Mode",
             tooltipShortcut: .keyboardShortcuts(.toggleLocalMode)
-        )
-    }
-
-    func openDiscord() {
-        if let url = URL(string: MenuJoinDiscord.link) {
-            NSWorkspace.shared.open(url)
+        ) {
+            toggleMode()
         }
     }
 
     var discord: some View {
         IconButton(
             icon: .logoDiscord,
-            iconSize: 22,
-            action: { openDiscord() },
+            iconSize: 21,
             tooltipPrompt: "Join Discord"
-        )
+        ) {
+            MenuJoinDiscord.openDiscord(appState)
+        }
     }
 
     var showHistoryBinding: Binding<Bool> {
@@ -80,18 +82,18 @@ struct ToolbarRight: View {
         IconButton(
             icon: .history,
             iconSize: 22,
-            action: {
-                AnalyticsManager.Toolbar.historyPressed(displayed: state.showHistory)
-                state.showHistory.toggle()
-            },
             isActive: state.showHistory,
             tooltipPrompt: "History"
-        )
+        ) {
+            AnalyticsManager.Toolbar.historyPressed(displayed: state.showHistory)
+            state.showHistory.toggle()
+        }
         .popover(
             isPresented: showHistoryBinding,
             arrowEdge: .bottom
-        )  {
+        ) {
             HistoryView()
+                .modelContainer(state.container)
         }
     }
 
@@ -108,9 +110,22 @@ struct ToolbarRight: View {
         IconButton(
             icon: .settingsCog,
             iconSize: 22,
-            action: { openSettingsWindow() },
             tooltipPrompt: "Settings"
-        )
+        ) {
+            openSettingsWindow()
+        }
+    }
+    
+    var installUpdate: some View {
+        IconButton(
+            icon: .lightning,
+            iconSize: 21,
+            inactiveColor: .blue300,
+            hoverBackground: .blue300.opacity(0.2),
+            tooltipPrompt: "Install Update"
+        ) {
+            appState.checkForAvailableUpdateWithDownload()
+        }
     }
 }
 

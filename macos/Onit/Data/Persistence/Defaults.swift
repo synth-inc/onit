@@ -15,6 +15,20 @@ enum AuthFlowStatus: String, Defaults.Serializable {
     case showSignIn
 }
 
+enum FooterNotification: String, Defaults.Serializable {
+    case discord
+    case update
+}
+
+struct WindowContextMostRecent: Codable, Hashable, Equatable, Defaults.Serializable {
+    let pid: pid_t
+    let hash: UInt
+    
+    static func == (lhs: WindowContextMostRecent, rhs: WindowContextMostRecent) -> Bool {
+        return lhs.pid == rhs.pid && lhs.hash == rhs.hash
+    }
+}
+
 extension Defaults.Keys {
     
     // Remote model tokens
@@ -71,6 +85,8 @@ extension Defaults.Keys {
     // This migration adds the 'instruction' the response object, so it can be dynamic
     static let hasPerformedInstructionResponseMigration = Key<Bool>(
         "hasPerformedInstructionResponseMigration", default: false)
+    static let needsHangingPromptCleanup = Key<Bool>(
+        "needsHangingPromptCleanup", default: true)
 
     static let localEndpointURL = Key<URL>(
         "localEndpointURL", default: URL(string: "http://localhost:11434")!)
@@ -86,6 +102,8 @@ extension Defaults.Keys {
     static let webSearchEnabled = Key<Bool>("webSearchEnabled", default: false)
     static let tavilyAPIToken = Key<String>("tavilyAPIToken", default: "")
     static let isTavilyAPITokenValidated = Key<Bool>("tavilyAPITokenValidated", default: false)
+    static let tavilyCostSavingMode = Key<Bool>("tavilyCostSavingMode", default: false)
+    static let allowWebSearchInLocalMode = Key<Bool>("allowWebSearchInLocalMode", default: false)
 
     // Window state
     static let panelWidth = Key<Double>("panelWidth", default: 400)
@@ -94,6 +112,8 @@ extension Defaults.Keys {
     static let launchOnStartupRequested = Key<Bool>("launchOnStartupRequested", default: false)
     static let fontSize = Key<Double>("fontSize", default: 14.0)
     static let lineHeight = Key<Double>("lineHeight", default: 1.5)
+    static let voiceSilenceThreshold = Key<Float>("voiceSilenceThreshold", default: -40)
+    static let voiceSpeechPassThreshold = Key<Double>("voiceSpeechPassThreshold", default: 0.7)
 
     // Local model advanced options
     static let localKeepAlive = Key<String?>("localKeepAlive", default: nil)
@@ -116,6 +136,14 @@ extension Defaults.Keys {
     // Alerts
     static let showTwoWeekProTrialEndedAlert = Key<Bool>("showTwoWeekProTrialEndedAlert", default: false)
     static let hasClosedTrialEndedAlert = Key<Bool>("hasClosedTrialEndedAlert", default: false)
+    
+    // Notifications
+    static let footerNotifications = Key<[FooterNotification]>("footerNotifications", default: [FooterNotification.discord])
+
+    // Stop generation behavior
+    static let stopMode = Key<StopMode>("stopMode", default: .removePartial)
+    static let stopModeUserConfigured = Key<Bool>("stopModeUserConfigured", default: false)
+
 }
 
 extension NSRect: Defaults.Serializable {

@@ -64,6 +64,10 @@ struct PromptCore: View {
         colorTwo: Color(hex: "#4AA4BF") ?? .gray800
     )
     
+    private var text: String {
+        editingText?.wrappedValue ?? windowState.pendingInstruction
+    }
+    
     var body: some View {
         VStack(spacing: 0) {
             if let pendingInput = windowState.pendingInput {
@@ -101,6 +105,8 @@ struct PromptCore: View {
                 }
             )
             
+            if text.isEmpty { disableSend = true }
+            
             notificationDelegate = delegate
             windowState.addDelegate(delegate)
         }
@@ -109,7 +115,7 @@ struct PromptCore: View {
                 windowState.removeDelegate(delegate)
             }
         }
-        .onChange(of: editingText?.wrappedValue ?? windowState.pendingInstruction) { old, new in
+        .onChange(of: text) { old, new in
             let slashMenuOpened = new == "/" && old != "/ "
             showSlashMenu = slashMenuOpened
             windowState.showContextMenu = slashMenuOpened // This should be removed later when the Slash Menu is developed.
@@ -157,7 +163,7 @@ extension PromptCore {
         }
         .disabled(showingAlert)
         .allowsHitTesting(!showingAlert)
-        // This should be commented in when the Slash Menu is built.
+        // TODO: LOYD - This should be commented in when the Slash Menu is built.
 //        .popover(
 //            isPresented: $showSlashMenu
 //        ) {

@@ -14,6 +14,7 @@ struct ContextMenu: View {
     @State private var currentArrowKeyIndex: Int = 0
     @State private var maxArrowKeyIndex: Int = 0
     
+    // TODO: LOYD - Might want to delete later, as browser tabs are currently not implemented?
     var showBrowserTabs: Bool {
         return windowState.showContextMenuBrowserTabs
     }
@@ -26,20 +27,14 @@ struct ContextMenu: View {
                 placeholder: "Search windows, tabs & files"
             )
         ) {
-            if showBrowserTabs {
-                ContextMenuBrowserTabs {
-                    closeContextMenu()
-                }
-            } else {
-                ContextMenuWindows(
-                    searchQuery: $searchQuery,
-                    currentArrowKeyIndex: $currentArrowKeyIndex,
-                    maxArrowKeyIndex: $maxArrowKeyIndex
-                ) {
-                    closeContextMenu()
-                } showBrowserTabsSubMenu: {
-                    showBrowserTabsSubMenu()
-                }
+            ContextMenuWindows(
+                searchQuery: $searchQuery,
+                currentArrowKeyIndex: $currentArrowKeyIndex,
+                maxArrowKeyIndex: $maxArrowKeyIndex
+            ) {
+                closeContextMenu()
+            } showBrowserTabsSubMenu: {
+                showBrowserTabsSubMenu()
             }
         }
         .background {
@@ -61,7 +56,7 @@ extension ContextMenu {
     private var upListener: some View {
         KeyListener(key: .upArrow, modifiers: []) {
             if currentArrowKeyIndex - 1 < 0 {
-                currentArrowKeyIndex = 0
+                currentArrowKeyIndex = maxArrowKeyIndex
             } else {
                 currentArrowKeyIndex -= 1
             }
@@ -70,8 +65,8 @@ extension ContextMenu {
     
     private var downListener: some View {
         KeyListener(key: .downArrow, modifiers: []) {
-            if currentArrowKeyIndex + 1 >= maxArrowKeyIndex {
-                currentArrowKeyIndex = maxArrowKeyIndex
+            if currentArrowKeyIndex + 1 > maxArrowKeyIndex {
+                currentArrowKeyIndex = 0
             } else {
                 currentArrowKeyIndex += 1
             }
@@ -84,20 +79,20 @@ extension ContextMenu {
 extension ContextMenu {
     private var backButton: IconButton {
         IconButton(
-            icon: .chevLeft,
-            action: {
-                searchQuery = ""
-                windowState.showContextMenuBrowserTabs = false
-            }
-        )
+            icon: .chevLeft
+        ) {
+            searchQuery = ""
+            windowState.showContextMenuBrowserTabs = false
+        }
     }
     
     private var closeButton: IconButton {
         IconButton(
             icon: .cross,
-            iconSize: 10,
-            action: closeContextMenu
-        )
+            iconSize: 10
+        ) {
+            closeContextMenu()
+        }
     }
     
     private var menuHeader: MenuHeader<IconButton> {

@@ -21,7 +21,8 @@ actor StreamingClient {
               responses: [String],
               useOnitServer: Bool,
               model: AIModel,
-              apiToken: String?) async throws -> AsyncThrowingStream<String, Error> {
+              apiToken: String?,
+              includeSearch: Bool? = nil) async throws -> AsyncThrowingStream<String, Error> {
         let userMessages = ChatEndpointMessagesBuilder.user(
             instructions: instructions,
             inputs: inputs,
@@ -35,11 +36,12 @@ actor StreamingClient {
             responses: responses,
             apiToken: apiToken,
             systemMessage: systemMessage,
-            userMessages: userMessages)
+            userMessages: userMessages,
+            includeSearch: includeSearch)
         var eventParser: EventParser?
         
         if !useOnitServer && model.provider == .perplexity {
-            eventParser = PerplexityEventParser(mode: .dataOnly)
+            eventParser = PerplexityEventParser()
         }
 
         return try await stream(endpoint: endpoint, eventParser: eventParser)
@@ -76,7 +78,7 @@ actor StreamingClient {
         -> AsyncThrowingStream<String, Error>
     {
         let urlRequest = try endpoint.asURLRequest()
-        let eventSource = EventSource(mode: .dataOnly, eventParser: eventParser)
+        let eventSource = EventSource(eventParser: eventParser)
         let dataTask = await eventSource.dataTask(for: urlRequest)
         
         #if DEBUG

@@ -13,13 +13,16 @@ struct GeneratedView: View {
     var body: some View {
         VStack(spacing: 0) {
             if !prompt.responses.isEmpty {
-                let curResponse = prompt.sortedResponses[prompt.generationIndex]
-                
-                switch curResponse.type {
-                case .error:
-                    GeneratedErrorView(errorDescription: prompt.sortedResponses[prompt.generationIndex].text)
-                default:
-                    GeneratedContentView(prompt: prompt)
+                let safeIndex = prompt.safeGenerationIndex
+                if safeIndex >= 0 && safeIndex < prompt.sortedResponses.count {
+                    let curResponse = prompt.sortedResponses[safeIndex]
+                    
+                    switch curResponse.type {
+                    case .error:
+                        GeneratedErrorView(errorDescription: curResponse.text)
+                    default:
+                        GeneratedContentView(prompt: prompt)
+                    }
                 }
             }
             

@@ -2,9 +2,10 @@ import SwiftUI
 import Defaults
 
 struct WebSearchTab: View {
-    @Default(.webSearchEnabled) var webSearchEnabled
     @Default(.tavilyAPIToken) var tavilyAPIToken
     @Default(.isTavilyAPITokenValidated) var isTavilyAPITokenValidated
+    @Default(.tavilyCostSavingMode) var tavilyCostSavingMode
+    @Default(.allowWebSearchInLocalMode) var allowWebSearchInLocalMode
     
     @State private var isValidating = false
     @State private var validationError: String? = nil
@@ -27,11 +28,36 @@ struct WebSearchTab: View {
                     Text("Web Search Providers")
                 }
             }
+
+            Section {
+                VStack(alignment: .leading, spacing: 16) {
+                    localModeSection
+                }
+            } header: {
+                HStack {
+                    Image(systemName: "lock.shield")
+                    Text("Local Mode")
+                }
+            }
         }
         .formStyle(.grouped)
         .padding()
     }
     
+    var localModeSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                Toggle("Enable Web Search in Local Mode", isOn: $allowWebSearchInLocalMode)
+                    .font(.system(size: 13))
+            }
+
+            Text("When enabled, web search will be available in local mode. Please note that your queries will be sent to the search provider's servers, and we cannot guarantee that your data won't be stored or logged by the provider.")
+                .font(.system(size: 12))
+                .foregroundStyle(.gray200)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+    }
+
     var tavilySection: some View {
         VStack(alignment: .leading, spacing: 16) {
             HStack {
@@ -81,6 +107,22 @@ struct WebSearchTab: View {
                         .foregroundStyle(.red)
                 }
             }
+
+            if isTavilyAPITokenValidated {
+                Divider()
+
+                VStack(alignment: .leading, spacing: 8) {
+                    HStack {
+                        Toggle("Cost Saving Mode", isOn: $tavilyCostSavingMode)
+                            .font(.system(size: 13))
+                    }
+
+                    Text("When enabled, Onit will use your Tavily token to perform searches instead of Onit credits. By default, Onit uses model provider search tools when available for optimal quality.")
+                        .font(.system(size: 12))
+                        .foregroundStyle(.gray200)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+            }
         }
     }
     
@@ -100,14 +142,12 @@ struct WebSearchTab: View {
                     
                     if !validated {
                         validationError = "Invalid API key. Please check and try again."
-                        webSearchEnabled = false
                     }
                 }
             } catch {
                 await MainActor.run {
                     isValidating = false
                     isTavilyAPITokenValidated = false
-                    webSearchEnabled = false
                     validationError = "Error validating API key: \(error.localizedDescription)"
                 }
             }

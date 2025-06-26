@@ -69,12 +69,11 @@ struct ModelSelectionView: View {
             header: MenuHeader(title: "Model") {
                 IconButton(
                     icon: .settingsCog,
-                    action: {
-                        AnalyticsManager.ModelPicker.settingsPressed()
-                        openModelSettings()
-                    },
                     tooltipPrompt: "Settings"
-                )
+                ) {
+                    AnalyticsManager.ModelPicker.settingsPressed()
+                    openModelSettings()
+                }
             },
             search: MenuList.Search(
                 query: $searchQuery,

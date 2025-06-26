@@ -17,16 +17,22 @@ struct AnthropicChatStreamingEndpoint: StreamingEndpoint {
     let token: String?
     let messages: [AnthropicMessage]
     let maxTokens: Int
+    let includeSearch: Bool?
     
     var path: String { "/v1/messages" }
     var getParams: [String: String]? { nil }
     var method: HTTPMethod { .post }
     
     var requestBody: AnthropicChatRequest? {
-        AnthropicChatRequest(
+        var tools: [AnthropicChatTool] = []
+        if includeSearch == true {
+            tools.append(AnthropicChatTool.search(maxUses: 5))
+        }
+        return AnthropicChatRequest(
             model: model,
             system: system,
             messages: messages,
+            tools: tools,
             max_tokens: maxTokens,
             stream: true
         )
@@ -41,13 +47,13 @@ struct AnthropicChatStreamingEndpoint: StreamingEndpoint {
     var timeout: TimeInterval? { nil }
     
     func getContentFromSSE(event: EVEvent) throws -> String? {
-        guard let eventString = event.event,
-              let dataStart = eventString.range(of: "data: ")?.upperBound else { return nil }
         
-        let jsonString = String(eventString[dataStart...]).trimmingCharacters(in: .whitespacesAndNewlines)
-        
-        if let data = jsonString.data(using: .utf8) {
+        if let data = event.data?.data(using: .utf8) {
             let response = try JSONDecoder().decode(Response.self, from: data)
+            
+            if response.contentBlock?.type == "server_tool_use" {
+                return "\n\n...\n\n"
+            }
             
             return response.delta?.text
         }
@@ -65,6 +71,7 @@ struct AnthropicChatStreamingEndpoint: StreamingEndpoint {
 struct AnthropicChatStreamingResponse: Codable {
     let type: String
     let delta: Delta?
+    let contentBlock: ContentBlock?
 
     struct Delta: Codable {
         let type: String?
@@ -77,19 +84,14 @@ struct AnthropicChatStreamingResponse: Codable {
         }
     }
 
-    struct Content: Codable {
-        let type: String
-        let text: String
+    struct ContentBlock: Codable {
+        let type: String?
     }
-
-    struct Usage: Codable {
-        let inputTokens: Int
-        let outputTokens: Int
-
-        enum CodingKeys: String, CodingKey {
-            case inputTokens = "input_tokens"
-            case outputTokens = "output_tokens"
-        }
+    
+    enum CodingKeys: String, CodingKey {
+        case type
+        case delta
+        case contentBlock = "content_block"
     }
 }
 

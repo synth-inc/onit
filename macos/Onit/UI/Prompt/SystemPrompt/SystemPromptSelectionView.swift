@@ -55,11 +55,10 @@ struct SystemPromptSelectionView: View {
             header: MenuHeader(title: "System Prompts") {
                 IconButton(
                     icon: .cross,
-                    iconSize: 10,
-                    action: {
-                        state.systemPromptState.shouldShowSelection = false
-                    }
-                )
+                    iconSize: 10
+                ) {
+                    state.systemPromptState.shouldShowSelection = false
+                }
             },
             search: MenuList.Search(
                 query: $searchText,

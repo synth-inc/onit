@@ -86,13 +86,15 @@ struct ContentView: View {
                 AuthFlow()
             } else {
                 ZStack {
-                    VStack(spacing: 0) {
-                        Spacer().frame(height: 38)
+                    VStack(alignment: .leading, spacing: 0) {
+                        if showToolbar {
+                            Toolbar()
+                        }
                         
-                        PromptDivider()
-                        
-                        if state.showChatView { ChatView().transition(.opacity) }
-                        else { Spacer() }
+                        VStack(spacing: 0) {
+                            if state.showChatView { ChatView().transition(.opacity) }
+                            else { Spacer() }
+                        }
                     }
                     
                     if state.showChatView {
@@ -130,18 +132,6 @@ struct ContentView: View {
         )
         .edgesIgnoringSafeArea(.top)
         .buttonStyle(PlainButtonStyle())
-        .toolbar {
-            if showToolbar {
-                ToolbarItem(placement: .navigation) {
-                    ToolbarLeft()
-                }
-                ToolbarItem(placement: .automatic) { TetheredToAppView() }
-                ToolbarItem(placement: .automatic) { Spacer() }
-                ToolbarItem(placement: .primaryAction) {
-                    ToolbarRight()
-                }
-            }
-        }
         .simultaneousGesture(
             TapGesture(count: 1)
                 .onEnded({ handleViewClicked() })

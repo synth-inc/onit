@@ -23,6 +23,8 @@ import SwiftUI
 @Observable
 class OnitPanelState: NSObject {
     
+    @ObservationIgnored var defaultEnvironmentSource: String? = nil
+    
     /// Clients
     let client = FetchingClient()
     let streamingClient = StreamingClient()
@@ -45,7 +47,22 @@ class OnitPanelState: NSObject {
     var promptSuggestionService: SystemPromptSuggestionService?
     
     // TODO: KNA - Refacto: Should be removed at the end
-    var trackedWindow: TrackedWindow?
+    var trackedWindow: TrackedWindow? // Used only in Tethered Mode. Corresponds to the specific window that's tethered to the panel.
+    var foregroundWindow: TrackedWindow? = nil {
+        didSet {
+            if let newWindow = foregroundWindow {
+                foregroundedWindowHistory.removeAll { $0 == newWindow.hash }
+                
+                foregroundedWindowHistory.append(newWindow.hash)
+                
+                if foregroundedWindowHistory.count > 50 {
+                    foregroundedWindowHistory.removeFirst()
+                }
+            }
+        }
+    } // Used for window context tracking (required for all modes).
+    var foregroundedWindowHistory : [UInt?] = []
+    
     // TODO: KNA - Refacto: Should be removed at the end
     var trackedScreen: NSScreen?
     var isWindowDragging: Bool = false
@@ -87,7 +104,7 @@ class OnitPanelState: NSObject {
         }
     }
     
-    var tetheredButtonYPosition: CGFloat?
+    var tetheredButtonYRelativePosition: CGFloat?
     
     var panelWidth: CGFloat 
     
@@ -96,6 +113,9 @@ class OnitPanelState: NSObject {
     
     var pendingInstruction = "" {
         didSet {
+            if pendingInstruction.isEmpty {
+                pendingInstructionCursorPosition = 0
+            }
             notifyDelegateInputsChange()
         }
     }
@@ -127,6 +147,7 @@ class OnitPanelState: NSObject {
     var generateTask: Task<Void, Never>? = nil
     var generatingPrompt: Prompt?
     var generatingPromptPriorState: GenerationState?
+    var generationStopped: Bool = false
     
     /// Don't leave this text empty to ensure the first scroll works.
     var streamedResponse: String = " "
@@ -141,8 +162,6 @@ class OnitPanelState: NSObject {
     // Window context states
     typealias UniqueWindowIdentifier = UInt
     var windowContextTasks: [UniqueWindowIdentifier: Task<Void, Never>] = [:]
-    
-    var foregroundWindow: TrackedWindow? = nil
     
     // Menu States
     var showContextMenu: Bool = false

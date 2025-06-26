@@ -22,9 +22,9 @@ struct GeneratedToolbar: View {
             
             Spacer()
             
-            if prompt.generationIndex >= 0 &&
-                prompt.generationIndex < prompt.responses.count,
-                let model = prompt.sortedResponses[prompt.generationIndex].model {
+            if prompt.safeGenerationIndex >= 0 &&
+                prompt.safeGenerationIndex < prompt.responses.count,
+                let model = prompt.sortedResponses[prompt.safeGenerationIndex].model {
                 Text("\(model)")
                     .foregroundColor(Color.gray300)
             }
@@ -42,11 +42,10 @@ struct GeneratedToolbar: View {
     var regenerate: some View {
         IconButton(
             icon: .arrowsSpin,
-            action: {
-                state.generate(prompt)
-            },
             tooltipPrompt: "Retry"
-        )
+        ) {
+            state.generate(prompt)
+        }
     }
 
     @ViewBuilder

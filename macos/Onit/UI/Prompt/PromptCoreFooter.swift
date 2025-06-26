@@ -6,9 +6,12 @@
 //
 
 import SwiftUI
+import Defaults
 
 struct PromptCoreFooter: View {
     @Environment(\.windowState) private var windowState
+    @Default(.mode) private var mode
+    @Default(.allowWebSearchInLocalMode) private var allowWebSearchInLocalMode
     
     private let audioRecorder: AudioRecorder
     private let disableSend: Bool
@@ -28,7 +31,9 @@ struct PromptCoreFooter: View {
         HStack(alignment: .center, spacing: 0) {
             HStack(spacing: 4) {
                 ModelSelectionButton()
-                WebSearchButton()
+                if mode != .local || allowWebSearchInLocalMode {
+                    WebSearchButton()
+                }
             }
             
             Spacer()
@@ -37,7 +42,9 @@ struct PromptCoreFooter: View {
                 MicrophoneButton(audioRecorder: audioRecorder)
                 
                 PromptCoreFooterButton(
-                    text: "􀅇 Send",
+                    iconColor: .gray200,
+                    icon: .send2,
+                    text: "Send",
                     disabled: disableSend,
                     action: handleSend
                 )

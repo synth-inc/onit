@@ -32,7 +32,8 @@ extension OnitPanelState {
                 }
                 
                 let systemPromptCopy = systemPrompt
-                let trackedWindow = AccessibilityNotificationsManager.shared.windowsManager.activeTrackedWindow
+                let trackedWindow = self.foregroundWindow
+                
                 currentChat = Chat(
                     systemPrompt: systemPromptCopy,
                     prompts: [],
@@ -79,6 +80,7 @@ extension OnitPanelState {
         addPartialResponse(prompt: prompt)
         generatingPrompt = prompt
         generatingPromptPriorState = prompt.generationState
+        generationStopped = false
         
         AnalyticsManager.Chat.prompted(prompt: prompt)
         
@@ -139,7 +141,32 @@ extension OnitPanelState {
                 streamedResponse = ""
                 
                 let isNewInstruction = !prompt.priorInstructions.dropLast().contains(prompt.instruction)
-                if Defaults[.webSearchEnabled] && isNewInstruction {
+
+                // Determine web search strategy
+                let webSearchEnabled = Defaults[.webSearchEnabled]
+                let localWebSearchAllowed = Defaults[.mode] != .local || Defaults[.allowWebSearchInLocalMode]
+                let useWebSearch = webSearchEnabled && localWebSearchAllowed && isNewInstruction
+
+                var hasValidProviderSearchToken = false
+                var onitSupportsSearchProvider = false
+                if Defaults[.mode] == .remote, let model = Defaults[.remoteModel] {
+                    let apiToken = TokenValidationManager.getTokenForModel(model)
+                    let hasValidToken = apiToken?.isEmpty == false
+                    hasValidProviderSearchToken = hasValidToken && (model.provider == .openAI || model.provider == .anthropic)
+
+                    let providers = try? await FetchingClient().getChatSearchProviders()
+
+                    if let providers = providers {
+                        let provider = model.provider.rawValue
+                        onitSupportsSearchProvider = providers.contains(where: { $0.lowercased() == provider })
+                    }
+                }
+
+                let tavilyCostSavingMode = Defaults[.tavilyCostSavingMode]
+                let useTavilySearch = useWebSearch && !hasValidProviderSearchToken && (tavilyCostSavingMode || !onitSupportsSearchProvider)
+
+                // Perform client-side web search with Tavily if available
+                if useTavilySearch {
                     isSearchingWeb[prompt.id] = true
                     let searchResults = await performWebSearch(query: curInstruction)
                     if !searchResults.isEmpty {
@@ -184,7 +211,8 @@ extension OnitPanelState {
                             responses: responsesHistory,
                             useOnitServer: useOnitChat,
                             model: model,
-                            apiToken: apiToken)
+                            apiToken: apiToken,
+                            includeSearch: (useWebSearch && !useTavilySearch) ? true : nil)
                         for try await response in asyncText {
                             streamedResponse += response
                         }
@@ -200,7 +228,8 @@ extension OnitPanelState {
                             webSearchContexts: webSearchContextsHistory,
                             responses: responsesHistory,
                             model: model,
-                            apiToken: apiToken)
+                            apiToken: apiToken,
+                            includeSearch: (useWebSearch && !useTavilySearch) ? true : nil)
                     }
                 
                 case .local:
@@ -209,7 +238,7 @@ extension OnitPanelState {
                     }
                     
                     if Defaults[.streamResponse].local {
-                        prompt.generationState = .streaming                        
+                        prompt.generationState = .streaming
                         let asyncText = try await streamingClient.localChat(
                             systemMessage: systemPrompt.prompt,
                             instructions: instructionsHistory,
@@ -267,6 +296,64 @@ extension OnitPanelState {
             curPrompt.generationState = priorState
         }
     }
+
+    func stopGeneration() {
+        guard let prompt = generatingPrompt else { return }
+        generationStopped = true
+        cancelGenerate()
+        
+        pendingInstruction = prompt.instruction
+        textFocusTrigger.toggle()
+
+        if FeatureFlagManager.shared.stopMode == .removePartial { removePartialResponse(prompt: prompt) }
+        generatingPrompt = nil
+    }
+    
+    func removePartialResponse(prompt: Prompt) {
+        // If the prompt already has a response, we can just remove the last, partial response.
+        if prompt.responses.count > 1, let lastResponse = prompt.responses.last, let lastInstruction = prompt.priorInstructions.last {
+            prompt.removeLastResponse()  // Use safe removal method
+            prompt.priorInstructions.removeLast()
+            do {
+                try container.mainContext.save()
+            } catch {
+                // Reset if it fails.
+                prompt.responses.append(lastResponse)
+                prompt.priorInstructions.append(lastInstruction)
+                prompt.generationIndex = (prompt.responses.count - 1)
+            }
+        } else {
+            // Otherwise, we need to remove the entire prompt.
+            if let index = currentChat?.prompts.firstIndex(where: { $0.id == prompt.id }) {
+                currentChat?.prompts.remove(at: index)
+            }
+            if let curIndex = currentPrompts?.firstIndex(where: { $0.id == prompt.id }) {
+                currentPrompts?.remove(at: curIndex)
+            }
+            container.mainContext.delete(prompt)
+            do {
+                try container.mainContext.save()
+                // Reset the nextPrompt/priorPrompt links, to account for the removed prompt. We only want to do this if the save succeeded.
+                if let chatPrompts = currentChat?.prompts {
+                    for existingPrompt in chatPrompts {
+                        if existingPrompt.nextPrompt?.id == prompt.id {
+                            existingPrompt.nextPrompt = prompt.nextPrompt
+                        }
+                        if existingPrompt.priorPrompt?.id == prompt.id {
+                            existingPrompt.priorPrompt = prompt.priorPrompt
+                        }
+                    }
+                }
+            } catch {
+                // If save fails, let's restore the partial prompt to prevent weird states.
+                container.mainContext.rollback()
+                if let chat = currentChat {
+                    chat.prompts.append(prompt)
+                    currentPrompts?.append(prompt)
+                }
+            }
+        }
+    }
     
     func shouldUseStream(_ aiModel: AIModel) -> Bool {
         switch aiModel.provider {
@@ -297,12 +384,19 @@ extension OnitPanelState {
     }
     
     func replacePartialResponse(prompt: Prompt, response: Response) {
-        // TODO could this cause isues where the generation index is beyond the lnegth of responses?
+        // TODO could this cause isues where the generation index is beyond the length of responses?
         if let partialResponseIndex = prompt.responses.firstIndex(where: { $0.isPartial }) {
             prompt.responses.remove(at: partialResponseIndex)
         }
-        prompt.responses.append(response)
-        prompt.generationState = .done
+        // We don't need to add the response if the generation was stopped we're removing the partial responses.
+        if generationStopped == false || FeatureFlagManager.shared.stopMode != .removePartial {
+            prompt.responses.append(response)
+            prompt.generationState = .done
+            do { try container.mainContext.save() } catch {
+                container.mainContext.rollback()
+                print("replacePartialResponse - Save failed!")
+            }
+        }
     }
     
     func sendAction(accountId: Int?) {

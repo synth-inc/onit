@@ -18,7 +18,8 @@ struct ChatStreamingEndpointBuilder {
         responses: [String],
         apiToken: String?,
         systemMessage: String,
-        userMessages: [String]
+        userMessages: [String],
+        includeSearch: Bool? = nil
     ) throws -> any StreamingEndpoint {
         if useOnitServer {
             return ChatStreamingEndpointBuilder.onit(
@@ -26,7 +27,8 @@ struct ChatStreamingEndpointBuilder {
                 images: images,
                 responses: responses,
                 systemMessage: systemMessage,
-                userMessages: userMessages)
+                userMessages: userMessages,
+                includeSearch: includeSearch)
         }
         switch model.provider {
         case .openAI:
@@ -36,7 +38,8 @@ struct ChatStreamingEndpointBuilder {
                 responses: responses,
                 apiToken: apiToken,
                 systemMessage: systemMessage,
-                userMessages: userMessages)
+                userMessages: userMessages,
+                includeSearch: includeSearch)
         case .anthropic:
             return ChatStreamingEndpointBuilder.anthropic(
                 model: model,
@@ -44,7 +47,8 @@ struct ChatStreamingEndpointBuilder {
                 responses: responses,
                 apiToken: apiToken,
                 systemMessage: systemMessage,
-                userMessages: userMessages)
+                userMessages: userMessages,
+                includeSearch: includeSearch)
         case .xAI:
             return ChatStreamingEndpointBuilder.xAI(
                 model: model,
@@ -92,7 +96,8 @@ struct ChatStreamingEndpointBuilder {
         images: [[URL]],
         responses: [String],
         systemMessage: String,
-        userMessages: [String]
+        userMessages: [String],
+        includeSearch: Bool? = nil
     ) -> OnitChatStreamingEndpoint {
         let messages = ChatEndpointMessagesBuilder.onit(
             model: model,
@@ -102,7 +107,7 @@ struct ChatStreamingEndpointBuilder {
             userMessages: userMessages)
 
         return OnitChatStreamingEndpoint(
-            model: model.id, messages: messages)
+            model: model.id, messages: messages, includeSearch: includeSearch)
     }
 
     private static func openAI(
@@ -111,7 +116,8 @@ struct ChatStreamingEndpointBuilder {
         responses: [String],
         apiToken: String?,
         systemMessage: String,
-        userMessages: [String]
+        userMessages: [String],
+        includeSearch: Bool? = nil
     ) -> OpenAIChatStreamingEndpoint {
         let messages = ChatEndpointMessagesBuilder.openAI(
             model: model,
@@ -121,7 +127,7 @@ struct ChatStreamingEndpointBuilder {
             userMessages: userMessages)
 
         return OpenAIChatStreamingEndpoint(
-            messages: messages, token: apiToken, model: model.id)
+            messages: messages, token: apiToken, model: model.id, includeSearch: includeSearch)
     }
 
     private static func anthropic(
@@ -130,7 +136,8 @@ struct ChatStreamingEndpointBuilder {
         responses: [String],
         apiToken: String?,
         systemMessage: String,
-        userMessages: [String]
+        userMessages: [String],
+        includeSearch: Bool? = nil
     ) -> AnthropicChatStreamingEndpoint {
         let messages = ChatEndpointMessagesBuilder.anthropic(
             model: model,
@@ -143,7 +150,8 @@ struct ChatStreamingEndpointBuilder {
             system: model.supportsSystemPrompts ? systemMessage : "",
             token: apiToken,
             messages: messages,
-            maxTokens: 4096
+            maxTokens: 4096,
+            includeSearch: includeSearch
         )
     }
 

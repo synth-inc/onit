@@ -15,12 +15,17 @@ struct OpenAIChatStreamingEndpoint: StreamingEndpoint {
     let messages: [OpenAIChatMessage]
     let token: String?
     let model: String
+    let includeSearch: Bool?
     
-    var path: String { "/v1/chat/completions" }
+    var path: String { "/v1/responses" }
     var getParams: [String: String]? { nil }
     var method: HTTPMethod { .post }
     var requestBody: OpenAIChatRequest? {
-        OpenAIChatRequest(model: model, messages: messages, stream: true)
+        var tools: [OpenAIChatTool] = []
+        if includeSearch == true {
+            tools.append(OpenAIChatTool.search())
+        }
+        return OpenAIChatRequest(model: model, input: messages, tools: tools, stream: true)
     }
     var additionalHeaders: [String: String]? {
         ["Authorization": "Bearer \(token ?? "")"]
@@ -32,7 +37,10 @@ struct OpenAIChatStreamingEndpoint: StreamingEndpoint {
         if let data = event.data?.data(using: .utf8) {
             let response = try JSONDecoder().decode(Response.self, from: data)
             
-            return response.choices.first?.delta.content
+            if response.type == "response.output_text.delta" {
+                return response.delta
+            }
+            return nil
         }
         
         return nil
@@ -46,26 +54,8 @@ struct OpenAIChatStreamingEndpoint: StreamingEndpoint {
 }
 
 struct OpenAIChatStreamingResponse: Codable {
-    let choices: [Choice]
-    let created: Int
-    let id: String
-    let model: String
-    let object: String
-    
-    struct Choice: Codable {
-        let delta: Delta
-        let index: Int
-            
-        enum CodingKeys: String, CodingKey {
-            case delta
-            case index
-        }
-    }
-        
-    struct Delta: Codable {
-        let content: String?
-        let role: String?
-    }
+    let type: String?
+    let delta: String?
 }
 
 struct OpenAIChatStreamingError: Codable {
