@@ -140,9 +140,14 @@ class QuickEditHintWindowController: NSObject, NSWindowDelegate, ObservableObjec
     
     private func startRightClickMonitoring() {
         rightClickMonitor = NSEvent.addLocalMonitorForEvents(matching: [.rightMouseDown]) { [weak self] event in
-            guard let self = self else { return event }
+            guard let self = self, let window = window else { return event }
+
+            let globalClickLocation = NSEvent.mouseLocation
+            let windowFrame = window.frame
             
-            showMenu()
+            if windowFrame.contains(globalClickLocation) {
+                self.showMenu()
+            }
 
             return event
         }
