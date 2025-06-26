@@ -14,6 +14,7 @@ struct GeneralTab: View {
     @Default(.openOnMouseMonitor) var openOnMouseMonitor
     @Default(.usePinnedMode) var usePinnedMode
     @Default(.autoContextOnLaunchTethered) var autoContextOnLaunchTethered
+    @Default(.stopMode) var stopMode
     
     @State var isLaunchAtStartupEnabled: Bool = SMAppService.mainApp.status == .enabled
     @State var isAnalyticsEnabled: Bool = PostHogSDK.shared.isOptOut() == false
@@ -38,6 +39,8 @@ struct GeneralTab: View {
             launchOnStartupSection
             
             displayModeSection
+            
+            behaviorSection
             
             analyticsSection
             
@@ -190,6 +193,56 @@ struct GeneralTab: View {
             HStack {
                 Image(systemName: "rectangle.on.rectangle")
                 Text("Display Mode")
+            }
+        }
+    }
+    
+    var behaviorSection: some View {
+        SettingsSection(
+            iconSystem: "stop.circle",
+            title: "Behavior"
+        ) {
+            VStack(alignment: .leading, spacing: 16) {
+                VStack(alignment: .leading, spacing: 8) {
+                    HStack {
+                        Text("Stop Mode")
+                            .font(.system(size: 13))
+                        SettingInfoButton(
+                            title: "Stop Mode",
+                            description:
+                                "Controls what happens when you stop generation. 'Remove Partial' removes incomplete responses, while 'Leave Partial' keeps them visible.",
+                            defaultValue: "Remove Partial",
+                            valueType: "StopMode"
+                        )
+                        Spacer()
+                    }
+                    
+                    VStack(alignment: .leading, spacing: 8) {
+                        ForEach(StopMode.allCases, id: \.self) { mode in
+                            Button {
+                                stopMode = mode
+                                FeatureFlagManager.shared.setStopModeByUser(mode)
+                            } label: {
+                                HStack {
+                                    Image(systemName: stopMode == mode ? "largecircle.fill.circle" : "circle")
+                                        .foregroundStyle(stopMode == mode ? .blue : .secondary)
+                                    VStack(alignment: .leading, spacing: 2) {
+                                        Text(mode == .removePartial ? "Remove Partial" : "Leave Partial")
+                                            .font(.system(size: 13))
+                                        Text(mode == .removePartial 
+                                             ? "Removes incomplete responses when stopped"
+                                             : "Keeps partial responses visible when stopped")
+                                            .font(.system(size: 11))
+                                            .foregroundStyle(.secondary)
+                                    }
+                                    Spacer()
+                                }
+                                .contentShape(Rectangle())
+                            }
+                            .buttonStyle(.plain)
+                        }
+                    }
+                }
             }
         }
     }
