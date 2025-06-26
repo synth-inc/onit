@@ -85,6 +85,8 @@ extension Defaults.Keys {
     // This migration adds the 'instruction' the response object, so it can be dynamic
     static let hasPerformedInstructionResponseMigration = Key<Bool>(
         "hasPerformedInstructionResponseMigration", default: false)
+    static let needsHangingPromptCleanup = Key<Bool>(
+        "needsHangingPromptCleanup", default: true)
 
     static let localEndpointURL = Key<URL>(
         "localEndpointURL", default: URL(string: "http://localhost:11434")!)
