@@ -184,9 +184,18 @@ extension OnitPanelState {
         addContext(urls: imageURLs)
     }
     
-    func addContext(texts: [Input]) {
-        let textContextItems = texts.map(Context.init)
+    func addContext(texts: [(Input, Bool)]) {
+        let textContextItems = texts.map { Context(text: $0.0, isPinned: $0.1) }
         pendingContextList += textContextItems
+    }
+    
+    func updateContext(
+        oldContext: Context,
+        newContext: Context
+    ) {
+        if let index = pendingContextList.firstIndex(of: oldContext) {
+            pendingContextList[index] = newContext
+        }
     }
 
     func newChat(clearContext: Bool = true, shouldSystemPrompt: Bool = false) {

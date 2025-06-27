@@ -256,16 +256,9 @@ class AccessibilityNotificationsManager: ObservableObject {
         }
 
         selectionDebounceWorkItem = workItem
-        
-        var debounceInterval = Config.debounceInterval
-        
-        // This allows for a more accurate experience when text highlights are set to auto-add to context.
-        if Defaults[.useTextHighlightContext] {
-            debounceInterval = 0.6
-        }
 
         DispatchQueue.main.asyncAfter(
-            deadline: .now() + debounceInterval,
+            deadline: .now() + Config.debounceInterval,
             execute: workItem
         )
     }
@@ -579,11 +572,13 @@ class AccessibilityNotificationsManager: ObservableObject {
     }
     
     private func processSelectedText(_ text: String?, elementFrame: CGRect?) {
+        PanelStateCoordinator.shared.state.currentHighlightedText = text
+        
         guard Defaults[.autoContextFromHighlights],
               let selectedText = text,
               HighlightedTextValidator.isValid(text: selectedText)
         else {
-            PanelStateCoordinator.shared.state.highlightedText = nil
+            PanelStateCoordinator.shared.state.manualAddHighlightedText = nil
             PanelStateCoordinator.shared.state.pendingInput = nil
             return
         }
@@ -593,16 +588,23 @@ class AccessibilityNotificationsManager: ObservableObject {
         if Defaults[.useTextHighlightContext] {
             let pendingContextList = PanelStateCoordinator.shared.state.getPendingContextList()
             
-            let textAlreadyAddedToContext = checkContextTextAlreadyAdded(
+            let textAlreadyExists = TextContextHelpers.checkContextTextAlreadyAdded(
                 contextList: pendingContextList,
-                text: selectedText
+                text: input.selectedText
             )
             
-            if !textAlreadyAddedToContext {
-                if Defaults[.autoAddHighlightedTextToContext] {
-                    PanelStateCoordinator.shared.state.addContext(texts: [input])
+            if !Defaults[.autoAddHighlightedTextToContext] {
+                PanelStateCoordinator.shared.state.manualAddHighlightedText = input
+            } else if !textAlreadyExists {
+                if let notPinnedTextContext = TextContextHelpers.getNotpinnedTextContext(
+                    contextList: pendingContextList
+                ) {
+                    PanelStateCoordinator.shared.state.updateContext(
+                        oldContext: notPinnedTextContext,
+                        newContext: Context.text(input, notPinnedTextContext.isPinned)
+                    )
                 } else {
-                    PanelStateCoordinator.shared.state.highlightedText = input
+                    PanelStateCoordinator.shared.state.addContext(texts: [(input, false)])
                 }
             }
         } else {

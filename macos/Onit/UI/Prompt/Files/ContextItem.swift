@@ -5,10 +5,13 @@
 //  Created by Benjamin Sage on 10/23/24.
 //
 
+import Defaults
 import SwiftUI
 
 struct ContextItem: View {
     @Environment(\.windowState) private var state
+    
+    @Default(.autoAddHighlightedTextToContext) var autoAddHighlightedTextToContext
 
     var item: Context
     var isEditing: Bool = true
@@ -32,12 +35,19 @@ struct ContextItem: View {
                     action: showContextWindow,
                     removeAction: isEditing ? { removeContextItem() } : nil   
                 )
-            case .text(let text):
+            case .text(let text, let isPinned):
                 tagButton(
                     text: "Text: \(name)",
                     tooltip: "Highlighted text",
+                    isPinned: isPinned,
+                    showIndicator: text.selectedText == state.currentHighlightedText,
+                    indicatorOffset: 1,
                     iconView: ContextImage(context: item),
                     action: { state.selectedHighlightedText = text },
+                    pinAction:
+                        checkAllowTextPin(isPinned) ? {
+                            togglePinned()
+                        } : nil,
                     removeAction: isEditing ? {
                         removeContextItem()
                         
@@ -46,6 +56,11 @@ struct ContextItem: View {
                         }
                     } : nil
                 )
+                .onChange(of: autoAddHighlightedTextToContext) { _, new in
+                    if !new && !isPinned {
+                        togglePinned()
+                    }
+                }
             default:
                 tagButton(
                     text: name,
@@ -72,7 +87,7 @@ struct ContextItem: View {
             title
         case .web(let websiteUrl, let websiteTitle, _):
             websiteTitle.isEmpty ? websiteUrl.host() ?? websiteUrl.absoluteString : websiteTitle
-        case .text(let text):
+        case .text(let text, _):
             text.selectedText
         }
     }
@@ -100,9 +115,13 @@ extension ContextItem {
     private func tagButton(
         text: String,
         tooltip: String,
+        isPinned: Bool = false,
+        showIndicator: Bool = false,
+        indicatorOffset: CGFloat = 0,
         iconBundleURL: URL? = nil,
         iconView: (any View)? = nil,
         action: @escaping () -> Void,
+        pinAction: (() -> Void)? = nil,
         removeAction: (() -> Void)? = nil
     ) -> some View {
         ContextTag(
@@ -110,10 +129,14 @@ extension ContextItem {
             textColor: isEditing ? .T_2 : Color.primary,  
             background: isEditing ? .gray500 : .clear,
             hoverBackground: isEditing ? .gray400 : .gray600,
+            shouldFadeIn: autoAddHighlightedTextToContext && isPinned,
+            showIndicator: showIndicator,
+            indicatorOffset: indicatorOffset,
             iconBundleURL: iconBundleURL,
             iconView: iconView,
             tooltip: tooltip,
             action: action,
+            pinAction: pinAction,
             removeAction: removeAction
         )
     }
@@ -141,6 +164,33 @@ extension ContextItem {
             windowState: state,
             context: item
         )
+    }
+    
+    private func checkAllowTextPin(_ isPinned: Bool) -> Bool {
+        if isEditing && autoAddHighlightedTextToContext {
+            let pendingContextList = state.getPendingContextList()
+            
+            let textContext = TextContextHelpers.getNotpinnedTextContext(
+                contextList: pendingContextList
+            )
+            
+            if isPinned { return textContext == nil }
+            else { return true }
+        } else {
+            return false
+        }
+    }
+    
+    private func togglePinned() {
+        switch item {
+        case .text(let text, let isPinned):
+            state.updateContext(
+                oldContext: item,
+                newContext: .text(text, !isPinned)
+            )
+        default:
+            break
+        }
     }
     
     private func removeContextItem() {

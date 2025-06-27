@@ -50,10 +50,10 @@ struct FileRow: View {
     }
     
     var highlightedTextAlreadyInContext: Bool {
-        if let highlightedText = windowState.highlightedText {
+        if let highlightedText = windowState.manualAddHighlightedText {
             let pendingContextList = windowState.getPendingContextList()
             
-            return checkContextTextAlreadyAdded(
+            return TextContextHelpers.checkContextTextAlreadyAdded(
                 contextList: pendingContextList,
                 text: highlightedText.selectedText
             )
@@ -109,7 +109,7 @@ extension FileRow {
     @ViewBuilder
     private var addAutoContextButton: some View {
         if accessibilityEnabled && autoContextFromCurrentWindow {
-            if let highlightedText = windowState.highlightedText,
+            if let highlightedText = windowState.manualAddHighlightedText,
                !highlightedTextAlreadyInContext
             {
                 AddAutoContextButton(
@@ -180,13 +180,13 @@ extension FileRow {
     private func addHighlightedTextToContext(_ highlightedText: Input) {
         let pendingContextList = windowState.getPendingContextList()
         
-        let textAlreadyAdded = checkContextTextAlreadyAdded(
+        let textAlreadyAdded = TextContextHelpers.checkContextTextAlreadyAdded(
             contextList: pendingContextList,
             text: highlightedText.selectedText
         )
         
         if !textAlreadyAdded {
-            windowState.addContext(texts: [highlightedText])
+            windowState.addContext(texts: [(highlightedText, true)])
         }
     }
 }
