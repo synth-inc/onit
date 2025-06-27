@@ -15,13 +15,18 @@ struct GoogleAIChatEndpoint: Endpoint {
     let messages: [GoogleAIChatMessage]
     let model: String
     let token: String?
+    let includeSearch: Bool?
 
-    var path: String { "/v1beta:chatCompletions" }
+    var path: String { "/v1beta/models/\(model):generateContent" }
     var getParams: [String: String]? { nil }
 
     var method: HTTPMethod { .post }
     var requestBody: GoogleAIChatRequest? {
-        GoogleAIChatRequest(model:model, messages: messages, stream: false, n: 1)
+        var tools: [GoogleAIChatSearchTool] = []
+        if includeSearch == true {
+            tools.append(GoogleAIChatSearchTool())
+        }
+        return GoogleAIChatRequest(model: model, messages: messages, tools: tools, stream: false, n: 1)
     }
 
     var additionalHeaders: [String: String]? {
@@ -79,6 +84,7 @@ struct GoogleAIChatContentPart: Codable {
 struct GoogleAIChatRequest: Codable {
     let model: String
     let messages: [GoogleAIChatMessage]
+    let tools: [GoogleAIChatSearchTool]
     let stream: Bool
     let n : Int
 }
@@ -117,5 +123,15 @@ struct GoogleAIChatResponse: Codable {
             case promptTokens = "prompt_tokens"
             case totalTokens = "total_tokens"
         }
+    }
+}
+
+struct GoogleAIChatSearchTool: Codable {
+    let googleSearch = GoogleSearch()
+
+    struct GoogleSearch: Codable {}
+
+    enum CodingKeys: String, CodingKey {
+        case googleSearch = "google_search"
     }
 }

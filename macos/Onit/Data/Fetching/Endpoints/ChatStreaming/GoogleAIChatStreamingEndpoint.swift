@@ -15,12 +15,17 @@ struct GoogleAIChatStreamingEndpoint: StreamingEndpoint {
     let messages: [GoogleAIChatMessage]
     let model: String
     let token: String?
+    let includeSearch: Bool?
     
-    var path: String { "/v1beta:chatCompletions" } 
+    var path: String { "/v1beta/models/\(model):generateContent" }
     var getParams: [String: String]? { nil }
     var method: HTTPMethod { .post }
     var requestBody: GoogleAIChatRequest? {
-        GoogleAIChatRequest(model:model, messages: messages, stream: true, n: 1)
+        var tools: [GoogleAIChatSearchTool] = []
+        if includeSearch == true {
+            tools.append(GoogleAIChatSearchTool())
+        }
+        return GoogleAIChatRequest(model: model, messages: messages, tools: tools, stream: true, n: 1)
     }
     
     var additionalHeaders: [String: String]? {
@@ -40,6 +45,7 @@ struct GoogleAIChatStreamingEndpoint: StreamingEndpoint {
     }
     
     func getStreamingErrorMessage(data: Data) -> String? {
+        print(String(data: data, encoding: .utf8) ?? "")
         let response = try? JSONDecoder().decode(GoogleAIChatStreamingError.self, from: data)
         
         return response?.error.message
