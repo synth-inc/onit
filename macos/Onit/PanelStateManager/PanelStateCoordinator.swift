@@ -71,7 +71,7 @@ class PanelStateCoordinator {
             return
         }
         
-        // This workaround will make the pannel jump on another screen
+        // This workaround will make the panel jump on another screen
         if currentManager is PanelStatePinnedManager,
             let mouseScreen = NSScreen.mouse, panel.screen != mouseScreen {
             currentManager.launchPanel(for: targetState, createNewChat: createNewChat)

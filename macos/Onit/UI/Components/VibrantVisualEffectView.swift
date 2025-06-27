@@ -8,6 +8,11 @@
 import SwiftUI
 
 struct VibrantVisualEffectView<Content: View>: NSViewRepresentable {
+    
+    class Coordinator {
+        var hostingView: NSHostingView<Content>?
+    }
+    
     let material: NSVisualEffectView.Material
     let blendingMode: NSVisualEffectView.BlendingMode
     let state: NSVisualEffectView.State
@@ -23,6 +28,10 @@ struct VibrantVisualEffectView<Content: View>: NSViewRepresentable {
         self.blendingMode = blendingMode
         self.state = state
         self.content = content
+    }
+    
+    func makeCoordinator() -> Coordinator {
+        Coordinator()
     }
     
     func makeNSView(context: Self.Context) -> NSVisualEffectView {
@@ -43,6 +52,8 @@ struct VibrantVisualEffectView<Content: View>: NSViewRepresentable {
             hostingView.trailingAnchor.constraint(equalTo: visualEffectView.trailingAnchor)
         ])
         
+        context.coordinator.hostingView = hostingView
+        
         return visualEffectView
     }
     
@@ -51,7 +62,7 @@ struct VibrantVisualEffectView<Content: View>: NSViewRepresentable {
         nsView.blendingMode = blendingMode
         nsView.state = state
         
-        if let hostingView = nsView.subviews.first as? NSHostingView<Content> {
+        if let hostingView = context.coordinator.hostingView {
             hostingView.rootView = content()
         }
     }

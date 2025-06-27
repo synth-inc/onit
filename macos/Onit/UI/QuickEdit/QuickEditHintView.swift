@@ -14,7 +14,7 @@ struct QuickEditHintView: View {
     
     static let hintWidth: CGFloat = 12
     static let hoverScale: CGFloat = 1.2
-    static let hozizontalPadding: CGFloat = 1
+    static let horizontalPadding: CGFloat = 1
     static let verticalPadding: CGFloat = 8
     
     private let height: CGFloat?
@@ -38,7 +38,7 @@ struct QuickEditHintView: View {
                         Image(.dots)
                             .resizable()
                             .renderingMode(.template)
-                            .foregroundColor(.white)
+                            .foregroundColor(.FG)
                             .aspectRatio(contentMode: .fit)
                             .frame(width: Self.hintWidth, height: Self.hintWidth)
                     } else {
@@ -49,7 +49,7 @@ struct QuickEditHintView: View {
             )
             .tooltip(prompt: KeyboardShortcuts.Name.quickEdit.shortcutText, background: false)
             .padding(.vertical, Self.verticalPadding)
-            .padding(.horizontal, Self.hozizontalPadding)
+            .padding(.horizontal, Self.horizontalPadding)
         }
         .frame(height: height)
         .background(.blue300)

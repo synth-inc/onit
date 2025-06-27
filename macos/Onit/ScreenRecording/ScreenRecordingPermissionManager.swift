@@ -18,7 +18,7 @@ class ScreenRecordingPermissionManager: ObservableObject {
     
     // MARK: - Published Properties
     @Published private(set) var isScreenRecordingEnabled: Bool
-	@Published private(set) var messageToShow: String?
+    @Published private(set) var messageToShow: String?
     
     // MARK: - Private Init
     private init() {

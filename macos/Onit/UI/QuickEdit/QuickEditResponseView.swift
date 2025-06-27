@@ -31,9 +31,6 @@ struct QuickEditResponseView: View {
     private let minimumOffset: CGFloat = 16
     private let autoScrollThrottleInterval: TimeInterval = 0.03
     
-    @Default(.fontSize) var fontSize
-    @Default(.lineHeight) var lineHeight
-    
     let prompt: Prompt
     let isEditableElement: Bool
     

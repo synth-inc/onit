@@ -48,7 +48,7 @@ class AccessibilityNotificationsManager: ObservableObject {
     private var currentSource: String?
 
     private var lastHighlightingProcessedAt: Date?
-	private var lastCaretPositionChangeTimestamp: Date?
+    private var lastCaretPositionChangeTimestamp: Date?
 
     private var valueDebounceWorkItem: DispatchWorkItem?
     private var selectionDebounceWorkItem: DispatchWorkItem?
@@ -157,7 +157,6 @@ class AccessibilityNotificationsManager: ObservableObject {
             self.handleWindowBounds(for: element, elementPid: elementPid)
         case kAXSelectedTextChangedNotification:
             self.handleSelectionChange(for: element)
-            //self.handleCaretPositionChange(for: element)
         case kAXValueChangedNotification:
             self.handleValueChanged(for: element)
             self.handleCaretPositionChange(for: element)
@@ -502,7 +501,7 @@ class AccessibilityNotificationsManager: ObservableObject {
             // On every apps, when caret position changed, we receive AXSelectedTextChanged notification with nil value.
             // This code is used to hide the QuickEdit hint for a real deselection
             let now = Date()
-            let caretPositionChangeRecently = lastCaretPositionChangeTimestamp?.timeIntervalSince(now) ?? -1000 > -0.5
+            let caretPositionChangeRecently = now.timeIntervalSince(lastCaretPositionChangeTimestamp ?? .distantPast) < 0.5
             let isEditableField = element.role() == kAXTextFieldRole || element.role() == kAXTextAreaRole
             
             if !caretPositionChangeRecently && !isEditableField {

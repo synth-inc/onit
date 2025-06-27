@@ -94,9 +94,9 @@ class QuickEditHintWindowController: NSObject, NSWindowDelegate, ObservableObjec
         NSAnimationContext.runAnimationGroup { context in
             context.duration = 0.2
             window?.animator().alphaValue = 1.0
-            
-            startRightClickMonitoring()
         }
+        
+        startRightClickMonitoring()
     }
     
     private func updateWindow(at position: CGPoint, height: CGFloat) {
@@ -113,7 +113,7 @@ class QuickEditHintWindowController: NSObject, NSWindowDelegate, ObservableObjec
             hostingController.rootView = AnyView(newContentView)
         }
         
-        let iconWidth = QuickEditHintView.hintWidth + (QuickEditHintView.hozizontalPadding * 2)
+        let iconWidth = QuickEditHintView.hintWidth + (QuickEditHintView.horizontalPadding * 2)
         let adjustedOffset = CGPoint(
             x: Self.hintOffset.x - (windowSize.width - iconWidth) / 2,
             y: Self.hintOffset.y - (windowSize.height - height) / 2
@@ -126,7 +126,7 @@ class QuickEditHintWindowController: NSObject, NSWindowDelegate, ObservableObjec
     
     private func calculateWindowSize(for height: CGFloat) -> CGSize {
         let iconWidth = QuickEditHintView.hintWidth
-        let horizontalPadding: CGFloat = QuickEditHintView.hozizontalPadding * 2
+        let horizontalPadding: CGFloat = QuickEditHintView.horizontalPadding * 2
         let verticalPadding: CGFloat = QuickEditHintView.verticalPadding * 2
         
         let realViewWidth = iconWidth + horizontalPadding

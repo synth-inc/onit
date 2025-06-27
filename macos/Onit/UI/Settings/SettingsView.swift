@@ -50,7 +50,7 @@ struct SettingsView: View {
                 }
                 .tag(SettingsTab.accessibility)
 
-			QuickEditTab()
+            QuickEditTab()
                 .tabItem {
                     Label("Quick Edit", systemImage: "wand.and.sparkles")
                 }

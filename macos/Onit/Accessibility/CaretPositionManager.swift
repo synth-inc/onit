@@ -107,12 +107,12 @@ class CaretPositionManager: ObservableObject {
             return CGRect(x: originalRect.origin.x, y: originalRect.origin.y, width: 2, height: 16)
         }
         
-        let positionSeamsReasonable = originalRect.origin.x >= elementFrame.origin.x - 50 &&
-                                     originalRect.origin.x <= elementFrame.maxX + 50 &&
-                                     originalRect.origin.y >= elementFrame.origin.y - 50 &&
-                                     originalRect.origin.y <= elementFrame.maxY + 50
+        let positionSeemsReasonable = originalRect.origin.x >= elementFrame.origin.x - 50 &&
+                                      originalRect.origin.x <= elementFrame.maxX + 50 &&
+                                      originalRect.origin.y >= elementFrame.origin.y - 50 &&
+                                      originalRect.origin.y <= elementFrame.maxY + 50
         
-        if positionSeamsReasonable {
+        if positionSeemsReasonable {
             return CGRect(
                 x: originalRect.origin.x,
                 y: originalRect.origin.y,

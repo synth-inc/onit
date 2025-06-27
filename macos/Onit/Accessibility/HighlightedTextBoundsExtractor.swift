@@ -416,7 +416,7 @@ class HighlightedTextBoundsExtractor {
         return nil
     }
     
-    // MARK: - Stratégies de recherche
+    // MARK: - Search strategies
     
     private func normalizeText(_ text: String) -> String {
         return text
