@@ -90,7 +90,7 @@ struct LocalModelsSection: View {
 
             HStack(alignment: .center, spacing: 8) {
                 Text("Endpoint URL:")
-                    .foregroundStyle(.primary.opacity(0.65))
+                    .foregroundStyle(Color.primary.opacity(0.65))
                     .font(.system(size: 12))
                     .fontWeight(.regular)
                 

@@ -17,7 +17,7 @@ struct ModelErrorView: View {
             Text(errorMessage)
                 .styleText(
                     size: 13,
-                    color: .orange
+                    color: .orange500
                 )
                 .opacity(0.65)
         }

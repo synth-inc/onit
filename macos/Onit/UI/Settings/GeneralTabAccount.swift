@@ -86,10 +86,7 @@ extension GeneralTabAccount {
         ) {
             AnalyticsManager.AccountEvents.createAccountPressed()
             Defaults[.authFlowStatus] = .showSignUp
-            
-            if !PanelStateCoordinator.shared.state.panelOpened {
-                PanelStateCoordinator.shared.launchPanel()
-            }
+            handlePanelOpen()
         }
     }
     
@@ -99,12 +96,15 @@ extension GeneralTabAccount {
             action: {
                 AnalyticsManager.AccountEvents.signInPressed()
                 Defaults[.authFlowStatus] = .showSignIn
-                
-                if !PanelStateCoordinator.shared.state.panelOpened {
-                    PanelStateCoordinator.shared.launchPanel()
-                }
+                handlePanelOpen()
             }
         )
+    }
+    
+    static func handlePanelOpen() {
+        if !PanelStateCoordinator.shared.state.panelOpened {
+            PanelStateCoordinator.shared.launchPanel()
+        }
     }
     
     private var logoutButton: some View {

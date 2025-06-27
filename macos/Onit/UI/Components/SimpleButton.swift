@@ -49,12 +49,12 @@ struct SimpleButton: View {
     var body: some View {
         HStack(alignment: .center, spacing: spacing) {
             if loading {
-                ProgressView()
-                    .controlSize(.small)
+                Loader(size: 20)
             } else if let iconText = iconText {
                 Text(iconText).styleText(size: 12)
             } else if let iconSystem = iconSystem {
                 Image(systemName: iconSystem)
+                    .foregroundStyle(Color.primary)
             } else if let iconImage = iconImage {
                 Image(iconImage)
             }
