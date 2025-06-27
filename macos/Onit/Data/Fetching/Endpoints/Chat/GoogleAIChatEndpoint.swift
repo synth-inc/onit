@@ -17,7 +17,7 @@ struct GoogleAIChatEndpoint: Endpoint {
     let token: String?
     let includeSearch: Bool?
 
-    var path: String { "/v1beta/models/\(model):generateContent" }
+    var path: String { "/v1beta/models/\(model):generateContent?key=\(token ?? "")" }
     var getParams: [String: String]? { nil }
 
     var method: HTTPMethod { .post }
@@ -29,9 +29,7 @@ struct GoogleAIChatEndpoint: Endpoint {
         return GoogleAIChatRequest(model: model, messages: messages, tools: tools, stream: false, n: 1)
     }
 
-    var additionalHeaders: [String: String]? {
-        ["Authorization": "Bearer \(token ?? "")"]
-    }
+    var additionalHeaders: [String: String]? { [:] }
     var timeout: TimeInterval? { nil }
     
     func getContent(response: Response) -> String? {

@@ -17,7 +17,7 @@ struct GoogleAIChatStreamingEndpoint: StreamingEndpoint {
     let token: String?
     let includeSearch: Bool?
     
-    var path: String { "/v1beta/models/\(model):generateContent" }
+    var path: String { "/v1beta/models/\(model):generateContent?key=\(token ?? "")" }
     var getParams: [String: String]? { nil }
     var method: HTTPMethod { .post }
     var requestBody: GoogleAIChatRequest? {
@@ -28,9 +28,7 @@ struct GoogleAIChatStreamingEndpoint: StreamingEndpoint {
         return GoogleAIChatRequest(model: model, messages: messages, tools: tools, stream: true, n: 1)
     }
     
-    var additionalHeaders: [String: String]? {
-        ["Authorization": "Bearer \(token ?? "")"]
-    }
+    var additionalHeaders: [String: String]? { [:] }
     
     var timeout: TimeInterval? { nil }
     
@@ -45,6 +43,7 @@ struct GoogleAIChatStreamingEndpoint: StreamingEndpoint {
     }
     
     func getStreamingErrorMessage(data: Data) -> String? {
+        print(String(data: data, encoding: .utf8) ?? "")
         let response = try? JSONDecoder().decode(GoogleAIChatStreamingError.self, from: data)
         
         return response?.error.message
