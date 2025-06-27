@@ -36,19 +36,18 @@ struct WebSearchTab: View {
                     tavilySection
                 }
             }
-
-            Section {
-                VStack(alignment: .leading, spacing: 16) {
-                    localModeSection
-                }
-            } header: {
-                HStack {
-                    Image(systemName: "lock.shield")
-                    Text("Local Mode")
-                }
+            
+            SettingsSection(
+                iconSystem: "lock.shield",
+                title: "Local Mode"
+            ) {
+                localModeSection
             }
         }
         .formStyle(.grouped)
+        .onAppear {
+            openApiKeyDropdown = isTavilyAPITokenValidated
+        }
     }
     
 //  MARK: - Child Components
@@ -139,13 +138,18 @@ struct WebSearchTab: View {
                     VStack(alignment: .leading, spacing: 8) {
                         HStack {
                             Toggle("Cost Saving Mode", isOn: $tavilyCostSavingMode)
-                                .font(.system(size: 13))
+                                .styleText(
+                                    size: 13,
+                                    weight: .regular
+                                )
                         }
 
                         Text("When enabled, Onit will use your Tavily token to perform searches instead of Onit credits. By default, Onit uses model provider search tools when available for optimal quality.")
-                            .font(.system(size: 12))
-                            .foregroundStyle(.gray200)
-                            .fixedSize(horizontal: false, vertical: true)
+                            .styleText(
+                                size: 12,
+                                weight: .regular,
+                                color: Color.primary.opacity(0.65)
+                            )
                     }
                 }
             }
@@ -158,7 +162,8 @@ struct WebSearchTab: View {
             HStack {
                 Text("Tavily")
                     .styleText(
-                        size: 13
+                        size: 13,
+                        weight: .semibold
                     )
                 
                 Spacer()
@@ -175,13 +180,18 @@ struct WebSearchTab: View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
                 Toggle("Enable Web Search in Local Mode", isOn: $allowWebSearchInLocalMode)
-                    .font(.system(size: 13))
+                    .styleText(
+                        size: 13,
+                        weight: .semibold
+                    )
             }
 
             Text("When enabled, web search will be available in local mode. Please note that your queries will be sent to the search provider's servers, and we cannot guarantee that your data won't be stored or logged by the provider.")
-                .font(.system(size: 12))
-                .foregroundStyle(.gray200)
-                .fixedSize(horizontal: false, vertical: true)
+                .styleText(
+                    size: 13,
+                    weight: .regular,
+                    color: Color.primary.opacity(0.65)
+                )
         }
     }
     
