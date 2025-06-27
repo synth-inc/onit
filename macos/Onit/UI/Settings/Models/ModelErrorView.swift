@@ -11,11 +11,14 @@ struct ModelErrorView: View {
     var errorMessage: String
     
     var body: some View {
-        HStack(spacing: 8) {
+        HStack(spacing: 6) {
             Image(.warningSettings)
             
             Text(errorMessage)
-                .styleText(size: 12, weight: .regular)
+                .styleText(
+                    size: 13,
+                    color: .orange
+                )
                 .opacity(0.65)
         }
     }

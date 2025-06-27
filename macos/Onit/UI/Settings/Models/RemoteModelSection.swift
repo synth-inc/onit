@@ -95,7 +95,7 @@ struct RemoteModelSection: View {
             advancedSettings
             apiKeyDropdown
             
-            PromptDivider()
+            Divider()
                 .padding(.top, 8)
         }
         .onAppear {
@@ -165,28 +165,6 @@ struct RemoteModelSection: View {
         }
     }
     
-    @ViewBuilder
-    private var buttonOverlay: some View {
-        if loading {
-            ProgressView()
-                .controlSize(.small)
-        } else {
-            switch localState {
-            case .notValidated, .invalid:
-                Text("Verify →")
-            case .validating:
-                ProgressView()
-                    .controlSize(.small)
-            case .valid:
-                if validated {
-                    Text("Verified")
-                } else {
-                    Text("Verify →")
-                }
-            }
-        }
-    }
-    
     private var verifiedButton: some View {
         SimpleButton(
             text: "Verified",
@@ -202,15 +180,11 @@ struct RemoteModelSection: View {
         }
     }
     
-    private var disableVerifyButton: Bool {
-        loading || tokenValidationState.isValidating
-    }
-    
     private var verifyButton: some View {
         SimpleButton(
             text: loading ? "Verifying" : "Verify →",
             loading: loading,
-            disabled: disableVerifyButton,
+            disabled: loading || tokenValidationState.isValidating,
             background: .blue
         ) {
             Task {
@@ -219,7 +193,6 @@ struct RemoteModelSection: View {
                 tokenManager.tokenValidation.setNotValidated(provider: provider)
                 TokenValidationManager.setTokenIsValid(false, provider: provider)
                 await validate()
-                setValidated(isValid: true)
                 loading = false
             }
         }
@@ -254,9 +227,11 @@ struct RemoteModelSection: View {
                  to use \(provider.title) models at cost.
                 """
             ))
-            .foregroundStyle(.foreground.opacity(0.65))
-            .fontWeight(.regular)
-            .font(.system(size: 12))
+        .styleText(
+            size: 12,
+            weight: .regular,
+            color: Color.primary.opacity(0.65)
+        )
     }
     
     private var apiKeyDropdown: some View {
@@ -333,27 +308,6 @@ struct RemoteModelSection: View {
         case .custom:
             break
         }
-    }
-    
-    private func setValidated(isValid: Bool) {
-        switch provider {
-        case .openAI:
-            isOpenAITokenValidated = isValid
-        case .anthropic:
-            isAnthropicTokenValidated = isValid
-        case .xAI:
-            isXAITokenValidated = isValid
-        case .googleAI:
-            isGoogleAITokenValidated = isValid
-        case .deepSeek:
-            isDeepSeekTokenValidated = isValid
-        case .perplexity:
-            isPerplexityTokenValidated = isValid
-        case .custom:
-            break
-        }
-        
-        validated = isValid
     }
 
     private func checkValidated() {

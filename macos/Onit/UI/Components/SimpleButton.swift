@@ -11,6 +11,7 @@ struct SimpleButton: View {
     let text: String
     let loading: Bool
     let disabled: Bool
+    let spacing: CGFloat
     let textColor: Color
     let background: Color
     let iconText: String?
@@ -22,6 +23,7 @@ struct SimpleButton: View {
         text: String,
         loading: Bool = false,
         disabled: Bool = false,
+        spacing: CGFloat = 4,
         textColor: Color = Color.primary,
         background: Color = Color.gray400,
         iconText: String? = nil,
@@ -32,6 +34,7 @@ struct SimpleButton: View {
         self.text = text
         self.loading = loading
         self.disabled = disabled
+        self.spacing = spacing
         self.textColor = textColor
         self.background = background
         self.iconText = iconText
@@ -44,7 +47,7 @@ struct SimpleButton: View {
     @State private var isPressed: Bool = false
     
     var body: some View {
-        HStack(alignment: .center, spacing: 4) {
+        HStack(alignment: .center, spacing: spacing) {
             if loading {
                 ProgressView()
                     .controlSize(.small)

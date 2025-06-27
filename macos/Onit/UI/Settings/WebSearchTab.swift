@@ -27,7 +27,8 @@ struct WebSearchTab: View {
                     Text("Web search can enhance your AI responses with real-time information from the internet.")
                         .styleText(
                             size: 13,
-                            color: .gray200
+                            weight: .regular,
+                            color: Color.primary.opacity(0.65)
                         )
                     
                     Divider()
@@ -54,8 +55,10 @@ struct WebSearchTab: View {
     
     private func connectedStatus(connected: Bool) -> some View {
         Text(connected ? "Connected" : "Using Onit Server")
-            .font(.system(size: 12))
-            .foregroundStyle(connected ? .green : .blue)
+            .styleText(
+                size: 12,
+                color: connected ? .green : .blue
+            )
             .padding(.horizontal, 8)
             .padding(.vertical, 4)
             .background(connected ? Color.green.opacity(0.2) : Color.blue.opacity(0.2))
@@ -66,7 +69,8 @@ struct WebSearchTab: View {
         Text("Tavily is a powerful search API that provides real-time information from the web.")
             .styleText(
                 size: 13,
-                color: .gray200
+                weight: .regular,
+                color: Color.primary.opacity(0.65)
             )
     }
     
@@ -105,7 +109,10 @@ struct WebSearchTab: View {
                 HStack(alignment: .center, spacing: 8) {
                     SecureField("Enter API key:", text: $tavilyAPIToken)
                         .textFieldStyle(.roundedBorder)
-                        .styleText(size: 13, weight: .regular)
+                        .styleText(
+                            size: 13,
+                            weight: .regular
+                        )
                     
                     if isTavilyAPITokenValidated {
                         validatedButton
@@ -116,15 +123,14 @@ struct WebSearchTab: View {
                 }
                 
                 if let error = validationError {
-                    Text(error)
-                        .font(.system(size: 12))
-                        .foregroundStyle(.red)
+                    ModelErrorView(errorMessage: error)
                 }
                 
                 Text("You can put in [your Tavily API key](https://app.tavily.com) to use Tavily web search at cost.")
                     .styleText(
-                        size: 13,
-                        color: .gray200
+                        size: 12,
+                        weight: .regular,
+                        color: Color.primary.opacity(0.65)
                     )
                 
                 if isTavilyAPITokenValidated {
@@ -152,8 +158,7 @@ struct WebSearchTab: View {
             HStack {
                 Text("Tavily")
                     .styleText(
-                        size: 13,
-                        weight: .semibold
+                        size: 13
                     )
                 
                 Spacer()
