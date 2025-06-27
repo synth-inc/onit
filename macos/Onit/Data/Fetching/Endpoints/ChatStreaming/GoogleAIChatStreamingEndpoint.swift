@@ -45,7 +45,6 @@ struct GoogleAIChatStreamingEndpoint: StreamingEndpoint {
     }
     
     func getStreamingErrorMessage(data: Data) -> String? {
-        print(String(data: data, encoding: .utf8) ?? "")
         let response = try? JSONDecoder().decode(GoogleAIChatStreamingError.self, from: data)
         
         return response?.error.message
