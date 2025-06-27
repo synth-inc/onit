@@ -37,7 +37,8 @@ class OnitPanelState: NSObject {
     var isTyping: Bool = false
     private var isTypingDebounceTask: Task<Void, Never>? = nil
     
-    var highlightedText: Input? = nil
+    var currentHighlightedText: String? = nil
+    var manualAddHighlightedText: Input? = nil
     var selectedHighlightedText: Input? = nil
     
     /// ChatView visibility.
