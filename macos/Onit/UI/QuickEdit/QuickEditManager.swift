@@ -134,6 +134,19 @@ class QuickEditManager: ObservableObject, CaretPositionDelegate {
                     currentAppName = highlightedResult.appName
                     lastElement = highlightedResult.element
                     showHint(at: frame.origin, height: frame.height)
+                    
+                    #if DEBUG
+                    if Defaults[.quickEditConfig].shouldCaptureTrainingData {
+                        Task {
+                            await HighlightedTextBoundTrainingDataManager.shared.captureTrainingData(
+                                selectedText: highlightedResult.highlightedText,
+                                boundingBox: highlightedResult.highlightedTextFrame,
+                                appName: highlightedResult.appName,
+                                element: highlightedResult.element
+                            )
+                        }
+                    }
+                    #endif
                 } else {
                     log.error("QuickEdit disabled/paused for \(highlightedResult.appName)")
                     hideHint()

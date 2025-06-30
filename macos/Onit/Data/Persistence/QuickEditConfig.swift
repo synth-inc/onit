@@ -12,10 +12,12 @@ struct QuickEditConfig: Codable, Defaults.Serializable {
     var isEnabled: Bool
     var excludedApps: Set<String>
     var pausedApps: [String: Date]
+    var shouldCaptureTrainingData: Bool
     
     static let `default` = QuickEditConfig(
         isEnabled: true,
         excludedApps: [],
-        pausedApps: [:]
+        pausedApps: [:],
+        shouldCaptureTrainingData: true
     )
 }

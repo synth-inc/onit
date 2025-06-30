@@ -34,12 +34,16 @@ struct QuickEditTab: View {
             
             if config.isEnabled {
                 if !config.excludedApps.isEmpty {
-                    excludedApps
-                }
-                
-                if !config.pausedApps.isEmpty {
-                    pausedApps
-                }
+                	excludedApps
+            	}
+            
+				if !config.pausedApps.isEmpty {
+					pausedApps
+				}
+            
+            #if DEBUG
+            	trainingDataSection
+            #endif
             }
         }
         .formStyle(.grouped)
@@ -192,4 +196,20 @@ struct QuickEditTab: View {
             }
         }
     }
+    
+    #if DEBUG
+    private var trainingDataSection: some View {
+        Section {
+            HighlightedTextBoundTrainingDataReviewView()
+        } header: {
+            Text("Training Data")
+                .font(.system(size: 14))
+                .padding(.vertical, 2)
+            Text("Collect and review training data for model to automatically detect text bounds from screenshots.")
+                .font(.system(size: 12))
+                .foregroundStyle(.gray200)
+                .lineSpacing(2)
+        }
+    }
+    #endif
 }
