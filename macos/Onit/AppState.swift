@@ -110,9 +110,7 @@ class AppState: NSObject, SPUUpdaterDelegate {
         settingsTab = tab
     }
     
-    func openModelSettingsTab() {
-        @Environment(\.openSettings) var openSettings
-        
+    func openModelSettingsTab(_ openSettings: OpenSettingsAction) {
         NSApp.activate()
         if NSApp.isActive {
             self.setSettingsTab(tab: .models)

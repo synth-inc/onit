@@ -151,8 +151,8 @@ struct ContentView: View {
         .onAppear {
             // Prevents edge cases where incorrect state may have been set.
             // While this isn't likely, having an extra layer of security makes sure to keep the UX in-line with expectations.
+            checkCanAccessRemoteModels(appState.canAccessRemoteModels)
             checkShouldHideOrShowAuthFlow()
-            checkCanAccessRemoteModels()
             
             if !hasClosedTrialEndedAlert {
                 if let subscriptionStatus = appState.subscription?.status {
@@ -172,6 +172,7 @@ struct ContentView: View {
             }
         }
         .onChange(of: appState.userLoggedIn) { _, loggedIn in
+            // Handles showing AuthFlow when logging out.
             if loggedIn {
                 authFlowStatus = .hideAuth
             } else if !loggedIn && !userProvidedOwnModel {
@@ -179,6 +180,7 @@ struct ContentView: View {
             }
         }
         .onChange(of: userProvidedOwnModel) { _, providedOwnModel in
+            // Handles showing AuthFlow when removing local models or provider API keys.
             if providedOwnModel {
                 authFlowStatus = .hideAuth
             } else if !providedOwnModel && !appState.userLoggedIn {
@@ -186,12 +188,7 @@ struct ContentView: View {
             }
         }
         .onChange(of: appState.canAccessRemoteModels) { _, canAccessRemoteModels in
-            if !canAccessRemoteModels {
-                mode = .local
-                Defaults[.modelModeToggleShortcutDisabled] = true
-            } else {
-                Defaults[.modelModeToggleShortcutDisabled] = false
-            }
+            checkCanAccessRemoteModels(!canAccessRemoteModels)
         }
     }
     
@@ -205,8 +202,8 @@ struct ContentView: View {
         }
     }
     
-    private func checkCanAccessRemoteModels() {
-        if !appState.canAccessRemoteModels {
+    private func checkCanAccessRemoteModels(_ canAccessRemoteModels: Bool) {
+        if !canAccessRemoteModels {
             mode = .local
             Defaults[.modelModeToggleShortcutDisabled] = true
         } else {

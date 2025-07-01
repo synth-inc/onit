@@ -119,10 +119,7 @@ struct ModelSelectionView: View {
                 .padding(.horizontal, 8)
                 .fixedSize(horizontal: false, vertical: true)
             
-            TextButton(
-                fillContainer: false,
-                background: .gray800
-            ) {
+            TextButton(fillContainer: false) {
                 HStack(alignment: .center, spacing: 10) {
                     Image(systemName: "cpu")
                     
@@ -131,7 +128,7 @@ struct ModelSelectionView: View {
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
             } action: {
-                appState.openModelSettingsTab()
+                openModelSettings()
             }
         }
         .padding([.horizontal, .bottom], 8)
@@ -255,13 +252,8 @@ extension ModelSelectionView {
     }
     
     private func openModelSettings() {
-        NSApp.activate()
-        
-        if NSApp.isActive {
-            appState.setSettingsTab(tab: .models)
-            openSettings()
-            OverlayManager.shared.dismissOverlay()
-        }
+        appState.openModelSettingsTab(openSettings)
+        OverlayManager.shared.dismissOverlay()
     }
     
     private func isSelectedLocalModel(modelName: String) -> Bool {

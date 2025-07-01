@@ -188,7 +188,7 @@ extension AuthFlow {
                 )
             
             Button {
-                appState.openModelSettingsTab()
+                appState.openModelSettingsTab(openSettings)
             } label: {
                 Text("Add it here to access Onit.")
                     .styleText(
