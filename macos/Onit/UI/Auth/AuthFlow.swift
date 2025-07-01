@@ -13,7 +13,9 @@ import SwiftUI
 
 struct AuthFlow: View {
     @Environment(\.appState) var appState
+    @Environment(\.openSettings) var openSettings
     
+    @Default(.availableLocalModels) var availableLocalModels
     @Default(.authFlowStatus) var authFlowStatus
     
     @Default(.useOpenAI) var useOpenAI
@@ -33,6 +35,8 @@ struct AuthFlow: View {
     @State private var isHoveredBackButton: Bool = false
     @State private var isPressedBackButton: Bool = false
     
+    @State private var isHoveredAddModelButton: Bool = false
+    
     @State private var email: String = ""
     @State private var requestedEmailLogin: Bool = false
     
@@ -43,14 +47,33 @@ struct AuthFlow: View {
         return authFlowStatus == .showSignUp
     }
     
+    private var userProvidedOwnModel: Bool {
+        let hasLocalModel: Bool = !availableLocalModels.isEmpty
+        return hasLocalModel || appState.hasUserAPITokens
+    }
+    
+    private var showCloseButton: Bool {
+        userProvidedOwnModel || appState.userLoggedIn
+    }
+    
     var body: some View {
         VStack(alignment: .center, spacing: 42) {
             if requestedEmailLogin {
                 emailAuthTokenForm
             } else {
                 form
+                
                 redirectSection
+                
+                if !userProvidedOwnModel {
+                    addModelSection
+                }
+                
                 Spacer()
+                
+                if showCloseButton {
+                    closeButton
+                }
             }
         }
         .onAppear {
@@ -154,19 +177,29 @@ extension AuthFlow {
         }
     }
     
-    private var signUpRedirect: some View {
-        VStack(alignment: .center, spacing: 12) {
-            redirectSection
+    private var addModelSection: some View {
+        VStack(alignment: .center, spacing: 4) {
+            Text("Have your own API key or local model?")
+                .styleText(
+                    size: 13,
+                    weight: .regular,
+                    color: .gray100,
+                    align: .center
+                )
             
             Button {
-                authFlowStatus = .hideAuth
+                appState.openModelSettingsTab()
             } label: {
-                Text(generateSkipText())
-                    .styleText(size: 13, weight: .regular, underline: isHoveredSkipButton)
-            }
-            .buttonStyle(PlainButtonStyle())
-            .onHover { isHovering in
-                isHoveredSkipButton = isHovering
+                Text("Add it here to access Onit.")
+                    .styleText(
+                        size: 13,
+                        weight: .regular,
+                        align: .center,
+                        underline: isHoveredAddModelButton
+                    )
+                    .onHover { isHovering in
+                        isHoveredAddModelButton = isHovering
+                    }
             }
         }
     }
@@ -237,6 +270,21 @@ extension AuthFlow {
         }
         .padding(.bottom, 53)
     }
+    
+    private var closeButton: some View {
+        TextButton(
+            height: 40,
+            background: .gray800
+        ) {
+            Text("Close")
+                .frame(maxWidth: .infinity, alignment: .center)
+                .styleText()
+        } action: {
+            authFlowStatus = .hideAuth
+        }
+        .padding([.top, .horizontal], 40)
+        .padding(.bottom, 53)
+    }
 }
 
 
@@ -268,20 +316,6 @@ extension AuthFlow {
         return agreementText
     }
     
-    private func generateSkipText() -> AttributedString {
-        var skipText = AttributedString("")
-        
-        var orText = AttributedString("or, ")
-        orText.foregroundColor = .gray100
-        skipText.append(orText)
-        
-        var mainText = AttributedString("skip account creation & use own APIs →")
-        mainText.foregroundColor = Color.primary
-        skipText.append(mainText)
-        
-        return skipText
-    }
-    
     @MainActor
     private func handleLogin(loginResponse: LoginResponse) {
         TokenManager.token = loginResponse.token
@@ -296,8 +330,6 @@ extension AuthFlow {
             useDeepSeek = true
             usePerplexity = true
         }
-        
-        authFlowStatus = .hideAuth
     }
 }
 

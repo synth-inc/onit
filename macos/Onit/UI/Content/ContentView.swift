@@ -15,11 +15,13 @@ struct ContentView: View {
     @ObservedObject private var accessibilityPermissionManager = AccessibilityPermissionManager.shared
     @Namespace private var animation
     
+    @Default(.mode) var mode
     @Default(.panelWidth) var panelWidth
     @Default(.authFlowStatus) var authFlowStatus
     @Default(.showOnboardingAccessibility) var showOnboardingAccessibility
     @Default(.showTwoWeekProTrialEndedAlert) var showTwoWeekProTrialEndedAlert
     @Default(.hasClosedTrialEndedAlert) var hasClosedTrialEndedAlert
+    @Default(.availableLocalModels) var availableLocalModels
     
     static let bottomPadding: CGFloat = 0
     
@@ -28,8 +30,17 @@ struct ContentView: View {
         return accessibilityNotGranted && showOnboardingAccessibility
     }
     
+    private var userProvidedOwnModel: Bool {
+        let hasLocalModel: Bool = !availableLocalModels.isEmpty
+        return hasLocalModel || appState.hasUserAPITokens
+    }
+    
+    private var showAuthFlow: Bool {
+        authFlowStatus != .hideAuth
+    }
+    
     private var showToolbar: Bool {
-        !shouldShowOnboardingAccessibility && appState.account != nil
+        !shouldShowOnboardingAccessibility && !showAuthFlow
     }
     
     private var showFileImporterBinding: Binding<Bool> {
@@ -75,14 +86,7 @@ struct ContentView: View {
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .background(Color.black)
-                .onAppear {
-                    if appState.account == nil {
-                        authFlowStatus = .showSignUp
-                    } else {
-                        authFlowStatus = .hideAuth
-                    }
-                }
-            } else if appState.account == nil {
+            } else if showAuthFlow {
                 AuthFlow()
             } else {
                 ZStack {
@@ -145,6 +149,11 @@ struct ContentView: View {
         }
         .addAnimation(dependency: state.showChatView)
         .onAppear {
+            // Prevents edge cases where incorrect state may have been set.
+            // While this isn't likely, having an extra layer of security makes sure to keep the UX in-line with expectations.
+            checkShouldHideOrShowAuthFlow()
+            checkCanAccessRemoteModels()
+            
             if !hasClosedTrialEndedAlert {
                 if let subscriptionStatus = appState.subscription?.status {
                     if subscriptionStatus == "active" {
@@ -161,6 +170,47 @@ struct ContentView: View {
                     }
                 }
             }
+        }
+        .onChange(of: appState.userLoggedIn) { _, loggedIn in
+            if loggedIn {
+                authFlowStatus = .hideAuth
+            } else if !loggedIn && !userProvidedOwnModel {
+                authFlowStatus = .showSignUp
+            }
+        }
+        .onChange(of: userProvidedOwnModel) { _, providedOwnModel in
+            if providedOwnModel {
+                authFlowStatus = .hideAuth
+            } else if !providedOwnModel && !appState.userLoggedIn {
+                authFlowStatus = .showSignUp
+            }
+        }
+        .onChange(of: appState.canAccessRemoteModels) { _, canAccessRemoteModels in
+            if !canAccessRemoteModels {
+                mode = .local
+                Defaults[.modelModeToggleShortcutDisabled] = true
+            } else {
+                Defaults[.modelModeToggleShortcutDisabled] = false
+            }
+        }
+    }
+    
+    private func checkShouldHideOrShowAuthFlow() {
+        if appState.userLoggedIn {
+            authFlowStatus = .hideAuth
+        } else if userProvidedOwnModel {
+            authFlowStatus = .hideAuth
+        } else {
+            authFlowStatus = .showSignUp
+        }
+    }
+    
+    private func checkCanAccessRemoteModels() {
+        if !appState.canAccessRemoteModels {
+            mode = .local
+            Defaults[.modelModeToggleShortcutDisabled] = true
+        } else {
+            Defaults[.modelModeToggleShortcutDisabled] = false
         }
     }
     

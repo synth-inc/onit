@@ -109,7 +109,9 @@ struct KeyboardShortcutsManager {
                 case .newChat:
                     state.newChat()
                 case .toggleLocalMode:
-                    Defaults[.mode] = Defaults[.mode] == .local ? .remote : .local
+                    if !Defaults[.modelModeToggleShortcutDisabled] {
+                        Defaults[.mode] = Defaults[.mode] == .local ? .remote : .local
+                    }
                 default:
                     print("KeyboardShortcut not handled: \(name)")
                 }

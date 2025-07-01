@@ -92,15 +92,49 @@ struct ModelSelectionView: View {
         return MenuSection(
             title: "Remote",
             showTopBorder: true,
-            maxScrollHeight: setModelListHeight(
-                listCount: CGFloat(filteredRemoteModels.count)
-            ),
+            maxScrollHeight:
+                !appState.canAccessRemoteModels ? nil :
+                setModelListHeight(
+                    listCount: CGFloat(filteredRemoteModels.count)
+                ),
             contentRightPadding: 0,
             contentBottomPadding: 0,
             contentLeftPadding: 0
         ) {
-            remoteModelsView
+            if !appState.canAccessRemoteModels {
+                addApiKeyCTA
+            } else {
+                remoteModelsView
+            }
         }
+    }
+    
+    var addApiKeyCTA: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("Sign up, log in, or add your own API key to access remote models.")
+                .styleText(
+                    weight: .regular,
+                    color: .gray200
+                )
+                .padding(.horizontal, 8)
+                .fixedSize(horizontal: false, vertical: true)
+            
+            TextButton(
+                fillContainer: false,
+                background: .gray800
+            ) {
+                HStack(alignment: .center, spacing: 10) {
+                    Image(systemName: "cpu")
+                    
+                    Text("Add Model API Key")
+                        .styleText()
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+            } action: {
+                appState.openModelSettingsTab()
+            }
+        }
+        .padding([.horizontal, .bottom], 8)
     }
     
     var remoteModelsView: some View {
@@ -113,8 +147,7 @@ struct ModelSelectionView: View {
                 )
             }
         }
-        .padding(.horizontal, 8)
-        .padding(.bottom, 8)
+        .padding([.horizontal, .bottom], 8)
     }
 
     var local: some View {

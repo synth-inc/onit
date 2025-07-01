@@ -95,9 +95,7 @@ extension RemoteModelButton {
     
     private func checkPlanLimitReached() async {
         do {
-            let userLoggedIn = appState.account != nil
-            
-            if userLoggedIn {
+            if appState.userLoggedIn {
                 let client = FetchingClient()
                 let chatUsageResponse = try await client.getChatUsage()
                 
