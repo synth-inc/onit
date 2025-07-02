@@ -66,7 +66,6 @@ struct TetheredButton: View {
                     .rotationEffect(arrowRotation)
                     .frame(width: Self.width, height: Self.height, alignment: .center)
             }
-            
             .background {
                 RoundedRectangle(cornerRadius: Self.width / 2)
                     .fill(.black)

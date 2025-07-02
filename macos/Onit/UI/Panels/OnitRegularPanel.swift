@@ -67,7 +67,49 @@ class OnitRegularPanel: NSPanel {
             .environment(\.windowState, state)
             .padding(.leading, TetheredButton.width / 2)
         
-        let hostingView = NSHostingView(rootView: contentView)
+        // Create a combined view with ContentView, TetheredButton, and ResizeHandle
+        let combinedView = ZStack(alignment: .leading) {
+            contentView
+                .onAppear {
+                    print("🔴 ContentView: appeared")
+                }
+            
+            // Add TetheredButton on the left side
+            TetheredButton()
+                .modelContainer(state.container)
+                .environment(\.windowState, state)
+                .frame(width: TetheredButton.width, height: frame.height, alignment: .leading)
+                .onAppear {
+                    print("🔴 TetheredButton: appeared")
+                }
+            
+            // Resize handle positioned at the left edge of the content area
+            ResizeHandle(
+                onDrag: { [weak self] deltaX in
+                    guard let self = self else { return }
+                    self.isResizing = true
+                    if self.originalFrame == .zero {
+                        self.originalFrame = NSRect(origin: frame.origin, size: frame.size)
+                    }
+                    self.resizePanel(byWidth: deltaX)
+                },
+                onDragEnded: { [weak self] in
+                    guard let self = self else { return }
+                    Defaults[.panelWidth] = self.width
+                    self.panelResizeEnded(originalPanelWidth: self.originalFrame.width)
+                    self.originalFrame = .zero
+                    self.isResizing = false
+                }
+            )
+            .padding(.leading, TetheredButton.width / 2)
+            .padding(.top, 4) // TIM -  For some reason, there is a 28px minY on this element. To make it align with the bottom of the toolbar, we add 4px.
+            .frame(width: (TetheredButton.width / 2) + 6, height: .infinity)
+        }
+        .onAppear {
+            print("🔴 ZStack: appeared")
+        }
+        
+        let hostingView = NSHostingView(rootView: combinedView)
         hostingView.wantsLayer = true
         hostingView.layer?.cornerRadius = 14
         hostingView.layer?.cornerCurve = .continuous
@@ -77,50 +119,7 @@ class OnitRegularPanel: NSPanel {
         self.contentView = hostingView
         self.contentView?.setFrameOrigin(NSPoint(x: 0, y: 0))
         
-        let resizeOverlay = NSHostingView(rootView: 
-            ZStack(alignment: .bottomLeading) {
-                Color.clear // Transparent background
-                
-                ResizeHandle(
-                    onDrag: { [weak self] deltaX in
-                        guard let self = self else { return }
-                        self.isResizing = true
-                        if self.originalFrame == .zero {
-                            self.originalFrame = NSRect(origin: frame.origin, size: frame.size)
-                            }
-                        self.resizePanel(byWidth: deltaX)
-                    },
-                    onDragEnded: { [weak self] in
-                        guard let self = self else { return }
-                        Defaults[.panelWidth] = self.width
-                        self.panelResizeEnded(originalPanelWidth: self.originalFrame.width)
-                        self.originalFrame = .zero
-                        self.isResizing = false
-                    }
-                )
-            }
-            .allowsHitTesting(true)
-            .contentShape(Rectangle())
-        )
-        resizeOverlay.wantsLayer = true
-        resizeOverlay.layer?.backgroundColor = CGColor.clear
         
-        // The target for dragging is be the entire height, and 6px wide, starting at TetheredButton.width/ 2 to leave room for the TetheredButton. 
-        resizeOverlay.frame = NSRect(x: TetheredButton.width / 2, y: 0, width: 6, height: frame.height)
-        hostingView.addSubview(resizeOverlay)
-        resizeOverlay.autoresizingMask = [.maxXMargin, .height]
-
-        // Create a separate hosting view for the TetheredButton
-        let tetheredButtonView = NSHostingView(rootView: 
-            TetheredButton()
-                .modelContainer(state.container)
-                .environment(\.windowState, state)
-        )
-        tetheredButtonView.wantsLayer = true
-        tetheredButtonView.frame = NSRect(x: 0, y: 0, width: TetheredButton.width, height: frame.height)
-        hostingView.addSubview(tetheredButtonView)
-        tetheredButtonView.autoresizingMask = [.maxXMargin, .height]
-
         if PanelStateCoordinator.shared.isPanelMovable {
             NotificationCenter.default.addObserver(
                 self,
