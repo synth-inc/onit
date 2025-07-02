@@ -23,6 +23,8 @@ struct ContextTag: View {
     private let iconView: (any View)?
     private let caption: String?
     private let tooltip: String?
+    private let popoverText: String?
+    private let popoverTextColor: Color?
     private let errorDotColor: Color?
     private let action: (() -> Void)?
     private let removeAction: (() -> Void)?
@@ -43,6 +45,8 @@ struct ContextTag: View {
         iconView: (any View)? = nil,
         caption: String? = nil,
         tooltip: String? = nil,
+        popoverText: String? = nil,
+        popoverTextColor: Color? = nil,
         errorDotColor: Color? = nil,
         action: (() -> Void)? = nil,
         removeAction: (() -> Void)? = nil
@@ -62,6 +66,8 @@ struct ContextTag: View {
         self.iconView = iconView
         self.caption = caption
         self.tooltip = tooltip
+        self.popoverText = popoverText
+        self.popoverTextColor = popoverTextColor
         self.errorDotColor = errorDotColor
         self.action = action
         self.removeAction = removeAction
@@ -70,6 +76,7 @@ struct ContextTag: View {
     @State private var isHoveredBody: Bool = false
     @State private var isPressedBody: Bool = false
     @State private var isHoveredRemove: Bool = false
+    @State private var isPopoverOpen: Bool = false
     
     private let height: CGFloat = 24
     
@@ -167,8 +174,11 @@ struct ContextTag: View {
             shouldFadeOnClick: false,
             isHovered: $isHoveredBody,
             isPressed: $isPressedBody,
-            action: action
+            action: popoverText != nil ? togglePopover : action
         )
+        .popover(isPresented: $isPopoverOpen) {
+            popoverTextScrollView
+        }
     }
 }
 
@@ -200,5 +210,28 @@ extension ContextTag {
         .onHover { isHovering in
             isHoveredRemove = isHovering
         }
+    }
+    
+    @ViewBuilder
+    private var popoverTextScrollView: some View {
+        if let text = popoverText {
+            DynamicScrollView(maxHeight: 200) {
+                Text(text)
+                    .padding(12)
+                    .frame(width: 300)
+                    .styleText(
+                        weight: .regular,
+                        color: popoverTextColor ?? Color.primary
+                    )
+            }
+        }
+    }
+}
+
+// MARK: - Private Functions
+
+extension ContextTag {
+    private func togglePopover() {
+        isPopoverOpen.toggle()
     }
 }
