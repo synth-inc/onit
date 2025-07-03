@@ -114,6 +114,8 @@ extension Defaults.Keys {
     static let lineHeight = Key<Double>("lineHeight", default: 1.5)
     static let voiceSilenceThreshold = Key<Float>("voiceSilenceThreshold", default: -40)
     static let voiceSpeechPassThreshold = Key<Double>("voiceSpeechPassThreshold", default: 0.7)
+        /// EXPERIMENTAL SETTINGS
+    static let experimentalHintEnabled = Key<Bool>("experimentalHintEnabled", default: false)
 
     // Local model advanced options
     static let localKeepAlive = Key<String?>("localKeepAlive", default: nil)
@@ -132,6 +134,11 @@ extension Defaults.Keys {
     // Onboarding
     static let showOnboardingAccessibility = Key<Bool>("showOnboardingAccessibility", default: true)
     static let authFlowStatus = Key<AuthFlowStatus>("authFlowStatus", default: .hideAuth)
+    
+    // Tethered Button Menu
+    static let tetheredButtonHiddenApps = Key<[String: Bool]>("tetheredButtonHiddenApps", default: [:])
+    static let tetheredButtonHideAllApps = Key<Bool>("tetheredButtonHideAllApps", default: false)
+    static let tetheredButtonHideAllAppsTimerDate = Key<Date?>("tetheredButtonHideAllAppsTimerDate", default: nil)
     
     // Alerts
     static let showTwoWeekProTrialEndedAlert = Key<Bool>("showTwoWeekProTrialEndedAlert", default: false)
