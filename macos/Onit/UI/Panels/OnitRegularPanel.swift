@@ -70,18 +70,13 @@ class OnitRegularPanel: NSPanel {
         // Create a combined view with ContentView, TetheredButton, and ResizeHandle
         let combinedView = ZStack(alignment: .leading) {
             contentView
-                .onAppear {
-                    print("🔴 ContentView: appeared")
-                }
             
             // Add TetheredButton on the left side
             TetheredButton()
                 .modelContainer(state.container)
                 .environment(\.windowState, state)
-                .frame(width: TetheredButton.width, height: frame.height, alignment: .leading)
-                .onAppear {
-                    print("🔴 TetheredButton: appeared")
-                }
+                .frame(width: TetheredButton.width, alignment: .leading)
+                .frame(maxHeight: .infinity)
             
             // Resize handle positioned at the left edge of the content area
             ResizeHandle(
@@ -103,10 +98,8 @@ class OnitRegularPanel: NSPanel {
             )
             .padding(.leading, TetheredButton.width / 2)
             .padding(.top, 4) // TIM -  For some reason, there is a 28px minY on this element. To make it align with the bottom of the toolbar, we add 4px.
-            .frame(width: (TetheredButton.width / 2) + 6, height: .infinity)
-        }
-        .onAppear {
-            print("🔴 ZStack: appeared")
+            .frame(width: (TetheredButton.width / 2) + 6)
+            .frame(maxHeight: .infinity)
         }
         
         let hostingView = OnitHostingView(rootView: combinedView)

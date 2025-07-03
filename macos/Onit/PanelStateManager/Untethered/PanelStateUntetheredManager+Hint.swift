@@ -90,7 +90,7 @@ extension PanelStateUntetheredManager {
     
     private func computeHintYPosition(for screenVisibleFrame: CGRect, offset: CGFloat?) -> CGFloat {
         let maxY = screenVisibleFrame.maxY - ExternalTetheredButton.containerHeight
-        let minY = screenVisibleFrame.minY
+        let minY = screenVisibleFrame.minY + 10
 
         var lastYComputed = tetherHintDetails.lastYComputed ?? screenVisibleFrame.minY + (screenVisibleFrame.height / 2) - (ExternalTetheredButton.containerHeight / 2)
 
