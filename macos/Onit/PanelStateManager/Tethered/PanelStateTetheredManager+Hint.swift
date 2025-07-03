@@ -39,7 +39,7 @@ extension PanelStateTetheredManager {
             }
         ).environment(\.windowState, state)
         
-        let buttonView = NSHostingView(rootView: tetherView)
+        let buttonView = OnitHostingView(rootView: tetherView)
         tetherHintDetails.tetherWindow.contentView = buttonView
         tetherButtonPanelState = state
 
@@ -155,7 +155,7 @@ extension PanelStateTetheredManager {
     
     private func computeTetheredWindowY(windowFrame: NSRect, offset: CGFloat?) -> CGFloat {
         let maxY = windowFrame.maxY - ExternalTetheredButton.containerHeight
-        let minY = windowFrame.minY
+        let minY = windowFrame.minY + 10
 
         var lastYComputed = tetherHintDetails.lastYComputed ?? windowFrame.minY + (windowFrame.height / 2) - (ExternalTetheredButton.containerHeight / 2)
 

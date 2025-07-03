@@ -47,12 +47,12 @@ struct ExternalTetheredButtonStyle: ButtonStyle {
                     clickBackground(configuration.isPressed)
                 }
                 .background {
-                    RoundedLeftCorners(radius: ExternalTetheredButton.width * 0.66)
+                    RoundedCorners(radius: ExternalTetheredButton.width * 0.66, corners: .left)
                         .fill(hovering ? .gray800 : .black)
                         .padding([.leading, .top, .bottom], containsInput ? ExternalTetheredButton.borderWidth : 0)
                 }
                 .overlay {
-                    RoundedLeftCorners(radius: (ExternalTetheredButton.width + 2) * 0.66)
+                    RoundedCorners(radius: (ExternalTetheredButton.width + 2) * 0.66, corners: .left)
                         .stroke(Color.gray500, lineWidth: 1)
                 }
         }
@@ -82,7 +82,7 @@ struct ExternalTetheredButtonStyle: ButtonStyle {
                 .rotationEffect(.degrees(rotationState.rotation))
         }
         .mask {
-            RoundedLeftCorners(radius: (ExternalTetheredButton.width + (ExternalTetheredButton.borderWidth * 2))  * 0.66)
+            RoundedCorners(radius: (ExternalTetheredButton.width + (ExternalTetheredButton.borderWidth * 2))  * 0.66, corners: .left)
                 .frame(width: ExternalTetheredButton.width + (ExternalTetheredButton.borderWidth * 2),
                        height: ExternalTetheredButton.height + (ExternalTetheredButton.borderWidth * 2))
         }
@@ -99,7 +99,7 @@ struct ExternalTetheredButtonStyle: ButtonStyle {
     
     @ViewBuilder
     private func clickBackground(_ clicked: Bool) -> some View {
-        RoundedLeftCorners(radius: (ExternalTetheredButton.width * 1.3) * 0.66)
+        RoundedCorners(radius: (ExternalTetheredButton.width * 1.3) * 0.66, corners: .left)
             .fill(.gray900)
             .opacity(clicked ? 1 : 0)
     }

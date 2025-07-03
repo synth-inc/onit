@@ -25,6 +25,7 @@ struct NonDraggableNSView: NSViewRepresentable {
 struct ResizeHandle: View {
     var onDrag: (CGFloat) -> Void
     var onDragEnded: (() -> Void)?
+    @State private var isHovered = false
     
     var body: some View {
         ZStack {
@@ -33,6 +34,12 @@ struct ResizeHandle: View {
                 .allowsHitTesting(true)
                 .background(Color.clear)
         }
+        .background(
+            RoundedCorners(radius: 14, corners: .bottomLeft)
+                .fill(Color.white)
+                .opacity(isHovered ? 0.2 : 0)
+        )
+        .clipped()
         .highPriorityGesture(
             DragGesture(minimumDistance: 1, coordinateSpace: .local)
                 .onChanged { value in
@@ -44,6 +51,9 @@ struct ResizeHandle: View {
         )
         .contentShape(Rectangle()) // Ensure the entire area is tappable
         .allowsHitTesting(true) // Make sure the view intercepts all events
+        .onHover { hovering in
+            isHovered = hovering
+        }
     }
 }
 
