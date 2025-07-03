@@ -15,6 +15,7 @@ struct GeneralTab: View {
     @Default(.usePinnedMode) var usePinnedMode
     @Default(.autoContextOnLaunchTethered) var autoContextOnLaunchTethered
     @Default(.stopMode) var stopMode
+    @Default(.experimentalHintEnabled) var experimentalHintEnabled
     
     @State var isLaunchAtStartupEnabled: Bool = SMAppService.mainApp.status == .enabled
     @State var isAnalyticsEnabled: Bool = PostHogSDK.shared.isOptOut() == false
@@ -47,6 +48,32 @@ struct GeneralTab: View {
             appearanceSection
             
             GeneralTabVoice()
+            
+            SettingsSection(
+                iconSystem: "scissors",
+                title: "Experimental"
+            ) {
+                VStack(alignment: .leading, spacing: 4) {
+                    HStack {
+                        Text("New Hint Experience")
+                            .font(.system(size: 13))
+
+                        Spacer()
+
+                        Toggle("", isOn: $experimentalHintEnabled)
+                            .toggleStyle(.switch)
+                            .controlSize(.small)
+
+                        SettingInfoButton(
+                            title: "New Hint Experience",
+                            description:
+                                "When enabled, the Onit hint button will react to foreground window updates, making window contexts more predictable.",
+                            defaultValue: "off",
+                            valueType: "Bool"
+                        )
+                    }
+                }
+            }
             
             // experimentalSection
         }
