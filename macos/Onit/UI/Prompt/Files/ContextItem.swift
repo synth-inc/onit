@@ -29,8 +29,8 @@ struct ContextItem: View {
             case .auto(let autoContext):
                 tagButton(
                     text: name,
-                    iconBundleURL: autoContext.appBundleUrl,
                     tooltip: isEditing ? (hasError ? errorMessage : name) : "View auto-context file",
+                    iconBundleURL: autoContext.appBundleUrl,
                     errorDotColor: hasError ? .red : nil,
                     action: showContextWindow,
                     removeAction: isEditing ? { removeContextItem() } : nil   
@@ -127,6 +127,7 @@ extension ContextItem {
         indicatorOffset: CGFloat = 0,
         iconBundleURL: URL? = nil,
         iconView: (any View)? = nil,
+        errorDotColor: Color? = nil,
         action: @escaping () -> Void,
         pinAction: (() -> Void)? = nil,
         removeAction: (() -> Void)? = nil
@@ -142,6 +143,7 @@ extension ContextItem {
             iconBundleURL: iconBundleURL,
             iconView: iconView,
             tooltip: tooltip,
+            errorDotColor: errorDotColor,
             action: action,
             pinAction: pinAction,
             removeAction: removeAction
