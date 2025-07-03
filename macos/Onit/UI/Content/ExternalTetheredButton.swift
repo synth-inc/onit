@@ -33,7 +33,6 @@ struct ExternalTetheredButton: View {
     // MARK: - State
     
     @State private var isHoveringButton: Bool = false
-    @State private var isHoveringMenu: Bool = false
     @State private var isPressed: Bool = false
     @State private var isDragging: Bool = false
     @State private var dragStartTime: Date? = nil
@@ -171,11 +170,6 @@ struct ExternalTetheredButton: View {
             alignment: .trailing
         )
         .offset(x: 1)
-        .onChange(of: isHoveringMenu) { _, hoveringMenu in
-            if !hoveringMenu {
-                showRightClickMenu = false
-            }
-        }
     }
 }
 
@@ -237,9 +231,6 @@ extension ExternalTetheredButton {
         }
         .padding(8)
         .background(.gray900)
-        .onHover { hovering in
-            isHoveringMenu = hovering
-        }
     }
 }
 
