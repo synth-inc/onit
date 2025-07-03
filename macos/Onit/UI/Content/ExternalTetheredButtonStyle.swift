@@ -28,6 +28,8 @@ struct ExternalTetheredButtonStyle: ButtonStyle {
     @Binding var dragStartTime: Date?
     @Binding var isHovering: Bool
     
+    var capturedHighlightedText: Bool
+    
     var buttonWidth = ExternalTetheredButton.width
     var buttonHeight = ExternalTetheredButton.height
     var buttonBorderWidth = ExternalTetheredButton.borderWidth
@@ -46,6 +48,11 @@ struct ExternalTetheredButtonStyle: ButtonStyle {
     
     func makeBody(configuration: Configuration) -> some View {
         ZStack {
+            if capturedHighlightedText {
+                highlightedTextGlow
+                    .matchedGeometryEffect(id: "background", in: animation)
+                    .transition(.opacity.animation(.easeInOut(duration: 0.3)))
+            }
             
             configuration.label
                 .background {
@@ -53,12 +60,12 @@ struct ExternalTetheredButtonStyle: ButtonStyle {
                 }
                 .background {
                     RoundedCorners(radius: buttonCornerRadius, corners: .left)
-                        .fill(isHovering ? .gray800 : .black.opacity(0.7))
+                        .fill(.gray800)
                 }
                 .overlay {
                     RoundedCorners(radius: buttonCornerRadius, corners: .left)
                         .stroke(
-                            isHovering ? Color.gray500 : .clear,
+                            isHovering ? .gray300 : .gray600,
                             lineWidth: buttonBorderWidth
                         )
                 }
@@ -84,6 +91,43 @@ struct ExternalTetheredButtonStyle: ButtonStyle {
             ),
             value: isHovering
         )
+    }
+    
+    private var highlightedTextGlow: some View {
+        HStack {
+            Rectangle()
+                .fill(
+                    AngularGradient(gradient: Gradient(colors: [
+                        Color(red: 0.78, green: 0.76, blue: 0.93),
+                        Color(red: 0.5, green: 0.45, blue: 0.83),
+                        Color(red: 0.43, green: 0.42, blue: 0.99)
+                    ]), center: .center)
+                )
+                .frame(
+                    width: buttonHeight,
+                    height: buttonHeight
+                )
+                .rotationEffect(.degrees(rotationState.rotation))
+        }
+        .mask {
+            RoundedLeftCorners(radius: (buttonWidth + (buttonBorderWidth * 2))  * 0.66)
+                .frame(
+                    width: buttonWidth + (buttonBorderWidth * 2),
+                    height: buttonHeight + (buttonBorderWidth * 2)
+                )
+        }
+        .blur(radius: 2)
+        .frame(width: buttonWidth + (buttonBorderWidth * 2))
+        .onAppear {
+            rotationState.ensureAnimationStarted()
+            
+            withAnimation(
+                .linear(duration: 5)
+                .repeatForever(autoreverses: false)
+            ) {
+                rotationState.rotation += 360
+            }
+        }
     }
     
     @ViewBuilder

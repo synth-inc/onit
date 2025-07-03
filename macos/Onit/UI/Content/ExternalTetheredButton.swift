@@ -21,7 +21,7 @@ struct ExternalTetheredButton: View {
     
     // MARK: - Initializers
 
-    static let width: CGFloat = 40
+    static let width: CGFloat = 33
     static let height: CGFloat = 40
     static let containerWidth: CGFloat = width * 2
     static let containerHeight: CGFloat = height * 2
@@ -144,6 +144,7 @@ struct ExternalTetheredButton: View {
                 ExternalTetheredButtonStyle(
                     dragStartTime: $dragStartTime,
                     isHovering: $isHoveringButton,
+                    capturedHighlightedText: capturedHighlightedText,
                     tooltipText: fitActiveWindowPrompt
                 )
             )
