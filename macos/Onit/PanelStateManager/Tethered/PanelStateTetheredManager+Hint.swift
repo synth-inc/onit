@@ -39,7 +39,7 @@ extension PanelStateTetheredManager {
             }
         ).environment(\.windowState, state)
         
-        let buttonView = NSHostingView(rootView: tetherView)
+        let buttonView = OnitHostingView(rootView: tetherView)
         tetherHintDetails.tetherWindow.contentView = buttonView
         tetherButtonPanelState = state
 

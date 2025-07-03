@@ -109,7 +109,7 @@ class OnitRegularPanel: NSPanel {
             print("🔴 ZStack: appeared")
         }
         
-        let hostingView = NSHostingView(rootView: combinedView)
+        let hostingView = OnitHostingView(rootView: combinedView)
         hostingView.wantsLayer = true
         hostingView.layer?.cornerRadius = 14
         hostingView.layer?.cornerCurve = .continuous

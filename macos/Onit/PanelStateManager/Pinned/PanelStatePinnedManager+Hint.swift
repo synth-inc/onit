@@ -26,23 +26,23 @@ extension PanelStatePinnedManager {
     }
 
     private func showTetherWindow(activeScreen: NSScreen) {
-         let tetherView = ExternalTetheredButton(
+        let tetherView = ExternalTetheredButton(
             onClick: { [weak self] in
                 self?.tetherHintClicked(screen: activeScreen)
             },
             onDrag: { [weak self] translation in
                 self?.tetheredWindowMoved(screen: activeScreen, y: translation)
             }
-         ).environment(\.windowState, state)
+        ).environment(\.windowState, state)
 
-        let buttonView = NSHostingView(rootView: tetherView)
+        let buttonView = OnitHostingView(rootView: tetherView)
         tetherHintDetails.tetherWindow.contentView = buttonView
         tetherButtonPanelState = state
 
         updateTetherWindowPosition(for: activeScreen, lastYComputed: tetherHintDetails.lastYComputed)
         tetherHintDetails.tetherWindow.orderFrontRegardless()
     }
-    
+
     private func tetherHintClicked(screen: NSScreen) {
         state.trackedScreen = screen
         launchPanel(for: state)
