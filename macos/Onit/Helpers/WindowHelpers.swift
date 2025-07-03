@@ -12,7 +12,7 @@ struct WindowHelpers {
         return NSRunningApplication(processIdentifier: pid)
     }
     
-    static func getWindowName(window: AXUIElement) -> String {
+    static func getWindowLocalizedName(window: AXUIElement) -> String? {
         var localizedName: String? = nil
         
         if let pid = window.pid(),
@@ -21,22 +21,23 @@ struct WindowHelpers {
             localizedName = appLocalizedName
         }
         
-        let windowTitle = window.title() ?? "Unknown Title"
-        let windowAppName = window.appName() ?? localizedName ?? "Unknown App"
-        let windowName = "\(windowTitle) - \(windowAppName)"
-        return windowName
+        return localizedName
     }
     
     static func getWindowAppName(window: AXUIElement) -> String {
-        var localizedName: String? = nil
-        
-        if let pid = window.pid(),
-           let appLocalizedName = getWindowApp(pid: pid)?.localizedName
-        {
-            localizedName = appLocalizedName
-        }
+        let localizedName = getWindowLocalizedName(window: window)
         
         return window.appName() ?? localizedName ?? "Unknown App"
+    }
+    
+    static func getWindowName(window: AXUIElement) -> String {
+        let windowTitle = window.title() ?? "Unknown Title"
+        
+        let windowAppName = getWindowAppName(window: window)
+        
+        let windowName = "\(windowTitle) - \(windowAppName)"
+        
+        return windowName
     }
     
     static func getWindowAppBundleUrl(window: AXUIElement) -> URL? {
