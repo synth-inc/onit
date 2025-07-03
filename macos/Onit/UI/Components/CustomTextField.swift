@@ -103,7 +103,7 @@ extension CustomTextField {
         }
         .buttonStyle(PlainButtonStyle())
         .frame(width: 18, height: 18)
-        .animation(.easeIn(duration: animationDuration), value: $closeButtonHovered.wrappedValue)
+        .animation(.easeIn(duration: AnimationStyle.animationDuration), value: $closeButtonHovered.wrappedValue)
         .onHover{ isHovering in closeButtonHovered = isHovering }
     }
 }

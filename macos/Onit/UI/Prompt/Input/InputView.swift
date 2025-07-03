@@ -13,23 +13,33 @@ struct InputView: View {
 
     var input: Input
     var isEditing: Bool = true
+    var close: (() -> Void)? = nil
 
     var body: some View {
         VStack(spacing: 0) {
-            InputTitle(inputExpanded: $inputExpanded, input: input)
+            InputTitle(
+                inputExpanded: $inputExpanded,
+                input: input,
+                close: close
+            )
+            
             divider
-            InputBody(inputExpanded: $inputExpanded, input: input)
+            
+            InputBody(
+                inputExpanded: $inputExpanded,
+                input: input
+            )
         }
-        .background {
-            RoundedRectangle(cornerRadius: 10)
-                .fill(.gray800)
-                .strokeBorder(.gray600)
-        }
+        .background(.gray500)
+        .addBorder(
+            cornerRadius: 6,
+            stroke: .gray400
+        )
         .padding([.horizontal, .top], isEditing ? 12 : 0)
     }
 
     var divider: some View {
-        Color.gray600
+        Color.gray400
             .frame(height: 1)
             .opacity(inputExpanded ? 1 : 0)
     }

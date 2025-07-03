@@ -257,7 +257,10 @@ class AccessibilityNotificationsManager: ObservableObject {
 
         selectionDebounceWorkItem = workItem
 
-        DispatchQueue.main.asyncAfter(deadline: .now() + Config.debounceInterval, execute: workItem)
+        DispatchQueue.main.asyncAfter(
+            deadline: .now() + Config.debounceInterval,
+            execute: workItem
+        )
     }
     
     // MARK: Parsing
@@ -567,20 +570,47 @@ class AccessibilityNotificationsManager: ObservableObject {
         processSelectedText(selectedTextExtracted, elementFrame: elementBounds)
         showDebug()
     }
-
+    
     private func processSelectedText(_ text: String?, elementFrame: CGRect?) {
+        PanelStateCoordinator.shared.state.currentHighlightedText = text
+        
         guard Defaults[.autoContextFromHighlights],
               let selectedText = text,
-              HighlightedTextValidator.isValid(text: selectedText) else {
-            
+              HighlightedTextValidator.isValid(text: selectedText)
+        else {
+            PanelStateCoordinator.shared.state.manualAddHighlightedText = nil
             PanelStateCoordinator.shared.state.pendingInput = nil
             return
         }
         
-        screenResult.userInteraction.selectedText = selectedText
-        
         let input = Input(selectedText: selectedText, application: currentSource ?? "")
-        PanelStateCoordinator.shared.state.pendingInput = input
+        
+        if Defaults[.useTextHighlightContext] {
+            let pendingContextList = PanelStateCoordinator.shared.state.getPendingContextList()
+            
+            let textAlreadyExists = TextContextHelpers.checkContextTextAlreadyAdded(
+                contextList: pendingContextList,
+                text: input.selectedText
+            )
+            
+            if !Defaults[.autoAddHighlightedTextToContext] {
+                PanelStateCoordinator.shared.state.manualAddHighlightedText = input
+            } else if !textAlreadyExists {
+                if let notPinnedTextContext = TextContextHelpers.getNotpinnedTextContext(
+                    contextList: pendingContextList
+                ) {
+                    PanelStateCoordinator.shared.state.updateContext(
+                        oldContext: notPinnedTextContext,
+                        newContext: Context.text(input, notPinnedTextContext.isPinned)
+                    )
+                } else {
+                    PanelStateCoordinator.shared.state.addContext(texts: [(input, false)])
+                }
+            }
+        } else {
+            screenResult.userInteraction.selectedText = selectedText
+            PanelStateCoordinator.shared.state.pendingInput = input
+        }
     }
 
     // MARK: Debug

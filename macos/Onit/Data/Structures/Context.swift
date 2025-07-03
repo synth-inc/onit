@@ -8,6 +8,8 @@
 import AppKit
 import Foundation
 
+typealias IsPinned = Bool
+
 struct AutoContext: Codable, Hashable {
     let appName: String
     let appHash: UInt
@@ -23,6 +25,7 @@ enum Context {
     case tooBig(URL)
     case error(URL, Error)
     case webSearch(String, String, String, URL?)
+    case text(Input, Bool)
     
     typealias WebsiteUrl = URL
     typealias WebsiteTitle = String
@@ -34,7 +37,7 @@ enum Context {
 
     var url: URL? {
         switch self {
-        case .auto:
+        case .auto, .text:
             return nil
         case .file(let url), .image(let url), .tooBig(let url), .error(let url, _):
             return url
@@ -57,6 +60,8 @@ enum Context {
             "WebSearch"
         case .web:
             "Web"
+        case .text:
+            "Text"
         default:
             nil
         }
@@ -86,6 +91,24 @@ enum Context {
             return url
         default:
             return nil
+        }
+    }
+    
+    var text: Input? {
+        switch self {
+        case .text(let text, _):
+            return text
+        default:
+            return nil
+        }
+    }
+    
+    var isPinned: Bool {
+        switch self {
+        case .text(_, let isPinned):
+            return isPinned
+        default:
+            return false
         }
     }
 }
@@ -136,6 +159,13 @@ extension Context {
         }
     }
     
+    init (
+        text: Input,
+        isPinned: Bool = false
+    ) {
+        self = .text(text, isPinned)
+    }
+    
     var isError: Bool {
         if case .error = self {
             return true
@@ -146,10 +176,10 @@ extension Context {
 
 extension Context: Codable {
     enum CodingKeys: String, CodingKey {
-        case autoContext, type, url, error, websiteUrl, websiteTitle, title, content, source
+        case autoContext, type, url, error, websiteUrl, websiteTitle, title, content, source, text, isPinned
     }
     enum ContextType: String, Codable {
-        case auto, file, image, tooBig, error, web, webSearch
+        case auto, file, image, tooBig, error, web, webSearch, text
     }
 
     init(from decoder: Decoder) throws {
@@ -186,6 +216,10 @@ extension Context: Codable {
             let websiteTitle = try container.decode(String.self, forKey: .websiteTitle)
             let webFileUrl = try container.decodeIfPresent(URL.self, forKey: .url)
             self = .web(websiteUrl, websiteTitle, webFileUrl)
+        case .text:
+            let text = try container.decode(Input.self, forKey: .text)
+            let isPinned = try container.decode(Bool.self, forKey: .isPinned)
+            self = .text(text, isPinned)
         }
     }
 
@@ -225,6 +259,10 @@ extension Context: Codable {
             if let webFileUrl = webFileUrl {
                 try container.encode(webFileUrl, forKey: .url)
             }
+        case .text(let text, let isPinned):
+            try container.encode(text, forKey: .text)
+            try container.encode(isPinned, forKey: .isPinned)
+            try container.encode(ContextType.text, forKey: .type)
         }
     }
 }
@@ -247,6 +285,8 @@ extension Context: Equatable, Hashable {
             return title1 == title2 && content1 == content2 && source1 == source2
         case (.web(let websiteUrl1, _, _), .web(let websiteUrl2, _, _)):
             return websiteUrl1 == websiteUrl2
+        case (.text(let text1, let isPinned1), .text(let text2, let isPinned2)):
+            return text1 == text2 && isPinned1 == isPinned2
         default:
             return false
         }
@@ -262,6 +302,9 @@ extension Context: Equatable, Hashable {
             hasher.combine(title)
             hasher.combine(content)
             hasher.combine(source)
+        case .text(let text, let isPinned):
+            hasher.combine(text)
+            hasher.combine(isPinned)
         }
     }
 }
@@ -340,5 +383,31 @@ extension [Context] {
         }
         
         return result
+    }
+    
+    var texts: [Input] {
+        compactMap {
+            switch $0 {
+            case .text(let text, _):
+                return text
+            default:
+                return nil
+            }
+        }
+    }
+    
+    var pinnedTexts: [Input] {
+        compactMap {
+            switch $0 {
+            case .text(let text, let isPinned):
+                if isPinned {
+                    return text
+                } else {
+                    return nil
+                }
+            default:
+                return nil
+            }
+        }
     }
 }
