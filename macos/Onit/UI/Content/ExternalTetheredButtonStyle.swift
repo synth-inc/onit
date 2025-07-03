@@ -110,7 +110,7 @@ struct ExternalTetheredButtonStyle: ButtonStyle {
                 .rotationEffect(.degrees(rotationState.rotation))
         }
         .mask {
-            RoundedLeftCorners(radius: (buttonWidth + (buttonBorderWidth * 2))  * 0.66)
+            RoundedCorners(radius: buttonCornerRadius, corners: .left)
                 .frame(
                     width: buttonWidth + (buttonBorderWidth * 2),
                     height: buttonHeight + (buttonBorderWidth * 2)
