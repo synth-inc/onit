@@ -61,6 +61,13 @@ struct ContextItem: View {
                         togglePinned()
                     }
                 }
+                .onChange(of: state.currentHighlightedText) { _, highlightedText in
+                    let highlightedTextUnselected = highlightedText == nil
+                    
+                    if highlightedTextUnselected && isEditing && !isPinned {
+                        removeContextItem()
+                    }
+                }
             default:
                 tagButton(
                     text: name,
