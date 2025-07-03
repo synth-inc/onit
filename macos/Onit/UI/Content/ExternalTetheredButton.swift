@@ -18,6 +18,7 @@ struct ExternalTetheredButton: View {
     @Default(.tetheredButtonHiddenApps) var tetheredButtonHiddenApps
     @Default(.tetheredButtonHideAllApps) var tetheredButtonHideAllApps
     @Default(.tetheredButtonHideAllAppsTimerDate) var tetheredButtonHideAllAppsTimerDate // Currently hides for one hour.
+    @Default(.experimentalHintEnabled) var experimentalHintEnabled
     
     // MARK: - Initializers
 
@@ -41,6 +42,8 @@ struct ExternalTetheredButton: View {
     @State private var rightClickListener: Any? = nil
     
     @State private var hideAllAppsTimer: Timer? = nil
+    
+    @State private var leftClickEnabled: Bool = false
     
     // MARK: - Private Variables
     
@@ -116,12 +119,16 @@ struct ExternalTetheredButton: View {
     
     var body: some View {
         VStack {
-            Button(action: tetherAction) {
+            Button {
+                tetherAction()
+            } label:  {
                 if dragStartTime != nil {
                     icon(.drag)
                 } else if capturedHighlightedText {
                     icon(.text)
-                } else if let foregroundWindowIcon = foregroundWindowIcon {
+                } else if experimentalHintEnabled,
+                          let foregroundWindowIcon = foregroundWindowIcon
+                {
                     if foregroundWindowIconHidden {
                         icon(.smirk)
                     } else {
@@ -151,8 +158,12 @@ struct ExternalTetheredButton: View {
             .offset(x: capturedHighlightedText ? Self.borderWidth : 0)
             .simultaneousGesture(dragGesture)
             .onAppear {
-                initializeRightClickListener()
-                initializeHideAllAppsTimer()
+                if experimentalHintEnabled {
+                    initializeRightClickListener()
+                    initializeHideAllAppsTimer()
+                } else {
+                    leftClickEnabled = true
+                }
             }
             .onDisappear {
                 clearRightClickListener()
@@ -163,6 +174,19 @@ struct ExternalTetheredButton: View {
                 arrowEdge: .trailing
             ) {
                 rightClickMenu
+            }
+            .onChange(of: showRightClickMenu) { _, show in
+                if !show {
+                    leftClickEnabled = false
+                }
+            }
+            .onChange(of: experimentalHintEnabled) { _, enabled in
+                if !enabled {
+                    clearRightClickListener()
+                    clearHideAllAppsTimer()
+                    tetheredButtonHideAllAppsTimerDate = nil
+                    leftClickEnabled = true
+                }
             }
         }
         .frame(
@@ -239,7 +263,7 @@ extension ExternalTetheredButton {
 
 extension ExternalTetheredButton {
     private func tetherAction() {
-        guard !isDragging else { return }
+        guard !isDragging && leftClickEnabled else { return }
         
         onClick()
     }
@@ -251,7 +275,19 @@ extension ExternalTetheredButton {
     // MARK: - Right-Click Handlers
     
     private func initializeRightClickListener() {
-        rightClickListener = NSEvent.addLocalMonitorForEvents(matching: .rightMouseDown) { event in
+        let matchingMouseEvents: NSEvent.EventTypeMask = [.rightMouseDown, .leftMouseDown]
+        
+        rightClickListener = NSEvent.addLocalMonitorForEvents(matching: matchingMouseEvents) { event in
+            
+            let isRightClick: Bool =
+                event.type == .rightMouseDown ||
+                (event.type == .leftMouseDown && event.modifierFlags.contains(.control))
+            
+            guard isRightClick else {
+                leftClickEnabled = true
+                return event
+            }
+            
             if let window = event.window,
                let contentView = window.contentView
             {
