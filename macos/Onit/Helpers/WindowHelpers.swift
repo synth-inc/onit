@@ -27,6 +27,18 @@ struct WindowHelpers {
         return windowName
     }
     
+    static func getWindowAppName(window: AXUIElement) -> String {
+        var localizedName: String? = nil
+        
+        if let pid = window.pid(),
+           let appLocalizedName = getWindowApp(pid: pid)?.localizedName
+        {
+            localizedName = appLocalizedName
+        }
+        
+        return window.appName() ?? localizedName ?? "Unknown App"
+    }
+    
     static func getWindowAppBundleUrl(window: AXUIElement) -> URL? {
         if let pid = window.pid(),
            let windowApp = getWindowApp(pid: pid)
