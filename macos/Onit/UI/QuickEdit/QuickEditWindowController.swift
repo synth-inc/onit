@@ -38,28 +38,29 @@ class QuickEditWindowController: NSObject, NSWindowDelegate {
     class MouseTrackingView: NSView {
         weak var windowController: QuickEditWindowController?
         
-        override func updateTrackingAreas() {
-            super.updateTrackingAreas()
-
-            trackingAreas.forEach { removeTrackingArea($0) }
-            
-            let trackingArea = NSTrackingArea(
-                rect: bounds,
-                options: [.mouseEnteredAndExited, .activeInActiveApp],
-                owner: self,
-                userInfo: nil
-            )
-			
-            addTrackingArea(trackingArea)
-        }
-        
-        override func mouseEntered(with event: NSEvent) {
-            windowController?.setWindowTransparency(isMouseInside: true)
-        }
-        
-        override func mouseExited(with event: NSEvent) {
-            windowController?.setWindowTransparency(isMouseInside: false)
-        }
+        // Uncomment this to set transparency back
+//        override func updateTrackingAreas() {
+//            super.updateTrackingAreas()
+//
+//            trackingAreas.forEach { removeTrackingArea($0) }
+//            
+//            let trackingArea = NSTrackingArea(
+//                rect: bounds,
+//                options: [.mouseEnteredAndExited, .activeInActiveApp],
+//                owner: self,
+//                userInfo: nil
+//            )
+//			
+//            addTrackingArea(trackingArea)
+//        }
+//        
+//        override func mouseEntered(with event: NSEvent) {
+//            windowController?.setWindowTransparency(isMouseInside: true)
+//        }
+//        
+//        override func mouseExited(with event: NSEvent) {
+//            windowController?.setWindowTransparency(isMouseInside: false)
+//        }
         
         override func layout() {
             super.layout()
@@ -150,6 +151,8 @@ class QuickEditWindowController: NSObject, NSWindowDelegate {
         window?.delegate = self
         window?.isReleasedWhenClosed = false
         window?.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
+        window?.isMovable = true
+        window?.isMovableByWindowBackground = true
         
         let optimalPosition = calculateTargetPosition(for: Constants.estimatedWindowSize)
         
@@ -211,7 +214,9 @@ class QuickEditWindowController: NSObject, NSWindowDelegate {
     private func setWindowTransparency(isMouseInside: Bool) {
         guard let window = window else { return }
         
-        let targetAlpha: CGFloat = isMouseInside ? Constants.mouseInAlpha : Constants.mouseOutAlpha
+        let targetAlpha: CGFloat = Constants.mouseInAlpha
+        // Uncomment this to set transparency back
+        // let targetAlpha: CGFloat = isMouseInside ? Constants.mouseInAlpha : Constants.mouseOutAlpha
         
         NSAnimationContext.runAnimationGroup { context in
             context.duration = Constants.transparencyAnimationDuration
