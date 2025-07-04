@@ -33,12 +33,12 @@ struct OpenAIChatStreamingEndpoint: StreamingEndpoint {
     
     var timeout: TimeInterval? { nil }
     
-    func getContentFromSSE(event: EVEvent) throws -> String? {
+    func getContentFromSSE(event: EVEvent) throws -> StreamingEndpointResponse? {
         if let data = event.data?.data(using: .utf8) {
             let response = try JSONDecoder().decode(Response.self, from: data)
             
             if response.type == "response.output_text.delta" {
-                return response.delta
+                return StreamingEndpointResponse(content: response.delta, functionName: nil, functionArguments: nil)
             }
             return nil
         }
