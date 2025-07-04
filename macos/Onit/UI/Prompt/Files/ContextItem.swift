@@ -31,7 +31,9 @@ struct ContextItem: View {
                     hoverBackground: isEditing ? (hasError ? .redDisabledHover : .gray400) : .gray600,
                     maxWidth: isEditing ? 155 : .infinity,
                     iconBundleURL: autoContext.appBundleUrl,
-                    tooltip: isEditing ? (hasError ? errorMessage : name) : "View auto-context file",
+                    tooltip: isEditing ? name : "View auto-context file",
+                    popoverText: hasError ? errorMessage : nil,
+                    popoverTextColor: hasError ? .red : nil,
                     errorDotColor: hasError ? .red : nil,
                     action: showContextWindow,
                     removeAction: isEditing ? { removeContextItem() } : nil   
