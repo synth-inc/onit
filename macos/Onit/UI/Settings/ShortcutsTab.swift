@@ -37,6 +37,11 @@ struct ShortcutsTab: View {
                 )
                 .padding()
                 
+                KeyboardShortcuts.Recorder(
+                    "Add Current Window to Context", name: .addForegroundWindowToContext
+                )
+                .padding()
+                
                 Toggle("Disable 'ESC' shortcut", isOn: $escapeShortcutDisabled)
                 .padding()
             }
