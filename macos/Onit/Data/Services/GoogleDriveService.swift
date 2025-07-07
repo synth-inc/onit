@@ -6,7 +6,7 @@
 //
 
 import Foundation
-import GoogleSignIn
+@preconcurrency import GoogleSignIn
 import SwiftUI
 import WebKit
 
@@ -153,6 +153,8 @@ class GoogleDriveService: NSObject, ObservableObject {
             self.isExtracting = false
             throw GoogleDriveError.invalidUrl(error)
         }
+
+        _ = try? await GIDSignIn.sharedInstance.restorePreviousSignIn()
 
         guard let user = GIDSignIn.sharedInstance.currentUser else {
             let error = "Not authenticated with Google Drive"
