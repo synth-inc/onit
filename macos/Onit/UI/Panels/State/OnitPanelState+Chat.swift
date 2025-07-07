@@ -225,7 +225,7 @@ extension OnitPanelState {
                         }
                     } else {
                         prompt.generationState = .generating
-                        streamedResponse = try await client.chat(
+                        let chatResponse = try await client.chat(
                             systemMessage: systemPrompt.prompt,
                             instructions: instructionsHistory,
                             inputs: inputsHistory,
@@ -236,7 +236,13 @@ extension OnitPanelState {
                             responses: responsesHistory,
                             model: model,
                             apiToken: apiToken,
+                            tools: ToolRouter.activeTools,
                             includeSearch: (useWebSearch && !useTavilySearch) ? true : nil)
+                        streamedResponse = chatResponse.content ?? ""
+						if chatResponse.functionName != nil {
+							functionName = chatResponse.functionName ?? ""
+						}
+						functionArguments = chatResponse.functionArguments ?? ""
                     }
                 
                 case .local:

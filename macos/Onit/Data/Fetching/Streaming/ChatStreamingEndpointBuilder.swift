@@ -41,6 +41,7 @@ struct ChatStreamingEndpointBuilder {
                 apiToken: apiToken,
                 systemMessage: systemMessage,
                 userMessages: userMessages,
+                tools: tools,
                 includeSearch: includeSearch)
         case .anthropic:
             return ChatStreamingEndpointBuilder.anthropic(
@@ -50,6 +51,7 @@ struct ChatStreamingEndpointBuilder {
                 apiToken: apiToken,
                 systemMessage: systemMessage,
                 userMessages: userMessages,
+                tools: tools,
                 includeSearch: includeSearch)
         case .xAI:
             return ChatStreamingEndpointBuilder.xAI(
@@ -120,6 +122,7 @@ struct ChatStreamingEndpointBuilder {
         apiToken: String?,
         systemMessage: String,
         userMessages: [String],
+        tools: [Tool],
         includeSearch: Bool? = nil
     ) -> OpenAIChatStreamingEndpoint {
         let messages = ChatEndpointMessagesBuilder.openAI(
@@ -130,7 +133,7 @@ struct ChatStreamingEndpointBuilder {
             userMessages: userMessages)
 
         return OpenAIChatStreamingEndpoint(
-            messages: messages, token: apiToken, model: model.id, includeSearch: includeSearch)
+            messages: messages, token: apiToken, model: model.id, tools: tools, includeSearch: includeSearch)
     }
 
     private static func anthropic(
@@ -140,6 +143,7 @@ struct ChatStreamingEndpointBuilder {
         apiToken: String?,
         systemMessage: String,
         userMessages: [String],
+        tools: [Tool],
         includeSearch: Bool? = nil
     ) -> AnthropicChatStreamingEndpoint {
         let messages = ChatEndpointMessagesBuilder.anthropic(
@@ -154,6 +158,7 @@ struct ChatStreamingEndpointBuilder {
             token: apiToken,
             messages: messages,
             maxTokens: 4096,
+            tools: tools,
             includeSearch: includeSearch
         )
     }

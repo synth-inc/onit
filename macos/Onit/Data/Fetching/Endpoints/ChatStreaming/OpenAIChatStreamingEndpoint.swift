@@ -15,13 +15,14 @@ struct OpenAIChatStreamingEndpoint: StreamingEndpoint {
     let messages: [OpenAIChatMessage]
     let token: String?
     let model: String
+    let tools: [Tool]
     let includeSearch: Bool?
     
     var path: String { "/v1/responses" }
     var getParams: [String: String]? { nil }
     var method: HTTPMethod { .post }
     var requestBody: OpenAIChatRequest? {
-        var tools: [OpenAIChatTool] = []
+        var tools: [OpenAIChatTool] = tools.map { OpenAIChatTool(tool: $0) }
         if includeSearch == true {
             tools.append(OpenAIChatTool.search())
         }
@@ -40,6 +41,13 @@ struct OpenAIChatStreamingEndpoint: StreamingEndpoint {
             if response.type == "response.output_text.delta" {
                 return StreamingEndpointResponse(content: response.delta, functionName: nil, functionArguments: nil)
             }
+            if response.type == "response.completed" {
+                if let functionCall = response.response?.output?.first {
+                    return StreamingEndpointResponse(content: nil,
+                                                     functionName: functionCall.name,
+                                                     functionArguments: functionCall.arguments)
+                }
+            }
             return nil
         }
         
@@ -56,6 +64,18 @@ struct OpenAIChatStreamingEndpoint: StreamingEndpoint {
 struct OpenAIChatStreamingResponse: Codable {
     let type: String?
     let delta: String?
+    let response: OpenAIChatStreamingCompletedResponse?
+}
+
+struct OpenAIChatStreamingCompletedResponse: Codable {
+    let output: [OpenAIChatStreamingFunctionCall]?
+}
+
+struct OpenAIChatStreamingFunctionCall: Codable {
+    let type: String?
+    let status: String?
+    let arguments: String?
+    let name: String?
 }
 
 struct OpenAIChatStreamingError: Codable {

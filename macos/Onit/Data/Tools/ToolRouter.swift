@@ -10,7 +10,7 @@ import Foundation
 actor ToolRouter {
     @MainActor
     static var activeTools: [Tool] {
-        return CalendarTool.activeTools
+        return CalendarTool.activeTools + DiffTool.activeTools
     }
 
     static func parseAndExecuteToolCalls(functionName: String, functionArguments: String) async
@@ -27,6 +27,9 @@ actor ToolRouter {
         switch appName {
         case "calendar":
             return await CalendarTool.executeToolCall(
+                toolName: toolName, arguments: functionArguments)
+        case "diff":
+            return await DiffTool.executeToolCall(
                 toolName: toolName, arguments: functionArguments)
         default:
             return .failure(

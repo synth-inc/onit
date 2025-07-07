@@ -9,6 +9,12 @@ import Defaults
 import Foundation
 import UniformTypeIdentifiers
 
+struct ChatResponse {
+    let content: String?
+    let functionName: String?
+    let functionArguments: String?
+}
+
 actor FetchingClient {
     let encoder = JSONEncoder()
     let decoder = {
@@ -30,8 +36,9 @@ actor FetchingClient {
         responses: [String],
         model: AIModel,
         apiToken: String?,
+        tools: [Tool] = [],
         includeSearch: Bool? = nil
-    ) async throws -> String {
+    ) async throws -> ChatResponse {
         let userMessages = ChatEndpointMessagesBuilder.user(
             instructions: instructions,
             inputs: inputs,
@@ -46,17 +53,23 @@ actor FetchingClient {
             apiToken: apiToken,
             systemMessage: systemMessage,
             userMessages: userMessages,
+            tools: tools,
             includeSearch: includeSearch)
         
         return try await fetchChatContent(from: endpoint)
     }
     
-    private func fetchChatContent<E: Endpoint>(from endpoint: E) async throws -> String {
+    private func fetchChatContent<E: Endpoint>(from endpoint: E) async throws -> ChatResponse {
         let response = try await execute(endpoint)
+        
+        if let toolResponse = endpoint.getToolResponse(response: response) {
+            return toolResponse
+        }
+        
         guard let content = endpoint.getContent(response: response) else {
             throw FetchingError.noContent
         }
-        return content
+        return ChatResponse(content: content, functionName: nil, functionArguments: nil)
     }
     
     func localChat(
