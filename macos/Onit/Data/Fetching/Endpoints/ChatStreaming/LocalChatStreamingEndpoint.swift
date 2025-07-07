@@ -62,11 +62,13 @@ struct LocalChatStreamingEndpoint: StreamingEndpoint {
         )
     }
 
-    func getContentFromSSE(event: EVEvent) throws -> String? {
+    func getContentFromSSE(event: EVEvent) throws -> StreamingEndpointResponse? {
         if let data = event.data?.data(using: .utf8) {
             let response = try JSONDecoder().decode(Response.self, from: data)
             
-            return response.message?.content
+            if let content = response.message?.content {
+                return StreamingEndpointResponse(content: content, functionName: nil, functionArguments: nil)
+            }
         }
         
         return nil

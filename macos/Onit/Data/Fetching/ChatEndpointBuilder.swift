@@ -17,6 +17,7 @@ struct ChatEndpointBuilder {
         apiToken: String?,
         systemMessage: String,
         userMessages: [String],
+        tools: [Tool] = [],
         includeSearch: Bool? = nil
     ) throws -> any Endpoint {
         switch model.provider {
@@ -28,6 +29,7 @@ struct ChatEndpointBuilder {
                 apiToken: apiToken,
                 systemMessage: systemMessage,
                 userMessages: userMessages,
+                tools: tools,
                 includeSearch: includeSearch)
         case .anthropic:
             return ChatEndpointBuilder.anthropic(
@@ -37,6 +39,7 @@ struct ChatEndpointBuilder {
                 apiToken: apiToken,
                 systemMessage: systemMessage,
                 userMessages: userMessages,
+                tools: tools,
                 includeSearch: includeSearch)
         case .xAI:
             return ChatEndpointBuilder.xAI(
@@ -87,6 +90,7 @@ struct ChatEndpointBuilder {
         apiToken: String?,
         systemMessage: String,
         userMessages: [String],
+        tools: [Tool] = [],
         includeSearch: Bool? = nil
     ) -> OpenAIChatEndpoint {
         let messages = ChatEndpointMessagesBuilder.openAI(
@@ -97,7 +101,7 @@ struct ChatEndpointBuilder {
             userMessages: userMessages)
 
         return OpenAIChatEndpoint(
-            messages: messages, token: apiToken, model: model.id, includeSearch: includeSearch)
+            messages: messages, token: apiToken, model: model.id, tools: tools, includeSearch: includeSearch)
     }
 
     private static func anthropic(
@@ -107,6 +111,7 @@ struct ChatEndpointBuilder {
         apiToken: String?,
         systemMessage: String,
         userMessages: [String],
+        tools: [Tool] = [],
         includeSearch: Bool? = nil
     ) -> AnthropicChatEndpoint {
         let messages = ChatEndpointMessagesBuilder.anthropic(
@@ -121,6 +126,7 @@ struct ChatEndpointBuilder {
             token: apiToken,
             messages: messages,
             maxTokens: 4096,
+            tools: tools,
             includeSearch: includeSearch
         )
     }

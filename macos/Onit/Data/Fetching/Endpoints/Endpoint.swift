@@ -22,10 +22,15 @@ protocol Endpoint: Sendable {
     var timeout: TimeInterval? { get }
     
     func getContent(response: Response) -> String?
+    func getToolResponse(response: Response) -> ChatResponse?
 }
 
 extension Endpoint {
     func getContent(response: Response) -> String? {
+        return nil
+    }
+    
+    func getToolResponse(response: Response) -> ChatResponse? {
         return nil
     }
 }
