@@ -71,13 +71,16 @@ struct ToolbarRight: View {
             MenuJoinDiscord.openDiscord(appState)
         }
     }
-
+   
+    var showHistory: Bool { state?.showHistory ?? false }
+    
     var showHistoryBinding: Binding<Bool> {
         Binding(
-            get: { self.state?.showHistory ?? false },
+            get: { self.showHistory },
             set: { self.state?.showHistory = $0 }
         )
     }
+    
     var history: some View {
         IconButton(
             icon: .history,

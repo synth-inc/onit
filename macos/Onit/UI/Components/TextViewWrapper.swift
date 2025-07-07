@@ -149,6 +149,7 @@ struct TextViewWrapper: NSViewRepresentable {
                     
                     // Prevents errors due to trying to cancel a Task that's already been cancelled.
                     guard !Task.isCancelled else { return }
+                    guard let windowState = parent.windowState else { return }
                     
                     let urls = detectURLs(in: text)
                     
@@ -157,7 +158,7 @@ struct TextViewWrapper: NSViewRepresentable {
                     var textWithoutWebsiteUrls = text
                     
                     for url in urls {
-                        guard let pendingContextList = parent.windowState?.getPendingContextList() else { continue }
+                        let pendingContextList = windowState.getPendingContextList()
                         
                         let urlExists = pendingContextList.contains { context in
                             if case .web(let existingWebsiteUrl, _, _) = context {
@@ -167,7 +168,7 @@ struct TextViewWrapper: NSViewRepresentable {
                         }
                         
                         if !urlExists {
-                            parent.windowState?.addContext(urls: [url])
+                            windowState.addContext(urls: [url])
                             
                             textWithoutWebsiteUrls = removeWebsiteUrlFromText(
                                 text: textWithoutWebsiteUrls,
@@ -222,29 +223,6 @@ struct TextViewWrapper: NSViewRepresentable {
             DispatchQueue.main.async {
                 self.parent.dynamicHeight = height
             }
-        }
-
-        @MainActor func textView(_ textView: NSTextView, shouldInteractWith URL: URL, in characterRange: NSRange, interaction: Any) -> Bool {
-            // Handle URL interactions
-            
-            // Check if windowState is available before accessing
-            guard let windowState = parent.windowState else { return false }
-            
-            let pendingContextList = windowState.getPendingContextList()
-            
-            let urlExists = pendingContextList.contains { context in
-                if case .web(let existingWebsiteUrl, _, _) = context {
-                    return existingWebsiteUrl.absoluteString == URL.absoluteString
-                }
-                return false
-            }
-            
-            if urlExists {
-                return false
-            }
-            
-            windowState.addContext(urls: [URL])
-            return false
         }
     }
 }

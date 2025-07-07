@@ -115,7 +115,7 @@ struct SystemPromptDetailView: View {
             
             Spacer()
             
-            if windowState?.systemPromptId != SystemPrompt.outputOnly.id {
+            if let windowState = windowState, windowState.systemPromptId != SystemPrompt.outputOnly.id {
                 Button {
                     showEditPrompt = true
                     dismiss()

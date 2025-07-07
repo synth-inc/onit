@@ -38,7 +38,7 @@ struct WebContextItem: View {
     }
     
     var body: some View {
-        let websiteUndergoingScrape = isWebsiteBeingScrapeOrScrapeCompleted
+        let websiteUndergoingScrape = windowState?.websiteUrlsScrapeQueue.keys.contains(websiteUrl.absoluteString) ?? false
 
         ContextTag(
             text: getCurrentWebsiteTitle(),
@@ -46,8 +46,8 @@ struct WebContextItem: View {
             background: websiteUndergoingScrape || !isEditing ? .clear : .gray500,
             hoverBackground: isEditing ? .gray400 : .gray600,
             maxWidth: isEditing ? 155 : .infinity,
-            isLoading: shouldShowProgressView,
-            iconView: shouldShowProgressView ? LoaderPulse() : favicon,
+            isLoading: websiteUndergoingScrape,
+            iconView: websiteUndergoingScrape ? LoaderPulse() : favicon,
             caption: item.fileType,
             tooltip: getCurrentWebsiteTitle(),
             action: action,
@@ -105,26 +105,5 @@ extension WebContextItem {
         }
 
         return websiteTitle
-    }
-    
-    private var isWebsiteBeingScrapeOrScrapeCompleted: Bool {
-        guard let windowState = windowState else { return false }
-        
-        let websiteUndergoingScrape = windowState.websiteUrlsScrapeQueue.keys.contains(websiteUrl.absoluteString)
-        
-        return websiteUndergoingScrape
-    }
-    
-    private var shouldShowProgressView: Bool {
-        guard let windowState = windowState else { return false }
-        
-        let pendingContextList = windowState.getPendingContextList()
-        
-        return pendingContextList.contains { context in
-            if case .web(let existingWebsiteUrl, _, _) = context {
-                return existingWebsiteUrl.absoluteString == websiteUrl.absoluteString
-            }
-            return false
-        }
     }
 }

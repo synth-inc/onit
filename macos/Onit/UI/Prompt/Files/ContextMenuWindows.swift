@@ -64,17 +64,17 @@ struct ContextMenuWindows: View {
         }
     }
     
-    private var windowsAvailable: Bool {
+    private var foregroundWindowCaptured: Bool {
         return windowState?.foregroundWindow != nil
     }
     
     private var allBrowserTabsButtonIndex: Int {
-        return windowsAvailable ? filteredCapturedWindows.count + 1 : filteredCapturedWindows.count
+        return foregroundWindowCaptured ? filteredCapturedWindows.count + 1 : filteredCapturedWindows.count
     }
     
     private var uploadFileButtonIndex: Int {
         // TODO: LOYD - This should be updated to be +2, +1 when bringing the browser tab button back in.
-        return windowsAvailable ? filteredCapturedWindows.count + 1 : filteredCapturedWindows.count
+        return foregroundWindowCaptured ? filteredCapturedWindows.count + 1 : filteredCapturedWindows.count
     }
     
     var body: some View {
@@ -318,50 +318,5 @@ extension ContextMenuWindows {
         
         isCapturingWindows = false
         return orderCapturedWindowsByMostRecent(capturedOpenWindows)
-    }
-    
-    private func handleAddFiles() {
-        windowState?.showFileImporter = true
-    }
-    
-    private func getCurrentContext() -> Context? {
-        return windowState?.getPendingContextList().first { context in
-            if case .web = context {
-                return false
-            }
-            return true
-        }
-    }
-    
-    private func isWindowBeingTracked(window: TrackedWindow) -> Bool {
-        let uniqueWindowIdentifier = window.hash
-        return windowState?.windowContextTasks[uniqueWindowIdentifier] != nil
-    }
-    
-    private func removeContext(contextItem: Context) {
-        windowState?.removeContext(context: contextItem)
-    }
-    
-    private func showProgressIndicator(window: TrackedWindow) {
-        let uniqueWindowIdentifier = window.hash
-        windowState?.cleanupWindowContextTask(
-            uniqueWindowIdentifier: uniqueWindowIdentifier
-        )
-    }
-    
-    private func addWindowToContext(trackedWindow: TrackedWindow) {
-        windowState?.addWindowToContext(window: trackedWindow.element)
-    }
-    
-    private func fetchForegroundedWindowsWithScreenshot() -> [TrackedWindow] {
-        guard let windowState = windowState else { return [] }
-        
-        let windowContextTaskWindowHashes = Set(windowState.windowContextTasks.keys)
-        
-        var windowsToFetch: [TrackedWindow] = []
-        
-        // TODO: Implement the logic for fetching foregrounded windows
-        
-        return windowsToFetch
     }
 }

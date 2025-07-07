@@ -39,28 +39,23 @@ struct ContextMenuWindowButton: View {
     }
     
     var body: some View {
-        // Only show content if windowState is available
-        if let windowState = windowState {
-            TextButton(
-                background: selected ? .gray600 : .clear,
-                icon: windowIcon == nil ? .stars : nil,
-                iconImage: windowIcon,
-                text: windowName
-            ){
-                if isLoadingIntoContext {
-                    LoaderPulse()
-                } else if windowContextItem == nil {
-                    checkEmpty
-                } else {
-                    checkFilled
-                }
-            } action: {
-                action()
+        TextButton(
+            background: selected ? .gray600 : .clear,
+            icon: windowIcon == nil ? .stars : nil,
+            iconImage: windowIcon,
+            text: windowName
+        ){
+            if isLoadingIntoContext {
+                LoaderPulse()
+            } else if windowContextItem == nil {
+                checkEmpty
+            } else {
+                checkFilled
             }
-            .addAnimation(dependency: selected)
-        } else {
-            EmptyView()
+        } action: {
+            action()
         }
+        .addAnimation(dependency: selected)
     }
 }
 

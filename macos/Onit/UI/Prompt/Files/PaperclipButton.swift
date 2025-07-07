@@ -46,7 +46,7 @@ struct PaperclipButton: View {
                 }
             }
 
-            if windowState?.pendingContextList.isEmpty != false {
+            if windowState?.pendingContextList.isEmpty ?? true {
                 if !accessibilityAutoContextEnabled && !closedAutoContextTag {
                     EnableAutocontextTag()
                 }
@@ -79,8 +79,10 @@ struct PaperclipButton: View {
     }
 
     private func handleAddContext() {
+        guard let windowState = windowState else { return }
+        
         if accessibilityAutoContextEnabled {
-            if let windowState = windowState, let panel = windowState.panel {
+            if let panel = windowState.panel {
                 if !panel.isKeyWindow {
                     panel.makeKey()
                 }
@@ -94,7 +96,7 @@ struct PaperclipButton: View {
             
             OverlayManager.shared.showOverlay(content: view)
         } else {
-            windowState?.showFileImporter = true
+            windowState.showFileImporter = true
         }
     }
 }

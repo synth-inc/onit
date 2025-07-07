@@ -84,8 +84,8 @@ struct PromptCore: View {
             }
         }
         .background {
-            if !isEditing {
-                if !showSlashMenu && (windowState?.showContextMenu != true) && (windowState?.isTyping != true) {
+            if !isEditing, let windowState = windowState {
+                if !showSlashMenu && (windowState.showContextMenu != true) && (windowState.isTyping != true) {
                     upListener
                     downListener
                 }
@@ -136,7 +136,7 @@ struct PromptCore: View {
 extension PromptCore {
     @ViewBuilder
     private var textField: some View {
-        if let windowState = windowState {
+        if let windowState = windowState, false {
             @Bindable var bindableWindowState = windowState
             
             TextViewWrapper(
@@ -164,11 +164,14 @@ extension PromptCore {
             }
             .disabled(showingAlert)
             .allowsHitTesting(!showingAlert)
+            // TODO: LOYD - This should be commented in when the Slash Menu is built.
+//          .popover(
+//              isPresented: $showSlashMenu
+//          ) {
+//              SlashMenu()
+//          }
         } else {
-            Text("Loading...")
-                .appFont(.medium16)
-                .foregroundStyle(.gray500)
-                .frame(height: min(textHeight, maxHeightLimit))
+            EmptyView()
         }
     }
     
@@ -245,7 +248,7 @@ extension PromptCore {
 
 extension PromptCore {
     private var shouldIndicateDisabled: Bool {
-        guard let windowState = windowState else { return false }
+        guard let windowState = windowState else { return true }
         return !windowState.websiteUrlsScrapeQueue.isEmpty || !windowState.windowContextTasks.isEmpty
     }
     
@@ -262,7 +265,7 @@ extension PromptCore {
     
     private var placeholderText: String {
         guard let windowState = windowState else {
-            return "Loading..."
+            return ""
         }
         
         if let currentChat = windowState.currentChat {

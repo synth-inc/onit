@@ -22,13 +22,13 @@ struct SystemPromptSelectionView: View {
         self._showNewPrompt = showNewPrompt
     }
     
-    private var systemPrompts: [SystemPrompt] {
+    private var suggestedPrompts: [SystemPrompt] {
         state?.promptSuggestionService?.suggestedPrompts ?? []
     }
     
     private var allPrompts: [SystemPrompt] {
         prompts.filter { prompt in
-            !systemPrompts.contains { $0.id == prompt.id }
+            !suggestedPrompts.contains { $0.id == prompt.id }
         }
     }
     
@@ -76,8 +76,8 @@ struct SystemPromptSelectionView: View {
                 List() {
                     EmptyView().id("topScrollPoint")
                     
-                    if !systemPrompts.isEmpty && searchText.isEmpty {
-                        sectionView(title: "Suggested", prompts: systemPrompts)
+                    if !suggestedPrompts.isEmpty && searchText.isEmpty {
+                        sectionView(title: "Suggested", prompts: suggestedPrompts)
                         sectionView(title: "All", prompts: allPrompts)
                     } else {
                         sectionView(title: nil, prompts: filteredPrompts)

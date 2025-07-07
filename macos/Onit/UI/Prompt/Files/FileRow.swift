@@ -18,23 +18,13 @@ struct FileRow: View {
         accessibilityPermissionManager.accessibilityPermissionStatus == .granted
     }
     
-    private var isWindowBeingTracked: Bool {
+    private var windowBeingAddedToContext: Bool {
         guard let windowState = windowState else { return false }
         
         if let foregroundWindow = windowState.foregroundWindow {
             return windowState.windowContextTasks[foregroundWindow.hash] != nil
         }
         return false
-    }
-    
-    private func showProgressIndicator() {
-        guard let windowState = windowState else { return }
-        
-        if let foregroundWindow = windowState.foregroundWindow {
-            windowState.cleanupWindowContextTask(
-                uniqueWindowIdentifier: foregroundWindow.hash
-            )
-        }
     }
     
     var windowAlreadyInContext: Bool {
@@ -71,7 +61,7 @@ struct FileRow: View {
             addedWindowContextItems
         }
         .onDisappear {
-            cleanUpPendingWindowContextTasks()
+            windowState?.cleanUpPendingWindowContextTasks()
         }
     }
 }
@@ -83,7 +73,7 @@ extension FileRow {
     private var addForegroundWindowToContextButton: some View {
         if accessibilityEnabled,
            autoContextFromCurrentWindow,
-           !(isWindowBeingTracked || windowAlreadyInContext),
+           !(windowBeingAddedToContext || windowAlreadyInContext),
            let foregroundWindow = windowState?.foregroundWindow
         {
             let foregroundWindowName = WindowHelpers.getWindowName(window: foregroundWindow.element)
@@ -99,7 +89,7 @@ extension FileRow {
                 iconBundleURL: iconBundleURL,
                 tooltip: "Add \(foregroundWindowName) Context"
             ) {
-                addWindowToContext()
+                windowState?.addWindowToContext(window: foregroundWindow.element)
             }
         }
     }
@@ -150,23 +140,3 @@ extension FileRow {
         FileRow(contextList: [])
     }
 #endif
-
-// MARK: - Helper Functions
-
-extension FileRow {
-    private func cleanUpPendingWindowContextTasks() {
-        windowState?.cleanUpPendingWindowContextTasks()
-    }
-    
-    private func addWindowToContext() {
-        guard let windowState = windowState else { return }
-        
-        let foregroundWindow = windowState.foregroundWindow
-        
-        if let foregroundWindow = foregroundWindow {
-            windowState.addWindowToContext(
-                window: foregroundWindow.element
-            )
-        }
-    }
-}
