@@ -17,8 +17,12 @@ struct GoogleAIChatEndpoint: Endpoint {
     let token: String?
     let includeSearch: Bool?
 
-    var path: String { "/v1beta/models/\(model):generateContent?key=\(token ?? "")" }
-    var getParams: [String: String]? { nil }
+    var path: String { "/v1beta/models/\(model):generateContent" }
+    var getParams: [String: String]? {
+        [
+            "key": token ?? ""
+        ]
+    }
 
     var method: HTTPMethod { .post }
     var requestBody: GoogleAIChatRequest? {

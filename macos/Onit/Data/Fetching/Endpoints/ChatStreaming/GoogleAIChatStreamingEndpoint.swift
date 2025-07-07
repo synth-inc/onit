@@ -17,8 +17,13 @@ struct GoogleAIChatStreamingEndpoint: StreamingEndpoint {
     let token: String?
     let includeSearch: Bool?
     
-    var path: String { "/v1beta/models/\(model):generateContent?key=\(token ?? "")" }
-    var getParams: [String: String]? { nil }
+    var path: String { "/v1beta/models/\(model):streamGenerateContent" }
+    var getParams: [String: String]? {
+        [
+            "key": token ?? "",
+            "alt": "sse"
+        ]
+    }
     var method: HTTPMethod { .post }
     var requestBody: GoogleAIChatRequest? {
         var tools: [GoogleAIChatSearchTool] = []
