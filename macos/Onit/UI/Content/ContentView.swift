@@ -159,7 +159,7 @@ struct ContentView: View {
                     if subscriptionStatus == "active" {
                         hasClosedTrialEndedAlert = true
                     } else if subscriptionStatus == "canceled",
-                       let trialEndDate = appState.subscription?.trialEnd
+                              let trialEndDate = appState.subscription?.trialEnd
                     {
                         let today = getTodayAsEpochDate()
                         let trialExpired = today >= trialEndDate
@@ -173,22 +173,22 @@ struct ContentView: View {
         }
         .onChange(of: appState.userLoggedIn) { _, loggedIn in
             // Handles showing AuthFlow when logging out.
-            if loggedIn {
+            if !loggedIn && !userProvidedOwnModel {
+                authFlowStatus = .showSignIn
+            } else {
                 authFlowStatus = .hideAuth
-            } else if !loggedIn && !userProvidedOwnModel {
-                authFlowStatus = .showSignUp
             }
         }
         .onChange(of: userProvidedOwnModel) { _, providedOwnModel in
             // Handles showing AuthFlow when removing local models or provider API keys.
-            if providedOwnModel {
-                authFlowStatus = .hideAuth
-            } else if !providedOwnModel && !appState.userLoggedIn {
+            if !providedOwnModel && !appState.userLoggedIn {
                 authFlowStatus = .showSignUp
+            } else {
+                authFlowStatus = .hideAuth
             }
         }
         .onChange(of: appState.canAccessRemoteModels) { _, canAccessRemoteModels in
-            checkCanAccessRemoteModels(!canAccessRemoteModels)
+            checkCanAccessRemoteModels(canAccessRemoteModels)
         }
     }
     

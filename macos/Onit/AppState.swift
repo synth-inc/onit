@@ -5,6 +5,7 @@
 //  Created by Kévin Naudin on 02/04/2025.
 //
 
+import Combine
 import Defaults
 import DefaultsMacros
 import Sparkle
@@ -77,6 +78,10 @@ class AppState: NSObject, SPUUpdaterDelegate {
     var showFreeLimitAlert: Bool = false
     var showProLimitAlert: Bool = false
     var subscriptionPlanError: String = ""
+    
+    // Network Monitoring
+    var isOnline: Bool = NetworkMonitor.shared.isOnline
+    private var cancellables = Set<AnyCancellable>()
 
     // MARK: - Initializer
     
@@ -89,6 +94,13 @@ class AppState: NSObject, SPUUpdaterDelegate {
             updaterDelegate: self,
             userDriverDelegate: nil
         )
+        
+        NetworkMonitor.shared.$isOnline
+            .receive(on: DispatchQueue.main)
+            .sink{ [weak self] online in
+                self?.isOnline = online
+            }
+            .store(in: &cancellables)
 
         Task {
             await fetchLocalModels()
@@ -457,12 +469,12 @@ class AppState: NSObject, SPUUpdaterDelegate {
         }
         
         // Used to only allow users to access to models they've provided API keys for when logged out.
-        let restrictedFromOpenAIModels = !self.userLoggedIn && openAIToken == nil && !isOpenAITokenValidated
-        let restrictedFromAnthropicModels = !self.userLoggedIn && anthropicToken == nil && !isAnthropicTokenValidated
-        let restrictedFromXAIModels = !self.userLoggedIn && xAIToken == nil && !isXAITokenValidated
-        let restrictedFromGoogleAIModels = !self.userLoggedIn && googleAIToken == nil && !isGoogleAITokenValidated
-        let restrictedFromDeepSeekModels = !self.userLoggedIn && deepSeekToken == nil && !isDeepSeekTokenValidated
-        let restrictedFromPerplexityModels = !self.userLoggedIn && perplexityToken == nil && !isPerplexityTokenValidated
+        let restrictedFromOpenAIModels = !self.userLoggedIn && (openAIToken == nil || !isOpenAITokenValidated)
+        let restrictedFromAnthropicModels = !self.userLoggedIn && (anthropicToken == nil || !isAnthropicTokenValidated)
+        let restrictedFromXAIModels = !self.userLoggedIn && (xAIToken == nil || !isXAITokenValidated)
+        let restrictedFromGoogleAIModels = !self.userLoggedIn && (googleAIToken == nil || !isGoogleAITokenValidated)
+        let restrictedFromDeepSeekModels = !self.userLoggedIn && (deepSeekToken == nil || !isDeepSeekTokenValidated)
+        let restrictedFromPerplexityModels = !self.userLoggedIn && (perplexityToken == nil || !isPerplexityTokenValidated)
         
         if restrictedFromOpenAIModels || !useOpenAI {
             models = models.filter { $0.provider != .openAI }
@@ -564,7 +576,7 @@ class AppState: NSObject, SPUUpdaterDelegate {
 //    }
     
     var canAccessRemoteModels: Bool {
-        return self.userLoggedIn || self.hasUserAPITokens
+        (self.userLoggedIn || self.hasUserAPITokens) && self.isOnline
     }
 }
 
