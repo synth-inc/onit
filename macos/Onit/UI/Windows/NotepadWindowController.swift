@@ -29,7 +29,7 @@ class NotepadWindowController: NSObject, NSWindowDelegate {
 
     // MARK: - Properties
 
-    private weak var model: OnitModel?
+    private var windowState: OnitPanelState?
     private var contentView: NotepadView?
     private var panel: NSPanel?
     
@@ -75,8 +75,8 @@ class NotepadWindowController: NSObject, NSWindowDelegate {
 
     // MARK: - Initializers
 
-    func configure(model: OnitModel) {
-        self.model = model
+    func configure(windowState: OnitPanelState) {
+        self.windowState = windowState
         
         // Update content view initialization
         self.contentView = NotepadView(
@@ -84,7 +84,7 @@ class NotepadWindowController: NSObject, NSWindowDelegate {
         )
 
         let contentView = contentView
-            .environment(\.model, model)
+            .environment(\.windowState, windowState)
             .environmentObject(config)
 
         let panelContentView = NSHostingView(rootView: contentView)
@@ -156,7 +156,7 @@ class NotepadWindowController: NSObject, NSWindowDelegate {
 
     private func positionWindow() {
         guard let panel = self.panel,
-              let onitPanel = model?.panel else { return }
+              let onitPanel = windowState?.panel else { return }
 
         let mouseLocation = NSEvent.mouseLocation
 
