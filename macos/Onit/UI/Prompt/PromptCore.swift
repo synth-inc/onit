@@ -17,6 +17,7 @@ struct PromptCore: View {
     
     @Default(.mode) var mode
     @Default(.showTwoWeekProTrialEndedAlert) var showTwoWeekProTrialEndedAlert
+    @Default(.useTextHighlightContext) var useTextHighlightContext
     
     private var chats: [Chat] {
         let chatsFilteredByAccount = allChats
@@ -70,8 +71,16 @@ struct PromptCore: View {
     
     var body: some View {
         VStack(spacing: 0) {
+            if let highlightedText = windowState.selectedHighlightedText {
+                InputView(input: highlightedText) {
+                    windowState.selectedHighlightedText = nil
+                }
+            }
+            
             if let pendingInput = windowState.pendingInput {
-                InputView(input: pendingInput)
+                InputView(input: pendingInput) {
+                    windowState.pendingInput = nil
+                }
             }
             
             VStack(spacing: 6) {
@@ -195,8 +204,7 @@ extension PromptCore {
                 isRemote ? remoteBorder :
                 localBorder
         )
-        .addAnimation(dependency: isRemote, duration: 0.3)
-        .addAnimation(dependency: isFocused, duration: 0.3)
+        .addAnimation(dependency: [isRemote, isFocused], duration: 0.3)
         .padding(.top, 8)
         .padding(.horizontal, 12)
     }

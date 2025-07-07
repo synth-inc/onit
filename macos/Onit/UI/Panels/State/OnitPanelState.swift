@@ -37,6 +37,10 @@ class OnitPanelState: NSObject {
     var isTyping: Bool = false
     private var isTypingDebounceTask: Task<Void, Never>? = nil
     
+    var currentHighlightedText: String? = nil
+    var manualAddHighlightedText: Input? = nil
+    var selectedHighlightedText: Input? = nil
+    
     /// ChatView visibility.
     /// When `showChatView` is true the ChatView is rendered;
     /// if `animateChatView` is true, the transition is animated.
