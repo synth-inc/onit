@@ -23,10 +23,6 @@ struct GeneralTabPlanAndBilling: View {
     @State private var fetchingSubscriptionData: Bool = false
     @State private var subscriptionDataErrorMessage: String = ""
     
-    private var userLoggedIn: Bool {
-        appState.account != nil
-    }
-    
     var body: some View {
         SettingsSection(
             iconText: "􀋃",
@@ -44,7 +40,7 @@ struct GeneralTabPlanAndBilling: View {
                 
                 if fetchingSubscriptionData {
                     shimmers
-                } else if userLoggedIn,
+                } else if appState.userLoggedIn,
                    let planType = planType,
                    let usage = chatGenerationsUsage,
                    let quota = chatGenerationsQuota,
@@ -58,7 +54,7 @@ struct GeneralTabPlanAndBilling: View {
                     )
                 }
                 
-                if !userLoggedIn {
+                if !appState.userLoggedIn {
                     upgradeToProButton
                 } else if appState.subscriptionStatus == SubscriptionStatus.free {
                     HStack(spacing: 11) {
@@ -86,7 +82,7 @@ struct GeneralTabPlanAndBilling: View {
                     }
                 }
                 
-                if !userLoggedIn ||
+                if !appState.userLoggedIn ||
                     appState.subscriptionCanceled ||
                     planType == SubscriptionStatus.free
                 {
@@ -97,8 +93,8 @@ struct GeneralTabPlanAndBilling: View {
         .task() {
             await fetchSubscriptionData()
         }
-        .onChange(of: userLoggedIn) {
-            if userLoggedIn {
+        .onChange(of: appState.userLoggedIn) { _, loggedIn in
+            if loggedIn {
                 Task {
                     await fetchSubscriptionData()
                 }
@@ -266,7 +262,7 @@ extension GeneralTabPlanAndBilling {
             subscriptionDataErrorMessage = ""
             fetchingSubscriptionData = true
             
-            if userLoggedIn {
+            if appState.userLoggedIn {
                 await refreshSubscriptionState()
                 
                 planType = appState.subscriptionStatus

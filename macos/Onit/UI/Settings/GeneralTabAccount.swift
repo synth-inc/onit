@@ -85,7 +85,7 @@ extension GeneralTabAccount {
             action: {
                 AnalyticsManager.AccountEvents.createAccountPressed()
                 authFlowStatus = .showSignUp
-                openPanel()
+                handlePanelOpen()
             },
             background: .blue
         )
@@ -97,7 +97,7 @@ extension GeneralTabAccount {
             action: {
                 AnalyticsManager.AccountEvents.signInPressed()
                 authFlowStatus = .showSignIn
-                openPanel()
+                handlePanelOpen()
             }
         )
     }
@@ -138,7 +138,6 @@ extension GeneralTabAccount {
     private func logout() {
         TokenManager.token = nil
         appState.account = nil
-        Defaults[.authFlowStatus] = .showSignIn
         GIDSignIn.sharedInstance.signOut()
         
         // Reset all chat state
@@ -147,7 +146,9 @@ extension GeneralTabAccount {
         }
     }
     
-    private func openPanel() {
-        PanelStateCoordinator.shared.launchPanel()
+    private func handlePanelOpen() {
+        if !PanelStateCoordinator.shared.state.panelOpened {
+            PanelStateCoordinator.shared.launchPanel()
+        }
     }
 }

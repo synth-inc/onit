@@ -60,6 +60,7 @@ struct ToolbarRight: View {
         ) {
             toggleMode()
         }
+        .disabled(!appState.canAccessRemoteModels)
     }
 
     var discord: some View {

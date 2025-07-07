@@ -5,6 +5,7 @@
 //  Created by Kévin Naudin on 02/04/2025.
 //
 
+import Combine
 import Defaults
 import DefaultsMacros
 import Sparkle
@@ -42,6 +43,10 @@ class AppState: NSObject, SPUUpdaterDelegate {
     private var fetchSubscriptionTask: Task<Void, Never>?
     private var chatGenerationLimitTask: Task<Void, Never>? = nil
     
+    var userLoggedIn: Bool {
+        account != nil
+    }
+    
     var subscription: Subscription?
 //    var subscriptionActive: Bool { subscription?.status == "active" || subscription?.status == "trialing" }
     
@@ -54,7 +59,7 @@ class AppState: NSObject, SPUUpdaterDelegate {
     }
     
     var subscriptionStatus: String? {
-        if account != nil && subscription == nil {
+        if self.userLoggedIn && subscription == nil {
             return SubscriptionStatus.free
         } else if let subscription = subscription {
             switch subscription.status {
@@ -73,6 +78,10 @@ class AppState: NSObject, SPUUpdaterDelegate {
     var showFreeLimitAlert: Bool = false
     var showProLimitAlert: Bool = false
     var subscriptionPlanError: String = ""
+    
+    // Network Monitoring
+    var isOnline: Bool = NetworkMonitor.shared.isOnline
+    private var cancellables = Set<AnyCancellable>()
 
     // MARK: - Initializer
     
@@ -85,6 +94,13 @@ class AppState: NSObject, SPUUpdaterDelegate {
             updaterDelegate: self,
             userDriverDelegate: nil
         )
+        
+        NetworkMonitor.shared.$isOnline
+            .receive(on: DispatchQueue.main)
+            .sink{ [weak self] online in
+                self?.isOnline = online
+            }
+            .store(in: &cancellables)
 
         Task {
             await fetchLocalModels()
@@ -104,6 +120,14 @@ class AppState: NSObject, SPUUpdaterDelegate {
     
     func setSettingsTab(tab: SettingsTab) {
         settingsTab = tab
+    }
+    
+    func openModelSettingsTab(_ openSettings: OpenSettingsAction) {
+        NSApp.activate()
+        if NSApp.isActive {
+            self.setSettingsTab(tab: .models)
+            openSettings()
+        }
     }
     
     @MainActor
@@ -444,22 +468,30 @@ class AppState: NSObject, SPUUpdaterDelegate {
             Defaults[.visibleModelIds].contains($0.uniqueId)
         }
         
-        if !useOpenAI {
+        // Used to only allow users to access to models they've provided API keys for when logged out.
+        let restrictedFromOpenAIModels = !self.userLoggedIn && (openAIToken == nil || !isOpenAITokenValidated)
+        let restrictedFromAnthropicModels = !self.userLoggedIn && (anthropicToken == nil || !isAnthropicTokenValidated)
+        let restrictedFromXAIModels = !self.userLoggedIn && (xAIToken == nil || !isXAITokenValidated)
+        let restrictedFromGoogleAIModels = !self.userLoggedIn && (googleAIToken == nil || !isGoogleAITokenValidated)
+        let restrictedFromDeepSeekModels = !self.userLoggedIn && (deepSeekToken == nil || !isDeepSeekTokenValidated)
+        let restrictedFromPerplexityModels = !self.userLoggedIn && (perplexityToken == nil || !isPerplexityTokenValidated)
+        
+        if restrictedFromOpenAIModels || !useOpenAI {
             models = models.filter { $0.provider != .openAI }
         }
-        if !useAnthropic {
+        if restrictedFromAnthropicModels || !useAnthropic {
             models = models.filter { $0.provider != .anthropic }
         }
-        if !useXAI {
+        if restrictedFromXAIModels || !useXAI {
             models = models.filter { $0.provider != .xAI }
         }
-        if !useGoogleAI {
+        if restrictedFromGoogleAIModels || !useGoogleAI {
             models = models.filter { $0.provider != .googleAI }
         }
-        if !useDeepSeek {
+        if restrictedFromDeepSeekModels || !useDeepSeek {
             models = models.filter { $0.provider != .deepSeek }
         }
-        if !usePerplexity {
+        if restrictedFromPerplexityModels || !usePerplexity {
             models = models.filter { $0.provider != .perplexity }
         }
 
@@ -475,34 +507,58 @@ class AppState: NSObject, SPUUpdaterDelegate {
 
         return models
     }
+    
+    @ObservableDefault(.openAIToken)
+    @ObservationIgnored
+    var openAIToken: String?
+    
+    @ObservableDefault(.anthropicToken)
+    @ObservationIgnored
+    var anthropicToken: String?
+    
+    @ObservableDefault(.xAIToken)
+    @ObservationIgnored
+    var xAIToken: String?
+    
+    @ObservableDefault(.googleAIToken)
+    @ObservationIgnored
+    var googleAIToken: String?
+    
+    @ObservableDefault(.deepSeekToken)
+    @ObservationIgnored
+    var deepSeekToken: String?
+    
+    @ObservableDefault(.perplexityToken)
+    @ObservationIgnored
+    var perplexityToken: String?
 
     var hasUserAPITokens: Bool {
-        if let token = Defaults[.openAIToken],
+        if let token = openAIToken,
            !token.isEmpty,
            isOpenAITokenValidated {
             return true
         }
-        if let token = Defaults[.anthropicToken],
+        if let token = anthropicToken,
            !token.isEmpty,
            isAnthropicTokenValidated {
             return true
         }
-        if let token = Defaults[.xAIToken],
+        if let token = xAIToken,
            !token.isEmpty,
            isXAITokenValidated {
             return true
         }
-        if let token = Defaults[.googleAIToken],
+        if let token = googleAIToken,
            !token.isEmpty,
            isGoogleAITokenValidated {
             return true
         }
-        if let token = Defaults[.deepSeekToken],
+        if let token = deepSeekToken,
            !token.isEmpty,
            isDeepSeekTokenValidated {
             return true
         }
-        if let token = Defaults[.perplexityToken],
+        if let token = perplexityToken,
            !token.isEmpty,
            isPerplexityTokenValidated {
             return true
@@ -518,6 +574,10 @@ class AppState: NSObject, SPUUpdaterDelegate {
 //    var remoteNeedsSetup: Bool {
 //        listedModels.isEmpty
 //    }
+    
+    var canAccessRemoteModels: Bool {
+        (self.userLoggedIn || self.hasUserAPITokens) && self.isOnline
+    }
 }
 
 // MARK: - App Update Listeners
