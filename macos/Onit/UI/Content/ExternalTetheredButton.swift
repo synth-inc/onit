@@ -44,6 +44,8 @@ struct ExternalTetheredButton: View {
     @State private var hideAllAppsTimer: Timer? = nil
     
     @State private var leftClickEnabled: Bool = false
+    @State private var iconScale: CGFloat = 1.0
+    @State private var iconOpacity: Double = 1.0
     
     // MARK: - Private Variables
     
@@ -132,19 +134,34 @@ struct ExternalTetheredButton: View {
                     if foregroundWindowIconHidden {
                         icon(.smirk)
                     } else {
-                        Image(nsImage: foregroundWindowIcon)
-                            .resizable()
-                            .frame(
-                                width: 22,
-                                height: 22
-                            )
-                            .frame(
-                                width: Self.width,
-                                height: Self.height
-                            )
+                        ZStack {
+                            Image(nsImage: foregroundWindowIcon)
+                                .resizable()
+                                .frame(
+                                    width: 22,
+                                    height: 22
+                                )
+                                .scaleEffect(iconScale)
+                                .opacity(iconOpacity)
+                        }
+                        .frame(
+                            width: Self.width,
+                            height: Self.height
+                        )
+                        .onChange(of: foregroundWindowAppName) { oldValue, newValue in
+                            if oldValue != newValue && newValue != nil {
+                                iconScale = 0.8
+                                iconOpacity = 0.0
+                                
+                                withAnimation(.spring(response: 0.3, dampingFraction: 0.5)) {
+                                    iconScale = 1.0
+                                    iconOpacity = 1.0
+                                }
+                            }
+                        }
                     }
                 } else {
-                    icon(.dots)
+                    icon(.smirk)
                 }
             }
             .buttonStyle(
@@ -164,6 +181,10 @@ struct ExternalTetheredButton: View {
                 } else {
                     leftClickEnabled = true
                 }
+                
+                // Initialize icon animation state
+                iconScale = 1.0
+                iconOpacity = 1.0
             }
             .onDisappear {
                 clearRightClickListener()
