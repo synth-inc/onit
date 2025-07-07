@@ -11,19 +11,79 @@ import Defaults
 
 struct MenuIcon: View {
     @ObservedObject private var accessibilityPermissionManager = AccessibilityPermissionManager.shared
+    @Default(.tetheredButtonHideAllApps) var tetheredButtonHideAllApps
+    @Default(.tetheredButtonHideAllAppsTimerDate) var tetheredButtonHideAllAppsTimerDate
+    
+    @State private var currentTime: Date = Date()
+    @State private var timerUpdateTask: Task<Void, Never>? = nil
+    
+    private var isHideAllAppsTimerActive: Bool {
+        guard let timerDate = tetheredButtonHideAllAppsTimerDate else { return false }
+        return timerDate > currentTime
+    }
+    
+    private var isOnitDisabled: Bool {
+        tetheredButtonHideAllApps || isHideAllAppsTimerActive
+    }
 
-    var body: some View {
+    private var iconImage: ImageResource {
         let statusGranted = accessibilityPermissionManager.accessibilityPermissionStatus == .granted
+        if !statusGranted {
 #if BETA
-        Image(statusGranted ? .betaNoodle : .untrusted)
-            .renderingMode(statusGranted ? .template : .original)
-            .animation(.default, value: statusGranted)
+            return .noodleErrorBeta
 #else
-        Image(statusGranted ? .smirk : .untrusted)
-            .renderingMode(statusGranted ? .template : .original)
-            .animation(.default, value: statusGranted)
+            return .noodleError
 #endif
-            
+        } else if isOnitDisabled {
+#if BETA
+            return .noodleWarningBeta
+#else
+            return .noodleWarning
+#endif
+        } else {
+#if BETA
+            return .noodleBeta
+#else
+            return .noodle
+#endif
+        }
+    }
+    
+    var body: some View {
+        Image(iconImage)
+            .renderingMode(.original)
+//            .animation(.default, value: isOnitDisabled)
+            .onAppear {
+                startTimerUpdateTask()
+            }
+            .onDisappear {
+                stopTimerUpdateTask()
+            }
+    }
+    
+    private func startTimerUpdateTask() {
+        timerUpdateTask = Task {
+            while !Task.isCancelled {
+                try? await Task.sleep(for: .seconds(1))
+                if !Task.isCancelled {
+                    await MainActor.run {
+                        currentTime = Date()
+                        
+                        // Clean up expired timer
+                        if let timerDate = tetheredButtonHideAllAppsTimerDate,
+                           timerDate <= currentTime {
+                            tetheredButtonHideAllAppsTimerDate = nil
+                            tetheredButtonHideAllApps = false
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    private func stopTimerUpdateTask() {
+        timerUpdateTask?.cancel()
+        timerUpdateTask = nil
     }
 }
 

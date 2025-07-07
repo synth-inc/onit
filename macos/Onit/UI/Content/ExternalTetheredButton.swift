@@ -18,7 +18,7 @@ struct ExternalTetheredButton: View {
     @Default(.tetheredButtonHiddenApps) var tetheredButtonHiddenApps
     @Default(.tetheredButtonHideAllApps) var tetheredButtonHideAllApps
     @Default(.tetheredButtonHideAllAppsTimerDate) var tetheredButtonHideAllAppsTimerDate // Currently hides for one hour.
-    @Default(.experimentalHintEnabled) var experimentalHintEnabled
+    @Default(.tetheredButtonShowAppIcons) var tetheredButtonShowAppIcons
     
     // MARK: - Initializers
 
@@ -57,26 +57,26 @@ struct ExternalTetheredButton: View {
         return windowState?.pendingInput != nil
     }
     
-    private var capturedForegroundWindow: Bool {
-        windowState?.foregroundWindow != nil
-    }
-    
     private var foregroundWindowIcon: NSImage? {
-        if let foregroundWindow = windowState?.foregroundWindow {
-            return WindowHelpers.getWindowIcon(window: foregroundWindow.element)
+        if let window = FeatureFlagManager.shared.usePinnedMode
+            ? windowState?.foregroundWindow
+            : windowState?.trackedWindow {
+            return WindowHelpers.getWindowIcon(window: window.element)
         } else {
             return nil
         }
     }
-    
+      
     private var foregroundWindowAppName: String? {
-        if let foregroundWindow = windowState?.foregroundWindow {
-            return WindowHelpers.getWindowAppName(window: foregroundWindow.element)
+        if let window = FeatureFlagManager.shared.usePinnedMode
+            ? windowState?.foregroundWindow
+            : windowState?.trackedWindow {
+            return WindowHelpers.getWindowAppName(window: window.element)
         } else {
             return nil
         }
     }
-    
+
     private var hideAllAppsCountdownIsActive: Bool {
         hideAllAppsTimer != nil && tetheredButtonHideAllAppsTimerDate != nil
     }
@@ -120,20 +120,21 @@ struct ExternalTetheredButton: View {
     // MARK: - Body
     
     var body: some View {
-        VStack {
-            Button {
-                tetherAction()
-            } label:  {
-                if dragStartTime != nil {
-                    icon(.drag)
-                } else if capturedHighlightedText {
-                    icon(.text)
-                } else if experimentalHintEnabled,
-                          let foregroundWindowIcon = foregroundWindowIcon
-                {
-                    if foregroundWindowIconHidden {
-                        icon(.smirk)
-                    } else {
+        // Hide the entire button when foregroundWindowIconHidden is true
+        if foregroundWindowIconHidden {
+            EmptyView()
+        } else {
+            VStack {
+                Button {
+                    tetherAction()
+                } label:  {
+                    if dragStartTime != nil {
+                        icon(.drag)
+                    } else if capturedHighlightedText {
+                        icon(.text)
+                    } else if tetheredButtonShowAppIcons,
+                              let foregroundWindowIcon = foregroundWindowIcon
+                    {
                         ZStack {
                             Image(nsImage: foregroundWindowIcon)
                                 .resizable()
@@ -159,63 +160,51 @@ struct ExternalTetheredButton: View {
                                 }
                             }
                         }
+                    } else {
+                        icon(.noodle)
                     }
-                } else {
-                    icon(.smirk)
                 }
-            }
-            .buttonStyle(
-                ExternalTetheredButtonStyle(
-                    dragStartTime: $dragStartTime,
-                    isHovering: $isHoveringButton,
-                    capturedHighlightedText: capturedHighlightedText,
-                    tooltipText: fitActiveWindowPrompt
+                .buttonStyle(
+                    ExternalTetheredButtonStyle(
+                        dragStartTime: $dragStartTime,
+                        isHovering: $isHoveringButton,
+                        capturedHighlightedText: capturedHighlightedText,
+                        tooltipText: fitActiveWindowPrompt
+                    )
                 )
-            )
-            .offset(x: capturedHighlightedText ? Self.borderWidth : 0)
-            .simultaneousGesture(dragGesture)
-            .onAppear {
-                if experimentalHintEnabled {
+                .offset(x: capturedHighlightedText ? Self.borderWidth : 0)
+                .simultaneousGesture(dragGesture)
+                .onAppear {
                     initializeRightClickListener()
                     initializeHideAllAppsTimer()
-                } else {
-                    leftClickEnabled = true
+                    
+                    // Initialize icon animation state
+                    iconScale = 1.0
+                    iconOpacity = 1.0
                 }
-                
-                // Initialize icon animation state
-                iconScale = 1.0
-                iconOpacity = 1.0
-            }
-            .onDisappear {
-                clearRightClickListener()
-                clearHideAllAppsTimer()
-            }
-            .popover(
-                isPresented: $showRightClickMenu,
-                arrowEdge: .trailing
-            ) {
-                rightClickMenu
-            }
-            .onChange(of: showRightClickMenu) { _, show in
-                if !show {
-                    leftClickEnabled = false
-                }
-            }
-            .onChange(of: experimentalHintEnabled) { _, enabled in
-                if !enabled {
+                .onDisappear {
                     clearRightClickListener()
                     clearHideAllAppsTimer()
-                    tetheredButtonHideAllAppsTimerDate = nil
-                    leftClickEnabled = true
+                }
+                .popover(
+                    isPresented: $showRightClickMenu,
+                    arrowEdge: .trailing
+                ) {
+                    rightClickMenu
+                }
+                .onChange(of: showRightClickMenu) { _, show in
+                    if !show {
+                        leftClickEnabled = false
+                    }
                 }
             }
+            .frame(
+                width: Self.containerWidth,
+                height: Self.containerHeight,
+                alignment: .trailing
+            )
+            .offset(x: 1)
         }
-        .frame(
-            width: Self.containerWidth,
-            height: Self.containerHeight,
-            alignment: .trailing
-        )
-        .offset(x: 1)
     }
 }
 
@@ -244,34 +233,34 @@ extension ExternalTetheredButton {
                 .padding(.horizontal, 8)
             
             VStack(alignment: .leading, spacing: 2) {
-                if let appName = foregroundWindowAppName {
-                    let appIsHidden = checkCurrentAppIsHidden(appName)
-                    
-                    TextButton(
-                        iconSize: 18,
-                        icon: .removeCross,
-                        text: "\(appIsHidden ? "Show" : "Hide") \(appName)"
-                    ) {
-                        toggleHideCurrentForegroundWindowIcon(appName: appName)
-                    }
+                TextButton(
+                    iconSize: 16,
+                    icon: .box,
+                    text: "\(tetheredButtonShowAppIcons ? "Don't show" : "Show") app icon"
+                ) {
+                    toggleHideForegroundWindowIcons()
                 }
                 
                 TextButton(
                     iconSize: 18,
                     disabled: tetheredButtonHideAllAppsTimerDate != nil,
                     icon: .timerSleep,
-                    text: tetheredButtonHideAllAppsTimerDate == nil ? "Hide Everywhere for 1h" : "Hiding for 1h..."
+                    text: tetheredButtonHideAllAppsTimerDate == nil ? "Hide everywhere for 1h" : "Hiding for 1h..."
                 ) {
                     toggleHideForegroundWindowIconsForOneHour()
                 }
                 .allowsHitTesting(tetheredButtonHideAllAppsTimerDate == nil)
                 
-                TextButton(
-                    iconSize: 16,
-                    icon: .box,
-                    text: "\(isHidingAllApps ? "Show" : "Hide") Current App Icon"
-                ) {
-                    toggleHideForegroundWindowIcons()
+                if !FeatureFlagManager.shared.usePinnedMode, let appName = foregroundWindowAppName {
+                    let appIsHidden = checkCurrentAppIsHidden(appName)
+                    
+                    TextButton(
+                        iconSize: 18,
+                        icon: .removeCross,
+                        text: "\(appIsHidden ? "Show for" : "Hide for") \(appName)"
+                    ) {
+                        toggleHideCurrentForegroundWindowIcon(appName: appName)
+                    }
                 }
             }
         }
@@ -396,11 +385,7 @@ extension ExternalTetheredButton {
     }
     
     private func toggleHideForegroundWindowIcons() {
-        tetheredButtonHideAllApps.toggle()
-        
-        clearHideAllAppsTimer()
-        tetheredButtonHideAllAppsTimerDate = nil
-        
+        tetheredButtonShowAppIcons.toggle()
         showRightClickMenu = false
     }
 }

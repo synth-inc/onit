@@ -15,6 +15,7 @@ struct MenuBarContent: View {
             MenuDivider()
             MenuCheckForPermissions()
             MenuOpenOnitButton()
+            MenuHideTimerStatus()
             MenuDivider()
             MenuSettings()
             MenuCheckForUpdates()

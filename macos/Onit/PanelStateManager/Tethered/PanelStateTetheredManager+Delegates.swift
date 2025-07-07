@@ -11,8 +11,10 @@ extension PanelStateTetheredManager: AccessibilityNotificationsDelegate {
     //  MARK: - DID ACTIVATE WINDOW
     
     func accessibilityManager(_ manager: AccessibilityNotificationsManager, didActivateWindow window: TrackedWindow) {
-        state.foregroundWindow = window
-        
+        for panelState in states {
+            panelState.foregroundWindow = window
+        }
+    
         log.debug("activate window")
         let panelState = getState(for: window)
         
@@ -89,13 +91,15 @@ extension PanelStateTetheredManager: AccessibilityNotificationsDelegate {
     // MARK: - DID CHANGE WINDOW TITLE
     
     func accessibilityManager(_ manager: AccessibilityNotificationsManager, didChangeWindowTitle window: TrackedWindow) {
-        if let foregroundWindow = state.foregroundWindow,
-           window.element == foregroundWindow.element,
-           window.pid == foregroundWindow.pid,
-           window.hash == foregroundWindow.hash
-        {
-            state.foregroundWindow = window
-        }
+         for panelState in states {
+            if let foregroundWindow = panelState.foregroundWindow,
+            window.element == foregroundWindow.element,
+            window.pid == foregroundWindow.pid,
+            window.hash == foregroundWindow.hash
+            {
+                panelState.foregroundWindow = window
+            }
+         }
     }
 }
 
