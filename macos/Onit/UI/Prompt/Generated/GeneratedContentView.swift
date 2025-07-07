@@ -55,10 +55,8 @@ struct GeneratedContentView: View {
 
         VStack(alignment: .leading, spacing: 8) {
             LLMStreamView(text: textToRead,
-                        configuration: configuration,
-                        onUrlClicked: onUrlClicked,
-                        onCodeAction: codeAction)
-                .id("\(fontSize)-\(lineHeight)") // Force recreation when font settings change
+                          configuration: configuration,
+                          onUrlClicked: onUrlClicked)
                 .padding(.horizontal, 12)
 
             if let response = prompt.currentResponse, response.hasToolCall {
@@ -83,16 +81,6 @@ struct GeneratedContentView: View {
         if let url = URL(string: urlString) {
             openURL(url)
         }
-    }
-    
-    private func codeAction(code: String) {
-        let notepadConfig = model.getNotepadConfig(prompt: prompt)
-        
-        NotepadWindowController.shared.showWindow(
-            oldText: notepadConfig.oldText,
-            newText: code,
-            isStreaming: notepadConfig.isStreaming
-        )
     }
 }
 
