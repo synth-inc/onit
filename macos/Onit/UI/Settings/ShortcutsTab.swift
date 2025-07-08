@@ -10,11 +10,15 @@ import SwiftUI
 import Defaults
 
 struct ShortcutsTab: View {
+    @ObservedObject private var accessibilityPermissionManager = AccessibilityPermissionManager.shared
+    
+    @Default(.autoContextFromCurrentWindow) var autoContextFromCurrentWindow
     @Default(.escapeShortcutDisabled) var escapeShortcutDisabled
     
     var body: some View {
         Form {
             Section {
+            } header: {
                 KeyboardShortcuts.Recorder(
                     "Launch Onit", name: .launch
                 )
@@ -37,7 +41,7 @@ struct ShortcutsTab: View {
                 )
                 .padding()
                 
-                if accessibilityPermissionManager.accessibilityPermissionStatus == .authorized && autoContextFromCurrentWindow {
+                if accessibilityPermissionManager.accessibilityPermissionStatus == .granted && autoContextFromCurrentWindow {
                     KeyboardShortcuts.Recorder(
                         "Add Current Window to Context", name: .addForegroundWindowToContext
                     )
