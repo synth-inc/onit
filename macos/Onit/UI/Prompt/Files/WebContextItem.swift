@@ -49,7 +49,7 @@ struct WebContextItem: View {
             isLoading: websiteUndergoingScrape,
             iconView: websiteUndergoingScrape ? LoaderPulse() : favicon,
             caption: item.fileType,
-            tooltip: getCurrentWebsiteTitle(),
+            tooltipPrompt: getCurrentWebsiteTitle(),
             action: action,
             removeAction: isEditing ? { removeAction() } : nil
         )

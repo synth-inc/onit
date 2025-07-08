@@ -22,9 +22,7 @@ struct ContextTag: View {
     private let iconBundleURL: URL?
     private let iconView: (any View)?
     private let caption: String?
-    private let tooltip: String?
-    private let popoverText: String?
-    private let popoverTextColor: Color?
+    private let tooltipPrompt: String?
     private let errorDotColor: Color?
     private let action: (() -> Void)?
     private let removeAction: (() -> Void)?
@@ -44,9 +42,7 @@ struct ContextTag: View {
         iconBundleURL: URL? = nil,
         iconView: (any View)? = nil,
         caption: String? = nil,
-        tooltip: String? = nil,
-        popoverText: String? = nil,
-        popoverTextColor: Color? = nil,
+        tooltipPrompt: String? = nil,
         errorDotColor: Color? = nil,
         action: (() -> Void)? = nil,
         removeAction: (() -> Void)? = nil
@@ -65,9 +61,7 @@ struct ContextTag: View {
         self.iconBundleURL = iconBundleURL
         self.iconView = iconView
         self.caption = caption
-        self.tooltip = tooltip
-        self.popoverText = popoverText
-        self.popoverTextColor = popoverTextColor
+        self.tooltipPrompt = tooltipPrompt
         self.errorDotColor = errorDotColor
         self.action = action
         self.removeAction = removeAction
@@ -146,20 +140,12 @@ struct ContextTag: View {
         .onHover { isHovering in
             isHoveredBody = isHovering
             
-            if tooltip != nil {
-                if isHovering {
-                    TooltipManager.shared.setTooltip(
-                        Tooltip(prompt: tooltip ?? ""),
-                        delayStart: 0.4,
-                        delayEnd: 0
-                    )
-                } else {
-                    TooltipManager.shared.setTooltip(
-                        nil,
-                        delayEnd: 0
-                    )
-                }
-            }
+            TooltipHelpers.setOptionalTooltip(
+                isHovering: isHovering,
+                ignoreMouseEvents: true,
+                tooltipPrompt: tooltipPrompt,
+                tooltipTruncated: TooltipHelpers.defaultTruncation
+            )
         }
         .addAnimation(dependency: isHoveredBody)
         .addBorder(
@@ -174,11 +160,8 @@ struct ContextTag: View {
             shouldFadeOnClick: false,
             isHovered: $isHoveredBody,
             isPressed: $isPressedBody,
-            action: popoverText != nil ? togglePopover : action
+            action: action
         )
-        .popover(isPresented: $isPopoverOpen) {
-            popoverTextScrollView
-        }
     }
 }
 
@@ -209,21 +192,6 @@ extension ContextTag {
         .background(hoverBackground)
         .onHover { isHovering in
             isHoveredRemove = isHovering
-        }
-    }
-    
-    @ViewBuilder
-    private var popoverTextScrollView: some View {
-        if let text = popoverText {
-            DynamicScrollView(maxHeight: 200) {
-                Text(text)
-                    .padding(12)
-                    .frame(width: 300)
-                    .styleText(
-                        weight: .regular,
-                        color: popoverTextColor ?? Color.primary
-                    )
-            }
         }
     }
 }

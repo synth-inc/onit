@@ -55,8 +55,8 @@ struct ToolbarRight: View {
             activeColor: .limeGreen,
             activeBackground: .clear,
             activeBorderColor: .clear,
-            tooltipPrompt: "Local Mode",
-            tooltipShortcut: .keyboardShortcuts(.toggleLocalMode)
+            tooltipShortcut: .keyboardShortcuts(.toggleLocalMode),
+            tooltipPrompt: "Local Mode"
         ) {
             toggleMode()
         }

@@ -141,7 +141,10 @@ struct ExternalTetheredButtonStyle: ButtonStyle {
         self.isHovering = hovering
 
         if hovering {
-            TooltipManager.shared.setTooltip(Tooltip(prompt: tooltipText))
+            TooltipManager.shared.setTooltip(
+                Tooltip(prompt: tooltipText),
+                ignoreMouseEvents: true
+            )
         } else {
             TooltipManager.shared.setTooltip(nil)
         }

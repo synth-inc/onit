@@ -216,7 +216,7 @@ extension FileRow {
             ghostContextTag(
                 text: contextTagText,
                 iconBundleURL: iconBundleURL,
-                tooltip: "Add \(foregroundWindowName) Context"
+                tooltipPrompt: "Add \(foregroundWindowName) Context"
             ) {
                 windowState.addWindowToContext(window: foregroundWindow.element)
             }
