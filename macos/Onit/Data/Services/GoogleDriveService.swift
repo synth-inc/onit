@@ -154,7 +154,7 @@ class GoogleDriveService: NSObject, ObservableObject {
             throw GoogleDriveServiceError.invalidUrl(error)
         }
 
-        _ = try? await GIDSignIn.sharedInstance.restorePreviousSignIn()
+        _ = try? await GIDSignIn.sharedInstance.currentUser?.refreshTokensIfNeeded()
 
         guard let user = GIDSignIn.sharedInstance.currentUser else {
             let error = "Not authenticated with Google Drive"
