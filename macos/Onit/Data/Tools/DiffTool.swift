@@ -127,7 +127,7 @@ class DiffTool: ToolProtocol {
     }
 
     private func generateDiffOperations(original: String, improved: String) -> [PlainTextDiffOperation] {
-        let diffs = diff(text1: original, text2: improved)
+        let diffs = optimizedDiff(text1: original, text2: improved)
         var operations: [PlainTextDiffOperation] = []
         var currentIndex = 0
         
@@ -160,26 +160,127 @@ class DiffTool: ToolProtocol {
         
         return operations
 	}
-}
+    
+    private static func optimizedDiff(text1: String, text2: String) -> [DiffOperation] {
+        if text1 == text2 {
+            return text1.isEmpty ? [] : [.equal(text1)]
+        }
+        
+        let (commonPrefix, trimmedText1, trimmedText2) = extractCommonPrefix(text1: text1, text2: text2)
+        let (commonSuffix, finalText1, finalText2) = extractCommonSuffix(text1: trimmedText1, text2: trimmedText2)
+        
+        if finalText1.isEmpty && finalText2.isEmpty {
+            var result: [DiffOperation] = []
+            if !commonPrefix.isEmpty {
+                result.append(.equal(commonPrefix))
+            }
+            if !commonSuffix.isEmpty {
+                result.append(.equal(commonSuffix))
+            }
+            return result
+        }
+        
+        if finalText1.isEmpty {
+            var result: [DiffOperation] = []
+            if !commonPrefix.isEmpty {
+                result.append(.equal(commonPrefix))
+            }
+            result.append(.insert(finalText2))
+            if !commonSuffix.isEmpty {
+                result.append(.equal(commonSuffix))
+            }
+            return result
+        }
+        
+        if finalText2.isEmpty {
+            var result: [DiffOperation] = []
+            if !commonPrefix.isEmpty {
+                result.append(.equal(commonPrefix))
+            }
+            result.append(.delete(finalText1))
+            if !commonSuffix.isEmpty {
+                result.append(.equal(commonSuffix))
+            }
+            return result
+        }
+        
+        let diffs = computeOptimalDiff(text1: finalText1, text2: finalText2)
+        
+        var result = diffs
+        if !commonPrefix.isEmpty {
+            result.insert(.equal(commonPrefix), at: 0)
+        }
+        if !commonSuffix.isEmpty {
+            result.append(.equal(commonSuffix))
+        }
+        
+        return result
+    }
 
-public func diff(text1: String, text2: String) -> [DiffOperation] {
-    if text1 == text2 {
-        return text1.isEmpty ? [] : [.equal(text1)]
+    private static func computeOptimalDiff(text1: String, text2: String) -> [DiffOperation] {
+        let chars1 = Array(text1)
+        let chars2 = Array(text2)
+        let n = chars1.count
+        let m = chars2.count
+        
+        var dp = Array(repeating: Array(repeating: 0, count: m + 1), count: n + 1)
+        
+        for i in 1...n {
+            for j in 1...m {
+                if chars1[i-1] == chars2[j-1] {
+                    dp[i][j] = dp[i-1][j-1] + 1
+                } else {
+                    dp[i][j] = max(dp[i-1][j], dp[i][j-1])
+                }
+            }
+        }
+        
+        var result: [DiffOperation] = []
+        var i = n
+        var j = m
+        
+        while i > 0 || j > 0 {
+            if i > 0 && j > 0 && chars1[i-1] == chars2[j-1] {
+                result.insert(.equal(String(chars1[i-1])), at: 0)
+                i -= 1
+                j -= 1
+            } else if i > 0 && (j == 0 || dp[i-1][j] >= dp[i][j-1]) {
+                result.insert(.delete(String(chars1[i-1])), at: 0)
+                i -= 1
+            } else if j > 0 {
+                result.insert(.insert(String(chars2[j-1])), at: 0)
+                j -= 1
+            }
+        }
+        
+        return mergeConsecutiveOperations(result)
     }
     
-    let (commonPrefix, trimmedText1, trimmedText2) = extractCommonPrefix(text1: text1, text2: text2)
-    let (commonSuffix, finalText1, finalText2) = extractCommonSuffix(text1: trimmedText1, text2: trimmedText2)
-    let diffs = computeDiff(text1: finalText1, text2: finalText2)
-    var result = diffs
-    
-    if !commonPrefix.isEmpty {
-        result.insert(.equal(commonPrefix), at: 0)
+    private static func mergeConsecutiveOperations(_ operations: [DiffOperation]) -> [DiffOperation] {
+        guard !operations.isEmpty else { return [] }
+        
+        var result: [DiffOperation] = []
+        var currentOp = operations[0]
+        
+        for i in 1..<operations.count {
+            let nextOp = operations[i]
+            
+            switch (currentOp, nextOp) {
+            case (.equal(let text1), .equal(let text2)):
+                currentOp = .equal(text1 + text2)
+            case (.delete(let text1), .delete(let text2)):
+                currentOp = .delete(text1 + text2)
+            case (.insert(let text1), .insert(let text2)):
+                currentOp = .insert(text1 + text2)
+            default:
+                result.append(currentOp)
+                currentOp = nextOp
+            }
+        }
+        
+        result.append(currentOp)
+        return result
     }
-    if !commonSuffix.isEmpty {
-        result.append(.equal(commonSuffix))
-    }
-    
-    return result
 }
 
 private func extractCommonPrefix(text1: String, text2: String) -> (String, String, String) {
@@ -230,109 +331,3 @@ private func extractCommonSuffix(text1: String, text2: String) -> (String, Strin
     return (suffix, remaining1, remaining2)
 }
 
-private func computeDiff(text1: String, text2: String) -> [DiffOperation] {
-    if text1.isEmpty {
-        return text2.isEmpty ? [] : [.insert(text2)]
-    }
-    
-    if text2.isEmpty {
-        return [.delete(text1)]
-    }
-    
-    return myersDiff(text1: text1, text2: text2)
-}
-
-private func myersDiff(text1: String, text2: String) -> [DiffOperation] {
-    let chars1 = Array(text1)
-    let chars2 = Array(text2)
-    let n = chars1.count
-    let m = chars2.count
-    
-    if n == 0 {
-        return [.insert(text2)]
-    }
-    if m == 0 {
-        return [.delete(text1)]
-    }
-    
-    let max = n + m
-    var v = Array(repeating: 0, count: 2 * max + 1)
-    var trace: [[Int]] = []
-    
-    for d in 0...max {
-        trace.append(v)
-        
-        for k in stride(from: -d, through: d, by: 2) {
-            let kIndex = k + max
-            
-            var x: Int
-            if k == -d || (k != d && v[kIndex - 1] < v[kIndex + 1]) {
-                x = v[kIndex + 1]
-            } else {
-                x = v[kIndex - 1] + 1
-            }
-            
-            var y = x - k
-            
-            while x < n && y < m && chars1[x] == chars2[y] {
-                v[kIndex] = x + 1
-                if x + 1 < n && y + 1 < m {
-                    x += 1
-                    y += 1
-                } else {
-                    break
-                }
-            }
-            
-            v[kIndex] = x
-            
-            if x >= n && y >= m {
-                return backtrack(chars1: chars1, chars2: chars2, trace: trace, d: d)
-            }
-        }
-    }
-    
-    // Fallback to simple diff
-    return [.delete(text1), .insert(text2)]
-}
-
-private func backtrack(chars1: [Character], chars2: [Character], trace: [[Int]], d: Int) -> [DiffOperation] {
-    var result: [DiffOperation] = []
-    var x = chars1.count
-    var y = chars2.count
-    
-    for step in stride(from: d, through: 0, by: -1) {
-        let v = trace[step]
-        let max = chars1.count + chars2.count
-        let k = x - y
-        let kIndex = k + max
-        
-        let prevK: Int
-        if k == -step || (k != step && v[kIndex - 1] < v[kIndex + 1]) {
-            prevK = k + 1
-        } else {
-            prevK = k - 1
-        }
-        
-        let prevX = v[prevK + max]
-        let prevY = prevX - prevK
-        
-        while x > prevX && y > prevY {
-            result.insert(.equal(String(chars1[x - 1])), at: 0)
-            x -= 1
-            y -= 1
-        }
-        
-        if step > 0 {
-            if x > prevX {
-                result.insert(.delete(String(chars1[x - 1])), at: 0)
-                x -= 1
-            } else {
-                result.insert(.insert(String(chars2[y - 1])), at: 0)
-                y -= 1
-            }
-        }
-    }
-    
-    return result
-}

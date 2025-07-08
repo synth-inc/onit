@@ -6,13 +6,16 @@
 //
 
 import SwiftUI
+import SwiftData
 
 struct NotepadView: View {
+    let response: Response
     let closeCompletion: (() -> Void)
     
-    @EnvironmentObject var config: NotepadConfig
+    @Environment(\.modelContext) private var modelContext
     
-    init(closeCompletion: @escaping () -> Void) {
+    init(response: Response, closeCompletion: @escaping () -> Void) {
+        self.response = response
         self.closeCompletion = closeCompletion
     }
     
@@ -20,7 +23,7 @@ struct NotepadView: View {
         VStack(spacing: 0) {
             toolbar
             PromptDivider()
-            DiffView(oldText: $config.oldText, newText: $config.newText, isStreaming: $config.isStreaming)
+            DiffView(response: response, modelContext: modelContext)
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         }
     }
@@ -42,11 +45,4 @@ struct NotepadView: View {
         }
         .buttonStyle(.plain)
     }
-}
-
-#Preview {
-    NotepadView {
-        
-    }
-    .environmentObject(NotepadConfig())
 }

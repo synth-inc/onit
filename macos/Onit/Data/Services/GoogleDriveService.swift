@@ -135,7 +135,7 @@ class GoogleDriveService: NSObject, ObservableObject {
         }
     }
 
-    func extractTextFromGoogleDrive(driveUrl: String) async throws -> String {
+    func extractTextFromGoogleDrive(driveUrl: String) async throws -> (String, String) {
         self.isExtracting = true
         self.extractionError = nil
 
@@ -226,9 +226,9 @@ class GoogleDriveService: NSObject, ObservableObject {
         }
 
         if text.isEmpty {
-            return "(Document appears to be empty)"
+            return ("(Document appears to be empty)", mimeType)
         } else {
-            return text
+            return (text, mimeType)
         }
     }
 
