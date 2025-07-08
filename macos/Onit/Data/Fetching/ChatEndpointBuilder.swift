@@ -162,7 +162,7 @@ struct ChatEndpointBuilder {
             userMessages: userMessages)
 
         return GoogleAIChatEndpoint(
-            messages: messages, model: model.id, token: apiToken, includeSearch: includeSearch)
+            messages: messages, model: model.id, queryToken: apiToken, includeSearch: includeSearch)
     }
 
     private static func deepSeek(

@@ -14,13 +14,14 @@ struct GoogleAIChatEndpoint: Endpoint {
 
     let messages: [GoogleAIChatMessage]
     let model: String
-    let token: String?
+    var token: String? { nil }
+    let queryToken: String?
     let includeSearch: Bool?
 
     var path: String { "/v1beta/models/\(model):generateContent" }
     var getParams: [String: String]? {
         [
-            "key": token ?? ""
+            "key": queryToken ?? ""
         ]
     }
 
