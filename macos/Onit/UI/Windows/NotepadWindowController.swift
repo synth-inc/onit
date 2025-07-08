@@ -8,18 +8,6 @@
 import AppKit
 import SwiftUI
 
-class NotepadConfig: ObservableObject {
-    @Published var oldText: String
-    @Published var newText: String
-    @Published var isStreaming: Bool
-    
-    init(oldText: String = "", newText: String = "", isStreaming: Bool = false) {
-        self.oldText = oldText
-        self.newText = newText
-        self.isStreaming = isStreaming
-    }
-}
-
 @MainActor
 class NotepadWindowController: NSObject, NSWindowDelegate {
     
@@ -29,64 +17,24 @@ class NotepadWindowController: NSObject, NSWindowDelegate {
 
     // MARK: - Properties
 
-    private var windowState: OnitPanelState?
-    private var contentView: NotepadView?
     private var panel: NSPanel?
-    
-    @Published private var config = NotepadConfig()
-    
-//    private var oldText: String {
-//        guard let prompt = prompt else { return "" }
-//        
-//        let autoContexts = prompt.contextList.autoContexts
-//        
-//        if let input = prompt.input {
-//            print("NotepadView oldText : \(input.selectedText)")
-//            return input.selectedText
-//        } else if !autoContexts.isEmpty {
-//            print("NotepadView oldText : \(autoContexts.values.joined(separator: "\n"))")
-//            return autoContexts.values.joined(separator: "\n")
-//        }
-//        
-//        return ""
-//    }
-//    private var newText: String {
-//        guard let prompt = prompt else { return "" }
-//        
-//        let response = prompt.responses[prompt.generationIndex]
-//        
-//        print("NotepadView newText : \(response.isPartial ? model.streamedResponse : response.text)")
-//        
-//        return response.isPartial ? model.streamedResponse : response.text
-//    }
-//    private var isStreaming: Bool {
-//        guard let prompt = prompt else {
-//            return false
-//        }
-//        
-//        let response = prompt.responses[prompt.generationIndex]
-//        
-//        print("NotepadView isStreaming : \(response.isPartial)")
-//        
-//        return response.isPartial
-//    }
-    
-    
 
-    // MARK: - Initializers
+    // MARK: - Functions
 
-    func configure(windowState: OnitPanelState) {
-        self.windowState = windowState
+    func showWindow(windowState: OnitPanelState, response: Response) {
+        guard response.isDiffResponse,
+              let _ = response.diffArguments,
+              let _ = response.diffResult else {
+            print("NotepadWindowController: Invalid diff response provided")
+            return
+        }
         
-        // Update content view initialization
-        self.contentView = NotepadView(
+        let contentView = NotepadView(
+            response: response,
             closeCompletion: closeWindow
         )
-
-        let contentView = contentView
-            .environment(\.windowState, windowState)
-            .environmentObject(config)
-
+        .environment(\.windowState, windowState)
+        
         let panelContentView = NSHostingView(rootView: contentView)
         panelContentView.wantsLayer = true
         panelContentView.layer?.cornerRadius = 14
@@ -94,41 +42,34 @@ class NotepadWindowController: NSObject, NSWindowDelegate {
         panelContentView.layer?.masksToBounds = true
         panelContentView.layer?.backgroundColor = .black
 
-        let newPanel = NSPanel(
-            contentRect: NSRect(x: 0, y: 0, width: 100, height: 0),
-            styleMask: [.resizable, .nonactivatingPanel, .fullSizeContentView],
-            backing: .buffered,
-            defer: false
-        )
+        if panel == nil {
+            let newPanel = NSPanel(
+                contentRect: NSRect(x: 0, y: 0, width: 800, height: 600),
+                styleMask: [.resizable, .nonactivatingPanel, .fullSizeContentView],
+                backing: .buffered,
+                defer: false
+            )
 
-        newPanel.isOpaque = false
-        newPanel.backgroundColor = NSColor.clear
-        newPanel.level = .floating
-        newPanel.titleVisibility = .hidden
-        newPanel.titlebarAppearsTransparent = true
-        newPanel.isMovableByWindowBackground = true
-        newPanel.delegate = self
+            newPanel.isOpaque = false
+            newPanel.backgroundColor = NSColor.clear
+            newPanel.level = .floating
+            newPanel.titleVisibility = .hidden
+            newPanel.titlebarAppearsTransparent = true
+            newPanel.isMovableByWindowBackground = true
+            newPanel.delegate = self
 
-        newPanel.standardWindowButton(.closeButton)?.isHidden = true
-        newPanel.standardWindowButton(.miniaturizeButton)?.isHidden = true
-        newPanel.standardWindowButton(.zoomButton)?.isHidden = true
-        newPanel.isFloatingPanel = true
+            newPanel.standardWindowButton(.closeButton)?.isHidden = true
+            newPanel.standardWindowButton(.miniaturizeButton)?.isHidden = true
+            newPanel.standardWindowButton(.zoomButton)?.isHidden = true
+            newPanel.isFloatingPanel = true
+            
+            panel = newPanel
+        }
         
-        newPanel.contentView = panelContentView
-        newPanel.contentView?.setFrameOrigin(NSPoint(x: 0, y: 0))
+        panel?.contentView = panelContentView
+        panel?.contentView?.setFrameOrigin(NSPoint(x: 0, y: 0))
         
-        panel = newPanel
-    }
-
-    // MARK: - Functions
-
-    func showWindow(oldText: String, newText: String, isStreaming: Bool) {
-        print("showWindow called - oldText: \(oldText.prefix(20))... newText: \(newText.prefix(20))... isStreaming: \(isStreaming)")
-        config.oldText = oldText
-        config.newText = newText
-        config.isStreaming = isStreaming
-        
-        positionWindow()
+        positionWindow(windowState: windowState)
         bringToFront()
     }
 
@@ -154,25 +95,13 @@ class NotepadWindowController: NSObject, NSWindowDelegate {
 
     // MARK: - Private Functions
 
-    private func positionWindow() {
+    private func positionWindow(windowState: OnitPanelState) {
         guard let panel = self.panel,
-              let onitPanel = windowState?.panel else { return }
-
-        let mouseLocation = NSEvent.mouseLocation
-
-        guard
-            let screen = NSScreen.screens.first(where: {
-                NSMouseInRect(mouseLocation, $0.frame, false)
-            })
-        else {
-            print("No screen contains the mouse location.")
-            return
-        }
-
-        let visibleFrame = screen.visibleFrame
+              let onitPanel = windowState.panel else { return }
 
         var newFrame = onitPanel.frame
-        newFrame.origin.x = visibleFrame.width - (onitPanel.frame.width * 2)
+        
+        newFrame.origin.x = onitPanel.frame.origin.x - onitPanel.frame.width + (TetheredButton.width / 2)
 
         panel.setFrame(newFrame, display: false, animate: false)
     }

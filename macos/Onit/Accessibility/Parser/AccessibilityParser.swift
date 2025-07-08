@@ -43,6 +43,7 @@ class AccessibilityParser {
                 results[AccessibilityParsedElements.applicationName] = appName
                 results[AccessibilityParsedElements.applicationTitle] = appTitle
                 results[AccessibilityParsedElements.elapsedTime] = "\(elapsedTime)"
+                results[AccessibilityParsedElements.mimeType] = "Content's mimeType: text/plain"
 
                 return results
             }

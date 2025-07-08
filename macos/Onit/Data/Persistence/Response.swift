@@ -48,3 +48,23 @@ enum ResponseType: String, Codable {
     case success
     case error
 }
+
+// MARK: - Diff tool
+
+extension Response {
+    var isDiffResponse: Bool {
+        return toolCallFunctionName?.hasPrefix("diff_") == true
+    }
+    
+    var diffArguments: DiffTool.PlainTextDiffArguments? {
+        guard let argumentsData = toolCallArguments?.data(using: .utf8) else { return nil }
+        
+        return try? JSONDecoder().decode(DiffTool.PlainTextDiffArguments.self, from: argumentsData)
+    }
+    
+    var diffResult: DiffTool.PlainTextDiffResult? {
+        guard let resultData = toolCallResult?.data(using: .utf8) else { return nil }
+        
+        return try? JSONDecoder().decode(DiffTool.PlainTextDiffResult.self, from: resultData)
+    }
+}

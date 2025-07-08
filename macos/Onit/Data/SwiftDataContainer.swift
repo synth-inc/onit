@@ -17,6 +17,7 @@ actor SwiftDataContainer {
             let schema = Schema([
                 Chat.self,
                 SystemPrompt.self,
+                DiffChangeState.self,
             ])
             
             // This handles legacy clients before we added the sandbox entitlement. 
@@ -53,6 +54,7 @@ actor SwiftDataContainer {
         let schema = Schema([
             Chat.self,
             SystemPrompt.self,
+            DiffChangeState.self,
         ])
         let configuration = ModelConfiguration(isStoredInMemoryOnly: true)
         let container = try ModelContainer(for: schema, configurations: [configuration])

@@ -46,7 +46,7 @@ struct GeneratedContentView: View {
                 .padding(.horizontal, 12)
 
             if let response = currentResponse, response.hasToolCall {
-                ToolCallView(response: response)
+                ToolCallHandlerView(response: response)
                     .padding(.horizontal, 12)
             }
 
