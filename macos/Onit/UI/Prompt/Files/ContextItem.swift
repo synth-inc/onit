@@ -91,6 +91,7 @@ struct ContextItem: View {
 
 extension ContextItem {
     private func showContextWindow() {
+        guard let state = state else { return }
         ContextWindowsManager.shared.showContextWindow(
             windowState: state,
             context: item
@@ -101,7 +102,7 @@ extension ContextItem {
         ContextWindowsManager.shared.deleteContextItem(
             item: item
         )
-        state.removeContext(context: item)
+        state?.removeContext(context: item)
     }
 }
 

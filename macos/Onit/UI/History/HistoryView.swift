@@ -59,7 +59,7 @@ struct HistoryView: View {
                     icon: .cross,
                     iconSize: 10
                 ) {
-                    windowState.showHistory = false
+                    windowState?.showHistory = false
                 }
             },
             search: MenuList.Search(query: $searchQuery)

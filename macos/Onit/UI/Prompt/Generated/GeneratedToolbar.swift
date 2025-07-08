@@ -44,7 +44,7 @@ struct GeneratedToolbar: View {
             icon: .arrowsSpin,
             tooltipPrompt: "Retry"
         ) {
-            state.generate(prompt)
+            state?.generate(prompt)
         }
     }
 

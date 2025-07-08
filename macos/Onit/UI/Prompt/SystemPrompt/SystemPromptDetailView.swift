@@ -59,10 +59,11 @@ struct SystemPromptDetailView: View {
                 .strokeBorder(.gray600)
         }
         .frame(width: size.width - 16)
-        .onChange(of: windowState.systemPromptId, initial: true) { oldValue, newValue in
+        .onChange(of: windowState?.systemPromptId, initial: true) { oldValue, newValue in
             let descriptor = FetchDescriptor<SystemPrompt>()
             
-            guard let prompt = try? modelContext.fetch(descriptor).first(where: { $0.id == newValue }) else {
+            guard let newValue = newValue,
+                  let prompt = try? modelContext.fetch(descriptor).first(where: { $0.id == newValue }) else {
                 storedPrompt = .outputOnly
                 print("Could not find prompt")
                 return
@@ -114,7 +115,7 @@ struct SystemPromptDetailView: View {
             
             Spacer()
             
-            if windowState.systemPromptId != SystemPrompt.outputOnly.id {
+            if let windowState = windowState, windowState.systemPromptId != SystemPrompt.outputOnly.id {
                 Button {
                     showEditPrompt = true
                     dismiss()

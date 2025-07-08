@@ -38,7 +38,7 @@ struct WebContextItem: View {
     }
     
     var body: some View {
-        let websiteUndergoingScrape = windowState.websiteUrlsScrapeQueue.keys.contains(websiteUrl.absoluteString)
+        let websiteUndergoingScrape = windowState?.websiteUrlsScrapeQueue.keys.contains(websiteUrl.absoluteString) ?? false
 
         ContextTag(
             text: getCurrentWebsiteTitle(),
@@ -86,7 +86,9 @@ extension WebContextItem {
 
 extension WebContextItem {
     private func getCurrentWebsiteTitle() -> String {
-        let pendingContextList = windowState.getPendingContextList()
+        guard let pendingContextList = windowState?.getPendingContextList() else {
+            return websiteTitle
+        }
 
         if let updatedWebContext = pendingContextList.first(where: { context in
             if case .web(let contextWebsiteUrl, _, _) = context,

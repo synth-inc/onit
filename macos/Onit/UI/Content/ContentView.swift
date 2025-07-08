@@ -34,13 +34,13 @@ struct ContentView: View {
     
     private var showFileImporterBinding: Binding<Bool> {
         Binding(
-            get: { state.showFileImporter },
-            set: { state.showFileImporter = $0 }
+            get: { state?.showFileImporter ?? false },
+            set: { state?.showFileImporter = $0 }
         )
     }
     
     private var errorContext: Context? {
-        state.pendingContextList.first { context in
+        state?.pendingContextList.first { context in
             if case .auto(let autoContext) = context {
                 return autoContext.appContent["error"] != nil
             }
@@ -67,7 +67,7 @@ struct ContentView: View {
         ZStack(alignment: .top) {
             if shouldShowOnboardingAccessibility {
                 VStack(spacing: 0) {
-                    if state.showChatView {
+                    if state?.showChatView == true {
                         OnboardingAccessibility().transition(.opacity)
                     } else {
                         Spacer()
@@ -92,12 +92,12 @@ struct ContentView: View {
                         }
                         
                         VStack(spacing: 0) {
-                            if state.showChatView { ChatView().transition(.opacity) }
+                            if state?.showChatView == true { ChatView().transition(.opacity) }
                             else { Spacer() }
                         }
                     }
                     
-                    if state.showChatView {
+                    if state?.showChatView == true {
                         ZStack {
                             alertView(
                                 isPresented: showTwoWeekProTrialEndedAlert,
@@ -143,7 +143,7 @@ struct ContentView: View {
         ) { result in
             handleFileImport(result)
         }
-        .addAnimation(dependency: state.showChatView)
+        .addAnimation(dependency: state?.showChatView)
         .onAppear {
             if !hasClosedTrialEndedAlert {
                 if let subscriptionStatus = appState.subscription?.status {
@@ -165,15 +165,17 @@ struct ContentView: View {
     }
     
     private func handleViewClicked() {
-        state.textFocusTrigger.toggle()
+        state?.textFocusTrigger.toggle()
         
-        state.notifyDelegates { $0.panelBecomeKey(state: state) }
+        if let state = state {
+            state.notifyDelegates { $0.panelBecomeKey(state: state) }
+        }
     }
 
     private func handleFileImport(_ result: Result<[URL], any Error>) {
         switch result {
         case .success(let urls):
-            state.addContext(urls: urls)
+            state?.addContext(urls: urls)
         case .failure(let error):
             print(error.localizedDescription)
         }

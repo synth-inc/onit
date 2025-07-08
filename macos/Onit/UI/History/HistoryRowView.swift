@@ -24,7 +24,7 @@ struct HistoryRowView: View {
                 else { chatResponseCount }
             }
         } action: {
-            windowState.setChat(chat: chat, index: index)
+            windowState?.setChat(chat: chat, index: index)
         }
         .onHover { hovering in showDelete = hovering }
     }
@@ -38,7 +38,7 @@ struct HistoryRowView: View {
     
     var deleteButton: some View {
         HStack(alignment: .center) {
-            Text(windowState.deleteChatFailed ? "Delete failed" : "")
+            Text(windowState?.deleteChatFailed == true ? "Delete failed" : "")
                 .foregroundColor(Color.red)
             
             Image(systemName: "trash")
@@ -48,6 +48,7 @@ struct HistoryRowView: View {
         .contentShape(Rectangle())
         .onTapGesture {
             // We want the padding around the button to also be a tap target
+            guard let windowState = windowState else { return }
             if !windowState.deleteChatFailed {
                 windowState.deleteChat(chat: chat)
             }

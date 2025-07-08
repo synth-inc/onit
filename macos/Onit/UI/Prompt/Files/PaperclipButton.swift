@@ -24,8 +24,8 @@ struct PaperclipButton: View {
     
     private var showContextMenuBinding: Binding<Bool> {
           Binding(
-              get: { windowState.showContextMenu },
-              set: { windowState.showContextMenu = $0 }
+              get: { windowState?.showContextMenu ?? false },
+              set: { windowState?.showContextMenu = $0 }
           )
       }
 
@@ -40,13 +40,13 @@ struct PaperclipButton: View {
                 AnalyticsManager.Chat.paperclipPressed()
                 
                 if accessibilityAutoContextEnabled && autoContextFromCurrentWindow {
-                    windowState.showContextMenu = true
+                    windowState?.showContextMenu = true
                 } else {
                     handleAddContext()
                 }
             }
 
-            if windowState.pendingContextList.isEmpty {
+            if windowState?.pendingContextList.isEmpty ?? true {
                 if !accessibilityAutoContextEnabled && !closedAutoContextTag {
                     EnableAutocontextTag()
                 }
@@ -79,6 +79,8 @@ struct PaperclipButton: View {
     }
 
     private func handleAddContext() {
+        guard let windowState = windowState else { return }
+        
         if accessibilityAutoContextEnabled {
             if let panel = windowState.panel {
                 if !panel.isKeyWindow {

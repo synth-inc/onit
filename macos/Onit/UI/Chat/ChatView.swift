@@ -11,15 +11,15 @@ struct ChatView: View {
     @State private var chatChangeTask: Task<Void, Never>?
     
     private var chatsID: Int? {
-        state.currentChat?.hashValue
+        state?.currentChat?.hashValue
     }
     
     private var shouldShowSystemPrompt: Bool {
-        state.currentChat?.systemPrompt == nil && state.systemPromptState.shouldShowSystemPrompt
+        state?.currentChat?.systemPrompt == nil && state?.systemPromptState.shouldShowSystemPrompt == true
     }
     
     private var currentPromptsCount: Int {
-        if let currentPrompts = state.currentPrompts {
+        if let currentPrompts = state?.currentPrompts {
             return currentPrompts.count
         } else {
             return 0
@@ -35,8 +35,8 @@ struct ChatView: View {
                 ZStack(alignment: .bottom) {
                     ChatScrollViewRepresentable(
                         hasUserManuallyScrolled: $hasUserManuallyScrolled,
-                        streamedResponse: state.streamedResponse,
-                        currentChat: state.currentChat
+                        streamedResponse: state?.streamedResponse ?? "",
+                        currentChat: state?.currentChat
                     ) {
                         VStack(alignment: .leading, spacing: 0) {
                             systemPrompt
@@ -48,11 +48,11 @@ struct ChatView: View {
                         }
                     }
                     // Floating action buttons area
-                    if state.generatingPrompt != nil || hasUserManuallyScrolled {
+                    if state?.generatingPrompt != nil || hasUserManuallyScrolled {
                         HStack {
                             Spacer()
                             
-                            if state.generatingPrompt != nil {
+                            if state?.generatingPrompt != nil {
                                 StopGenerationButton()
                                     .offset(x: 18, y: 0) // This centers it to account for the scroll button frame
                             }
@@ -85,7 +85,7 @@ struct ChatView: View {
                         .padding(.bottom, 4)
                     }
                 }
-                .onChange(of: state.currentChat) { old, new in
+                .onChange(of: state?.currentChat) { old, new in
 					chatChangeTask?.cancel()
                     hasUserManuallyScrolled = true
                     chatChangeTask = Task {
@@ -121,7 +121,7 @@ struct ChatView: View {
 extension ChatView {
     var systemPrompt: some View {
         VStack(alignment: .leading, spacing: 0) {
-            if let systemPrompt = state.currentChat?.systemPrompt {
+            if let systemPrompt = state?.currentChat?.systemPrompt {
                 ChatSystemPromptView(systemPrompt: systemPrompt)
             }
             if shouldShowSystemPrompt { SystemPromptView() }

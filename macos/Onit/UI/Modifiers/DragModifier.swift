@@ -28,12 +28,12 @@ struct DragModifier: ViewModifier {
                         guard let item = items.first else { return false }
                         if let data = item.data {
                             if let image = NSImage(data: data) {
-                                state.addContext(images: [image])
+                                state?.addContext(images: [image])
                                 return true
                             }
                             return false
                         } else if let url = item.url {
-                            state.addContext(urls: [url])
+                            state?.addContext(urls: [url])
                             return true
                         }
                         return false

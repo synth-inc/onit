@@ -17,7 +17,7 @@ struct HistoryTitle: View {
                 .foregroundStyle(.FG)
             Spacer()
             Button {
-                state.showHistory = false
+                state?.showHistory = false
             } label: {
                 Image(.smallCross)
                     .renderingMode(.template)

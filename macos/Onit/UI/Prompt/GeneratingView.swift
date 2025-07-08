@@ -17,22 +17,27 @@ struct GeneratingView: View {
     }
 
     var body: some View {
-        HStack {
-            Spacer()
-            
-            Button {
-                state.cancelGenerate()
-                state.textFocusTrigger.toggle()
-            } label: {
-                VStack(spacing: 12) {
-                    icon
-                    text
+        // Only show content if windowState is available
+        if let state = state {
+            HStack {
+                Spacer()
+                
+                Button {
+                    state.cancelGenerate()
+                    state.textFocusTrigger.toggle()
+                } label: {
+                    VStack(spacing: 12) {
+                        icon
+                        text
+                    }
+                    .padding(20)
                 }
-                .padding(20)
+                .buttonStyle(.plain)
+                .keyboardShortcut(delete)
+                Spacer()
             }
-            .buttonStyle(.plain)
-            .keyboardShortcut(delete)
-            Spacer()
+        } else {
+            EmptyView()
         }
     }
 

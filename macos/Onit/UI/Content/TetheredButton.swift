@@ -21,6 +21,7 @@ struct TetheredButton: View {
     }
     
     private var spacerHeight: CGFloat? {
+        guard let state = state else { return nil }
         guard let relativePosition = state.tetheredButtonYRelativePosition else { return nil }
         
         let windowHeight: CGFloat
@@ -41,7 +42,7 @@ struct TetheredButton: View {
             return .degrees(0)
         }
 
-        if state.trackedScreen != nil || state.panel == nil || state.panel?.resizedApplication == true {
+        if state?.trackedScreen != nil || state?.panel == nil || state?.panel?.resizedApplication == true {
             return .degrees(0)
         } else {
             return .degrees(180)
@@ -72,11 +73,6 @@ struct TetheredButton: View {
             }
             .tooltip(prompt: fitActiveWindowPrompt)
             Spacer()
-        }
-        .onAppear {
-            if let defaultEnvironmentSource = state.defaultEnvironmentSource {
-                AnalyticsManager.Technical.defaultWindowState(source: defaultEnvironmentSource)
-            }
         }
         .edgesIgnoringSafeArea(.top)
         .frame(maxHeight: .infinity, alignment: .top)
