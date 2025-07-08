@@ -33,10 +33,25 @@ struct TooltipView: View {
     
     // MARK: - Child Components
     
+    @ViewBuilder
     var text: some View {
-        Text(tooltip.prompt.split(separator: "\n")[0])
-            .styleText(size: 12)
+        let textSubstring: [Substring] = tooltip.prompt.split(separator: "\n")
+        let textFirstLine = textSubstring[0]
+        
+        let hasMultipleLines = textSubstring.count > 1
+        
+        if hasMultipleLines {
+            VStack(alignment: .leading) {
+                Text(textFirstLine)
+                Text("...")
+            }
             .padding(.vertical, 8)
+            .styleText(size: 12)
+        } else {
+            Text(textFirstLine)
+                .padding(.vertical, 8)
+                .styleText(size: 12)
+        }
     }
     
     var fixedText: some View {
