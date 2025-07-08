@@ -87,7 +87,7 @@ extension FileRow {
                 hasHoverBorder: true,
                 shouldFadeIn: true,
                 iconBundleURL: iconBundleURL,
-                tooltip: "Add \(foregroundWindowName) Context"
+                tooltipPrompt: "Add \(foregroundWindowName) Context"
             ) {
                 windowState?.addWindowToContext(window: foregroundWindow.element)
             }
