@@ -211,7 +211,7 @@ class GoogleDriveService: NSObject, ObservableObject {
             throw GoogleDriveServiceError.accessDenied(extractionError)
         } else if httpResponse.statusCode != 200 {
             var extractionError =
-                "Failed to retrieve document (HTTP \(httpResponse.statusCode))"
+                "Failed to retrieve document"
             if let errorMessage = extractApiErrorMessage(from: data) {
                 extractionError += "\n\nError message: \(errorMessage)"
             }
