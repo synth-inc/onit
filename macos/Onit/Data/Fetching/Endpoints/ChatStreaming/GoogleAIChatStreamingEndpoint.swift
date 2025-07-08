@@ -14,6 +14,7 @@ struct GoogleAIChatStreamingEndpoint: StreamingEndpoint {
     
     let messages: [GoogleAIChatMessage]
     let model: String
+    // Doing this so the token doesn't get added as a header
     var token: String? { nil }
     let queryToken: String?
     let includeSearch: Bool?
