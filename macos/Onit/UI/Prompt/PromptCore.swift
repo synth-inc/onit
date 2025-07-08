@@ -136,7 +136,7 @@ struct PromptCore: View {
 extension PromptCore {
     @ViewBuilder
     private var textField: some View {
-        if let windowState = windowState, false {
+        if let windowState = windowState {
             @Bindable var bindableWindowState = windowState
             
             TextViewWrapper(
