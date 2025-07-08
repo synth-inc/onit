@@ -98,8 +98,8 @@ extension View {
             .underline(underline)
     }
     
-    func truncateText() -> some View {
-        self.lineLimit(1).truncationMode(.tail)
+    func truncateText(lineLimit: Int = 1) -> some View {
+        self.lineLimit(lineLimit).truncationMode(.tail)
     }
 }
 

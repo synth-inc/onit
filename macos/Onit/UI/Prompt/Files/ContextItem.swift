@@ -31,9 +31,7 @@ struct ContextItem: View {
                     hoverBackground: isEditing ? (hasError ? .redDisabledHover : .gray400) : .gray600,
                     maxWidth: isEditing ? 155 : .infinity,
                     iconBundleURL: autoContext.appBundleUrl,
-                    tooltip: isEditing ? name : "View auto-context file",
-                    popoverText: hasError ? errorMessage : nil,
-                    popoverTextColor: hasError ? .red : nil,
+                    tooltipPrompt: isEditing ? (hasError ? errorMessage : name) : "View auto-context file",
                     errorDotColor: hasError ? .red : nil,
                     action: showContextWindow,
                     removeAction: isEditing ? { removeContextItem() } : nil   
@@ -47,7 +45,7 @@ struct ContextItem: View {
                     maxWidth: isEditing ? 155 : .infinity,
                     iconView: ContextImage(context: item),
                     caption: item.fileType,
-                    tooltip: isEditing ? name : "View \(item.fileType ?? "") file",
+                    tooltipPrompt: isEditing ? name : "View \(item.fileType ?? "") file",
                     action: showContextWindow,
                     removeAction: isEditing ? { removeContextItem() } : nil
                 )
