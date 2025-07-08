@@ -15,9 +15,14 @@ struct GeneralTab: View {
     @Default(.usePinnedMode) var usePinnedMode
     @Default(.autoContextOnLaunchTethered) var autoContextOnLaunchTethered
     @Default(.stopMode) var stopMode
+    @Default(.tetheredButtonHiddenApps) var tetheredButtonHiddenApps
+    @Default(.tetheredButtonHideAllApps) var tetheredButtonHideAllApps
+    @Default(.tetheredButtonHideAllAppsTimerDate) var tetheredButtonHideAllAppsTimerDate
     
     @State var isLaunchAtStartupEnabled: Bool = SMAppService.mainApp.status == .enabled
     @State var isAnalyticsEnabled: Bool = PostHogSDK.shared.isOptOut() == false
+    @State var currentTime: Date = Date()
+    @State var timerUpdateTask: Task<Void, Never>? = nil
     
     @ObservedObject private var accessibilityPermissionManager = AccessibilityPermissionManager.shared
     @ObservedObject private var featureFlagsManager = FeatureFlagManager.shared
@@ -28,6 +33,27 @@ struct GeneralTab: View {
     
     private var isPinnedMode: Bool {
         usePinnedMode ?? true
+    }
+    
+    private var isHideAllAppsTimerActive: Bool {
+        guard let timerDate = tetheredButtonHideAllAppsTimerDate else { return false }
+        return timerDate > currentTime
+    }
+    
+    private var remainingTimeString: String {
+        guard let timerDate = tetheredButtonHideAllAppsTimerDate else { return "" }
+        
+        let timeInterval = timerDate.timeIntervalSince(currentTime)
+        if timeInterval <= 0 { return "Expired" }
+        
+        let minutes = Int(timeInterval) / 60
+        let seconds = Int(timeInterval) % 60
+        
+        if minutes > 0 {
+            return "\(minutes)m \(seconds)s"
+        } else {
+            return "\(seconds)s"
+        }
     }
     
     var body: some View {
@@ -47,10 +73,18 @@ struct GeneralTab: View {
             appearanceSection
             
             GeneralTabVoice()
+                        
+            hiddenAppsSection
             
             // experimentalSection
         }
         .formStyle(.grouped)
+        .onAppear {
+            startTimerUpdateTask()
+        }
+        .onDisappear {
+            stopTimerUpdateTask()
+        }
     }
     
     var launchOnStartupSection: some View {
@@ -373,6 +407,102 @@ struct GeneralTab: View {
         }
     }
     
+    var hiddenAppsSection: some View {
+        SettingsSection(
+            iconSystem: "eye.slash",
+            title: "Hidden Apps"
+        ) {
+            VStack(alignment: .leading, spacing: 16) {
+                // Hide Everywhere Timer Section
+                if isHideAllAppsTimerActive || tetheredButtonHideAllApps {
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Hide Everywhere")
+                            .font(.system(size: 13, weight: .medium))
+                        
+                        if isHideAllAppsTimerActive {
+                            HStack {
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text("Hidden for 1 hour")
+                                        .font(.system(size: 13))
+                                    Text("Time remaining: \(remainingTimeString)")
+                                        .font(.system(size: 11))
+                                        .foregroundStyle(.gray300)
+                                }
+                                
+                                Spacer()
+                                
+                                Button("Unhide") {
+                                    cancelHideAllAppsTimer()
+                                }
+                                .controlSize(.small)
+                                .buttonStyle(.bordered)
+                            }
+                            .padding(.vertical, 6)
+                            .padding(.horizontal, 10)
+                            .background(Color.orange.opacity(0.1))
+                            .clipShape(RoundedRectangle(cornerRadius: 6))
+                        } else if tetheredButtonHideAllApps {
+                            HStack {
+                                Text("Hidden permanently")
+                                    .font(.system(size: 13))
+                                
+                                Spacer()
+                                
+                                Button("Unhide") {
+                                    tetheredButtonHideAllApps = false
+                                }
+                                .controlSize(.small)
+                                .buttonStyle(.bordered)
+                            }
+                            .padding(.vertical, 6)
+                            .padding(.horizontal, 10)
+                            .background(Color.red.opacity(0.1))
+                            .clipShape(RoundedRectangle(cornerRadius: 6))
+                        }
+                    }
+                }
+                
+                // Individual Hidden Apps Section
+                if !FeatureFlagManager.shared.usePinnedMode {
+                    VStack(alignment: .leading, spacing: 8) {
+                        
+                        Text("Applications where you've disabled the Onit entry point.")
+                            .font(.system(size: 12))
+                            .foregroundStyle(.gray200)
+                        
+                        if tetheredButtonHiddenApps.isEmpty {
+                            Text("You haven't disabled Onit on any apps yet. ")
+                                .font(.system(size: 13))
+                                .foregroundStyle(.gray400)
+                                .italic()
+                        } else {
+                            VStack(spacing: 8) {
+                                ForEach(Array(tetheredButtonHiddenApps.keys.sorted()), id: \.self) { appName in
+                                    HStack {
+                                        Text(appName)
+                                            .font(.system(size: 13))
+                                        
+                                        Spacer()
+                                        
+                                        Button("Unhide") {
+                                            tetheredButtonHiddenApps.removeValue(forKey: appName)
+                                        }
+                                        .controlSize(.small)
+                                        .buttonStyle(.bordered)
+                                    }
+                                    .padding(.vertical, 4)
+                                    .padding(.horizontal, 8)
+                                    .background(Color.gray.opacity(0.1))
+                                    .clipShape(RoundedRectangle(cornerRadius: 6))
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
 //    var experimentalSection: some View {
 //        Section {
 //            VStack(spacing: 16) {
@@ -459,6 +589,36 @@ struct GeneralTab: View {
         } else {
             PostHogSDK.shared.optOut()
         }
+    }
+    
+    private func cancelHideAllAppsTimer() {
+        tetheredButtonHideAllAppsTimerDate = nil
+        tetheredButtonHideAllApps = false
+    }
+    
+    private func startTimerUpdateTask() {
+        timerUpdateTask = Task {
+            while !Task.isCancelled {
+                try? await Task.sleep(for: .seconds(1))
+                if !Task.isCancelled {
+                    await MainActor.run {
+                        currentTime = Date()
+                        
+                        // Clean up expired timer
+                        if let timerDate = tetheredButtonHideAllAppsTimerDate,
+                           timerDate <= currentTime {
+                            tetheredButtonHideAllAppsTimerDate = nil
+                            tetheredButtonHideAllApps = false
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    private func stopTimerUpdateTask() {
+        timerUpdateTask?.cancel()
+        timerUpdateTask = nil
     }
 }
 

@@ -306,9 +306,11 @@ class PanelStateTetheredManager: PanelStateBaseManager, ObservableObject {
         guard let app = (userInfo[NSWorkspace.applicationUserInfoKey] as? NSRunningApplication) ??
                 (userInfo["NSWorkspaceApplicationKey"] as? NSRunningApplication) else { return }
         
-        state.foregroundWindow = AccessibilityNotificationsManager.shared.windowsManager.trackWindowForElement(
-            app.processIdentifier.getAXUIElement(),
-            pid: app.processIdentifier
-        )
+        for panelState in states {
+            panelState.foregroundWindow = AccessibilityNotificationsManager.shared.windowsManager.trackWindowForElement(
+                app.processIdentifier.getAXUIElement(),
+                pid: app.processIdentifier
+            )
+        }
     }
 }

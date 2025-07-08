@@ -14,7 +14,7 @@ struct MenuOpenOnitButton: View {
             PanelStateCoordinator.shared.launchPanel()
         } leading: {
             HStack(spacing: 4) {
-                Image(.smirk)
+                Image(.noodle)
                     .renderingMode(.template)
                     .resizable()
                     .foregroundStyle(.primary)
