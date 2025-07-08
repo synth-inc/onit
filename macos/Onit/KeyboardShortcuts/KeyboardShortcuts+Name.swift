@@ -18,7 +18,7 @@ extension KeyboardShortcuts.Name {
     static let toggleLocalMode = Self(
         "toggleLocalMode", default: .init(.seven, modifiers: [.shift, .command]))
     static let addForegroundWindowToContext = Self(
-        "addForegroundWindowToContext", default: .init(.nine, modifiers: [.command]))
+        "addForegroundWindowToContext", default: .init(.w, modifiers: [.shift, .command]))
 }
 
 extension KeyboardShortcuts.Name: @retroactive CaseIterable {
