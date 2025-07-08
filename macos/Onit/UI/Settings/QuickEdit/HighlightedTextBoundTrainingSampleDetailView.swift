@@ -13,7 +13,7 @@ struct HighlightedTextBoundTrainingSampleDetailView: View {
     let onDelete: () -> Void
     let onClose: () -> Void
     
-    @State private var editableBoundingBox: BoundingBox
+    @State private var editableBoundingBox: NormalizedBoundingBox
     @State private var hasChanges = false
     @State private var showDeleteAlert = false
     @State private var isPanelExpanded = false
@@ -23,51 +23,7 @@ struct HighlightedTextBoundTrainingSampleDetailView: View {
         self.onSave = onSave
         self.onDelete = onDelete
         self.onClose = onClose
-        
-        let localBoundingBox = Self.convertGlobalBoundingBoxToScreenLocal(
-            boundingBox: sample.boundingBox,
-            appScreenFrame: sample.appScreenFrame,
-            appScreenMenuBarHeight: sample.appScreenMenuBarHeight
-        )
-        
-        self._editableBoundingBox = State(initialValue: localBoundingBox)
-    }
-    
-    private static func convertGlobalBoundingBoxToScreenLocal(
-        boundingBox: BoundingBox,
-        appScreenFrame: ScreenFrame,
-        appScreenMenuBarHeight: Double
-    ) -> BoundingBox {
-        let globalRect = boundingBox.rect
-        let storedScreenFrame = CGRect(
-            x: appScreenFrame.x,
-            y: appScreenFrame.y,
-            width: appScreenFrame.width,
-            height: appScreenFrame.height
-        )
-        let virtualVisibleFrame = CGRect(
-            x: storedScreenFrame.origin.x,
-            y: storedScreenFrame.origin.y,
-            width: storedScreenFrame.width,
-            height: storedScreenFrame.height
-        )
-        let isMainScreen = storedScreenFrame.origin.x == 0 && storedScreenFrame.origin.y == 0
-        
-        if isMainScreen {
-            return boundingBox
-        } else {
-            let localX = globalRect.origin.x - virtualVisibleFrame.origin.x
-            let dockHeight = appScreenMenuBarHeight
-            let localY = globalRect.origin.y + storedScreenFrame.origin.y - dockHeight
-            let result = BoundingBox(
-                x: localX,
-                y: localY,
-                width: globalRect.width,
-                height: globalRect.height
-            )
-            
-            return result
-        }
+        self._editableBoundingBox = State(initialValue: sample.boundingBox)
     }
     
     var body: some View {
@@ -324,18 +280,12 @@ struct HighlightedTextBoundTrainingSampleDetailView: View {
     }
     
     private func createUpdatedSample(isValidated: Bool) -> HighlightedTextBoundTrainingSample {
-        let globalBoundingBox = hasChanges ? 
-            convertScreenLocalBoundingBoxToGlobal(
-                localBoundingBox: editableBoundingBox,
-                appScreenFrame: sample.appScreenFrame
-            ) : sample.boundingBox
-        
         return HighlightedTextBoundTrainingSample(
             id: sample.id,
             createdAt: sample.createdAt,
             screenshotBase64: sample.screenshotBase64,
             selectedText: sample.selectedText,
-            boundingBox: globalBoundingBox,
+            boundingBox: editableBoundingBox,
             primaryScreenFrame: sample.primaryScreenFrame,
             appScreenFrame: sample.appScreenFrame,
             appScreenMenuBarHeight: sample.appScreenMenuBarHeight,
@@ -344,46 +294,11 @@ struct HighlightedTextBoundTrainingSampleDetailView: View {
         )
     }
     
-    private func convertScreenLocalBoundingBoxToGlobal(
-        localBoundingBox: BoundingBox,
-        appScreenFrame: ScreenFrame
-    ) -> BoundingBox {
-        let localRect = localBoundingBox.rect
-        let storedScreenFrame = CGRect(
-            x: appScreenFrame.x,
-            y: appScreenFrame.y,
-            width: appScreenFrame.width,
-            height: appScreenFrame.height
-        )
-        let virtualVisibleFrame = CGRect(
-            x: storedScreenFrame.origin.x,
-            y: storedScreenFrame.origin.y,
-            width: storedScreenFrame.width,
-            height: storedScreenFrame.height
-        )
-        
-        let isMainScreen = storedScreenFrame.origin.x == 0 && storedScreenFrame.origin.y == 0
-        
-        if isMainScreen {
-            return localBoundingBox
-        } else {
-            let globalX = localRect.origin.x + storedScreenFrame.origin.x
-            let dockHeight = sample.appScreenMenuBarHeight
-            let globalY = localRect.origin.y - storedScreenFrame.origin.y + dockHeight
-            let result = BoundingBox(
-                x: globalX,
-                y: globalY,
-                width: localRect.width,
-                height: localRect.height
-            )
-            
-            return result
-        }
-    }
+
 }
 
 struct EditableBoundingBoxOverlay: View {
-    @Binding var boundingBox: BoundingBox
+    @Binding var boundingBox: NormalizedBoundingBox
     let imageGeometry: GeometryProxy
     let originalImageSize: CGSize
     
@@ -391,7 +306,7 @@ struct EditableBoundingBoxOverlay: View {
     @State private var isResizing = false
     @State private var dragOffset = CGSize.zero
     @State private var resizeAnchor: ResizeAnchor = .bottomRight
-    @State private var initialBoundingBox: BoundingBox = BoundingBox(x: 0, y: 0, width: 0, height: 0)
+    @State private var initialBoundingBox: NormalizedBoundingBox = NormalizedBoundingBox(x: 0, y: 0, width: 0, height: 0)
     @State private var dragStartThreshold: CGFloat = 1.0
     
     enum ResizeAnchor {
@@ -399,10 +314,10 @@ struct EditableBoundingBoxOverlay: View {
     }
     
     var body: some View {
-        let displayX = boundingBox.x * imageGeometry.size.width / originalImageSize.width
-        let displayY = boundingBox.y * imageGeometry.size.height / originalImageSize.height
-        let displayWidth = boundingBox.width * imageGeometry.size.width / originalImageSize.width
-        let displayHeight = boundingBox.height * imageGeometry.size.height / originalImageSize.height
+        let displayX = boundingBox.x * imageGeometry.size.width
+        let displayY = (1.0 - boundingBox.y - boundingBox.height) * imageGeometry.size.height
+        let displayWidth = boundingBox.width * imageGeometry.size.width
+        let displayHeight = boundingBox.height * imageGeometry.size.height
         
         ZStack(alignment: .topLeading) {
             Rectangle()
@@ -423,16 +338,16 @@ struct EditableBoundingBoxOverlay: View {
                             dragOffset = value.translation
                         }
                         .onEnded { value in
-                            let totalTranslationX = value.translation.width * originalImageSize.width / imageGeometry.size.width
-                            let totalTranslationY = value.translation.height * originalImageSize.height / imageGeometry.size.height
+                            let normalizedDeltaX = value.translation.width / imageGeometry.size.width
+                            let normalizedDeltaY = -value.translation.height / imageGeometry.size.height
                             
-                            let newX = initialBoundingBox.x + totalTranslationX
-                            let newY = initialBoundingBox.y + totalTranslationY
+                            let newX = initialBoundingBox.x + normalizedDeltaX
+                            let newY = initialBoundingBox.y + normalizedDeltaY
                             
-                            let clampedX = max(0, min(originalImageSize.width - boundingBox.width, newX))
-                            let clampedY = max(0, min(originalImageSize.height - boundingBox.height, newY))
+                            let clampedX = max(0, min(1 - boundingBox.width, newX))
+                            let clampedY = max(0, min(1 - boundingBox.height, newY))
                             
-                            boundingBox = BoundingBox(
+                            boundingBox = NormalizedBoundingBox(
                                 x: clampedX,
                                 y: clampedY,
                                 width: boundingBox.width,
@@ -494,45 +409,45 @@ struct EditableBoundingBoxOverlay: View {
         }
     }
     
-    private func updateBoundingBox(for anchor: ResizeAnchor, translation: CGSize, fromInitial: BoundingBox) {
-        let deltaX = translation.width * originalImageSize.width / imageGeometry.size.width
-        let deltaY = translation.height * originalImageSize.height / imageGeometry.size.height
+    private func updateBoundingBox(for anchor: ResizeAnchor, translation: CGSize, fromInitial: NormalizedBoundingBox) {
+        let normalizedDeltaX = translation.width / imageGeometry.size.width
+        let normalizedDeltaY = -translation.height / imageGeometry.size.height
         
         var newX = fromInitial.x
         var newY = fromInitial.y
         var newWidth = fromInitial.width
         var newHeight = fromInitial.height
         
-        let minSize: CGFloat = 10
+        let minNormalizedSize: Double = 0.01
         
         switch anchor {
         case .topLeft:
-            newX = max(0, fromInitial.x + deltaX)
-            newY = max(0, fromInitial.y + deltaY)
-            newWidth = max(minSize, fromInitial.width - (newX - fromInitial.x))
-            newHeight = max(minSize, fromInitial.height - (newY - fromInitial.y))
+            newX = max(0, fromInitial.x + normalizedDeltaX)
+            newY = max(0, fromInitial.y + normalizedDeltaY)
+            newWidth = max(minNormalizedSize, fromInitial.width - (newX - fromInitial.x))
+            newHeight = max(minNormalizedSize, fromInitial.height - normalizedDeltaY)
             
         case .topRight:
-            newY = max(0, fromInitial.y + deltaY)
-            newWidth = max(minSize, fromInitial.width + deltaX)
-            newHeight = max(minSize, fromInitial.height - (newY - fromInitial.y))
+            newY = max(0, fromInitial.y + normalizedDeltaY)
+            newWidth = max(minNormalizedSize, fromInitial.width + normalizedDeltaX)
+            newHeight = max(minNormalizedSize, fromInitial.height - normalizedDeltaY)
             
         case .bottomLeft:
-            newX = max(0, fromInitial.x + deltaX)
-            newWidth = max(minSize, fromInitial.width - (newX - fromInitial.x))
-            newHeight = max(minSize, fromInitial.height + deltaY)
+            newX = max(0, fromInitial.x + normalizedDeltaX)
+            newWidth = max(minNormalizedSize, fromInitial.width - (newX - fromInitial.x))
+            newHeight = max(minNormalizedSize, fromInitial.height + normalizedDeltaY)
             
         case .bottomRight:
-            newWidth = max(minSize, fromInitial.width + deltaX)
-            newHeight = max(minSize, fromInitial.height + deltaY)
+            newWidth = max(minNormalizedSize, fromInitial.width + normalizedDeltaX)
+            newHeight = max(minNormalizedSize, fromInitial.height + normalizedDeltaY)
         }
         
-        newWidth = min(newWidth, originalImageSize.width - newX)
-        newHeight = min(newHeight, originalImageSize.height - newY)
-        newX = max(0, min(newX, originalImageSize.width - newWidth))
-        newY = max(0, min(newY, originalImageSize.height - newHeight))
+        newWidth = min(newWidth, 1 - newX)
+        newHeight = min(newHeight, 1 - newY)
+        newX = max(0, min(newX, 1 - newWidth))
+        newY = max(0, min(newY, 1 - newHeight))
         
-        boundingBox = BoundingBox(x: newX, y: newY, width: newWidth, height: newHeight)
+        boundingBox = NormalizedBoundingBox(x: newX, y: newY, width: newWidth, height: newHeight)
     }
 }
 

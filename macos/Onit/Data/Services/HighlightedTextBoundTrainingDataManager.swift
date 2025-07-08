@@ -17,7 +17,7 @@ struct HighlightedTextBoundTrainingSample: Codable, Identifiable {
     let createdAt: Date
     let screenshotBase64: String
     let selectedText: String
-    let boundingBox: BoundingBox
+    let boundingBox: NormalizedBoundingBox
     let primaryScreenFrame: ScreenFrame
     let appScreenFrame: ScreenFrame
     let appScreenMenuBarHeight: Double
@@ -28,7 +28,7 @@ struct HighlightedTextBoundTrainingSample: Codable, Identifiable {
          createdAt: Date = Date(),
          screenshotBase64: String,
          selectedText: String,
-         boundingBox: BoundingBox,
+         boundingBox: NormalizedBoundingBox,
          primaryScreenFrame: ScreenFrame,
          appScreenFrame: ScreenFrame,
          appScreenMenuBarHeight: Double,
@@ -47,28 +47,33 @@ struct HighlightedTextBoundTrainingSample: Codable, Identifiable {
     }
 }
 
-struct BoundingBox: Codable, Hashable {
+struct NormalizedBoundingBox: Codable, Hashable {
     let x: Double
     let y: Double
     let width: Double
     let height: Double
     
     init(x: Double, y: Double, width: Double, height: Double) {
-        self.x = x
-        self.y = y
-        self.width = width
-        self.height = height
+        self.x = max(0, min(1, x))
+        self.y = max(0, min(1, y))
+        self.width = max(0, min(1, width))
+        self.height = max(0, min(1, height))
     }
     
-    init(rect: CGRect) {
-        x = rect.origin.x
-        y = rect.origin.y
-        width = rect.width
-        height = rect.height
+    init(rect: CGRect, imageSize: CGSize) {
+        self.x = rect.origin.x / imageSize.width
+        self.y = rect.origin.y / imageSize.height
+        self.width = rect.width / imageSize.width
+        self.height = rect.height / imageSize.height
     }
     
-    var rect: CGRect {
-        CGRect(x: x, y: y, width: width, height: height)
+    func toCGRect(imageSize: CGSize) -> CGRect {
+        return CGRect(
+            x: x * imageSize.width,
+            y: y * imageSize.height,
+            width: width * imageSize.width,
+            height: height * imageSize.height
+        )
     }
 }
 
@@ -112,7 +117,7 @@ extension HighlightedTextBoundTrainingSample: FetchableRecord, PersistableRecord
         
         let boundingBoxString: String = row[Columns.boundingBox]
         let boundingBoxData = boundingBoxString.data(using: .utf8) ?? Data()
-        boundingBox = try JSONDecoder().decode(BoundingBox.self, from: boundingBoxData)
+        boundingBox = try JSONDecoder().decode(NormalizedBoundingBox.self, from: boundingBoxData)
         
         let primaryScreenFrameString: String = row[Columns.primaryScreenFrame]
         let primaryScreenFrameData = primaryScreenFrameString.data(using: .utf8) ?? Data()
@@ -237,7 +242,13 @@ class HighlightedTextBoundTrainingDataManager: ObservableObject {
         isCapturing = true
         defer { isCapturing = false }
         
-        guard let screenshot = await captureScreenshot(for: elementFrame) else {
+        guard let elementScreen = elementFrame.findScreen() else {
+            log.error("Failed to find element screen")
+            return
+        }
+        
+        let (screenshot, capturedImageSize) = await captureScreenshot(for: elementFrame)
+        guard let screenshot = screenshot else {
             log.error("Failed to capture screenshot")
             return
         }
@@ -250,13 +261,25 @@ class HighlightedTextBoundTrainingDataManager: ObservableObject {
             return
         }
         
-        guard let elementScreen = elementFrame.findScreen() else {
-            log.error("Failed to find element screen for menu bar calculation")
-            return
-        }
         let appScreenMenuBarHeight = elementScreen.frame.height - elementScreen.visibleFrame.height
         
-        let boundingBoxData = BoundingBox(rect: boundingBox)
+        let screenFrame = elementScreen.frame
+        let adjustedBoundingBox = CGRect(
+            x: boundingBox.origin.x - screenFrame.origin.x,
+            y: boundingBox.origin.y - screenFrame.origin.y, 
+            width: boundingBox.width,
+            height: boundingBox.height
+        )
+        
+        let scaleFactor = capturedImageSize.width / screenFrame.width
+        let scaledBoundingBox = CGRect(
+            x: adjustedBoundingBox.origin.x * scaleFactor,
+            y: adjustedBoundingBox.origin.y * scaleFactor,
+            width: adjustedBoundingBox.width * scaleFactor,
+            height: adjustedBoundingBox.height * scaleFactor
+        )
+        
+        let boundingBoxData = NormalizedBoundingBox(rect: scaledBoundingBox, imageSize: capturedImageSize)
         
         let sample = HighlightedTextBoundTrainingSample(
             screenshotBase64: screenshot,
@@ -265,7 +288,8 @@ class HighlightedTextBoundTrainingDataManager: ObservableObject {
             primaryScreenFrame: primaryScreenFrame,
             appScreenFrame: appScreenFrame,
             appScreenMenuBarHeight: appScreenMenuBarHeight,
-            appName: appName
+            appName: appName,
+            isValidated: false
         )
         
         await saveSample(sample)
@@ -393,25 +417,31 @@ class HighlightedTextBoundTrainingDataManager: ObservableObject {
         }
     }
     
-    private func captureScreenshot(for elementFrame: CGRect) async -> String? {
+    private func captureScreenshot(for elementFrame: CGRect) async -> (String?, CGSize) {
         return await withCheckedContinuation { continuation in
             DispatchQueue.global(qos: .userInitiated).async {
 				guard let elementScreen = elementFrame.findScreen(),
                       let primaryScreen = NSScreen.primary else {
-					continuation.resume(returning: nil)
+					continuation.resume(returning: (nil, .zero))
 					return
 				}
                 
-                let screenRect = elementScreen.visibleFrame
-                let targetSize = CGSize(width: 1920, height: 1080)
-                let scaleFactor = min(targetSize.width / screenRect.width, targetSize.height / screenRect.height)
+                let screenRect = elementScreen.frame
+                
+                let maxSize = CGSize(width: 2560, height: 1440)
+                let scaleFactor = min(
+                    min(maxSize.width / screenRect.width, maxSize.height / screenRect.height),
+                    1.0
+                )
+                
                 let finalSize = CGSize(
                     width: screenRect.width * scaleFactor,
                     height: screenRect.height * scaleFactor
                 )
+                let primaryScreenMaxY = primaryScreen.frame.maxY
                 let flippedRect = CGRect(
                     x: screenRect.origin.x,
-                    y: primaryScreen.visibleFrame.height - screenRect.origin.y - screenRect.height,
+                    y: primaryScreenMaxY - screenRect.maxY,
                     width: screenRect.width,
                     height: screenRect.height
                 )
@@ -422,32 +452,38 @@ class HighlightedTextBoundTrainingDataManager: ObservableObject {
                     kCGNullWindowID,
                     .nominalResolution
                 ) else {
-                    continuation.resume(returning: nil)
+                    continuation.resume(returning: (nil, .zero))
                     return
                 }
                 
                 let nsImage = NSImage(cgImage: cgImage, size: screenRect.size)
                 
-                let resizedImage = NSImage(size: finalSize)
-                resizedImage.lockFocus()
-                nsImage.draw(in: NSRect(origin: .zero, size: finalSize))
-                resizedImage.unlockFocus()
+                let finalImage: NSImage
+                if scaleFactor == 1.0 {
+                    finalImage = nsImage
+                } else {
+                    let resizedImage = NSImage(size: finalSize)
+                    resizedImage.lockFocus()
+                    nsImage.draw(in: NSRect(origin: .zero, size: finalSize))
+                    resizedImage.unlockFocus()
+                    finalImage = resizedImage
+                }
                 
-                guard let tiffData = resizedImage.tiffRepresentation,
+                guard let tiffData = finalImage.tiffRepresentation,
                       let bitmapRep = NSBitmapImageRep(data: tiffData) else {
-                    continuation.resume(returning: nil)
+                    continuation.resume(returning: (nil, .zero))
                     return
                 }
                 
                 guard let jpegData = bitmapRep.representation(using: .jpeg, properties: [
                     .compressionFactor: 0.6
                 ]) else {
-                    continuation.resume(returning: nil)
+                    continuation.resume(returning: (nil, .zero))
                     return
                 }
                 
                 let base64String = jpegData.base64EncodedString()
-                continuation.resume(returning: base64String)
+                continuation.resume(returning: (base64String, finalSize))
             }
         }
     }

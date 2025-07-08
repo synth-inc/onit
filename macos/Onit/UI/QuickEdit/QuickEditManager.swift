@@ -140,7 +140,7 @@ class QuickEditManager: ObservableObject, CaretPositionDelegate {
                         Task {
                             await HighlightedTextBoundTrainingDataManager.shared.captureTrainingData(
                                 selectedText: highlightedResult.highlightedText,
-                                boundingBox: highlightedResult.highlightedTextFrame,
+                                boundingBox: frame,
                                 appName: highlightedResult.appName,
                                 element: highlightedResult.element
                             )
