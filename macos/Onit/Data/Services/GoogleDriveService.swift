@@ -154,14 +154,14 @@ class GoogleDriveService: NSObject, ObservableObject {
             throw GoogleDriveServiceError.invalidUrl(error)
         }
 
-        _ = try? await GIDSignIn.sharedInstance.currentUser?.refreshTokensIfNeeded()
-
         guard let user = GIDSignIn.sharedInstance.currentUser else {
             let error = "Not authenticated with Google Drive"
             self.extractionError = error
             self.isExtracting = false
             throw GoogleDriveServiceError.notAuthenticated(error)
         }
+
+        _ = try? await user.refreshTokensIfNeeded()
 
         // Get the access token (tokens are automatically refreshed by Google Sign-In SDK)
         let accessToken = user.accessToken.tokenString
