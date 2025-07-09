@@ -21,6 +21,7 @@ class PanelStatePinnedManager: PanelStateBaseManager, ObservableObject {
     // MARK: - Properties
     
     var isResizingWindows: Bool = false
+    var shouldResizeWindows : Bool = false
     var hintYRelativePosition: CGFloat?
     
     private var lastScreenFrame = CGRect.zero
@@ -135,6 +136,7 @@ class PanelStatePinnedManager: PanelStateBaseManager, ObservableObject {
     
     override func launchPanel(for state: OnitPanelState) {
         AnalyticsManager.Panel.opened(displayMode: "pinned")
+        shouldResizeWindows = true
         
         hideTetherWindow()
         resetFramesOnAppChange()
@@ -147,6 +149,7 @@ class PanelStatePinnedManager: PanelStateBaseManager, ObservableObject {
     
     override func closePanel(for state: OnitPanelState) {
         AnalyticsManager.Panel.closed(displayMode: "pinned")
+        shouldResizeWindows = false
         
         hidePanel(for: state)
         
