@@ -41,6 +41,7 @@ actor StreamingClient {
         var eventParser: EventParser?
         
         if !useOnitServer && model.provider == .googleAI {
+            // Reusing this event parser because it also fix the same bug with GoogleAI
             eventParser = PerplexityEventParser()
         }
 
