@@ -188,11 +188,14 @@ struct ChatStreamingEndpointBuilder {
             model: model,
             images: images,
             responses: responses,
-            systemMessage: systemMessage,
             userMessages: userMessages)
 
         return GoogleAIChatStreamingEndpoint(
-            messages: messages, model: model.id, queryToken: apiToken, includeSearch: includeSearch)
+            messages: messages,
+            system: model.supportsSystemPrompts ? systemMessage : nil,
+            model: model.id,
+            queryToken: apiToken,
+            includeSearch: includeSearch)
     }
 
     private static func deepSeek(

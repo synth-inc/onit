@@ -40,6 +40,10 @@ actor StreamingClient {
             includeSearch: includeSearch)
         var eventParser: EventParser?
         
+        if !useOnitServer && model.provider == .googleAI {
+            eventParser = PerplexityEventParser()
+        }
+
         if !useOnitServer && model.provider == .perplexity {
             eventParser = PerplexityEventParser()
         }

@@ -10,9 +10,10 @@ struct GoogleAIChatStreamingEndpoint: StreamingEndpoint {
     var baseURL: URL = URL(string: "https://generativelanguage.googleapis.com")!
     
     typealias Request = GoogleAIChatRequest
-    typealias Response = GoogleAIChatStreamingResponse
+    typealias Response = GoogleAIChatResponse
     
     let messages: [GoogleAIChatMessage]
+    let system: String?
     let model: String
     // Doing this so the token doesn't get added as a header
     var token: String? { nil }
@@ -28,11 +29,15 @@ struct GoogleAIChatStreamingEndpoint: StreamingEndpoint {
     }
     var method: HTTPMethod { .post }
     var requestBody: GoogleAIChatRequest? {
+        var systemInstruction: GoogleAIChatSystemInstruction?
+        if let system = system {
+            systemInstruction = GoogleAIChatSystemInstruction(parts: [GoogleAIChatPart(text: system, inlineData: nil)])
+        }
         var tools: [GoogleAIChatSearchTool] = []
         if includeSearch == true {
             tools.append(GoogleAIChatSearchTool())
         }
-        return GoogleAIChatRequest(model: model, messages: messages, tools: tools, stream: true, n: 1)
+        return GoogleAIChatRequest(systemInstruction: systemInstruction, contents: messages, tools: tools)
     }
     
     var additionalHeaders: [String: String]? { [:] }
@@ -43,7 +48,8 @@ struct GoogleAIChatStreamingEndpoint: StreamingEndpoint {
         if let data = event.data?.data(using: .utf8) {
             let response = try JSONDecoder().decode(Response.self, from: data)
             
-            return response.choices.first?.delta.content
+            let part = response.candidates.first?.content.parts.first { $0.text != nil }
+            return part?.text
         }
         
         return nil
@@ -56,29 +62,10 @@ struct GoogleAIChatStreamingEndpoint: StreamingEndpoint {
     }
 }
 
-struct GoogleAIChatStreamingResponse: Codable {
-    let choices: [Choice]
-    
-    struct Choice: Codable {
-        let delta: Delta
-        let index: Int
-            
-        enum CodingKeys: String, CodingKey {
-            case delta
-            case index
-        }
-    }
-        
-    struct Delta: Codable {
-        let content: String?
-        let role: String?
-    }
-}
-
 struct GoogleAIChatStreamingError: Codable {
+    let error: Error
+
     struct Error: Codable {
         let message: String
     }
-    
-    let error: Error
 }
