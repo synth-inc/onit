@@ -17,6 +17,7 @@ struct ShortcutsTab: View {
     var body: some View {
         Form {
             Section {
+            } header: {
                 KeyboardShortcuts.Recorder(
                     "Launch Onit", name: .launch
                 )
