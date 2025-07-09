@@ -50,7 +50,7 @@ class AccessibilityParserXCode: AccessibilityParserBase {
             switch description {
             case "Source Editor":
                 result[AccessibilityParsedElements.Xcode.editor] = value
-                boundingBoxes.append(TextBoundingBox(text: value, boundingBox: frame, elementRole: role, elementDescription: element.description() ?? ""))
+                boundingBoxes.append(TextBoundingBox(text: value, boundingBox: frame, elementRole: role, elementDescription: description))
             default:
                 break
             }
