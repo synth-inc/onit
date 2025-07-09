@@ -321,7 +321,7 @@ class AccessibilityNotificationsManager: ObservableObject {
                         self.screenResult.applicationName = appName
                         self.screenResult.applicationTitle = appTitle
                         self.screenResult.appBundleUrl = appBundleUrl
-                        if let googleDriveError = error as? GoogleDriveError {
+                        if let googleDriveError = error as? GoogleDriveServiceError {
                             self.screenResult.errorMessage = "\(googleDriveError.localizedDescription)"
                             switch googleDriveError {
                             case .notFound:
