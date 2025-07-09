@@ -21,22 +21,22 @@ struct OCRComparisonResult: Codable, Identifiable, Hashable {
     let debugAccessibilityScreenshotPath: String?
     let appBundleUrl: URL?
     
-    var screenshot: NSImage? {
-        guard let path = screenshotPath,
-              let data = try? Data(contentsOf: URL(fileURLWithPath: path)) else { return nil }
+    private func loadImage(from path: String?) -> NSImage? {
+        guard let path else { return nil }
+        guard let data = try? Data(contentsOf: URL(fileURLWithPath: path)) else { return nil }
         return NSImage(data: data)
+    }
+    
+    var screenshot: NSImage? {
+        loadImage(from: screenshotPath)
     }
     
     var debugScreenshot: NSImage? {
-        guard let path = debugScreenshotPath,
-              let data = try? Data(contentsOf: URL(fileURLWithPath: path)) else { return nil }
-        return NSImage(data: data)
+        loadImage(from: debugScreenshotPath)
     }
     
     var debugAccessibilityScreenshot: NSImage? {
-        guard let path = debugAccessibilityScreenshotPath,
-              let data = try? Data(contentsOf: URL(fileURLWithPath: path)) else { return nil }
-        return NSImage(data: data)
+        loadImage(from: debugAccessibilityScreenshotPath)
     }
     
     init(appName: String,
