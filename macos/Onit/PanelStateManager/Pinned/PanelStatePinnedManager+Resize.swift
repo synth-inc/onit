@@ -27,6 +27,7 @@ extension PanelStatePinnedManager {
         isPanelResized: Bool = false
     ) {
         if !windowFrameChanged, !isPanelResized { guard !targetInitialFrames.keys.contains(window) else { return } }
+        if !shouldResizeWindows { return }
         
         if let windowFrameConverted = window.getFrame(convertedToGlobalCoordinateSpace: true),
            let windowScreen = windowFrameConverted.findScreen(),
