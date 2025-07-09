@@ -13,7 +13,6 @@ import SwiftUI
 
 @MainActor protocol OnitPanelStateDelegate: AnyObject {
     func panelBecomeKey(state: OnitPanelState)
-    // TODO: KNA - Unused function which can create bugs with keyboard shortcut
     func panelResignKey(state: OnitPanelState)
     func panelStateDidChange(state: OnitPanelState)
     func userInputsDidChange(instruction: String, contexts: [Context], input: Input?)

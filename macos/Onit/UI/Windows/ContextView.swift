@@ -14,6 +14,19 @@ struct ContextView: View {
     @State private var text: String? = nil
     @State var windowState: OnitPanelState
 
+    @State private var showOCRDetails = false
+    @State private var ocrComparisonResult: OCRComparisonResult? = nil {
+        didSet {
+            if ocrComparisonResult == nil {
+                print("ocrComparisonResult set to nil")
+            } else {
+                print("ocrComparisonResult set to non-nil")
+            }
+        }
+    }
+    
+    @ObservedObject private var debugManager = DebugManager.shared
+
     let initialContext: Context
     var webFileContents: String
 
@@ -62,9 +75,40 @@ struct ContextView: View {
             .task(id: context.hashValue) {
                 text = readableContent
             }
+            .onAppear() {
+                updateOCRComparisonResult()
+            }
         }
         .frame(idealWidth: 569, minHeight: 370, maxHeight: 569)
         .fixedSize(horizontal: true, vertical: false)
+        .sheet(isPresented: $showOCRDetails) {
+            // There is a weird SwiftUI bug here. We need to get the OCR result in this closure.
+            // It fails when we try to use the "ocrComparisonResult" variable.
+            // My guess is that it has to do with being a struct. - TIM
+            if let ocrResult = getOCRComparisonResult() {
+                OCRDetailSheet(result: ocrResult)
+            }
+        }
+    }
+    
+    private func updateOCRComparisonResult() {
+        ocrComparisonResult = getOCRComparisonResult()
+    }
+    
+    private func getOCRComparisonResult() -> OCRComparisonResult? {
+        guard case .auto(let autoContext) = context else {
+            ocrComparisonResult = nil
+            return nil
+        }
+        
+        // Find the most recent OCR result that matches this auto context
+        return debugManager.ocrComparisonResults
+            .filter { result in
+                result.appTitle == autoContext.appTitle &&
+                Date().timeIntervalSince(result.timestamp) < 300 // Within last 5 minutes
+            }
+            .sorted { $0.timestamp > $1.timestamp }
+            .first
     }
     
     private func getDialogInfo() -> (String, String) {
@@ -144,6 +188,8 @@ struct ContextView: View {
             return ("To fetch your Google Drive tabs as window context, you'll need to connect your account. Please authenticate with Google Drive and try again.", "Connect Google Drive")
         case "1501":
             return ("Give permission to Onit to view this drive file.", "Grant Permission")
+        case "1800":
+            return ("A significant amount of content may be missing from your context. This can affect accuracy.", "View Report")
         default:
             return ("An error occurred while fetching context.", "OK")
         }
@@ -190,6 +236,8 @@ struct ContextView: View {
                         }
                     }
                 }
+            } else if errorCode == "1800" {
+                showOCRDetails = true
             }
         }
         .fixedSize(horizontal: false, vertical: true)

@@ -11,7 +11,6 @@ import Defaults
 
 struct ShortcutsTab: View {
     @ObservedObject private var accessibilityPermissionManager = AccessibilityPermissionManager.shared
-    
     @Default(.autoContextFromCurrentWindow) var autoContextFromCurrentWindow
     @Default(.escapeShortcutDisabled) var escapeShortcutDisabled
     

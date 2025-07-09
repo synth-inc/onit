@@ -150,6 +150,10 @@ extension Defaults.Keys {
     static let stopMode = Key<StopMode>("stopMode", default: .removePartial)
     static let stopModeUserConfigured = Key<Bool>("stopModeUserConfigured", default: false)
 
+    // OCR Comparison - BETA Only.
+    static let ocrComparisonResults = Key<Data?>("ocrComparisonResults", default: nil)
+    static let enableOCRComparison = Key<Bool>("enableOCRComparison", default: false)
+    static let enableAutoOCRComparison = Key<Bool>("enableAutoOCRComparison", default: false)
 }
 
 extension NSRect: Defaults.Serializable {

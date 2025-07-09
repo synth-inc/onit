@@ -13,10 +13,12 @@ class AccessibilityParserCalendar: AccessibilityParserBase {
     // MARK: - AccessibilityParserLogic
 
     /** See ``AccessibilityParserLogic`` parse function */
-    override func parse(element: AXUIElement) async -> [String: String] {
+    override func parse(element: AXUIElement, includeBoundingBoxes: Bool ) async -> ([String: String], [TextBoundingBox]?) {
+
         var result: [String: String] = [:]
         var screen: String = ""
         var highlightedTextFound = false
+        var boundingBoxes : [TextBoundingBox] = []
 
         _ = await AccessibilityParserUtility.recursivelyParse(
             element: element,
@@ -24,7 +26,7 @@ class AccessibilityParserCalendar: AccessibilityParserBase {
         ) { element, depth in
             
             if !highlightedTextFound {
-                let parentResult = await super.parse(element: element)
+                let (parentResult, parentBoundingBoxes) = await super.parse(element: element)
                 
                 if !parentResult.isEmpty {
                     highlightedTextFound = true
@@ -39,6 +41,10 @@ class AccessibilityParserCalendar: AccessibilityParserBase {
                 return .continueRecursing(nil)
             }
             
+            if includeBoundingBoxes, let frame = element.getFrame() {
+                let textBoundingBox = TextBoundingBox(text: description, boundingBox: frame, elementRole: role, elementDescription: description)
+                boundingBoxes.append(textBoundingBox)
+            }
             screen += "\(description)\n"
 
             return .continueRecursing(nil)
@@ -46,6 +52,6 @@ class AccessibilityParserCalendar: AccessibilityParserBase {
         
         result[AccessibilityParsedElements.screen] = screen
         
-        return result
+        return (result, includeBoundingBoxes ? boundingBoxes : nil)
     }
 }
