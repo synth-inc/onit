@@ -97,7 +97,7 @@ struct IconButton: View {
             )
             .addAnimation(dependency: isActive)
             .onChange(of: isHovered) { _, isHovering in
-                TooltipHelpers.setOptionalTooltip(
+                TooltipHelpers.setTooltipOnHover(
                     isHovering: isHovering,
                     ignoreMouseEvents: true,
                     tooltipShortcut: tooltipShortcut,

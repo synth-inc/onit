@@ -8,15 +8,15 @@
 import SwiftUI
 
 struct TooltipHelpers {
-    static let defaultTruncation = TooltipViewTruncated(maxWidth: 320)
+    static let defaultConfig = TooltipConfig(maxWidth: 320)
     
     @MainActor
-    static func setOptionalTooltip(
+    static func setTooltipOnHover(
         isHovering: Bool,
         ignoreMouseEvents: Bool = false,
         tooltipShortcut: Tooltip.Shortcut = .none,
         tooltipPrompt: String?,
-        tooltipTruncated: TooltipViewTruncated? = nil
+        tooltipConfig: TooltipConfig? = nil
     ) {
         if tooltipPrompt != nil {
             if isHovering {
@@ -25,7 +25,7 @@ struct TooltipHelpers {
                         prompt: tooltipPrompt!,
                         shortcut: tooltipShortcut,
                     ),
-                    tooltipTruncated: tooltipTruncated,
+                    tooltipConfig: tooltipConfig,
                     delayStart: 0.4,
                     delayEnd: 0,
                     ignoreMouseEvents: ignoreMouseEvents
