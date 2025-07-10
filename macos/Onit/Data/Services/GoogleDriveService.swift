@@ -135,7 +135,7 @@ class GoogleDriveService: NSObject, ObservableObject {
         }
     }
 
-    func extractTextFromGoogleDrive(driveUrl: String) async throws -> (String, String) {
+    func extractTextFromGoogleDrive(driveUrl: String) async throws -> String {
         self.isExtracting = true
         self.extractionError = nil
 
@@ -161,86 +161,37 @@ class GoogleDriveService: NSObject, ObservableObject {
             throw GoogleDriveError.notAuthenticated(error)
         }
 
-        // Get the access token (tokens are automatically refreshed by Google Sign-In SDK)
-        let accessToken = user.accessToken.tokenString
-
-        // Determine document type and appropriate MIME type for export
-        let mimeType = getMimeTypeForUrl(driveUrl)
-
-        // Use Google Drive API to export the document
-        let exportUrl =
-            "https://www.googleapis.com/drive/v3/files/\(fileId)/export?mimeType=\(mimeType)"
-
-        guard let url = URL(string: exportUrl) else {
-            let error = "Invalid export URL"
-            self.extractionError = error
+        do {
+            let text = try await GoogleDocumentManager.readPlainText(fileId: fileId)
+            
             self.isExtracting = false
-            throw GoogleDriveError.invalidUrl(error)
-        }
-
-        var request = URLRequest(url: url)
-        request.setValue("Bearer \(accessToken)", forHTTPHeaderField: "Authorization")
-
-        let (data, response) = try await URLSession.shared.data(for: request)
-
-        self.isExtracting = false
-
-        guard let httpResponse = response as? HTTPURLResponse else {
-            let error = "Invalid response"
-            self.extractionError = error
-            throw GoogleDriveError.invalidResponse(error)
-        }
-
-        if httpResponse.statusCode == 404 {
-            let extractionError =
-                "Onit needs permission to access this file."
-            self.extractionError = extractionError
-            throw GoogleDriveError.notFound(extractionError)
-        } else if httpResponse.statusCode == 403 {
-            var extractionError =
-                "Onit can't access this file."
-            if let errorMessage = String(data: data, encoding: .utf8) {
-                extractionError += "\n\nError message: \(errorMessage)"
+            
+            if text.isEmpty {
+                return "(Document appears to be empty)"
+            } else {
+                return text
             }
-            self.extractionError = extractionError
-            throw GoogleDriveError.accessDenied(extractionError)
-        } else if httpResponse.statusCode != 200 {
-            var extractionError =
-                "Failed to retrieve document (HTTP \(httpResponse.statusCode))"
-            if let errorMessage = String(data: data, encoding: .utf8) {
-                extractionError += "\n\nError message: \(errorMessage)"
+        } catch {
+            self.isExtracting = false
+            
+            if let googleDriveError = error as? GoogleDriveError {
+                self.extractionError = googleDriveError.localizedDescription
+                throw googleDriveError
+            } else {
+                let extractionError = "Failed to extract document content: \(error.localizedDescription)"
+                self.extractionError = extractionError
+                throw GoogleDriveError.decodingError(extractionError)
             }
-            self.extractionError = extractionError
-            throw GoogleDriveError.httpError(httpResponse.statusCode, extractionError)
-        }
-
-        guard let text = String(data: data, encoding: .utf8) else {
-            let error = "Failed to decode document content"
-            self.extractionError = error
-            throw GoogleDriveError.decodingError(error)
-        }
-
-        if text.isEmpty {
-            return ("(Document appears to be empty)", mimeType)
-        } else {
-            return (text, mimeType)
-        }
-    }
-
-    private func getMimeTypeForUrl(_ url: String) -> String {
-        if url.contains("docs.google.com/document") {
-            return "text/plain"
-        } else if url.contains("docs.google.com/spreadsheets") {
-            return "text/csv"
-        } else if url.contains("docs.google.com/presentation") {
-            return "text/plain"
-        } else {
-            // Default to text/plain for generic drive URLs
-            return "text/plain"
         }
     }
 
     private func extractFileIdFromUrl(_ url: String) -> String? {
+        return GoogleDriveService.extractFileId(from: url)
+    }
+
+    // MARK: - Public Static Utilities
+    
+    static func extractFileId(from url: String) -> String? {
         // Handle various Google Drive URL formats
         let patterns = [
             #"https://docs\.google\.com/document/d/([a-zA-Z0-9-_]+)"#,
@@ -467,6 +418,7 @@ enum GoogleDriveError: Error, LocalizedError {
     case httpError(Int, String)
     case accessDenied(String)
     case invalidResponse(String)
+    case unsupportedFileType(String)
 
     var errorDescription: String? {
         switch self {
@@ -484,6 +436,8 @@ enum GoogleDriveError: Error, LocalizedError {
             return "Access Denied: \(message)"
         case .invalidResponse(let message):
             return "Invalid Response: \(message)"
+        case .unsupportedFileType(let message):
+            return "Unsupported File Type: \(message)"
         }
     }
 }

@@ -17,7 +17,12 @@ class NotepadWindowController: NSObject, NSWindowDelegate {
 
     // MARK: - Properties
 
-    private var panel: NSPanel?
+    private var panel: CustomPanel?
+    private var windowState: OnitPanelState?
+    
+    class CustomPanel: NSPanel {
+        override var canBecomeKey: Bool { true }
+    }
 
     // MARK: - Functions
 
@@ -28,6 +33,8 @@ class NotepadWindowController: NSObject, NSWindowDelegate {
             print("NotepadWindowController: Invalid diff response provided")
             return
         }
+        
+        self.windowState = windowState
         
         let contentView = NotepadView(
             response: response,
@@ -43,9 +50,9 @@ class NotepadWindowController: NSObject, NSWindowDelegate {
         panelContentView.layer?.backgroundColor = .black
 
         if panel == nil {
-            let newPanel = NSPanel(
+            let newPanel = CustomPanel(
                 contentRect: NSRect(x: 0, y: 0, width: 800, height: 600),
-                styleMask: [.resizable, .nonactivatingPanel, .fullSizeContentView],
+                styleMask: [.resizable, .fullSizeContentView],
                 backing: .buffered,
                 defer: false
             )
@@ -57,6 +64,7 @@ class NotepadWindowController: NSObject, NSWindowDelegate {
             newPanel.titlebarAppearsTransparent = true
             newPanel.isMovableByWindowBackground = true
             newPanel.delegate = self
+            newPanel.hidesOnDeactivate = false
 
             newPanel.standardWindowButton(.closeButton)?.isHidden = true
             newPanel.standardWindowButton(.miniaturizeButton)?.isHidden = true
@@ -71,11 +79,13 @@ class NotepadWindowController: NSObject, NSWindowDelegate {
         
         positionWindow(windowState: windowState)
         bringToFront()
+        self.windowState?.isDiffViewActive = true
     }
 
     func bringToFront() {
         panel?.alphaValue = 1.0
         panel?.orderFront(nil)
+        panel?.makeKeyAndOrderFront(nil)
     }
 
     func closeWindow() {
@@ -87,7 +97,8 @@ class NotepadWindowController: NSObject, NSWindowDelegate {
                 context.timingFunction = CAMediaTimingFunction(name: .easeInEaseOut)
                 panel.animator().alphaValue = 0.0
             },
-            completionHandler: {
+            completionHandler: { [weak self] in
+                self?.windowState?.isDiffViewActive = false
                 panel.orderOut(nil)
                 panel.alphaValue = 1.0
             })

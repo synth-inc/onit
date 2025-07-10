@@ -296,12 +296,12 @@ class AccessibilityNotificationsManager: ObservableObject {
                 let startTime = CFAbsoluteTimeGetCurrent()
                 if GoogleDriveService.shared.checkAuthorizationStatus() {
                     do {
-                        let (documentContent, mimeType) = try await GoogleDriveService.shared.extractTextFromGoogleDrive(driveUrl: url.absoluteString)
+                        let documentContent = try await GoogleDriveService.shared.extractTextFromGoogleDrive(driveUrl: url.absoluteString)
                         let contentArray = [
                             AccessibilityParsedElements.applicationName: appName,
                             AccessibilityParsedElements.applicationTitle: appTitle,
                             AccessibilityParsedElements.elapsedTime: "\(CFAbsoluteTimeGetCurrent() - startTime)",
-                            AccessibilityParsedElements.mimeType: "Content's mimeType: " + mimeType,
+                            AccessibilityParsedElements.documentUrl: "Google drive document's url: " + url.absoluteString,
                             "document": documentContent
                         ]
                         handleWindowContent(
@@ -383,8 +383,7 @@ class AccessibilityNotificationsManager: ObservableObject {
                     AccessibilityParsedElements.applicationName: appName,
                     AccessibilityParsedElements.applicationTitle: appTitle,
                     AccessibilityParsedElements.elapsedTime: "\(CFAbsoluteTimeGetCurrent() - startTime)",
-                    "document": content,
-                    AccessibilityParsedElements.mimeType: "Content's mimeType: text/plain"
+                    "document": content
                 ]
             } catch {
                 return nil

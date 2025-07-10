@@ -5,105 +5,154 @@
 //  Created by Kévin Naudin on 07/07/2025.
 //
 
+import KeyboardShortcuts
 import SwiftUI
 import SwiftData
 
 struct DiffView: View {
+	@Environment(\.modelContext) private var modelContext
     @State private var viewModel: DiffViewModel
-    @Environment(\.modelContext) private var modelContext
+    @State private var currentSegmentRect: CGRect? = nil
+    @State private var currentOperationBarSize: CGSize = CGSize(width: 140, height: 30)
+    @State private var shouldScrollToSegment: Bool = false
+    @State private var isScrolling: Bool = false
 
-	private func attributedText(for segments: [DiffSegment]) -> AttributedString {
-        var result = AttributedString()
-        let effectiveChanges = viewModel.getEffectiveDiffChanges()
-        
-
-        
-        for segment in segments {
-            var segmentText = AttributedString(segment.content)
-            
-            let segmentStatus: DiffChangeStatus? = {
-                guard let opIndex = segment.operationIndex else { return nil }
-				
-                return effectiveChanges.first { $0.operationIndex == opIndex }?.status
-            }()
-            
-            switch segment.type {
-            case .unchanged:
-                segmentText.foregroundColor = .primary
-                
-            case .added:
-				switch segmentStatus {
-				case .approved:
-					segmentText.foregroundColor = .primary
-				case .pending:
-					segmentText.foregroundColor = .green
-					segmentText.backgroundColor = Color.green.opacity(0.2)
-				case .rejected:
-					continue
-				default:
-					segmentText.foregroundColor = .gray
-					segmentText.backgroundColor = Color.gray.opacity(0.1)
-				}
-                
-            case .removed:
-				switch segmentStatus {
-				case .approved:
-					continue
-				case .pending:
-					segmentText.foregroundColor = .red
-					segmentText.backgroundColor = Color.red.opacity(0.2)
-					segmentText.strikethroughStyle = .single
-				case .rejected:
-					segmentText.foregroundColor = .primary
-				default:
-					segmentText.foregroundColor = .gray
-					segmentText.backgroundColor = Color.gray.opacity(0.1)
-					segmentText.strikethroughStyle = .single
-				}
-            }
-            
-            if let opIndex = segment.operationIndex, opIndex == viewModel.currentOperationIndex {
-                segmentText.backgroundColor = Color.accentColor.opacity(0.3)
-            }
-            
-            result.append(segmentText)
-        }
-        
-        return result
-    }
-    
     init(response: Response, modelContext: ModelContext) {
-        self._viewModel = State(initialValue: DiffViewModel(response: response, modelContext: modelContext))
+        self._viewModel = State(initialValue: DiffViewModel(response: response))
     }
     
     var body: some View {
         ZStack {
-            ScrollView {
-                if let diffSegments = generateDiffSegments() {
-                    Text(attributedText(for: diffSegments))
-           				.font(.system(size: 14).monospaced())
-            			.frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(.horizontal, 16)
-                    .padding(.vertical, 12)
-                    .id(viewModel.isPreviewingAllApproved)
+            if let diffSegments = generateDiffSegments() {
+                DiffTextView(
+                    segments: diffSegments,
+                    currentOperationIndex: viewModel.currentOperationIndex,
+                    effectiveChanges: viewModel.getEffectiveDiffChanges(),
+                    onSegmentPositionChanged: { rect in
+                        currentSegmentRect = rect
+                    },
+                    onSegmentClicked: { operationIndex in
+                        viewModel.currentOperationIndex = operationIndex
+                    },
+                    shouldScrollToCurrentSegment: shouldScrollToSegment,
+                    onScrollStateChanged: { scrolling in
+                        isScrolling = scrolling
+                    }
+                )
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .id("\(viewModel.diffChanges.count)-\(viewModel.isPreviewingAllApproved)")
+            }
+            
+            if viewModel.currentDiffChange?.status == .pending && !isScrolling {
+                if let segmentRect = currentSegmentRect {
+                    GeometryReader { geometry in
+                        VStack {
+                            HStack {
+                                currentOperationBar
+                                	.offset(x: calculateBarXOffset(segmentRect: segmentRect,
+                                                                   containerWidth: geometry.size.width,
+                                                                   barWidth: currentOperationBarSize.width))
+                                Spacer()
+                            }
+                            .offset(y: segmentRect.minY - currentOperationBarSize.height)
+                            Spacer()
+                        }
+                    }
                 }
             }
             
             VStack(alignment: .center, spacing: 8) {
                 Spacer()
                 
-                //if viewModel.statistics.pending > 0 {
+                if !viewModel.diffChanges.filter({ $0.status == .pending }).isEmpty {
                     compactNavigationBar
-                //}
+                }
                 
                 bottomToolbar
             }
         }
         .background(.BG)
+        .background {
+            if !viewModel.diffChanges.filter({ $0.status == .pending }).isEmpty {
+                upArrowListener
+                downArrowListener
+                acceptListener
+                rejectListener
+            }
+        }
+        .onChange(of: viewModel.currentOperationIndex) { _, _ in
+            currentSegmentRect = nil
+        }
+    }
+    
+    private func triggerScrollToSegment() {
+        shouldScrollToSegment = true
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+            shouldScrollToSegment = false
+        }
+    }
+    
+    private var currentOperationBar: some View {
+        HStack(spacing: 4) {
+            Button {
+                viewModel.approveCurrentChange()
+            } label: {
+                HStack(spacing: 6) {
+                    KeyboardShortcutView(shortcut: KeyboardShortcut(KeyEquivalent("y")))
+                        .font(.system(size: 13, weight: .medium))
+                    Text("Accept")
+                        .font(.system(size: 13, weight: .medium))
+                }
+                .padding(.horizontal, 6)
+                .padding(.vertical, 3)
+            }
+            .buttonStyle(.plain)
+            .foregroundStyle(.white)
+            .background(
+                RoundedRectangle(cornerRadius: 3)
+                    .fill(.acceptBG)
+            )
+            
+            Button {
+                viewModel.rejectCurrentChange()
+            } label: {
+                HStack(spacing: 6) {
+                    KeyboardShortcutView(shortcut: KeyboardShortcut(KeyEquivalent("n")))
+                        .font(.system(size: 13, weight: .medium))
+                    Text("Reject")
+                        .font(.system(size: 13, weight: .medium))
+                }
+                .padding(.horizontal, 6)
+                .padding(.vertical, 3)
+            }
+            .buttonStyle(.plain)
+            .foregroundStyle(.white)
+            .background(
+                RoundedRectangle(cornerRadius: 3)
+                    .fill(.rejectBG)
+            )
+        }
+        .padding(2)
+        .background(
+            RoundedRectangle(cornerRadius: 4)
+                .fill(.gray700)
+                .stroke(.gray500)
+        )
+        .background(
+            GeometryReader { geometry in
+                Color.clear
+                    .onAppear {
+                        currentOperationBarSize = geometry.size
+                    }
+                    .onChange(of: geometry.size) { _, newSize in
+                        currentOperationBarSize = newSize
+                    }
+            }
+        )
     }
     
     private var compactNavigationBar: some View {
-        HStack(spacing: 12) {
+        HStack(spacing: 2) {
             Button {
                 viewModel.approveAllChanges()
             } label: {
@@ -124,30 +173,37 @@ struct DiffView: View {
                 }
             }
             
-            HStack(spacing: 8) {
-                Button(action: viewModel.navigatePrevious) {
+            HStack(spacing: 0) {
+                Button(action: {
+                    viewModel.navigateToPreviousAvailablePendingChange()
+                    triggerScrollToSegment()
+                }) {
                     Image(systemName: "chevron.up")
-                        .font(.system(size: 12, weight: .medium))
                         .foregroundColor(viewModel.canNavigatePrevious ? .primary : .secondary)
+                        .padding(10)
+						.contentShape(Rectangle())
                 }
                 .disabled(!viewModel.canNavigatePrevious)
                 .buttonStyle(.plain)
                 
-                Text("\(viewModel.currentOperationIndex + 1) / \(viewModel.diffResult?.operations.count ?? 0)")
+                Text("\(viewModel.currentPendingOperationNumber) / \(viewModel.totalPendingOperationsCount)")
                     .font(.system(size: 13, weight: .medium))
                     .foregroundColor(.secondary)
                     .frame(minWidth: 30)
                 
-                Button(action: viewModel.navigateNext) {
+                Button(action: {
+                    viewModel.navigateToNextAvailablePendingChange()
+                    triggerScrollToSegment()
+                }) {
                     Image(systemName: "chevron.down")
-                        .font(.system(size: 12, weight: .medium))
                         .foregroundColor(viewModel.canNavigateNext ? .primary : .secondary)
+                        .padding(10)
+						.contentShape(Rectangle())
                 }
                 .disabled(!viewModel.canNavigateNext)
                 .buttonStyle(.plain)
             }
-            .padding(.horizontal, 12)
-            .padding(.vertical, 6)
+            .padding(.horizontal, 2)
         }
         .padding(4)
         .background(
@@ -160,7 +216,7 @@ struct DiffView: View {
     private var bottomToolbar: some View {
         HStack {
             Button {
-                insertApprovedChanges()
+                //insertApprovedChanges()
             } label: {
                 Text("Saved")
                     .padding(6)
@@ -178,7 +234,7 @@ struct DiffView: View {
             CopyButton(text: viewModel.generatePreviewText())
             
             Button {
-                insertApprovedChanges()
+                viewModel.insert()
             } label: {
                 Text("Insert")
                     .padding(6)
@@ -199,16 +255,6 @@ struct DiffView: View {
         )
         .padding(.horizontal, 16)
         .padding(.bottom, 24)
-    }
-    
-    private func insertApprovedChanges() {
-        let previewText = viewModel.generatePreviewText()
-        NSPasteboard.general.clearContents()
-        NSPasteboard.general.setString(previewText, forType: .string)
-        
-        viewModel.markAsSaved()
-        
-        // TODO: Show confirmation or handle insertion based on the source application
     }
     
     // Define operation priority: deletions first, then replacements, then insertions
@@ -322,6 +368,44 @@ struct DiffView: View {
         
         return segments
     }
+    
+    private func calculateBarXOffset(segmentRect: CGRect, containerWidth: CGFloat, barWidth: CGFloat) -> CGFloat {
+        let desiredXOffset = segmentRect.minX
+        let minXOffset: CGFloat = 0
+        let maxXOffset = max(0, containerWidth - barWidth)
+        
+        return max(minXOffset, min(maxXOffset, desiredXOffset))
+    }
+}
+
+// MARK: - Keyboard Listeners
+
+extension DiffView {
+    private var upArrowListener: some View {
+        KeyListener(key: .upArrow, modifiers: []) {
+            viewModel.navigateToPreviousAvailablePendingChange()
+            triggerScrollToSegment()
+        }
+    }
+    
+    private var downArrowListener: some View {
+        KeyListener(key: .downArrow, modifiers: []) {
+            viewModel.navigateToNextAvailablePendingChange()
+            triggerScrollToSegment()
+        }
+    }
+    
+    private var acceptListener: some View {
+        KeyListener(key: KeyEquivalent("y"), modifiers: [.command]) {
+            viewModel.approveCurrentChange()
+        }
+    }
+    
+    private var rejectListener: some View {
+        KeyListener(key: KeyEquivalent("n"), modifiers: [.command]) {
+            viewModel.rejectCurrentChange()
+        }
+    }
 }
 
 // MARK: - DiffSegment Model
@@ -337,4 +421,3 @@ enum DiffSegmentType {
     case added
     case removed
 }
-

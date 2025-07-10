@@ -1,0 +1,62 @@
+//
+//  GoogleDocumentServiceProtocol.swift
+//  Onit
+//
+//  Created by Kévin Naudin on 07/01/2025.
+//
+
+import Foundation
+import GoogleSignIn
+
+protocol GoogleDocumentServiceProtocol {
+    func getPlainTextContent(fileId: String) async throws -> String
+	func applyDiffChanges(fileId: String, diffChanges: [DiffChangeData]) async throws
+    var plainTextMimeType: String { get }
+}
+
+extension GoogleDocumentServiceProtocol {
+    
+    func getPlainTextContent(fileId: String) async throws -> String {
+        guard let user = GIDSignIn.sharedInstance.currentUser else {
+            throw GoogleDriveError.notAuthenticated("Not authenticated with Google Drive")
+        }
+        
+        let accessToken = user.accessToken.tokenString
+        let exportUrl = "https://www.googleapis.com/drive/v3/files/\(fileId)/export?mimeType=\(plainTextMimeType)"
+        
+        guard let url = URL(string: exportUrl) else {
+            throw GoogleDriveError.invalidUrl("Invalid export URL")
+        }
+        
+        var request = URLRequest(url: url)
+        request.setValue("Bearer \(accessToken)", forHTTPHeaderField: "Authorization")
+        
+        let (data, response) = try await URLSession.shared.data(for: request)
+
+		guard let httpResponse = response as? HTTPURLResponse else {
+            throw GoogleDriveError.invalidResponse("Invalid response")
+        }
+
+		if httpResponse.statusCode == 404 {
+            throw GoogleDriveError.notFound("Onit needs permission to access this file.")
+        } else if httpResponse.statusCode == 403 {
+            var errorMessage = "Onit can't access this file."
+            if let errorData = String(data: data, encoding: .utf8) {
+                errorMessage += "\n\nError message: \(errorData)"
+            }
+            throw GoogleDriveError.accessDenied(errorMessage)
+        } else if httpResponse.statusCode != 200 {
+            var errorMessage = "Failed to retrieve document (HTTP \(httpResponse.statusCode))"
+            if let errorData = String(data: data, encoding: .utf8) {
+                errorMessage += "\n\nError message: \(errorData)"
+            }
+            throw GoogleDriveError.httpError(httpResponse.statusCode, errorMessage)
+        }
+        
+        return String(data: data, encoding: .utf8) ?? ""
+    }
+    
+    func applyDiffChanges(fileId: String, diffChanges: [DiffChangeData]) async throws {
+        throw GoogleDriveError.unsupportedFileType("Diff changes application not implemented for this document type")
+    }
+}
