@@ -8,37 +8,39 @@
 import KeyboardShortcuts
 import SwiftUI
 
-struct TooltipViewTruncated {
+struct TooltipConfig {
     var maxWidth: CGFloat
     var lineLimit: Int? = nil
 }
 
 struct TooltipView: View {
     var tooltip: Tooltip
-    var truncated: TooltipViewTruncated? = nil
+    var config: TooltipConfig? = nil
 
     var body: some View {
-        if let truncated = truncated {
-            content(
-                truncatedText(truncated)
-            )
-            .fixedSize(horizontal: false, vertical: true)
+        if let config = config {
+            truncatedText(config)
         } else {
-            content(
-                fixedText
-            )
-            .frame(minHeight: 78)
+            fixedText
         }
     }
     
     // MARK: - Child Components
     
+    private func findValidSubstring(_ substrings: [String]) -> String {
+        return substrings
+            .first { !$0.trimmingCharacters(in: .whitespaces).isEmpty }?
+            .trimmingCharacters(in: .whitespaces)
+        ?? ""
+    }
+    
     @ViewBuilder
     var text: some View {
-        let textSubstring: [Substring] = tooltip.prompt.split(separator: "\n")
-        let textFirstLine = textSubstring[0]
+        let newlineCharacters = CharacterSet.newlines
+        let textSubstrings: [String] = tooltip.prompt.components(separatedBy: newlineCharacters)
+        let textFirstLine: String = findValidSubstring(textSubstrings)
         
-        let hasMultipleLines = textSubstring.count > 1
+        let hasMultipleLines = textSubstrings.count > 1
         
         if hasMultipleLines {
             VStack(alignment: .leading) {
@@ -54,18 +56,36 @@ struct TooltipView: View {
         }
     }
     
-    var fixedText: some View {
-        text.fixedSize()
+    func textWithShortcutWrapper(_ textView: some View) -> some View {
+        HStack(spacing: 0) {
+            textView
+            tooltipShortcut
+        }
+        .foregroundStyle(.white)
+        .padding(.leading, 8)
+        .background {
+            tooltipBackground
+        }
     }
     
-    func truncatedText(_ truncated: TooltipViewTruncated) -> some View {
-        text
-            .lineLimit(truncated.lineLimit ?? 6)
-            .truncationMode(.tail)
-            .frame(
-                maxWidth: truncated.maxWidth,
-                alignment: .leading
-            )
+    var fixedText: some View {
+        textWithShortcutWrapper(
+            text
+                .fixedSize()
+        )
+        .frame(minHeight: 78)
+    }
+    
+    func truncatedText(_ config: TooltipConfig) -> some View {
+        textWithShortcutWrapper(
+            text
+                .truncateText(lineLimit: config.lineLimit ?? 6)
+                .frame(
+                    maxWidth: config.maxWidth,
+                    alignment: .leading
+                )
+        )
+        .fixedSize(horizontal: false, vertical: true)
     }
     
     var tooltipShortcut: some View {
@@ -93,18 +113,6 @@ struct TooltipView: View {
         RoundedRectangle(cornerRadius: 8)
             .fill(Color.gray500)
         //            .shadow(color: .black.opacity(0.36), radius: 2.5, x: 0, y: 0)
-    }
-    
-    func content(_ textView: some View) -> some View {
-        HStack(spacing: 0) {
-            textView
-            tooltipShortcut
-        }
-        .foregroundStyle(.white)
-        .padding(.leading, 8)
-        .background {
-            tooltipBackground
-        }
     }
 }
 

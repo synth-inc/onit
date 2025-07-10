@@ -24,7 +24,7 @@ class TooltipManager {
     
     func setTooltip(
         _ tooltip: Tooltip?,
-        tooltipTruncated: TooltipViewTruncated? = nil,
+        tooltipConfig: TooltipConfig? = nil,
         delayStart: Double = 0,
         delayEnd: Double = 0.2,
         ignoreMouseEvents: Bool = false
@@ -38,7 +38,7 @@ class TooltipManager {
 
         if let tooltip {
             if isTooltipActive {
-                resetTooltip(tooltip, tooltipTruncated)
+                resetTooltip(tooltip, tooltipConfig)
                 updateTooltipWindowSize()
                 moveTooltip()
                 showWindowWithoutAnimation()
@@ -47,7 +47,7 @@ class TooltipManager {
                     try? await Task.sleep(for: .seconds(delayStart))
                     if Task.isCancelled { return }
                     isTooltipActive = true
-                    setupTooltip(ignoreMouseEvents, tooltip, tooltipTruncated)
+                    setupTooltip(ignoreMouseEvents, tooltip, tooltipConfig)
                     updateTooltipWindowSize()
                     moveTooltip()
                     showWindowWithoutAnimation()
@@ -148,12 +148,12 @@ class TooltipManager {
     func setupTooltip(
         _ ignoreMouseEvents: Bool,
         _ tooltip: Tooltip,
-        _ tooltipTruncated: TooltipViewTruncated?
+        _ tooltipConfig: TooltipConfig?
     ) {
         if tooltipWindow == nil {
             let contentView = TooltipView(
                 tooltip: tooltip,
-                truncated: tooltipTruncated
+                config: tooltipConfig
             )
             
             let hostingController = NSHostingController(rootView: contentView)
@@ -166,7 +166,6 @@ class TooltipManager {
             window.hasShadow = true
             window.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
             
-            /// Set as optional to keep things backwards-compatible with previous non-ignore-mouse-events implementation.
             if ignoreMouseEvents {
                 window.ignoresMouseEvents = true
             }
@@ -176,13 +175,13 @@ class TooltipManager {
 
             updateTooltipWindowSize()
         } else {
-            resetTooltip(tooltip, tooltipTruncated)
+            resetTooltip(tooltip, tooltipConfig)
         }
     }
 
     func resetTooltip(
         _ tooltip: Tooltip,
-        _ tooltipTruncated: TooltipViewTruncated?
+        _ tooltipConfig: TooltipConfig?
     ) {
         guard let tooltipWindow = self.tooltipWindow else {
             print("No window available to reset.")
@@ -191,7 +190,7 @@ class TooltipManager {
 
         let content = TooltipView(
             tooltip: tooltip,
-            truncated: tooltipTruncated
+            config: tooltipConfig
         )
         
         let newHostingController = NSHostingController(rootView: content)

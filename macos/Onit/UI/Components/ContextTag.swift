@@ -134,11 +134,11 @@ struct ContextTag: View {
         .onHover { isHovering in
             isHoveredBody = isHovering
             
-            TooltipHelpers.setOptionalTooltip(
+            TooltipHelpers.setTooltipOnHover(
                 isHovering: isHovering,
                 ignoreMouseEvents: true,
                 tooltipPrompt: tooltipPrompt,
-                tooltipTruncated: TooltipHelpers.defaultTruncation
+                tooltipConfig: TooltipHelpers.defaultConfig
             )
         }
         .addAnimation(dependency: isHoveredBody)

@@ -144,7 +144,7 @@ struct TextButton<Child: View>: View {
         .onHover{ isHovering in
             isHovered = isHovering
             
-            TooltipHelpers.setOptionalTooltip(
+            TooltipHelpers.setTooltipOnHover(
                 isHovering: isHovering,
                 ignoreMouseEvents: true,
                 tooltipShortcut: tooltipShortcut,
