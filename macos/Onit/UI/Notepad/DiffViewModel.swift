@@ -5,14 +5,15 @@
 //  Created by Kévin Naudin on 07/07/2025.
 //
 
+import AppKit
+import Combine
 import Foundation
 import SwiftData
-import Combine
 
 @MainActor
 @Observable
 class DiffViewModel {
-    private let diffChangeManager: DiffChangeManager
+    private let modelContext: ModelContext
     private let response: Response
     
     // Current state
@@ -41,16 +42,15 @@ class DiffViewModel {
     }
     
     var statistics: (pending: Int, approved: Int, rejected: Int) {
-        diffChangeManager.getChangeStatistics(for: response)
+        getChangeStatistics()
     }
     
     var canNavigateNext: Bool {
-        guard let result = diffResult else { return false }
-        return currentOperationIndex < result.operations.count - 1
+        return getNextPendingChange(after: currentOperationIndex) != nil
     }
     
     var canNavigatePrevious: Bool {
-        return currentOperationIndex > 0
+        return getPreviousPendingChange(before: currentOperationIndex) != nil
     }
     
     var allChangesApproved: Bool {
@@ -58,24 +58,213 @@ class DiffViewModel {
         return stats.pending == 0 && stats.approved > 0
     }
     
-    init(response: Response, modelContext: ModelContext) {
+    var totalPendingOperationsCount: Int {
+        return diffChanges.filter { $0.status == .pending }.count
+    }
+    
+    var currentPendingOperationNumber: Int {
+        let pendingChanges = diffChanges.filter { $0.status == .pending }
+            .sorted { $0.operationIndex < $1.operationIndex }
+        
+        if let currentIndex = pendingChanges.firstIndex(where: { $0.operationIndex == currentOperationIndex }) {
+            return currentIndex + 1
+        }
+        return 1
+    }
+    
+    init(response: Response) {
         self.response = response
-        self.diffChangeManager = DiffChangeManager(modelContext: modelContext)
+        self.modelContext = SwiftDataContainer.appContainer.mainContext
+        
         loadOrCreateDiffChanges()
     }
     
     // MARK: - Data Management
     
     private func loadOrCreateDiffChanges() {
-        diffChanges = diffChangeManager.getDiffChanges(for: response)
+        diffChanges = getDiffChanges()
         
         if diffChanges.isEmpty {
-            diffChangeManager.createOrUpdateDiffChanges(for: response)
-            diffChanges = diffChangeManager.getDiffChanges(for: response)
+            createDiffChanges()
+            diffChanges = getDiffChanges()
         }
         
         if let firstPending = diffChanges.first(where: { $0.status == .pending }) {
             currentOperationIndex = firstPending.operationIndex
+        }
+    }
+    
+    // MARK: - Database Operations
+    
+    private func getDiffChanges() -> [DiffChangeState] {
+        return response.currentDiffChanges.sorted { $0.operationIndex < $1.operationIndex }
+    }
+    
+    private func getDiffChange(operationIndex: Int) -> DiffChangeState? {
+        return response.currentDiffChanges.first { $0.operationIndex == operationIndex }
+    }
+    
+    private func createDiffChanges() {
+        guard let diffResult = response.diffResult else {
+            return
+        }
+        
+        var newRevisionChanges: [DiffChangeState] = []
+        
+        for (index, operation) in diffResult.operations.enumerated() {
+            let diffChange = DiffChangeState(
+                operationIndex: index,
+                operationType: operation.type,
+                status: .pending,
+                operationText: operation.text ?? operation.newText,
+                operationStartIndex: operation.startIndex ?? operation.index,
+                operationEndIndex: operation.endIndex
+            )
+            modelContext.insert(diffChange)
+            newRevisionChanges.append(diffChange)
+        }
+        
+        response.createNewDiffRevision(with: newRevisionChanges)
+        
+        saveContext(modelContext)
+    }
+    
+    private func updateDiffChangeStatus(operationIndex: Int, status: DiffChangeStatus) {
+        if let diffChange = getDiffChange(operationIndex: operationIndex) {
+            diffChange.status = status
+            diffChange.timestamp = Date()
+            
+            if status == .approved {
+                recalculateIndicesAfterApproval(approvedOperationIndex: operationIndex)
+            }
+            
+            saveContext(modelContext)
+        }
+    }
+    
+    private func recalculateIndicesAfterApproval(approvedOperationIndex: Int) {
+        guard let diffResult = response.diffResult else { return }
+        
+        let allChanges = getDiffChanges().sorted { $0.operationIndex < $1.operationIndex }
+        let approvedOperation = diffResult.operations[approvedOperationIndex]
+        let offset = calculateOffsetForOperation(approvedOperation)
+        
+        for change in allChanges {
+            if change.operationIndex > approvedOperationIndex && change.status == .pending {
+                updateIndicesForChange(change, withOffset: offset)
+            }
+        }
+    }
+    
+    private func calculateOffsetForOperation(_ operation: DiffTool.PlainTextDiffOperation) -> Int {
+        switch operation.type {
+        case "insertText":
+            return operation.text?.count ?? 0
+            
+        case "deleteContentRange":
+            if let startIndex = operation.startIndex, let endIndex = operation.endIndex {
+                return -(endIndex - startIndex)
+            }
+            return 0
+            
+        case "replaceText":
+            if let startIndex = operation.startIndex, 
+               let endIndex = operation.endIndex,
+               let newText = operation.newText {
+                let deletedLength = endIndex - startIndex
+                let insertedLength = newText.count
+                return insertedLength - deletedLength
+            }
+            return 0
+            
+        default:
+            return 0
+        }
+    }
+    
+    private func updateIndicesForChange(_ change: DiffChangeState, withOffset offset: Int) {
+        if let startIndex = change.operationStartIndex {
+            change.operationStartIndex = max(0, startIndex + offset)
+        }
+        
+        if let endIndex = change.operationEndIndex {
+            change.operationEndIndex = max(0, endIndex + offset)
+        }
+    }
+    
+    private func getAdjustedDiffChanges() -> [DiffChangeData] {
+        let changes = getDiffChanges()
+        
+        var adjustedChanges: [DiffChangeData] = []
+        var cumulativeOffset = 0
+        
+        for change in changes.sorted(by: { $0.operationIndex < $1.operationIndex }) {
+            if change.status == .approved {
+                adjustedChanges.append(DiffChangeData(
+                    operationIndex: change.operationIndex,
+                    operationType: change.operationType,
+                    status: change.status,
+                    operationText: change.operationText,
+                    operationStartIndex: change.operationStartIndex,
+                    operationEndIndex: change.operationEndIndex
+                ))
+                
+                if let operation = getOperation(for: change) {
+                    cumulativeOffset += calculateOffsetForOperation(operation)
+                }
+            } else {
+                let adjustedStartIndex = change.operationStartIndex.map { max(0, $0 + cumulativeOffset) }
+                let adjustedEndIndex = change.operationEndIndex.map { max(0, $0 + cumulativeOffset) }
+                
+                adjustedChanges.append(DiffChangeData(
+                    operationIndex: change.operationIndex,
+                    operationType: change.operationType,
+                    status: change.status,
+                    operationText: change.operationText,
+                    operationStartIndex: adjustedStartIndex,
+                    operationEndIndex: adjustedEndIndex
+                ))
+            }
+        }
+        
+        return adjustedChanges
+    }
+    
+    private func getOperation(for change: DiffChangeState) -> DiffTool.PlainTextDiffOperation? {
+        guard let diffResult = response.diffResult,
+              change.operationIndex < diffResult.operations.count else {
+            return nil
+        }
+        return diffResult.operations[change.operationIndex]
+    }
+    
+    private func getChangeStatistics() -> (pending: Int, approved: Int, rejected: Int) {
+        let changes = getDiffChanges()
+        
+        let pending = changes.filter { $0.status == .pending }.count
+        let approved = changes.filter { $0.status == .approved }.count
+        let rejected = changes.filter { $0.status == .rejected }.count
+        
+        return (pending: pending, approved: approved, rejected: rejected)
+    }
+    
+    private func getNextPendingChange(after currentIndex: Int) -> DiffChangeState? {
+        let changes = getDiffChanges()
+            .filter { $0.status == .pending && $0.operationIndex > currentIndex }
+        return changes.first
+    }
+    
+    private func getPreviousPendingChange(before currentIndex: Int) -> DiffChangeState? {
+        let changes = getDiffChanges()
+            .filter { $0.status == .pending && $0.operationIndex < currentIndex }
+        return changes.last
+    }
+    
+    private func saveContext(_ context: ModelContext) {
+        do {
+            try context.save()
+        } catch {
+            print("Error saving diff changes: \(error)")
         }
     }
     
@@ -90,19 +279,35 @@ class DiffViewModel {
     }
     
     func approveAllChanges() {
-        diffChangeManager.approveAllChanges(for: response)
+        let pendingChanges = diffChanges.filter { $0.status == .pending }
+            .sorted { $0.operationIndex < $1.operationIndex }
+        
+        for change in pendingChanges {
+            updateDiffChangeStatus(
+                operationIndex: change.operationIndex,
+                status: .approved
+            )
+        }
+        
         refreshChanges()
         hasUnsavedChanges = true
     }
     
     func rejectAllChanges() {
-        diffChangeManager.rejectAllChanges(for: response)
+        let pendingChanges = diffChanges.filter { $0.status == .pending }
+        
+        for change in pendingChanges {
+            updateDiffChangeStatus(
+                operationIndex: change.operationIndex,
+                status: .rejected
+            )
+        }
+        
         refreshChanges()
     }
     
     private func updateCurrentChangeStatus(_ status: DiffChangeStatus) {
-        diffChangeManager.updateDiffChangeStatus(
-            response: response,
+        updateDiffChangeStatus(
             operationIndex: currentOperationIndex,
             status: status
         )
@@ -112,93 +317,77 @@ class DiffViewModel {
             hasUnsavedChanges = true
         }
         
-        navigateToNextPendingChange()
+        navigateToNextAvailablePendingChange()
     }
     
     // MARK: - Navigation
     
-    func navigateNext() {
-        guard canNavigateNext else { return }
-        currentOperationIndex += 1
-    }
-    
-    func navigatePrevious() {
-        guard canNavigatePrevious else { return }
-        currentOperationIndex -= 1
-    }
-    
-    func navigateToNextPendingChange() {
-        guard let nextPending = diffChangeManager.getNextPendingChange(
-                for: response,
-                after: currentOperationIndex
-              ) else { return }
+    func navigateToNextAvailablePendingChange() {
+        if let nextPending = getNextPendingChange(after: currentOperationIndex) {
+            currentOperationIndex = nextPending.operationIndex
+            return
+        }
         
-        currentOperationIndex = nextPending.operationIndex
+        let pendingChanges = diffChanges.filter { $0.status == .pending }
+            .sorted { $0.operationIndex < $1.operationIndex }
+        
+        if let lastPending = pendingChanges.last {
+            currentOperationIndex = lastPending.operationIndex
+        }
     }
     
-    func navigateToPreviousPendingChange() {
-        guard let previousPending = diffChangeManager.getPreviousPendingChange(
-                for: response,
-                before: currentOperationIndex
-              ) else { return }
+    func navigateToPreviousAvailablePendingChange() {
+        if let previousPending = getPreviousPendingChange(before: currentOperationIndex) {
+            currentOperationIndex = previousPending.operationIndex
+            return
+        }
         
-        currentOperationIndex = previousPending.operationIndex
+        let pendingChanges = diffChanges.filter { $0.status == .pending }
+            .sorted { $0.operationIndex < $1.operationIndex }
+        
+        if let firstPending = pendingChanges.first {
+            currentOperationIndex = firstPending.operationIndex
+        }
     }
     
     // MARK: - Text Generation
     
     func generatePreviewText() -> String {
-        guard let arguments = diffArguments,
-              let result = diffResult else { return "" }
+        guard let arguments = diffArguments else { return "" }
         
         let effectiveChanges = getEffectiveDiffChanges()
-        let approvedOperationIndices = Set(effectiveChanges.filter { $0.status == .approved }.map { $0.operationIndex })
+        let approvedChanges = effectiveChanges.filter { $0.status == .approved }
+            .sorted { ($0.operationStartIndex ?? $0.operationEndIndex ?? 0) > ($1.operationStartIndex ?? $1.operationEndIndex ?? 0) }
         
         var text = arguments.original_content
-        var offset = 0
         
-        for (index, operation) in result.operations.enumerated() {
-            guard approvedOperationIndices.contains(index) else { continue }
-            
-            switch operation.type {
+        for change in approvedChanges {
+            switch change.operationType {
             case "insertText":
-                if let insertIndex = operation.index,
-                   let newText = operation.text {
-                    let adjustedIndex = insertIndex + offset
-                    if adjustedIndex <= text.count {
-                        let index = text.index(text.startIndex, offsetBy: adjustedIndex)
-                        text.insert(contentsOf: newText, at: index)
-                        offset += newText.count
-                    }
+                if let insertIndex = change.operationStartIndex,
+                   let newText = change.operationText,
+                   insertIndex <= text.count {
+                    let index = text.index(text.startIndex, offsetBy: insertIndex)
+                    text.insert(contentsOf: newText, at: index)
                 }
                 
             case "deleteContentRange":
-                if let startIndex = operation.startIndex,
-                   let endIndex = operation.endIndex {
-                    let adjustedStart = startIndex + offset
-                    let adjustedEnd = endIndex + offset
-                    if adjustedStart < text.count && adjustedEnd <= text.count && adjustedStart <= adjustedEnd {
-                        let start = text.index(text.startIndex, offsetBy: adjustedStart)
-                        let end = text.index(text.startIndex, offsetBy: adjustedEnd)
-                        let deletedLength = adjustedEnd - adjustedStart
-                        text.removeSubrange(start..<end)
-                        offset -= deletedLength
-                    }
+                if let startIndex = change.operationStartIndex,
+                   let endIndex = change.operationEndIndex,
+                   startIndex < text.count && endIndex <= text.count && startIndex <= endIndex {
+                    let start = text.index(text.startIndex, offsetBy: startIndex)
+                    let end = text.index(text.startIndex, offsetBy: endIndex)
+                    text.removeSubrange(start..<end)
                 }
                 
             case "replaceText":
-                if let startIndex = operation.startIndex,
-                   let endIndex = operation.endIndex,
-                   let newText = operation.newText {
-                    let adjustedStart = startIndex + offset
-                    let adjustedEnd = endIndex + offset
-                    if adjustedStart < text.count && adjustedEnd <= text.count && adjustedStart <= adjustedEnd {
-                        let start = text.index(text.startIndex, offsetBy: adjustedStart)
-                        let end = text.index(text.startIndex, offsetBy: adjustedEnd)
-                        let originalLength = adjustedEnd - adjustedStart
-                        text.replaceSubrange(start..<end, with: newText)
-                        offset += newText.count - originalLength
-                    }
+                if let startIndex = change.operationStartIndex,
+                   let endIndex = change.operationEndIndex,
+                   let newText = change.operationText,
+                   startIndex < text.count && endIndex <= text.count && startIndex <= endIndex {
+                    let start = text.index(text.startIndex, offsetBy: startIndex)
+                    let end = text.index(text.startIndex, offsetBy: endIndex)
+                    text.replaceSubrange(start..<end, with: newText)
                 }
                 
             default:
@@ -213,6 +402,41 @@ class DiffViewModel {
         hasUnsavedChanges = false
     }
     
+    // MARK: - Insertion
+    
+    func insert() {
+        guard let diffArguments = diffArguments else { return }
+        
+        if let documentUrl = diffArguments.document_url {
+            Task {
+                do {
+                    try await applyApprovedChangesToDocument(documentUrl: documentUrl)
+                } catch {
+                    log.error("error: \(error.localizedDescription)")
+                }
+            }
+        } else {
+            let previewText = generatePreviewText()
+            NSPasteboard.general.clearContents()
+            NSPasteboard.general.setString(previewText, forType: .string)
+            // TODO: 
+        }
+    }
+    
+    func applyApprovedChangesToDocument(documentUrl: String) async throws {
+        let adjustedChanges = getAdjustedDiffChanges()
+        let approvedChanges = adjustedChanges.filter { $0.status == .approved }
+        
+		guard !approvedChanges.isEmpty else {
+            return
+        }
+        
+        try await GoogleDocumentManager.applyDiffChangesToDocument(
+            documentUrl: documentUrl,
+            diffChanges: approvedChanges
+        )
+    }
+    
     // MARK: - Preview Mode
     
     func startPreviewingAllApproved() {
@@ -223,11 +447,12 @@ class DiffViewModel {
         isPreviewingAllApproved = false
     }
     
-    func getEffectiveDiffChanges() -> [DiffChangeState] {
+    func getEffectiveDiffChanges() -> [DiffChangeData] {
+        let adjustedChanges = getAdjustedDiffChanges()
+        
         if isPreviewingAllApproved {
-            return diffChanges.map { change in
-                let previewChange = DiffChangeState(
-                    responseId: change.responseId,
+            return adjustedChanges.map { change in
+                DiffChangeData(
                     operationIndex: change.operationIndex,
                     operationType: change.operationType,
                     status: change.status == .pending ? .approved : change.status,
@@ -235,16 +460,15 @@ class DiffViewModel {
                     operationStartIndex: change.operationStartIndex,
                     operationEndIndex: change.operationEndIndex
                 )
-                return previewChange
             }
         } else {
-            return diffChanges
+            return adjustedChanges
         }
     }
     
     // MARK: - Private
     
     private func refreshChanges() {
-        diffChanges = diffChangeManager.getDiffChanges(for: response)
+        diffChanges = getDiffChanges()
     }
 } 

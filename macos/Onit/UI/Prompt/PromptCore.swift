@@ -82,7 +82,7 @@ struct PromptCore: View {
         }
         .background {
             if !isEditing, let windowState = windowState {
-                if !showSlashMenu && (windowState.showContextMenu != true) && (windowState.isTyping != true) {
+                if !showSlashMenu && (windowState.showContextMenu != true) && (windowState.isTyping != true) && (windowState.isDiffViewActive != true) {
                     upListener
                     downListener
                 }
@@ -144,7 +144,7 @@ extension PromptCore {
                 maxHeight: maxHeightLimit,
                 placeholder: placeholderText,
                 audioRecorder: audioRecorder,
-                isDisabled: showingAlert,
+                isDisabled: showingAlert || windowState.isDiffViewActive,
                 detectLinks: true
             )
             .frame(height: min(textHeight, maxHeightLimit))

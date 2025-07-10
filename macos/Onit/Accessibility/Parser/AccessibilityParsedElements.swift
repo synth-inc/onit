@@ -9,7 +9,7 @@ struct AccessibilityParsedElements {
     static let applicationName = "applicationName"
     static let applicationTitle = "applicationTitle"
     static let elapsedTime = "elapsedTime"
-    static let mimeType = "mimeType"
+    static let documentUrl = "documentUrl"
 
     static let highlightedText = "highlightedText"
     static let screen = "screen"

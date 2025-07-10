@@ -143,6 +143,8 @@ class OnitPanelState: NSObject {
     var showHistory: Bool = false
     var historyIndex = -1
     
+    var isDiffViewActive: Bool = false
+    
     var setUpHeight: CGFloat = 0
     
     var generateTask: Task<Void, Never>? = nil

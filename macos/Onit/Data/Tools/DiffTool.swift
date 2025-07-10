@@ -31,6 +31,11 @@ class DiffTool: ToolProtocol {
                         description: "Title of the source document or window",
                         items: nil
                     ),
+                    "document_url": ToolProperty(
+                        type: "string",
+                        description: "Optional URL of the Google Drive document for structured updates",
+                        items: nil
+                    ),
                     "original_content": ToolProperty(
                         type: "string",
                         description: "Original plain text content before improvements",
@@ -75,6 +80,7 @@ class DiffTool: ToolProtocol {
     struct PlainTextDiffArguments: Codable {
         let source_name: String
         let source_title: String
+        let document_url: String?
         let original_content: String
         let improved_content: String
     }

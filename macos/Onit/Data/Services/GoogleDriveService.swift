@@ -135,7 +135,7 @@ class GoogleDriveService: NSObject, ObservableObject {
         }
     }
 
-    func extractTextFromGoogleDrive(driveUrl: String) async throws -> (String, String) {
+    func extractTextFromGoogleDrive(driveUrl: String) async throws -> String {
         self.isExtracting = true
         self.extractionError = nil
 
@@ -254,6 +254,12 @@ class GoogleDriveService: NSObject, ObservableObject {
     }
 
     private func extractFileIdFromUrl(_ url: String) -> String? {
+        return GoogleDriveService.extractFileId(from: url)
+    }
+
+    // MARK: - Public Static Utilities
+    
+    static func extractFileId(from url: String) -> String? {
         // Handle various Google Drive URL formats
         let patterns = [
             #"https://docs\.google\.com/document/d/([a-zA-Z0-9-_]+)"#,
@@ -480,6 +486,7 @@ enum GoogleDriveServiceError: Error, LocalizedError {
     case httpError(Int, String)
     case accessDenied(String)
     case invalidResponse(String)
+    case unsupportedFileType(String)
 
     var errorDescription: String? {
         switch self {
@@ -497,6 +504,8 @@ enum GoogleDriveServiceError: Error, LocalizedError {
             return "Access Denied: \(message)"
         case .invalidResponse(let message):
             return "Invalid Response: \(message)"
+        case .unsupportedFileType(let message):
+            return "Unsupported File Type: \(message)"
         }
     }
 }
