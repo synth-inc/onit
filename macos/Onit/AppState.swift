@@ -80,7 +80,9 @@ class AppState: NSObject, SPUUpdaterDelegate {
     var subscriptionPlanError: String = ""
     
     // Network Monitoring
+    var networkMonitor = NetworkMonitor.shared
     var isOnline: Bool = NetworkMonitor.shared.isOnline
+    
     private var cancellables = Set<AnyCancellable>()
 
     // MARK: - Initializer
@@ -95,10 +97,26 @@ class AppState: NSObject, SPUUpdaterDelegate {
             userDriverDelegate: nil
         )
         
-        NetworkMonitor.shared.$isOnline
+        networkMonitor.$isOnline
             .receive(on: DispatchQueue.main)
-            .sink{ [weak self] online in
-                self?.isOnline = online
+            .sink{ [weak self] isOnline in
+                if let self = self {
+                    self.isOnline = isOnline
+                    
+                    if !self.isOnline {
+                        Defaults[.mode] = .local
+                    } else {
+                        if !userLoggedIn {
+                            if self.hasUserAPITokens {
+                                Defaults[.mode] = .remote
+                            } else if hasLocalModels {
+                                Defaults[.mode] = .local
+                            }
+                        } else {
+                            Defaults[.mode] = .remote
+                        }
+                    }
+                }
             }
             .store(in: &cancellables)
 
@@ -577,6 +595,14 @@ class AppState: NSObject, SPUUpdaterDelegate {
     
     var canAccessRemoteModels: Bool {
         (self.userLoggedIn || self.hasUserAPITokens) && self.isOnline
+    }
+    
+    @ObservableDefault(.availableLocalModels)
+    @ObservationIgnored
+    var availableLocalModels: [String]
+    
+    var hasLocalModels: Bool {
+        !availableLocalModels.isEmpty
     }
 }
 

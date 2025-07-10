@@ -129,7 +129,7 @@ struct TextViewWrapper: NSViewRepresentable {
                 parent.cursorPosition = textView.selectedRange().location
             }
             
-            if parent.detectLinks {
+            if parent.detectLinks && NetworkMonitor.shared.isOnline {
                 handleUrlDetection(text: textView.string)
             }
             

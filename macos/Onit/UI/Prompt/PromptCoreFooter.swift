@@ -9,6 +9,7 @@ import SwiftUI
 import Defaults
 
 struct PromptCoreFooter: View {
+    @Environment(\.appState) var appState
     @Environment(\.windowState) private var windowState
     @Default(.mode) private var mode
     @Default(.allowWebSearchInLocalMode) private var allowWebSearchInLocalMode
@@ -33,6 +34,9 @@ struct PromptCoreFooter: View {
                 ModelSelectionButton()
                 if mode != .local || allowWebSearchInLocalMode {
                     WebSearchButton()
+                        .disabled(!appState.isOnline)
+                        .allowsHitTesting(appState.isOnline)
+                        .opacity(appState.isOnline ? 1 : 0.3)
                 }
             }
             

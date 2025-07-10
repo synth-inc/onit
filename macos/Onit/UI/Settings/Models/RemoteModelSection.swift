@@ -124,6 +124,7 @@ struct RemoteModelSection: View {
                 .frame(height: 22)
                 .font(.system(size: 13, weight: .regular))
                 .foregroundColor(.primary)  // Ensure placeholder text is not dimmed
+                .disabled(!appState.isOnline)
 
             Button {
                 Task {

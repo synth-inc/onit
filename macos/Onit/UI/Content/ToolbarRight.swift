@@ -14,8 +14,9 @@ struct ToolbarRight: View {
     @Environment(\.openSettings) var openSettings
     @Environment(\.windowState) private var state
     
-    @Default(.mode) var mode
     @Default(.footerNotifications) var footerNotifications
+    
+    var mode: InferenceMode
 
     var body: some View {
         HStack(alignment: .center, spacing: 6) {
@@ -23,10 +24,7 @@ struct ToolbarRight: View {
             localMode
             history
             settings
-            
-            if footerNotifications.contains(.update) {
-                installUpdate
-            }
+            installUpdate
         }
         .padding(.trailing, 6)
         .foregroundStyle(.gray200)
@@ -42,7 +40,7 @@ struct ToolbarRight: View {
     func toggleMode() {
         let oldMode = mode
         
-        mode = mode == .local ? .remote : .local
+        Defaults[.mode] = oldMode == .local ? .remote : .local
         
         AnalyticsManager.Toolbar.llmModeToggled(oldValue: oldMode, newValue: mode)
     }
@@ -63,13 +61,16 @@ struct ToolbarRight: View {
         .disabled(!appState.canAccessRemoteModels)
     }
 
+    @ViewBuilder
     var discord: some View {
-        IconButton(
-            icon: .logoDiscord,
-            iconSize: 21,
-            tooltipPrompt: "Join Discord"
-        ) {
-            MenuJoinDiscord.openDiscord(appState)
+        if appState.isOnline {
+            IconButton(
+                icon: .logoDiscord,
+                iconSize: 21,
+                tooltipPrompt: "Join Discord"
+            ) {
+                MenuJoinDiscord.openDiscord(appState)
+            }
         }
     }
 
@@ -117,19 +118,22 @@ struct ToolbarRight: View {
         }
     }
     
+    @ViewBuilder
     var installUpdate: some View {
-        IconButton(
-            icon: .lightning,
-            iconSize: 21,
-            inactiveColor: .blue300,
-            hoverBackground: .blue300.opacity(0.2),
-            tooltipPrompt: "Install Update"
-        ) {
-            appState.checkForAvailableUpdateWithDownload()
+        if appState.isOnline && footerNotifications.contains(.update) {
+            IconButton(
+                icon: .lightning,
+                iconSize: 21,
+                inactiveColor: .blue300,
+                hoverBackground: .blue300.opacity(0.2),
+                tooltipPrompt: "Install Update"
+            ) {
+                appState.checkForAvailableUpdateWithDownload()
+            }
         }
     }
 }
 
 #Preview {
-    ToolbarRight()
+    ToolbarRight(mode: .remote)
 }

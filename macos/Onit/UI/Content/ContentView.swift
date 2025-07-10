@@ -31,8 +31,7 @@ struct ContentView: View {
     }
     
     private var userProvidedOwnModel: Bool {
-        let hasLocalModel: Bool = !availableLocalModels.isEmpty
-        return hasLocalModel || appState.hasUserAPITokens
+        return appState.hasLocalModels || appState.hasUserAPITokens
     }
     
     private var showAuthFlow: Bool {
@@ -92,7 +91,7 @@ struct ContentView: View {
                 ZStack {
                     VStack(alignment: .leading, spacing: 0) {
                         if showToolbar {
-                            Toolbar()
+                            Toolbar(mode: mode)
                         }
                         
                         VStack(spacing: 0) {
@@ -149,10 +148,9 @@ struct ContentView: View {
         }
         .addAnimation(dependency: state.showChatView)
         .onAppear {
-            // Prevents edge cases where incorrect state may have been set.
-            // While this isn't likely, having an extra layer of security makes sure to keep the UX in-line with expectations.
-            checkCanAccessRemoteModels(appState.canAccessRemoteModels)
-            checkShouldHideOrShowAuthFlow()
+            checkModeAndAuthWithLogin()
+            checkUserProvidedOwnModel()
+            checkCanAccessRemoteModels()
             
             if !hasClosedTrialEndedAlert {
                 if let subscriptionStatus = appState.subscription?.status {
@@ -171,42 +169,48 @@ struct ContentView: View {
                 }
             }
         }
-        .onChange(of: appState.userLoggedIn) { _, loggedIn in
-            // Handles showing AuthFlow when logging out.
-            if !loggedIn && !userProvidedOwnModel {
+        .onChange(of: appState.userLoggedIn) { _, isLoggedIn in
+            checkModeAndAuthWithLogin()
+            
+            if isLoggedIn {
+                mode = .remote
+            }
+        }
+        .onChange(of: userProvidedOwnModel) { _, _ in
+            checkUserProvidedOwnModel()
+        }
+        .onChange(of: appState.canAccessRemoteModels) { _, _ in
+            checkCanAccessRemoteModels()
+        }
+    }
+    
+    private func checkModeAndAuthWithLogin() {
+        if !appState.userLoggedIn {
+            if !userProvidedOwnModel {
                 authFlowStatus = .showSignIn
-            } else {
+            } else if mode == .remote && !appState.hasUserAPITokens && appState.hasLocalModels {
+                mode = .local
                 authFlowStatus = .hideAuth
             }
-        }
-        .onChange(of: userProvidedOwnModel) { _, providedOwnModel in
-            // Handles showing AuthFlow when removing local models or provider API keys.
-            if !providedOwnModel && !appState.userLoggedIn {
-                authFlowStatus = .showSignUp
-            } else {
-                authFlowStatus = .hideAuth
-            }
-        }
-        .onChange(of: appState.canAccessRemoteModels) { _, canAccessRemoteModels in
-            checkCanAccessRemoteModels(canAccessRemoteModels)
-        }
-    }
-    
-    private func checkShouldHideOrShowAuthFlow() {
-        if appState.userLoggedIn {
-            authFlowStatus = .hideAuth
-        } else if userProvidedOwnModel {
-            authFlowStatus = .hideAuth
         } else {
-            authFlowStatus = .showSignUp
+            authFlowStatus = .hideAuth
         }
     }
     
-    private func checkCanAccessRemoteModels(_ canAccessRemoteModels: Bool) {
-        if !canAccessRemoteModels {
+    private func checkUserProvidedOwnModel() {
+        if !userProvidedOwnModel && !appState.userLoggedIn {
+            authFlowStatus = .showSignUp
+        } else {
+            authFlowStatus = .hideAuth
+        }
+    }
+    
+    private func checkCanAccessRemoteModels() {
+        if !appState.canAccessRemoteModels {
             mode = .local
             Defaults[.modelModeToggleShortcutDisabled] = true
         } else {
+            mode = .remote
             Defaults[.modelModeToggleShortcutDisabled] = false
         }
     }

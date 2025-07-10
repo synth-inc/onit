@@ -106,12 +106,17 @@ struct ChatView: View {
             
             if currentPromptsCount <= 0 {
                 Spacer()
-                footerNotificationsList
+                
+                if appState.isOnline {
+                    footerNotificationsList
+                }
             }
         }
         .drag()
         .onAppear {
-            appState.checkForAvailableUpdate()
+            if appState.isOnline {
+                appState.checkForAvailableUpdate()
+            }
         }
     }
 }

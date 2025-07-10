@@ -11,12 +11,16 @@ struct ModelsTab: View {
     
     var body: some View {
         ScrollView {
-            VStack(spacing: 25) {
-                RemoteModelsSection()
-                LocalModelsSection()
-                DefaultModelsSection()
+            VStack(spacing: 8) {
+                OfflineText()
+                
+                VStack(spacing: 25) {
+                    RemoteModelsSection()
+                    LocalModelsSection()
+                    DefaultModelsSection()
+                }
             }
-            .padding(.vertical, 20)
+            .padding()
             .padding(.horizontal, 86)
         }
     }

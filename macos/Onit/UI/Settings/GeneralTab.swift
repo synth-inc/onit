@@ -31,26 +31,33 @@ struct GeneralTab: View {
     }
     
     var body: some View {
-        Form {
-            GeneralTabPlanAndBilling()
-            
-            GeneralTabAccount()
-            
-            launchOnStartupSection
-            
-            displayModeSection
-            
-            behaviorSection
-            
-            analyticsSection
-            
-            appearanceSection
-            
-            GeneralTabVoice()
-            
-            // experimentalSection
+        ScrollView {
+            VStack(alignment: .center, spacing: 0) {
+                OfflineText()
+                
+                Form {
+                    GeneralTabPlanAndBilling()
+                    
+                    GeneralTabAccount()
+                    
+                    launchOnStartupSection
+                    
+                    displayModeSection
+                    
+                    behaviorSection
+                    
+                    analyticsSection
+                    
+                    appearanceSection
+                    
+                    GeneralTabVoice()
+                    
+                    // experimentalSection
+                }
+                .formStyle(.grouped)
+            }
+            .padding()
         }
-        .formStyle(.grouped)
     }
     
     var launchOnStartupSection: some View {

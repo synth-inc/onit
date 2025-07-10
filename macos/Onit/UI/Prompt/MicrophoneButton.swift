@@ -9,6 +9,7 @@ import Defaults
 import SwiftUI
 
 struct MicrophoneButton: View {
+    @Environment(\.appState) var appState
     @Environment(\.windowState) private var windowState
     
     @Default(.openAIToken) var openAIToken
@@ -29,17 +30,22 @@ struct MicrophoneButton: View {
     
     private let recordingSpacesCount = 8
     
+    private var disabled: Bool {
+        !appState.isOnline || audioRecorder.isTranscribing
+    }
+    
     var body: some View {
         PromptCoreFooterButton(
             iconColor: audioRecorder.isRecording ? .red : .gray200,
             icon: .microphone,
             text: audioRecorder.isRecording ? "Stop" : "Voice",
+            disabled: disabled,
             action: { handleMicrophonePress() },
             background: audioRecorder.isRecording ? Color.red.opacity(0.15) : .clear,
             hoverBackground: audioRecorder.isRecording ? Color.red.opacity(0.3) : .gray600,
             fontColor: audioRecorder.isRecording ? .red : .gray200
         )
-        .disabled(audioRecorder.isTranscribing)
+        .disabled(disabled)
         .help(microphoneButtonHelpText)
         .onDisappear {
             if audioRecorder.isRecording { cancelRecording() }

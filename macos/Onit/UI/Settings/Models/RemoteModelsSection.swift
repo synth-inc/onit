@@ -8,6 +8,7 @@
 import SwiftUI
 
 struct RemoteModelsSection: View {
+    @Environment(\.appState) var appState
 
     var body: some View {
         ScrollView {
@@ -20,6 +21,8 @@ struct RemoteModelsSection: View {
                 RemoteModelSection(provider: .perplexity)
                 CustomProvidersSection()
             }
+            .opacity(appState.isOnline ? 1 : 0.4)
+            .allowsHitTesting(appState.isOnline)
         }
     }
 }

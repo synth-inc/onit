@@ -2,6 +2,8 @@ import SwiftUI
 import Defaults
 
 struct WebSearchTab: View {
+    @Environment(\.appState) var appState
+    
     @Default(.tavilyAPIToken) var tavilyAPIToken
     @Default(.isTavilyAPITokenValidated) var isTavilyAPITokenValidated
     @Default(.tavilyCostSavingMode) var tavilyCostSavingMode
@@ -11,36 +13,42 @@ struct WebSearchTab: View {
     @State private var validationError: String? = nil
     
     var body: some View {
-        Form {
-            Section {
-                VStack(alignment: .leading, spacing: 16) {
-                    Text("Configure web search providers to enhance your AI responses with real-time information from the internet.")
-                        .font(.system(size: 13))
-                        .foregroundStyle(.gray200)
-                    
-                    Divider()
-                    
-                    tavilySection
+        VStack(alignment: .center, spacing: 8) {
+            OfflineText()
+            
+            Form {
+                Section {
+                    VStack(alignment: .leading, spacing: 16) {
+                        Text("Configure web search providers to enhance your AI responses with real-time information from the internet.")
+                            .font(.system(size: 13))
+                            .foregroundStyle(.gray200)
+                        
+                        Divider()
+                        
+                        tavilySection
+                    }
+                } header: {
+                    HStack {
+                        Image(systemName: "magnifyingglass")
+                        Text("Web Search Providers")
+                    }
                 }
-            } header: {
-                HStack {
-                    Image(systemName: "magnifyingglass")
-                    Text("Web Search Providers")
-                }
-            }
 
-            Section {
-                VStack(alignment: .leading, spacing: 16) {
-                    localModeSection
-                }
-            } header: {
-                HStack {
-                    Image(systemName: "lock.shield")
-                    Text("Local Mode")
+                Section {
+                    VStack(alignment: .leading, spacing: 16) {
+                        localModeSection
+                    }
+                } header: {
+                    HStack {
+                        Image(systemName: "lock.shield")
+                        Text("Local Mode")
+                    }
                 }
             }
+            .formStyle(.grouped)
+            .opacity(appState.isOnline ? 1 : 0.4)
+            .allowsHitTesting(appState.isOnline)
         }
-        .formStyle(.grouped)
         .padding()
     }
     

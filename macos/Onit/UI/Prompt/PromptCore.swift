@@ -192,10 +192,10 @@ extension PromptCore {
             lineWidth: 1.6,
             gradientBorder:
                 !isFocused ? unfocusedBorder :
-                isRemote ? remoteBorder :
+                mode == .remote ? remoteBorder :
                 localBorder
         )
-        .addAnimation(dependency: isRemote, duration: 0.3)
+        .addAnimation(dependency: mode, duration: 0.3)
         .addAnimation(dependency: isFocused, duration: 0.3)
         .padding(.top, 8)
         .padding(.horizontal, 12)
@@ -247,13 +247,6 @@ extension PromptCore {
     
     private var showingAlert: Bool {
         showTwoWeekProTrialEndedAlert || appState.showFreeLimitAlert || appState.showProLimitAlert
-    }
-    
-    private var isRemote: Bool {
-        switch mode {
-        case .remote: return true
-        default: return false
-        }
     }
     
     private var placeholderText: String {
