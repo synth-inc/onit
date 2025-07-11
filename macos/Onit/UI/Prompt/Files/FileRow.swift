@@ -40,9 +40,6 @@ struct FileRow: View {
             for contextItem in contextList {
                 if case .auto(let autoContext) = contextItem {
                     if windowName == autoContext.appTitle {
-                        windowState?.cleanupWindowContextTask(
-                            uniqueWindowIdentifier: foregroundWindow.hash
-                        )
                         return true
                     }
                 }
