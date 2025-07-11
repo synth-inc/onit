@@ -13,13 +13,24 @@ extension PanelStatePinnedManager {
         guard !isResizingWindows else { return }
 
         isResizingWindows = true
+
+        // First, handle the foregroundWindow if it exists
+        if let foregroundWindow = state.foregroundWindow {
+            resizeWindow(for: screen, window: foregroundWindow.element, isPanelResized: isPanelResized)
+        }
+
+        // Then, handle all other windows, skipping the foregroundWindow if present
         let windows = WindowHelpers.getAllOtherAppWindows()
         for window in windows {
-            resizeWindow(for: screen, window: window, isPanelResized: isPanelResized)
+            if let foregroundWindow = state.foregroundWindow, window == foregroundWindow.element {
+                continue
+            }
+            DispatchQueue.main.async {
+                self.resizeWindow(for: screen, window: window, isPanelResized: isPanelResized)
+            }
         }
         isResizingWindows = false
     }
-    
     func resizeWindow(
         for screen: NSScreen,
         window: AXUIElement,
@@ -36,41 +47,10 @@ extension PanelStatePinnedManager {
             
             let panelWidth = state.panelWidth - (TetheredButton.width / 2) + 1
             let screenFrame = screen.visibleFrame
-            let availableSpace = screenFrame.maxX - windowFrame.maxX
             
-            if !isPanelResized {
-                if availableSpace < panelWidth {
-                    if !windowFrameChanged {
-                        targetInitialFrames[window] = windowFrame
-                    } else if targetInitialFrames[window] == nil {
-                        // The user resize the window, we should store the initial frame containing the panel space.
-                        let newWidth = windowFrame.width + panelWidth
-                        let newFrame = NSRect(origin: windowFrame.origin,
-                                              size: NSSize(width: newWidth, height: windowFrame.height))
-                        
-                        targetInitialFrames[window] = newFrame
-                    }
-                    let overlapAmount = panelWidth - availableSpace
-                    let newWidth = windowFrame.width - overlapAmount
-                    let newFrame = CGRect(x: windowFrame.origin.x, y: windowFrame.origin.y, width: newWidth, height: windowFrame.height)
-                    _ = window.setFrame(newFrame)
-                }
-            } else {
-                // If we're already tracking it, then make it move.
-                if targetInitialFrames.keys.contains(window) {
-                    let newWidth = (screenFrame.maxX - windowFrame.origin.x) - panelWidth
-                    let newFrame = CGRect(x: windowFrame.origin.x, y:windowFrame.origin.y, width: newWidth, height: windowFrame.height)
-                    _ = window.setFrame(newFrame)
-                } else if availableSpace < panelWidth {
-                    // If we aren't already tracking it and it now needs to get resized, start tracking it.
-                    targetInitialFrames[window] = windowFrame
-                    let overlapAmount = panelWidth - availableSpace
-                    let newWidth = windowFrame.width - overlapAmount
-                    let newFrame = CGRect(x: windowFrame.origin.x, y: windowFrame.origin.y, width: newWidth, height: windowFrame.height)
-                    _ = window.setFrame(newFrame)
-                }
-                
-            }
+            let newWidth = (screenFrame.maxX - windowFrame.origin.x) - panelWidth
+            let newFrame = CGRect(x: windowFrame.origin.x, y:windowFrame.origin.y, width: newWidth, height: windowFrame.height)
+            _ = window.setFrame(newFrame)
         }
     }
 }
