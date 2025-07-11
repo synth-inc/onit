@@ -71,12 +71,60 @@ struct TetheredButton: View {
                 RoundedRectangle(cornerRadius: Self.width / 2)
                     .fill(.black)
             }
+            .overlay {
+                TetheredButtonBorder(cornerRadius: Self.width / 2)
+                    .stroke(
+                        .gray500,
+                        lineWidth: 1.5
+                    )
+            }
             .tooltip(prompt: fitActiveWindowPrompt)
             Spacer()
         }
         .edgesIgnoringSafeArea(.top)
         .frame(maxHeight: .infinity, alignment: .top)
         .zIndex(1)
+    }
+}
+
+struct TetheredButtonBorder: Shape {
+    let cornerRadius: CGFloat
+    
+    func path(in rect: CGRect) -> Path {
+        var path = Path()
+        
+        let inset: CGFloat = 0.75 // Half the line width to draw inside
+        let midX = rect.midX
+        let adjustedCornerRadius = cornerRadius - inset
+        let extensionPastHalf: CGFloat = 1.5 // Extra pixels past center for clean connection
+        
+        // Start from middle of top edge + extension (inset)
+        path.move(to: CGPoint(x: midX + extensionPastHalf, y: rect.minY + inset))
+        
+        // Draw left half of top edge to start of curve
+        path.addLine(to: CGPoint(x: rect.minX + cornerRadius, y: rect.minY + inset))
+        
+        // Draw top-left curve
+        path.addArc(center: CGPoint(x: rect.minX + cornerRadius, y: rect.minY + cornerRadius),
+                   radius: adjustedCornerRadius,
+                   startAngle: .degrees(270),
+                   endAngle: .degrees(180),
+                   clockwise: true)
+        
+        // Draw full left edge
+        path.addLine(to: CGPoint(x: rect.minX + inset, y: rect.maxY - cornerRadius))
+        
+        // Draw bottom-left curve
+        path.addArc(center: CGPoint(x: rect.minX + cornerRadius, y: rect.maxY - cornerRadius),
+                   radius: adjustedCornerRadius,
+                   startAngle: .degrees(180),
+                   endAngle: .degrees(90),
+                   clockwise: true)
+        
+        // Draw left half of bottom edge to middle + extension
+        path.addLine(to: CGPoint(x: midX + extensionPastHalf, y: rect.maxY - inset))
+        
+        return path
     }
 }
 
