@@ -74,10 +74,17 @@ struct MenuHideTimerStatus: View {
                 .padding(.trailing, 10)
         }
         .onAppear {
-            startTimerUpdateTask()
+            startTimerUpdateTaskIfNeeded()
         }
         .onDisappear {
             stopTimerUpdateTask()
+        }
+        .onChange(of: tetheredButtonHideAllAppsTimerDate) { _, newValue in
+            if newValue != nil {
+                startTimerUpdateTaskIfNeeded()
+            } else {
+                stopTimerUpdateTask()
+            }
         }
     }
     
@@ -86,7 +93,10 @@ struct MenuHideTimerStatus: View {
         tetheredButtonHideAllApps = false
     }
     
-    private func startTimerUpdateTask() {
+    private func startTimerUpdateTaskIfNeeded() {
+        // Only start timer if there's a timer date set and no task is already running
+        guard tetheredButtonHideAllAppsTimerDate != nil, timerUpdateTask == nil else { return }
+        
         timerUpdateTask = Task {
             while !Task.isCancelled {
                 try? await Task.sleep(for: .seconds(1))
