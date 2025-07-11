@@ -350,29 +350,22 @@ struct ChatEndpointMessagesBuilder {
         model: AIModel,
         images: [[URL]],
         responses: [String],
-        systemMessage: String,
         userMessages: [String]
     ) -> [GoogleAIChatMessage] {
-        // For compatibility, the Google AI API is set up to respond to messages in the same format as OpenAI
-        // So this exactly duplicates the OpenAI API structure.
         var googleAIMessageStack: [GoogleAIChatMessage] = []
-
-        if model.supportsSystemPrompts {
-            googleAIMessageStack.append(
-                GoogleAIChatMessage(
-                    role: "system", content: .text(systemMessage)))
-        }
 
         for (index, userMessage) in userMessages.enumerated() {
             if images[index].isEmpty {
                 googleAIMessageStack.append(
                     GoogleAIChatMessage(
-                        role: "user", content: .text(userMessage)))
+                        role: "user",
+                        parts: [GoogleAIChatPart(text: userMessage, inlineData: nil)]
+                    )
+                )
             } else {
                 let parts =
                     [
-                        GoogleAIChatContentPart(
-                            type: "text", text: userMessage, image_url: nil)
+                        GoogleAIChatPart(text: userMessage, inlineData: nil)
                     ]
                     + images[index].compactMap { url in
                         guard let imageData = try? Data(contentsOf: url) else {
@@ -381,24 +374,21 @@ struct ChatEndpointMessagesBuilder {
                         }
                         let base64EncodedData = imageData.base64EncodedString()
                         let mimeType = url.mimeType
-                        return GoogleAIChatContentPart(
-                            type: "image_url",
+                        return GoogleAIChatPart(
                             text: nil,
-                            image_url: .init(
-                                url:
-                                    "data:\(mimeType);base64,\(base64EncodedData)"
-                            )
+                            inlineData: GoogleAIChatPart.InlineData(mimeType: mimeType, data: base64EncodedData)
                         )
                     }
                 googleAIMessageStack.append(
-                    GoogleAIChatMessage(
-                        role: "user", content: .multiContent(parts)))
+                    GoogleAIChatMessage(role: "user", parts: parts))
             }
 
             // If there is a corresponding response, add it as an assistant message
             if index < responses.count {
                 let responseMessage = GoogleAIChatMessage(
-                    role: "assistant", content: .text(responses[index]))
+                    role: "model",
+                    parts: [GoogleAIChatPart(text: responses[index], inlineData: nil)]
+                )
                 googleAIMessageStack.append(responseMessage)
             }
         }
