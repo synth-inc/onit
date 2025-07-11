@@ -39,6 +39,7 @@ class DebugManager: ObservableObject {
     // MARK: - Initialization
     
     private init() {
+        #if DEBUG || BETA
         // Load persisted OCR comparison results
         loadOCRComparisonResults()
         
@@ -48,6 +49,7 @@ class DebugManager: ObservableObject {
         if enableAutoOCRComparison {
             startAutoOCRComparison()
         }
+        #endif
     }
     
     // MARK: - Functions
