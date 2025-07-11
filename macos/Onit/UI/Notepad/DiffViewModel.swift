@@ -194,23 +194,47 @@ class DiffViewModel {
     
     private func getAdjustedDiffChanges() -> [DiffChangeData] {
         let changes = getDiffChanges()
-        
         var adjustedChanges: [DiffChangeData] = []
         var cumulativeOffset = 0
         
         for change in changes.sorted(by: { $0.operationIndex < $1.operationIndex }) {
             if change.status == .approved {
-                adjustedChanges.append(DiffChangeData(
-                    operationIndex: change.operationIndex,
-                    operationType: change.operationType,
-                    status: change.status,
-                    operationText: change.operationText,
-                    operationStartIndex: change.operationStartIndex,
-                    operationEndIndex: change.operationEndIndex
-                ))
-                
                 if let operation = getOperation(for: change) {
+                    let originalStartIndex: Int?
+                    let originalEndIndex: Int?
+                    
+                    switch operation.type {
+                    case "insertText":
+                        originalStartIndex = operation.index
+                        originalEndIndex = nil
+                    case "deleteContentRange", "replaceText":
+                        originalStartIndex = operation.startIndex
+                        originalEndIndex = operation.endIndex
+                    default:
+                        originalStartIndex = change.operationStartIndex
+                        originalEndIndex = change.operationEndIndex
+                    }
+                    
+                    adjustedChanges.append(DiffChangeData(
+                        operationIndex: change.operationIndex,
+                        operationType: change.operationType,
+                        status: change.status,
+                        operationText: change.operationText,
+                        operationStartIndex: originalStartIndex,
+                        operationEndIndex: originalEndIndex
+                    ))
+                    
                     cumulativeOffset += calculateOffsetForOperation(operation)
+                } else {
+                    // Fallback if operation not found
+                    adjustedChanges.append(DiffChangeData(
+                        operationIndex: change.operationIndex,
+                        operationType: change.operationType,
+                        status: change.status,
+                        operationText: change.operationText,
+                        operationStartIndex: change.operationStartIndex,
+                        operationEndIndex: change.operationEndIndex
+                    ))
                 }
             } else {
                 let adjustedStartIndex = change.operationStartIndex.map { max(0, $0 + cumulativeOffset) }
@@ -405,7 +429,10 @@ class DiffViewModel {
     // MARK: - Insertion
     
     func insert() {
-        guard let diffArguments = diffArguments else { return }
+        guard let diffArguments = diffArguments else {
+            log.error("no arguments")
+            return
+        }
         
         if let documentUrl = diffArguments.document_url {
             Task {
@@ -416,10 +443,10 @@ class DiffViewModel {
                 }
             }
         } else {
+            log.error("no document url")
             let previewText = generatePreviewText()
             NSPasteboard.general.clearContents()
-            NSPasteboard.general.setString(previewText, forType: .string)
-            // TODO: 
+            NSPasteboard.general.setString(previewText, forType: .string) 
         }
     }
     
@@ -428,6 +455,7 @@ class DiffViewModel {
         let approvedChanges = adjustedChanges.filter { $0.status == .approved }
         
 		guard !approvedChanges.isEmpty else {
+            log.error("no approved changes")
             return
         }
         

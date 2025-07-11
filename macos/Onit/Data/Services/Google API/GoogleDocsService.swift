@@ -16,13 +16,15 @@ struct TextWithOffsets {
 
 class GoogleDocsService: GoogleDocumentServiceProtocol {
     
+    private let parser = GoogleDocsParser()
+    
 	var plainTextMimeType: String {
         return "text/plain"
     }
     
     func getPlainTextContent(fileId: String) async throws -> String {
         let structuredData = try await readStructuredFile(fileId: fileId)
-        let document = try parseGoogleDocsDocument(from: structuredData)
+        let document = try parser.parseGoogleDocsDocument(from: structuredData)
         let textWithOffsets = reconstructDocsTextWithOffsets(document: document)
         
         return textWithOffsets.reconstructedText
@@ -104,7 +106,7 @@ class GoogleDocsService: GoogleDocumentServiceProtocol {
     
     func applyDiffChanges(fileId: String, diffChanges: [DiffChangeData]) async throws {
         let structuredData = try await readStructuredFile(fileId: fileId)
-        let document = try parseGoogleDocsDocument(from: structuredData)
+        let document = try parser.parseGoogleDocsDocument(from: structuredData)
         let textWithOffsets = reconstructDocsTextWithOffsets(document: document)
         
         let sortedChanges = diffChanges.sorted { (change1, change2) in
@@ -117,13 +119,13 @@ class GoogleDocsService: GoogleDocumentServiceProtocol {
                 return priority1 < priority2
             }
             
-            return pos1 < pos2
+            return pos1 > pos2
         }
         
-        log.debug("Applying \(sortedChanges.count) diff changes to Google Docs")
+        let resolvedChanges = resolveOperationConflicts(sortedChanges)
         
         let googleDocsOperations = try mapDiffChangesToDocsOperations(
-            diffChanges: sortedChanges,
+            diffChanges: resolvedChanges,
             offsetMap: textWithOffsets.offsetToGoogleIndexMap
         )
         
@@ -190,46 +192,109 @@ class GoogleDocsService: GoogleDocumentServiceProtocol {
         var offsetToGoogleIndexMap: [Int: Int] = [:]
         
         for element in document.body.content {
-            if let paragraph = element.paragraph {
-                for paragraphElement in paragraph.elements {
-                    if let textRun = paragraphElement.textRun {
-                        let content = textRun.content
-                        
-                        // Map each character position in reconstructed text to Google Docs index
-                        // Note: Google Docs body content starts at index 1, not 0
-                        let startPosition = reconstructedText.count
-                        
-                        if let elementStartIndex = paragraphElement.startIndex {
-                            // Create mapping that handles invisible characters
-                            let mappingResult = createTextToGoogleMapping(
-                                content: content,
-                                startPosition: startPosition,
-                                elementStartIndex: elementStartIndex
-                            )
-                            
-                            // Merge the mapping into the global offset map
-                            for (textPos, googleIndex) in mappingResult.mapping {
-                                offsetToGoogleIndexMap[textPos] = googleIndex
-                            }
-                            
-                            reconstructedText += mappingResult.processedContent
-                        } else {
-                            // Fallback for elements without startIndex
-                            reconstructedText += content
-                        }
-                    }
-                }
+            let (elementText, elementMapping) = reconstructStructuralElement(
+                element: element,
+                startPosition: reconstructedText.count
+            )
+            
+            for (textPos, googleIndex) in elementMapping {
+                offsetToGoogleIndexMap[textPos] = googleIndex
             }
-            // Handle other element types (tables, page breaks) if needed
+            
+            reconstructedText += elementText
         }
-        
-        log.debug("Reconstructed text:\n\(reconstructedText)")
-        log.debug("Offset map: \(offsetToGoogleIndexMap)")
         
         return TextWithOffsets(
             reconstructedText: reconstructedText,
             offsetToGoogleIndexMap: offsetToGoogleIndexMap
         )
+    }
+    
+    private func reconstructStructuralElement(
+        element: GoogleDocsStructuralElement,
+        startPosition: Int
+    ) -> (text: String, mapping: [Int: Int]) {
+        var reconstructedText = ""
+        var offsetToGoogleIndexMap: [Int: Int] = [:]
+        
+        if let paragraph = element.paragraph {
+            for paragraphElement in paragraph.elements {
+                if let textRun = paragraphElement.textRun {
+                    let content = textRun.content
+                    let currentStartPosition = startPosition + reconstructedText.count
+                    
+                    if let elementStartIndex = paragraphElement.startIndex {
+                        let mappingResult = createTextToGoogleMapping(
+                            content: content,
+                            startPosition: currentStartPosition,
+                            elementStartIndex: elementStartIndex
+                        )
+                        
+                        for (textPos, googleIndex) in mappingResult.mapping {
+                            offsetToGoogleIndexMap[textPos] = googleIndex
+                        }
+                        
+                        reconstructedText += mappingResult.processedContent
+                    } else {
+                        reconstructedText += content
+                    }
+                } else {
+                    if let elementStartIndex = paragraphElement.startIndex,
+                       let placeholderChar = getPlaceholderCharacter(for: paragraphElement) {
+                        let currentStartPosition = startPosition + reconstructedText.count
+                        let mappingResult = createTextToGoogleMapping(
+                            content: placeholderChar,
+                            startPosition: currentStartPosition,
+                            elementStartIndex: elementStartIndex
+                        )
+                        
+                        for (textPos, googleIndex) in mappingResult.mapping {
+                            offsetToGoogleIndexMap[textPos] = googleIndex
+                        }
+                        
+                        reconstructedText += mappingResult.processedContent
+                    }
+                }
+            }
+        }
+        
+        if let table = element.table {
+            for tableRow in table.tableRows {
+                for tableCell in tableRow.tableCells {
+                    for cellElement in tableCell.content {
+                        let currentStartPosition = startPosition + reconstructedText.count
+                        let (cellText, cellMapping) = reconstructStructuralElement(
+                            element: cellElement,
+                            startPosition: currentStartPosition
+                        )
+                        
+                        for (textPos, googleIndex) in cellMapping {
+                            offsetToGoogleIndexMap[textPos] = googleIndex
+                        }
+                        
+                        reconstructedText += cellText
+                    }
+                }
+            }
+        }
+        
+        if let elementStartIndex = element.startIndex,
+           let placeholderChar = getStructuralElementPlaceholderCharacter(for: element) {
+            let currentStartPosition = startPosition + reconstructedText.count
+            let mappingResult = createTextToGoogleMapping(
+                content: placeholderChar,
+                startPosition: currentStartPosition,
+                elementStartIndex: elementStartIndex
+            )
+            
+            for (textPos, googleIndex) in mappingResult.mapping {
+                offsetToGoogleIndexMap[textPos] = googleIndex
+            }
+            
+            reconstructedText += mappingResult.processedContent
+        }
+        
+        return (reconstructedText, offsetToGoogleIndexMap)
     }
     
     private func createTextToGoogleMapping(
@@ -244,12 +309,13 @@ class GoogleDocsService: GoogleDocumentServiceProtocol {
         
         for char in content {
             if isInvisibleCharacter(char) {
-                // For invisible characters: map the current text position to the Google index,
-                // but don't add to processed content and advance Google index
                 mapping[textPosition] = googleIndex
                 googleIndex += 1
-            } else {
-                // For visible characters: map and add to processed content
+            } else if isGoogleDocsPlaceholderCharacter(char) {
+				mapping[textPosition] = googleIndex
+                googleIndex += 1
+				textPosition += 1
+			} else {
                 mapping[textPosition] = googleIndex
                 processedContent.append(char)
                 textPosition += 1
@@ -257,7 +323,6 @@ class GoogleDocsService: GoogleDocumentServiceProtocol {
             }
         }
         
-        // Map the end position (for insertions at the end)
         mapping[textPosition] = googleIndex
         
         return (processedContent, mapping)
@@ -282,6 +347,51 @@ class GoogleDocsService: GoogleDocumentServiceProtocol {
         }
         return false
     }
+
+	private func isGoogleDocsPlaceholderCharacter(_ char: Character) -> Bool {
+		let unicodeScalars = char.unicodeScalars
+		for scalar in unicodeScalars {
+			switch scalar.value {
+			case 0xE907, 0xE000, 0xE001, 0xE002, 0xE003, 0xE004, 0xE005, 0xE006, 0xE008, 0xE009:
+				return true
+			default:
+				continue
+			}
+		}
+		return false
+	}
+    
+    private func getPlaceholderCharacter(for paragraphElement: GoogleDocsParagraphElement) -> String? {
+        if paragraphElement.inlineObjectElement != nil {
+            return "\u{E907}" // Images
+        } else if paragraphElement.autoText != nil {
+            return "\u{E000}" // AutoText (page numbers, etc.)
+        } else if paragraphElement.columnBreak != nil {
+            return "\u{E001}" // Column Break
+        } else if paragraphElement.footnoteReference != nil {
+            return "\u{E002}" // Footnote Reference
+        } else if paragraphElement.horizontalRule != nil {
+            return "\u{E003}" // Horizontal Rule
+        } else if paragraphElement.equation != nil {
+            return "\u{E004}" // Equation
+        } else if paragraphElement.person != nil {
+            return "\u{E005}" // Person
+        } else if paragraphElement.richLink != nil {
+            return "\u{E006}" // Rich Link
+        }
+        return nil
+    }
+    
+    private func getStructuralElementPlaceholderCharacter(for element: GoogleDocsStructuralElement) -> String? {
+        if element.pageBreak != nil {
+            return "\u{000C}" // Page Break (form feed character)
+        } else if element.sectionBreak != nil {
+            return "\u{E008}" // Section Break
+        } else if element.tableOfContents != nil {
+            return "\u{E009}" // Table of Contents
+        }
+        return nil
+    }
     
     // MARK: - Diff Changes to Google Docs Operations Mapping
     
@@ -290,48 +400,34 @@ class GoogleDocsService: GoogleDocumentServiceProtocol {
         offsetMap: [Int: Int]
     ) throws -> [GoogleDocsOperation] {
         var operations: [GoogleDocsOperation] = []
-        var cumulativeOffset = 0 // Track the cumulative offset from previous operations
         
-        // Changes are already sorted in ascending order in applyDiffChanges
-        for change in diffChanges {
+        for (_, change) in diffChanges.enumerated() {
             switch change.operationType {
             case "insertText":
-                // For insertText, DiffChangeState stores the insertion position in operationStartIndex
                 if let textPosition = change.operationStartIndex,
                    let text = change.operationText {
-                    let googleIndex = getGoogleDocsIndex(for: textPosition, offsetMap: offsetMap) + cumulativeOffset
-                    operations.append(.insertText(index: googleIndex, text: text))
-                    log.debug("Insert operation: position \(textPosition) + offset \(cumulativeOffset) -> Google index \(googleIndex), text: '\(text)'")
+                    let googleIndex = getGoogleDocsIndex(for: textPosition, offsetMap: offsetMap)
                     
-                    // Update cumulative offset: insertion adds text length
-                    cumulativeOffset += text.count
+                    operations.append(.insertText(index: googleIndex, text: text))
                 }
                 
             case "deleteContentRange":
                 if let startPosition = change.operationStartIndex,
                    let endPosition = change.operationEndIndex {
-                    let startGoogleIndex = getGoogleDocsIndex(for: startPosition, offsetMap: offsetMap) + cumulativeOffset
-                    let endGoogleIndex = getGoogleDocsIndex(for: endPosition, offsetMap: offsetMap) + cumulativeOffset
-                    operations.append(.deleteContentRange(startIndex: startGoogleIndex, endIndex: endGoogleIndex))
-                    log.debug("Delete operation: positions \(startPosition)-\(endPosition) + offset \(cumulativeOffset) -> Google indices \(startGoogleIndex)-\(endGoogleIndex)")
+                    let startGoogleIndex = getGoogleDocsIndex(for: startPosition, offsetMap: offsetMap)
+                    let endGoogleIndex = getGoogleDocsIndex(for: endPosition, offsetMap: offsetMap)
                     
-                    // Update cumulative offset: deletion removes text length
-                    cumulativeOffset -= (endPosition - startPosition)
+                    operations.append(.deleteContentRange(startIndex: startGoogleIndex, endIndex: endGoogleIndex))
                 }
                 
             case "replaceText":
                 if let startPosition = change.operationStartIndex,
                    let endPosition = change.operationEndIndex,
                    let newText = change.operationText {
-                    let startGoogleIndex = getGoogleDocsIndex(for: startPosition, offsetMap: offsetMap) + cumulativeOffset
-                    let endGoogleIndex = getGoogleDocsIndex(for: endPosition, offsetMap: offsetMap) + cumulativeOffset
-                    operations.append(.replaceText(startIndex: startGoogleIndex, endIndex: endGoogleIndex, newText: newText))
-                    log.debug("Replace operation: positions \(startPosition)-\(endPosition) + offset \(cumulativeOffset) -> Google indices \(startGoogleIndex)-\(endGoogleIndex), text: '\(newText)'")
+                    let startGoogleIndex = getGoogleDocsIndex(for: startPosition, offsetMap: offsetMap)
+                    let endGoogleIndex = getGoogleDocsIndex(for: endPosition, offsetMap: offsetMap)
                     
-                    // Update cumulative offset: replace changes text length
-                    let deletedLength = endPosition - startPosition
-                    let insertedLength = newText.count
-                    cumulativeOffset += (insertedLength - deletedLength)
+                    operations.append(.replaceText(startIndex: startGoogleIndex, endIndex: endGoogleIndex, newText: newText))
                 }
                 
             default:
@@ -342,20 +438,71 @@ class GoogleDocsService: GoogleDocumentServiceProtocol {
         return operations
     }
     
+    // MARK: - Operation Conflict Resolution
+    
+    private func resolveOperationConflicts(_ changes: [DiffChangeData]) -> [DiffChangeData] {
+        var resolvedChanges: [DiffChangeData] = []
+        
+        for change in changes {
+            switch change.operationType {
+            case "deleteContentRange":
+                resolvedChanges.append(change)
+                
+            case "insertText", "replaceText":
+                let conflictsWithDelete = resolvedChanges.contains { deleteOp in
+                    guard deleteOp.operationType == "deleteContentRange",
+                          let deleteStart = deleteOp.operationStartIndex,
+                          let deleteEnd = deleteOp.operationEndIndex,
+                          let insertPos = change.operationStartIndex else {
+                        return false
+                    }
+                    
+                    return insertPos >= deleteStart && insertPos < deleteEnd
+                }
+                
+                if conflictsWithDelete {
+                    if let conflictingDelete = resolvedChanges.first(where: { deleteOp in
+                        guard deleteOp.operationType == "deleteContentRange",
+                              let deleteStart = deleteOp.operationStartIndex,
+                              let deleteEnd = deleteOp.operationEndIndex,
+                              let insertPos = change.operationStartIndex else {
+                            return false
+                        }
+                        return insertPos >= deleteStart && insertPos < deleteEnd
+                    }) {
+                        let adjustedChange = DiffChangeData(
+                            operationIndex: change.operationIndex,
+                            operationType: change.operationType,
+                            status: change.status,
+                            operationText: change.operationText,
+                            operationStartIndex: conflictingDelete.operationStartIndex,
+                            operationEndIndex: change.operationEndIndex
+                        )
+                        
+                        resolvedChanges.append(adjustedChange)
+                    }
+                } else {
+                    resolvedChanges.append(change)
+                }
+                
+            default:
+                resolvedChanges.append(change)
+            }
+        }
+        
+        return resolvedChanges
+    }
+    
     // MARK: - Helper Methods
     
     private func getGoogleDocsIndex(for textPosition: Int, offsetMap: [Int: Int]) -> Int {
-        // First try to get exact mapping
         if let exactIndex = offsetMap[textPosition] {
             return exactIndex
         }
         
-        // If no exact mapping, find the closest valid position
-        // This handles edge cases where diff positions don't align perfectly with element boundaries
         let sortedKeys = offsetMap.keys.sorted()
         
-        // Find the position just before or at the target position
-        var closestKey = 1 // Default to beginning of body content (index 1)
+        var closestKey: Int? = nil
         for key in sortedKeys {
             if key <= textPosition {
                 closestKey = key
@@ -364,144 +511,39 @@ class GoogleDocsService: GoogleDocumentServiceProtocol {
             }
         }
         
-        // Calculate the offset difference and apply it to the Google Docs index
-        if let baseGoogleIndex = offsetMap[closestKey] {
-            let offset = textPosition - closestKey
-            return max(1, baseGoogleIndex + offset) // Ensure minimum index is 1
+        guard let baseKey = closestKey,
+              let baseGoogleIndex = offsetMap[baseKey] else {
+            return max(1, textPosition + 1)
         }
         
-        // Fallback: use the last known position + 1
-        if let lastKey = sortedKeys.last,
-           let lastGoogleIndex = offsetMap[lastKey] {
-            return lastGoogleIndex + (textPosition - lastKey) + 1
+        let offset = textPosition - baseKey
+        var nextKey: Int? = nil
+        var nextGoogleIndex: Int? = nil
+        
+        for key in sortedKeys {
+            if key > baseKey {
+                nextKey = key
+                nextGoogleIndex = offsetMap[key]
+                break
+            }
         }
         
-        // Ultimate fallback: start at body beginning
-        return max(1, textPosition + 1)
-    }
-    
-    // MARK: - Document Parser
-    
-    private func parseGoogleDocsDocument(from data: [String: Any]) throws -> GoogleDocsDocument {
-        guard let documentId = data["documentId"] as? String,
-              let title = data["title"] as? String,
-              let bodyData = data["body"] as? [String: Any],
-              let revisionId = data["revisionId"] as? String else {
-            throw GoogleDriveError.invalidResponse("Invalid Google Docs document structure")
+        if let nextK = nextKey, let nextGIndex = nextGoogleIndex {
+            let keyGap = nextK - baseKey
+            let googleGap = nextGIndex - baseGoogleIndex
+            
+            if offset <= keyGap {
+                let ratio = Double(offset) / Double(keyGap)
+                let interpolatedGoogleIndex = baseGoogleIndex + Int(Double(googleGap) * ratio)
+                
+                return max(1, interpolatedGoogleIndex)
+            } else {
+                let extraOffset = offset - keyGap
+                
+                return max(1, nextGIndex + extraOffset)
+            }
+        } else {
+            return max(1, baseGoogleIndex + offset)
         }
-        
-        let body = try parseGoogleDocsBody(from: bodyData)
-        
-        return GoogleDocsDocument(
-            documentId: documentId,
-            title: title,
-            body: body,
-            revisionId: revisionId
-        )
-    }
-    
-    private func parseGoogleDocsBody(from data: [String: Any]) throws -> GoogleDocsBody {
-        guard let contentArray = data["content"] as? [[String: Any]] else {
-            throw GoogleDriveError.invalidResponse("Invalid Google Docs body structure")
-        }
-        
-        let content = contentArray.compactMap { elementData in
-            return parseGoogleDocsStructuralElement(from: elementData)
-        }
-        
-        return GoogleDocsBody(content: content)
-    }
-    
-    private func parseGoogleDocsStructuralElement(from data: [String: Any]) -> GoogleDocsStructuralElement? {
-        let startIndex = data["startIndex"] as? Int
-        let endIndex = data["endIndex"] as? Int
-        
-        var paragraph: GoogleDocsParagraph?
-        var table: GoogleDocsTable?
-        var pageBreak: GoogleDocsPageBreak?
-        
-        if let paragraphData = data["paragraph"] as? [String: Any] {
-            paragraph = parseGoogleDocsParagraph(from: paragraphData)
-        }
-        
-        if let tableData = data["table"] as? [String: Any] {
-            table = parseGoogleDocsTable(from: tableData)
-        }
-        
-        if data["pageBreak"] != nil {
-            pageBreak = GoogleDocsPageBreak()
-        }
-        
-        return GoogleDocsStructuralElement(
-            startIndex: startIndex,
-            endIndex: endIndex,
-            paragraph: paragraph,
-            table: table,
-            pageBreak: pageBreak
-        )
-    }
-    
-    private func parseGoogleDocsParagraphElement(from data: [String: Any]) -> GoogleDocsParagraphElement? {
-        let startIndex = data["startIndex"] as? Int
-        let endIndex = data["endIndex"] as? Int
-        
-        var textRun: GoogleDocsTextRun?
-        if let textRunData = data["textRun"] as? [String: Any],
-           let content = textRunData["content"] as? String {
-            textRun = GoogleDocsTextRun(content: content)
-        }
-        
-        return GoogleDocsParagraphElement(
-            startIndex: startIndex,
-            endIndex: endIndex,
-            textRun: textRun
-        )
-    }
-    
-    private func parseGoogleDocsParagraph(from data: [String: Any]) -> GoogleDocsParagraph? {
-        guard let elementsArray = data["elements"] as? [[String: Any]] else {
-            return nil
-        }
-        
-        let elements = elementsArray.compactMap { elementData in
-            return parseGoogleDocsParagraphElement(from: elementData)
-        }
-        
-        return GoogleDocsParagraph(elements: elements)
-    }
-    
-    private func parseGoogleDocsTable(from data: [String: Any]) -> GoogleDocsTable? {
-        let rows = data["rows"] as? Int ?? 0
-        let columns = data["columns"] as? Int ?? 0
-        
-        var tableRows: [GoogleDocsTableRow] = []
-        if let tableRowsData = data["tableRows"] as? [[String: Any]] {
-            tableRows = tableRowsData.compactMap { parseGoogleDocsTableRow(from: $0) }
-        }
-        
-        return GoogleDocsTable(
-            rows: rows,
-            columns: columns,
-            tableRows: tableRows
-        )
-    }
-    
-    private func parseGoogleDocsTableRow(from data: [String: Any]) -> GoogleDocsTableRow? {
-        var tableCells: [GoogleDocsTableCell] = []
-        if let tableCellsData = data["tableCells"] as? [[String: Any]] {
-            tableCells = tableCellsData.compactMap { parseGoogleDocsTableCell(from: $0) }
-        }
-        
-        return GoogleDocsTableRow(tableCells: tableCells)
-    }
-    
-    private func parseGoogleDocsTableCell(from data: [String: Any]) -> GoogleDocsTableCell? {
-        var content: [GoogleDocsStructuralElement] = []
-        if let contentData = data["content"] as? [[String: Any]] {
-            // Recursively parse table cell content (can contain paragraphs)
-            content = contentData.compactMap { parseGoogleDocsStructuralElement(from: $0) }
-        }
-        
-        return GoogleDocsTableCell(content: content)
     }
 }
