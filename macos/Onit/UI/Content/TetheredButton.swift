@@ -13,6 +13,8 @@ struct TetheredButton: View {
     @Environment(\.openSettings) var openSettings
     @Environment(\.windowState) private var state
     
+    @State private var isHovering: Bool = false
+    
     static let width: CGFloat = 19
     static let height: CGFloat = 53
     
@@ -67,10 +69,23 @@ struct TetheredButton: View {
                     .rotationEffect(arrowRotation)
                     .frame(width: Self.width, height: Self.height, alignment: .center)
             }
+            .buttonStyle(.plain)
             .background {
                 RoundedRectangle(cornerRadius: Self.width / 2)
-                    .fill(.black)
+                    .fill(isHovering ? .gray800 : .black)
+                    .animation(.easeInOut(duration: 0.15), value: isHovering)
             }
+             .onHover { hovering in
+                 isHovering = hovering
+                
+                 if hovering {
+                     TooltipManager.shared.setTooltip(
+                         Tooltip(prompt: fitActiveWindowPrompt)
+                     )
+                 } else {
+                     TooltipManager.shared.setTooltip(nil)
+                 }
+             }
             .overlay {
                 TetheredButtonBorder(cornerRadius: Self.width / 2)
                     .stroke(
@@ -78,7 +93,6 @@ struct TetheredButton: View {
                         lineWidth: 1.5
                     )
             }
-            .tooltip(prompt: fitActiveWindowPrompt)
             Spacer()
         }
         .edgesIgnoringSafeArea(.top)
