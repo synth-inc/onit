@@ -100,7 +100,7 @@ struct App: SwiftUI.App {
                     }
                 }
                 .onOpenURL { url in
-                    appState.handleTokenLogin(url)
+                    appState.handleDeeplink(url)
                 }
         }
         
