@@ -137,35 +137,195 @@ class DiffTool: ToolProtocol {
         var operations: [PlainTextDiffOperation] = []
         var currentIndex = 0
         
-        for diffOp in diffs {
+        var rawOperations: [(type: String, index: Int, text: String?)] = []
+        
+        for (index, diffOp) in diffs.enumerated() {
             switch diffOp {
             case .equal(let text):
+                log.debug("  \(index + 1). EQUAL(\(text.count) chars) at index \(currentIndex): '\(text.prefix(20))...'")
                 currentIndex += text.count
+                
             case .delete(let text):
-                operations.append(PlainTextDiffOperation(
-                    type: "deleteContentRange",
-                    index: nil,
-                    startIndex: currentIndex,
-                    endIndex: currentIndex + text.count,
-                    text: nil,
-                    newText: nil
-                ))
+                log.debug("  \(index + 1). DELETE(\(text.count) chars) at index \(currentIndex): '\(text)'")
+                rawOperations.append((type: "delete", index: currentIndex, text: text))
                 currentIndex += text.count
                 
             case .insert(let text):
+                log.debug("  \(index + 1). INSERT(\(text.count) chars) at index \(currentIndex): '\(text)'")
+                rawOperations.append((type: "insert", index: currentIndex, text: text))
+            }
+        }
+        
+        var i = 0
+		
+        while i < rawOperations.count {
+            let current = rawOperations[i]
+            
+            if i + 1 < rawOperations.count {
+                let next = rawOperations[i + 1]
+                var deleteOp: (type: String, index: Int, text: String?)? = nil
+                var insertOp: (type: String, index: Int, text: String?)? = nil
+                
+                if current.type == "delete" && next.type == "insert" {
+                    let deleteEnd = current.index + (current.text?.count ?? 0)
+
+                    if next.index >= current.index && next.index <= deleteEnd {
+                        deleteOp = current
+                        insertOp = next
+                    }
+                }
+                else if current.type == "insert" && next.type == "delete" {
+                    let deleteEnd = next.index + (next.text?.count ?? 0)
+
+                    if current.index >= next.index && current.index <= deleteEnd {
+                        insertOp = current
+                        deleteOp = next
+                    }
+                }
+                
+                if let deleteOp = deleteOp, let insertOp = insertOp {
+                    operations.append(PlainTextDiffOperation(
+                        type: "replaceText",
+                        index: nil,
+                        startIndex: deleteOp.index,
+                        endIndex: deleteOp.index + (deleteOp.text?.count ?? 0),
+                        text: nil,
+                        newText: insertOp.text
+                    ))
+                    i += 2
+                    continue
+                }
+            }
+            
+            if current.type == "insert" {
+                var insertSequence = [current]
+                var j = i + 1
+                
+                while j < rawOperations.count && rawOperations[j].type == "insert" {
+                    let nextInsert = rawOperations[j]
+                    let lastInsert = insertSequence.last!
+                    let lastInsertEnd = lastInsert.index + (lastInsert.text?.count ?? 0)
+                    
+                    if nextInsert.index <= lastInsertEnd + 5 {
+                        insertSequence.append(nextInsert)
+                        j += 1
+                    } else {
+                        break
+                    }
+                }
+                
+                if insertSequence.count >= 3 {
+                    let firstInsert = insertSequence.first!
+                    let lastInsert = insertSequence.last!
+                    let span = lastInsert.index - firstInsert.index
+                    
+                    if span <= 10 {
+                        let replacementText = reconstructReplacementText(
+                            originalText: original,
+                            insertSequence: insertSequence,
+                            startIndex: firstInsert.index,
+                            endIndex: lastInsert.index
+                        )
+                        
+                        operations.append(PlainTextDiffOperation(
+                            type: "replaceText",
+                            index: nil,
+                            startIndex: firstInsert.index,
+                            endIndex: lastInsert.index,
+                            text: nil,
+                            newText: replacementText
+                        ))
+                    } else {
+                        for insert in insertSequence {
+                            operations.append(PlainTextDiffOperation(
+                                type: "insertText",
+                                index: insert.index,
+                                startIndex: nil,
+                                endIndex: nil,
+                                text: insert.text,
+                                newText: nil
+                            ))
+                        }
+                    }
+                } else {
+                    for insert in insertSequence {
+                        operations.append(PlainTextDiffOperation(
+                            type: "insertText",
+                            index: insert.index,
+                            startIndex: nil,
+                            endIndex: nil,
+                            text: insert.text,
+                            newText: nil
+                        ))
+                    }
+                }
+                
+                i = j
+                continue
+            }
+            
+            switch current.type {
+            case "delete":
                 operations.append(PlainTextDiffOperation(
-                    type: "insertText",
-                    index: currentIndex,
-                    startIndex: nil,
-                    endIndex: nil,
-                    text: text,
+                    type: "deleteContentRange",
+                    index: nil,
+                    startIndex: current.index,
+                    endIndex: current.index + (current.text?.count ?? 0),
+                    text: nil,
                     newText: nil
                 ))
+                
+            case "insert":
+                operations.append(PlainTextDiffOperation(
+                    type: "insertText",
+                    index: current.index,
+                    startIndex: nil,
+                    endIndex: nil,
+                    text: current.text,
+                    newText: nil
+                ))
+                
+            default:
+                break
             }
+            
+            i += 1
         }
         
         return operations
 	}
+    
+    private static func reconstructReplacementText(
+        originalText: String,
+        insertSequence: [(type: String, index: Int, text: String?)],
+        startIndex: Int,
+        endIndex: Int
+    ) -> String {
+        var result = ""
+        var currentPos = startIndex
+        
+        for insert in insertSequence {
+            if insert.index > currentPos {
+                let textStart = originalText.index(originalText.startIndex, offsetBy: currentPos)
+                let textEnd = originalText.index(originalText.startIndex, offsetBy: min(insert.index, originalText.count))
+                result += String(originalText[textStart..<textEnd])
+            }
+            
+            if let insertText = insert.text {
+                result += insertText
+            }
+            
+            currentPos = insert.index
+        }
+        
+        if currentPos < endIndex && currentPos < originalText.count {
+            let textStart = originalText.index(originalText.startIndex, offsetBy: currentPos)
+            let textEnd = originalText.index(originalText.startIndex, offsetBy: min(endIndex, originalText.count))
+            result += String(originalText[textStart..<textEnd])
+        }
+        
+        return result
+    }
     
     private static func optimizedDiff(text1: String, text2: String) -> [DiffOperation] {
         if text1 == text2 {

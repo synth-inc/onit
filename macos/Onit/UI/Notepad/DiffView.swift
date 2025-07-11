@@ -43,7 +43,7 @@ struct DiffView: View {
                 .id("\(viewModel.diffChanges.count)-\(viewModel.isPreviewingAllApproved)")
             }
             
-            if viewModel.currentDiffChange?.status == .pending && !isScrolling {
+            if viewModel.currentDiffChange?.status == .pending && !isScrolling && !viewModel.isPreviewingAllApproved {
                 if let segmentRect = currentSegmentRect {
                     GeometryReader { geometry in
                         VStack {
@@ -166,6 +166,7 @@ struct DiffView: View {
                     .fill(.T_7)
             )
             .onHover { isHovering in
+				currentSegmentRect = nil
                 if isHovering {
                     viewModel.startPreviewingAllApproved()
                 } else {
