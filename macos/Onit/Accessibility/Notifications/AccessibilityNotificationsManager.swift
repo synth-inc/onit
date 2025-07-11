@@ -525,8 +525,6 @@ class AccessibilityNotificationsManager: ObservableObject {
         results?.removeValue(forKey: AccessibilityParsedElements.applicationTitle)
         results?.removeValue(forKey: AccessibilityParsedElements.highlightedText)
         
-        self.processSelectedText(highlightedText, elementFrame: nil)
-        
         self.screenResult.elapsedTime = elapsedTime
         self.screenResult.applicationName = appName
         self.screenResult.applicationTitle = appTitle
