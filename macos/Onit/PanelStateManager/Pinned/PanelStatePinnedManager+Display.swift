@@ -71,11 +71,19 @@ extension PanelStatePinnedManager {
         state.animateChatView = true
         state.showChatView = false
         
+        // Enable layer backing for smoother animation
+        panel.contentView?.wantsLayer = true
+        panel.contentView?.layer?.shouldRasterize = true
+        panel.contentView?.layer?.rasterizationScale = NSScreen.main?.backingScaleFactor ?? 2.0
+        
         NSAnimationContext.runAnimationGroup { context in
             context.duration = animationDuration
             context.timingFunction = CAMediaTimingFunction(name: .easeOut)
             panel.animator().setFrame(toPanel, display: false)
         } completionHandler: {
+            // Disable rasterization after animation
+            panel.contentView?.layer?.shouldRasterize = false
+
             state.animateChatView = true
             state.showChatView = true
             panel.isAnimating = false
@@ -100,6 +108,11 @@ extension PanelStatePinnedManager {
         state.animateChatView = true
         state.showChatView = false
         
+        // Enable layer backing for smoother animation
+        panel.contentView?.wantsLayer = true
+        panel.contentView?.layer?.shouldRasterize = true
+        panel.contentView?.layer?.rasterizationScale = NSScreen.main?.backingScaleFactor ?? 2.0
+
         resetFramesOnAppChange()
         
         NSAnimationContext.runAnimationGroup { context in
@@ -107,11 +120,14 @@ extension PanelStatePinnedManager {
             context.timingFunction = CAMediaTimingFunction(name: .easeIn)
             panel.animator().setFrame(toPanel, display: false)
         } completionHandler: {
+            // Disable rasterization after animation
+            panel.contentView?.layer?.shouldRasterize = false
+
             panel.hide()
             panel.isAnimating = false
             panel.alphaValue = 0
             state.panel = nil
-            
+
             // Once the panel is hidden, we should show the hint
             if let screen = self.attachedScreen {
                 self.attachedScreen = nil
