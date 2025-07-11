@@ -63,11 +63,17 @@ struct TetheredButton: View {
             Button(action: {
                 PanelStateCoordinator.shared.closePanel(for: state)
             }) {
-                Image(.smallChevRight)
-                    .renderingMode(.template)
-                    .foregroundColor(.white)
-                    .rotationEffect(arrowRotation)
-                    .frame(width: Self.width, height: Self.height, alignment: .center)
+                // Transparent rectangle that fills the entire button area
+                RoundedRectangle(cornerRadius: Self.width / 2)
+                    .fill(isHovering ? .gray800 : .black)
+                    .frame(width: Self.width, height: Self.height)
+                    .animation(.easeInOut(duration: 0.15), value: isHovering)
+                    .overlay {
+                        Image(.smallChevRight)
+                            .renderingMode(.template)
+                            .foregroundColor(.white)
+                            .rotationEffect(arrowRotation)
+                    }
             }
             .buttonStyle(.plain)
             .background {
