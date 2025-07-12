@@ -240,15 +240,15 @@ class PanelStatePinnedManager: PanelStateBaseManager, ObservableObject {
     override func resetFramesOnAppChange() {
         let panelWidth = state.panelWidth - (TetheredButton.width / 2) + 1
         let screenFrame = self.attachedScreen?.visibleFrame ?? NSScreen.main?.visibleFrame ?? .zero
-        let panelMaxX = screenFrame.maxX - panelWidth
+        let panelMinX = screenFrame.maxX - panelWidth
         let capturedForegroundWindow = state.foregroundWindow
         
         // Handle foreground window first.
         // This is the only one users can see, so we can handle it synchronously. This creates the desired visual experience.
         if let foregroundWindow = capturedForegroundWindow,
            let currentFrame = foregroundWindow.element.getFrame() {
-            let isNearPanel = abs((panelMaxX) - currentFrame.maxX) <= 2
-            if isNearPanel {
+            let isNearOrUnderPanel = currentFrame.maxX > (panelMinX - 2) && currentFrame.maxX <= screenFrame.maxX
+            if isNearOrUnderPanel {
                 let newWidth = currentFrame.width + panelWidth
                 let newFrame = NSRect(origin: currentFrame.origin,
                                       size: NSSize(width: newWidth, height: currentFrame.height))
@@ -265,8 +265,8 @@ class PanelStatePinnedManager: PanelStateBaseManager, ObservableObject {
                 // Skip the foreground element, since we've already done it.
                 if let foregroundWindow = capturedForegroundWindow, window != foregroundWindow.element {
                     if let currentFrame = window.getFrame() {
-                        let isNearPanel = abs(panelMaxX - currentFrame.maxX) <= 2
-                        if isNearPanel {
+                        let isNearOrUnderPanel = currentFrame.maxX > (panelMinX - 2) && currentFrame.maxX <= screenFrame.maxX
+                        if isNearOrUnderPanel {
                             let newWidth = currentFrame.width + panelWidth
                             let newFrame = NSRect(origin: currentFrame.origin,
                                                   size: NSSize(width: newWidth, height: currentFrame.height))
