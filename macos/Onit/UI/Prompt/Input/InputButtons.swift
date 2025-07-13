@@ -26,6 +26,9 @@ struct InputButtons: View {
                 .buttonStyle(DarkerButtonStyle())
             }
 
+            CopyButton(text: input.selectedText)
+                .frame(width: 20, height: 20)
+
             Button {
                 inputExpanded.toggle()
             } label: {
