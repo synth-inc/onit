@@ -110,26 +110,26 @@ struct AnthropicChatTool: Codable {
     let name: String
     let description: String?
     let input_schema: AnthropicChatToolInputSchema?
-    let maxUses: Int?
+    let max_uses: Int?
     
     enum CodingKeys: String, CodingKey {
         case type
         case name
         case description
         case input_schema
-        case maxUses = "max_uses"
+        case max_uses
     }
 
     static func search(maxUses: Int) -> AnthropicChatTool {
-        return AnthropicChatTool(type: "web_search_20250305", name: "web_search", maxUses: maxUses)
+        return AnthropicChatTool(type: "web_search_20250305", name: "web_search", max_uses: maxUses)
     }
     
-    init(type: String, name: String, description: String? = nil, input_schema: AnthropicChatToolInputSchema? = nil, maxUses: Int? = nil) {
+    init(type: String, name: String, description: String? = nil, input_schema: AnthropicChatToolInputSchema? = nil, max_uses: Int? = nil) {
         self.type = type
         self.name = name
         self.description = description
         self.input_schema = input_schema
-        self.maxUses = maxUses
+        self.max_uses = max_uses
     }
     
     init(tool: Tool) {
@@ -137,7 +137,7 @@ struct AnthropicChatTool: Codable {
         self.name = tool.name
         self.description = tool.description
         self.input_schema = AnthropicChatToolInputSchema(toolParameters: tool.parameters)
-        self.maxUses = nil
+        self.max_uses = nil
     }
 }
 
