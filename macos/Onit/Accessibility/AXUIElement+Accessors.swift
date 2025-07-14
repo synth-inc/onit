@@ -334,6 +334,29 @@ extension AXUIElement {
         
         return domain
     }
+
+    /// Returns the accessibility element at the given screen point.
+    func accessibilityHitTest(_ point: CGPoint) -> AXUIElement? {
+        var element: AXUIElement?
+        let result = AXUIElementCopyElementAtPosition(self, Float(point.x), Float(point.y), &element)
+        return result == .success ? element : nil
+    }
+
+    func findContainingTargetWindow() -> AXUIElement? {
+        var currentElement = self
+        if self.isTargetWindow() {
+            return self
+        }
+        
+        while let parent = currentElement.parent() {
+            if parent.isTargetWindow() {
+                return parent
+            }
+            currentElement = parent
+        }
+
+        return nil
+    }
 }
 
 //
