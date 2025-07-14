@@ -9,9 +9,14 @@ import Defaults
 import SwiftUI
 
 struct ModelSelectionButton: View {
-    @Default(.mode) var mode
     @Default(.remoteModel) var remoteModel
     @Default(.localModel) var localModel
+    
+    private var mode: InferenceMode
+    
+    init(mode: InferenceMode) {
+        self.mode = mode
+    }
     
     @State private var open: Bool = false
     

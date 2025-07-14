@@ -42,6 +42,10 @@ class AppState: NSObject, SPUUpdaterDelegate {
     private var fetchSubscriptionTask: Task<Void, Never>?
     private var chatGenerationLimitTask: Task<Void, Never>? = nil
     
+    var userLoggedIn: Bool {
+        account != nil
+    }
+    
     var subscription: Subscription?
 //    var subscriptionActive: Bool { subscription?.status == "active" || subscription?.status == "trialing" }
     
@@ -390,7 +394,13 @@ class AppState: NSObject, SPUUpdaterDelegate {
     @ObservableDefault(.availableCustomProviders)
     @ObservationIgnored
     var availableCustomProvider: [CustomProvider]
+    
+    /// OpenAI
 
+    @ObservableDefault(.openAIToken)
+    @ObservationIgnored
+    var openAIToken: String?
+    
     @ObservableDefault(.isOpenAITokenValidated)
     @ObservationIgnored
     var isOpenAITokenValidated: Bool
@@ -398,6 +408,12 @@ class AppState: NSObject, SPUUpdaterDelegate {
     @ObservableDefault(.useOpenAI)
     @ObservationIgnored
     var useOpenAI: Bool
+    
+    /// Anthropic
+    
+    @ObservableDefault(.anthropicToken)
+    @ObservationIgnored
+    var anthropicToken: String?
 
     @ObservableDefault(.isAnthropicTokenValidated)
     @ObservationIgnored
@@ -406,6 +422,12 @@ class AppState: NSObject, SPUUpdaterDelegate {
     @ObservableDefault(.useAnthropic)
     @ObservationIgnored
     var useAnthropic: Bool
+    
+    /// XAI
+    
+    @ObservableDefault(.xAIToken)
+    @ObservationIgnored
+    var xAIToken: String?
 
     @ObservableDefault(.isXAITokenValidated)
     @ObservationIgnored
@@ -414,6 +436,12 @@ class AppState: NSObject, SPUUpdaterDelegate {
     @ObservableDefault(.useXAI)
     @ObservationIgnored
     var useXAI: Bool
+    
+    /// GoogleAI
+    
+    @ObservableDefault(.googleAIToken)
+    @ObservationIgnored
+    var googleAIToken: String?
 
     @ObservableDefault(.isGoogleAITokenValidated)
     @ObservationIgnored
@@ -422,6 +450,12 @@ class AppState: NSObject, SPUUpdaterDelegate {
     @ObservableDefault(.useGoogleAI)
     @ObservationIgnored
     var useGoogleAI: Bool
+    
+    /// DeepSeek
+    
+    @ObservableDefault(.deepSeekToken)
+    @ObservationIgnored
+    var deepSeekToken: String?
 
     @ObservableDefault(.isDeepSeekTokenValidated)
     @ObservationIgnored
@@ -430,6 +464,12 @@ class AppState: NSObject, SPUUpdaterDelegate {
     @ObservableDefault(.useDeepSeek)
     @ObservationIgnored
     var useDeepSeek: Bool
+    
+    /// Perplexity
+    
+    @ObservableDefault(.perplexityToken)
+    @ObservationIgnored
+    var perplexityToken: String?
 
     @ObservableDefault(.isPerplexityTokenValidated)
     @ObservationIgnored
@@ -438,28 +478,80 @@ class AppState: NSObject, SPUUpdaterDelegate {
     @ObservableDefault(.usePerplexity)
     @ObservationIgnored
     var usePerplexity: Bool
+    
+    ///
+    
+    private var openAIUnavailableWhenLoggedOut: Bool {
+        let hasValidOpenAIToken = openAIToken != nil && !openAIToken!.isEmpty
+        return !userLoggedIn && !(hasValidOpenAIToken && isOpenAITokenValidated)
+    }
+    
+    private var anthropicUnavailableWhenLoggedOut: Bool {
+        let hasValidAnthropicToken = anthropicToken != nil && !anthropicToken!.isEmpty
+        return !userLoggedIn && !(hasValidAnthropicToken && isAnthropicTokenValidated)
+    }
+    
+    private var XAIUnavailableWhenLoggedOut: Bool {
+        let hasValidXAIToken = xAIToken != nil && !xAIToken!.isEmpty
+        return !userLoggedIn && !(hasValidXAIToken && isXAITokenValidated)
+    }
+    
+    private var googleAIUnavailableWhenLoggedOut: Bool {
+        let hasValidGoogleAIToken = googleAIToken != nil && !googleAIToken!.isEmpty
+        return !userLoggedIn && !(hasValidGoogleAIToken && isGoogleAITokenValidated)
+    }
+    
+    private var deepSeekUnavailableWhenLoggedOut: Bool {
+        let hasValidDeepSeekToken = deepSeekToken != nil && !deepSeekToken!.isEmpty
+        return !userLoggedIn && !(hasValidDeepSeekToken && isDeepSeekTokenValidated)
+    }
+    
+    private var perplexityUnavailableWhenLoggedOut: Bool {
+        let hasValidPerplexityToken = perplexityToken != nil && !perplexityToken!.isEmpty
+        return !userLoggedIn && !(hasValidPerplexityToken && isPerplexityTokenValidated)
+    }
+    
+    var canAccessRemoteModels: Bool {
+        if !userLoggedIn {
+            let canAccessOpenAI = useOpenAI && !openAIUnavailableWhenLoggedOut
+            let canAccessAnthropic = useAnthropic && !anthropicUnavailableWhenLoggedOut
+            let canAccessXAI = useXAI && !XAIUnavailableWhenLoggedOut
+            let canAccessGoogleAI = useGoogleAI && !googleAIUnavailableWhenLoggedOut
+            let canAccessDeepSeek = useDeepSeek && !deepSeekUnavailableWhenLoggedOut
+            let canAccessPerplexity = usePerplexity && !perplexityUnavailableWhenLoggedOut
+            
+            return canAccessOpenAI || canAccessAnthropic || canAccessXAI || canAccessGoogleAI || canAccessDeepSeek || canAccessPerplexity
+        } else {
+            return useOpenAI || useAnthropic || useXAI || useGoogleAI || useDeepSeek || usePerplexity
+        }
+    }
 
     var listedModels: [AIModel] {
         var models = availableRemoteModels.filter {
             Defaults[.visibleModelIds].contains($0.uniqueId)
         }
         
-        if !useOpenAI {
+        if openAIUnavailableWhenLoggedOut || !useOpenAI {
             models = models.filter { $0.provider != .openAI }
         }
-        if !useAnthropic {
+        
+        if anthropicUnavailableWhenLoggedOut || !useAnthropic {
             models = models.filter { $0.provider != .anthropic }
         }
-        if !useXAI {
+        
+        if XAIUnavailableWhenLoggedOut || !useXAI {
             models = models.filter { $0.provider != .xAI }
         }
-        if !useGoogleAI {
+        
+        if googleAIUnavailableWhenLoggedOut || !useGoogleAI {
             models = models.filter { $0.provider != .googleAI }
         }
-        if !useDeepSeek {
+        
+        if deepSeekUnavailableWhenLoggedOut || !useDeepSeek {
             models = models.filter { $0.provider != .deepSeek }
         }
-        if !usePerplexity {
+        
+        if perplexityUnavailableWhenLoggedOut || !usePerplexity {
             models = models.filter { $0.provider != .perplexity }
         }
 
@@ -477,32 +569,32 @@ class AppState: NSObject, SPUUpdaterDelegate {
     }
 
     var hasUserAPITokens: Bool {
-        if let token = Defaults[.openAIToken],
+        if let token = openAIToken,
            !token.isEmpty,
            isOpenAITokenValidated {
             return true
         }
-        if let token = Defaults[.anthropicToken],
+        if let token = anthropicToken,
            !token.isEmpty,
            isAnthropicTokenValidated {
             return true
         }
-        if let token = Defaults[.xAIToken],
+        if let token = xAIToken,
            !token.isEmpty,
            isXAITokenValidated {
             return true
         }
-        if let token = Defaults[.googleAIToken],
+        if let token = googleAIToken,
            !token.isEmpty,
            isGoogleAITokenValidated {
             return true
         }
-        if let token = Defaults[.deepSeekToken],
+        if let token = deepSeekToken,
            !token.isEmpty,
            isDeepSeekTokenValidated {
             return true
         }
-        if let token = Defaults[.perplexityToken],
+        if let token = perplexityToken,
            !token.isEmpty,
            isPerplexityTokenValidated {
             return true
@@ -518,6 +610,58 @@ class AppState: NSObject, SPUUpdaterDelegate {
 //    var remoteNeedsSetup: Bool {
 //        listedModels.isEmpty
 //    }
+    
+    private func getIsRemoteProviderOn(_ provider: AIModel.ModelProvider) -> Bool {
+        switch provider {
+        case .openAI:
+            return useOpenAI
+        case .anthropic:
+            return useAnthropic
+        case .xAI:
+            return useXAI
+        case .googleAI:
+            return useGoogleAI
+        case .deepSeek:
+            return useDeepSeek
+        case .perplexity:
+            return usePerplexity
+        default:
+            return false
+        }
+    }
+    
+    var remoteProvidersCount: Int {
+        var count: Int = 0
+        
+        let providers: [AIModel.ModelProvider] = [.openAI, .anthropic, .xAI, .googleAI, .deepSeek, .perplexity]
+        
+        for provider in providers {
+            if getIsRemoteProviderOn(provider) {
+                count += 1
+            }
+        }
+        
+        return count
+    }
+    
+    func setValidRemoteModel() {
+        if listedModels.isEmpty {
+            Defaults[.remoteModel] = nil
+            Defaults[.mode] = .local
+            return
+        } else if let currentRemoteModel = Defaults[.remoteModel] {
+            let isCurrentProviderOn = getIsRemoteProviderOn(currentRemoteModel.provider)
+            
+            if !isCurrentProviderOn || !listedModels.contains(currentRemoteModel) {
+                Defaults[.remoteModel] = listedModels.first
+            }
+            
+            Defaults[.mode] = .remote
+        } else {
+            Defaults[.remoteModel] = listedModels.first
+            Defaults[.mode] = .remote
+        }
+    }
 }
 
 // MARK: - App Update Listeners

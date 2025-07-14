@@ -30,7 +30,8 @@ struct PromptCoreFooter: View {
     var body: some View {
         HStack(alignment: .center, spacing: 0) {
             HStack(spacing: 4) {
-                ModelSelectionButton()
+                ModelSelectionButton(mode: mode)
+                
                 if mode != .local || allowWebSearchInLocalMode {
                     WebSearchButton()
                 }

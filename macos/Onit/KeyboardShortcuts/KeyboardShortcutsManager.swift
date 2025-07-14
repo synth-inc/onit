@@ -109,7 +109,9 @@ struct KeyboardShortcutsManager {
                 case .newChat:
                     state.newChat()
                 case .toggleLocalMode:
-                    Defaults[.mode] = Defaults[.mode] == .local ? .remote : .local
+                    if !Defaults[.modeToggleShortcutDisabled] {
+                        Defaults[.mode] = Defaults[.mode] == .local ? .remote : .local
+                    }
                 case .addForegroundWindowToContext:
                     if let foregroundWindow = state.foregroundWindow {
                         state.addWindowToContext(window: foregroundWindow.element)
