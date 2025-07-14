@@ -86,22 +86,17 @@ extension GeneralTabAccount {
             textColor: Color.white,
             action: {
                 AnalyticsManager.AccountEvents.createAccountPressed()
-                Defaults[.authFlowStatus] = .showSignUp
-                openPanel()
+                authFlowStatus = .showSignUp
+                Self.openPanel()
             },
             background: Color.blue
         )
     }
     
-    static var signInButton: some View {
-        SimpleButton(
-            text: "Sign in",
-            action: {
-                AnalyticsManager.AccountEvents.signInPressed()
-                Defaults[.authFlowStatus] = .showSignIn
-                openPanel()
-            }
-        )
+    private var signInButton: some View {
+        SimpleButton(text: "Sign in") {
+            Self.openSignInAuth()
+        }
     }
     
     private var logoutButton: some View {
@@ -140,7 +135,6 @@ extension GeneralTabAccount {
     private func logout() {
         TokenManager.token = nil
         appState.account = nil
-        Defaults[.authFlowStatus] = .showSignIn
         GIDSignIn.sharedInstance.signOut()
         
         // Reset all chat state
@@ -153,5 +147,11 @@ extension GeneralTabAccount {
         if !PanelStateCoordinator.shared.state.panelOpened {
             PanelStateCoordinator.shared.launchPanel()
         }
+    }
+    
+    static func openSignInAuth() {
+        AnalyticsManager.AccountEvents.signInPressed()
+        Defaults[.authFlowStatus] = .showSignIn
+        Self.openPanel()
     }
 }

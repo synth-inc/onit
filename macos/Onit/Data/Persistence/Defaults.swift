@@ -57,6 +57,8 @@ extension Defaults.Keys {
     static let useLocal = Key<Bool>("useLocalModel", default: true)
     
     static let streamResponse = Key<StreamResponseConfig>("streamResponse", default: StreamResponseConfig.default)
+    
+    static let modeToggleShortcutDisabled = Key<Bool>("modeToggleShortcutDisabled", default: true)
 
     // Dialogs closed
     static let closedLocal = Key<Bool>("closedLocal", default: false)

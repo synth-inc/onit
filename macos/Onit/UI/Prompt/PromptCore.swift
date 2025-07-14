@@ -48,6 +48,8 @@ struct PromptCore: View {
     
     @State private var disableSend: Bool = false
     
+    @State private var isHoveredSignInButton: Bool = false
+    
     @FocusState private var isFocused: Bool
     
     private var unfocusedBorder = GradientBorder(
@@ -131,6 +133,27 @@ struct PromptCore: View {
 // MARK: - Child Components
 
 extension PromptCore {
+    private var signInButton: some View {
+        Button {
+            GeneralTabAccount.openSignInAuth()
+        } label: {
+            Text("Sign In →")
+                .styleText(
+                    size: 13,
+                    weight: .regular,
+                    color: isHoveredSignInButton ? Color.primary : .gray100,
+                    underline: isHoveredSignInButton
+                )
+        }
+        .padding(.top, 6)
+        .padding(.horizontal, 16)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .addAnimation(dependency: isHoveredSignInButton)
+        .onHover { isHovering in
+            isHoveredSignInButton = isHovering
+        }
+    }
+    
     @ViewBuilder
     private var textField: some View {
         if let windowState = windowState {

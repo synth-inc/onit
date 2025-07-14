@@ -15,6 +15,7 @@ struct AuthFlow: View {
     @Environment(\.appState) var appState
     
     @Default(.authFlowStatus) var authFlowStatus
+    @Default(.availableLocalModels) var availableLocalModels
     
     @Default(.useOpenAI) var useOpenAI
     @Default(.useAnthropic) var useAnthropic
@@ -51,6 +52,7 @@ struct AuthFlow: View {
                 form
                 redirectSection
                 Spacer()
+                closeButton
             }
         }
         .onAppear {
@@ -238,6 +240,25 @@ extension AuthFlow {
             }
         }
         .padding(.bottom, 53)
+    }
+    
+    @ViewBuilder
+    private var closeButton: some View {
+        let hasRemoteModels = appState.hasUserAPITokens
+        let hasLocalModels = !availableLocalModels.isEmpty
+        let hasModels = hasRemoteModels || hasLocalModels
+        
+        if !appState.userLoggedIn && hasModels {
+            TextButton(height: 40) {
+                Text("Close")
+                    .frame(maxWidth: .infinity, alignment: .center)
+                    .styleText()
+            } action: {
+                authFlowStatus = .hideAuth
+            }
+            .padding(.horizontal, 40)
+            .padding(.bottom, 53)
+        }
     }
 }
 

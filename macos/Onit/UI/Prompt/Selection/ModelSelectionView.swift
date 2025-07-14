@@ -82,6 +82,7 @@ struct ModelSelectionView: View {
                 placeholder: "Search models..."
             )
         ) {
+            signInCTA
             remote
             local
         }
@@ -89,19 +90,58 @@ struct ModelSelectionView: View {
             AnalyticsManager.ModelPicker.opened()
         }
     }
+    
+    private func emptyText(_ text: String) -> some View {
+        Text(text)
+            .fixedSize(horizontal: false, vertical: true)
+            .styleText(
+                size: 13,
+                weight: .regular,
+                color: .gray100
+            )
+    }
+    
+    private func arrowButton(_ text: String, action: @escaping () -> Void) -> some View {
+        Button(text) {
+            action()
+        }
+        .buttonStyle(SetUpButtonStyle(showArrow: true))
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+    
+    @ViewBuilder
+    private var signInCTA: some View {
+        if !appState.userLoggedIn {
+            VStack(alignment: .leading, spacing: 8) {
+                emptyText("Sign in to gain access to models from OpenAI, Anthropic, and more!")
+                
+                arrowButton("Sign In") {
+                    GeneralTabAccount.openSignInAuth()
+                }
+            }
+            .padding(.horizontal, 16)
+            .padding(.bottom, 8)
+        }
+    }
 
     var remote: some View {
         return MenuSection(
             title: "Remote",
             showTopBorder: true,
-            maxScrollHeight: setModelListHeight(
+            maxScrollHeight: !filteredRemoteModels.isEmpty ? setModelListHeight(
                 listCount: CGFloat(filteredRemoteModels.count)
-            ),
+            ) : nil,
             contentRightPadding: 0,
             contentBottomPadding: 0,
             contentLeftPadding: 0
         ) {
-            remoteModelsView
+            if filteredRemoteModels.isEmpty {
+                emptyText("No remote models.")
+                    .padding(.horizontal, 16)
+                    .padding(.bottom, 8)
+            } else {
+                remoteModelsView
+            }
         }
     }
     
@@ -125,25 +165,25 @@ struct ModelSelectionView: View {
             titleIconColor: Color.orange500,
             title: "Local",
             showTopBorder: true,
-            maxScrollHeight: setModelListHeight(
+            maxScrollHeight: !filteredLocalModels.isEmpty ? setModelListHeight(
                 listCount: CGFloat(filteredLocalModels.count)
-            ),
+            ) : nil,
             contentRightPadding: 0,
             contentBottomPadding: 0,
             contentLeftPadding: 0
         ) {
             if availableLocalModels.isEmpty {
-                Button("Setup local models") {
-                    AnalyticsManager.ModelPicker.localSetupPressed()
-                    appState.settingsTab = .models
-                    openSettings()
+                VStack(alignment: .leading, spacing: 8) {
+                    emptyText("No local models.")
+                    
+                    arrowButton("Setup local models") {
+                        AnalyticsManager.ModelPicker.localSetupPressed()
+                        appState.settingsTab = .models
+                        openSettings()
+                    }
+                    
                 }
-                .buttonStyle(SetUpButtonStyle(showArrow: true))
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(.horizontal, 12)
-                .padding(.top, 6)
-                .padding(.bottom, 10)
-
+                .padding([.horizontal, .bottom], 16)
             } else {
                 localModelsView
             }

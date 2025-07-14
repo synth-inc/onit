@@ -15,11 +15,15 @@ struct ContentView: View {
     @ObservedObject private var accessibilityPermissionManager = AccessibilityPermissionManager.shared
     @Namespace private var animation
     
+    @Default(.mode) var mode
     @Default(.panelWidth) var panelWidth
     @Default(.authFlowStatus) var authFlowStatus
     @Default(.showOnboardingAccessibility) var showOnboardingAccessibility
     @Default(.showTwoWeekProTrialEndedAlert) var showTwoWeekProTrialEndedAlert
     @Default(.hasClosedTrialEndedAlert) var hasClosedTrialEndedAlert
+    @Default(.availableLocalModels) var availableLocalModels
+    @Default(.visibleModelIds) var visibleModelIds
+    @Default(.remoteModel) var remoteModel
     
     static let bottomPadding: CGFloat = 0
     
@@ -28,8 +32,12 @@ struct ContentView: View {
         return accessibilityNotGranted && showOnboardingAccessibility
     }
     
+    private var showAuthFlow: Bool {
+        authFlowStatus != .hideAuth
+    }
+    
     private var showToolbar: Bool {
-        !shouldShowOnboardingAccessibility && appState.account != nil
+        !shouldShowOnboardingAccessibility && !showAuthFlow
     }
     
     private var showFileImporterBinding: Binding<Bool> {
@@ -83,13 +91,13 @@ struct ContentView: View {
                         authFlowStatus = .hideAuth
                     }
                 }
-            } else if appState.account == nil {
+            } else if showAuthFlow {
                 AuthFlow()
             } else {
                 ZStack {
                     VStack(alignment: .leading, spacing: 0) {
                         if showToolbar {
-                            Toolbar()
+                            Toolbar(mode: mode)
                         }
                         
                         VStack(spacing: 0) {
@@ -142,6 +150,8 @@ struct ContentView: View {
         }
         .addAnimation(dependency: state?.showChatView)
         .onAppear {
+            setModeAndAuthOnLoginStatus()
+            
             if !hasClosedTrialEndedAlert {
                 if let subscriptionStatus = appState.subscription?.status {
                     if subscriptionStatus == "active" {
@@ -158,6 +168,47 @@ struct ContentView: View {
                     }
                 }
             }
+        }
+        .onChange(of: appState.userLoggedIn) { _, userLoggedIn in
+            setModeAndAuthOnLoginStatus()
+        }
+        .onChange(of: availableLocalModels) {_, localModelsList in
+            if !appState.userLoggedIn {
+                let canAccessRemoteModels = appState.canAccessRemoteModels
+                let hasNoLocalModels = localModelsList.isEmpty
+                
+                if hasNoLocalModels && canAccessRemoteModels {
+                    mode = .remote
+                }
+                
+                authFlowStatus = !canAccessRemoteModels && hasNoLocalModels ? .showSignUp : .hideAuth
+            }
+        }
+        .onChange(of: appState.canAccessRemoteModels) { _, canAccessRemoteModels in
+            Defaults[.modeToggleShortcutDisabled] = !canAccessRemoteModels
+            mode = !canAccessRemoteModels ? .local : .remote
+            
+            let hasNoAvailableModels = !canAccessRemoteModels && availableLocalModels.isEmpty
+            authFlowStatus = !appState.userLoggedIn && hasNoAvailableModels ? .showSignUp : .hideAuth
+        }
+        .onChange(of: appState.remoteProvidersCount) { _, _ in
+            appState.setValidRemoteModel()
+        }
+        .onChange(of: visibleModelIds) { _, _ in
+            appState.setValidRemoteModel()
+        }
+    }
+    
+    private func setModeAndAuthOnLoginStatus() {
+        Defaults[.modeToggleShortcutDisabled] = !appState.canAccessRemoteModels
+        mode = !appState.canAccessRemoteModels ? .local : .remote
+        
+        if appState.userLoggedIn {
+            appState.setValidRemoteModel()
+            authFlowStatus = .hideAuth
+        } else {
+            let hasNoAvailableModels = !appState.hasUserAPITokens && availableLocalModels.isEmpty
+            authFlowStatus = hasNoAvailableModels ? .showSignUp : .hideAuth
         }
     }
     
