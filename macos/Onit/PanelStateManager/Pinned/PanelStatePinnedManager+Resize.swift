@@ -37,7 +37,7 @@ extension PanelStatePinnedManager {
         windowFrameChanged: Bool = false,
         isPanelResized: Bool = false
     ) {
-        if !windowFrameChanged, !isPanelResized { guard !targetInitialFrames.keys.contains(window) else { return } }
+        // We pass when the panel is in the process of closing.
         if !shouldResizeWindows { return }
         
         if let windowFrameConverted = window.getFrame(convertedToGlobalCoordinateSpace: true),
@@ -47,10 +47,15 @@ extension PanelStatePinnedManager {
             
             let panelWidth = state.panelWidth - (TetheredButton.width / 2) + 1
             let screenFrame = screen.visibleFrame
+            let availableSpace = screenFrame.maxX - windowFrame.maxX
             
-            let newWidth = (screenFrame.maxX - windowFrame.origin.x) - panelWidth
-            let newFrame = CGRect(x: windowFrame.origin.x, y:windowFrame.origin.y, width: newWidth, height: windowFrame.height)
-            _ = window.setFrame(newFrame)
+            // Only resize when the window occupies the same space as the panel. 
+            if availableSpace < panelWidth {
+                let overlapAmount = panelWidth - availableSpace
+                let newWidth = windowFrame.width - overlapAmount
+                let newFrame = CGRect(x: windowFrame.origin.x, y: windowFrame.origin.y, width: newWidth, height: windowFrame.height)
+                _ = window.setFrame(newFrame)
+            }
         }
     }
 }
