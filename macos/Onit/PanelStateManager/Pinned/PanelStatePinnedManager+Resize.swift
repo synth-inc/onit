@@ -14,9 +14,10 @@ extension PanelStatePinnedManager {
 
         isResizingWindows = true
 
-        // First, handle the foregroundWindow if it exists
-        if let foregroundWindow = state.foregroundWindow {
-            resizeWindow(for: screen, window: foregroundWindow.element, isPanelResized: isPanelResized)
+        // First, handle the bordering windows if they exists
+        let borderingWindows = findBorderingWindows().compactMap { $0 }
+        for window in borderingWindows {
+            resizeWindow(for: screen, window: window, isPanelResized: isPanelResized)
         }
 
         // Then, handle all other windows, skipping the foregroundWindow if present
@@ -57,5 +58,37 @@ extension PanelStatePinnedManager {
                 _ = window.setFrame(newFrame)
             }
         }
+    }
+    
+    func findBorderingWindows() -> [AXUIElement?] {
+        guard let screenFrame = self.attachedScreen?.visibleFrame ?? NSScreen.main?.visibleFrame else { return [] }
+        let panelWidth = state.panelWidth - (TetheredButton.width / 2) + 1
+        let panelMinX = screenFrame.maxX - panelWidth
+        let panelYMin = screenFrame.minY
+        let panelYMax = screenFrame.maxY
+
+        // We'll sample 10 points evenly along the vertical edge of the panel, 2px outside the panel's left edge
+        let sampleCount = 10
+        let x = panelMinX - 2
+        let step = (panelYMax - panelYMin) / CGFloat(sampleCount - 1)
+        var foundWindows: [AXUIElement] = []
+
+        for i in 0..<sampleCount {
+            let y = panelYMin + CGFloat(i) * step
+            let point = CGPoint(x: x, y: y)
+
+            // Perform hit test at this point
+            if let element = AXUIElementCreateSystemWide().accessibilityHitTest(point) {
+                // Try to get the window containing this element
+                if let window = element.findContainingTargetWindow() {
+                    // Only add if not already present
+                    if !foundWindows.contains(where: { $0 == window }) {
+                        foundWindows.append(window)
+                    }
+                }
+            }
+        }
+
+        return foundWindows.map { Optional($0) }
     }
 }

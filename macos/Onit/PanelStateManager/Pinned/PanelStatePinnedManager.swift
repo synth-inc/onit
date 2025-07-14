@@ -243,16 +243,18 @@ class PanelStatePinnedManager: PanelStateBaseManager, ObservableObject {
         let panelMinX = screenFrame.maxX - panelWidth
         let capturedForegroundWindow = state.foregroundWindow
         
-        // Handle foreground window first.
-        // This is the only one users can see, so we can handle it synchronously. This creates the desired visual experience.
-        if let foregroundWindow = capturedForegroundWindow,
-           let currentFrame = foregroundWindow.element.getFrame() {
-            let isNearOrUnderPanel = currentFrame.maxX > (panelMinX - 2) && currentFrame.maxX <= screenFrame.maxX
-            if isNearOrUnderPanel {
-                let newWidth = currentFrame.width + panelWidth
-                let newFrame = NSRect(origin: currentFrame.origin,
-                                      size: NSSize(width: newWidth, height: currentFrame.height))
-                _ = foregroundWindow.element.setFrame(newFrame)
+        // Handle bordering window first.
+        // These are the only ones users can see, so we can handle them synchronously. This creates the desired visual experience.
+        let borderingWindows = self.findBorderingWindows().compactMap { $0 }
+        for window in borderingWindows {
+            if let currentFrame = window.getFrame() {
+                let isNearOrUnderPanel = currentFrame.maxX > (panelMinX - 2) && currentFrame.maxX <= screenFrame.maxX
+                if isNearOrUnderPanel {
+                    let newWidth = currentFrame.width + panelWidth
+                    let newFrame = NSRect(origin: currentFrame.origin,
+                                          size: NSSize(width: newWidth, height: currentFrame.height))
+                    _ = window.setFrame(newFrame)
+                }
             }
         }
         
@@ -260,7 +262,7 @@ class PanelStatePinnedManager: PanelStateBaseManager, ObservableObject {
         // The other window resizes are expensive, so we don't want them interfering with animation.
         DispatchQueue.main.asyncAfter(deadline: .now() + (animationDuration + 0.1)) {
             let windows = WindowHelpers.getAllOtherAppWindows()
-            
+
             for window in windows {
                 // Skip the foreground element, since we've already done it.
                 if let foregroundWindow = capturedForegroundWindow, window != foregroundWindow.element {
