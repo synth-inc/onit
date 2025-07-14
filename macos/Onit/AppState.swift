@@ -491,7 +491,7 @@ class AppState: NSObject, SPUUpdaterDelegate {
         return !userLoggedIn && !(hasValidAnthropicToken && isAnthropicTokenValidated)
     }
     
-    private var XAIUnavailableWhenLoggedOut: Bool {
+    private var xAIUnavailableWhenLoggedOut: Bool {
         let hasValidXAIToken = xAIToken != nil && !xAIToken!.isEmpty
         return !userLoggedIn && !(hasValidXAIToken && isXAITokenValidated)
     }
@@ -515,7 +515,7 @@ class AppState: NSObject, SPUUpdaterDelegate {
         if !userLoggedIn {
             let canAccessOpenAI = useOpenAI && !openAIUnavailableWhenLoggedOut
             let canAccessAnthropic = useAnthropic && !anthropicUnavailableWhenLoggedOut
-            let canAccessXAI = useXAI && !XAIUnavailableWhenLoggedOut
+            let canAccessXAI = useXAI && !xAIUnavailableWhenLoggedOut
             let canAccessGoogleAI = useGoogleAI && !googleAIUnavailableWhenLoggedOut
             let canAccessDeepSeek = useDeepSeek && !deepSeekUnavailableWhenLoggedOut
             let canAccessPerplexity = usePerplexity && !perplexityUnavailableWhenLoggedOut
@@ -539,7 +539,7 @@ class AppState: NSObject, SPUUpdaterDelegate {
             models = models.filter { $0.provider != .anthropic }
         }
         
-        if XAIUnavailableWhenLoggedOut || !useXAI {
+        if xAIUnavailableWhenLoggedOut || !useXAI {
             models = models.filter { $0.provider != .xAI }
         }
         
