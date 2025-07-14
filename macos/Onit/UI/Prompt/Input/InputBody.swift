@@ -55,6 +55,7 @@ struct InputBody: View {
             .foregroundColor(.FG)
             .frame(maxWidth: .infinity, alignment: .leading)
             .fixedSize(horizontal: false, vertical: true)
+            .textSelection(.enabled)
             .padding(10)
             .background {
                 geometryReader

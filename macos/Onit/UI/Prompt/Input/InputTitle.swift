@@ -24,6 +24,7 @@ struct InputTitle: View {
         HStack(spacing: 8) {
             Text(inputString)
                 .appFont(.medium13)
+                .textSelection(.enabled)
             Spacer()
             InputButtons(inputExpanded: $inputExpanded, input: input)
         }
