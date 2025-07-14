@@ -55,6 +55,11 @@ struct KeyboardShortcutsManager {
             }
         }
         
+        let modeToggleDisabled = Defaults[.modeToggleShortcutDisabled]
+        if modeToggleDisabled {
+            names.removeAll { $0 == .toggleLocalMode }
+        }
+        
         do {
             let storedPrompts = try modelContainer.mainContext.fetch(FetchDescriptor<SystemPrompt>())
             for systemPrompt in storedPrompts {
@@ -115,9 +120,7 @@ struct KeyboardShortcutsManager {
                 case .newChat:
                     state.newChat()
                 case .toggleLocalMode:
-                    if !Defaults[.modeToggleShortcutDisabled] {
-                        Defaults[.mode] = Defaults[.mode] == .local ? .remote : .local
-                    }
+                    Defaults[.mode] = Defaults[.mode] == .local ? .remote : .local
                 case .addForegroundWindowToContext:
                     if let foregroundWindow = state.foregroundWindow {
                         state.addWindowToContext(window: foregroundWindow.element)

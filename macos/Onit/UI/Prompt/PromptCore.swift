@@ -144,14 +144,14 @@ extension PromptCore {
                     color: isHoveredSignInButton ? Color.primary : .gray100,
                     underline: isHoveredSignInButton
                 )
+                .addAnimation(dependency: isHoveredSignInButton)
+                .onHover { isHovering in
+                    isHoveredSignInButton = isHovering
+                }
         }
         .padding(.top, 6)
         .padding(.horizontal, 16)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .addAnimation(dependency: isHoveredSignInButton)
-        .onHover { isHovering in
-            isHoveredSignInButton = isHovering
-        }
     }
     
     @ViewBuilder

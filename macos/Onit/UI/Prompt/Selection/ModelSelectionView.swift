@@ -135,10 +135,16 @@ struct ModelSelectionView: View {
             contentBottomPadding: 0,
             contentLeftPadding: 0
         ) {
-            if filteredRemoteModels.isEmpty {
-                emptyText("No remote models.")
-                    .padding(.horizontal, 16)
-                    .padding(.bottom, 8)
+            if filteredRemoteModels.isEmpty {                
+                VStack(alignment: .leading, spacing: 8) {
+                    emptyText("No remote models.")
+                    
+                    arrowButton("Setup remote models") {
+                        appState.settingsTab = .models
+                        openSettings()
+                    }
+                }
+                .padding([.horizontal, .bottom], 16)
             } else {
                 remoteModelsView
             }
@@ -181,7 +187,6 @@ struct ModelSelectionView: View {
                         appState.settingsTab = .models
                         openSettings()
                     }
-                    
                 }
                 .padding([.horizontal, .bottom], 16)
             } else {
