@@ -10,22 +10,37 @@ struct GoogleAIChatStreamingEndpoint: StreamingEndpoint {
     var baseURL: URL = URL(string: "https://generativelanguage.googleapis.com")!
     
     typealias Request = GoogleAIChatRequest
-    typealias Response = GoogleAIChatStreamingResponse
+    typealias Response = GoogleAIChatResponse
     
     let messages: [GoogleAIChatMessage]
+    let system: String?
     let model: String
-    let token: String?
+    // Doing this so the token doesn't get added as a header
+    var token: String? { nil }
+    let queryToken: String?
+    let includeSearch: Bool?
     
-    var path: String { "/v1beta:chatCompletions" } 
-    var getParams: [String: String]? { nil }
+    var path: String { "/v1beta/models/\(model):streamGenerateContent" }
+    var getParams: [String: String]? {
+        [
+            "key": queryToken ?? "",
+            "alt": "sse"
+        ]
+    }
     var method: HTTPMethod { .post }
     var requestBody: GoogleAIChatRequest? {
-        GoogleAIChatRequest(model:model, messages: messages, stream: true, n: 1)
+        var systemInstruction: GoogleAIChatSystemInstruction?
+        if let system = system {
+            systemInstruction = GoogleAIChatSystemInstruction(parts: [GoogleAIChatPart(text: system, inlineData: nil)])
+        }
+        var tools: [GoogleAIChatSearchTool] = []
+        if includeSearch == true {
+            tools.append(GoogleAIChatSearchTool())
+        }
+        return GoogleAIChatRequest(systemInstruction: systemInstruction, contents: messages, tools: tools)
     }
     
-    var additionalHeaders: [String: String]? {
-        ["Authorization": "Bearer \(token ?? "")"]
-    }
+    var additionalHeaders: [String: String]? { [:] }
     
     var timeout: TimeInterval? { nil }
     
@@ -33,7 +48,8 @@ struct GoogleAIChatStreamingEndpoint: StreamingEndpoint {
         if let data = event.data?.data(using: .utf8) {
             let response = try JSONDecoder().decode(Response.self, from: data)
             
-            return response.choices.first?.delta.content
+            let part = response.candidates.first?.content.parts.first { $0.text != nil }
+            return part?.text
         }
         
         return nil
@@ -46,29 +62,10 @@ struct GoogleAIChatStreamingEndpoint: StreamingEndpoint {
     }
 }
 
-struct GoogleAIChatStreamingResponse: Codable {
-    let choices: [Choice]
-    
-    struct Choice: Codable {
-        let delta: Delta
-        let index: Int
-            
-        enum CodingKeys: String, CodingKey {
-            case delta
-            case index
-        }
-    }
-        
-    struct Delta: Codable {
-        let content: String?
-        let role: String?
-    }
-}
-
 struct GoogleAIChatStreamingError: Codable {
+    let error: Error
+
     struct Error: Codable {
         let message: String
     }
-    
-    let error: Error
 }

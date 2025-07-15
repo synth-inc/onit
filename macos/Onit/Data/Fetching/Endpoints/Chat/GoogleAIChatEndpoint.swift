@@ -13,109 +13,81 @@ struct GoogleAIChatEndpoint: Endpoint {
     typealias Response = GoogleAIChatResponse
 
     let messages: [GoogleAIChatMessage]
+    let system: String?
     let model: String
-    let token: String?
+    // Doing this so the token doesn't get added as a header
+    var token: String? { nil }
+    let queryToken: String?
+    let includeSearch: Bool?
 
-    var path: String { "/v1beta:chatCompletions" }
-    var getParams: [String: String]? { nil }
+    var path: String { "/v1beta/models/\(model):generateContent" }
+    var getParams: [String: String]? {
+        [
+            "key": queryToken ?? ""
+        ]
+    }
 
     var method: HTTPMethod { .post }
     var requestBody: GoogleAIChatRequest? {
-        GoogleAIChatRequest(model:model, messages: messages, stream: false, n: 1)
+        var systemInstruction: GoogleAIChatSystemInstruction?
+        if let system = system {
+            systemInstruction = GoogleAIChatSystemInstruction(parts: [GoogleAIChatPart(text: system, inlineData: nil)])
+        }
+        var tools: [GoogleAIChatSearchTool] = []
+        if includeSearch == true {
+            tools.append(GoogleAIChatSearchTool())
+        }
+        return GoogleAIChatRequest(systemInstruction: systemInstruction, contents: messages, tools: tools)
     }
 
-    var additionalHeaders: [String: String]? {
-        ["Authorization": "Bearer \(token ?? "")"]
-    }
+    var additionalHeaders: [String: String]? { [:] }
     var timeout: TimeInterval? { nil }
     
     func getContent(response: Response) -> String? {
-        return response.choices.first?.message.content
+        let part = response.candidates.first?.content.parts.first { $0.text != nil }
+        return part?.text
     }
+}
+
+struct GoogleAIChatSystemInstruction: Codable {
+    let parts: [GoogleAIChatPart]
 }
 
 struct GoogleAIChatMessage: Codable {
     let role: String
-    let content: GoogleAIChatContent
+    let parts: [GoogleAIChatPart]
 }
 
-enum GoogleAIChatContent: Codable {
-    case text(String)
-    case multiContent([GoogleAIChatContentPart])
-
-    func encode(to encoder: Encoder) throws {
-        var container = encoder.singleValueContainer()
-        switch self {
-        case .text(let str):
-            try container.encode(str)
-        case .multiContent(let parts):
-            try container.encode(parts)
-        }
-    }
-
-    init(from decoder: Decoder) throws {
-        let container = try decoder.singleValueContainer()
-        if let str = try? container.decode(String.self) {
-            self = .text(str)
-        } else if let parts = try? container.decode([GoogleAIChatContentPart].self) {
-            self = .multiContent(parts)
-        } else {
-            throw DecodingError.dataCorruptedError(
-                in: container, debugDescription: "Invalid content format")
-        }
-    }
-}
-
-struct GoogleAIChatContentPart: Codable {
-    let type: String
+struct GoogleAIChatPart: Codable {
     let text: String?
-    let image_url: ImageURL?
+    let inlineData: InlineData?
 
-    struct ImageURL: Codable {
-        let url: String
+    struct InlineData: Codable {
+        let mimeType: String
+        let data: String
     }
 }
 
 struct GoogleAIChatRequest: Codable {
-    let model: String
-    let messages: [GoogleAIChatMessage]
-    let stream: Bool
-    let n : Int
+    let systemInstruction: GoogleAIChatSystemInstruction?
+    let contents: [GoogleAIChatMessage]
+    let tools: [GoogleAIChatSearchTool]?
 }
 
 struct GoogleAIChatResponse: Codable {
-    let choices: [Choice]
-    let created: Int
-    let model: String
-    let object: String
-    let usage: Usage
+    let candidates: [GoogleAIChatCandidate]
 
-    struct Choice: Codable {
-        let finishReason: String
-        let index: Int
-        let message: Message
-
-        enum CodingKeys: String, CodingKey {
-            case finishReason = "finish_reason"
-            case index
-            case message
-        }
+    struct GoogleAIChatCandidate: Codable {
+        let content: GoogleAIChatMessage
     }
+}
 
-    struct Message: Codable {
-        let content: String
-        let role: String
-    }
+struct GoogleAIChatSearchTool: Codable {
+    let googleSearch = GoogleSearch()
 
-    struct Usage: Codable {
-        let completionTokens: Int
-        let promptTokens: Int
-        let totalTokens: Int
+    struct GoogleSearch: Codable {}
 
-        enum CodingKeys: String, CodingKey {
-            case completionTokens = "completion_tokens"
-            case promptTokens = "prompt_tokens"
-            case totalTokens = "total_tokens"
-        }
+    enum CodingKeys: String, CodingKey {
+        case googleSearch = "google_search"
     }
 }
