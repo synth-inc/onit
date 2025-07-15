@@ -61,8 +61,8 @@ struct AnthropicChatEndpoint: Endpoint {
             
             return ChatResponse(
                 content: nil,
-                functionName: toolContent.name,
-                functionArguments: argumentsString
+                toolName: toolContent.name,
+                toolArguments: argumentsString
             )
         }
         
@@ -70,8 +70,8 @@ struct AnthropicChatEndpoint: Endpoint {
            let text = textContent.text {
             return ChatResponse(
                 content: text,
-                functionName: nil,
-                functionArguments: nil
+                toolName: nil,
+                toolArguments: nil
             )
         }
         

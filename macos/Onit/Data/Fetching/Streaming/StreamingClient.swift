@@ -103,7 +103,7 @@ actor StreamingClient {
                         if let response = try? endpoint.getContentFromSSE(event: event) {
                             continuation.yield(response)
                         } else {
-                            continuation.yield(StreamingEndpointResponse(content: nil, functionName: nil, functionArguments: nil))
+                            continuation.yield(StreamingEndpointResponse(content: nil, toolName: nil, toolArguments: nil))
                         }
                     case .error(let error):
                         continuation.finish(

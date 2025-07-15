@@ -33,11 +33,11 @@ struct PerplexityChatStreamingEndpoint: StreamingEndpoint {
             let content = response.choices.first?.delta.content
 
             guard var content = content else {
-                return StreamingEndpointResponse(content: nil, functionName: nil, functionArguments: nil)
+                return StreamingEndpointResponse(content: nil, toolName: nil, toolArguments: nil)
             }
             
             guard let citations = response.citations, !citations.isEmpty else {
-                return StreamingEndpointResponse(content: content, functionName: nil, functionArguments: nil)
+                return StreamingEndpointResponse(content: content, toolName: nil, toolArguments: nil)
             }
             
             for (index, citation) in citations.enumerated() {
@@ -46,7 +46,7 @@ struct PerplexityChatStreamingEndpoint: StreamingEndpoint {
                 content = content.replacingOccurrences(of: "[\(realIndex)]", with: citation)
             }
             
-            return StreamingEndpointResponse(content: content, functionName: nil, functionArguments: nil)
+            return StreamingEndpointResponse(content: content, toolName: nil, toolArguments: nil)
         }
         return nil
     }

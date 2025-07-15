@@ -11,8 +11,8 @@ import UniformTypeIdentifiers
 
 struct ChatResponse {
     let content: String?
-    let functionName: String?
-    let functionArguments: String?
+    let toolName: String?
+    let toolArguments: String?
 }
 
 actor FetchingClient {
@@ -69,7 +69,7 @@ actor FetchingClient {
         guard let content = endpoint.getContent(response: response) else {
             throw FetchingError.noContent
         }
-        return ChatResponse(content: content, functionName: nil, functionArguments: nil)
+        return ChatResponse(content: content, toolName: nil, toolArguments: nil)
     }
     
     func localChat(

@@ -55,11 +55,11 @@ struct AnthropicChatStreamingEndpoint: StreamingEndpoint {
             let response = try JSONDecoder().decode(Response.self, from: data)
             
             if response.contentBlock?.type == "server_tool_use" {
-                return StreamingEndpointResponse(content: "\n\n...\n\n", functionName: nil, functionArguments: nil)
+                return StreamingEndpointResponse(content: "\n\n...\n\n", toolName: nil, toolArguments: nil)
             }
             
             if let content = response.delta?.text {
-                return StreamingEndpointResponse(content: content, functionName: nil, functionArguments: nil)
+                return StreamingEndpointResponse(content: content, toolName: nil, toolArguments: nil)
             }
             
             if response.type == "content_block_start" && response.contentBlock?.type == "tool_use" {
@@ -80,8 +80,8 @@ struct AnthropicChatStreamingEndpoint: StreamingEndpoint {
                 if toolAccumulator.hasActiveTool(), let toolData = toolAccumulator.finishTool() {
                     return StreamingEndpointResponse(
                         content: nil,
-                        functionName: toolData.name,
-                        functionArguments: toolData.arguments
+                        toolName: toolData.name,
+                        toolArguments: toolData.arguments
                     )
                 }
                 return nil

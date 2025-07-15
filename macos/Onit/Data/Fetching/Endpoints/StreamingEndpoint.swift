@@ -57,6 +57,6 @@ extension StreamingEndpoint {
 
 struct StreamingEndpointResponse {
     let content: String?
-    let functionName: String?
-    let functionArguments: String?
+    let toolName: String?
+    let toolArguments: String?
 }

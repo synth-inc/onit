@@ -161,18 +161,18 @@ struct ToolCallView: View {
     }
 
     private var displayToolName: String {
-        guard let functionName = response.toolCallFunctionName else {
+        guard let toolName = response.toolCallName else {
             return "Tool Call"
         }
 
         // Convert function name to display name
-        let parts = functionName.split(separator: "_")
+        let parts = toolName.split(separator: "_")
         if parts.count >= 2 {
             let toolName = parts[1...].joined(separator: " ")
             return toolName.capitalized.replacingOccurrences(of: "_", with: " ")
         }
 
-        return functionName.capitalized.replacingOccurrences(of: "_", with: " ")
+        return toolName.capitalized.replacingOccurrences(of: "_", with: " ")
     }
 
     private var parsedArguments: [(key: String, value: String)] {

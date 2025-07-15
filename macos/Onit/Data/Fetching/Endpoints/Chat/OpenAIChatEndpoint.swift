@@ -38,19 +38,19 @@ struct OpenAIChatEndpoint: Endpoint {
     }
     
     func getToolResponse(response: Response) -> ChatResponse? {
-        if let functionCall = response.output?.first(where: { $0.type == "function_call" }) {
+        if let toolCall = response.output?.first(where: { $0.type == "function_call" }) {
             return ChatResponse(
                 content: nil,
-                functionName: functionCall.name,
-                functionArguments: functionCall.arguments
+                toolName: toolCall.name,
+                toolArguments: toolCall.arguments
             )
         }
         
         if let content = response.delta {
             return ChatResponse(
                 content: content,
-                functionName: nil,
-                functionArguments: nil
+                toolName: nil,
+                toolArguments: nil
             )
         }
         

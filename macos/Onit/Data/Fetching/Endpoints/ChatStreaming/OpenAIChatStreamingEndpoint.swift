@@ -39,13 +39,13 @@ struct OpenAIChatStreamingEndpoint: StreamingEndpoint {
             let response = try JSONDecoder().decode(Response.self, from: data)
             
             if response.type == "response.output_text.delta" {
-                return StreamingEndpointResponse(content: response.delta, functionName: nil, functionArguments: nil)
+                return StreamingEndpointResponse(content: response.delta, toolName: nil, toolArguments: nil)
             }
             if response.type == "response.completed" {
-                if let functionCall = response.response?.output?.first {
+                if let toolCall = response.response?.output?.first {
                     return StreamingEndpointResponse(content: nil,
-                                                     functionName: functionCall.name,
-                                                     functionArguments: functionCall.arguments)
+                                                     toolName: toolCall.name,
+                                                     toolArguments: toolCall.arguments)
                 }
             }
             return nil

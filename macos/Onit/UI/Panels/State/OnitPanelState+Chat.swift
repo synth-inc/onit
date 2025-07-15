@@ -139,8 +139,8 @@ extension OnitPanelState {
                 }
 
                 streamedResponse = ""
-                var functionName = ""
-                var functionArguments = ""
+                var toolName = ""
+                var toolArguments = ""
                 
                 let isNewInstruction = !prompt.priorInstructions.dropLast().contains(prompt.instruction)
 
@@ -218,10 +218,10 @@ extension OnitPanelState {
                             includeSearch: (useWebSearch && !useTavilySearch) ? true : nil)
                         for try await response in asyncText {
                             streamedResponse += response.content ?? ""
-                            if let responseFunctionName = response.functionName {
-                                functionName = responseFunctionName
+                            if let responseToolName = response.toolName {
+                                toolName = responseToolName
                             }
-                            functionArguments += response.functionArguments ?? ""
+                            toolArguments += response.toolArguments ?? ""
                         }
                     } else {
                         prompt.generationState = .generating
@@ -239,10 +239,10 @@ extension OnitPanelState {
                             tools: ToolRouter.activeTools,
                             includeSearch: (useWebSearch && !useTavilySearch) ? true : nil)
                         streamedResponse = chatResponse.content ?? ""
-						if let responseFunctionName = chatResponse.functionName {
-							functionName = responseFunctionName
+						if let responseToolName = chatResponse.toolName {
+							toolName = responseToolName
 						}
-						functionArguments = chatResponse.functionArguments ?? ""
+						toolArguments = chatResponse.toolArguments ?? ""
                     }
                 
                 case .local:
@@ -264,10 +264,10 @@ extension OnitPanelState {
                             model: model)
                         for try await response in asyncText {
                             streamedResponse += response.content ?? ""
-                            if let responseFunctionName = response.functionName {
-                                functionName = responseFunctionName
+                            if let responseToolName = response.toolName {
+                                toolName = responseToolName
                             }
-                            functionArguments += response.functionArguments ?? ""
+                            toolArguments += response.toolArguments ?? ""
                         }
                     } else {
                         prompt.generationState = .generating
@@ -286,10 +286,10 @@ extension OnitPanelState {
                 
                 let response = Response(text: String(streamedResponse), instruction: curInstruction, type: .success, model: currentModelName)
 
-                if !functionArguments.isEmpty {
-                    let toolResult = await ToolRouter.parseAndExecuteToolCalls(functionName: functionName, functionArguments: functionArguments)
-                    response.toolCallFunctionName = functionName
-                    response.toolCallArguments = functionArguments
+                if !toolArguments.isEmpty {
+                    let toolResult = await ToolRouter.parseAndExecuteToolCalls(toolName: toolName, toolArguments: toolArguments)
+                    response.toolCallName = toolName
+                    response.toolCallArguments = toolArguments
 
                     switch toolResult {
                     case .success(let success):

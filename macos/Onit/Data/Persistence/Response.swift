@@ -17,7 +17,7 @@ class Response {
     var model: String?
 
     // Tool call properties
-    var toolCallFunctionName: String?
+    var toolCallName: String?
     var toolCallArguments: String?
     var toolCallResult: String?
     var toolCallSuccess: Bool?
@@ -39,7 +39,7 @@ class Response {
     }
 
     var hasToolCall: Bool {
-        toolCallFunctionName?.isEmpty == false
+        toolCallName?.isEmpty == false
     }
 }
 

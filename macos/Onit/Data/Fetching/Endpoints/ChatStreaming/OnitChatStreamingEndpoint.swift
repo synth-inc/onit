@@ -40,7 +40,7 @@ struct OnitChatStreamingEndpoint: StreamingEndpoint {
         if let data = event.data?.data(using: .utf8) {
             let response = try JSONDecoder().decode(Response.self, from: data)
 
-            return StreamingEndpointResponse(content: response.content, functionName: response.functionName, functionArguments: response.functionArguments)
+            return StreamingEndpointResponse(content: response.content, toolName: response.toolName, toolArguments: response.toolArguments)
         }
         return nil
     }
@@ -76,8 +76,8 @@ struct OnitImageSource: Codable {
 
 struct OnitChatStreamingResponse: Codable {
     let content: String?
-    let functionName: String?
-    let functionArguments: String?
+    let toolName: String?
+    let toolArguments: String?
 }
 
 struct OnitChatStreamingError: Codable {
