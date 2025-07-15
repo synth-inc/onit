@@ -14,14 +14,26 @@ class AccessibilityParserBase: AccessibilityParserLogic {
     // MARK: - AccessibilityParserLogic
 
     /** See ``AccessibilityParserLogic`` parse function */
-    func parse(element: AXUIElement) async -> [String: String] {
+    func parse(element: AXUIElement, includeBoundingBoxes: Bool = false) async -> ([String: String], [TextBoundingBox]?) {
+
         var results: [String: String] = [:]
+        var boundingBoxes: [TextBoundingBox] = []
         
         if let selectedText = element.selectedText(),
            HighlightedTextValidator.isValid(element: element) {
             results[AccessibilityParsedElements.highlightedText] = selectedText
+            
+            if includeBoundingBoxes, let frame = element.getFrame() {
+                let textBoundingBox = TextBoundingBox(
+                    text: selectedText,
+                    boundingBox: frame,
+                    elementRole: element.role(),
+                    elementDescription: element.description()
+                )
+                boundingBoxes.append(textBoundingBox)
+            }
         }
 
-        return results
+        return (results, includeBoundingBoxes ? boundingBoxes : nil)
     }
 }

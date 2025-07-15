@@ -16,7 +16,7 @@ struct ContextMenu: View {
     
     // TODO: LOYD - Might want to delete later, as browser tabs are currently not implemented?
     var showBrowserTabs: Bool {
-        return windowState.showContextMenuBrowserTabs
+        return windowState?.showContextMenuBrowserTabs ?? false
     }
     
     var body: some View {
@@ -38,7 +38,7 @@ struct ContextMenu: View {
             }
         }
         .background {
-            if windowState.showContextMenu {
+            if windowState?.showContextMenu ?? false {
                 upListener
                 downListener
             }
@@ -82,7 +82,7 @@ extension ContextMenu {
             icon: .chevLeft
         ) {
             searchQuery = ""
-            windowState.showContextMenuBrowserTabs = false
+            windowState?.showContextMenuBrowserTabs = false
         }
     }
     
@@ -106,11 +106,11 @@ extension ContextMenu {
 
 extension ContextMenu {
     private func closeContextMenu() {
-        windowState.showContextMenu = false
+        windowState?.showContextMenu = false
     }
     
     private func showBrowserTabsSubMenu() {
         searchQuery = ""
-        windowState.showContextMenuBrowserTabs = true
+        windowState?.showContextMenuBrowserTabs = true
     }
 }

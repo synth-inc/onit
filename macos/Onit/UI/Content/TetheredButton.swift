@@ -13,6 +13,8 @@ struct TetheredButton: View {
     @Environment(\.openSettings) var openSettings
     @Environment(\.windowState) private var state
     
+    @State private var isHovering: Bool = false
+    
     static let width: CGFloat = 19
     static let height: CGFloat = 53
     
@@ -21,6 +23,7 @@ struct TetheredButton: View {
     }
     
     private var spacerHeight: CGFloat? {
+        guard let state = state else { return nil }
         guard let relativePosition = state.tetheredButtonYRelativePosition else { return nil }
         
         let windowHeight: CGFloat
@@ -41,7 +44,7 @@ struct TetheredButton: View {
             return .degrees(0)
         }
 
-        if state.trackedScreen != nil || state.panel == nil || state.panel?.resizedApplication == true {
+        if state?.trackedScreen != nil || state?.panel == nil || state?.panel?.resizedApplication == true {
             return .degrees(0)
         } else {
             return .degrees(180)
@@ -60,27 +63,88 @@ struct TetheredButton: View {
             Button(action: {
                 PanelStateCoordinator.shared.closePanel(for: state)
             }) {
-                Image(.smallChevRight)
-                    .renderingMode(.template)
-                    .foregroundColor(.white)
-                    .rotationEffect(arrowRotation)
-                    .frame(width: Self.width, height: Self.height, alignment: .center)
+                // Transparent rectangle that fills the entire button area
+                RoundedRectangle(cornerRadius: Self.width / 2)
+                    .fill(isHovering ? .gray800 : .black)
+                    .frame(width: Self.width, height: Self.height)
+                    .animation(.easeInOut(duration: 0.15), value: isHovering)
+                    .overlay {
+                        Image(.smallChevRight)
+                            .renderingMode(.template)
+                            .foregroundColor(.white)
+                            .rotationEffect(arrowRotation)
+                    }
             }
+            .buttonStyle(.plain)
             .background {
                 RoundedRectangle(cornerRadius: Self.width / 2)
-                    .fill(.black)
+                    .fill(isHovering ? .gray800 : .black)
+                    .animation(.easeInOut(duration: 0.15), value: isHovering)
             }
-            .tooltip(prompt: fitActiveWindowPrompt)
+             .onHover { hovering in
+                 isHovering = hovering
+                
+                 if hovering {
+                     TooltipManager.shared.setTooltip(
+                         Tooltip(prompt: fitActiveWindowPrompt)
+                     )
+                 } else {
+                     TooltipManager.shared.setTooltip(nil)
+                 }
+             }
+            .overlay {
+                TetheredButtonBorder(cornerRadius: Self.width / 2)
+                    .stroke(
+                        .gray500,
+                        lineWidth: 1.5
+                    )
+            }
             Spacer()
-        }
-        .onAppear {
-            if let defaultEnvironmentSource = state.defaultEnvironmentSource {
-                AnalyticsManager.Technical.defaultWindowState(source: defaultEnvironmentSource)
-            }
         }
         .edgesIgnoringSafeArea(.top)
         .frame(maxHeight: .infinity, alignment: .top)
         .zIndex(1)
+    }
+}
+
+struct TetheredButtonBorder: Shape {
+    let cornerRadius: CGFloat
+    
+    func path(in rect: CGRect) -> Path {
+        var path = Path()
+        
+        let inset: CGFloat = 0.75 // Half the line width to draw inside
+        let midX = rect.midX
+        let adjustedCornerRadius = cornerRadius - inset
+        let extensionPastHalf: CGFloat = 1.5 // Extra pixels past center for clean connection
+        
+        // Start from middle of top edge + extension (inset)
+        path.move(to: CGPoint(x: midX + extensionPastHalf, y: rect.minY + inset))
+        
+        // Draw left half of top edge to start of curve
+        path.addLine(to: CGPoint(x: rect.minX + cornerRadius, y: rect.minY + inset))
+        
+        // Draw top-left curve
+        path.addArc(center: CGPoint(x: rect.minX + cornerRadius, y: rect.minY + cornerRadius),
+                   radius: adjustedCornerRadius,
+                   startAngle: .degrees(270),
+                   endAngle: .degrees(180),
+                   clockwise: true)
+        
+        // Draw full left edge
+        path.addLine(to: CGPoint(x: rect.minX + inset, y: rect.maxY - cornerRadius))
+        
+        // Draw bottom-left curve
+        path.addArc(center: CGPoint(x: rect.minX + cornerRadius, y: rect.maxY - cornerRadius),
+                   radius: adjustedCornerRadius,
+                   startAngle: .degrees(180),
+                   endAngle: .degrees(90),
+                   clockwise: true)
+        
+        // Draw left half of bottom edge to middle + extension
+        path.addLine(to: CGPoint(x: midX + extensionPastHalf, y: rect.maxY - inset))
+        
+        return path
     }
 }
 

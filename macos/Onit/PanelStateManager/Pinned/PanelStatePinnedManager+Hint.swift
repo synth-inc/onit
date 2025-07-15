@@ -25,8 +25,9 @@ extension PanelStatePinnedManager {
         }
     }
 
-    private func showTetherWindow(activeScreen: NSScreen) {
-        let tetherView = ExternalTetheredButton(
+    func showTetherWindow(activeScreen: NSScreen) {
+         let tetherView = ExternalTetheredButton(
+
             onClick: { [weak self] in
                 self?.tetherHintClicked(screen: activeScreen)
             },

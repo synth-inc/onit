@@ -18,18 +18,18 @@ class ClipboardParser: AccessibilityParserLogic {
     // MARK: - AccessibilityParserLogic
 
     /** See ``AccessibilityParserLogic`` parse function */
-    func parse(element: AXUIElement) async -> [String: String] {
+    func parse(element: AXUIElement, includeBoundingBoxes: Bool = false) async -> ([String: String], [TextBoundingBox]?) {
         /// Prevent the system from looping because highlighting text emits a new event.
         if let lastParsingDate = lastParsingDate,
            let lastParsingScreen = lastParsingScreen,
            Date().timeIntervalSince(lastParsingDate) < 1 {
-            return [AccessibilityParsedElements.screen: lastParsingScreen]
+            return ([AccessibilityParsedElements.screen: lastParsingScreen], nil)
         }
         
         let previousClipboardContent = readFromPasteboard()
         
         guard copyToClipboard() else {
-            return [:]
+            return ([:], nil)
         }
         
         deselectWithArrowKeys()
@@ -41,7 +41,7 @@ class ClipboardParser: AccessibilityParserLogic {
         lastParsingDate = Date()
         lastParsingScreen = screen
         
-        return [AccessibilityParsedElements.screen: screen]
+        return ([AccessibilityParsedElements.screen: screen], nil)
     }
     
     private func copyToClipboard() -> Bool {

@@ -321,7 +321,7 @@ class AccessibilityNotificationsManager: ObservableObject {
                         self.screenResult.applicationName = appName
                         self.screenResult.applicationTitle = appTitle
                         self.screenResult.appBundleUrl = appBundleUrl
-                        if let googleDriveError = error as? GoogleDriveError {
+                        if let googleDriveError = error as? GoogleDriveServiceError {
                             self.screenResult.errorMessage = "\(googleDriveError.localizedDescription)"
                             switch googleDriveError {
                             case .notFound:
@@ -473,8 +473,7 @@ class AccessibilityNotificationsManager: ObservableObject {
             
             Task {
                 do {
-                    let results = try await AccessibilityParser.shared.getAllTextInElement(windowElement: mainWindow)
-                    
+                    let (results, boundingBoxes) = try await AccessibilityParser.shared.getAllTextInElement(windowElement: mainWindow)
                     self.handleWindowContent(
                         results,
                         for: state,
@@ -525,8 +524,6 @@ class AccessibilityNotificationsManager: ObservableObject {
         results?.removeValue(forKey: AccessibilityParsedElements.applicationName)
         results?.removeValue(forKey: AccessibilityParsedElements.applicationTitle)
         results?.removeValue(forKey: AccessibilityParsedElements.highlightedText)
-        
-        self.processSelectedText(highlightedText, elementFrame: nil)
         
         self.screenResult.elapsedTime = elapsedTime
         self.screenResult.applicationName = appName

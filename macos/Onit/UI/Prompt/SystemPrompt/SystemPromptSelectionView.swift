@@ -23,7 +23,7 @@ struct SystemPromptSelectionView: View {
     }
     
     private var suggestedPrompts: [SystemPrompt] {
-        state.promptSuggestionService?.suggestedPrompts ?? []
+        state?.promptSuggestionService?.suggestedPrompts ?? []
     }
     
     private var allPrompts: [SystemPrompt] {
@@ -57,7 +57,7 @@ struct SystemPromptSelectionView: View {
                     icon: .cross,
                     iconSize: 10
                 ) {
-                    state.systemPromptState.shouldShowSelection = false
+                    state?.systemPromptState.shouldShowSelection = false
                 }
             },
             search: MenuList.Search(

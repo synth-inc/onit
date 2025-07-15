@@ -91,7 +91,7 @@ struct ChatSystemPromptView: View {
                                     .foregroundStyle(.blue300)
                                     .underline()
                                     .onTapGesture {
-                                        state.newChat(shouldSystemPrompt: true)
+                                        state?.newChat(shouldSystemPrompt: true)
                                     }
                             }
                         }

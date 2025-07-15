@@ -15,10 +15,8 @@ struct InputButtons: View {
     var input: Input
 
     var body: some View {
-        @Bindable var state = state
-
         Group {
-            if input == state.pendingInput {
+            if let state = state, input == state.pendingInput {
                 Button {
                     state.pendingInput = nil
                 } label: {
@@ -27,6 +25,9 @@ struct InputButtons: View {
                 }
                 .buttonStyle(DarkerButtonStyle())
             }
+
+            CopyButton(text: input.selectedText)
+                .frame(width: 20, height: 20)
 
             Button {
                 inputExpanded.toggle()

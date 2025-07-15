@@ -110,6 +110,10 @@ struct KeyboardShortcutsManager {
                     state.newChat()
                 case .toggleLocalMode:
                     Defaults[.mode] = Defaults[.mode] == .local ? .remote : .local
+                case .addForegroundWindowToContext:
+                    if let foregroundWindow = state.foregroundWindow {
+                        state.addWindowToContext(window: foregroundWindow.element)
+                    }
                 default:
                     print("KeyboardShortcut not handled: \(name)")
                 }

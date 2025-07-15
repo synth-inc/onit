@@ -25,19 +25,31 @@ final class GradientRotationState: ObservableObject {
 }
 
 struct ExternalTetheredButtonStyle: ButtonStyle {
-    @Binding var hovering: Bool
-    @Binding var containsInput: Bool
-
+    @Binding var dragStartTime: Date?
+    @Binding var isHovering: Bool
+    
+    var capturedHighlightedText: Bool
+    
+    var buttonWidth = ExternalTetheredButton.width
+    var buttonHeight = ExternalTetheredButton.height
+    var buttonBorderWidth = ExternalTetheredButton.borderWidth
+    var buttonCornerRadius: CGFloat = 12
+    
     @ObservedObject private var rotationState = GradientRotationState.shared
     var tooltipText: String
 
     @Namespace private var animation
     
+    @State var isPressed: Bool = false
+    
+    private var isDragging: Bool {
+        dragStartTime != nil
+    }
+    
     func makeBody(configuration: Configuration) -> some View {
-        
         ZStack {
-            if containsInput {
-                backgroundForInput
+            if capturedHighlightedText {
+                highlightedTextGlow
                     .matchedGeometryEffect(id: "background", in: animation)
                     .transition(.opacity.animation(.easeInOut(duration: 0.3)))
             }
@@ -47,28 +59,41 @@ struct ExternalTetheredButtonStyle: ButtonStyle {
                     clickBackground(configuration.isPressed)
                 }
                 .background {
-                    RoundedCorners(radius: ExternalTetheredButton.width * 0.66, corners: .left)
-                        .fill(hovering ? .gray800 : .black)
-                        .padding([.leading, .top, .bottom], containsInput ? ExternalTetheredButton.borderWidth : 0)
+                    RoundedCorners(radius: buttonCornerRadius, corners: .left)
+                        .fill(.gray800)
                 }
                 .overlay {
-                    RoundedCorners(radius: (ExternalTetheredButton.width + 2) * 0.66, corners: .left)
-                        .stroke(Color.gray500, lineWidth: 1)
+                    RoundedCorners(radius: buttonCornerRadius, corners: .left)
+                        .stroke(
+                            isHovering ? .gray300 : .gray600,
+                            lineWidth: buttonBorderWidth
+                        )
                 }
         }
         .onHover { hovering in
             handleHover(hovering)
         }
         .onChange(of: configuration.isPressed) { _, pressed in
+            isPressed = pressed
+            
             if pressed {
                 TooltipManager.shared.setTooltip(nil, delayEnd: 0)
             }
         }
-        .scaleEffect(hovering ? 1.3 : 1.0, anchor: .trailing)
-        .animation(.spring(response: 0.3, dampingFraction: 0.6), value: hovering)
+        .scaleEffect(
+            isDragging || isPressed ? 1.2 : isHovering ? 1.3 : 1.0,
+            anchor: .trailing
+        )
+        .animation(
+            .spring(
+                response: 0.3,
+                dampingFraction: 0.6
+            ),
+            value: isHovering
+        )
     }
-
-    private var backgroundForInput: some View {
+    
+    private var highlightedTextGlow: some View {
         HStack {
             Rectangle()
                 .fill(
@@ -78,20 +103,28 @@ struct ExternalTetheredButtonStyle: ButtonStyle {
                         Color(red: 0.43, green: 0.42, blue: 0.99)
                     ]), center: .center)
                 )
-                .frame(width: ExternalTetheredButton.height, height: ExternalTetheredButton.height)
+                .frame(
+                    width: buttonHeight,
+                    height: buttonHeight
+                )
                 .rotationEffect(.degrees(rotationState.rotation))
         }
         .mask {
-            RoundedCorners(radius: (ExternalTetheredButton.width + (ExternalTetheredButton.borderWidth * 2))  * 0.66, corners: .left)
-                .frame(width: ExternalTetheredButton.width + (ExternalTetheredButton.borderWidth * 2),
-                       height: ExternalTetheredButton.height + (ExternalTetheredButton.borderWidth * 2))
+            RoundedCorners(radius: buttonCornerRadius, corners: .left)
+                .frame(
+                    width: buttonWidth + (buttonBorderWidth * 2),
+                    height: buttonHeight + (buttonBorderWidth * 2)
+                )
         }
         .blur(radius: 2)
-        .frame(width: ExternalTetheredButton.width + (ExternalTetheredButton.borderWidth * 2))
+        .frame(width: buttonWidth + (buttonBorderWidth * 2))
         .onAppear {
             rotationState.ensureAnimationStarted()
             
-            withAnimation(.linear(duration: 5).repeatForever(autoreverses: false)) {
+            withAnimation(
+                .linear(duration: 5)
+                .repeatForever(autoreverses: false)
+            ) {
                 rotationState.rotation += 360
             }
         }
@@ -99,13 +132,13 @@ struct ExternalTetheredButtonStyle: ButtonStyle {
     
     @ViewBuilder
     private func clickBackground(_ clicked: Bool) -> some View {
-        RoundedCorners(radius: (ExternalTetheredButton.width * 1.3) * 0.66, corners: .left)
+        RoundedCorners(radius: buttonCornerRadius, corners: .left)
             .fill(.gray900)
             .opacity(clicked ? 1 : 0)
     }
 
     private func handleHover(_ hovering: Bool) {
-        self.hovering = hovering
+        self.isHovering = hovering
 
         if hovering {
             TooltipManager.shared.setTooltip(Tooltip(prompt: tooltipText))

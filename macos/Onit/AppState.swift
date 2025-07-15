@@ -23,8 +23,8 @@ class AppState: NSObject, SPUUpdaterDelegate {
                                                userDriverDelegate: nil)
     
     var remoteFetchFailed: Bool = false
-    var localFetchFailed: Bool = false
-    
+    var localFetchFailed: Bool = false 
+
     var account: Account? {
         didSet {
             if account == nil {
@@ -161,6 +161,7 @@ class AppState: NSObject, SPUUpdaterDelegate {
 
                 // Update the availableRemoteModels with the newly fetched models
                 let newModelIds = Set(models.map { $0.id })
+                
                 let existingModelIds = Set(Defaults[.availableRemoteModels].map { $0.id })
 
                 let newModels = models.filter { !existingModelIds.contains($0.id) }
@@ -201,6 +202,27 @@ class AppState: NSObject, SPUUpdaterDelegate {
         } catch {
             print("Error fetching remote models:", error)
             remoteFetchFailed = true
+        }
+    }
+    
+    func handleDeeplink(_ url: URL) {
+        guard url.scheme == "onit" else {
+            return
+        }
+        
+        guard let components = URLComponents(url: url, resolvingAgainstBaseURL: true) else {
+            print("Invalid URL: \(url)")
+            return
+        }
+        
+        // Handle different deeplink actions based on path
+        switch components.path {
+        case "/update", "/check-for-updates":
+            handleUpdateDeeplink()
+        default:
+            // For backwards compatibility, if no path is specified, assume it's a token login
+            handleTokenLogin(url)
+            
         }
     }
     
@@ -249,6 +271,12 @@ class AppState: NSObject, SPUUpdaterDelegate {
                 print("Login by token failed with error: \(error)")
             }
         }
+    }
+    
+    func handleUpdateDeeplink() {
+        // Activate the app to bring it to the foreground
+        NSApp.activate(ignoringOtherApps: true)
+        checkForAvailableUpdateWithDownload()
     }
     
     // MARK: - Alert Functions

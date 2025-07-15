@@ -46,47 +46,53 @@ struct SetUpDialogs: View {
     let scrollMaxHeight: CGFloat = 230
 
     var body: some View {
-        ScrollView(showsIndicators: false) {
-            VStack {
-                content
-            }
-            .onHeightChanged(callback: updateHeight)
-            .onChange(of: availableLocalModels.count) { _, new in
-                if new != 0 {
-                    seenLocal = true
+        if let state = state {
+            ScrollView(showsIndicators: false) {
+                VStack {
+                    content
                 }
+                .onHeightChanged(callback: updateHeight)
+                .onChange(of: availableLocalModels.count) { _, new in
+                    if new != 0 {
+                        seenLocal = true
+                    }
+                }
+                .padding(.bottom, 4) 
             }
-            .padding(.bottom, 4) 
+            .frame(maxHeight: min(state.setUpHeight, scrollMaxHeight))
+            .overlay(
+                Group {
+                    if state.setUpHeight >= scrollMaxHeight {
+                        LinearGradient(
+                            gradient: Gradient(stops: [
+                                .init(color: Color.black, location: 0),
+                                .init(color: Color.black.opacity(0), location: 1)
+                            ]),
+                            startPoint: .bottom,
+                            endPoint: .top
+                        )
+                        .frame(height: 50)
+                    }
+                },
+                alignment: .bottom
+            )
+        } else {
+            EmptyView()
         }
-        .frame(maxHeight: min(state.setUpHeight, scrollMaxHeight))
-        .overlay(
-            Group {
-                if state.setUpHeight >= scrollMaxHeight {
-                    LinearGradient(
-                        gradient: Gradient(stops: [
-                            .init(color: Color.black, location: 0),
-                            .init(color: Color.black.opacity(0), location: 1)
-                        ]),
-                        startPoint: .bottom,
-                        endPoint: .top
-                    )
-                    .frame(height: 50)
-                }
-            },
-            alignment: .bottom
-        )
     }
     
     private func updateHeight(newHeight: CGFloat) {
         debounceTask?.cancel()
         
         let task = DispatchWorkItem {
-            guard state.panel?.isVisible == true else {
-                state.setUpHeight = 0
-                return
+            DispatchQueue.main.async {
+                guard state?.panel?.isVisible == true else {
+                    state?.setUpHeight = 0
+                    return
+                }
+                
+                state?.setUpHeight = newHeight
             }
-            
-            state.setUpHeight = newHeight
         }
         debounceTask = task
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.3, execute: task)

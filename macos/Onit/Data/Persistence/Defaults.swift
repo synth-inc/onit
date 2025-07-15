@@ -133,6 +133,12 @@ extension Defaults.Keys {
     static let showOnboardingAccessibility = Key<Bool>("showOnboardingAccessibility", default: true)
     static let authFlowStatus = Key<AuthFlowStatus>("authFlowStatus", default: .hideAuth)
     
+    // Tethered Button Menu
+    static let tetheredButtonShowAppIcons = Key<Bool>("tetheredButtonShowAppIcons", default: true)
+    static let tetheredButtonHiddenApps = Key<[String: Bool]>("tetheredButtonHiddenApps", default: [:])
+    static let tetheredButtonHideAllApps = Key<Bool>("tetheredButtonHideAllApps", default: false)
+    static let tetheredButtonHideAllAppsTimerDate = Key<Date?>("tetheredButtonHideAllAppsTimerDate", default: nil)
+    
     // Alerts
     static let showTwoWeekProTrialEndedAlert = Key<Bool>("showTwoWeekProTrialEndedAlert", default: false)
     static let hasClosedTrialEndedAlert = Key<Bool>("hasClosedTrialEndedAlert", default: false)
@@ -144,6 +150,10 @@ extension Defaults.Keys {
     static let stopMode = Key<StopMode>("stopMode", default: .removePartial)
     static let stopModeUserConfigured = Key<Bool>("stopModeUserConfigured", default: false)
 
+    // OCR Comparison - BETA Only.
+    static let ocrComparisonResults = Key<Data?>("ocrComparisonResults", default: nil)
+    static let enableOCRComparison = Key<Bool>("enableOCRComparison", default: false)
+    static let enableAutoOCRComparison = Key<Bool>("enableAutoOCRComparison", default: false)
 }
 
 extension NSRect: Defaults.Serializable {

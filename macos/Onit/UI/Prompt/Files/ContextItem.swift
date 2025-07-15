@@ -26,13 +26,14 @@ struct ContextItem: View {
             case .auto(let autoContext):
                 ContextTag(
                     text: name,
-                    textColor: isEditing ? .T_2 : .white,
-                    background: isEditing ? (hasError ? .redDisabled : .gray500) : .clear,
-                    hoverBackground: isEditing ? (hasError ? .redDisabledHover : .gray400) : .gray600,
+                    textColor: isEditing ? autoContextTextColor : .white,
+                    hoverTextColor: isEditing ? autoContextHoverTextColor : .white,
+                    background: isEditing ? autoContextBackground : .clear,
+                    hoverBackground: isEditing ? autoContextHoverBackground : .gray600,
                     maxWidth: isEditing ? 155 : .infinity,
                     iconBundleURL: autoContext.appBundleUrl,
-                    tooltip: isEditing ? (hasError ? errorMessage : name) : "View auto-context file",
-                    errorDotColor: hasError ? .red : nil,
+                    tooltip: isEditing ? name : "View auto-context file",
+                    errorDotColor: autoContextErrorDotColor,
                     action: showContextWindow,
                     removeAction: isEditing ? { removeContextItem() } : nil   
                 )
@@ -56,41 +57,103 @@ struct ContextItem: View {
     var name: String {
         switch item {
         case .auto(let autoContext):
-            autoContext.appTitle
+            var name = autoContext.appTitle
+            if hasError {
+                name = errorMessage
+            } else if hasWarning {
+                name = warningMessage
+            }
+            if let matchPercentage = autoContext.ocrMatchingPercentage {
+                name = "\(matchPercentage)% \(name)"
+            }
+            return name
         case .file(let url), .image(let url):
-            url.lastPathComponent
+            return url.lastPathComponent
         case .error(_, let error):
-            error.localizedDescription
+            return error.localizedDescription
         case .tooBig:
-            "Upload exceeds model limit"
+            return "Upload exceeds model limit"
         case .webSearch(let title, _, _, _):
-            title
+            return title
         case .web(let websiteUrl, let websiteTitle, _):
-            websiteTitle.isEmpty ? websiteUrl.host() ?? websiteUrl.absoluteString : websiteTitle
+            return websiteTitle.isEmpty ? websiteUrl.host() ?? websiteUrl.absoluteString : websiteTitle
         }
     }
     
-    
-     private var hasError: Bool {
-         if case .auto(let autoContext) = item {
-             return autoContext.appContent["error"] != nil
-         }
-         return false
-     }
+    private var hasError: Bool {
+        if case .auto(let autoContext) = item {
+            return autoContext.appContent["error"] != nil
+        }
+        return false
+    }
      
-     private var errorMessage: String {
-         if case .auto(let autoContext) = item,
-            let error = autoContext.appContent["error"] as? String {
-             return error
-         }
-         return name
-     }
+    private var errorMessage: String {
+        if case .auto(let autoContext) = item,
+            let error = autoContext.appContent["error"] {
+            return error
+        }
+        return name
+    }
+
+    private var hasWarning: Bool {
+        if case .auto(let autoContext) = item {
+            return autoContext.appContent["warning"] != nil
+        }
+        return false
+    }
+
+    private var warningMessage: String {
+        if case .auto(let autoContext) = item,
+           let warning = autoContext.appContent["warning"] {
+            return warning
+        }
+        return name
+    }
+        
+    private var autoContextTextColor: Color {
+        return .T_2
+    }
+    
+    private var autoContextHoverTextColor: Color {
+        return .white
+    }
+    
+    private var autoContextBackground: Color {
+        if hasError {
+            return .redDisabled
+        } else if hasWarning {
+            return .warningDisabled
+        } else {
+            return .gray500
+        }
+    }
+    
+    private var autoContextHoverBackground: Color {
+        if hasError {
+            return .redDisabledHover
+        } else if hasWarning {
+            return .warningDisabledHover
+        } else {
+            return .gray400
+        }
+    }
+    
+    private var autoContextErrorDotColor: Color? {
+        if hasError {
+            return .red
+        } else if hasWarning {
+            return .yellow
+        } else {
+            return nil
+        }
+    }
 }
 
 // MARK: - Private Functions
 
 extension ContextItem {
     private func showContextWindow() {
+        guard let state = state else { return }
         ContextWindowsManager.shared.showContextWindow(
             windowState: state,
             context: item
@@ -101,7 +164,7 @@ extension ContextItem {
         ContextWindowsManager.shared.deleteContextItem(
             item: item
         )
-        state.removeContext(context: item)
+        state?.removeContext(context: item)
     }
 }
 

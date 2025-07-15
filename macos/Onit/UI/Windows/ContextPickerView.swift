@@ -14,7 +14,7 @@ struct ContextPickerView: View {
     @Default(.autoContextFromCurrentWindow) var autoContextFromCurrentWindow
     
     var autoContextDisabled: Bool {
-        return autoContextFromCurrentWindow && windowState.foregroundWindow != nil
+        return autoContextFromCurrentWindow && windowState?.foregroundWindow != nil
     }
     
     var body: some View {
@@ -26,7 +26,7 @@ struct ContextPickerView: View {
             ) {
                 AnalyticsManager.ContextPicker.uploadFilePressed()
                 OverlayManager.shared.dismissOverlay()
-                windowState.showFileImporter = true
+                windowState?.showFileImporter = true
             }
             
             ContextPickerItemView(
@@ -61,7 +61,7 @@ extension ContextPickerView {
         } else if !autoContextFromCurrentWindow {
             return "Click to enable"
         } else {
-            if let foregroundWindow = windowState.foregroundWindow {
+            if let foregroundWindow = windowState?.foregroundWindow {
                 return WindowHelpers.getWindowName(window: foregroundWindow.element)
             } else {
                 return "Current window"
@@ -71,6 +71,8 @@ extension ContextPickerView {
     
     private func addWindowToContext() {
         AnalyticsManager.ContextPicker.autoContextPressed()
+        
+        guard let windowState = windowState else { return }
         
         if let foregroundWindow = windowState.foregroundWindow {
             windowState.addWindowToContext(

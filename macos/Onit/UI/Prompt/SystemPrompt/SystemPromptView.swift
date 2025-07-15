@@ -58,7 +58,7 @@ struct SystemPromptView: View {
                 .frame(width: 4)
             
             Button {
-                windowState.systemPromptState.shouldShowSystemPrompt = false
+                windowState?.systemPromptState.shouldShowSystemPrompt = false
             } label: {
                 Image(.remove)
                     .resizable()
@@ -67,10 +67,10 @@ struct SystemPromptView: View {
             }
         }
         .popover(isPresented: .init(
-            get: { showSelection || windowState.systemPromptState.shouldShowSelection },
+            get: { showSelection || windowState?.systemPromptState.shouldShowSelection == true },
             set: {
                 showSelection = $0
-                windowState.systemPromptState.shouldShowSelection = $0
+                windowState?.systemPromptState.shouldShowSelection = $0
             }
         ), arrowEdge: .leading) {
             SystemPromptSelectionView(showNewPrompt: $showNewPrompt)
@@ -87,7 +87,7 @@ struct SystemPromptView: View {
         .onChange(of: shouldSavePrompt) { _, new in
             if new { addPrompt() }
         }
-        .onChange(of: windowState.systemPromptId, initial: true) { _, systemPromptId in
+        .onChange(of: windowState?.systemPromptId, initial: true) { _, systemPromptId in
             guard let prompts = try? modelContext.fetch(FetchDescriptor<SystemPrompt>()),
                   let prompt = prompts.first(where: { $0.id == systemPromptId }) else {
                 selectedPrompt = .outputOnly
@@ -123,7 +123,7 @@ struct SystemPromptView: View {
         do {
             try modelContext.save()
             KeyboardShortcutsManager.register(systemPrompt: promptToAdd)
-            windowState.systemPromptId = promptToAdd.id
+            windowState?.systemPromptId = promptToAdd.id
             promptToAdd = SystemPrompt()
             shouldSavePrompt = false
         } catch {

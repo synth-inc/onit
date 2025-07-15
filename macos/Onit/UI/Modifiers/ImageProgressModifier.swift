@@ -13,7 +13,7 @@ struct ImageProgressModifier: ViewModifier {
     var url: URL
 
     var progress: Int? {
-        if let progress = state.imageUploads[url] {
+        if let progress = state?.imageUploads[url] {
             switch progress {
             case .completed:
                 return 100
@@ -26,7 +26,7 @@ struct ImageProgressModifier: ViewModifier {
     }
 
     var done: Bool {
-        if let progress = state.imageUploads[url] {
+        if let progress = state?.imageUploads[url] {
             switch progress {
             case .completed:
                 return true

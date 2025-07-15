@@ -21,7 +21,11 @@ class AppCoordinator {
     private let notificationsManager: AccessibilityNotificationsManager
     private let panelStateCoordinator: PanelStateCoordinator
     private let featureFlagManager: FeatureFlagManager
-    
+
+    #if DEBUG || BETA
+    private let debugManager : DebugManager
+    #endif
+
     private var stateChangesCancellable: AnyCancellable?
     
     // MARK: - Initializer
@@ -33,6 +37,9 @@ class AppCoordinator {
         notificationsManager = AccessibilityNotificationsManager.shared
         panelStateCoordinator = PanelStateCoordinator.shared
         featureFlagManager = FeatureFlagManager.shared
+        #if DEBUG || BETA
+        debugManager = DebugManager.shared
+        #endif
         
         observerManager.delegate = notificationsManager
         

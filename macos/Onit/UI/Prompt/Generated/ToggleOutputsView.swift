@@ -12,6 +12,8 @@ struct ToggleOutputsView: View {
     
     var prompt: Prompt
 
+    private var isTyping: Bool { windowState?.isTyping ?? false }
+    
     var body: some View {
         HStack(spacing: 0) {
             `left`
@@ -34,7 +36,7 @@ struct ToggleOutputsView: View {
         .foregroundStyle(prompt.canDecrementGeneration ? .FG : .gray300)
         .disabled(!prompt.canDecrementGeneration)
         .background {
-            if !windowState.isTyping {
+            if isTyping {
                 Button { decrementGenerationIndex() }
                 label: { EmptyView() }
                     .keyboardShortcut(.leftArrow, modifiers: [])
@@ -64,7 +66,7 @@ struct ToggleOutputsView: View {
         .foregroundStyle(prompt.canIncrementGeneration ? .FG : .gray300)
         .disabled(!prompt.canIncrementGeneration)
         .background {
-            if !windowState.isTyping {
+            if isTyping {
                 Button { incrementGenerationIndex() }
                 label: { EmptyView() }
                     .keyboardShortcut(.rightArrow, modifiers: [])

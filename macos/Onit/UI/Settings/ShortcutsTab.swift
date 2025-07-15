@@ -10,11 +10,14 @@ import SwiftUI
 import Defaults
 
 struct ShortcutsTab: View {
+    @ObservedObject private var accessibilityPermissionManager = AccessibilityPermissionManager.shared
+    @Default(.autoContextFromCurrentWindow) var autoContextFromCurrentWindow
     @Default(.escapeShortcutDisabled) var escapeShortcutDisabled
     
     var body: some View {
         Form {
             Section {
+            } header: {
                 KeyboardShortcuts.Recorder(
                     "Launch Onit", name: .launch
                 )
@@ -36,6 +39,13 @@ struct ShortcutsTab: View {
                     "Switch Local vs Remote", name: .toggleLocalMode
                 )
                 .padding()
+                
+                if accessibilityPermissionManager.accessibilityPermissionStatus == .granted && autoContextFromCurrentWindow {
+                    KeyboardShortcuts.Recorder(
+                        "Add Current Window to Context", name: .addForegroundWindowToContext
+                    )
+                    .padding()
+                }
                 
                 Toggle("Disable 'ESC' shortcut", isOn: $escapeShortcutDisabled)
                 .padding()
