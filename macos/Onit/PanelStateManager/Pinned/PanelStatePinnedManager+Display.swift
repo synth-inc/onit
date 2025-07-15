@@ -115,6 +115,8 @@ extension PanelStatePinnedManager {
 
         resetFramesOnAppChange()
         
+        
+        
         NSAnimationContext.runAnimationGroup { context in
             context.duration = animationDuration
             context.timingFunction = CAMediaTimingFunction(name: .easeIn)
@@ -122,7 +124,6 @@ extension PanelStatePinnedManager {
         } completionHandler: {
             // Disable rasterization after animation
             panel.contentView?.layer?.shouldRasterize = false
-
             panel.hide()
             panel.isAnimating = false
             panel.alphaValue = 0
@@ -131,7 +132,7 @@ extension PanelStatePinnedManager {
             // Once the panel is hidden, we should show the hint
             if let screen = self.attachedScreen {
                 self.attachedScreen = nil
-                self.debouncedShowTetherWindow(activeScreen: screen)
+                self.showTetherWindow(activeScreen: screen)
             }
         }
     }
