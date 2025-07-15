@@ -66,8 +66,10 @@ class TokenValidationManager {
         } catch let error as FetchingError {
             print("Error: \(error.localizedDescription)")
             state.setInvalid(provider: provider, error: error)
+            Self.setTokenIsValid(false, provider: provider)
         } catch {
             state.setInvalid(provider: provider, error: error)
+            Self.setTokenIsValid(false, provider: provider)
         }
 
         tokenValidation = state

@@ -630,7 +630,7 @@ class AppState: NSObject, SPUUpdaterDelegate {
         }
     }
     
-    var remoteProvidersCount: Int {
+    var remoteProvidersOnCount: Int {
         var count: Int = 0
         
         let providers: [AIModel.ModelProvider] = [.openAI, .anthropic, .xAI, .googleAI, .deepSeek, .perplexity]
