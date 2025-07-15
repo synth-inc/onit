@@ -218,8 +218,8 @@ extension OnitPanelState {
                             includeSearch: (useWebSearch && !useTavilySearch) ? true : nil)
                         for try await response in asyncText {
                             streamedResponse += response.content ?? ""
-                            if response.functionName != nil {
-                                functionName = response.functionName ?? ""
+                            if let responseFunctionName = response.functionName {
+                                functionName = responseFunctionName
                             }
                             functionArguments += response.functionArguments ?? ""
                         }
@@ -239,8 +239,8 @@ extension OnitPanelState {
                             tools: ToolRouter.activeTools,
                             includeSearch: (useWebSearch && !useTavilySearch) ? true : nil)
                         streamedResponse = chatResponse.content ?? ""
-						if chatResponse.functionName != nil {
-							functionName = chatResponse.functionName ?? ""
+						if let responseFunctionName = chatResponse.functionName {
+							functionName = responseFunctionName
 						}
 						functionArguments = chatResponse.functionArguments ?? ""
                     }
@@ -264,8 +264,8 @@ extension OnitPanelState {
                             model: model)
                         for try await response in asyncText {
                             streamedResponse += response.content ?? ""
-                            if response.functionName != nil {
-                                functionName = response.functionName ?? ""
+                            if let responseFunctionName = response.functionName {
+                                functionName = responseFunctionName
                             }
                             functionArguments += response.functionArguments ?? ""
                         }
