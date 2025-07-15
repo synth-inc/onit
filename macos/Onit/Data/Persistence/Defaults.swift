@@ -169,6 +169,9 @@ extension Defaults.Keys {
     
     // Screen recording
     static let screenRecordingPermissionAsked = Key<Bool>("screenRecordingPermissionAsked", default: false)
+    
+    // Timed Check Dates
+    static let lastCheckedValidRemoteTokens = Key<Date?>("lastCheckedValidRemoteTokens", default: nil)
 }
 
 extension NSRect: Defaults.Serializable {

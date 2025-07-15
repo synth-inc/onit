@@ -131,6 +131,25 @@ struct ContentView: View {
                         .animation(.spring(response: 0.3, dampingFraction: 0.8), value: appState.showProLimitAlert)
                     }
                 }
+                .onAppear {
+                    Task {
+                        let now: Date = Date()
+                        var shouldCheck: Bool = false
+                        
+                        if let mostRecentCheckDate = Defaults[.lastCheckedValidRemoteTokens] {
+                            /// Throttle remote token validity check to once every 24 hours.
+                            shouldCheck = now.timeIntervalSince(mostRecentCheckDate) >= 86400 /// 24 hours in seconds
+                        } else {
+                            /// First-time check.
+                            shouldCheck = true
+                        }
+                        
+                        guard shouldCheck else { return }
+                        
+                        await checkRemoteTokenValidity()
+                        Defaults[.lastCheckedValidRemoteTokens] = now
+                    }
+                }
             }
         }
         .background(Color.baseBG)
@@ -191,7 +210,7 @@ struct ContentView: View {
             let hasNoAvailableModels = !canAccessRemoteModels && availableLocalModels.isEmpty
             authFlowStatus = !appState.userLoggedIn && hasNoAvailableModels ? .showSignUp : .hideAuth
         }
-        .onChange(of: appState.remoteProvidersCount) { _, _ in
+        .onChange(of: appState.remoteProvidersOnCount) { _, _ in
             appState.setValidRemoteModel()
         }
         .onChange(of: visibleModelIds) { _, _ in
@@ -209,6 +228,30 @@ struct ContentView: View {
         } else {
             let hasNoAvailableModels = !appState.hasUserAPITokens && availableLocalModels.isEmpty
             authFlowStatus = hasNoAvailableModels ? .showSignUp : .hideAuth
+        }
+    }
+    
+    private func checkRemoteTokenValidity() async {
+        let providerTokens: [AIModel.ModelProvider: String?] = [
+            .openAI: Defaults[.openAIToken],
+            .anthropic: Defaults[.anthropicToken],
+            .xAI: Defaults[.xAIToken],
+            .googleAI: Defaults[.googleAIToken],
+            .deepSeek: Defaults[.deepSeekToken],
+            .perplexity: Defaults[.perplexityToken]
+        ]
+        
+        await withTaskGroup(
+            of: Void.self,
+            returning: Void.self
+        ) { group in
+            for (provider, providerToken) in providerTokens {
+                if let token = providerToken {
+                    group.addTask {
+                        await TokenValidationManager.shared.validateToken(provider: provider, token: token)
+                    }
+                }
+            }
         }
     }
     
