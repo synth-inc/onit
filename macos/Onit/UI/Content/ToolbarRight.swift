@@ -14,8 +14,10 @@ struct ToolbarRight: View {
     @Environment(\.openSettings) var openSettings
     @Environment(\.windowState) private var state
     
-    @Default(.mode) var mode
+    @Default(.modeToggleShortcutDisabled) var modeToggleShortcutDisabled
     @Default(.footerNotifications) var footerNotifications
+    
+    var mode: InferenceMode
 
     var body: some View {
         HStack(alignment: .center, spacing: 6) {
@@ -40,11 +42,13 @@ struct ToolbarRight: View {
     }
 
     func toggleMode() {
-        let oldMode = mode
-        
-        mode = mode == .local ? .remote : .local
-        
-        AnalyticsManager.Toolbar.llmModeToggled(oldValue: oldMode, newValue: mode)
+        if !modeToggleShortcutDisabled {
+            let oldMode = mode
+            
+            Defaults[.mode] = mode == .local ? .remote : .local
+            
+            AnalyticsManager.Toolbar.llmModeToggled(oldValue: oldMode, newValue: mode)
+        }
     }
     
     var localMode: some View {
@@ -60,6 +64,8 @@ struct ToolbarRight: View {
         ) {
             toggleMode()
         }
+        .disabled(modeToggleShortcutDisabled)
+        .allowsHitTesting(!modeToggleShortcutDisabled)
     }
 
     var discord: some View {
@@ -135,5 +141,5 @@ struct ToolbarRight: View {
 }
 
 #Preview {
-    ToolbarRight()
+    ToolbarRight(mode: .remote)
 }

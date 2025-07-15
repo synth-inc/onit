@@ -15,11 +15,15 @@ struct ContentView: View {
     @ObservedObject private var accessibilityPermissionManager = AccessibilityPermissionManager.shared
     @Namespace private var animation
     
+    @Default(.mode) var mode
     @Default(.panelWidth) var panelWidth
     @Default(.authFlowStatus) var authFlowStatus
     @Default(.showOnboardingAccessibility) var showOnboardingAccessibility
     @Default(.showTwoWeekProTrialEndedAlert) var showTwoWeekProTrialEndedAlert
     @Default(.hasClosedTrialEndedAlert) var hasClosedTrialEndedAlert
+    @Default(.availableLocalModels) var availableLocalModels
+    @Default(.visibleModelIds) var visibleModelIds
+    @Default(.remoteModel) var remoteModel
     
     static let bottomPadding: CGFloat = 0
     
@@ -28,8 +32,12 @@ struct ContentView: View {
         return accessibilityNotGranted && showOnboardingAccessibility
     }
     
+    private var showAuthFlow: Bool {
+        authFlowStatus != .hideAuth
+    }
+    
     private var showToolbar: Bool {
-        !shouldShowOnboardingAccessibility && appState.account != nil
+        !shouldShowOnboardingAccessibility && !showAuthFlow
     }
     
     private var showFileImporterBinding: Binding<Bool> {
@@ -82,13 +90,13 @@ struct ContentView: View {
                         authFlowStatus = .hideAuth
                     }
                 }
-            } else if appState.account == nil {
+            } else if showAuthFlow {
                 AuthFlow()
             } else {
                 ZStack {
                     VStack(alignment: .leading, spacing: 0) {
                         if showToolbar {
-                            Toolbar()
+                            Toolbar(mode: mode)
                         }
                         
                         VStack(spacing: 0) {
@@ -122,6 +130,25 @@ struct ContentView: View {
                         .animation(.spring(response: 0.3, dampingFraction: 0.8), value: appState.showProLimitAlert)
                     }
                 }
+                .onAppear {
+                    Task {
+                        let now: Date = Date()
+                        var shouldCheck: Bool = false
+                        
+                        if let mostRecentCheckDate = Defaults[.lastCheckedValidRemoteTokens] {
+                            /// Throttle remote token validity check to once every 24 hours.
+                            shouldCheck = now.timeIntervalSince(mostRecentCheckDate) >= 86400 /// 24 hours in seconds
+                        } else {
+                            /// First-time check.
+                            shouldCheck = true
+                        }
+                        
+                        guard shouldCheck else { return }
+                        
+                        await checkRemoteTokenValidity()
+                        Defaults[.lastCheckedValidRemoteTokens] = now
+                    }
+                }
             }
         }
         .background(Color.black)
@@ -145,6 +172,8 @@ struct ContentView: View {
         }
         .addAnimation(dependency: state?.showChatView)
         .onAppear {
+            setModeAndAuthOnLoginStatus()
+            
             if !hasClosedTrialEndedAlert {
                 if let subscriptionStatus = appState.subscription?.status {
                     if subscriptionStatus == "active" {
@@ -158,6 +187,71 @@ struct ContentView: View {
                         if trialExpired {
                             showTwoWeekProTrialEndedAlert = true
                         }
+                    }
+                }
+            }
+        }
+        .onChange(of: appState.userLoggedIn) { _, userLoggedIn in
+            setModeAndAuthOnLoginStatus()
+        }
+        .onChange(of: availableLocalModels) {_, localModelsList in
+            if !appState.userLoggedIn {
+                let canAccessRemoteModels = appState.canAccessRemoteModels
+                let hasNoLocalModels = localModelsList.isEmpty
+                
+                if hasNoLocalModels && canAccessRemoteModels {
+                    mode = .remote
+                }
+                
+                authFlowStatus = !canAccessRemoteModels && hasNoLocalModels ? .showSignUp : .hideAuth
+            }
+        }
+        .onChange(of: appState.canAccessRemoteModels) { _, canAccessRemoteModels in
+            Defaults[.modeToggleShortcutDisabled] = !canAccessRemoteModels
+            mode = !canAccessRemoteModels ? .local : .remote
+            
+            let hasNoAvailableModels = !canAccessRemoteModels && availableLocalModels.isEmpty
+            authFlowStatus = !appState.userLoggedIn && hasNoAvailableModels ? .showSignUp : .hideAuth
+        }
+        .onChange(of: appState.remoteProvidersOnCount) { _, _ in
+            appState.setValidRemoteModel()
+        }
+        .onChange(of: visibleModelIds) { _, _ in
+            appState.setValidRemoteModel()
+        }
+    }
+    
+    private func setModeAndAuthOnLoginStatus() {
+        Defaults[.modeToggleShortcutDisabled] = !appState.canAccessRemoteModels
+        mode = !appState.canAccessRemoteModels ? .local : .remote
+        
+        if appState.userLoggedIn {
+            appState.setValidRemoteModel()
+            authFlowStatus = .hideAuth
+        } else {
+            let hasNoAvailableModels = !appState.hasUserAPITokens && availableLocalModels.isEmpty
+            authFlowStatus = hasNoAvailableModels ? .showSignUp : .hideAuth
+        }
+    }
+    
+    private func checkRemoteTokenValidity() async {
+        let providerTokens: [AIModel.ModelProvider: String?] = [
+            .openAI: Defaults[.openAIToken],
+            .anthropic: Defaults[.anthropicToken],
+            .xAI: Defaults[.xAIToken],
+            .googleAI: Defaults[.googleAIToken],
+            .deepSeek: Defaults[.deepSeekToken],
+            .perplexity: Defaults[.perplexityToken]
+        ]
+        
+        await withTaskGroup(
+            of: Void.self,
+            returning: Void.self
+        ) { group in
+            for (provider, providerToken) in providerTokens {
+                if let token = providerToken {
+                    group.addTask {
+                        await TokenValidationManager.shared.validateToken(provider: provider, token: token)
                     }
                 }
             }

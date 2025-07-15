@@ -13,8 +13,10 @@ import SwiftUI
 
 struct AuthFlow: View {
     @Environment(\.appState) var appState
+    @Environment(\.openSettings) var openSettings
     
     @Default(.authFlowStatus) var authFlowStatus
+    @Default(.availableLocalModels) var availableLocalModels
     
     @Default(.useOpenAI) var useOpenAI
     @Default(.useAnthropic) var useAnthropic
@@ -40,7 +42,23 @@ struct AuthFlow: View {
     @State private var errorMessageAuth: String = ""
     
     private var isSignUp: Bool {
-        return authFlowStatus == .showSignUp
+        authFlowStatus == .showSignUp
+    }
+    
+    private var isNotLoggedIn: Bool {
+        !appState.userLoggedIn
+    }
+    
+    private var hasRemoteModels: Bool {
+        appState.hasUserAPITokens
+    }
+    
+    private var hasLocalModels: Bool {
+        !availableLocalModels.isEmpty
+    }
+    
+    private var hasModels: Bool {
+        hasRemoteModels || hasLocalModels
     }
     
     var body: some View {
@@ -49,8 +67,10 @@ struct AuthFlow: View {
                 emailAuthTokenForm
             } else {
                 form
+                notLoggedInCTA
                 redirectSection
                 Spacer()
+                closeButton
             }
         }
         .onAppear {
@@ -130,6 +150,98 @@ extension AuthFlow {
     private var agreement: some View {
         Text(generateAgreementText())
             .styleText(size: 12, align: .center)
+    }
+    
+    private struct LocalModelsCTA: View {
+        @Environment(\.appState) var appState
+        @Environment(\.openSettings) var openSettings
+        
+        @State private var isHoveredFetchButton: Bool = false
+        @State private var isHoveredModelAddButton: Bool = false
+        @State private var isFetchingLocalModels: Bool = false
+        @State private var localModelFetchErrorMessage: String = ""
+        
+        var body: some View {
+            VStack(alignment: .center, spacing: 4) {
+                Text("No local models found.")
+                    .styleText(
+                        size: 13,
+                        weight: .regular,
+                        color: .gray100
+                    )
+                
+                Button {
+                    localModelFetchErrorMessage = ""
+                    appState.localFetchFailed = false
+                    isFetchingLocalModels = true
+                    
+                    Task {
+                        await appState.fetchLocalModels()
+                        
+                        if appState.localFetchFailed {
+                            localModelFetchErrorMessage = "Couldn't find local models."
+                        }
+                        
+                        isFetchingLocalModels = false
+                    }
+                } label: {
+                    if isFetchingLocalModels {
+                        Loader()
+                    } else {
+                        Text("Search for local models...")
+                            .styleText(
+                                size: 13,
+                                weight: .regular,
+                                underline: isHoveredFetchButton
+                            )
+                            .onHover { isHovering in isHoveredFetchButton = isHovering}
+                    }
+                }
+                
+                if !localModelFetchErrorMessage.isEmpty {
+                    VStack(alignment: .center, spacing: 4) {
+                        Text(localModelFetchErrorMessage)
+                            .styleText(
+                                size: 13,
+                                weight: .regular,
+                                color: .red
+                            )
+                        
+                        Button {
+                            appState.settingsTab = .models
+                            openSettings()
+                        } label: {
+                            Text("Manually add models →")
+                                .styleText(
+                                    size: 13,
+                                    weight: .regular,
+                                    underline: isHoveredModelAddButton
+                                )
+                                .onHover { isHovering in isHoveredModelAddButton = isHovering}
+                        }
+                    }
+                    .padding(.top, 8)
+                }
+            }
+        }
+    }
+    
+    @ViewBuilder
+    private var notLoggedInCTA: some View {
+        if isNotLoggedIn {
+            if !hasLocalModels {
+                LocalModelsCTA()
+            } else {
+                Text("\(isSignUp ? "Sign Up" : "Sign in") to access the latest models from OpenAI, Anthropic, and more!")
+                    .padding(.horizontal, 40)
+                    .styleText(
+                        size: 13,
+                        weight: .regular,
+                        color: .gray100,
+                        align: .center
+                    )
+            }
+        }
     }
     
     private var redirectSection: some View {
@@ -236,6 +348,21 @@ extension AuthFlow {
             }
         }
         .padding(.bottom, 53)
+    }
+    
+    @ViewBuilder
+    private var closeButton: some View {
+        if isNotLoggedIn && hasModels {
+            TextButton(height: 40) {
+                Text("Close")
+                    .frame(maxWidth: .infinity, alignment: .center)
+                    .styleText()
+            } action: {
+                authFlowStatus = .hideAuth
+            }
+            .padding(.horizontal, 40)
+            .padding(.bottom, 53)
+        }
     }
 }
 

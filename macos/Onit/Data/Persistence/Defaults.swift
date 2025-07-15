@@ -57,6 +57,8 @@ extension Defaults.Keys {
     static let useLocal = Key<Bool>("useLocalModel", default: true)
     
     static let streamResponse = Key<StreamResponseConfig>("streamResponse", default: StreamResponseConfig.default)
+    
+    static let modeToggleShortcutDisabled = Key<Bool>("modeToggleShortcutDisabled", default: true)
 
     // Dialogs closed
     static let closedLocal = Key<Bool>("closedLocal", default: false)
@@ -154,6 +156,9 @@ extension Defaults.Keys {
     static let ocrComparisonResults = Key<Data?>("ocrComparisonResults", default: nil)
     static let enableOCRComparison = Key<Bool>("enableOCRComparison", default: false)
     static let enableAutoOCRComparison = Key<Bool>("enableAutoOCRComparison", default: false)
+    
+    // Timed Check Dates
+    static let lastCheckedValidRemoteTokens = Key<Date?>("lastCheckedValidRemoteTokens", default: nil)
 }
 
 extension NSRect: Defaults.Serializable {

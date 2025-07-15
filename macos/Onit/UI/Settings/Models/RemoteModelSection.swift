@@ -18,7 +18,6 @@ struct RemoteModelSection: View {
     @State private var showAdvanced: Bool = false  
     @State private var localState: TokenValidationState.ValidationState = .notValidated
 
-    @Default(.mode) var mode
     @Default(.remoteModel) var remoteModel
     @Default(.availableRemoteModels) var availableRemoteModels
     @Default(.openAIToken) var openAIToken
@@ -99,11 +98,9 @@ struct RemoteModelSection: View {
         .onChange(of: use) {
             save(use: use)
             save(validated: validated)
-            // If we've turned off everything go into local mode.
-            if appState.listedModels.isEmpty {
-                mode = .local
-            } else {
-                // If it's our first time adding models, set the remoteModel
+            
+            // If it's our first time adding models, set the remoteModel
+            if !appState.listedModels.isEmpty {
                 if remoteModel == nil {
                     remoteModel = appState.listedModels.first
                 }
