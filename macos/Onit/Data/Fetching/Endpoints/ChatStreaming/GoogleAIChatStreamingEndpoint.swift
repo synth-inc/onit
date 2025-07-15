@@ -48,7 +48,7 @@ struct GoogleAIChatStreamingEndpoint: StreamingEndpoint {
         if let data = event.data?.data(using: .utf8) {
             let response = try JSONDecoder().decode(Response.self, from: data)
             
-            if let part = response.candidates.first?.content.parts.first { $0.text != nil } {
+            if let part = response.candidates.first?.content.parts.first(where: { $0.text != nil }) {
                 return StreamingEndpointResponse(content: part.text, toolName: nil, toolArguments: nil)
             }
         }
