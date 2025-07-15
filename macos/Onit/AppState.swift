@@ -647,6 +647,7 @@ class AppState: NSObject, SPUUpdaterDelegate {
     func setValidRemoteModel() {
         if listedModels.isEmpty {
             Defaults[.remoteModel] = nil
+            Defaults[.modeToggleShortcutDisabled] = true
             Defaults[.mode] = .local
             return
         } else if let currentRemoteModel = Defaults[.remoteModel] {
@@ -656,9 +657,11 @@ class AppState: NSObject, SPUUpdaterDelegate {
                 Defaults[.remoteModel] = listedModels.first
             }
             
+            Defaults[.modeToggleShortcutDisabled] = false
             Defaults[.mode] = .remote
         } else {
             Defaults[.remoteModel] = listedModels.first
+            Defaults[.modeToggleShortcutDisabled] = false
             Defaults[.mode] = .remote
         }
     }
