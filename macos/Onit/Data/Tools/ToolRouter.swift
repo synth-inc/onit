@@ -20,7 +20,7 @@ actor ToolRouter {
         if nameParts.count < 2 {
             return .failure(
                 ToolCallError(
-                    toolName: nil, message: "Unable to parse function name: \(toolName)"))
+                    toolName: nil, message: "Unable to parse tool name: \(toolName)"))
         }
         let appName = String(nameParts[0])
         let toolName = String(toolName.dropFirst(appName.count + 1))

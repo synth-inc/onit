@@ -165,7 +165,7 @@ struct ToolCallView: View {
             return "Tool Call"
         }
 
-        // Convert function name to display name
+        // Convert tool name to display name
         let parts = toolName.split(separator: "_")
         if parts.count >= 2 {
             let toolName = parts[1...].joined(separator: " ")
