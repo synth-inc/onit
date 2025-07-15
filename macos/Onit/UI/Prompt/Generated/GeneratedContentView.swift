@@ -46,13 +46,13 @@ struct GeneratedContentView: View {
                           onCodeAction: codeAction)
                 .padding(.horizontal, 12)
 
-            if let response = currentResponse, response.hasToolCall {
+            if let response = prompt.currentResponse, response.hasToolCall {
                 ToolCallView(response: response)
                     .padding(.horizontal, 12)
             }
 
             Spacer()
-            if textToRead.isEmpty && !(state.isSearchingWeb[prompt.id] ?? false) && currentResponse?.hasToolCall != true {
+            if textToRead.isEmpty && !(state.isSearchingWeb[prompt.id] ?? false) && prompt.currentResponse?.hasToolCall != true {
                 HStack {
                     Spacer()
                     QLImage("loader_rotated-200")
@@ -62,14 +62,6 @@ struct GeneratedContentView: View {
                 }
             }
         }
-    }
-    
-    private var currentResponse: Response? {
-        guard prompt.generationIndex >= 0,
-              prompt.generationIndex < prompt.sortedResponses.count else {
-            return nil
-        }
-        return prompt.sortedResponses[prompt.generationIndex]
     }
 
     private func onUrlClicked(urlString: String) {
