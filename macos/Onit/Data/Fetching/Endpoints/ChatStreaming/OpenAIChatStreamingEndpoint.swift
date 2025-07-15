@@ -16,17 +16,17 @@ struct OpenAIChatStreamingEndpoint: StreamingEndpoint {
     let token: String?
     let model: String
     let tools: [Tool]
-    let includeSearch: Bool?
+    let searchTool: ChatSearchTool?
     
     var path: String { "/v1/responses" }
     var getParams: [String: String]? { nil }
     var method: HTTPMethod { .post }
     var requestBody: OpenAIChatRequest? {
-        var tools: [OpenAIChatTool] = tools.map { OpenAIChatTool(tool: $0) }
-        if includeSearch == true {
-            tools.append(OpenAIChatTool.search())
+        var apiTools: [OpenAIChatTool] = tools.map { OpenAIChatTool(tool: $0) }
+        if let searchTool = searchTool, let type = searchTool.type {
+            apiTools.append(OpenAIChatTool.search(type: type))
         }
-        return OpenAIChatRequest(model: model, input: messages, tools: tools, stream: true)
+        return OpenAIChatRequest(model: model, input: messages, tools: apiTools, stream: true)
     }
     var additionalHeaders: [String: String]? {
         ["Authorization": "Bearer \(token ?? "")"]

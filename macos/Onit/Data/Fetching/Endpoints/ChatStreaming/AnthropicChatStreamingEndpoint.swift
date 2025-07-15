@@ -18,7 +18,7 @@ struct AnthropicChatStreamingEndpoint: StreamingEndpoint {
     let messages: [AnthropicMessage]
     let maxTokens: Int
     let tools: [Tool]
-    let includeSearch: Bool?
+    let searchTool: ChatSearchTool?
     
     let toolAccumulator = StreamToolAccumulator()
     
@@ -27,15 +27,19 @@ struct AnthropicChatStreamingEndpoint: StreamingEndpoint {
     var method: HTTPMethod { .post }
     
     var requestBody: AnthropicChatRequest? {
-        var tools: [AnthropicChatTool] = tools.map { AnthropicChatTool(tool: $0) }
-        if includeSearch == true {
-            tools.append(AnthropicChatTool.search(maxUses: 5))
+        var apiTools: [AnthropicChatTool] = tools.map { AnthropicChatTool(tool: $0) }
+        if let searchTool = searchTool,
+           let type = searchTool.type,
+           let name = searchTool.name,
+           let maxUses = searchTool.maxUses
+        {
+            apiTools.append(AnthropicChatTool.search(type: type, name: name, maxUses: maxUses))
         }
         return AnthropicChatRequest(
             model: model,
             system: system,
             messages: messages,
-            tools: tools,
+            tools: apiTools,
             max_tokens: maxTokens,
             stream: true
         )

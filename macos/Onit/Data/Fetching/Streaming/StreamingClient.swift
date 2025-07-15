@@ -30,7 +30,7 @@ actor StreamingClient {
             files: files,
             autoContexts: autoContexts,
             webSearchContexts: webSearchContexts)
-        let endpoint = try ChatStreamingEndpointBuilder.build(
+        let endpoint = try await ChatStreamingEndpointBuilder.build(
             useOnitServer: useOnitServer,
             model: model,
             images: images,

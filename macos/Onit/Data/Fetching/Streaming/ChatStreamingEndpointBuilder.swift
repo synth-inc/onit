@@ -21,7 +21,7 @@ struct ChatStreamingEndpointBuilder {
         userMessages: [String],
         tools: [Tool],
         includeSearch: Bool? = nil
-    ) throws -> any StreamingEndpoint {
+    ) async throws -> any StreamingEndpoint {
         if useOnitServer {
             return ChatStreamingEndpointBuilder.onit(
                 model: model,
@@ -34,7 +34,7 @@ struct ChatStreamingEndpointBuilder {
         }
         switch model.provider {
         case .openAI:
-            return ChatStreamingEndpointBuilder.openAI(
+            return await ChatStreamingEndpointBuilder.openAI(
                 model: model,
                 images: images,
                 responses: responses,
@@ -44,7 +44,7 @@ struct ChatStreamingEndpointBuilder {
                 tools: tools,
                 includeSearch: includeSearch)
         case .anthropic:
-            return ChatStreamingEndpointBuilder.anthropic(
+            return await ChatStreamingEndpointBuilder.anthropic(
                 model: model,
                 images: images,
                 responses: responses,
@@ -125,7 +125,7 @@ struct ChatStreamingEndpointBuilder {
         userMessages: [String],
         tools: [Tool],
         includeSearch: Bool? = nil
-    ) -> OpenAIChatStreamingEndpoint {
+    ) async -> OpenAIChatStreamingEndpoint {
         let messages = ChatEndpointMessagesBuilder.openAI(
             model: model,
             images: images,
@@ -133,8 +133,13 @@ struct ChatStreamingEndpointBuilder {
             systemMessage: systemMessage,
             userMessages: userMessages)
 
+        var searchTool: ChatSearchTool?
+        if includeSearch == true {
+            searchTool = try? await FetchingClient().getChatSearchTool(provider: "OpenAI")
+        }
+
         return OpenAIChatStreamingEndpoint(
-            messages: messages, token: apiToken, model: model.id, tools: tools, includeSearch: includeSearch)
+            messages: messages, token: apiToken, model: model.id, tools: tools, searchTool: searchTool)
     }
 
     private static func anthropic(
@@ -146,12 +151,17 @@ struct ChatStreamingEndpointBuilder {
         userMessages: [String],
         tools: [Tool],
         includeSearch: Bool? = nil
-    ) -> AnthropicChatStreamingEndpoint {
+    ) async -> AnthropicChatStreamingEndpoint {
         let messages = ChatEndpointMessagesBuilder.anthropic(
             model: model,
             images: images,
             responses: responses,
             userMessages: userMessages)
+
+        var searchTool: ChatSearchTool?
+        if includeSearch == true {
+            searchTool = try? await FetchingClient().getChatSearchTool(provider: "Anthropic")
+        }
 
         return AnthropicChatStreamingEndpoint(
             model: model.id,
@@ -160,7 +170,7 @@ struct ChatStreamingEndpointBuilder {
             messages: messages,
             maxTokens: 4096,
             tools: tools,
-            includeSearch: includeSearch
+            searchTool: searchTool
         )
     }
 

@@ -18,7 +18,7 @@ struct AnthropicChatEndpoint: Endpoint {
     let messages: [AnthropicMessage]
     let maxTokens: Int
     let tools: [Tool]
-    let includeSearch: Bool?
+    let searchTool: ChatSearchTool?
 
     var path: String { "/v1/messages" }
     var getParams: [String: String]? { nil }
@@ -26,8 +26,12 @@ struct AnthropicChatEndpoint: Endpoint {
 
     var requestBody: AnthropicChatRequest? {
         var apiTools: [AnthropicChatTool] = tools.map { AnthropicChatTool(tool: $0) }
-        if includeSearch == true {
-            apiTools.append(AnthropicChatTool.search(maxUses: 5))
+        if let searchTool = searchTool,
+           let type = searchTool.type,
+           let name = searchTool.name,
+           let maxUses = searchTool.maxUses
+        {
+            apiTools.append(AnthropicChatTool.search(type: type, name: name, maxUses: maxUses))
         }
         return AnthropicChatRequest(
             model: model,
@@ -120,8 +124,8 @@ struct AnthropicChatTool: Codable {
         case max_uses
     }
 
-    static func search(maxUses: Int) -> AnthropicChatTool {
-        return AnthropicChatTool(type: "web_search_20250305", name: "web_search", max_uses: maxUses)
+    static func search(type: String, name: String, maxUses: Int) -> AnthropicChatTool {
+        return AnthropicChatTool(type: type, name: name, max_uses: maxUses)
     }
     
     init(type: String, name: String, description: String? = nil, input_schema: AnthropicChatToolInputSchema? = nil, max_uses: Int? = nil) {

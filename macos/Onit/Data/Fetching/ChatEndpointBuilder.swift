@@ -19,10 +19,10 @@ struct ChatEndpointBuilder {
         userMessages: [String],
         tools: [Tool] = [],
         includeSearch: Bool? = nil
-    ) throws -> any Endpoint {
+    ) async throws -> any Endpoint {
         switch model.provider {
         case .openAI:
-            return ChatEndpointBuilder.openAI(
+            return await ChatEndpointBuilder.openAI(
                 model: model,
                 images: images,
                 responses: responses,
@@ -32,7 +32,7 @@ struct ChatEndpointBuilder {
                 tools: tools,
                 includeSearch: includeSearch)
         case .anthropic:
-            return ChatEndpointBuilder.anthropic(
+            return await ChatEndpointBuilder.anthropic(
                 model: model,
                 images: images,
                 responses: responses,
@@ -93,7 +93,7 @@ struct ChatEndpointBuilder {
         userMessages: [String],
         tools: [Tool] = [],
         includeSearch: Bool? = nil
-    ) -> OpenAIChatEndpoint {
+    ) async -> OpenAIChatEndpoint {
         let messages = ChatEndpointMessagesBuilder.openAI(
             model: model,
             images: images,
@@ -101,8 +101,13 @@ struct ChatEndpointBuilder {
             systemMessage: systemMessage,
             userMessages: userMessages)
 
+        var searchTool: ChatSearchTool?
+        if includeSearch == true {
+            searchTool = try? await FetchingClient().getChatSearchTool(provider: "OpenAI")
+        }
+
         return OpenAIChatEndpoint(
-            messages: messages, token: apiToken, model: model.id, tools: tools, includeSearch: includeSearch)
+            messages: messages, token: apiToken, model: model.id, tools: tools, searchTool: searchTool)
     }
 
     private static func anthropic(
@@ -114,12 +119,17 @@ struct ChatEndpointBuilder {
         userMessages: [String],
         tools: [Tool] = [],
         includeSearch: Bool? = nil
-    ) -> AnthropicChatEndpoint {
+    ) async -> AnthropicChatEndpoint {
         let messages = ChatEndpointMessagesBuilder.anthropic(
             model: model,
             images: images,
             responses: responses,
             userMessages: userMessages)
+
+        var searchTool: ChatSearchTool?
+        if includeSearch == true {
+            searchTool = try? await FetchingClient().getChatSearchTool(provider: "Anthropic")
+        }
 
         return AnthropicChatEndpoint(
             model: model.id,
@@ -128,7 +138,7 @@ struct ChatEndpointBuilder {
             messages: messages,
             maxTokens: 4096,
             tools: tools,
-            includeSearch: includeSearch
+            searchTool: searchTool
         )
     }
 

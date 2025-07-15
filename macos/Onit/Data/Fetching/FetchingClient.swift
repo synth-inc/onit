@@ -46,7 +46,7 @@ actor FetchingClient {
             autoContexts: autoContexts,
             webSearchContexts: webSearchContexts)
         
-        let endpoint = try ChatEndpointBuilder.build(
+        let endpoint = try await ChatEndpointBuilder.build(
             model: model,
             images: images,
             responses: responses,

@@ -16,15 +16,15 @@ struct OpenAIChatEndpoint: Endpoint {
     let token: String?
     let model: String
     let tools: [Tool]
-    let includeSearch: Bool?
+    let searchTool: ChatSearchTool?
 
     var path: String { "/v1/responses" }
     var getParams: [String: String]? { nil }
     var method: HTTPMethod { .post }
     var requestBody: OpenAIChatRequest? {
         var apiTools: [OpenAIChatTool] = tools.map { OpenAIChatTool(tool: $0) }
-        if includeSearch == true {
-            apiTools.append(OpenAIChatTool.search())
+        if let searchTool = searchTool, let type = searchTool.type {
+            apiTools.append(OpenAIChatTool.search(type: type))
         }
         return OpenAIChatRequest(model: model, input: messages, tools: apiTools, stream: false)
     }
@@ -109,8 +109,8 @@ struct OpenAIChatTool: Codable {
     let description: String?
     let parameters: OpenAIChatToolParameters?
 
-    static func search() -> OpenAIChatTool {
-        return OpenAIChatTool(type: "web_search_preview")
+    static func search(type: String) -> OpenAIChatTool {
+        return OpenAIChatTool(type: type)
     }
     
     init(type: String,
