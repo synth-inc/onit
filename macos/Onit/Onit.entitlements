@@ -8,8 +8,10 @@
 	<true/>
 	<key>com.apple.security.network.client</key>
 	<true/>
+    <!--
 	<key>com.apple.security.personal-information.calendars</key>
 	<true/>
+    -->
 	<key>com.apple.security.web</key>
 	<true/>
 	<key>keychain-access-groups</key>

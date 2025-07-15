@@ -43,10 +43,12 @@
         <string>public.app-category.utilities</string>
         <key>NSApplicationCrashOnExceptions</key>
         <true/>
+        <!--
         <key>NSCalendarsWriteOnlyAccessUsageDescription</key>
         <string>Onit would like to automatically create and manage your events through Calendar</string>
         <key>NSCalendarsFullAccessUsageDescription</key>
         <string>Onit would like to automatically create and manage your events through Calendar</string>
+        -->
         <key>NSHumanReadableCopyright</key>
         <string></string>
         <key>NSMicrophoneUsageDescription</key>
