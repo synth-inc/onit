@@ -10,7 +10,11 @@ import Foundation
 actor ToolRouter {
     @MainActor
     static var activeTools: [Tool] {
+        #if DEBUG || BETA
         return CalendarTool.activeTools + DiffTool.activeTools
+        #else
+        return []
+        #endif
     }
 
     static func parseAndExecuteToolCalls(toolName: String, toolArguments: String) async
