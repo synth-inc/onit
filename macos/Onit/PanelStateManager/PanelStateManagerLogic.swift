@@ -25,7 +25,7 @@ protocol PanelStateManagerLogic {
     func filterHistoryChats(_ chats: [Chat]) -> [Chat]
     func filterPanelChats(_ chats: [Chat]) -> [Chat]
     
-    func launchPanel(for state: OnitPanelState)
+    func launchPanel(for state: OnitPanelState, createNewChat: Bool)
     func closePanel(for state: OnitPanelState)
 
     func fetchWindowContext()

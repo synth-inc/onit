@@ -35,7 +35,7 @@ struct PromptCoreFooter: View {
                     WebSearchButton()
                 }
             }
-            
+                
             Spacer()
             
             HStack(spacing: 4) {

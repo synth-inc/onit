@@ -122,6 +122,19 @@ extension AXUIElement {
         }
         return nil
     }
+    
+    func firstGroupParent() -> AXUIElement? {
+        var currentElement: AXUIElement? = self
+        
+        while let current = currentElement {
+            if current.role() == kAXGroupRole, current.subrole() == nil {
+                return current
+            }
+            currentElement = current.parent()
+        }
+        
+        return nil
+    }
 
     func children() -> [AXUIElement]? {
         return self.attribute(forAttribute: kAXChildrenAttribute as CFString) as? [AXUIElement]
@@ -354,8 +367,33 @@ extension AXUIElement {
             }
             currentElement = parent
         }
-
+        
         return nil
+    }
+    
+    // MARK: - Caret Position Methods
+    
+    func isTextElement() -> Bool {
+        guard let role = role() else { return false }
+        
+        let supportedRoles = [
+            kAXTextFieldRole,
+            kAXTextAreaRole,
+            kAXStaticTextRole
+        ]
+        
+        return supportedRoles.contains(role)
+    }
+    
+    func supportsCaretTracking() -> Bool {
+        guard let role = role() else { return false }
+        
+        let supportedRoles = [
+            kAXTextFieldRole,
+            kAXTextAreaRole
+        ]
+        
+        return supportedRoles.contains(role)
     }
 }
 

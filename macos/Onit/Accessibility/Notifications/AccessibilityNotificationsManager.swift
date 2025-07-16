@@ -43,10 +43,13 @@ class AccessibilityNotificationsManager: ObservableObject {
     let windowsManager = AccessibilityWindowsManager()
     
     private let highlightedTextCoordinator = HighlightedTextCoordinator()
+    
+    private let caretPositionManager = CaretPositionManager.shared
 
     private var currentSource: String?
 
     private var lastHighlightingProcessedAt: Date?
+    private var lastCaretPositionChangeTimestamp: Date?
 
     private var valueDebounceWorkItem: DispatchWorkItem?
     private var selectionDebounceWorkItem: DispatchWorkItem?
@@ -90,6 +93,7 @@ class AccessibilityNotificationsManager: ObservableObject {
         
         currentSource = nil
         lastHighlightingProcessedAt = nil
+		lastCaretPositionChangeTimestamp = nil
         valueDebounceWorkItem?.cancel()
         selectionDebounceWorkItem?.cancel()
         parseDebounceWorkItem?.cancel()
@@ -106,17 +110,21 @@ class AccessibilityNotificationsManager: ObservableObject {
         print("Application activated: \(appName ?? "Unknown") \(processID)")
          
         Task.detached {
-            await self.highlightedTextCoordinator.startPollingIfNeeded(pid: processID, selectionChangedHandler: { [weak self] text, frame in
-                guard let self = self else { return }
+            await self.highlightedTextCoordinator.startPollingIfNeeded(pid: processID, selectionChangedHandler: { [weak self] element, text in
+                guard let self = self, let element = element else { return }
+                
+                nonisolated(unsafe) let unsafeElement = element
                 
                 Task { @MainActor in
-                    self.processSelectedText(text, elementFrame: frame)
+                    self.processSelectionChange(for: unsafeElement)
                 }
             })
         }
 
         currentSource = appName
         lastActiveWindowPid = processID
+        
+        caretPositionManager.updateCaretLost()
         
         if let mainWindow = processID.firstMainWindow {
             handleWindowBounds(for: mainWindow, elementPid: processID)
@@ -144,6 +152,9 @@ class AccessibilityNotificationsManager: ObservableObject {
             self.handleSelectionChange(for: element)
         case kAXValueChangedNotification:
             self.handleValueChanged(for: element)
+            // self.handleCaretPositionChange(for: element)
+        case kAXFocusedUIElementChangedNotification:
+            self.handleCaretPositionChange(for: element)
         case kAXWindowMovedNotification:
             self.handleWindowMoved(for: element, elementPid: elementPid)
         case kAXWindowResizedNotification:
@@ -257,7 +268,7 @@ class AccessibilityNotificationsManager: ObservableObject {
 
         selectionDebounceWorkItem = workItem
 
-        DispatchQueue.main.asyncAfter(deadline: .now() + Config.debounceInterval, execute: workItem)
+        DispatchQueue.main.asyncAfter(deadline: .now() + Config.textSelectionDebounceInterval, execute: workItem)
     }
     
     // MARK: Parsing
@@ -558,18 +569,39 @@ class AccessibilityNotificationsManager: ObservableObject {
         // Ensure we're on the main thread
         dispatchPrecondition(condition: .onQueue(.main))
 
-        let selectedTextExtracted = element.selectedText()
-        let elementBounds = element.selectedTextBound()
+        let selectedText = element.selectedText()
         
-        processSelectedText(selectedTextExtracted, elementFrame: elementBounds)
+        if let selectedText = selectedText, HighlightedTextValidator.isValid(text: selectedText) {
+            Task {
+                _ = await HighlightedTextBoundsExtractor.shared.getBounds(for: element, selectedText: selectedText)
+                
+                processSelectedText(selectedText)
+            }
+        } else {
+            // On every apps, when caret position changed, we receive AXSelectedTextChanged notification with nil value.
+            // This code is used to hide the QuickEdit hint for a real deselection
+            let now = Date()
+            let caretPositionChangeRecently = now.timeIntervalSince(lastCaretPositionChangeTimestamp ?? .distantPast) < 0.5
+            let isEditableField = element.role() == kAXTextFieldRole || element.role() == kAXTextAreaRole
+            
+            if !caretPositionChangeRecently && !isEditableField {
+                processSelectedText(nil)
+                HighlightedTextBoundsExtractor.shared.reset()
+                QuickEditManager.shared.hideHint()
+            } else if isEditableField {
+                handleCaretPositionChange(for: element)
+            }
+        }
+        
         showDebug()
     }
 
-    private func processSelectedText(_ text: String?, elementFrame: CGRect?) {
+    private func processSelectedText(_ text: String?) {
         guard Defaults[.autoContextFromHighlights],
               let selectedText = text,
               HighlightedTextValidator.isValid(text: selectedText) else {
             
+            screenResult.userInteraction.selectedText = nil
             PanelStateCoordinator.shared.state.pendingInput = nil
             return
         }
@@ -578,6 +610,18 @@ class AccessibilityNotificationsManager: ObservableObject {
         
         let input = Input(selectedText: selectedText, application: currentSource ?? "")
         PanelStateCoordinator.shared.state.pendingInput = input
+    }
+
+	// MARK: Caret Position Handling
+    
+    private func handleCaretPositionChange(for element: AXUIElement) {
+        guard element.supportsCaretTracking() else { return }
+        
+        selectionDebounceWorkItem?.cancel()
+        selectionDebounceWorkItem = nil
+        processSelectedText(nil)
+		lastCaretPositionChangeTimestamp = Date()
+        caretPositionManager.updateCaretPosition(for: element)
     }
 
     // MARK: Debug

@@ -61,20 +61,20 @@ class PanelStateCoordinator {
         currentManager.filterPanelChats(allChats)
     }
     
-    func launchPanel(for state: OnitPanelState? = nil) {
+    func launchPanel(for state: OnitPanelState? = nil, createNewChat: Bool = true) {
         let targetState = state ?? self.state
         
         guard targetState !== currentManager.defaultState else { return }
         
         guard let panel = targetState.panel else {
-            currentManager.launchPanel(for: targetState)
+            currentManager.launchPanel(for: targetState, createNewChat: createNewChat)
             return
         }
         
-        // This workaround will make the pannel jump on another screen
+        // This workaround will make the panel jump on another screen
         if currentManager is PanelStatePinnedManager,
             let mouseScreen = NSScreen.mouse, panel.screen != mouseScreen {
-            currentManager.launchPanel(for: targetState)
+            currentManager.launchPanel(for: targetState, createNewChat: createNewChat)
             return
         }
 

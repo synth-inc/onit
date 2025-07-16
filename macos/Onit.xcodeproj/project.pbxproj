@@ -15,6 +15,7 @@
 		863817352D3FB5F700919BC7 /* PostHog in Frameworks */ = {isa = PBXBuildFile; productRef = 863817342D3FB5F700919BC7 /* PostHog */; };
 		867A647A2D4AD73A00FD4D80 /* Defaults in Frameworks */ = {isa = PBXBuildFile; productRef = 867A64792D4AD73A00FD4D80 /* Defaults */; };
 		867A647C2D4AD73A00FD4D80 /* DefaultsMacros in Frameworks */ = {isa = PBXBuildFile; productRef = 867A647B2D4AD73A00FD4D80 /* DefaultsMacros */; };
+		868C078F2E0ED4C7007C86EF /* GRDB in Frameworks */ = {isa = PBXBuildFile; productRef = 868C078E2E0ED4C7007C86EF /* GRDB */; };
 		86A974C12D4A76F800CF6FCE /* Markdown in Frameworks */ = {isa = PBXBuildFile; productRef = 86A974C02D4A76F800CF6FCE /* Markdown */; };
 		86EE5E572DAFA5BD0089FD49 /* SwiftyBeaver in Frameworks */ = {isa = PBXBuildFile; productRef = 86EE5E562DAFA5BD0089FD49 /* SwiftyBeaver */; };
 		86F908912D7AF491008D8027 /* Highlightr in Frameworks */ = {isa = PBXBuildFile; productRef = 86F908902D7AF491008D8027 /* Highlightr */; };
@@ -55,6 +56,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				868C078F2E0ED4C7007C86EF /* GRDB in Frameworks */,
 				280F35002CB9BF4300D60130 /* Sparkle in Frameworks */,
 				28F57E292CAC9262006AAA8C /* MenuBarExtraAccess in Frameworks */,
 				86A974C12D4A76F800CF6FCE /* Markdown in Frameworks */,
@@ -130,6 +132,7 @@
 				96E6E90B2DB81CB200BADA63 /* GoogleSignIn */,
 				96E6E90D2DB81CB200BADA63 /* GoogleSignInSwift */,
 				C81B6B572E159DA3005B0843 /* LLMStream */,
+				868C078E2E0ED4C7007C86EF /* GRDB */,
 			);
 			productName = Onit;
 			productReference = 2883E4B32CA5ECBB00F79A48 /* Onit.app */;
@@ -174,6 +177,7 @@
 				86EE5E552DAFA5BD0089FD49 /* XCRemoteSwiftPackageReference "SwiftyBeaver" */,
 				96E6E90A2DB81CB200BADA63 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */,
 				C81B6B562E159DA3005B0843 /* XCLocalSwiftPackageReference "../LLMStream" */,
+				868C078D2E0ED4C7007C86EF /* XCRemoteSwiftPackageReference "GRDB.swift" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 2883E4B42CA5ECBB00F79A48 /* Products */;
@@ -512,6 +516,14 @@
 				minimumVersion = 9.0.1;
 			};
 		};
+		868C078D2E0ED4C7007C86EF /* XCRemoteSwiftPackageReference "GRDB.swift" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/groue/GRDB.swift.git";
+			requirement = {
+				kind = upToNextMinorVersion;
+				minimumVersion = 7.5.0;
+			};
+		};
 		86A974BF2D4A76F800CF6FCE /* XCRemoteSwiftPackageReference "swift-markdown" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/apple/swift-markdown.git";
@@ -602,6 +614,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 867A64782D4AD73A00FD4D80 /* XCRemoteSwiftPackageReference "Defaults" */;
 			productName = DefaultsMacros;
+		};
+		868C078E2E0ED4C7007C86EF /* GRDB */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 868C078D2E0ED4C7007C86EF /* XCRemoteSwiftPackageReference "GRDB.swift" */;
+			productName = GRDB;
 		};
 		86A974C02D4A76F800CF6FCE /* Markdown */ = {
 			isa = XCSwiftPackageProductDependency;

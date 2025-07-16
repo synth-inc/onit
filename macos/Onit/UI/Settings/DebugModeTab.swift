@@ -269,7 +269,7 @@ struct DebugModeTab: View {
     }
     
     private func copyFailingAppsReport() {
-        let report = failingApps.map { app in
+        let copyableReport : String = failingApps.map { app in
             let emoji: String
             if app.failurePercentage > 50 {
                 emoji = "🔴"
@@ -284,7 +284,7 @@ struct DebugModeTab: View {
         
         let pasteboard = NSPasteboard.general
         pasteboard.clearContents()
-        pasteboard.setString(report, forType: .string)
+        pasteboard.setString(copyableReport, forType: .string)
     }
 }
 

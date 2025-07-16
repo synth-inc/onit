@@ -49,6 +49,12 @@ struct SettingsView: View {
                     }
                 }
                 .tag(SettingsTab.accessibility)
+
+            QuickEditTab()
+                .tabItem {
+                    Label("Quick Edit", systemImage: "wand.and.sparkles")
+                }
+                .tag(SettingsTab.quickEdit)
                 
             WebSearchTab()
                 .tabItem {

@@ -154,6 +154,12 @@ extension Defaults.Keys {
     static let ocrComparisonResults = Key<Data?>("ocrComparisonResults", default: nil)
     static let enableOCRComparison = Key<Bool>("enableOCRComparison", default: false)
     static let enableAutoOCRComparison = Key<Bool>("enableAutoOCRComparison", default: false)
+
+    // QuickEdit
+    static let quickEditConfig = Key<QuickEditConfig>("quickEditConfig", default: .default)
+    
+    // Screen recording
+    static let screenRecordingPermissionAsked = Key<Bool>("screenRecordingPermissionAsked", default: false)
 }
 
 extension NSRect: Defaults.Serializable {
