@@ -299,7 +299,7 @@ class AccessibilityNotificationsManager: ObservableObject {
         guard let role = element.role(), [kAXTextFieldRole, kAXTextAreaRole].contains(role) else {
             return
         }
-        print("handleValueChanged - element with role \(role), description: \(element.description()), frame: \(element.frame())")
+        print("handleValueChanged - element with role \(role), description: \(element.description()), frame: \(element.getFrame())")
         let value = element.value()
         let window = windowsManager.trackedWindows(for: element).first
         notifyDelegates { $0.accessibilityManager(self, didChangeValue: element, newValue: value, window: window) }
@@ -741,7 +741,7 @@ extension AccessibilityNotificationsManager: AccessibilityObserversDelegate {
     
     func accessibilityObserversManager(didActivateOnit appName: String?, processID: pid_t) {
         if let mainWindow = processID.firstMainWindow {
-            guard let trackedWindow = self.windowsManager.append(mainWindow, pid: processID) else { return }
+            guard let trackedWindow = self.windowsManager.trackWindowForElement(mainWindow, pid: processID) else { return }
             notifyDelegates { delegate in
                 delegate.accessibilityManager(self, didActivateOnit: trackedWindow)
             }
@@ -750,7 +750,7 @@ extension AccessibilityNotificationsManager: AccessibilityObserversDelegate {
     
     func accessibilityObserversManager(didActivateIgnoredApplication appName: String?, processID: pid_t) {
         if let mainWindow = processID.firstMainWindow {
-            guard let trackedWindow = self.windowsManager.append(mainWindow, pid: processID) else { return }
+            guard let trackedWindow = self.windowsManager.trackWindowForElement(mainWindow, pid: processID) else { return }
             notifyDelegates { delegate in
                 delegate.accessibilityManager(self, didActivateIgnoredWindow: trackedWindow)
             }

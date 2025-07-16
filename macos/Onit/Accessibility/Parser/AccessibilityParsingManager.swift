@@ -30,10 +30,10 @@ final class AccessibilityParsingManager {
     }
     
     /// Completion handler for parsing results without bounding boxes
-    typealias SimpleCompletionHandler = @MainActor ([String: String]) -> Void
+    typealias SimpleCompletionHandler = @MainActor (Result<[String: String], Error>) -> Void
     
     /// Completion handler for parsing results with bounding boxes
-    typealias EnhancedCompletionHandler = @MainActor ([String: String], [TextBoundingBox]?) -> Void
+    typealias EnhancedCompletionHandler = @MainActor (Result<([String: String], [TextBoundingBox]?), Error>) -> Void
     
     /// Cached parsing result
     private struct CachedResult {
@@ -79,23 +79,32 @@ final class AccessibilityParsingManager {
         }
         
         @MainActor
-        func callCompletion(results: [String: String], boundingBoxes: [TextBoundingBox]?) {
-            if let simpleCompletion = simpleCompletion {
-                simpleCompletion(results)
-            } else if let enhancedCompletion = enhancedCompletion {
-                enhancedCompletion(results, boundingBoxes)
+        func callCompletion(result: Result<([String: String], [TextBoundingBox]?), Error>) {
+            switch result {
+            case .success(let (results, boundingBoxes)):
+                if let simpleCompletion = simpleCompletion {
+                    simpleCompletion(.success(results))
+                } else if let enhancedCompletion = enhancedCompletion {
+                    enhancedCompletion(.success((results, boundingBoxes)))
+                }
+            case .failure(let error):
+                if let simpleCompletion = simpleCompletion {
+                    simpleCompletion(.failure(error))
+                } else if let enhancedCompletion = enhancedCompletion {
+                    enhancedCompletion(.failure(error))
+                }
             }
         }
     }
     
     /// Ongoing parsing operation
     private class ParseOperation {
-        let task: Task<([String: String], [TextBoundingBox]?), Never>
+        let task: Task<Result<([String: String], [TextBoundingBox]?), Error>, Never>
         var requests: [ParseRequest] = []
         let needsBoundingBoxes: Bool
         let pid: pid_t?
         
-        init(task: Task<([String: String], [TextBoundingBox]?), Never>, needsBoundingBoxes: Bool, pid: pid_t?) {
+        init(task: Task<Result<([String: String], [TextBoundingBox]?), Error>, Never>, needsBoundingBoxes: Bool, pid: pid_t?) {
             self.task = task
             self.needsBoundingBoxes = needsBoundingBoxes
             self.pid = pid
@@ -146,7 +155,7 @@ final class AccessibilityParsingManager {
         // Check if we have valid cached results
         if let cachedResult = validateAndCleanExpiredResult(for: elementHash) {
             print("AccessibilityParsingManager: Using cached results for element hash \(elementHash)")
-            completion(cachedResult.results)
+            completion(.success(cachedResult.results))
             return
         }
         
@@ -176,7 +185,7 @@ final class AccessibilityParsingManager {
         if let cachedResult = validateAndCleanExpiredResult(for: elementHash),
            cachedResult.hasBoundingBoxes {
             print("AccessibilityParsingManager: Using cached enhanced results for element hash \(elementHash)")
-            completion(cachedResult.results, cachedResult.boundingBoxes)
+            completion(.success((cachedResult.results, cachedResult.boundingBoxes)))
             return
         }
         
@@ -305,18 +314,27 @@ final class AccessibilityParsingManager {
         
         print("AccessibilityParsingManager: Starting new parse operation for element hash \(elementHash), needsBoundingBoxes: \(needsBoundingBoxes)")
         
-        let task = Task { [weak self] () -> ([String: String], [TextBoundingBox]?) in
-            let result = await AccessibilityParser.shared.getAllTextInElement(
-                windowElement: windowElement,
-                includeBoundingBoxes: needsBoundingBoxes
-            )
-            
-            // Operation completed, notify all callbacks and cleanup
-            await MainActor.run { [weak self] in
-                self?.completeOperation(elementHash: elementHash, result: result, hasBoundingBoxes: needsBoundingBoxes, pid: pid)
+        let task = Task { [weak self] () -> Result<([String: String], [TextBoundingBox]?), Error> in
+            do {
+                let result = try await AccessibilityParser.shared.getAllTextInElement(
+                    windowElement: windowElement,
+                    includeBoundingBoxes: needsBoundingBoxes
+                )
+                
+                // Operation completed, notify all callbacks and cleanup
+                await MainActor.run { [weak self] in
+                    self?.completeOperation(elementHash: elementHash, result: .success(result), hasBoundingBoxes: needsBoundingBoxes, pid: pid)
+                }
+                
+                return .success(result)
+            } catch {
+                // Operation failed, notify all callbacks and cleanup
+                await MainActor.run { [weak self] in
+                    self?.completeOperation(elementHash: elementHash, result: .failure(error), hasBoundingBoxes: needsBoundingBoxes, pid: pid)
+                }
+                
+                return .failure(error)
             }
-            
-            return result
         }
         
         let operation = ParseOperation(task: task, needsBoundingBoxes: needsBoundingBoxes, pid: pid)
@@ -324,18 +342,20 @@ final class AccessibilityParsingManager {
         ongoingOperations[elementHash] = operation
     }
     
-    private func completeOperation(elementHash: UInt, result: ([String: String], [TextBoundingBox]?), hasBoundingBoxes: Bool, pid: pid_t?) {
+    private func completeOperation(elementHash: UInt, result: Result<([String: String], [TextBoundingBox]?), Error>, hasBoundingBoxes: Bool, pid: pid_t?) {
         guard let operation = ongoingOperations.removeValue(forKey: elementHash) else { return }
         
-        // Cache the result
-        let cachedResult = CachedResult(
-            results: result.0,
-            boundingBoxes: result.1,
-            hasBoundingBoxes: hasBoundingBoxes,
-            pid: pid
-        )
-        cachedResults[elementHash] = cachedResult
-        print("AccessibilityParsingManager: Cached results for element hash \(elementHash)")
+        // Cache the result only if successful
+        if case .success(let (results, boundingBoxes)) = result {
+            let cachedResult = CachedResult(
+                results: results,
+                boundingBoxes: boundingBoxes,
+                hasBoundingBoxes: hasBoundingBoxes,
+                pid: pid
+            )
+            cachedResults[elementHash] = cachedResult
+            print("AccessibilityParsingManager: Cached results for element hash \(elementHash)")
+        }
         
         // Clean up invalid requests before calling completions
         operation.cleanupInvalidRequests()
@@ -343,7 +363,7 @@ final class AccessibilityParsingManager {
         // Call all completion handlers
         for request in operation.requests {
             guard request.isValid else { continue }
-            request.callCompletion(results: result.0, boundingBoxes: result.1)
+            request.callCompletion(result: result)
         }
     }
     
@@ -382,11 +402,16 @@ final class AccessibilityParsingManager {
             fullText = cachedResult.results["screen"] ?? ""
         } else {
             print("AccessibilityParsingManager: Parsing fresh results for text splitting")
-            let results = await AccessibilityParser.shared.getAllTextInElement(windowElement: windowElement)
-            let pid = windowElement.pid()
-            let cachedResult = CachedResult(results: results, boundingBoxes: nil, hasBoundingBoxes: false, pid: pid)
-            cachedResults[elementHash] = cachedResult
-            fullText = results["screen"] ?? ""
+            do {
+                let (results, _) = try await AccessibilityParser.shared.getAllTextInElement(windowElement: windowElement)
+                let pid = windowElement.pid()
+                let cachedResult = CachedResult(results: results, boundingBoxes: nil, hasBoundingBoxes: false, pid: pid)
+                cachedResults[elementHash] = cachedResult
+                fullText = results["screen"] ?? ""
+            } catch {
+                print("AccessibilityParsingManager: Error parsing text for splitting: \(error)")
+                return ("", "")
+            }
         }
         
         // Find the target element's value or closest element with value
@@ -543,14 +568,14 @@ final class AccessibilityParsingManager {
         let targetRole = targetElement.role()
         let targetTitle = targetElement.title()
         let targetValue = targetElement.value()
-        let targetFrame = targetElement.frame()
+        let targetFrame = targetElement.getFrame()
         
         for (index, element) in elements.enumerated() {
             // Compare multiple properties to identify the same element
             let elementRole = element.role()
             let elementTitle = element.title()
             let elementValue = element.value()
-            let elementFrame = element.frame()
+            let elementFrame = element.getFrame()
             
             // Elements match if all comparable properties are equal
             let roleMatch = targetRole == elementRole
@@ -603,13 +628,18 @@ final class AccessibilityParsingManager {
         }
         
         // Parse and cache
-        let results = await AccessibilityParser.shared.getAllTextInElement(windowElement: windowElement)
-        let pid = windowElement.pid()
-        let cachedResult = CachedResult(results: results, boundingBoxes: nil, hasBoundingBoxes: false, pid: pid)
-        cachedResults[elementHash] = cachedResult
-        print("AccessibilityParsingManager: Direct parse cached results for element hash \(elementHash)")
-        
-        return results
+        do {
+            let (results, _) = try await AccessibilityParser.shared.getAllTextInElement(windowElement: windowElement)
+            let pid = windowElement.pid()
+            let cachedResult = CachedResult(results: results, boundingBoxes: nil, hasBoundingBoxes: false, pid: pid)
+            cachedResults[elementHash] = cachedResult
+            print("AccessibilityParsingManager: Direct parse cached results for element hash \(elementHash)")
+            
+            return results
+        } catch {
+            print("AccessibilityParsingManager: Error in direct parse: \(error)")
+            return [:]
+        }
     }
     
     /// Direct parsing method that bypasses the request system for enhanced cases
@@ -624,13 +654,18 @@ final class AccessibilityParsingManager {
         }
         
         // Parse and cache
-        let result = await AccessibilityParser.shared.getAllTextInElement(windowElement: windowElement, includeBoundingBoxes: true)
-        let pid = windowElement.pid()
-        let cachedResult = CachedResult(results: result.0, boundingBoxes: result.1, hasBoundingBoxes: true, pid: pid)
-        cachedResults[elementHash] = cachedResult
-        print("AccessibilityParsingManager: Direct enhanced parse cached results for element hash \(elementHash)")
-        
-        return result
+        do {
+            let result = try await AccessibilityParser.shared.getAllTextInElement(windowElement: windowElement, includeBoundingBoxes: true)
+            let pid = windowElement.pid()
+            let cachedResult = CachedResult(results: result.0, boundingBoxes: result.1, hasBoundingBoxes: true, pid: pid)
+            cachedResults[elementHash] = cachedResult
+            print("AccessibilityParsingManager: Direct enhanced parse cached results for element hash \(elementHash)")
+            
+            return result
+        } catch {
+            print("AccessibilityParsingManager: Error in direct enhanced parse: \(error)")
+            return ([:], nil)
+        }
     }
     
     /// Check if a cached result is still valid and remove it if not

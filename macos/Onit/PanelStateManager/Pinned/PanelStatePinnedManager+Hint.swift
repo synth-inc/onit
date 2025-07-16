@@ -25,7 +25,7 @@ extension PanelStatePinnedManager {
         }
     }
 
-    private func showTetherWindow(activeScreen: NSScreen) {
+    func showTetherWindow(activeScreen: NSScreen) {
         // TIM TODO: This is for HISTORY building mode DO NOT COMMIT
 //         let tetherView = ExternalTetheredButton(
 //            onClick: { [weak self] in

@@ -8,6 +8,7 @@
 import AppKit
 
 extension PanelStatePinnedManager: AccessibilityNotificationsDelegate {
+    
     //  MARK: - DID ACTIVATE WINDOW
     
     func accessibilityManager(_ manager: AccessibilityNotificationsManager, didActivateWindow window: TrackedWindow) {
@@ -25,7 +26,7 @@ extension PanelStatePinnedManager: AccessibilityNotificationsDelegate {
     
     //  MARK: - DID ACTIVATE IGNORED WINDOW
     
-    func accessibilityManager(_ manager: AccessibilityNotificationsManager, didActivateIgnoredWindow window: TrackedWindow?) {}
+    func accessibilityManager(_ manager: AccessibilityNotificationsManager, didActivateIgnoredWindow window: TrackedWindow) {}
 
     //  MARK: - DID ACTIVATE ONIT
     
