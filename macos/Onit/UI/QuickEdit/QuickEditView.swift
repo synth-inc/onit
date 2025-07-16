@@ -48,6 +48,7 @@ struct QuickEditView: View {
     }
     
     var isWindowAlreadyInContext: Bool {
+        guard let windowState = windowState else { return false }
         guard let windowName = currentWindowInfo.name else {
             return false
         }
@@ -61,58 +62,79 @@ struct QuickEditView: View {
     }
     
     var body: some View {
+        mainContent
+            .background(VibrantVisualEffectView { Color.quickEditBG })
+            .addBorder(cornerRadius: 14, lineWidth: 1, stroke: .T_4)
+            .frame(minWidth: 360, minHeight: 120, maxHeight: 605)
+            .onAppear(perform: handleOnAppear)
+            .modifier(GeneratingPromptModifier(
+                windowState: windowState,
+                displayedPrompt: $displayedPrompt
+            ))
+            .modifier(CurrentChatModifier(
+                windowState: windowState,
+                displayedPrompt: $displayedPrompt
+            ))
+            .modifier(PendingContextModifier(
+                windowState: windowState,
+                currentWindowInfo: currentWindowInfo,
+                isAddingContext: $isAddingContext
+            ))
+    }
+    
+    // MARK: - Content Views
+    
+    @ViewBuilder
+    private var mainContent: some View {
         VStack(spacing: 8) {
             headerView
             
-            if let prompt = displayedPrompt {
-                QuickEditResponseView(
-                    prompt: prompt,
-                    isEditableElement: quickEditManager.isEditableElement
-                )
-                
-                Color.gray500
-                    .frame(height: 1)
+            responseSection
+            
+            if let windowState = windowState {
+                textfield(windowState: windowState)
             }
+            
+            footerSection
+        }
+    }
     
-            textfield
-            
-            PromptCoreFooter(
-                audioRecorder: audioRecorder,
-                disabledSend: windowState.pendingInstruction.isEmpty,
-                handleSend: handleSend
+    @ViewBuilder
+    private var responseSection: some View {
+        if let prompt = displayedPrompt {
+            QuickEditResponseView(
+                prompt: prompt,
+                isEditableElement: quickEditManager.isEditableElement
             )
-        }
-        .background(VibrantVisualEffectView { Color.quickEditBG })
-        .addBorder(cornerRadius: 14, lineWidth: 1, stroke: .T_4)
-        .frame(minWidth: 360, minHeight: 120, maxHeight: 605)
-        .onChange(of: windowState.generatingPrompt) { _, generatingPrompt in
-            if let generatingPrompt = generatingPrompt {
-                displayedPrompt = generatingPrompt
-            }
-        }
-        .onChange(of: windowState.currentChat) { _, currentChat in
-            if displayedPrompt == nil, let lastPrompt = currentChat?.prompts.last {
-                displayedPrompt = lastPrompt
-            }
-        }
-        .onAppear {
-            loadCurrentWindowInfo()
             
-            if autoContextFromCurrentWindow && accessibilityEnabled {
-                addCurrentWindowToContext()
-            }
+            Color.gray500
+                .frame(height: 1)
         }
-        .onChange(of: windowState.pendingContextList) { _, newContextList in
-            if isAddingContext,
-               let windowName = currentWindowInfo.name,
-               newContextList.contains(where: { context in
-                   if case .auto(let autoContext) = context {
-                       return windowName == autoContext.appTitle
-                   }
-                   return false
-               }) {
-                isAddingContext = false
-            }
+    }
+    
+    @ViewBuilder
+    private var footerSection: some View {
+        PromptCoreFooter(
+            audioRecorder: audioRecorder,
+            disableSend: isDisabledSend,
+            handleSend: handleSend
+        )
+    }
+    
+    // MARK: - Computed Properties
+    
+    private var isDisabledSend: Bool {
+        guard let windowState = windowState else { return true }
+        return windowState.pendingInstruction.isEmpty
+    }
+    
+    // MARK: - Event Handlers
+    
+    private func handleOnAppear() {
+        loadCurrentWindowInfo()
+        
+        if autoContextFromCurrentWindow && accessibilityEnabled {
+            addCurrentWindowToContext()
         }
     }
 }
@@ -144,11 +166,10 @@ extension QuickEditView {
                 IconButton(
                     icon: .addContext,
                     iconSize: 18,
-                    action: {
-                        addCurrentWindowToContext()
-                    },
                     tooltipPrompt: "Add window context"
-                )
+                ) {
+                    addCurrentWindowToContext()
+                }
             }
             
             Spacer()
@@ -156,19 +177,18 @@ extension QuickEditView {
             IconButton(
                 icon: .layoutRight,
                 iconSize: 16,
-                action: {
-                    PanelStateCoordinator.shared.launchPanel(for: windowState, createNewChat: false)
-                    QuickEditManager.shared.hide()
-                },
                 tooltipPrompt: "Open Onit"
-            )
+            ) {
+                PanelStateCoordinator.shared.launchPanel(for: windowState, createNewChat: false)
+                QuickEditManager.shared.hide()
+            }
         }
         .frame(height: 24, alignment: .center)
         .padding(.horizontal, 16)
         .padding(.vertical, 6)
     }
     
-    private var textfield: some View {
+    private func textfield(windowState: OnitPanelState) -> some View {
         @Bindable var bindableWindowState = windowState
         
         return TextViewWrapper(
@@ -204,7 +224,8 @@ extension QuickEditView {
 extension QuickEditView {
     
     private func handleSend() {
-        guard !windowState.pendingInstruction.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return }
+        guard let windowState = windowState,
+              !windowState.pendingInstruction.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return }
         
         Task {
             await appState.checkSubscriptionAlerts {
@@ -218,7 +239,8 @@ extension QuickEditView {
     private func loadCurrentWindowInfo() {
         let windowsManager = AccessibilityNotificationsManager.shared.windowsManager
         
-        if let trackedWindow = windowsManager.activeTrackedWindow,
+        if let windowState = windowState,
+           let trackedWindow = windowState.foregroundWindow,
            let pid = trackedWindow.element.pid(),
            let windowApp = NSRunningApplication(processIdentifier: pid)
         {
@@ -230,7 +252,8 @@ extension QuickEditView {
     }
     
     private func addCurrentWindowToContext() {
-        guard let pid = currentWindowInfo.pid,
+        guard let windowState = windowState,
+              let pid = currentWindowInfo.pid,
               let focusedWindow = pid.firstMainWindow,
               !isAddingContext,
               !isWindowAlreadyInContext else {
@@ -239,12 +262,14 @@ extension QuickEditView {
         
         isAddingContext = true
         
-        let _ = AccessibilityNotificationsManager.shared.windowsManager.append(focusedWindow, pid: pid)
-        AccessibilityNotificationsManager.shared.fetchAutoContext(pid: pid, state: windowState)
+        if let trackedWindow = AccessibilityNotificationsManager.shared.windowsManager.trackWindowForElement(focusedWindow, pid: pid) {
+            windowState.addWindowToContext(window: trackedWindow.element)
+        }
     }
     
     private func removeCurrentWindowFromContext() {
-        guard let windowName = currentWindowInfo.name else {
+        guard let windowState = windowState,
+              let windowName = currentWindowInfo.name else {
             return
         }
         
@@ -257,7 +282,8 @@ extension QuickEditView {
     }
     
     private func showContextWindow(windowName: String) {
-        guard let context = windowState.pendingContextList.first(where: { context in
+        guard let windowState = windowState,
+              let context = windowState.pendingContextList.first(where: { context in
             if case .auto(let autoContext) = context {
                 return windowName == autoContext.appTitle
             }
@@ -270,5 +296,66 @@ extension QuickEditView {
             windowState: windowState,
             context: context
         )
+    }
+}
+
+// MARK: - Custom Modifiers
+
+struct GeneratingPromptModifier: ViewModifier {
+    let windowState: OnitPanelState?
+    @Binding var displayedPrompt: Prompt?
+    
+    func body(content: Content) -> some View {
+        content
+            .onChange(of: windowState?.generatingPrompt) { _, generatingPrompt in
+                if let generatingPrompt = generatingPrompt {
+                    displayedPrompt = generatingPrompt
+                }
+            }
+    }
+}
+
+struct CurrentChatModifier: ViewModifier {
+    let windowState: OnitPanelState?
+    @Binding var displayedPrompt: Prompt?
+    
+    func body(content: Content) -> some View {
+        content
+            .onChange(of: windowState?.currentChat) { _, currentChat in
+                if displayedPrompt == nil, let lastPrompt = currentChat?.prompts.last {
+                    displayedPrompt = lastPrompt
+                }
+            }
+    }
+}
+
+struct PendingContextModifier: ViewModifier {
+    let windowState: OnitPanelState?
+    let currentWindowInfo: (appBundleUrl: URL?, name: String?, pid: pid_t?)
+    @Binding var isAddingContext: Bool
+    
+    func body(content: Content) -> some View {
+        content
+            .onChange(of: windowState!.pendingContextList) { _, newContextList in
+                handleContextListChange(newContextList)
+            }
+    }
+    
+    private func handleContextListChange(_ newContextList: [Context]) {
+        guard isAddingContext,
+              let windowName = currentWindowInfo.name else {
+            return
+        }
+        
+        let containsWindow = newContextList.contains { context in
+            if case .auto(let autoContext) = context {
+                return windowName == autoContext.appTitle
+            }
+            return false
+        }
+        
+        if containsWindow {
+            isAddingContext = false
+        }
     }
 }

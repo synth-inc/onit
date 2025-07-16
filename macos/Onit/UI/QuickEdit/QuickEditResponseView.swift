@@ -44,6 +44,7 @@ struct QuickEditResponseView: View {
     }
     
     private var textToDisplay: String {
+        guard let state = state else { return "" }
         guard !prompt.responses.isEmpty else {
             return state.streamedResponse
         }
@@ -105,7 +106,7 @@ extension QuickEditResponseView {
                 .frame(maxWidth: .infinity, alignment: .leading)
                 
             case .streaming, .done:
-                if textToDisplay.isEmpty && !(state.isSearchingWeb[prompt.id] ?? false) {
+                if textToDisplay.isEmpty && !(state?.isSearchingWeb[prompt.id] ?? false) {
                     HStack {
                         Spacer()
                         QLImage("loader_rotated-200")
@@ -123,25 +124,24 @@ extension QuickEditResponseView {
                                 IconButton(
                                     icon: .arrowDown,
                                     buttonSize: 36,
-                                    action: {
-                                        hasUserManuallyScrolled = false
-                                        isButtonScrolling = true
-                                        
-                                        if let proxy = scrollProxy {
-                                            withAnimation(.easeOut(duration: 0.2)) {
-                                                proxy.scrollTo("bottom", anchor: .bottom)
-                                            }
-                                            
-                                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                                                isButtonScrolling = false
-                                            }
-                                        }
-                                    },
                                     activeColor: .white,
                                     inactiveColor: .white,
-                                    tooltipPrompt: "Scroll to bottom",
-                                    hoverBackgroundColor: .gray400
-                                )
+                                    hoverBackground: .gray400,
+                                    tooltipPrompt: "Scroll to bottom"
+                                ) {
+                                    hasUserManuallyScrolled = false
+                                    isButtonScrolling = true
+                                    
+                                    if let proxy = scrollProxy {
+                                        withAnimation(.easeOut(duration: 0.2)) {
+                                            proxy.scrollTo("bottom", anchor: .bottom)
+                                        }
+                                        
+                                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                                            isButtonScrolling = false
+                                        }
+                                    }
+                                }
                                 .background(.gray600)
                                 .addBorder(cornerRadius: 18, stroke: .gray400)
                                 .transition(.scale.combined(with: .opacity))
@@ -276,11 +276,12 @@ extension QuickEditResponseView {
             
             IconButton(
                 icon: .arrowsSpin,
-                action: {
-                    state.generate(prompt)
-                },
                 tooltipPrompt: "Retry"
-            )
+            ) {
+                if let state = state {
+                    state.generate(prompt)
+                }
+            }
         }
     }
 }

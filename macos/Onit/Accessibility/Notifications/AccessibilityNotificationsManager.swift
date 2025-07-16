@@ -152,7 +152,7 @@ class AccessibilityNotificationsManager: ObservableObject {
             self.handleSelectionChange(for: element)
         case kAXValueChangedNotification:
             self.handleValueChanged(for: element)
-            self.handleCaretPositionChange(for: element)
+            // self.handleCaretPositionChange(for: element)
         case kAXFocusedUIElementChangedNotification:
             self.handleCaretPositionChange(for: element)
         case kAXWindowMovedNotification:
