@@ -25,7 +25,7 @@ struct TextViewWrapper: NSViewRepresentable {
     var audioRecorder: AudioRecorder
     var isDisabled: Bool = false
     
-    var font: NSFont = AppFont.medium16.nsFont
+    var font: NSFont = AppFont.medium14.nsFont
     var textColor: NSColor = .white
     var placeholderColor: NSColor = .gray300
     var detectLinks: Bool = true // TODO remove this once we use TextInputView for prompt editing

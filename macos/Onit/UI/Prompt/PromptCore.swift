@@ -151,7 +151,6 @@ extension PromptCore {
                 detectLinks: true
             )
             .frame(height: min(textHeight, maxHeightLimit))
-            .appFont(.medium16)
             .foregroundStyle(.white)
             .opacity(shouldIndicateDisabled ? 0.5 : 1)
             .focused($isFocused)

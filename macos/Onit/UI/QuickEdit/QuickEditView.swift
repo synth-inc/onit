@@ -205,7 +205,6 @@ extension QuickEditView {
         .frame(height: min(textHeight, maxTextHeight))
         .padding(.horizontal, 16)
         .padding(.vertical, 6)
-        .appFont(.medium16)
         .foregroundStyle(.white)
         .focused($isFocused)
         .onAppear { 
