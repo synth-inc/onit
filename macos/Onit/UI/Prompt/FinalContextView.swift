@@ -63,7 +63,6 @@ struct FinalContextView: View {
                     audioRecorder: audioRecorder,
                     detectLinks: false
                 )
-                .appFont(.medium16)
                 .frame(height: min(textHeight, maxHeightLimit))
                 .allowsHitTesting(isEditing)
                 .textSelection(.enabled)
