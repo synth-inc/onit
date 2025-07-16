@@ -14,6 +14,7 @@ struct FileRow: View {
     @ObservedObject private var debugManager = DebugManager.shared
     
     @Default(.autoContextFromCurrentWindow) var autoContextFromCurrentWindow
+    @Default(.autoAddHighlightedTextToContext) var autoAddHighlightedTextToContext
     
     @State private var ocrComparisonResult: OCRComparisonResult? = nil
     @State private var showOCRDetails = false
@@ -119,7 +120,7 @@ struct FileRow: View {
             FlowLayout(spacing: 6) {
                 PaperclipButton()
                 
-                addForegroundWindowToContextButton
+                addToContextButton
                 pendingWindowContextItems
                 highlightedTextContext
                 addedWindowContextItems
@@ -150,28 +151,63 @@ struct FileRow: View {
 // MARK: - Child Components
 
 extension FileRow {
+    private func ghostContextTag(
+        text: String,
+        iconBundleURL: URL? = nil,
+        iconView: (any View)? = nil,
+        tooltip: String,
+        action: @escaping () -> Void
+    ) -> some View {
+        ContextTag(
+            text: text,
+            textColor: .T_2,
+            hoverTextColor: .white,
+            background: contextTagBackground,
+            hoverBackground: contextTagHoverBackground,
+            hasHoverBorder: true,
+            shouldFadeIn: true,
+            iconBundleURL: iconBundleURL,
+            iconView: iconView,
+            tooltip: tooltip
+        ) {
+            action()
+        }
+    }
+    
     @ViewBuilder
-    private var addForegroundWindowToContextButton: some View {
-        if accessibilityEnabled,
-           autoContextFromCurrentWindow,
-           !(windowBeingAddedToContext || windowAlreadyInContext),
-           let foregroundWindow = windowState?.foregroundWindow
-        {
-            let foregroundWindowName = WindowHelpers.getWindowName(window: foregroundWindow.element)
-            let iconBundleURL = WindowHelpers.getWindowAppBundleUrl(window: foregroundWindow.element)
-
-            ContextTag(
-                text: contextTagText,
-                textColor: .T_2,
-                hoverTextColor: .white,
-                background: contextTagBackground,
-                hoverBackground: contextTagHoverBackground,
-                hasHoverBorder: true,
-                shouldFadeIn: true,
-                iconBundleURL: iconBundleURL,
-                tooltip: "Add \(foregroundWindowName) Context"
-            ) {
-                windowState?.addWindowToContext(window: foregroundWindow.element)
+    private var addToContextButton: some View {
+        if accessibilityEnabled {
+            if let windowState = windowState,
+               let trackedPendingInput = windowState.trackedPendingInput
+            {
+                ghostContextTag(
+                    text: trackedPendingInput.selectedText,
+                    iconView: Image(.text).addIconStyles(iconSize: 14),
+                    tooltip: "Add Highlighted Text To Context"
+                ) {
+                    windowState.pendingInput = trackedPendingInput
+                    windowState.trackedPendingInput = nil
+                }
+                .onChange(of: autoAddHighlightedTextToContext) { _, autoAddHighlightedText in
+                    if autoAddHighlightedText {
+                        windowState.pendingInput = trackedPendingInput
+                        windowState.trackedPendingInput = nil
+                    }
+                }
+            } else if autoContextFromCurrentWindow,
+                      !(windowBeingAddedToContext || windowAlreadyInContext),
+                      let foregroundWindow = windowState?.foregroundWindow
+            {
+                let foregroundWindowName = WindowHelpers.getWindowName(window: foregroundWindow.element)
+                let iconBundleURL = WindowHelpers.getWindowAppBundleUrl(window: foregroundWindow.element)
+                
+                ghostContextTag(
+                    text: contextTagText,
+                    iconBundleURL: iconBundleURL,
+                    tooltip: "Add \(foregroundWindowName) Context"
+                ) {
+                    windowState?.addWindowToContext(window: foregroundWindow.element)
+                }
             }
         }
     }
@@ -211,6 +247,8 @@ extension FileRow {
                 iconView: Image(.text).addIconStyles(iconSize: 14)
             ) {
                 Defaults[.showHighlightedTextInput] = true
+            } removeAction: {
+                windowState?.pendingInput = nil
             }
         }
     }
