@@ -44,7 +44,15 @@ import SwiftData
     var sortedResponses: [Response] {
         return responses.sorted { $0.timestamp < $1.timestamp }
     }
-    
+
+    var currentResponse: Response? {
+        guard generationIndex >= 0,
+              generationIndex < sortedResponses.count else {
+            return nil
+        }
+        return sortedResponses[generationIndex]
+    }
+
     /// Safe generation index that's always within bounds
     var safeGenerationIndex: Int {
         guard !sortedResponses.isEmpty else { return -1 }

@@ -4,12 +4,10 @@ struct RemoteModelsEndpoint: Endpoint {
     typealias Request = EmptyRequest
     typealias Response = ModelsResponse
 
-    var baseURL: URL {
-        URL(string: "https://syntheticco.blob.core.windows.net")!
-    }
+    var baseURL: URL { OnitServer.baseURL }
 
     var path: String {
-        "/onit/models-deepseek.json"
+        "/public/supported-models.json"
     }
     var getParams: [String: String]? { nil }
 
@@ -33,6 +31,7 @@ struct ModelInfo: Codable {
     let defaultOn: Bool
     let supportsVision: Bool
     let supportsSystemPrompts: Bool
+    let supportsToolCalling: Bool
 
     enum CodingKeys: String, CodingKey {
         case id
@@ -41,5 +40,6 @@ struct ModelInfo: Codable {
         case defaultOn = "default_on"
         case supportsVision = "supports_vision"
         case supportsSystemPrompts = "supports_system_prompt"
+        case supportsToolCalling = "supports_tool_calling"
     }
 }

@@ -44,12 +44,13 @@ struct GoogleAIChatStreamingEndpoint: StreamingEndpoint {
     
     var timeout: TimeInterval? { nil }
     
-    func getContentFromSSE(event: EVEvent) throws -> String? {
+    func getContentFromSSE(event: EVEvent) throws -> StreamingEndpointResponse? {
         if let data = event.data?.data(using: .utf8) {
             let response = try JSONDecoder().decode(Response.self, from: data)
             
-            let part = response.candidates.first?.content.parts.first { $0.text != nil }
-            return part?.text
+            if let part = response.candidates.first?.content.parts.first(where: { $0.text != nil }) {
+                return StreamingEndpointResponse(content: part.text, toolName: nil, toolArguments: nil)
+            }
         }
         
         return nil

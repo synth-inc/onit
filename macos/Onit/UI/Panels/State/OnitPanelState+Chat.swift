@@ -139,6 +139,8 @@ extension OnitPanelState {
                 }
 
                 streamedResponse = ""
+                var toolName = ""
+                var toolArguments = ""
                 
                 let isNewInstruction = !prompt.priorInstructions.dropLast().contains(prompt.instruction)
 
@@ -209,16 +211,21 @@ extension OnitPanelState {
                             autoContexts: autoContextsHistory,
                             webSearchContexts: webSearchContextsHistory,
                             responses: responsesHistory,
+                            tools: ToolRouter.activeTools,
                             useOnitServer: useOnitChat,
                             model: model,
                             apiToken: apiToken,
                             includeSearch: (useWebSearch && !useTavilySearch) ? true : nil)
                         for try await response in asyncText {
-                            streamedResponse += response
+                            streamedResponse += response.content ?? ""
+                            if let responseToolName = response.toolName {
+                                toolName = responseToolName
+                            }
+                            toolArguments += response.toolArguments ?? ""
                         }
                     } else {
                         prompt.generationState = .generating
-                        streamedResponse = try await client.chat(
+                        let chatResponse = try await client.chat(
                             systemMessage: systemPrompt.prompt,
                             instructions: instructionsHistory,
                             inputs: inputsHistory,
@@ -229,7 +236,13 @@ extension OnitPanelState {
                             responses: responsesHistory,
                             model: model,
                             apiToken: apiToken,
+                            tools: ToolRouter.activeTools,
                             includeSearch: (useWebSearch && !useTavilySearch) ? true : nil)
+                        streamedResponse = chatResponse.content ?? ""
+						if let responseToolName = chatResponse.toolName {
+							toolName = responseToolName
+						}
+						toolArguments = chatResponse.toolArguments ?? ""
                     }
                 
                 case .local:
@@ -250,7 +263,11 @@ extension OnitPanelState {
                             responses: responsesHistory,
                             model: model)
                         for try await response in asyncText {
-                            streamedResponse += response
+                            streamedResponse += response.content ?? ""
+                            if let responseToolName = response.toolName {
+                                toolName = responseToolName
+                            }
+                            toolArguments += response.toolArguments ?? ""
                         }
                     } else {
                         prompt.generationState = .generating
@@ -268,6 +285,22 @@ extension OnitPanelState {
                 }
                 
                 let response = Response(text: String(streamedResponse), instruction: curInstruction, type: .success, model: currentModelName)
+
+                if !toolArguments.isEmpty {
+                    let toolResult = await ToolRouter.parseAndExecuteToolCalls(toolName: toolName, toolArguments: toolArguments)
+                    response.toolCallName = toolName
+                    response.toolCallArguments = toolArguments
+
+                    switch toolResult {
+                    case .success(let success):
+                        response.toolCallResult = success.result
+                        response.toolCallSuccess = true
+                    case .failure(let failure):
+                        response.toolCallResult = failure.message
+                        response.toolCallSuccess = false
+                    }
+                }
+
                 replacePartialResponse(prompt: prompt, response: response)
                 TokenValidationManager.setTokenIsValid(true)
             } catch let error as FetchingError {

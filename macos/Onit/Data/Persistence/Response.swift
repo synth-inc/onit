@@ -16,6 +16,12 @@ class Response {
     var type: ResponseType
     var model: String?
 
+    // Tool call properties
+    var toolCallName: String?
+    var toolCallArguments: String?
+    var toolCallResult: String?
+    var toolCallSuccess: Bool?
+
     init(text: String, instruction: String?, type: ResponseType, model: String, time: Date = .now) {
         self.text = text
         self.instruction = instruction
@@ -30,6 +36,10 @@ class Response {
     
     var isPartial: Bool {
         type == .partial
+    }
+
+    var hasToolCall: Bool {
+        toolCallName?.isEmpty == false
     }
 }
 

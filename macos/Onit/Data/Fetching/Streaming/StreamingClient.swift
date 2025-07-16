@@ -19,17 +19,18 @@ actor StreamingClient {
               autoContexts: [[String: String]],
               webSearchContexts: [[(title: String, content: String, source: String, url: URL?)]],
               responses: [String],
+              tools: [Tool],
               useOnitServer: Bool,
               model: AIModel,
               apiToken: String?,
-              includeSearch: Bool? = nil) async throws -> AsyncThrowingStream<String, Error> {
+              includeSearch: Bool? = nil) async throws -> AsyncThrowingStream<StreamingEndpointResponse, Error> {
         let userMessages = ChatEndpointMessagesBuilder.user(
             instructions: instructions,
             inputs: inputs,
             files: files,
             autoContexts: autoContexts,
             webSearchContexts: webSearchContexts)
-        let endpoint = try ChatStreamingEndpointBuilder.build(
+        let endpoint = try await ChatStreamingEndpointBuilder.build(
             useOnitServer: useOnitServer,
             model: model,
             images: images,
@@ -37,6 +38,7 @@ actor StreamingClient {
             apiToken: apiToken,
             systemMessage: systemMessage,
             userMessages: userMessages,
+            tools: tools,
             includeSearch: includeSearch)
         var eventParser: EventParser?
         
@@ -60,7 +62,7 @@ actor StreamingClient {
                    autoContexts: [[String: String]],
                    webSearchContexts: [[(title: String, content: String, source: String, url: URL?)]],
                    responses: [String],
-                   model: String) async throws -> AsyncThrowingStream<String, Error> {
+                   model: String) async throws -> AsyncThrowingStream<StreamingEndpointResponse, Error> {
         let userMessages = ChatEndpointMessagesBuilder.user(
             instructions: instructions,
             inputs: inputs,
@@ -80,7 +82,7 @@ actor StreamingClient {
     // MARK: - Streaming
 
     private func stream(endpoint: any StreamingEndpoint, eventParser: EventParser? = nil) async throws
-        -> AsyncThrowingStream<String, Error>
+        -> AsyncThrowingStream<StreamingEndpointResponse, Error>
     {
         let urlRequest = try endpoint.asURLRequest()
         let eventSource = EventSource(eventParser: eventParser)
@@ -94,8 +96,8 @@ actor StreamingClient {
         }
         #endif
         
-        return AsyncThrowingStream<String, Error>(
-            String.self, bufferingPolicy: .unbounded
+        return AsyncThrowingStream<StreamingEndpointResponse, Error>(
+            StreamingEndpointResponse.self, bufferingPolicy: .unbounded
         ) { continuation in
             let task = Task { @Sendable in
                 for await event in await dataTask.events() {
@@ -106,7 +108,7 @@ actor StreamingClient {
                         if let response = try? endpoint.getContentFromSSE(event: event) {
                             continuation.yield(response)
                         } else {
-                            continuation.yield("")
+                            continuation.yield(StreamingEndpointResponse(content: nil, toolName: nil, toolArguments: nil))
                         }
                     case .error(let error):
                         continuation.finish(

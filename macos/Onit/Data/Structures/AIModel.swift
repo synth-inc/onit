@@ -15,6 +15,7 @@ struct AIModel: Codable, Identifiable, Hashable, Defaults.Serializable {
     let defaultOn: Bool
     let supportsVision: Bool
     let supportsSystemPrompts: Bool
+    let supportsToolCalling: Bool
     var isNew: Bool = false
     var isDeprecated: Bool = false
     var customProviderName: String?
@@ -51,6 +52,7 @@ struct AIModel: Codable, Identifiable, Hashable, Defaults.Serializable {
         self.defaultOn = false
         self.supportsVision = false
         self.supportsSystemPrompts = true
+        self.supportsToolCalling = false
         self.customProviderName = providerName
     }
 
@@ -64,6 +66,7 @@ struct AIModel: Codable, Identifiable, Hashable, Defaults.Serializable {
         self.defaultOn = modelInfo.defaultOn
         self.supportsVision = modelInfo.supportsVision
         self.supportsSystemPrompts = modelInfo.supportsSystemPrompts
+        self.supportsToolCalling = modelInfo.supportsToolCalling
     }
 
     @MainActor
