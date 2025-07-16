@@ -114,6 +114,7 @@ extension Defaults.Keys {
     static let lineHeight = Key<Double>("lineHeight", default: 1.5)
     static let voiceSilenceThreshold = Key<Float>("voiceSilenceThreshold", default: -40)
     static let voiceSpeechPassThreshold = Key<Double>("voiceSpeechPassThreshold", default: 0.7)
+    static let showHighlightedTextInput = Key<Bool>("showHighlightedTextInput", default: true)
 
     // Local model advanced options
     static let localKeepAlive = Key<String?>("localKeepAlive", default: nil)

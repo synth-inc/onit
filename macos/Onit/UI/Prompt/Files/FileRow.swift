@@ -121,6 +121,7 @@ struct FileRow: View {
                 
                 addForegroundWindowToContextButton
                 pendingWindowContextItems
+                highlightedTextContext
                 addedWindowContextItems
             }
             
@@ -198,6 +199,18 @@ extension FileRow {
                         )
                     }
                 }
+            }
+        }
+    }
+    
+    @ViewBuilder
+    private var highlightedTextContext: some View {
+        if let pendingInput = windowState?.pendingInput {
+            ContextTag(
+                text: pendingInput.selectedText,
+                iconView: Image(.text).addIconStyles(iconSize: 14)
+            ) {
+                Defaults[.showHighlightedTextInput] = true
             }
         }
     }

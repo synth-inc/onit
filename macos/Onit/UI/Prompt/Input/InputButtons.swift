@@ -5,6 +5,7 @@
 //  Created by Benjamin Sage on 10/8/24.
 //
 
+import Defaults
 import SwiftUI
 
 struct InputButtons: View {
@@ -40,8 +41,21 @@ struct InputButtons: View {
                             .rotationEffect(inputExpanded ? .degrees(90) : .zero)
                     }
             }
+            
+            closeButton
         }
         .foregroundStyle(.gray200)
+    }
+    
+    // MARK: - Child Components
+    
+    private var closeButton: some View {
+        IconButton(
+            icon: .cross,
+            iconSize: 9
+        ) {
+            Defaults[.showHighlightedTextInput] = false
+        }
     }
 }
 
