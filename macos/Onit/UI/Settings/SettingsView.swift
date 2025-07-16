@@ -50,11 +50,13 @@ struct SettingsView: View {
                 }
                 .tag(SettingsTab.accessibility)
 
+            #if DEBUG || BETA
             QuickEditTab()
                 .tabItem {
                     Label("Quick Edit", systemImage: "wand.and.sparkles")
                 }
                 .tag(SettingsTab.quickEdit)
+            #endif
                 
             WebSearchTab()
                 .tabItem {
