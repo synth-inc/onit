@@ -7,7 +7,7 @@ struct RemoteModelsEndpoint: Endpoint {
     var baseURL: URL { OnitServer.baseURL }
 
     var path: String {
-        "/public/supported-models.json"
+        "/supported-models.json"
     }
     var getParams: [String: String]? { nil }
 
