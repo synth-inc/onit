@@ -15,6 +15,7 @@ struct OpenAIChatStreamingEndpoint: StreamingEndpoint {
     let messages: [OpenAIChatMessage]
     let token: String?
     let model: String
+    let supportsToolCalling: Bool
     let tools: [Tool]
     let searchTool: ChatSearchTool?
     
@@ -22,9 +23,12 @@ struct OpenAIChatStreamingEndpoint: StreamingEndpoint {
     var getParams: [String: String]? { nil }
     var method: HTTPMethod { .post }
     var requestBody: OpenAIChatRequest? {
-        var apiTools: [OpenAIChatTool] = tools.map { OpenAIChatTool(tool: $0) }
-        if let searchTool = searchTool, let type = searchTool.type {
-            apiTools.append(OpenAIChatTool.search(type: type))
+        var apiTools: [OpenAIChatTool] = []
+        if supportsToolCalling {
+            apiTools = tools.map { OpenAIChatTool(tool: $0) }
+            if let searchTool = searchTool, let type = searchTool.type {
+                apiTools.append(OpenAIChatTool.search(type: type))
+            }
         }
         return OpenAIChatRequest(model: model, input: messages, tools: apiTools, stream: true)
     }

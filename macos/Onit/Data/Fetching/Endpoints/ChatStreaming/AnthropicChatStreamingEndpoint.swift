@@ -17,6 +17,7 @@ struct AnthropicChatStreamingEndpoint: StreamingEndpoint {
     let token: String?
     let messages: [AnthropicMessage]
     let maxTokens: Int
+    let supportsToolCalling: Bool
     let tools: [Tool]
     let searchTool: ChatSearchTool?
     
@@ -27,13 +28,16 @@ struct AnthropicChatStreamingEndpoint: StreamingEndpoint {
     var method: HTTPMethod { .post }
     
     var requestBody: AnthropicChatRequest? {
-        var apiTools: [AnthropicChatTool] = tools.map { AnthropicChatTool(tool: $0) }
-        if let searchTool = searchTool,
-           let type = searchTool.type,
-           let name = searchTool.name,
-           let maxUses = searchTool.maxUses
-        {
-            apiTools.append(AnthropicChatTool.search(type: type, name: name, maxUses: maxUses))
+        var apiTools: [AnthropicChatTool] = []
+        if supportsToolCalling {
+            apiTools = tools.map { AnthropicChatTool(tool: $0) }
+            if let searchTool = searchTool,
+               let type = searchTool.type,
+               let name = searchTool.name,
+               let maxUses = searchTool.maxUses
+            {
+                apiTools.append(AnthropicChatTool.search(type: type, name: name, maxUses: maxUses))
+            }
         }
         return AnthropicChatRequest(
             model: model,

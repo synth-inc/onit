@@ -139,7 +139,7 @@ struct ChatStreamingEndpointBuilder {
         }
 
         return OpenAIChatStreamingEndpoint(
-            messages: messages, token: apiToken, model: model.id, tools: tools, searchTool: searchTool)
+            messages: messages, token: apiToken, model: model.id, supportsToolCalling: model.supportsToolCalling, tools: tools, searchTool: searchTool)
     }
 
     private static func anthropic(
@@ -169,6 +169,7 @@ struct ChatStreamingEndpointBuilder {
             token: apiToken,
             messages: messages,
             maxTokens: 4096,
+            supportsToolCalling: model.supportsToolCalling,
             tools: tools,
             searchTool: searchTool
         )
