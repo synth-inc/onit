@@ -424,7 +424,7 @@ struct GeneralTab: View {
         ) {
             VStack(alignment: .leading, spacing: 20) {
                 HStack {
-                    Text("Show highlighted text input.")
+                    Text("Show highlighted text input")
                         .font(.system(size: 13))
                     
                     Spacer()
