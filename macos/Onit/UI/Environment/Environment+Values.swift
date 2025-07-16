@@ -32,7 +32,12 @@ extension EnvironmentValues {
     }
     
     var windowState: OnitPanelState? {
-        get { self[OnitPanelStateKey.self] }
+        get {
+            guard Thread.isMainThread else {
+                return nil
+            }
+            return self[OnitPanelStateKey.self]
+        }
         set { self[OnitPanelStateKey.self] = newValue }
     }
 }
