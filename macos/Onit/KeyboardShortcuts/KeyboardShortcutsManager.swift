@@ -106,8 +106,8 @@ struct KeyboardShortcutsManager {
                     if state.panel != nil {
                         if state.showContextMenuBrowserTabs {
                             state.showContextMenuBrowserTabs = false
-                        } else if state.pendingInput != nil {
-                            state.pendingInput = nil
+                        } else if state.hasHighlightedText {
+                            state.clearHighlightedTextStates()
                         } else {
                             PanelStateCoordinator.shared.closePanel()
                         }
