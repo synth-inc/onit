@@ -69,6 +69,7 @@ struct ChatStreamingEndpointBuilder {
                 apiToken: apiToken,
                 systemMessage: systemMessage,
                 userMessages: userMessages,
+                tools: tools,
                 includeSearch: includeSearch)
         case .deepSeek:
             return ChatStreamingEndpointBuilder.deepSeek(
@@ -201,6 +202,7 @@ struct ChatStreamingEndpointBuilder {
         apiToken: String?,
         systemMessage: String,
         userMessages: [String],
+        tools: [Tool],
         includeSearch: Bool? = nil
     ) -> GoogleAIChatStreamingEndpoint {
         let messages = ChatEndpointMessagesBuilder.googleAI(
@@ -214,6 +216,8 @@ struct ChatStreamingEndpointBuilder {
             system: model.supportsSystemPrompts ? systemMessage : nil,
             model: model.id,
             queryToken: apiToken,
+            supportsToolCalling: model.supportsToolCalling,
+            tools: tools,
             includeSearch: includeSearch)
     }
 

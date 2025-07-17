@@ -57,6 +57,7 @@ struct ChatEndpointBuilder {
                 apiToken: apiToken,
                 systemMessage: systemMessage,
                 userMessages: userMessages,
+                tools: tools,
                 includeSearch: includeSearch)
         case .deepSeek:
             return ChatEndpointBuilder.deepSeek(
@@ -169,6 +170,7 @@ struct ChatEndpointBuilder {
         apiToken: String?,
         systemMessage: String,
         userMessages: [String],
+        tools: [Tool] = [],
         includeSearch: Bool? = nil
     ) -> GoogleAIChatEndpoint {
         let messages = ChatEndpointMessagesBuilder.googleAI(
@@ -182,6 +184,8 @@ struct ChatEndpointBuilder {
             system: model.supportsSystemPrompts ? systemMessage : nil,
             model: model.id,
             queryToken: apiToken,
+            supportsToolCalling: model.supportsToolCalling,
+            tools: tools,
             includeSearch: includeSearch)
     }
 
