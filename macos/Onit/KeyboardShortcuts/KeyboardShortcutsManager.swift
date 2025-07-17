@@ -93,6 +93,7 @@ struct KeyboardShortcutsManager {
         KeyboardShortcuts.Name.allCases.forEach { name in
             KeyboardShortcuts.onKeyUp(for: name) {
                 let state = PanelStateCoordinator.shared.state
+                let hasHighlightedText = state.selectedPendingInput != nil || state.trackedPendingInput != nil || state.unpinnedPendingInput != nil || !state.pinnedPendingInputs.isEmpty
                 
                 AnalyticsManager.shortcutPressed(for: name.rawValue, panelOpened: state.panelOpened)
                 
@@ -106,8 +107,8 @@ struct KeyboardShortcutsManager {
                     if state.panel != nil {
                         if state.showContextMenuBrowserTabs {
                             state.showContextMenuBrowserTabs = false
-                        } else if state.pendingInput != nil {
-                            state.pendingInput = nil
+                        } else if hasHighlightedText {
+                            state.clearHighlightedTextStates()
                         } else {
                             PanelStateCoordinator.shared.closePanel()
                         }

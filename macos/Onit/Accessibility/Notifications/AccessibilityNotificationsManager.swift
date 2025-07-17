@@ -595,6 +595,24 @@ class AccessibilityNotificationsManager: ObservableObject {
         
         showDebug()
     }
+    
+    private func clearPendingInputsOnInvalidSelectedText() {
+        let selectedPendingInput = PanelStateCoordinator.shared.state.selectedPendingInput
+        let unpinnedPendingInput = PanelStateCoordinator.shared.state.unpinnedPendingInput
+        let currentHighlightedTextIsInView = selectedPendingInput == unpinnedPendingInput
+        
+        if currentHighlightedTextIsInView {
+            PanelStateCoordinator.shared.state.selectedPendingInput = nil
+        }
+        
+        PanelStateCoordinator.shared.state.unpinnedPendingInput = nil
+        PanelStateCoordinator.shared.state.trackedPendingInput = nil
+    }
+    
+    private func addSelectedTextToContextAndShowInView(_ input: Input) {
+        PanelStateCoordinator.shared.state.selectedPendingInput = input
+        PanelStateCoordinator.shared.state.unpinnedPendingInput = input
+    }
 
     private func processSelectedText(_ text: String?) {
         guard Defaults[.autoContextFromHighlights],
@@ -602,8 +620,9 @@ class AccessibilityNotificationsManager: ObservableObject {
               HighlightedTextValidator.isValid(text: selectedText) else {
             
             screenResult.userInteraction.selectedText = nil
-            PanelStateCoordinator.shared.state.pendingInput = nil
-            PanelStateCoordinator.shared.state.trackedPendingInput = nil
+            
+            clearPendingInputsOnInvalidSelectedText()
+            
             return
         }
         
@@ -612,7 +631,7 @@ class AccessibilityNotificationsManager: ObservableObject {
         let input = Input(selectedText: selectedText, application: currentSource ?? "")
         
         if Defaults[.autoAddHighlightedTextToContext] {
-            PanelStateCoordinator.shared.state.pendingInput = input
+            addSelectedTextToContextAndShowInView(input)
         } else {
             PanelStateCoordinator.shared.state.trackedPendingInput = input
         }

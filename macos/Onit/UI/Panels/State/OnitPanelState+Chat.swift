@@ -14,10 +14,18 @@ import SwiftData
 extension OnitPanelState {
     
     func createAndSavePrompt(accountId: Int?) {
+        var inputs = pinnedPendingInputs
+        
+        if let unpinnedPendingInput = unpinnedPendingInput,
+           !inputs.contains(unpinnedPendingInput)
+        {
+            inputs.append(unpinnedPendingInput)
+        }
+        
         let prompt = Prompt(
             instruction: pendingInstruction,
             timestamp: .now,
-            input: pendingInput,
+            inputs: inputs,
             contextList: pendingContextList
         )
 
@@ -62,7 +70,7 @@ extension OnitPanelState {
         currentChat?.prompts.append(prompt)
         currentPrompts?.append(prompt)
         pendingInstruction = ""
-        pendingInput = nil
+        clearHighlightedTextStates()
 
         do {
             try container.mainContext.save()
@@ -91,7 +99,7 @@ extension OnitPanelState {
             let curInstruction = prompt.instruction
             
             var filesHistory: [[URL]] = [prompt.contextList.files]
-            var inputsHistory: [Input?] = [prompt.input]
+            var inputsHistory: [[Input]] = [prompt.inputs]
             var imagesHistory: [[URL]] = [prompt.contextList.images]
             var instructionsHistory: [String] = [curInstruction]
             var autoContextsHistory: [[String: String]] = [prompt.contextList.autoContexts]
@@ -110,7 +118,7 @@ extension OnitPanelState {
                     
                     if response.type != .error {
                         instructionsHistory.insert(currentPrompt!.instruction, at: 0)
-                        inputsHistory.insert(currentPrompt!.input, at: 0)
+                        inputsHistory.insert(currentPrompt!.inputs, at: 0)
                         filesHistory.insert(currentPrompt!.contextList.files, at: 0)
                         imagesHistory.insert(currentPrompt!.contextList.images, at: 0)
                         autoContextsHistory.insert(currentPrompt!.contextList.autoContexts, at: 0)

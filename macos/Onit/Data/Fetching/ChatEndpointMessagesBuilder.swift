@@ -12,7 +12,7 @@ import Foundation
  */
 struct ChatEndpointMessagesBuilder {
     
-    static func user(instructions: [String], inputs: [Input?], files: [[URL]], autoContexts: [[String: String]], webSearchContexts: [[(title: String, content: String, source: String, url: URL?)]]) -> [String] {
+    static func user(instructions: [String], inputs: [[Input]], files: [[URL]], autoContexts: [[String: String]], webSearchContexts: [[(title: String, content: String, source: String, url: URL?)]]) -> [String] {
         var userMessages: [String] = []
         for (index, instruction) in instructions.enumerated() {
             var message = ""
@@ -46,17 +46,21 @@ struct ChatEndpointMessagesBuilder {
                     message += "\n\(webSearchContext.content)"
                 }
             }
-
-           if let input = inputs[index], !input.selectedText.isEmpty { 
+            
+            if !inputs[index].isEmpty {
+                let pendingInputs = inputs[index]
+                
                 message += "\n\nUse the following selected text as context. When present, selected text should take priority over other context."
-                if let application = input.application {
-                    message += "\n\nSelected Text from \(application): \(input.selectedText)"
-                } else {
-                    message += "\n\nSelected Text: \(input.selectedText)"
+                
+                for input in pendingInputs {
+                    if let application = input.application {
+                        message += "\n\nSelected Text from \(application): \(input.selectedText)"
+                    } else {
+                        message += "\n\nSelected Text: \(input.selectedText)"
+                    }
                 }
             }
             
-
             // Intuitively, I (tim) think the message should be the last thing.
             // TODO: evaluate this
             message += "\n\n\(instruction)"

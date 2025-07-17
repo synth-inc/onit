@@ -70,8 +70,8 @@ struct PromptCore: View {
     
     var body: some View {
         VStack(spacing: 0) {
-            if let windowState = windowState, let pendingInput = windowState.pendingInput {
-                InputView(input: pendingInput)
+            if let windowState = windowState, let selectedPendingInput = windowState.selectedPendingInput {
+                InputView(input: selectedPendingInput)
             }
             
             VStack(spacing: 6) {
