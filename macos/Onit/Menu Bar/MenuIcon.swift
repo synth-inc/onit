@@ -51,8 +51,8 @@ struct MenuIcon: View {
     
     var body: some View {
         Image(iconImage)
-            .renderingMode(.original)
-//            .animation(.default, value: isOnitDisabled)
+            .renderingMode(.template) // Make sure to use template rendering
+            .foregroundColor(.primary) // Adapts to menu bar color
             .onAppear {
                 startTimerUpdateTaskIfNeeded()
             }
