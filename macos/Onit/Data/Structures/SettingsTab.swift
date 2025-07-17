@@ -9,9 +9,9 @@ enum SettingsTab: String {
     case quickEdit
     case webSearch
     case about
-    #if DEBUG
+//    #if DEBUG
         case database
         case debug
         case account
-    #endif
+//    #endif
 }

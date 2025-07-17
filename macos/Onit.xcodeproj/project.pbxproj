@@ -22,12 +22,31 @@
 		900CD80A2D9C0A1E0049592B /* SwiftSoup in Frameworks */ = {isa = PBXBuildFile; productRef = 900CD8092D9C0A1E0049592B /* SwiftSoup */; };
 		96E6E90C2DB81CB200BADA63 /* GoogleSignIn in Frameworks */ = {isa = PBXBuildFile; productRef = 96E6E90B2DB81CB200BADA63 /* GoogleSignIn */; };
 		96E6E90E2DB81CB200BADA63 /* GoogleSignInSwift in Frameworks */ = {isa = PBXBuildFile; productRef = 96E6E90D2DB81CB200BADA63 /* GoogleSignInSwift */; };
+		A760E3292E3139BC008E38E3 /* GRDB in Frameworks */ = {isa = PBXBuildFile; productRef = A760E3252E3139BC008E38E3 /* GRDB */; };
+		A760E32A2E3139BC008E38E3 /* Sparkle in Frameworks */ = {isa = PBXBuildFile; productRef = A760E30C2E3139BC008E38E3 /* Sparkle */; };
+		A760E32B2E3139BC008E38E3 /* MenuBarExtraAccess in Frameworks */ = {isa = PBXBuildFile; productRef = A760E30A2E3139BC008E38E3 /* MenuBarExtraAccess */; };
+		A760E32C2E3139BC008E38E3 /* Markdown in Frameworks */ = {isa = PBXBuildFile; productRef = A760E3142E3139BC008E38E3 /* Markdown */; };
+		A760E32D2E3139BC008E38E3 /* GoogleSignInSwift in Frameworks */ = {isa = PBXBuildFile; productRef = A760E3232E3139BC008E38E3 /* GoogleSignInSwift */; };
+		A760E32E2E3139BC008E38E3 /* PostHog in Frameworks */ = {isa = PBXBuildFile; productRef = A760E3122E3139BC008E38E3 /* PostHog */; };
+		A760E32F2E3139BC008E38E3 /* Highlightr in Frameworks */ = {isa = PBXBuildFile; productRef = A760E31B2E3139BC008E38E3 /* Highlightr */; };
+		A760E3302E3139BC008E38E3 /* GoogleSignIn in Frameworks */ = {isa = PBXBuildFile; productRef = A760E3212E3139BC008E38E3 /* GoogleSignIn */; };
+		A760E3312E3139BC008E38E3 /* Defaults in Frameworks */ = {isa = PBXBuildFile; productRef = A760E3182E3139BC008E38E3 /* Defaults */; };
+		A760E3322E3139BC008E38E3 /* FirebaseCrashlytics in Frameworks */ = {isa = PBXBuildFile; productRef = A760E3102E3139BC008E38E3 /* FirebaseCrashlytics */; };
+		A760E3332E3139BC008E38E3 /* HighlightSwift in Frameworks */ = {isa = PBXBuildFile; productRef = A760E30E2E3139BC008E38E3 /* HighlightSwift */; };
+		A760E3342E3139BC008E38E3 /* LLMStream in Frameworks */ = {isa = PBXBuildFile; productRef = A760E3242E3139BC008E38E3 /* LLMStream */; };
+		A760E3352E3139BC008E38E3 /* KeyboardShortcuts in Frameworks */ = {isa = PBXBuildFile; productRef = A760E3082E3139BC008E38E3 /* KeyboardShortcuts */; };
+		A760E3362E3139BC008E38E3 /* SwiftyBeaver in Frameworks */ = {isa = PBXBuildFile; productRef = A760E31F2E3139BC008E38E3 /* SwiftyBeaver */; };
+		A760E3372E3139BC008E38E3 /* SwiftSoup in Frameworks */ = {isa = PBXBuildFile; productRef = A760E31D2E3139BC008E38E3 /* SwiftSoup */; };
+		A760E3382E3139BC008E38E3 /* DefaultsMacros in Frameworks */ = {isa = PBXBuildFile; productRef = A760E31A2E3139BC008E38E3 /* DefaultsMacros */; };
+		A760E3392E3139BC008E38E3 /* EventSource in Frameworks */ = {isa = PBXBuildFile; productRef = A760E3162E3139BC008E38E3 /* EventSource */; };
 		A782C1982D383493009976F8 /* FirebaseCrashlytics in Frameworks */ = {isa = PBXBuildFile; productRef = A782C1972D383493009976F8 /* FirebaseCrashlytics */; };
 		C81B6B582E159DA3005B0843 /* LLMStream in Frameworks */ = {isa = PBXBuildFile; productRef = C81B6B572E159DA3005B0843 /* LLMStream */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
 		2883E4B32CA5ECBB00F79A48 /* Onit.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Onit.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		A760E33F2E3139BC008E38E3 /* Onit2.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Onit2.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		A760E3402E3139BD008E38E3 /* Onit copy-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = "Onit copy-Info.plist"; path = "/Users/timl/Documents/Apps/onit/macos/Onit copy-Info.plist"; sourceTree = "<absolute>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -38,6 +57,445 @@
 			);
 			target = 2883E4B22CA5ECBB00F79A48 /* Onit */;
 		};
+		A760E3412E3139BD008E38E3 /* Exceptions for "Onit" folder in "Onit2" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Accessibility/AppCoordinator.swift,
+				"Accessibility/AXUIElement+Accessors.swift",
+				Accessibility/CaretPositionManager.swift,
+				Accessibility/Focus/FocusedElementWorker.swift,
+				Accessibility/HighlightedText/HighlightedTextCoordinator.swift,
+				Accessibility/HighlightedText/HighlightedTextValidator.swift,
+				Accessibility/HighlightedText/HighlightedTextWorker.swift,
+				Accessibility/HighlightedTextBoundsExtractor.swift,
+				Accessibility/Notifications/AccessibilityNotificationsDelegate.swift,
+				Accessibility/Notifications/AccessibilityNotificationsManager.swift,
+				"Accessibility/Notifications/AccessibilityNotificationsManager+Config.swift",
+				Accessibility/Notifications/AccessibilityWindowsManager.swift,
+				Accessibility/Notifications/WindowChangeDelegate.swift,
+				Accessibility/Observers/AccessibilityObserversDelegate.swift,
+				Accessibility/Observers/AccessibilityObserversManager.swift,
+				"Accessibility/Observers/AccessibilityObserversManager+Config.swift",
+				Accessibility/Parser/AccessibilityParsedElements.swift,
+				Accessibility/Parser/AccessibilityParser.swift,
+				Accessibility/Parser/AccessibilityParserBase.swift,
+				Accessibility/Parser/AccessibilityParserCalendar.swift,
+				Accessibility/Parser/AccessibilityParserConfig.swift,
+				Accessibility/Parser/AccessibilityParserGeneric.swift,
+				Accessibility/Parser/AccessibilityParserLogic.swift,
+				Accessibility/Parser/AccessibilityParserMessages.swift,
+				Accessibility/Parser/AccessibilityParserUtility.swift,
+				Accessibility/Parser/AccessibilityParserXCode.swift,
+				Accessibility/Parser/AccessibilityParsingManager.swift,
+				Accessibility/Parser/ClipboardParser.swift,
+				Accessibility/Permission/AccessibilityPermissionManager.swift,
+				Accessibility/Permission/AccessibilityPermissionStatus.swift,
+				"Accessibility/ProcessIdentifier+Accessibility.swift",
+				Analytics/AnalyticsManager.swift,
+				"Analytics/AnalyticsManager+Accessibility.swift",
+				"Analytics/AnalyticsManager+Account.swift",
+				"Analytics/AnalyticsManager+Auth.swift",
+				"Analytics/AnalyticsManager+Billing.swift",
+				"Analytics/AnalyticsManager+Chat.swift",
+				"Analytics/AnalyticsManager+ContextPicker.swift",
+				"Analytics/AnalyticsManager+Debug.swift",
+				"Analytics/AnalyticsManager+Identity.swift",
+				"Analytics/AnalyticsManager+ModelPicker.swift",
+				"Analytics/AnalyticsManager+Onboarding.swift",
+				"Analytics/AnalyticsManager+Panel.swift",
+				"Analytics/AnalyticsManager+Settings.swift",
+				"Analytics/AnalyticsManager+Technical.swift",
+				"Analytics/AnalyticsManager+Toolbar.swift",
+				App.swift,
+				AppDelegate.swift,
+				AppState.swift,
+				Assets.xcassets,
+				Constants/ButtonConstants.swift,
+				Constants/WindowConstants.swift,
+				Data/Fetching/ChatEndpointBuilder.swift,
+				Data/Fetching/ChatEndpointMessagesBuilder.swift,
+				Data/Fetching/Endpoints/Chat/AnthropicChatEndpoint.swift,
+				Data/Fetching/Endpoints/Chat/CustomChatEndpoint.swift,
+				Data/Fetching/Endpoints/Chat/DeepSeekChatEndpoint.swift,
+				Data/Fetching/Endpoints/Chat/GoogleAIChatEndpoint.swift,
+				Data/Fetching/Endpoints/Chat/LocalChatEndpoint.swift,
+				Data/Fetching/Endpoints/Chat/OpenAIChatEndpoint.swift,
+				Data/Fetching/Endpoints/Chat/PerplexityChatEndpoint.swift,
+				Data/Fetching/Endpoints/Chat/XAIChatEndpoint.swift,
+				Data/Fetching/Endpoints/ChatStreaming/AnthropicChatStreamingEndpoint.swift,
+				Data/Fetching/Endpoints/ChatStreaming/CustomChatStreamingEndpoint.swift,
+				Data/Fetching/Endpoints/ChatStreaming/DeepSeekChatStreamingEndpoint.swift,
+				Data/Fetching/Endpoints/ChatStreaming/GoogleAIChatStreamingEndpoint.swift,
+				Data/Fetching/Endpoints/ChatStreaming/LocalChatStreamingEndpoint.swift,
+				Data/Fetching/Endpoints/ChatStreaming/OnitChatStreamingEndpoint.swift,
+				Data/Fetching/Endpoints/ChatStreaming/OpenAIChatStreamingEndpoint.swift,
+				Data/Fetching/Endpoints/ChatStreaming/PerplexityChatStreamingEndpoint.swift,
+				Data/Fetching/Endpoints/ChatStreaming/XAIChatStreamingEndpoint.swift,
+				Data/Fetching/Endpoints/CustomModelsEndpoint.swift,
+				Data/Fetching/Endpoints/Empty.swift,
+				Data/Fetching/Endpoints/Endpoint.swift,
+				Data/Fetching/Endpoints/GoogleAIValidationEndpoint.swift,
+				Data/Fetching/Endpoints/LocalModelsEndpoint.swift,
+				Data/Fetching/Endpoints/Onit/Auth/DeleteAccountEndpoint.swift,
+				Data/Fetching/Endpoints/Onit/Auth/GetAccountEndpoint.swift,
+				Data/Fetching/Endpoints/Onit/Auth/GetGooglePickerAPIKey.swift,
+				Data/Fetching/Endpoints/Onit/Auth/LoginAppleEndpoint.swift,
+				Data/Fetching/Endpoints/Onit/Auth/LoginGoogleEndpoint.swift,
+				Data/Fetching/Endpoints/Onit/Auth/LoginLinkEndpoint.swift,
+				Data/Fetching/Endpoints/Onit/Auth/LoginResponse.swift,
+				Data/Fetching/Endpoints/Onit/Auth/LoginTokenEndpoint.swift,
+				Data/Fetching/Endpoints/Onit/Chat/ChatSearchEndpoint.swift,
+				Data/Fetching/Endpoints/Onit/Chat/GetChatSearchProvidersEndpoint.swift,
+				Data/Fetching/Endpoints/Onit/Chat/GetChatSearchToolEndpoint.swift,
+				Data/Fetching/Endpoints/Onit/OnitServer.swift,
+				Data/Fetching/Endpoints/Onit/Subscription/CreateSubscriptionBillingPortalSessionEndpoint.swift,
+				Data/Fetching/Endpoints/Onit/Subscription/CreateSubscriptionCheckoutSessionEndpoint.swift,
+				Data/Fetching/Endpoints/Onit/Subscription/GetChatUsageEndpoint.swift,
+				Data/Fetching/Endpoints/Onit/Subscription/GetSubscriptionEndpoint.swift,
+				Data/Fetching/Endpoints/Onit/Subscription/GetSubscriptionFeaturesEndpoint.swift,
+				Data/Fetching/Endpoints/Onit/Subscription/GetSubscriptionFreeTrialAvailableEndpoint.swift,
+				Data/Fetching/Endpoints/Onit/Subscription/UpdateSubscriptionCancelEndpoint.swift,
+				Data/Fetching/Endpoints/RemoteModelsEndpoint.swift,
+				Data/Fetching/Endpoints/StreamingEndpoint.swift,
+				Data/Fetching/Endpoints/StreamToolAccumulator.swift,
+				Data/Fetching/Endpoints/TokenValidationEndpoint.swift,
+				Data/Fetching/Endpoints/UploadEndpoint.swift,
+				Data/Fetching/FetchingClient.swift,
+				"Data/Fetching/FetchingClient+Data.swift",
+				"Data/Fetching/FetchingClient+Debug.swift",
+				"Data/Fetching/FetchingClient+Error.swift",
+				"Data/Fetching/FetchingClient+Execute.swift",
+				Data/Fetching/HTTPMethod.swift,
+				Data/Fetching/ServerErrorResponse.swift,
+				Data/Fetching/Streaming/ChatStreamingEndpointBuilder.swift,
+				Data/Fetching/Streaming/LocalEventParser.swift,
+				Data/Fetching/Streaming/PerplexityEventParser.swift,
+				Data/Fetching/Streaming/StreamingClient.swift,
+				"Data/Fetching/Streaming/StreamingClient+ErrorHandling.swift",
+				Data/Fetching/TokenManager.swift,
+				Data/Fetching/UploadBody.swift,
+				"Data/Fetching/URL+Stripped.swift",
+				"Data/Fetching/URLRequest+Authorization.swift",
+				"Data/Fetching/URLRequest+ContentType.swift",
+				Data/Fetching/WebContext/WebContentFetchService.swift,
+				Data/Model/Chat.swift,
+				Data/Model/CustomProvider.swift,
+				Data/Persistence/Defaults.swift,
+				Data/Persistence/Prompt.swift,
+				Data/Persistence/QuickEditConfig.swift,
+				Data/Persistence/Response.swift,
+				Data/Persistence/StreamResponseConfig.swift,
+				Data/Persistence/TestModel.swift,
+				Data/Services/AudioRecorder.swift,
+				Data/Services/DatabaseMigrationService.swift,
+				Data/Services/GoogleDriveService.swift,
+				Data/Services/HighlightedTextBoundTrainingDataManager.swift,
+				Data/Services/SystemPromptSuggestionService.swift,
+				Data/Services/TavilyService.swift,
+				Data/Services/TranscriptionService.swift,
+				Data/Services/TranscriptionServiceVerbose.swift,
+				Data/Services/WhisperService.swift,
+				Data/Services/WhisperServiceVerbose.swift,
+				Data/Structures/Account.swift,
+				Data/Structures/AIModel.swift,
+				Data/Structures/AnyCodable.swift,
+				Data/Structures/BoundingBoxMatcher.swift,
+				Data/Structures/Context.swift,
+				Data/Structures/DropItem.swift,
+				Data/Structures/GenerationState.swift,
+				Data/Structures/ImageExtensions.swift,
+				Data/Structures/InferenceMode.swift,
+				Data/Structures/Input.swift,
+				Data/Structures/LocalModel.swift,
+				Data/Structures/OCRComparisonResult.swift,
+				Data/Structures/OCRTextObservation.swift,
+				Data/Structures/SelectedModel.swift,
+				Data/Structures/SettingsTab.swift,
+				Data/Structures/StopMode.swift,
+				Data/Structures/Subscription.swift,
+				Data/Structures/SubscriptionFeature.swift,
+				Data/Structures/SystemPrompt.swift,
+				Data/Structures/TextBoundingBox.swift,
+				Data/Structures/Tool.swift,
+				Data/Structures/WebSearchResult.swift,
+				Data/SwiftDataContainer.swift,
+				Data/Tools/CalendarTool.swift,
+				Data/Tools/DiffTool.swift,
+				Data/Tools/ToolRouter.swift,
+				FeatureFlag/FeatureFlagManager.swift,
+				"General/Extensions/Bundle+AppVersion.swift",
+				"General/Extensions/Error+Sample.swift",
+				"General/Extensions/FileManager+InstalledApps.swift",
+				"General/Extensions/Image+JPEG.swift",
+				"General/Extensions/NSImage+base64.swift",
+				"General/Extensions/NSRect+Screen.swift",
+				"General/Extensions/NSScreen+Helper.swift",
+				"General/Extensions/OptionSet+ActiveModifiers.swift",
+				"General/Extensions/ProcessIdentifier+Helper.swift",
+				"General/Extensions/String+KeyCode.swift",
+				"General/Extensions/String+LevenshteinDistance.swift",
+				"General/Extensions/String+Markdown.swift",
+				"General/Extensions/String+Sample.swift",
+				"General/Extensions/URL+MimeType.swift",
+				General/Extensions/WordMatcher.metal,
+				General/Modifiers/TooltipModifier.swift,
+				"General/Resources/Inter/Inter-Black.ttf",
+				"General/Resources/Inter/Inter-Bold.ttf",
+				"General/Resources/Inter/Inter-ExtraBold.ttf",
+				"General/Resources/Inter/Inter-ExtraLight.ttf",
+				"General/Resources/Inter/Inter-Light.ttf",
+				"General/Resources/Inter/Inter-Medium.ttf",
+				"General/Resources/Inter/Inter-Regular.ttf",
+				"General/Resources/Inter/Inter-SemiBold.ttf",
+				"General/Resources/Inter/Inter-Thin.ttf",
+				"General/Resources/Sometype/SometypeMono-Italic-VariableFont_wght.ttf",
+				"General/Resources/Sometype/SometypeMono-VariableFont_wght.ttf",
+				General/Styles/AnimationStyle.swift,
+				General/Styles/AppFont.swift,
+				General/Styles/ButtonStyle.swift,
+				General/Styles/ColorStyle.swift,
+				General/Styles/DarkerButtonStyle.swift,
+				General/Styles/HoverableButtonStyle.swift,
+				General/Styles/ImageStyle.swift,
+				General/Styles/ViewStyle.swift,
+				"GoogleService-Info.plist",
+				Helpers/DateHelpers.swift,
+				Helpers/ImageUtilities.swift,
+				Helpers/Stripe.swift,
+				Helpers/WebContextHelpers.swift,
+				Helpers/WindowHelpers.swift,
+				Info.plist,
+				"KeyboardShortcuts/KeyboardShortcuts+Name.swift",
+				"KeyboardShortcuts/KeyboardShortcuts+Native.swift",
+				KeyboardShortcuts/KeyboardShortcutsManager.swift,
+				"loader_rotated-200.gif",
+				"Menu Bar/Content Rows/MenuCheckForPermissions.swift",
+				"Menu Bar/Content Rows/MenuCheckForUpdates.swift",
+				"Menu Bar/Content Rows/MenuDivider.swift",
+				"Menu Bar/Content Rows/MenuHideTimerStatus.swift",
+				"Menu Bar/Content Rows/MenuJoinDiscord.swift",
+				"Menu Bar/Content Rows/MenuOpenOnitButton.swift",
+				"Menu Bar/Content Rows/MenuQuit.swift",
+				"Menu Bar/Content Rows/MenuSettings.swift",
+				"Menu Bar/Content Rows/MenuTypeaheadToggle.swift",
+				"Menu Bar/Content Rows/MenuVersion.swift",
+				"Menu Bar/MenuBarContent.swift",
+				"Menu Bar/MenuBarRow.swift",
+				"Menu Bar/MenuButtonStyle.swift",
+				"Menu Bar/MenuIcon.swift",
+				OCR/OCRManager.swift,
+				OCR/WindowCaptureOCR.swift,
+				PanelStateManager/PanelStateBaseManager.swift,
+				PanelStateManager/PanelStateCoordinator.swift,
+				PanelStateManager/PanelStateManagerLogic.swift,
+				PanelStateManager/Pinned/PanelStatePinnedManager.swift,
+				"PanelStateManager/Pinned/PanelStatePinnedManager+Delegates.swift",
+				"PanelStateManager/Pinned/PanelStatePinnedManager+Display.swift",
+				"PanelStateManager/Pinned/PanelStatePinnedManager+Hint.swift",
+				"PanelStateManager/Pinned/PanelStatePinnedManager+Resize.swift",
+				PanelStateManager/Tethered/PanelStateTetheredManager.swift,
+				"PanelStateManager/Tethered/PanelStateTetheredManager+Delegates.swift",
+				"PanelStateManager/Tethered/PanelStateTetheredManager+Display.swift",
+				"PanelStateManager/Tethered/PanelStateTetheredManager+Hint.swift",
+				PanelStateManager/TetherHintDetails.swift,
+				PanelStateManager/Untethered/PanelStateUntetheredManager.swift,
+				"PanelStateManager/Untethered/PanelStateUntetheredManager+Display.swift",
+				"PanelStateManager/Untethered/PanelStateUntetheredManager+Hint.swift",
+				"Preview Content/Preview Assets.xcassets",
+				"Preview Content/PreviewSampleData.swift",
+				ScreenRecording/ScreenRecordingPermissionManager.swift,
+				Sparkle/Sparkle.swift,
+				Testing/ModelMigrationTests.swift,
+				TokenValidation/TokenValidationManager.swift,
+				TokenValidation/TokenValidationState.swift,
+				Typeahead/KeyCodeTranslator.swift,
+				Typeahead/TextChangeHelper.swift,
+				Typeahead/TypeaheadHistoryManager.swift,
+				Typeahead/TypeaheadLearningManager.swift,
+				Typeahead/TypingChangeDelegate.swift,
+				Typeahead/TypingSessionManager.swift,
+				UI/Alerts/FreeLimitAlert.swift,
+				UI/Alerts/ProLimitAlert.swift,
+				UI/Alerts/SubscriptionAlert.swift,
+				UI/Alerts/SubscriptionFeatures.swift,
+				UI/Alerts/TwoWeekProTrialEndedAlert.swift,
+				UI/Auth/AuthFlow.swift,
+				UI/Chat/ChatScrollView.swift,
+				UI/Chat/ChatSystemPromptView.swift,
+				UI/Chat/ChatView.swift,
+				UI/Components/ContextTag.swift,
+				UI/Components/CopyButton.swift,
+				UI/Components/CustomTextField.swift,
+				UI/Components/Divider.swift,
+				UI/Components/DynamicScrollView.swift,
+				UI/Components/FadeHorizontal.swift,
+				UI/Components/FlowLayout.swift,
+				UI/Components/IconButton.swift,
+				UI/Components/InputField.swift,
+				UI/Components/KeyboardShortcutView.swift,
+				UI/Components/KeyListener.swift,
+				UI/Components/LabeledTextField.swift,
+				UI/Components/Loader.swift,
+				UI/Components/LoaderPulse.swift,
+				UI/Components/MenuHeader.swift,
+				UI/Components/MenuList.swift,
+				UI/Components/MenuSection.swift,
+				UI/Components/OCRDetailSheet.swift,
+				UI/Components/OnitHostingView.swift,
+				UI/Components/QLImage.swift,
+				UI/Components/RecordingIndicator.swift,
+				UI/Components/ResizeHandle.swift,
+				UI/Components/SearchBar.swift,
+				UI/Components/Shimmer.swift,
+				UI/Components/SimpleButton.swift,
+				UI/Components/TextButton.swift,
+				UI/Components/TextViewWrapper.swift,
+				UI/Components/ToolCallView.swift,
+				UI/Components/TooltipView.swift,
+				UI/Components/VibrantVisualEffectView.swift,
+				UI/Content/ContentView.swift,
+				UI/Content/ContentViewFooterNotification.swift,
+				UI/Content/ExternalTetheredButton.swift,
+				UI/Content/ExternalTetheredButtonStyle.swift,
+				UI/Content/TetheredButton.swift,
+				UI/Content/Toolbar.swift,
+				UI/Content/ToolbarLeft.swift,
+				UI/Content/ToolbarRight.swift,
+				UI/Debug/DebugManager.swift,
+				UI/Debug/DebugView.swift,
+				"UI/Environment/Environment+Values.swift",
+				UI/GlobalDragManager.swift,
+				UI/History/HistoryRowView.swift,
+				UI/History/HistoryTitle.swift,
+				UI/History/HistoryView.swift,
+				UI/Modifiers/AppFontModifier.swift,
+				UI/Modifiers/DragModifier.swift,
+				UI/Modifiers/ImageProgressModifier.swift,
+				UI/Modifiers/LoadingOverlayModifier.swift,
+				UI/Modifiers/SizeCalculatorModifier.swift,
+				UI/Modifiers/ViewHeightModifier.swift,
+				UI/Modifiers/WindowAccessor.swift,
+				UI/Onboarding/OnboardingAccessibility.swift,
+				UI/Onboarding/OnboardingAuthApple.swift,
+				UI/Onboarding/OnboardingAuthButton.swift,
+				UI/Onboarding/OnboardingSkipAccessibility.swift,
+				UI/Onboarding/SubcriptionButton.swift,
+				UI/Onboarding/TetherTutorialOverlay.swift,
+				UI/Panels/OnitPanel.swift,
+				UI/Panels/OnitRegularPanel.swift,
+				"UI/Panels/OnitRegularPanel+Move.swift",
+				UI/Panels/PanelDraggingDetails.swift,
+				UI/Panels/State/OnitPanelState.swift,
+				"UI/Panels/State/OnitPanelState+Chat.swift",
+				"UI/Panels/State/OnitPanelState+History.swift",
+				"UI/Panels/State/OnitPanelState+Input.swift",
+				"UI/Panels/State/OnitPanelState+NSWindowDelegate.swift",
+				"UI/Panels/State/OnitPanelState+ScreenMode.swift",
+				"UI/Panels/State/OnitPanelState+WebContext.swift",
+				"UI/Panels/State/OnitPanelState+WebSearch.swift",
+				UI/Prompt/ChatsView.swift,
+				UI/Prompt/Dialogs/SetUpButtonStyle.swift,
+				UI/Prompt/Dialogs/SetUpDialog.swift,
+				UI/Prompt/Dialogs/SetUpDialogs.swift,
+				UI/Prompt/Files/ContextImage.swift,
+				UI/Prompt/Files/ContextItem.swift,
+				UI/Prompt/Files/ContextList.swift,
+				UI/Prompt/Files/ContextMenu.swift,
+				UI/Prompt/Files/ContextMenuLoading.swift,
+				UI/Prompt/Files/ContextMenuSection.swift,
+				UI/Prompt/Files/ContextMenuWindowButton.swift,
+				UI/Prompt/Files/ContextMenuWindows.swift,
+				UI/Prompt/Files/EnableAutocontextTag.swift,
+				UI/Prompt/Files/FileRow.swift,
+				UI/Prompt/Files/PaperclipButton.swift,
+				UI/Prompt/Files/WebContextItem.swift,
+				UI/Prompt/FinalContextView.swift,
+				UI/Prompt/Generated/GeneratedContentView.swift,
+				UI/Prompt/Generated/GeneratedToolbar.swift,
+				UI/Prompt/Generated/GeneratedView.swift,
+				UI/Prompt/Generated/ToggleOutputsView.swift,
+				UI/Prompt/GeneratedErrorView.swift,
+				UI/Prompt/GeneratingView.swift,
+				UI/Prompt/Input/InputBody.swift,
+				UI/Prompt/Input/InputButtons.swift,
+				UI/Prompt/Input/InputTitle.swift,
+				UI/Prompt/Input/InputView.swift,
+				UI/Prompt/MicrophoneButton.swift,
+				UI/Prompt/ModelSelectionButton.swift,
+				UI/Prompt/PromptCore.swift,
+				UI/Prompt/PromptCoreFooter.swift,
+				UI/Prompt/PromptCoreFooterButton.swift,
+				UI/Prompt/PromptView.swift,
+				UI/Prompt/Selection/ModelSelectionView.swift,
+				UI/Prompt/Selection/RemoteModelButton.swift,
+				UI/Prompt/Selection/RemoteModelSelector.swift,
+				UI/Prompt/StopGenerationButton.swift,
+				UI/Prompt/SystemPrompt/SystemPromptDetailView.swift,
+				UI/Prompt/SystemPrompt/SystemPromptSelectionRowView.swift,
+				UI/Prompt/SystemPrompt/SystemPromptSelectionView.swift,
+				UI/Prompt/SystemPrompt/SystemPromptView.swift,
+				UI/Prompt/WebSearchButton.swift,
+				UI/PromptDivider.swift,
+				UI/QuickEdit/QuickEditHintMenuView.swift,
+				UI/QuickEdit/QuickEditHintView.swift,
+				UI/QuickEdit/QuickEditHintWindowController.swift,
+				UI/QuickEdit/QuickEditManager.swift,
+				UI/QuickEdit/QuickEditResponseView.swift,
+				UI/QuickEdit/QuickEditView.swift,
+				UI/QuickEdit/QuickEditWindowController.swift,
+				UI/Settings/AboutTab.swift,
+				UI/Settings/AccessibilityTab.swift,
+				UI/Settings/DatabaseSettingsView.swift,
+				UI/Settings/DebugModeTab.swift,
+				UI/Settings/GeneralTab.swift,
+				UI/Settings/GeneralTabAccount.swift,
+				UI/Settings/GeneralTabAccountAlert.swift,
+				UI/Settings/GeneralTabPlanAndBilling.swift,
+				UI/Settings/GeneralTabVoice.swift,
+				UI/Settings/Models/CustomProvider/CustomProviderFormView.swift,
+				UI/Settings/Models/CustomProvider/CustomProviderRow.swift,
+				UI/Settings/Models/CustomProvider/CustomProvidersSection.swift,
+				UI/Settings/Models/DefaultModelsSection.swift,
+				UI/Settings/Models/LocalModelPicker.swift,
+				UI/Settings/Models/LocalModelsSection.swift,
+				UI/Settings/Models/LocalModelValidation.swift,
+				UI/Settings/Models/ModelsSection.swift,
+				UI/Settings/Models/ModelTitle.swift,
+				UI/Settings/Models/ModelToggle.swift,
+				UI/Settings/Models/RemoteModelPicker.swift,
+				UI/Settings/Models/RemoteModelSection.swift,
+				UI/Settings/Models/RemoteModelsSection.swift,
+				UI/Settings/Models/SettingErrorMessage.swift,
+				UI/Settings/Models/SettingInfoButton.swift,
+				UI/Settings/Models/StreamingToggle.swift,
+				UI/Settings/ModelsTab.swift,
+				UI/Settings/QuickEdit/HighlightedTextBoundTrainingDataReviewView.swift,
+				UI/Settings/QuickEdit/HighlightedTextBoundTrainingSampleDetailView.swift,
+				UI/Settings/QuickEdit/HighlightedTextBoundTrainingSampleDetailWindowController.swift,
+				UI/Settings/QuickEditTab.swift,
+				UI/Settings/SettingsSection.swift,
+				UI/Settings/SettingsView.swift,
+				UI/Settings/ShortcutsTab.swift,
+				UI/Settings/SystemPrompt/NewSystemPromptView.swift,
+				UI/Settings/SystemPrompt/SettingsSystemPromptDetail.swift,
+				UI/Settings/SystemPrompt/SettingsSystemPromptTable.swift,
+				UI/Settings/SystemPromptTab.swift,
+				UI/Settings/TypeaheadTestCasesView.swift,
+				UI/Settings/WebSearchTab.swift,
+				UI/Shapes/RoundedCorners.swift,
+				UI/SystemPromptState.swift,
+				UI/Tooltip/Tooltip.swift,
+				UI/Tooltip/TooltipManager.swift,
+				UI/Windows/ContextPickerItemView.swift,
+				UI/Windows/ContextPickerView.swift,
+				UI/Windows/ContextView.swift,
+				UI/Windows/ContextWindowController.swift,
+				UI/Windows/ContextWindowsManager.swift,
+				UI/Windows/OverlayManager.swift,
+				UI/Windows/OverlayWindowController.swift,
+			);
+			target = A760E3072E3139BC008E38E3 /* Onit2 */;
+		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -45,6 +503,7 @@
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
 				28F57E1D2CAC7913006AAA8C /* Exceptions for "Onit" folder in "Onit" target */,
+				A760E3412E3139BD008E38E3 /* Exceptions for "Onit" folder in "Onit2" target */,
 			);
 			path = Onit;
 			sourceTree = "<group>";
@@ -76,6 +535,30 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		A760E3282E3139BC008E38E3 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A760E3292E3139BC008E38E3 /* GRDB in Frameworks */,
+				A760E32A2E3139BC008E38E3 /* Sparkle in Frameworks */,
+				A760E32B2E3139BC008E38E3 /* MenuBarExtraAccess in Frameworks */,
+				A760E32C2E3139BC008E38E3 /* Markdown in Frameworks */,
+				A760E32D2E3139BC008E38E3 /* GoogleSignInSwift in Frameworks */,
+				A760E32E2E3139BC008E38E3 /* PostHog in Frameworks */,
+				A760E32F2E3139BC008E38E3 /* Highlightr in Frameworks */,
+				A760E3302E3139BC008E38E3 /* GoogleSignIn in Frameworks */,
+				A760E3312E3139BC008E38E3 /* Defaults in Frameworks */,
+				A760E3322E3139BC008E38E3 /* FirebaseCrashlytics in Frameworks */,
+				A760E3332E3139BC008E38E3 /* HighlightSwift in Frameworks */,
+				A760E3342E3139BC008E38E3 /* LLMStream in Frameworks */,
+				A760E3352E3139BC008E38E3 /* KeyboardShortcuts in Frameworks */,
+				A760E3362E3139BC008E38E3 /* SwiftyBeaver in Frameworks */,
+				A760E3372E3139BC008E38E3 /* SwiftSoup in Frameworks */,
+				A760E3382E3139BC008E38E3 /* DefaultsMacros in Frameworks */,
+				A760E3392E3139BC008E38E3 /* EventSource in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -83,6 +566,7 @@
 			isa = PBXGroup;
 			children = (
 				2883E4B52CA5ECBB00F79A48 /* Onit */,
+				A760E3402E3139BD008E38E3 /* Onit copy-Info.plist */,
 				2883E4B42CA5ECBB00F79A48 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -91,6 +575,7 @@
 			isa = PBXGroup;
 			children = (
 				2883E4B32CA5ECBB00F79A48 /* Onit.app */,
+				A760E33F2E3139BC008E38E3 /* Onit2.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -136,6 +621,46 @@
 			);
 			productName = Onit;
 			productReference = 2883E4B32CA5ECBB00F79A48 /* Onit.app */;
+			productType = "com.apple.product-type.application";
+		};
+		A760E3072E3139BC008E38E3 /* Onit2 */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = A760E33C2E3139BC008E38E3 /* Build configuration list for PBXNativeTarget "Onit2" */;
+			buildPhases = (
+				A760E3272E3139BC008E38E3 /* Sources */,
+				A760E3282E3139BC008E38E3 /* Frameworks */,
+				A760E33A2E3139BC008E38E3 /* Resources */,
+				A760E33B2E3139BC008E38E3 /* ShellScript */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				2883E4B52CA5ECBB00F79A48 /* Onit */,
+			);
+			name = Onit2;
+			packageProductDependencies = (
+				A760E3082E3139BC008E38E3 /* KeyboardShortcuts */,
+				A760E30A2E3139BC008E38E3 /* MenuBarExtraAccess */,
+				A760E30C2E3139BC008E38E3 /* Sparkle */,
+				A760E30E2E3139BC008E38E3 /* HighlightSwift */,
+				A760E3102E3139BC008E38E3 /* FirebaseCrashlytics */,
+				A760E3122E3139BC008E38E3 /* PostHog */,
+				A760E3142E3139BC008E38E3 /* Markdown */,
+				A760E3162E3139BC008E38E3 /* EventSource */,
+				A760E3182E3139BC008E38E3 /* Defaults */,
+				A760E31A2E3139BC008E38E3 /* DefaultsMacros */,
+				A760E31B2E3139BC008E38E3 /* Highlightr */,
+				A760E31D2E3139BC008E38E3 /* SwiftSoup */,
+				A760E31F2E3139BC008E38E3 /* SwiftyBeaver */,
+				A760E3212E3139BC008E38E3 /* GoogleSignIn */,
+				A760E3232E3139BC008E38E3 /* GoogleSignInSwift */,
+				A760E3242E3139BC008E38E3 /* LLMStream */,
+				A760E3252E3139BC008E38E3 /* GRDB */,
+			);
+			productName = Onit;
+			productReference = A760E33F2E3139BC008E38E3 /* Onit2.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -185,6 +710,7 @@
 			projectRoot = "";
 			targets = (
 				2883E4B22CA5ECBB00F79A48 /* Onit */,
+				A760E3072E3139BC008E38E3 /* Onit2 */,
 			);
 		};
 /* End PBXProject section */
@@ -197,9 +723,39 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		A760E33A2E3139BC008E38E3 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXShellScriptBuildPhase section */
+		A760E33B2E3139BC008E38E3 /* ShellScript */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+				"${DWARF_DSYM_FOLDER_PATH}/${DWARF_DSYM_FILE_NAME}",
+				"${DWARF_DSYM_FOLDER_PATH}/${DWARF_DSYM_FILE_NAME}/Contents/Resources/DWARF/${PRODUCT_NAME}",
+				"${DWARF_DSYM_FOLDER_PATH}/${DWARF_DSYM_FILE_NAME}/Contents/Info.plist",
+				"$(TARGET_BUILD_DIR)/$(UNLOCALIZED_RESOURCES_FOLDER_PATH)/GoogleService-Info.plist",
+				"$(TARGET_BUILD_DIR)/$(EXECUTABLE_PATH)",
+				"${DWARF_DSYM_FOLDER_PATH}/${DWARF_DSYM_FILE_NAME}/Contents/Resources/DWARF/${PRODUCT_NAME}.debug.dylib",
+			);
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "# Type a script or drag a script file from your workspace to insert its path.\n\"${BUILD_DIR%/Build/*}/SourcePackages/checkouts/firebase-ios-sdk/Crashlytics/run\"\n";
+		};
 		A782C1992D3836ED009976F8 /* ShellScript */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
@@ -227,6 +783,13 @@
 
 /* Begin PBXSourcesBuildPhase section */
 		2883E4AF2CA5ECBB00F79A48 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		A760E3272E3139BC008E38E3 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -375,7 +938,7 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = ./Onit/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = "onit - history";
+				INFOPLIST_KEY_CFBundleDisplayName = "OnitDev - Typeahead";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -384,7 +947,7 @@
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
 				MARKETING_VERSION = 2.8;
 				OTHER_LDFLAGS = "-ObjC";
-				PRODUCT_BUNDLE_IDENTIFIER = inc.synth.Onit.dev.lurk;
+				PRODUCT_BUNDLE_IDENTIFIER = inc.synth.Onit.dev;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -398,7 +961,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_ENTITLEMENTS = Onit/Onit.entitlements;
+				CODE_SIGN_ENTITLEMENTS = Onit/OnitRelease.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
@@ -411,7 +974,7 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = ./Onit/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = "onit - history";
+				INFOPLIST_KEY_CFBundleDisplayName = "OnitDev - Typeahead";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -421,6 +984,79 @@
 				MARKETING_VERSION = 2.8;
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_BUNDLE_IDENTIFIER = inc.synth.Onit;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_STRICT_CONCURRENCY = complete;
+				SWIFT_VERSION = 6.0;
+			};
+			name = Release;
+		};
+		A760E33D2E3139BC008E38E3 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = Onit/Onit.entitlements;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 44;
+				DEAD_CODE_STRIPPING = YES;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_ASSET_PATHS = "\"Onit/Preview Content\"";
+				DEVELOPMENT_TEAM = TYC9PKBMB6;
+				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = "Onit copy-Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = "OnitDev - Typeahead";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MARKETING_VERSION = 2.8;
+				OTHER_LDFLAGS = "-ObjC";
+				PRODUCT_BUNDLE_IDENTIFIER = inc.synth.Onit.dev.typeahead;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_STRICT_CONCURRENCY = complete;
+				SWIFT_VERSION = 6.0;
+			};
+			name = Debug;
+		};
+		A760E33E2E3139BC008E38E3 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = Onit/OnitRelease.entitlements;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 44;
+				DEAD_CODE_STRIPPING = YES;
+				DEVELOPMENT_ASSET_PATHS = "\"Onit/Preview Content\"";
+				DEVELOPMENT_TEAM = TYC9PKBMB6;
+				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = "Onit copy-Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = "OnitDev - Typeahead";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MARKETING_VERSION = 2.8;
+				OTHER_LDFLAGS = "-ObjC";
+				PRODUCT_BUNDLE_IDENTIFIER = inc.synth.Onit.typeahead;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -446,6 +1082,15 @@
 			buildConfigurations = (
 				2883E4C32CA5ECBC00F79A48 /* Debug */,
 				2883E4C42CA5ECBC00F79A48 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		A760E33C2E3139BC008E38E3 /* Build configuration list for PBXNativeTarget "Onit2" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				A760E33D2E3139BC008E38E3 /* Debug */,
+				A760E33E2E3139BC008E38E3 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
@@ -564,6 +1209,118 @@
 				kind = branch;
 			};
 		};
+		A760E3092E3139BC008E38E3 /* XCRemoteSwiftPackageReference "KeyboardShortcuts" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/sindresorhus/KeyboardShortcuts";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.1.0;
+			};
+		};
+		A760E30B2E3139BC008E38E3 /* XCRemoteSwiftPackageReference "MenuBarExtraAccess" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/orchetect/MenuBarExtraAccess";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.0.5;
+			};
+		};
+		A760E30D2E3139BC008E38E3 /* XCRemoteSwiftPackageReference "Sparkle" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/sparkle-project/Sparkle";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.6.4;
+			};
+		};
+		A760E30F2E3139BC008E38E3 /* XCRemoteSwiftPackageReference "HighlightSwift" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/blsage/HighlightSwift";
+			requirement = {
+				branch = main;
+				kind = branch;
+			};
+		};
+		A760E3112E3139BC008E38E3 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/firebase/firebase-ios-sdk";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 11.7.0;
+			};
+		};
+		A760E3132E3139BC008E38E3 /* XCRemoteSwiftPackageReference "posthog-ios" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/PostHog/posthog-ios.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 3.19.1;
+			};
+		};
+		A760E3152E3139BC008E38E3 /* XCRemoteSwiftPackageReference "swift-markdown" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/apple/swift-markdown.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 0.5.0;
+			};
+		};
+		A760E3172E3139BC008E38E3 /* XCRemoteSwiftPackageReference "EventSource" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/Recouse/EventSource";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 0.1.3;
+			};
+		};
+		A760E3192E3139BC008E38E3 /* XCRemoteSwiftPackageReference "Defaults" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/sindresorhus/Defaults";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 9.0.1;
+			};
+		};
+		A760E31C2E3139BC008E38E3 /* XCRemoteSwiftPackageReference "Highlightr" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/raspu/Highlightr";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.2.1;
+			};
+		};
+		A760E31E2E3139BC008E38E3 /* XCRemoteSwiftPackageReference "SwiftSoup" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/scinfu/SwiftSoup";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.8.7;
+			};
+		};
+		A760E3202E3139BC008E38E3 /* XCRemoteSwiftPackageReference "SwiftyBeaver" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/SwiftyBeaver/SwiftyBeaver.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.1.1;
+			};
+		};
+		A760E3222E3139BC008E38E3 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/google/GoogleSignIn-iOS";
+			requirement = {
+				branch = main;
+				kind = branch;
+			};
+		};
+		A760E3262E3139BC008E38E3 /* XCRemoteSwiftPackageReference "GRDB.swift" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/groue/GRDB.swift.git";
+			requirement = {
+				kind = upToNextMinorVersion;
+				minimumVersion = 7.5.0;
+			};
+		};
 		A782C1962D383493009976F8 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/firebase/firebase-ios-sdk";
@@ -649,6 +1406,90 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 96E6E90A2DB81CB200BADA63 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */;
 			productName = GoogleSignInSwift;
+		};
+		A760E3082E3139BC008E38E3 /* KeyboardShortcuts */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A760E3092E3139BC008E38E3 /* XCRemoteSwiftPackageReference "KeyboardShortcuts" */;
+			productName = KeyboardShortcuts;
+		};
+		A760E30A2E3139BC008E38E3 /* MenuBarExtraAccess */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A760E30B2E3139BC008E38E3 /* XCRemoteSwiftPackageReference "MenuBarExtraAccess" */;
+			productName = MenuBarExtraAccess;
+		};
+		A760E30C2E3139BC008E38E3 /* Sparkle */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A760E30D2E3139BC008E38E3 /* XCRemoteSwiftPackageReference "Sparkle" */;
+			productName = Sparkle;
+		};
+		A760E30E2E3139BC008E38E3 /* HighlightSwift */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A760E30F2E3139BC008E38E3 /* XCRemoteSwiftPackageReference "HighlightSwift" */;
+			productName = HighlightSwift;
+		};
+		A760E3102E3139BC008E38E3 /* FirebaseCrashlytics */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A760E3112E3139BC008E38E3 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseCrashlytics;
+		};
+		A760E3122E3139BC008E38E3 /* PostHog */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A760E3132E3139BC008E38E3 /* XCRemoteSwiftPackageReference "posthog-ios" */;
+			productName = PostHog;
+		};
+		A760E3142E3139BC008E38E3 /* Markdown */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A760E3152E3139BC008E38E3 /* XCRemoteSwiftPackageReference "swift-markdown" */;
+			productName = Markdown;
+		};
+		A760E3162E3139BC008E38E3 /* EventSource */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A760E3172E3139BC008E38E3 /* XCRemoteSwiftPackageReference "EventSource" */;
+			productName = EventSource;
+		};
+		A760E3182E3139BC008E38E3 /* Defaults */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A760E3192E3139BC008E38E3 /* XCRemoteSwiftPackageReference "Defaults" */;
+			productName = Defaults;
+		};
+		A760E31A2E3139BC008E38E3 /* DefaultsMacros */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A760E3192E3139BC008E38E3 /* XCRemoteSwiftPackageReference "Defaults" */;
+			productName = DefaultsMacros;
+		};
+		A760E31B2E3139BC008E38E3 /* Highlightr */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A760E31C2E3139BC008E38E3 /* XCRemoteSwiftPackageReference "Highlightr" */;
+			productName = Highlightr;
+		};
+		A760E31D2E3139BC008E38E3 /* SwiftSoup */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A760E31E2E3139BC008E38E3 /* XCRemoteSwiftPackageReference "SwiftSoup" */;
+			productName = SwiftSoup;
+		};
+		A760E31F2E3139BC008E38E3 /* SwiftyBeaver */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A760E3202E3139BC008E38E3 /* XCRemoteSwiftPackageReference "SwiftyBeaver" */;
+			productName = SwiftyBeaver;
+		};
+		A760E3212E3139BC008E38E3 /* GoogleSignIn */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A760E3222E3139BC008E38E3 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */;
+			productName = GoogleSignIn;
+		};
+		A760E3232E3139BC008E38E3 /* GoogleSignInSwift */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A760E3222E3139BC008E38E3 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */;
+			productName = GoogleSignInSwift;
+		};
+		A760E3242E3139BC008E38E3 /* LLMStream */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = LLMStream;
+		};
+		A760E3252E3139BC008E38E3 /* GRDB */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A760E3262E3139BC008E38E3 /* XCRemoteSwiftPackageReference "GRDB.swift" */;
+			productName = GRDB;
 		};
 		A782C1972D383493009976F8 /* FirebaseCrashlytics */ = {
 			isa = XCSwiftPackageProductDependency;

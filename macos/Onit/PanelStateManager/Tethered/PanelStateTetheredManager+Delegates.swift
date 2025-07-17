@@ -108,7 +108,7 @@ extension PanelStateTetheredManager: AccessibilityNotificationsDelegate {
     }
 
     func accessibilityManager(_ manager: AccessibilityNotificationsManager, didChangeValue element: AXUIElement, newValue: String?, window: TrackedWindow?) {}
-    func accessibilityManager(_ manager: AccessibilityNotificationsManager, didFocusTextElement element: AXUIElement, window: TrackedWindow?) {}
+    func accessibilityManager(_ manager: AccessibilityNotificationsManager, didFocusUIElement element: AXUIElement, window: TrackedWindow?) {}
 }
 
 // MARK: - OnitPanelStateDelegate

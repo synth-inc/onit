@@ -9,6 +9,7 @@ import ApplicationServices.HIServices.AXUIElement
 import Foundation
 
 /// Logic used to parse the Accessibility DOM using `AXUIElement`
+@MainActor
 protocol AccessibilityParserLogic {
     
     /**

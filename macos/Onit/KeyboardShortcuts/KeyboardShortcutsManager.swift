@@ -19,7 +19,7 @@ struct KeyboardShortcutsManager {
 	private static let persistentShortcuts: [KeyboardShortcuts.Name] = [
 		.launch,
 		.launchWithAutoContext,
-		.quickEdit
+//		.quickEdit
 	]
     
     static func configure() {
@@ -121,8 +121,8 @@ struct KeyboardShortcutsManager {
                     if let foregroundWindow = state.foregroundWindow {
                         state.addWindowToContext(window: foregroundWindow.element)
                     }
-                case .quickEdit:
-                    QuickEditManager.shared.show()
+//                case .quickEdit:
+//                    QuickEditManager.shared.show()
                 default:
                     print("KeyboardShortcut not handled: \(name)")
                 }

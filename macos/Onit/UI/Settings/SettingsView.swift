@@ -58,27 +58,28 @@ struct SettingsView: View {
                 .tag(SettingsTab.quickEdit)
             #endif
                 
-            WebSearchTab()
-                .tabItem {
-                    Label("Web Search", systemImage: "magnifyingglass")
-                }
-                .tag(SettingsTab.webSearch)
+//            WebSearchTab()
+//                .tabItem {
+//                    Label("Web Search", systemImage: "magnifyingglass")
+//                }
+//                .tag(SettingsTab.webSearch)
 
-            #if DEBUG || BETA
-            DatabaseSettingsView()
-                .tabItem {
-                    Label("Database", systemImage: "externaldrive")
-                }
-                .tag(SettingsTab.database)
-            #endif
+//            #if DEBUG || BETA
+//            DatabaseSettingsView()
+//                .tabItem {
+//                    Label("Database", systemImage: "externaldrive")
+//                }
+//                .tag(SettingsTab.database)
+//            #endif
 
-            #if DEBUG || BETA
+//            #if DEBUG || BETA
                 DebugModeTab()
                     .tabItem {
                         Label("Debug", systemImage: "wrench.and.screwdriver")
                     }
                     .tag(SettingsTab.debug)
-            #endif
+//            #endif
+            
 
             AboutTab()
                 .tabItem {
@@ -86,8 +87,8 @@ struct SettingsView: View {
                 }
                 .tag(SettingsTab.about)
         }
-        .frame(idealWidth: 569, minHeight: 500)
-        .fixedSize(horizontal: true, vertical: false)
+        .frame(minWidth: 569, maxWidth: .infinity, minHeight: 500)
+        .fixedSize(horizontal: false, vertical: false)
         .onAppear {
             AnalyticsManager.Settings.opened(on: appState.settingsTab.rawValue)
         }

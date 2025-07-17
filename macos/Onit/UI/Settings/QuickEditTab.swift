@@ -11,7 +11,7 @@ import KeyboardShortcuts
 
 struct QuickEditTab: View {
     @Default(.quickEditConfig) private var config
-    @State private var shortcutText: String = KeyboardShortcuts.Name.quickEdit.shortcutText
+    @State private var shortcutText: String = "yerp" // KeyboardShortcuts.Name.quickEdit.shortcutText
     @ObservedObject private var permissionManager = ScreenRecordingPermissionManager.shared
     
     var body: some View {
@@ -79,11 +79,11 @@ struct QuickEditTab: View {
             if config.isEnabled {
                 screenRecordingPermission
                 
-                KeyboardShortcuts.Recorder(
-                    "Shortcut", name: .quickEdit
-                ) { _ in
-                    shortcutText = KeyboardShortcuts.Name.quickEdit.shortcutText
-                }
+//                KeyboardShortcuts.Recorder(
+//                    "Shortcut", name: .quickEdit
+//                ) { _ in
+//                    shortcutText = KeyboardShortcuts.Name.quickEdit.shortcutText
+//                }
                 .padding(.vertical, 8)
             }
         }

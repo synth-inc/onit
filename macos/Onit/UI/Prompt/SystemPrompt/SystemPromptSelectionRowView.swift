@@ -45,7 +45,7 @@ extension SystemPromptSelectionRowView {
 // MARK: - Preview
 
 #if DEBUG
-    #Preview {
-        SystemPromptSelectionRowView(prompt: PreviewSampleData.systemPrompt)
-    }
+//    #Preview {
+//        SystemPromptSelectionRowView(prompt: PreviewSampleData.systemPrompt)
+//    }
 #endif

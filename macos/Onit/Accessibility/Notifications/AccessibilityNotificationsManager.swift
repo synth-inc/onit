@@ -80,8 +80,50 @@ class AccessibilityNotificationsManager: ObservableObject {
             notification(delegate)
         }
     }
+    
+    /// Notifies delegates with filtering based on element's process type
+    private func notifyDelegates(for element: AXUIElement, _ notification: (AccessibilityNotificationsDelegate) -> Void) {
+        guard let elementPid = element.pid() else {
+            // If we can't determine PID, notify all delegates
+            notifyDelegates(notification)
+            return
+        }
+        
+        let processType = determineProcessType(for: elementPid)
+        
+        for case let delegate as AccessibilityNotificationsDelegate in delegates.allObjects {
+            switch processType {
+            case .ownProcess, .ignoreProcess:
+                // Only notify delegates that want notifications from all processes
+                if delegate.wantsNotificationsFromAllProcesses {
+                    notification(delegate)
+                }
+            case .eligible:
+                // Always notify for eligible processes
+                notification(delegate)
+            }
+        }
+    }
+    
+    /// Determines the process type for a given PID using shared logic from AccessibilityObserversManager
+    private func determineProcessType(for pid: pid_t) -> ProcessObservationEligibility {
+        return AccessibilityObserversManager.determineProcessObservationEligibility(
+            for: pid, 
+            ignoredAppNames: AccessibilityObserversManager.currentIgnoredAppNames
+        )
+    }
 
     // MARK: - Functions
+    
+    /// Returns true if any registered delegate wants notifications from all process types
+    func hasAnyDelegateWantingAllProcesses() -> Bool {
+        for case let delegate as AccessibilityNotificationsDelegate in delegates.allObjects {
+            if delegate.wantsNotificationsFromAllProcesses {
+                return true
+            }
+        }
+        return false
+    }
     
     func reset() {
         windowsManager.reset()
@@ -160,7 +202,23 @@ class AccessibilityNotificationsManager: ObservableObject {
     ) {
         dispatchPrecondition(condition: .onQueue(.main))
         
-        log.debug("Received notification: \(notification) \(element.role() ?? "") \(element.title() ?? "")")
+        // Xcode console is a special case. We don't want to print any logs on these notifications
+        // Because that casues an infinite loop
+        // Console notification triggers a console print, which triggers more console notifications.
+        if let elementRole = element.role(),
+           let appName = element.appName(),
+           appName == "Xcode" {
+            if let description = element.description(),
+               description == "Console" {
+                return
+            }
+            if elementRole == "AXScrollBar" || elementRole == "AXStaticText" {
+                return
+            }
+        }
+        
+        // Received notification: Onit
+        log.debug("Received notification: \(element.appName() ?? "") \(notification) \(element.role() ?? "") \(element.title() ?? "") \(element.description() ?? "")")
         
         switch notification {
         case kAXFocusedWindowChangedNotification, kAXMainWindowChangedNotification:
@@ -172,6 +230,7 @@ class AccessibilityNotificationsManager: ObservableObject {
             // self.handleCaretPositionChange(for: element)
         case kAXFocusedUIElementChangedNotification:
             self.handleCaretPositionChange(for: element)
+            self.handleFocusedUIElementChanged(for: element, elementPid: elementPid)
             // Invalidate cache when content values change
             AccessibilityParsingManager.shared.invalidateCache(for: element, reason: "value changed")
         case kAXWindowMovedNotification:
@@ -190,8 +249,7 @@ class AccessibilityNotificationsManager: ObservableObject {
             self.handleDeminimizedElement(for: element)
         case kAXTitleChangedNotification:
             self.handleTitleChanged(for: element, elementPid: elementPid)
-        case kAXFocusedUIElementChangedNotification:
-            self.handleFocusedUIElementChanged(for: element, elementPid: elementPid)
+
         // Additional notifications that indicate content/structure changes
         case kAXCreatedNotification:
             // New UI element created - invalidate cache
@@ -231,7 +289,7 @@ class AccessibilityNotificationsManager: ObservableObject {
         // Invalidate cached parsing results when window title changes as content may have changed
         AccessibilityParsingManager.shared.invalidateCache(for: element, reason: "title changed")
         
-        notifyDelegates { $0.accessibilityManager(self, didChangeWindowTitle: trackedWindow) }
+        notifyDelegates(for: element) { $0.accessibilityManager(self, didChangeWindowTitle: trackedWindow) }
     }
     
     private func handleWindowMoved(for element: AXUIElement, elementPid: pid_t) {
@@ -240,7 +298,7 @@ class AccessibilityNotificationsManager: ObservableObject {
         // Invalidate cached parsing results when window moves as frame-based hashing may be affected
         AccessibilityParsingManager.shared.invalidateCache(for: element, reason: "window moved")
         
-        notifyDelegates { $0.accessibilityManager(self, didMoveWindow: trackedWindow) }
+        notifyDelegates(for: element) { $0.accessibilityManager(self, didMoveWindow: trackedWindow) }
     }
     
     private func handleWindowResized(for element: AXUIElement, elementPid: pid_t) {
@@ -249,19 +307,19 @@ class AccessibilityNotificationsManager: ObservableObject {
         // Invalidate cached parsing results when window resizes as content layout may have changed
         AccessibilityParsingManager.shared.invalidateCache(for: element, reason: "window resized")
         
-        notifyDelegates { $0.accessibilityManager(self, didResizeWindow: trackedWindow) }
+        notifyDelegates(for: element) { $0.accessibilityManager(self, didResizeWindow: trackedWindow) }
     }
     
     private func handleWindowBounds(for element: AXUIElement, elementPid: pid_t) {
         guard let trackedWindow = self.windowsManager.trackWindowForElement(element, pid: elementPid) else { return }
         
-        notifyDelegates { $0.accessibilityManager(self, didActivateWindow: trackedWindow) }
+        notifyDelegates(for: element) { $0.accessibilityManager(self, didActivateWindow: trackedWindow) }
     }
     
     private func handleCreatedWindowElement(for element: AXUIElement, elementPid: pid_t) {
         guard let trackedWindow = self.windowsManager.trackWindowForElement(element, pid: elementPid) else { return }
         
-        self.notifyDelegates { $0.accessibilityManager(self, didActivateWindow: trackedWindow) }
+        self.notifyDelegates(for: element) { $0.accessibilityManager(self, didActivateWindow: trackedWindow) }
     }
     
     private func handleDetroyedElement(for element: AXUIElement) {
@@ -271,7 +329,7 @@ class AccessibilityNotificationsManager: ObservableObject {
             if foundWindow.element.role() == nil {
                 guard let trackedWindow = self.windowsManager.remove(foundWindow) else { return }
                 
-                notifyDelegates { $0.accessibilityManager(self, didDestroyWindow: trackedWindow) }
+                notifyDelegates(for: element) { $0.accessibilityManager(self, didDestroyWindow: trackedWindow) }
             }
         }
     }
@@ -279,7 +337,7 @@ class AccessibilityNotificationsManager: ObservableObject {
     private func handleMinimizedElement(for element: AXUIElement) {
         let trackedWindows = self.windowsManager.trackedWindows(for: element)
         if let firstTrackedWindow = trackedWindows.first {
-            notifyDelegates { delegate in
+            notifyDelegates(for: element) { delegate in
                 delegate.accessibilityManager(self, didMinimizeWindow: firstTrackedWindow)
             }
         }
@@ -288,7 +346,7 @@ class AccessibilityNotificationsManager: ObservableObject {
     private func handleDeminimizedElement(for element: AXUIElement) {
         let trackedWindows = self.windowsManager.trackedWindows(for: element)
         if let firstTrackedWindow = trackedWindows.first {
-            notifyDelegates { delegate in
+            notifyDelegates(for: element) { delegate in
                 delegate.accessibilityManager(self, didDeminimizeWindow: firstTrackedWindow)
             }
         }
@@ -299,10 +357,11 @@ class AccessibilityNotificationsManager: ObservableObject {
         guard let role = element.role(), [kAXTextFieldRole, kAXTextAreaRole].contains(role) else {
             return
         }
+
         print("handleValueChanged - element with role \(role), description: \(element.description()), frame: \(element.getFrame())")
         let value = element.value()
         let window = windowsManager.trackedWindows(for: element).first
-        notifyDelegates { $0.accessibilityManager(self, didChangeValue: element, newValue: value, window: window) }
+        notifyDelegates(for: element) { $0.accessibilityManager(self, didChangeValue: element, newValue: value, window: window) }
         
         valueDebounceWorkItem?.cancel()
         let workItem = DispatchWorkItem { [weak self] in
@@ -313,13 +372,12 @@ class AccessibilityNotificationsManager: ObservableObject {
     }
 
     private func handleFocusedUIElementChanged(for element: AXUIElement, elementPid: pid_t) {
-        print("handleFocusedUIElementChanged \(element.role() ?? "") \(element.value() ?? "")")
         guard let role = element.role(), [kAXTextFieldRole, kAXTextAreaRole].contains(role) else {
             return
         }
         
         let window = self.windowsManager.trackedWindows(for: element).first
-        self.notifyDelegates { $0.accessibilityManager(self, didFocusTextElement: element, window: window) }
+        self.notifyDelegates(for: element) { $0.accessibilityManager(self, didFocusUIElement: element, window: window) }
     }
     
     private func handleSelectionChange(for element: AXUIElement) {

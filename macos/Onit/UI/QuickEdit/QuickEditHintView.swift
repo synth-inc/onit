@@ -47,7 +47,7 @@ struct QuickEditHintView: View {
                     }
                 }
             )
-            .tooltip(prompt: KeyboardShortcuts.Name.quickEdit.shortcutText, background: false)
+//            .tooltip(prompt: KeyboardShortcuts.Name.quickEdit.shortcutText, background: false)
             .padding(.vertical, Self.verticalPadding)
             .padding(.horizontal, Self.horizontalPadding)
         }

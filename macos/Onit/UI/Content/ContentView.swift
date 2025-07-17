@@ -165,6 +165,11 @@ struct ContentView: View {
     }
     
     private func handleViewClicked() {
+        // NEW: Force Onit to become activated so standard notifications work
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+            NSApp.activate(ignoringOtherApps: true)
+        }
+        
         state?.textFocusTrigger.toggle()
         
         if let state = state {

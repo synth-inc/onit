@@ -13,6 +13,7 @@ struct MenuIcon: View {
     @ObservedObject private var accessibilityPermissionManager = AccessibilityPermissionManager.shared
     @Default(.tetheredButtonHideAllApps) var tetheredButtonHideAllApps
     @Default(.tetheredButtonHideAllAppsTimerDate) var tetheredButtonHideAllAppsTimerDate
+    @Default(.collectTypeaheadTestCases) var collectTypeaheadTestCases
     
     @State private var currentTime: Date = Date()
     @State private var timerUpdateTask: Task<Void, Never>? = nil
@@ -27,26 +28,45 @@ struct MenuIcon: View {
     }
 
     private var iconImage: ImageResource {
-        let statusGranted = accessibilityPermissionManager.accessibilityPermissionStatus == .granted
-        if !statusGranted {
+
+        // Typeahead recording state for normal operation
+        if collectTypeaheadTestCases {
+            // Recording active - use active state
 #if BETA
-            return .noodleErrorBeta
+            return .noodleActiveBeta // Use beta version when recording in beta
 #else
-            return .noodleError
+            return .noodleActive // Use regular active icon when recording
 #endif
-        } else if isOnitDisabled {
+        } else {
+            // Not recording - use warning state to indicate inactive recording
 #if BETA
             return .noodleWarningBeta
 #else
             return .noodleWarning
 #endif
-        } else {
-#if BETA
-            return .noodleBeta
-#else
-            return .noodle
-#endif
         }
+
+//         let statusGranted = accessibilityPermissionManager.accessibilityPermissionStatus == .granted
+        
+//         // Accessibility permission takes highest priority
+//         if !statusGranted {
+// #if BETA
+//             return .noodleErrorBeta
+// #else
+//             return .noodleError
+// #endif
+//         }
+        
+//         // App disabled state takes second priority
+//         if isOnitDisabled {
+// #if BETA
+//             return .noodleWarningBeta
+// #else
+//             return .noodleWarning
+// #endif
+//         }
+        
+
     }
     
     var body: some View {
@@ -69,24 +89,13 @@ struct MenuIcon: View {
     }
     
     private func startTimerUpdateTaskIfNeeded() {
-        // Only start timer if there's a timer date set and no task is already running
-        guard tetheredButtonHideAllAppsTimerDate != nil, timerUpdateTask == nil else { return }
+        guard tetheredButtonHideAllAppsTimerDate != nil else { return }
         
+        timerUpdateTask?.cancel()
         timerUpdateTask = Task {
             while !Task.isCancelled {
-                try? await Task.sleep(for: .seconds(1))
-                if !Task.isCancelled {
-                    await MainActor.run {
-                        currentTime = Date()
-                        
-                        // Clean up expired timer
-                        if let timerDate = tetheredButtonHideAllAppsTimerDate,
-                           timerDate <= currentTime {
-                            tetheredButtonHideAllAppsTimerDate = nil
-                            tetheredButtonHideAllApps = false
-                        }
-                    }
-                }
+                currentTime = Date()
+                try? await Task.sleep(nanoseconds: 1_000_000_000) // 1 second
             }
         }
     }

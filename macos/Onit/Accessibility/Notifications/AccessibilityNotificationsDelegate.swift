@@ -22,5 +22,17 @@ import SwiftUI
     func accessibilityManager(_ manager: AccessibilityNotificationsManager, didChangeWindowTitle window: TrackedWindow)
     
     func accessibilityManager(_ manager: AccessibilityNotificationsManager, didChangeValue element: AXUIElement, newValue: String?, window: TrackedWindow?)
-    func accessibilityManager(_ manager: AccessibilityNotificationsManager, didFocusTextElement element: AXUIElement, window: TrackedWindow?)
+    func accessibilityManager(_ manager: AccessibilityNotificationsManager, didFocusUIElement element: AXUIElement, window: TrackedWindow?)
+    
+    /// When true, this delegate will receive notifications from all process types,
+    /// including Onit's own process and ignored applications. 
+    /// Defaults to false for backwards compatibility.
+    var wantsNotificationsFromAllProcesses: Bool { get }
+}
+
+// MARK: - Default Implementation
+
+extension AccessibilityNotificationsDelegate {
+    /// Default implementation returns false to maintain backwards compatibility
+    var wantsNotificationsFromAllProcesses: Bool { false }
 }

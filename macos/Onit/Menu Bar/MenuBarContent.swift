@@ -17,6 +17,10 @@ struct MenuBarContent: View {
             MenuOpenOnitButton()
             MenuHideTimerStatus()
             MenuDivider()
+            #if DEBUG
+            MenuTypeaheadToggle()
+            MenuDivider()
+            #endif
             MenuSettings()
             MenuCheckForUpdates()
             MenuJoinDiscord()

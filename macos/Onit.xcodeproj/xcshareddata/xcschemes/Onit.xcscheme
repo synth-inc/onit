@@ -81,7 +81,8 @@
       buildConfiguration = "Debug">
    </AnalyzeAction>
    <ArchiveAction
-      buildConfiguration = "Release"
+      buildConfiguration = "Debug"
+      customArchiveName = "Onit2"
       revealArchiveInOrganizer = "YES">
    </ArchiveAction>
 </Scheme>

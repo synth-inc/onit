@@ -76,11 +76,14 @@ struct TypedInputEntry: Codable, Identifiable, Sendable {
     let followingInputText: String
     let preceedingWindowText: String
     let followingWindowText: String
-    let changeText: String?
+    let addedText: String?
+    let deletedText: String?
     let changeType: String?
+    let keystrokes: String? // Store as JSON string
+    let couldntFindInitialText: Bool
     let timestamp: Date
     
-    init(id: Int64? = nil, applicationName: String, applicationTitle: String?, screenContent: String, currentText: String, precedingInputText: String, followingInputText: String, preceedingWindowText: String, followingWindowText: String, changeText: String?, changeType: String?, timestamp: Date = Date()) {
+    init(id: Int64? = nil, applicationName: String, applicationTitle: String?, screenContent: String, currentText: String, precedingInputText: String, followingInputText: String, preceedingWindowText: String, followingWindowText: String, addedText: String?, deletedText: String?, changeType: String?, keystrokes: [String]? = nil, couldntFindInitialText: Bool = false, timestamp: Date = Date()) {
         self.id = id
         self.applicationName = applicationName
         self.applicationTitle = applicationTitle
@@ -90,8 +93,16 @@ struct TypedInputEntry: Codable, Identifiable, Sendable {
         self.followingInputText = followingInputText
         self.preceedingWindowText = preceedingWindowText
         self.followingWindowText = followingWindowText
-        self.changeText = changeText
+        self.addedText = addedText
+        self.deletedText = deletedText
         self.changeType = changeType
+        // Convert keystrokes array to JSON string for storage
+        if let keystrokes = keystrokes, !keystrokes.isEmpty {
+            self.keystrokes = try? String(data: JSONEncoder().encode(keystrokes), encoding: .utf8)
+        } else {
+            self.keystrokes = nil
+        }
+        self.couldntFindInitialText = couldntFindInitialText
         self.timestamp = timestamp
     }
 }
@@ -180,7 +191,7 @@ extension TypedInputEntry: FetchableRecord, PersistableRecord {
     static let databaseTableName = "typed_input_history"
     
     enum Columns: String, ColumnExpression {
-        case id, applicationName, applicationTitle, screenContent, currentText, precedingInputText, followingInputText, preceedingWindowText, followingWindowText, changeText, changeType, timestamp
+        case id, applicationName, applicationTitle, screenContent, currentText, precedingInputText, followingInputText, preceedingWindowText, followingWindowText, addedText, deletedText, changeType, keystrokes, couldntFindInitialText, timestamp
     }
     
     init(row: Row) throws {
@@ -193,8 +204,11 @@ extension TypedInputEntry: FetchableRecord, PersistableRecord {
         followingInputText = row[Columns.followingInputText]
         preceedingWindowText = row[Columns.preceedingWindowText]
         followingWindowText = row[Columns.followingWindowText]
-        changeText = row[Columns.changeText]
+        addedText = row[Columns.addedText]
+        deletedText = row[Columns.deletedText]
         changeType = row[Columns.changeType]
+        keystrokes = row[Columns.keystrokes]
+        couldntFindInitialText = row[Columns.couldntFindInitialText]
         timestamp = row[Columns.timestamp]
     }
     
@@ -208,9 +222,70 @@ extension TypedInputEntry: FetchableRecord, PersistableRecord {
         container[Columns.followingInputText] = followingInputText
         container[Columns.preceedingWindowText] = preceedingWindowText
         container[Columns.followingWindowText] = followingWindowText
-        container[Columns.changeText] = changeText
+        container[Columns.addedText] = addedText
+        container[Columns.deletedText] = deletedText
         container[Columns.changeType] = changeType
+        container[Columns.keystrokes] = keystrokes
+        container[Columns.couldntFindInitialText] = couldntFindInitialText
         container[Columns.timestamp] = timestamp
+    }
+}
+
+// MARK: - TypedInputEntry Extensions
+
+extension TypedInputEntry {
+    /// Parses the keystrokes JSON string back to an array
+    var keystrokesArray: [String] {
+        guard let keystrokesData = keystrokes?.data(using: .utf8),
+              let array = try? JSONDecoder().decode([String].self, from: keystrokesData) else {
+            return []
+        }
+        return array
+    }
+    
+    /// Creates a trimmed version of text for display, showing context around the edit point
+    func trimTextForDisplay(_ text: String, changeIndex: Int?, maxLength: Int = 50) -> String {
+        guard text.count > maxLength else { return text }
+        
+        let changeIdx = changeIndex ?? text.count / 2
+        let halfLength = maxLength / 2
+        
+        let startIndex = max(0, changeIdx - halfLength)
+        let endIndex = min(text.count, changeIdx + halfLength)
+        
+        let trimmedText = String(text[text.index(text.startIndex, offsetBy: startIndex)..<text.index(text.startIndex, offsetBy: endIndex)])
+        
+        let prefix = startIndex > 0 ? "..." : ""
+        let suffix = endIndex < text.count ? "..." : ""
+        
+        return prefix + trimmedText + suffix
+    }
+    
+    /// Gets the estimated change index for trimming purposes
+    var estimatedChangeIndex: Int? {
+        if let addedText = addedText, !addedText.isEmpty {
+            // For additions, look for where the added text appears in currentText
+            if let range = currentText.range(of: addedText) {
+                return currentText.distance(from: currentText.startIndex, to: range.lowerBound)
+            }
+        }
+        
+        if let deletedText = deletedText, !deletedText.isEmpty {
+            // For deletions, estimate based on preceding text length
+            return precedingInputText.count
+        }
+        
+        return nil
+    }
+    
+    /// Creates display-friendly text before and after for the table
+    var displayTextBefore: String {
+        let beforeText = precedingInputText + (deletedText ?? "") + followingInputText
+        return trimTextForDisplay(beforeText, changeIndex: estimatedChangeIndex)
+    }
+    
+    var displayTextAfter: String {
+        return trimTextForDisplay(currentText, changeIndex: estimatedChangeIndex)
     }
 }
 
@@ -310,8 +385,11 @@ final class TypeaheadHistoryManager: ObservableObject {
             t.column("followingInputText", .text).notNull()
             t.column("preceedingWindowText", .text).notNull()
             t.column("followingWindowText", .text).notNull()
-            t.column("changeText", .text)
+            t.column("addedText", .text)
+            t.column("deletedText", .text)
             t.column("changeType", .text)
+            t.column("keystrokes", .text) // JSON string
+            t.column("couldntFindInitialText", .boolean).notNull().defaults(to: false)
             t.column("timestamp", .datetime).notNull()
         }
         
@@ -320,7 +398,7 @@ final class TypeaheadHistoryManager: ObservableObject {
     
     // MARK: - TypedInputEntry
     
-    private func saveTypedEntry(_ entry: TypedInputEntry) async {
+    nonisolated private func saveTypedEntry(_ entry: TypedInputEntry) async {
         guard let dbQueue = dbQueue else { return }
         do {
             try await dbQueue.write { db in
@@ -333,7 +411,7 @@ final class TypeaheadHistoryManager: ObservableObject {
     
     
     
-    func addTypedPhrase(applicationName: String,
+    nonisolated func addTypedPhrase(applicationName: String,
                         applicationTitle: String?,
                         screenContent: String,
                         currentText: String,
@@ -341,11 +419,14 @@ final class TypeaheadHistoryManager: ObservableObject {
                         followingInputText: String,
                         preceedingWindowText: String,
                         followingWindowText: String,
-                        changeText: String?,
+                        addedText: String?,
+                        deletedText: String?,
                         changeType: String?,
+                        keystrokes: [String] = [],
+                        couldntFindInitialText: Bool = false,
                         timestamp: Date = Date()) async {
         guard Defaults[.collectTypeaheadTestCases] else { return }
-        print("historyManager - addTypedPhrase | applicationName: \(applicationName) applicationTitle: \(applicationTitle ?? "nil") screenContent: \(screenContent.prefix(20)) currentText: \(currentText.prefix(20)) precedingInputText: \(precedingInputText.prefix(20)) followingInputText: \(followingInputText.prefix(20)) preceedingWindowText: \(preceedingWindowText.prefix(20)) followingWindowText: \(followingWindowText.prefix(20)) changeText: \(changeText?.prefix(20) ?? "nil") changeType: \(changeType ?? "nil") timestamp: \(timestamp)")
+        print("historyManager - addTypedPhrase | applicationName: \(applicationName) applicationTitle: \(applicationTitle ?? "nil") screenContent: \(screenContent.prefix(20)) currentText: \(currentText.prefix(20)) precedingInputText: \(precedingInputText.prefix(20)) followingInputText: \(followingInputText.prefix(20)) preceedingWindowText: \(preceedingWindowText.prefix(20)) followingWindowText: \(followingWindowText.prefix(20)) addedText: \(addedText?.prefix(20) ?? "nil") deletedText: \(deletedText?.prefix(20) ?? "nil") changeType: \(changeType ?? "nil") keystrokes: \(keystrokes) couldntFindInitialText: \(couldntFindInitialText) timestamp: \(timestamp)")
         let entry = TypedInputEntry(
             applicationName: applicationName,
             applicationTitle: applicationTitle,
@@ -355,15 +436,18 @@ final class TypeaheadHistoryManager: ObservableObject {
             followingInputText: followingInputText,
             preceedingWindowText: preceedingWindowText,
             followingWindowText: followingWindowText,
-            changeText: changeText,
+            addedText: addedText,
+            deletedText: deletedText,
             changeType: changeType,
+            keystrokes: keystrokes,
+            couldntFindInitialText: couldntFindInitialText,
             timestamp: timestamp)
         await saveTypedEntry(entry)
     }
     
     // MARK: - Content
     
-    private func saveContentEntry(_ entry: ContentEntry) async {
+    nonisolated private func saveContentEntry(_ entry: ContentEntry) async {
         guard let dbQueue = dbQueue else { return }
         do {
             try await dbQueue.write { db in
@@ -381,7 +465,7 @@ final class TypeaheadHistoryManager: ObservableObject {
                     elapsedTime: Double? = nil, 
                     timestamp: Date = Date()) async {
         guard Defaults[.collectTypeaheadTestCases] else { return }
-        print("historyManager - addContent | content: \(content.prefix(20)) applicationName: \(applicationName) applicationTitle: \(applicationTitle) method: \(method) elapsedTime: \(elapsedTime ?? -1) timestamp: \(timestamp)")
+//        print("historyManager - addContent | content: \(content.prefix(20)) applicationName: \(applicationName) applicationTitle: \(applicationTitle) method: \(method) elapsedTime: \(elapsedTime ?? -1) timestamp: \(timestamp)")
         let entry = ContentEntry(
             content: content, 
             applicationName: applicationName, 
@@ -390,6 +474,37 @@ final class TypeaheadHistoryManager: ObservableObject {
             elapsedTime: elapsedTime, 
             timestamp: timestamp)
         await saveContentEntry(entry)
+    }
+    
+    // MARK: - Fetching TypedInputEntry
+    
+    nonisolated func fetchTypedInputEntries(limit: Int = 100) async -> [TypedInputEntry] {
+        guard let dbQueue = dbQueue else { return [] }
+        
+        do {
+            return try await dbQueue.read { db in
+                try TypedInputEntry
+                    .order(TypedInputEntry.Columns.timestamp.desc)
+                    .limit(limit)
+                    .fetchAll(db)
+            }
+        } catch {
+            log.error("Failed to fetch typed input entries: \(error)")
+            return []
+        }
+    }
+    
+    nonisolated func clearAllTypedInputEntries() async {
+        guard let dbQueue = dbQueue else { return }
+        
+        do {
+            try await dbQueue.write { db in
+                try TypedInputEntry.deleteAll(db)
+            }
+            print("TypeaheadHistoryManager: All typed input entries cleared")
+        } catch {
+            log.error("Failed to clear typed input entries: \(error)")
+        }
     }
 }
 

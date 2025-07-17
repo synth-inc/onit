@@ -53,8 +53,8 @@ final class TypeaheadLearningService: @unchecked Sendable {
         print("TypeaheadLearningService: Starting typeahead learning")
         
         typingChangeDelegate = TypingChangeDelegate(
-            onPhraseEntered: { [weak self] element, newValue, textChange in
-                self?.handlePhraseEntered(element: element, newValue: newValue, textChange: textChange)
+            onPhraseEntered: { [weak self] element, newValue, textChange, keystrokes, couldntFindInitialText in
+                self?.handlePhraseEntered(element: element, newValue: newValue, textChange: textChange, keystrokes: keystrokes, couldntFindInitialText: couldntFindInitialText)
             },
             onTextFocused: { [weak self] element in
                 self?.handleTextFocused(element: element)
@@ -64,10 +64,11 @@ final class TypeaheadLearningService: @unchecked Sendable {
         AccessibilityNotificationsManager.shared.addDelegate(typingChangeDelegate!)
     }
     
-    private func handlePhraseEntered(element: AXUIElement?, newValue: String?, textChange: TextChange?) {
+    private func handlePhraseEntered(element: AXUIElement?, newValue: String?, textChange: TextChange?, keystrokes: [String], couldntFindInitialText: Bool) {
         guard let element = element else { return }
         
-        let changeText = textChange?.addedText ?? ""
+        let addedText = textChange?.addedText ?? ""
+        let deletedText = textChange?.deletedText ?? ""
         let changeTypeString = textChange?.type.rawValue ?? "unknown"
         //print("typeaheadPhraseDebug - Phrase Cange: \(changeTypeString) - \(textChange?.trigger ?? "") - added: \(textChange?.addedText ?? "") deleted: \(textChange?.deletedText ?? ""))")
         
@@ -76,16 +77,23 @@ final class TypeaheadLearningService: @unchecked Sendable {
         var suffixText = ""
         
         if let textChange = textChange, let newValue = newValue {
+            // TODO: Tim - this still has an out of bounds error.
+            // TODO: Tim - the prefix/suffix code needs to only 'take' the number of chracters available.
             prefixText = textChange.textPrefixRange != nil ? (newValue as NSString).substring(with: textChange.textPrefixRange!) : ""
             suffixText = textChange.textSuffixRange != nil ? (newValue as NSString).substring(with: textChange.textSuffixRange!) : ""
-            print("typeaheadPhraseDebugPrefix - \(changeTypeString): prefix='\(prefixText)', suffix='\(suffixText)'")
+            print("typeaheadPhraseDebugPrefix - \(changeTypeString): prefix='\(prefixText)', suffix='\(suffixText)', keystrokes: \(keystrokes)")
         }
+        
+        print("typeaheadPhraseDebuSave - ===== new one")
+        print("typeaheadPhraseDebuSave - added: \(addedText)")
+        print("typeaheadPhraseDebuSave - removed: \(deletedText)")
+        print("typeaheadPhraseDebuSave - type: \(changeTypeString)")
         
         // TODO: Process the value change for typeahead learning
         // This is where you would:
         // 2. Store this information for learning
         
-        Task {
+        Task { @MainActor in 
             let (precedingWindowText, followingWindowText) = await AccessibilityParsingManager.shared.splitTextAroundElement(element)
             // Store this typing pattern in the history manager
             let app = element.appName() ?? ""
@@ -100,8 +108,11 @@ final class TypeaheadLearningService: @unchecked Sendable {
                 followingInputText: suffixText,
                 preceedingWindowText: precedingWindowText,
                 followingWindowText: followingWindowText,
-                changeText: changeText,
-                changeType: changeTypeString
+                addedText: addedText,
+                deletedText: deletedText,
+                changeType: changeTypeString,
+                keystrokes: keystrokes,
+                couldntFindInitialText: couldntFindInitialText
             )
         }
     }

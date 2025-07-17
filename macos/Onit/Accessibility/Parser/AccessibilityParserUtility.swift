@@ -31,6 +31,7 @@ enum AccessibilityParseResult {
 }
 
 /// An utility class helping for parsing Accessibility
+@MainActor
 class AccessibilityParserUtility {
 
     /**
@@ -45,7 +46,7 @@ class AccessibilityParserUtility {
         element: AXUIElement,
         maxDepth: Int,
         childNodeProcessingInterval: Int = 128,
-        handler: @escaping (AXUIElement, Int) async -> AccessibilityParseResult
+        handler: @escaping @MainActor (AXUIElement, Int) async -> AccessibilityParseResult
     ) async -> [String: String] {
         var results: [String: String] = [:]
         var processedChildNodes = 0
@@ -62,6 +63,7 @@ class AccessibilityParserUtility {
             return [:]
         }
 
+        @MainActor
         func helper(currentElement: AXUIElement, currentDepth: Int) async {
             // Check if the current depth exceeds maxDepth
             guard currentDepth <= maxDepth else { return }
@@ -80,33 +82,28 @@ class AccessibilityParserUtility {
              }
 
             // Only recursively parse children if handler didn't return .stopRecursing
-            if parseResult.shouldContinue, let children = currentElement.children() {
-                for child in children {
-                    
-                    /// Recursively traversing child nodes can get very expensive, resulting in a sub-optimal
-                    /// UX (frozen/stuck UI and slower UI as more windows are simultaneously processed).
-                    ///
-                    /// By yielding the parent task at multiples of `childNodeProcessingInterval`, we
-                    /// can allocate other tasks back to the main thread and then get back into processing child nodes.
-                    ///
-                    /// So, rather than processing one large operation, this allows us to chunk and yield window
-                    /// parsing at regular intervals, turning window parsing into many short bursts that respect
-                    /// sibling operations on the shared main thread and keeping the UI fluid as a result.
-                    ///
-                    /// Adjust `childNodeProcessingInterval` for custom processing intervals.
+            guard parseResult.shouldContinue else { return }
 
-                    processedChildNodes += 1
-                    
-                    if processedChildNodes.isMultiple(of: childNodeProcessingInterval) {
-                        await Task.yield()
-                    }
-                    
-                    await helper(currentElement: child, currentDepth: currentDepth + 1)
+            // Recursively parse children
+            guard let children = currentElement.children() else {
+                return
+            }
+
+            for child in children {
+                await helper(currentElement: child, currentDepth: currentDepth + 1)
+
+                processedChildNodes += 1
+
+                // Small delay after processing a batch of children to avoid timeouts
+                if processedChildNodes % childNodeProcessingInterval == 0 {
+                    await Task.yield()
+                    // try? await Task.sleep(nanoseconds: 10_000_000) // 10ms pause
                 }
             }
         }
 
         await helper(currentElement: element, currentDepth: 0)
+
         return results
     }
 

@@ -37,4 +37,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         
         return true
     }
+    
+    func applicationDidBecomeActive(_ notification: Notification) {
+        print("appActivationReceived - in appDelegate")
+    }
 }

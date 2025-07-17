@@ -110,11 +110,11 @@ struct SettingsSystemPromptDetail: View {
         }
     }
 }
-
-#if DEBUG
-    #Preview {
-        SettingsSystemPromptDetail(prompt: .constant(PreviewSampleData.systemPrompt),
-                           shouldBeDeleted: .constant(false),
-                           shortcutChanged: .constant(false))
-    }
-#endif
+//
+//#if DEBUG
+//    #Preview {
+//        SettingsSystemPromptDetail(prompt: .constant(PreviewSampleData.systemPrompt),
+//                           shouldBeDeleted: .constant(false),
+//                           shortcutChanged: .constant(false))
+//    }
+//#endif

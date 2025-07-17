@@ -19,7 +19,7 @@ extension KeyboardShortcuts.Name {
         "toggleLocalMode", default: .init(.seven, modifiers: [.shift, .command]))
     static let addForegroundWindowToContext = Self(
         "addForegroundWindowToContext", default: .init(.w, modifiers: [.shift, .command]))
-    static let quickEdit = Self("quickEdit", default: .init(.k, modifiers: [.command]))
+//    static let quickEdit = Self("quickEdit", default: .init(.k, modifiers: [.command]))
     
     @MainActor
     var shortcutText: String {
@@ -57,6 +57,6 @@ extension KeyboardShortcuts.Name: @retroactive CaseIterable {
         .newChat,
         .toggleLocalMode,
         .addForegroundWindowToContext,
-        .quickEdit
+//        .quickEdit
     ]
 }

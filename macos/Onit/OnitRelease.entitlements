@@ -14,8 +14,8 @@
 	<array>
 		<string>$(AppIdentifierPrefix)inc.synth.Onit.dev</string>
 		<string>$(AppIdentifierPrefix)inc.synth.Onit</string>
-		<string>$(AppIdentifierPrefix)inc.synth.Onit.dev.typeahead</string>
-		<string>$(AppIdentifierPrefix)inc.synth.Onit.dev.lurk 1</string>
+		<string>$(AppIdentifierPrefix)inc.synth.Onit.typeahead</string>
+		<string>$(AppIdentifierPrefix)inc.synth.Onit.lurk 1</string>
 	</array>
 </dict>
 </plist>
