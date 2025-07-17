@@ -126,7 +126,8 @@ struct FileRow: View {
                 addHighlightedTextToContextButton
                 pendingWindowContextItems
                 addedWindowContextItems
-                highlightedTextContext
+                unpinnedHighlightedTextContextItem
+                pinnedHighlightedTextContextItems
             }
             
             ocrDetailsLink
@@ -144,6 +145,13 @@ struct FileRow: View {
         }
         .onChange(of: debugManager.ocrComparisonResults) { _, newResults in
             updateOCRComparisonResult(from: newResults)
+        }
+        .onChange(of: autoAddHighlightedTextToContext) { _, autoAddHighlightedText in
+            if autoAddHighlightedText {
+                morphHighlightedTextGhostTagToContextTag()
+            } else {
+                morphHighlightedTextUnpinnedContextTagToGhostTag()
+            }
         }
         .onDisappear {
             windowState?.cleanUpPendingWindowContextTasks()
@@ -183,21 +191,15 @@ extension FileRow {
         if accessibilityEnabled,
            autoContextFromHighlights,
            let windowState = windowState,
-           let trackedPendingInput = windowState.trackedPendingInput
+           let trackedPendingInput = windowState.trackedPendingInput,
+           !windowState.pinnedPendingInputs.contains(trackedPendingInput)
         {
             ghostContextTag(
                 text: StringHelpers.removeWhiteSpaceAndNewLines(trackedPendingInput.selectedText),
                 iconView: Image(.text).addIconStyles(iconSize: 14),
                 tooltip: "Add Highlighted Text To Context"
             ) {
-                windowState.pendingInput = trackedPendingInput
-                windowState.trackedPendingInput = nil
-            }
-            .onChange(of: autoAddHighlightedTextToContext) { _, autoAddHighlightedText in
-                if autoAddHighlightedText {
-                    windowState.pendingInput = trackedPendingInput
-                    windowState.trackedPendingInput = nil
-                }
+                addTrackedGhostHighlightedTextToContext(trackedPendingInput)
             }
         }
     }
@@ -251,16 +253,37 @@ extension FileRow {
     }
     
     @ViewBuilder
-    private var highlightedTextContext: some View {
-        if let pendingInput = windowState?.pendingInput {
+    private var unpinnedHighlightedTextContextItem: some View {
+        if let windowState = windowState,
+           let unpinnedPendingInput = windowState.unpinnedPendingInput,
+           !windowState.pinnedPendingInputs.contains(unpinnedPendingInput)
+        {
             ContextTag(
-                text: StringHelpers.removeWhiteSpaceAndNewLines(pendingInput.selectedText),
-                borderColor: showHighlightedTextInput ? .gray400 : .clear,
+                text: StringHelpers.removeWhiteSpaceAndNewLines(unpinnedPendingInput.selectedText),
                 iconView: Image(.text).addIconStyles(iconSize: 14)
             ) {
-                showHighlightedTextInput = true
+                showHighlightedText(input: unpinnedPendingInput)
+            } pinAction: {
+                pinUnpinnedHighlightedText(unpinnedPendingInput)
             } removeAction: {
-                windowState?.pendingInput = nil
+                removeHighlightedText()
+            }
+        }
+    }
+    
+    @ViewBuilder
+    private var pinnedHighlightedTextContextItems: some View {
+        if let windowState = windowState {
+            ForEach(windowState.pinnedPendingInputs, id: \.self) { pinnedPendingInput in
+                ContextTag(
+                    text: pinnedPendingInput.selectedText,
+                    iconView: Image(.text).addIconStyles(iconSize: 14),
+                    iconViewCornerIcon: .pin
+                ) {
+                    showHighlightedText(input: pinnedPendingInput)
+                } removeAction: {
+                    removeHighlightedText(pinnedPendingInput)
+                }
             }
         }
     }
@@ -290,6 +313,86 @@ extension FileRow {
                 Spacer()
             }
             .padding(.top, 2)
+        }
+    }
+}
+
+// MARK: - Private Functions
+
+extension FileRow {
+    private func morphHighlightedTextGhostTagToContextTag() {
+        guard let windowState = windowState else { return }
+
+        windowState.selectedPendingInput = windowState.trackedPendingInput
+        windowState.unpinnedPendingInput = windowState.trackedPendingInput
+        windowState.trackedPendingInput = nil
+    }
+
+    private func morphHighlightedTextUnpinnedContextTagToGhostTag() {
+        guard let windowState = windowState else { return }
+
+        windowState.trackedPendingInput = windowState.unpinnedPendingInput
+        windowState.selectedPendingInput = nil
+        windowState.unpinnedPendingInput = nil
+    }
+
+    private func pinHighlightedText(_ windowState: OnitPanelState, _ input: Input) {
+        if !windowState.pinnedPendingInputs.contains(input) {
+            windowState.pinnedPendingInputs.append(input)
+        }
+    }
+
+    private func addTrackedGhostHighlightedTextToContext(_ trackedPendingInput: Input) {
+        guard let windowState = windowState else { return }
+
+        pinHighlightedText(windowState, trackedPendingInput)
+
+        windowState.selectedPendingInput = trackedPendingInput
+        windowState.trackedPendingInput = nil
+    }
+
+    private func pinUnpinnedHighlightedText(_ unpinnedPendingInput: Input) {
+        guard let windowState = windowState else { return }
+
+        pinHighlightedText(windowState, unpinnedPendingInput)
+
+        windowState.unpinnedPendingInput = nil
+    }
+
+    private func showHighlightedText(input: Input) {
+        guard let windowState = windowState else { return }
+
+        windowState.selectedPendingInput = input
+        Defaults[.showHighlightedTextInput] = true
+    }
+
+    private func removeUnpinnedHighlightedTextItem(_ windowState: OnitPanelState) {
+        let showingUnpinnedHighlightedText = windowState.selectedPendingInput == windowState.unpinnedPendingInput
+
+        /// Removing `InputView` from the UI if it matches the removed unpinned highlighted text.
+        if showingUnpinnedHighlightedText {
+            windowState.selectedPendingInput = nil
+        }
+
+        windowState.unpinnedPendingInput = nil
+    }
+    private func removePinnedHighlightedTextItem(_ windowState: OnitPanelState, _ pinnedPendingInput: Input) {
+        let showingPinnedHighlightedText = windowState.selectedPendingInput == pinnedPendingInput
+
+        /// Removing `InputView` from the UI if it matches the removed pinned highlighted text.
+        if showingPinnedHighlightedText {
+            windowState.selectedPendingInput = nil
+        }
+
+        windowState.pinnedPendingInputs.removeAll { $0 == pinnedPendingInput }
+    }
+    private func removeHighlightedText(_ pinnedPendingInput: Input? = nil) {
+        guard let windowState = windowState else { return }
+
+        if let pinnedPendingInput = pinnedPendingInput {
+            removePinnedHighlightedTextItem(windowState, pinnedPendingInput)
+        } else {
+            removeUnpinnedHighlightedTextItem(windowState)
         }
     }
 }
