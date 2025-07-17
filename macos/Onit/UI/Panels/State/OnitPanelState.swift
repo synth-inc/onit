@@ -124,13 +124,25 @@ class OnitPanelState: NSObject {
             notifyDelegateInputsChange()
         }
     }
-    var pendingInput: Input? = nil {
+    
+    var selectedPendingInput: Input? = nil
+
+    var trackedPendingInput: Input? = nil
+
+    var unpinnedPendingInput: Input? = nil {
         didSet {
             notifyDelegateInputsChange()
         }
     }
-    
-    var trackedPendingInput: Input? = nil
+
+    var pinnedPendingInputs: [Input] = []
+
+    func clearHighlightedTextStates() {
+        selectedPendingInput = nil
+        trackedPendingInput = nil
+        unpinnedPendingInput = nil
+        pinnedPendingInputs = []
+    }
     
     var systemPromptId: String = SystemPrompt.outputOnly.id
     
@@ -219,7 +231,7 @@ class OnitPanelState: NSObject {
             delegate.userInputsDidChange(
                 instruction: pendingInstruction,
                 contexts: pendingContextList,
-                input: pendingInput
+                input: unpinnedPendingInput
             )
         }
     }
