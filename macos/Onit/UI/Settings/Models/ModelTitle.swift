@@ -16,7 +16,9 @@ struct ModelTitle: View {
         HStack {
             Text(title)
                 .font(.system(size: 13))
+            
             Spacer()
+            
             if showToggle {
                 Toggle("", isOn: $isOn)
                     .toggleStyle(.switch)

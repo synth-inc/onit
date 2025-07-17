@@ -39,7 +39,6 @@ struct ModelsSection<Content: View>: View {
             }
             content()
         }
-        .fontWeight(.medium)
         .frame(maxWidth: .infinity, alignment: .leading)
     }
 }
