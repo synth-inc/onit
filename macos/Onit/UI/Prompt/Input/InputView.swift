@@ -11,17 +11,15 @@ import SwiftUI
 struct InputView: View {
     @Default(.showHighlightedTextInput) var showHighlightedTextInput
 
-    @State var inputExpanded: Bool = true
-
     var input: Input
     var isEditing: Bool = true
 
     var body: some View {
         if showHighlightedTextInput {
             VStack(spacing: 0) {
-                InputTitle(inputExpanded: $inputExpanded, input: input)
+                InputTitle(input: input)
                 divider
-                InputBody(inputExpanded: $inputExpanded, input: input)
+                InputBody(input: input)
             }
             .background {
                 RoundedRectangle(cornerRadius: 10)
@@ -35,7 +33,6 @@ struct InputView: View {
     var divider: some View {
         Color.gray600
             .frame(height: 1)
-            .opacity(inputExpanded ? 1 : 0)
     }
 }
 

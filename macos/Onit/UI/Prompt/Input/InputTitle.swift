@@ -8,7 +8,6 @@
 import SwiftUI
 
 struct InputTitle: View {
-    @Binding var inputExpanded: Bool
     var input: Input
 
     var sourceString: String {
@@ -26,7 +25,7 @@ struct InputTitle: View {
                 .appFont(.medium13)
                 .textSelection(.enabled)
             Spacer()
-            InputButtons(inputExpanded: $inputExpanded, input: input)
+            InputButtons(input: input)
         }
         .foregroundStyle(.gray100)
         .padding(.horizontal, 12)
@@ -35,5 +34,5 @@ struct InputTitle: View {
 }
 
 #Preview {
-    InputTitle(inputExpanded: .constant(true), input: .sample)
+    InputTitle(input: .sample)
 }

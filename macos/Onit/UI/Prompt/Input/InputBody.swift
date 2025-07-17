@@ -9,14 +9,12 @@ import HighlightSwift
 import SwiftUI
 
 struct InputBody: View {
-    @Binding var inputExpanded: Bool
     @State var text: String?
     @State var textHeight: CGFloat = 0
 
     var input: Input
 
-    init(inputExpanded: Binding<Bool>, input: Input) {
-        _inputExpanded = inputExpanded
+    init(input: Input) {
         text = input.selectedText.count <= 500 ? input.selectedText : nil
         self.input = input
     }
@@ -41,7 +39,7 @@ struct InputBody: View {
                     }
             }
         }
-        .frame(height: inputExpanded ? height : 0)
+        .frame(height: height)
         .onChange(of: input.selectedText, initial: true) {
             DispatchQueue.main.async {
                 text = input.selectedText
@@ -74,6 +72,6 @@ struct InputBody: View {
 
 #if DEBUG
     #Preview {
-        InputBody(inputExpanded: .constant(true), input: .sample)
+        InputBody(input: .sample)
     }
 #endif

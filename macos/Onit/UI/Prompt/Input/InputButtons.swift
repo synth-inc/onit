@@ -10,8 +10,6 @@ import SwiftUI
 
 struct InputButtons: View {
     @Environment(\.windowState) private var state
-    
-    @Binding var inputExpanded: Bool
 
     var input: Input
 
@@ -27,40 +25,24 @@ struct InputButtons: View {
                 .buttonStyle(DarkerButtonStyle())
             }
 
-            CopyButton(text: input.selectedText)
-                .frame(width: 20, height: 20)
-
             Button {
-                inputExpanded.toggle()
+                Defaults[.showHighlightedTextInput] = false
             } label: {
                 Color.clear
                     .frame(width: 20, height: 20)
                     .overlay {
                         Image(.smallChevRight)
                             .renderingMode(.template)
-                            .rotationEffect(inputExpanded ? .degrees(90) : .zero)
+                            .rotationEffect(.degrees(90))
                     }
             }
-            
-            closeButton
         }
         .foregroundStyle(.gray200)
-    }
-    
-    // MARK: - Child Components
-    
-    private var closeButton: some View {
-        IconButton(
-            icon: .cross,
-            iconSize: 9
-        ) {
-            Defaults[.showHighlightedTextInput] = false
-        }
     }
 }
 
 #if DEBUG
     #Preview {
-        InputButtons(inputExpanded: .constant(true), input: .sample)
+        InputButtons(input: .sample)
     }
 #endif

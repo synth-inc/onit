@@ -598,7 +598,10 @@ class AccessibilityNotificationsManager: ObservableObject {
 
     private func processSelectedText(_ text: String?) {
         guard Defaults[.autoContextFromHighlights],
-              let selectedText = text,
+              let selectedText = text?
+                                    .replacingOccurrences(of: "\\r?\\n", with: " ", options: .regularExpression)
+                                    .replacingOccurrences(of: " +", with: " ", options: .regularExpression)
+                                    .trimmingCharacters(in: .whitespacesAndNewlines),
               HighlightedTextValidator.isValid(text: selectedText) else {
             
             screenResult.userInteraction.selectedText = nil
