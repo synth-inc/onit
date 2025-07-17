@@ -136,6 +136,10 @@ class OnitPanelState: NSObject {
     }
 
     var pinnedPendingInputs: [Input] = []
+    
+    var hasHighlightedText: Bool {
+        selectedPendingInput != nil || trackedPendingInput != nil || unpinnedPendingInput != nil || !pinnedPendingInputs.isEmpty
+    }
 
     func clearHighlightedTextStates() {
         selectedPendingInput = nil
