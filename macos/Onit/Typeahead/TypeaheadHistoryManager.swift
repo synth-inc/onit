@@ -6,447 +6,390 @@
 //
 
 import Foundation
-import SQLite3
-import SwiftData
+import GRDB
 import AppKit
 import Defaults
 
 // MARK: - Entry Models
 
-struct PasteboardEntry {
-    let id: Int64
+struct PasteboardEntry: Codable, Identifiable, Sendable {
+    let id: Int64?
     let text: String
     let applicationName: String
     let applicationTitle: String
     let timestamp: Date
+    
+    init(id: Int64? = nil, text: String, applicationName: String, applicationTitle: String, timestamp: Date = Date()) {
+        self.id = id
+        self.text = text
+        self.applicationName = applicationName
+        self.applicationTitle = applicationTitle
+        self.timestamp = timestamp
+    }
 }
 
-struct HighlightedTextEntry {
-    let id: Int64
+struct HighlightedTextEntry: Codable, Identifiable, Sendable {
+    let id: Int64?
     let text: String
     let applicationName: String
     let applicationTitle: String
     let method: String
     let timestamp: Date
+    
+    init(id: Int64? = nil, text: String, applicationName: String, applicationTitle: String, method: String, timestamp: Date = Date()) {
+        self.id = id
+        self.text = text
+        self.applicationName = applicationName
+        self.applicationTitle = applicationTitle
+        self.method = method
+        self.timestamp = timestamp
+    }
 }
 
-struct ContentEntry {
-    let id: Int64
+struct ContentEntry: Codable, Identifiable, Sendable {
+    let id: Int64?
     let content: String
     let applicationName: String
     let applicationTitle: String
     let method: String
     let elapsedTime: Double?
     let timestamp: Date
+    
+    init(id: Int64? = nil, content: String, applicationName: String, applicationTitle: String, method: String, elapsedTime: Double? = nil, timestamp: Date = Date()) {
+        self.id = id
+        self.content = content
+        self.applicationName = applicationName
+        self.applicationTitle = applicationTitle
+        self.method = method
+        self.elapsedTime = elapsedTime
+        self.timestamp = timestamp
+    }
 }
 
-struct TypedInputEntry {
-    let id: Int64
+struct TypedInputEntry: Codable, Identifiable, Sendable {
+    let id: Int64?
     let applicationName: String
     let applicationTitle: String?
     let screenContent: String
-    
     let currentText: String
-    
     let precedingInputText: String
     let followingInputText: String
     let preceedingWindowText: String
     let followingWindowText: String
-
     let changeText: String?
     let changeType: String?
     let timestamp: Date
+    
+    init(id: Int64? = nil, applicationName: String, applicationTitle: String?, screenContent: String, currentText: String, precedingInputText: String, followingInputText: String, preceedingWindowText: String, followingWindowText: String, changeText: String?, changeType: String?, timestamp: Date = Date()) {
+        self.id = id
+        self.applicationName = applicationName
+        self.applicationTitle = applicationTitle
+        self.screenContent = screenContent
+        self.currentText = currentText
+        self.precedingInputText = precedingInputText
+        self.followingInputText = followingInputText
+        self.preceedingWindowText = preceedingWindowText
+        self.followingWindowText = followingWindowText
+        self.changeText = changeText
+        self.changeType = changeType
+        self.timestamp = timestamp
+    }
+}
+
+// MARK: - GRDB Extensions
+
+extension PasteboardEntry: FetchableRecord, PersistableRecord {
+    static let databaseTableName = "pasteboard_history"
+    
+    enum Columns: String, ColumnExpression {
+        case id, text, applicationName, applicationTitle, timestamp
+    }
+    
+    init(row: Row) throws {
+        id = row[Columns.id]
+        text = row[Columns.text]
+        applicationName = row[Columns.applicationName]
+        applicationTitle = row[Columns.applicationTitle]
+        timestamp = row[Columns.timestamp]
+    }
+    
+    func encode(to container: inout PersistenceContainer) throws {
+        container[Columns.id] = id
+        container[Columns.text] = text
+        container[Columns.applicationName] = applicationName
+        container[Columns.applicationTitle] = applicationTitle
+        container[Columns.timestamp] = timestamp
+    }
+}
+
+extension HighlightedTextEntry: FetchableRecord, PersistableRecord {
+    static let databaseTableName = "highlighted_text_history"
+    
+    enum Columns: String, ColumnExpression {
+        case id, text, applicationName, applicationTitle, method, timestamp
+    }
+    
+    init(row: Row) throws {
+        id = row[Columns.id]
+        text = row[Columns.text]
+        applicationName = row[Columns.applicationName]
+        applicationTitle = row[Columns.applicationTitle]
+        method = row[Columns.method]
+        timestamp = row[Columns.timestamp]
+    }
+    
+    func encode(to container: inout PersistenceContainer) throws {
+        container[Columns.id] = id
+        container[Columns.text] = text
+        container[Columns.applicationName] = applicationName
+        container[Columns.applicationTitle] = applicationTitle
+        container[Columns.method] = method
+        container[Columns.timestamp] = timestamp
+    }
+}
+
+extension ContentEntry: FetchableRecord, PersistableRecord {
+    static let databaseTableName = "content_history"
+    
+    enum Columns: String, ColumnExpression {
+        case id, content, applicationName, applicationTitle, method, elapsedTime, timestamp
+    }
+    
+    init(row: Row) throws {
+        id = row[Columns.id]
+        content = row[Columns.content]
+        applicationName = row[Columns.applicationName]
+        applicationTitle = row[Columns.applicationTitle]
+        method = row[Columns.method]
+        elapsedTime = row[Columns.elapsedTime]
+        timestamp = row[Columns.timestamp]
+    }
+    
+    func encode(to container: inout PersistenceContainer) throws {
+        container[Columns.id] = id
+        container[Columns.content] = content
+        container[Columns.applicationName] = applicationName
+        container[Columns.applicationTitle] = applicationTitle
+        container[Columns.method] = method
+        container[Columns.elapsedTime] = elapsedTime
+        container[Columns.timestamp] = timestamp
+    }
+}
+
+extension TypedInputEntry: FetchableRecord, PersistableRecord {
+    static let databaseTableName = "typed_input_history"
+    
+    enum Columns: String, ColumnExpression {
+        case id, applicationName, applicationTitle, screenContent, currentText, precedingInputText, followingInputText, preceedingWindowText, followingWindowText, changeText, changeType, timestamp
+    }
+    
+    init(row: Row) throws {
+        id = row[Columns.id]
+        applicationName = row[Columns.applicationName]
+        applicationTitle = row[Columns.applicationTitle]
+        screenContent = row[Columns.screenContent]
+        currentText = row[Columns.currentText]
+        precedingInputText = row[Columns.precedingInputText]
+        followingInputText = row[Columns.followingInputText]
+        preceedingWindowText = row[Columns.preceedingWindowText]
+        followingWindowText = row[Columns.followingWindowText]
+        changeText = row[Columns.changeText]
+        changeType = row[Columns.changeType]
+        timestamp = row[Columns.timestamp]
+    }
+    
+    func encode(to container: inout PersistenceContainer) throws {
+        container[Columns.id] = id
+        container[Columns.applicationName] = applicationName
+        container[Columns.applicationTitle] = applicationTitle
+        container[Columns.screenContent] = screenContent
+        container[Columns.currentText] = currentText
+        container[Columns.precedingInputText] = precedingInputText
+        container[Columns.followingInputText] = followingInputText
+        container[Columns.preceedingWindowText] = preceedingWindowText
+        container[Columns.followingWindowText] = followingWindowText
+        container[Columns.changeText] = changeText
+        container[Columns.changeType] = changeType
+        container[Columns.timestamp] = timestamp
+    }
 }
 
 // MARK: - HistoryManager
 
-final class TypeaheadHistoryManager: ObservableObject, @unchecked Sendable {
+
+final class TypeaheadHistoryManager: ObservableObject {
     @MainActor
     static let shared = TypeaheadHistoryManager()
 
-    private let dbURL: URL
-    private var db: OpaquePointer?
-    internal let queue = DispatchQueue(label: "com.onit.historyManager", qos: .background)
+    private var dbQueue: DatabaseQueue?
+    private let dbFile: String = "typeahead_history.sqlite"
+    
+    private var dbPath: String? {
+        let fileManager = FileManager.default
+        
+        guard let applicationSupportURL = fileManager
+            .urls(for: .applicationSupportDirectory, in: .userDomainMask)
+            .first else {
+            print("Could not find Application Support directory")
+            return nil
+        }
+        
+        let onitURL = applicationSupportURL.appendingPathComponent("Onit")
+        try? fileManager.createDirectory(at: onitURL, withIntermediateDirectories: true)
+        
+        return onitURL.appendingPathComponent(dbFile).path
+    }
 
-    lazy var pasteboard = PasteboardHistoryManager(manager: self)
-    lazy var highlightedText = HighlightedTextHistoryManager(manager: self)
-    lazy var content = ContentHistoryManager(manager: self)
-    lazy var typedPhrase = TypedPhraseHistoryManager(manager: self)
-    lazy var typedWord = TypedWordHistoryManager(manager: self)
+//    lazy var pasteboard = PasteboardHistoryManager(manager: self)
+//    lazy var highlightedText = HighlightedTextHistoryManager(manager: self)
+//    lazy var content = ContentHistoryManager(manager: self)
+////    lazy var typedPhrase = TypedPhraseHistoryManager(manager: self)
+//    lazy var typedWord = TypedWordHistoryManager(manager: self)
 
     private init() {
-        // Store DB in Application Support
-        let fm = FileManager.default
-        let appSupport = fm.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
-        let dir = appSupport.appendingPathComponent("Onit", isDirectory: true)
-        try? fm.createDirectory(at: dir, withIntermediateDirectories: true)
-        dbURL = dir.appendingPathComponent("history.sqlite3")
-
-        openDatabase()
-        createTables()
+        setupDatabase()
     }
 
-    deinit {
-        sqlite3_close(db)
-    }
-
-    private func openDatabase() {
-        if sqlite3_open(dbURL.path, &db) != SQLITE_OK {
-            print("Failed to open SQLite database at \(dbURL.path)")
-        }
-    }
-
-    private func createTables() {
-        let createPasteboard = """
-        CREATE TABLE IF NOT EXISTS pasteboard_history (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            text TEXT NOT NULL,
-            app TEXT,
-            window TEXT,
-            timestamp REAL NOT NULL
-        );
-        """
-        let createHighlighted = """
-        CREATE TABLE IF NOT EXISTS highlighted_text_history (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            text TEXT NOT NULL,
-            app TEXT NOT NULL,
-            window TEXT,
-            method TEXT,
-            timestamp REAL NOT NULL
-        );
-        """
-        let createContent = """
-        CREATE TABLE IF NOT EXISTS content_history (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            content TEXT NOT NULL,
-            app TEXT NOT NULL,
-            window TEXT,
-            method TEXT,
-            elapsedTime REAL,
-            timestamp REAL NOT NULL
-        );
-        """
-        let createTypedPhraseHistory = """
-        CREATE TABLE IF NOT EXISTS typed_phrase_history (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            applicationName TEXT NOT NULL,
-            applicationTitle TEXT,
-            screenContent TEXT,
-            currentText TEXT,
-            precedingInputText TEXT,
-            followingInputText TEXT,
-            preceedingWindowText TEXT,
-            followingWindowText TEXT,
-            changeText TEXT,
-            changeType TEXT,
-            timestamp REAL NOT NULL
-        );
-        """
-        let createTypedWordHistory = """
-        CREATE TABLE IF NOT EXISTS typed_word_history (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            applicationName TEXT NOT NULL,
-            applicationTitle TEXT,
-            screenContent TEXT,
-            currentText TEXT,
-            precedingInputText TEXT,
-            followingInputText TEXT,
-            preceedingWindowText TEXT,
-            followingWindowText TEXT,
-            changeText TEXT,
-            changeType TEXT,
-            timestamp REAL NOT NULL
-        );
-        """
-        queue.sync {
-            _ = execute(createPasteboard)
-            _ = execute(createHighlighted)
-            _ = execute(createContent)
-            _ = execute(createTypedPhraseHistory)
-            _ = execute(createTypedWordHistory)
+    // MARK: - Database Setup
+    
+    private func setupDatabase() {
+        guard let dbPath = dbPath else { return }
+        
+        do {
+            dbQueue = try DatabaseQueue(path: dbPath)
             
-            // Add migration for new columns if they don't exist
-            _ = execute("ALTER TABLE typed_phrase_history ADD COLUMN changeText TEXT")
-            _ = execute("ALTER TABLE typed_phrase_history ADD COLUMN changeType TEXT")
-            _ = execute("ALTER TABLE typed_word_history ADD COLUMN changeText TEXT")
-            _ = execute("ALTER TABLE typed_word_history ADD COLUMN changeType TEXT")
-            _ = execute("ALTER TABLE content_history ADD COLUMN elapsedTime REAL")
+            try dbQueue?.write { db in
+                try createTables(in: db)
+            }
             
-            // Migrate old typed_input_history table to typed_phrase_history if it exists
-            _ = execute("INSERT OR IGNORE INTO typed_phrase_history SELECT * FROM typed_input_history WHERE EXISTS (SELECT name FROM sqlite_master WHERE type='table' AND name='typed_input_history')")
+            print("TypeaheadHistoryManager: Database initialized successfully at: \(dbPath)")
+        } catch {
+            print("TypeaheadHistoryManager: Failed to setup database: \(error)")
         }
     }
-
-    func execute(_ sql: String, args: [Any?] = []) -> Bool {
-        var stmt: OpaquePointer?
-        guard sqlite3_prepare_v2(db, sql, -1, &stmt, nil) == SQLITE_OK else {
-            print("SQLite prepare error: \(String(cString: sqlite3_errmsg(db)))")
-            return false
+    
+    private func createTables(in db: Database) throws {
+        // Create pasteboard_history table
+        try db.create(table: PasteboardEntry.databaseTableName, ifNotExists: true) { t in
+            t.autoIncrementedPrimaryKey("id")
+            t.column("text", .text).notNull()
+            t.column("applicationName", .text).notNull()
+            t.column("applicationTitle", .text).notNull()
+            t.column("timestamp", .datetime).notNull()
         }
-        defer { sqlite3_finalize(stmt) }
-        for (i, arg) in args.enumerated() {
-            let idx = Int32(i+1)
-            if let str = arg as? String {
-                sqlite3_bind_text(stmt, idx, str, -1, nil)
-            } else if let d = arg as? Double {
-                sqlite3_bind_double(stmt, idx, d)
-            } else if let i = arg as? Int {
-                sqlite3_bind_int(stmt, idx, Int32(i))
-            } else if let i64 = arg as? Int64 {
-                sqlite3_bind_int64(stmt, idx, i64)
-            } else if arg == nil {
-                sqlite3_bind_null(stmt, idx)
-            }
+        
+        // Create highlighted_text_history table
+        try db.create(table: HighlightedTextEntry.databaseTableName, ifNotExists: true) { t in
+            t.autoIncrementedPrimaryKey("id")
+            t.column("text", .text).notNull()
+            t.column("applicationName", .text).notNull()
+            t.column("applicationTitle", .text).notNull()
+            t.column("method", .text).notNull()
+            t.column("timestamp", .datetime).notNull()
         }
-        if sqlite3_step(stmt) != SQLITE_DONE {
-            print("SQLite step error: \(String(cString: sqlite3_errmsg(db)))")
-            return false
+        
+        // Create content_history table
+        try db.create(table: ContentEntry.databaseTableName, ifNotExists: true) { t in
+            t.autoIncrementedPrimaryKey("id")
+            t.column("content", .text).notNull()
+            t.column("applicationName", .text).notNull()
+            t.column("applicationTitle", .text).notNull()
+            t.column("method", .text).notNull()
+            t.column("elapsedTime", .double)
+            t.column("timestamp", .datetime).notNull()
         }
-        return true
+        
+        // Create typed_input_history table (unified for both phrase and word)
+        try db.create(table: TypedInputEntry.databaseTableName, ifNotExists: true) { t in
+            t.autoIncrementedPrimaryKey("id")
+            t.column("applicationName", .text).notNull()
+            t.column("applicationTitle", .text)
+            t.column("screenContent", .text).notNull()
+            t.column("currentText", .text).notNull()
+            t.column("precedingInputText", .text).notNull()
+            t.column("followingInputText", .text).notNull()
+            t.column("preceedingWindowText", .text).notNull()
+            t.column("followingWindowText", .text).notNull()
+            t.column("changeText", .text)
+            t.column("changeType", .text)
+            t.column("timestamp", .datetime).notNull()
+        }
+        
+        print("TypeaheadHistoryManager: All tables created successfully")
     }
-
-    func query(_ sql: String, args: [Any?] = []) -> [[String: Any?]] {
-        var stmt: OpaquePointer?
-        var rows: [[String: Any?]] = []
-        guard sqlite3_prepare_v2(db, sql, -1, &stmt, nil) == SQLITE_OK else {
-            print("SQLite prepare error: \(String(cString: sqlite3_errmsg(db)))")
-            return rows
-        }
-        defer { sqlite3_finalize(stmt) }
-        for (i, arg) in args.enumerated() {
-            let idx = Int32(i+1)
-            if let str = arg as? String {
-                sqlite3_bind_text(stmt, idx, str, -1, nil)
-            } else if let d = arg as? Double {
-                sqlite3_bind_double(stmt, idx, d)
-            } else if let i = arg as? Int {
-                sqlite3_bind_int(stmt, idx, Int32(i))
-            } else if let i64 = arg as? Int64 {
-                sqlite3_bind_int64(stmt, idx, i64)
-            } else if arg == nil {
-                sqlite3_bind_null(stmt, idx)
+    
+    // MARK: - TypedInputEntry
+    
+    private func saveTypedEntry(_ entry: TypedInputEntry) async {
+        guard let dbQueue = dbQueue else { return }
+        do {
+            try await dbQueue.write { db in
+                try entry.insert(db)
             }
+        } catch {
+            log.error("Failed to save sample: \(error)")
         }
-        while sqlite3_step(stmt) == SQLITE_ROW {
-            var row: [String: Any?] = [:]
-            for i in 0..<sqlite3_column_count(stmt) {
-                let name = String(cString: sqlite3_column_name(stmt, i))
-                let type = sqlite3_column_type(stmt, i)
-                switch type {
-                case SQLITE_INTEGER:
-                    row[name] = sqlite3_column_int64(stmt, i)
-                case SQLITE_FLOAT:
-                    row[name] = sqlite3_column_double(stmt, i)
-                case SQLITE_TEXT:
-                    row[name] = String(cString: sqlite3_column_text(stmt, i))
-                case SQLITE_NULL:
-                    row[name] = nil
-                default:
-                    row[name] = nil
-                }
-            }
-            rows.append(row)
-        }
-        return rows
     }
-}
-
-// MARK: - Submanagers
-
-final class PasteboardHistoryManager {
-    private unowned let manager: TypeaheadHistoryManager
-    init(manager: TypeaheadHistoryManager) { self.manager = manager }
-
-    func add(text: String, applicationName: String, applicationTitle: String, timestamp: Date = Date()) {
+    
+    
+    
+    func addTypedPhrase(applicationName: String,
+                        applicationTitle: String?,
+                        screenContent: String,
+                        currentText: String,
+                        precedingInputText: String,
+                        followingInputText: String,
+                        preceedingWindowText: String,
+                        followingWindowText: String,
+                        changeText: String?,
+                        changeType: String?,
+                        timestamp: Date = Date()) async {
         guard Defaults[.collectTypeaheadTestCases] else { return }
-        print("historyManager - PasteboardHistoryManager.add | text: \(text.prefix(40)) applicationName: \(applicationName) applicationTitle: \(applicationTitle) timestamp: \(timestamp)")
-        let sql = "INSERT INTO pasteboard_history (text, app, window, timestamp) VALUES (?, ?, ?, ?)"
-        manager.queue.async {
-            _ = self.manager.execute(sql, args: [text, applicationName, applicationTitle, timestamp.timeIntervalSince1970])
-        }
+        print("historyManager - addTypedPhrase | applicationName: \(applicationName) applicationTitle: \(applicationTitle ?? "nil") screenContent: \(screenContent.prefix(20)) currentText: \(currentText.prefix(20)) precedingInputText: \(precedingInputText.prefix(20)) followingInputText: \(followingInputText.prefix(20)) preceedingWindowText: \(preceedingWindowText.prefix(20)) followingWindowText: \(followingWindowText.prefix(20)) changeText: \(changeText?.prefix(20) ?? "nil") changeType: \(changeType ?? "nil") timestamp: \(timestamp)")
+        let entry = TypedInputEntry(
+            applicationName: applicationName,
+            applicationTitle: applicationTitle,
+            screenContent: screenContent,
+            currentText: currentText,
+            precedingInputText: precedingInputText,
+            followingInputText: followingInputText,
+            preceedingWindowText: preceedingWindowText,
+            followingWindowText: followingWindowText,
+            changeText: changeText,
+            changeType: changeType,
+            timestamp: timestamp)
+        await saveTypedEntry(entry)
     }
-
-    func fetchAll() -> [PasteboardEntry] {
-        let sql = "SELECT * FROM pasteboard_history ORDER BY timestamp DESC"
-        var result: [PasteboardEntry] = []
-        manager.queue.sync {
-            let rows = manager.query(sql)
-            for row in rows {
-                if let id = row["id"] as? Int64,
-                   let text = row["text"] as? String,
-                   let ts = row["timestamp"] as? Double {
-                    let app = row["app"] as? String ?? ""
-                    let window = row["window"] as? String ?? ""
-                    result.append(PasteboardEntry(id: id, text: text, applicationName: app, applicationTitle: window, timestamp: Date(timeIntervalSince1970: ts)))
-                }
+    
+    // MARK: - Content
+    
+    private func saveContentEntry(_ entry: ContentEntry) async {
+        guard let dbQueue = dbQueue else { return }
+        do {
+            try await dbQueue.write { db in
+                try entry.insert(db)
             }
+        } catch {
+            log.error("Failed to save sample: \(error)")
         }
-        return result
     }
-}
-
-final class HighlightedTextHistoryManager {
-    private unowned let manager: TypeaheadHistoryManager
-    init(manager: TypeaheadHistoryManager) { self.manager = manager }
-
-    func add(text: String, applicationName: String, applicationTitle: String, method: String, timestamp: Date = Date()) {
+    
+    func addContent(content: String, 
+                    applicationName: String, 
+                    applicationTitle: String, 
+                    method: String, 
+                    elapsedTime: Double? = nil, 
+                    timestamp: Date = Date()) async {
         guard Defaults[.collectTypeaheadTestCases] else { return }
-        print("historyManager - HighlightedTextHistoryManager.add | text: \(text.prefix(40)) applicationName: \(applicationName) applicationTitle: \(applicationTitle) method: \(method) timestamp: \(timestamp)")
-        let sql = "INSERT INTO highlighted_text_history (text, app, window, method, timestamp) VALUES (?, ?, ?, ?, ?)"
-        manager.queue.async {
-            _ = self.manager.execute(sql, args: [text, applicationName, applicationTitle, method, timestamp.timeIntervalSince1970])
-        }
-    }
-
-    func fetchAll() -> [HighlightedTextEntry] {
-        let sql = "SELECT * FROM highlighted_text_history ORDER BY timestamp DESC"
-        var result: [HighlightedTextEntry] = []
-        manager.queue.sync {
-            let rows = manager.query(sql)
-            for row in rows {
-                if let id = row["id"] as? Int64,
-                   let text = row["text"] as? String,
-                   let app = row["app"] as? String,
-                   let ts = row["timestamp"] as? Double {
-                    let window = row["window"] as? String ?? ""
-                    let method = row["method"] as? String ?? ""
-                    result.append(HighlightedTextEntry(id: id, text: text, applicationName: app, applicationTitle: window, method: method, timestamp: Date(timeIntervalSince1970: ts)))
-                }
-            }
-        }
-        return result
+        print("historyManager - addContent | content: \(content.prefix(20)) applicationName: \(applicationName) applicationTitle: \(applicationTitle) method: \(method) elapsedTime: \(elapsedTime ?? -1) timestamp: \(timestamp)")
+        let entry = ContentEntry(
+            content: content, 
+            applicationName: applicationName, 
+            applicationTitle: applicationTitle, 
+            method: method, 
+            elapsedTime: elapsedTime, 
+            timestamp: timestamp)
+        await saveContentEntry(entry)
     }
 }
 
-final class ContentHistoryManager {
-    private unowned let manager: TypeaheadHistoryManager
-    init(manager: TypeaheadHistoryManager) { self.manager = manager }
-
-    func add(content: String, applicationName: String, applicationTitle: String, method: String, elapsedTime: Double? = nil, timestamp: Date = Date()) {
-        guard Defaults[.collectTypeaheadTestCases] else { return }
-        print("historyManager - ContentHistoryManager.add | content: \(content.prefix(40)) applicationName: \(applicationName) applicationTitle: \(applicationTitle) method: \(method) elapsedTime: \(elapsedTime ?? -1) timestamp: \(timestamp)")
-        let sql = "INSERT INTO content_history (content, app, window, method, elapsedTime, timestamp) VALUES (?, ?, ?, ?, ?, ?)"
-        manager.queue.async {
-            _ = self.manager.execute(sql, args: [content, applicationName, applicationTitle, method, elapsedTime, timestamp.timeIntervalSince1970])
-        }
-    }
-
-    func fetchAll() -> [ContentEntry] {
-        let sql = "SELECT * FROM content_history ORDER BY timestamp DESC"
-        var result: [ContentEntry] = []
-        manager.queue.sync {
-            let rows = manager.query(sql)
-            for row in rows {
-                if let id = row["id"] as? Int64,
-                   let content = row["content"] as? String,
-                   let app = row["app"] as? String,
-                   let ts = row["timestamp"] as? Double {
-                    let window = row["window"] as? String ?? ""
-                    let method = row["method"] as? String ?? ""
-                    let elapsedTime = row["elapsedTime"] as? Double
-                    result.append(ContentEntry(id: id, content: content, applicationName: app, applicationTitle: window, method: method, elapsedTime: elapsedTime, timestamp: Date(timeIntervalSince1970: ts)))
-                }
-            }
-        }
-        return result
-    }
-}
-
-final class TypedPhraseHistoryManager {
-    private unowned let manager: TypeaheadHistoryManager
-    init(manager: TypeaheadHistoryManager) { self.manager = manager }
-
-    func add(applicationName: String,
-             applicationTitle: String?,
-             screenContent: String,
-             currentText: String,
-             precedingInputText:String,
-             followingInputText: String,
-             preceedingWindowText: String,
-             followingWindowText: String,
-             changeText: String?,
-             changeType: String?,
-             timestamp: Date = Date()) {
-        guard Defaults[.collectTypeaheadTestCases] else { return }
-        print("historyManager - TypedPhraseHistoryManager.add | applicationName: \(applicationName) applicationTitle: \(applicationTitle ?? "nil") screenContent: \(screenContent.prefix(20)) currentText: \(currentText.prefix(20)) precedingInputText: \(precedingInputText.prefix(20)) followingInputText: \(followingInputText.prefix(20)) preceedingWindowText: \(preceedingWindowText.prefix(20)) followingWindowText: \(followingWindowText.prefix(20)) changeText: \(changeText?.prefix(20) ?? "nil") changeType: \(changeType ?? "nil") timestamp: \(timestamp)")
-        let sql = "INSERT INTO typed_phrase_history (applicationName, applicationTitle, screenContent, currentText, precedingInputText, followingInputText, preceedingWindowText, followingWindowText, changeText, changeType, timestamp) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
-        manager.queue.async {
-            _ = self.manager.execute(sql, args: [applicationName, applicationTitle, screenContent, currentText, precedingInputText, followingInputText, preceedingWindowText, followingWindowText, changeText, changeType, timestamp.timeIntervalSince1970])
-        }
-    }
-
-    func fetchAll() -> [TypedInputEntry] {
-        let sql = "SELECT * FROM typed_phrase_history ORDER BY timestamp DESC"
-        var result: [TypedInputEntry] = []
-        manager.queue.sync {
-            let rows = manager.query(sql)
-            for row in rows {
-                if let id = row["id"] as? Int64,
-                   let applicationName = row["applicationName"] as? String,
-                   let ts = row["timestamp"] as? Double {
-                    let applicationTitle = row["applicationTitle"] as? String
-                    let screenContent = row["screenContent"] as? String ?? ""
-                    let currentText = row["currentText"] as? String ?? ""
-                    let precedingInputText = row["precedingInputText"] as? String ?? ""
-                    let followingInputText = row["followingInputText"] as? String ?? ""
-                    let preceedingWindowText = row["preceedingWindowText"] as? String ?? ""
-                    let followingWindowText = row["followingWindowText"] as? String ?? ""
-                    let changeText = row["changeText"] as? String
-                    let changeType = row["changeType"] as? String
-                    result.append(TypedInputEntry(id: id, applicationName: applicationName, applicationTitle: applicationTitle, screenContent: screenContent, currentText: currentText, precedingInputText: precedingInputText, followingInputText: followingInputText, preceedingWindowText: preceedingWindowText, followingWindowText: followingWindowText, changeText: changeText, changeType: changeType, timestamp: Date(timeIntervalSince1970: ts)))
-                }
-            }
-        }
-        return result
-    }
-}
-
-final class TypedWordHistoryManager {
-    private unowned let manager: TypeaheadHistoryManager
-    init(manager: TypeaheadHistoryManager) { self.manager = manager }
-
-    func add(applicationName: String,
-             applicationTitle: String?,
-             screenContent: String,
-             currentText: String,
-             precedingInputText:String,
-             followingInputText: String,
-             preceedingWindowText: String,
-             followingWindowText: String,
-             changeText: String?,
-             changeType: String?,
-             timestamp: Date = Date()) {
-        guard Defaults[.collectTypeaheadTestCases] else { return }
-        print("historyManager - TypedWordHistoryManager.add | applicationName: \(applicationName) applicationTitle: \(applicationTitle ?? "nil") screenContent: \(screenContent.prefix(20)) currentText: \(currentText.prefix(20)) precedingInputText: \(precedingInputText.prefix(20)) followingInputText: \(followingInputText.prefix(20)) preceedingWindowText: \(preceedingWindowText.prefix(20)) followingWindowText: \(followingWindowText.prefix(20)) changeText: \(changeText?.prefix(20) ?? "nil") changeType: \(changeType ?? "nil") timestamp: \(timestamp)")
-        let sql = "INSERT INTO typed_word_history (applicationName, applicationTitle, screenContent, currentText, precedingInputText, followingInputText, preceedingWindowText, followingWindowText, changeText, changeType, timestamp) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
-        manager.queue.async {
-            _ = self.manager.execute(sql, args: [applicationName, applicationTitle, screenContent, currentText, precedingInputText, followingInputText, preceedingWindowText, followingWindowText, changeText, changeType, timestamp.timeIntervalSince1970])
-        }
-    }
-
-    func fetchAll() -> [TypedInputEntry] {
-        let sql = "SELECT * FROM typed_word_history ORDER BY timestamp DESC"
-        var result: [TypedInputEntry] = []
-        manager.queue.sync {
-            let rows = manager.query(sql)
-            for row in rows {
-                if let id = row["id"] as? Int64,
-                   let applicationName = row["applicationName"] as? String,
-                   let ts = row["timestamp"] as? Double {
-                    let applicationTitle = row["applicationTitle"] as? String
-                    let screenContent = row["screenContent"] as? String ?? ""
-                    let currentText = row["currentText"] as? String ?? ""
-                    let precedingInputText = row["precedingInputText"] as? String ?? ""
-                    let followingInputText = row["followingInputText"] as? String ?? ""
-                    let preceedingWindowText = row["preceedingWindowText"] as? String ?? ""
-                    let followingWindowText = row["followingWindowText"] as? String ?? ""
-                    let changeText = row["changeText"] as? String
-                    let changeType = row["changeType"] as? String
-                    result.append(TypedInputEntry(id: id, applicationName: applicationName, applicationTitle: applicationTitle, screenContent: screenContent, currentText: currentText, precedingInputText: precedingInputText, followingInputText: followingInputText, preceedingWindowText: preceedingWindowText, followingWindowText: followingWindowText, changeText: changeText, changeType: changeType, timestamp: Date(timeIntervalSince1970: ts)))
-                }
-            }
-        }
-        return result
-    }
-}

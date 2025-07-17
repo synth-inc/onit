@@ -87,24 +87,22 @@ final class TypeaheadLearningService: @unchecked Sendable {
         
         Task {
             let (precedingWindowText, followingWindowText) = await AccessibilityParsingManager.shared.splitTextAroundElement(element)
-            
-            
             // Store this typing pattern in the history manager
-            if let app = element.appName() {
-                let windowTitle = element.title() ?? ""
-                TypeaheadHistoryManager.shared.typedPhrase.add(
-                    applicationName: app,
-                    applicationTitle: windowTitle,
-                    screenContent: "", // Could add more context here
-                    currentText: newValue ?? "",
-                    precedingInputText: prefixText,
-                    followingInputText: suffixText,
-                    preceedingWindowText: precedingWindowText,
-                    followingWindowText: followingWindowText,
-                    changeText: changeText,
-                    changeType: changeTypeString
-                )
-            }
+            let app = element.appName() ?? ""
+            let windowTitle = element.title() ?? ""
+            
+            await TypeaheadHistoryManager.shared.addTypedPhrase(
+                applicationName: app,
+                applicationTitle: windowTitle,
+                screenContent: "", // Could add more context here
+                currentText: newValue ?? "",
+                precedingInputText: prefixText,
+                followingInputText: suffixText,
+                preceedingWindowText: precedingWindowText,
+                followingWindowText: followingWindowText,
+                changeText: changeText,
+                changeType: changeTypeString
+            )
         }
     }
     

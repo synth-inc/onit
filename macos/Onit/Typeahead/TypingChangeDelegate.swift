@@ -353,32 +353,32 @@ final class TypingChangeDelegate: AccessibilityNotificationsDelegate {
     
     private func addToContentHistoryIfNeeded(_ window: TrackedWindow) {
         if Defaults[.collectTypeaheadTestCases] {
-            // We should get the AXScrape if it doesn't already exist.
-            Task {
-                AccessibilityParsingManager.shared.requestParsing(for: window.element, requester: self, completion: { result in
-                switch result {
-                case .success(let parsedResult):
-                    print("typeaheadDebugParsing - loaded context from window named: \(window.title)")
-                    
-                    // Extract data from parsing result
-                    let screenContent = parsedResult["screen"] ?? ""
-                    let applicationName = parsedResult["applicationName"] ?? window.pid.appName ?? "Unknown"
-                    let applicationTitle = parsedResult["applicationTitle"] ?? window.title
-                    let elapsedTime = Double(parsedResult["elapsedTime"] ?? "0") ?? 0.0
-                    
-                // Store in content history
-                TypeaheadHistoryManager.shared.content.add(
-                    content: screenContent,
-                    applicationName: applicationName,
-                    applicationTitle: applicationTitle,
-                        method: "accessibility",
-                            elapsedTime: elapsedTime
-                    )
-                case .failure(let error):
-                    print("typeaheadDebugParsing - failed to load context from window: \(error)")
-                }
-            })
-            }
+             Task {
+                 AccessibilityParsingManager.shared.requestParsing(for: window.element, requester: self, completion: { result in
+                     switch result {
+                     case .success(let parsedResult):
+                         print("typeaheadDebugParsing - loaded context from window named: \(window.title)")
+                        
+                         // Extract data from parsing result
+                         let screenContent = parsedResult["screen"] ?? ""
+                         let applicationName = parsedResult["applicationName"] ?? window.pid.appName ?? "Unknown"
+                         let applicationTitle = parsedResult["applicationTitle"] ?? window.title
+                         let elapsedTime = Double(parsedResult["elapsedTime"] ?? "0") ?? 0.0
+                        
+                         Task {
+                             await TypeaheadHistoryManager.shared.addContent(
+                                content: screenContent,
+                                applicationName: applicationName,
+                                applicationTitle: applicationTitle,
+                                method: "accessibility",
+                                elapsedTime: elapsedTime)
+                         }
+                         
+                      case .failure(let error):
+                         print("typeaheadDebugParsing - failed to load context from window: \(error)")
+                     }
+                 })
+             }
         }
         focusedTextFieldId = nil
         focusedTextElement = nil
