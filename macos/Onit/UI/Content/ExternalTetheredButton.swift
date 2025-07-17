@@ -54,7 +54,7 @@ struct ExternalTetheredButton: View {
     }
     
     private var capturedHighlightedText: Bool {
-        return windowState?.pendingInput != nil
+        return windowState?.unpinnedPendingInput != nil || windowState?.trackedPendingInput != nil
     }
     
     private var foregroundWindowIcon: NSImage? {

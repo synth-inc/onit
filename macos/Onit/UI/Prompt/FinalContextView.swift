@@ -25,7 +25,7 @@ struct FinalContextView: View {
     let prompt: Prompt
 
     var usingContextOrInput: Bool {
-        usingContext || prompt.input != nil
+        usingContext || !prompt.inputs.isEmpty
     }
 
     var usingContext: Bool {
@@ -164,8 +164,10 @@ struct FinalContextView: View {
                 .buttonStyle(.plain)
 
                 if isExpanded {
-                    if let input = prompt.input {
-                        InputView(input: input, isEditing: false)
+                    if !prompt.inputs.isEmpty {
+                        ForEach(prompt.inputs, id: \.self) { input in
+                            InputView(input: input, isEditing: false)
+                        }
                     }
 
                     if usingContext {
