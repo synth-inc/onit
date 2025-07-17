@@ -69,7 +69,7 @@ struct ContextTag: View {
     
     @State private var isHoveredBody: Bool = false
     @State private var isPressedBody: Bool = false
-    @State private var isHoveredRemove: Bool = false
+    @State private var isHoveredAction: Bool = false
     
     private let height: CGFloat = 24
     
@@ -210,10 +210,10 @@ extension ContextTag {
         Text(text)
             .styleText(
                 size: 12,
-                color: isHoveredRemove ? .T_3 : isHoveredBody ? hoverTextColor : textColor
+                color: isHoveredAction ? .T_3 : isHoveredBody ? hoverTextColor : textColor
             )
             .truncateText()
-            .addAnimation(dependency: [isHoveredBody, isHoveredRemove])
+            .addAnimation(dependency: [isHoveredBody, isHoveredAction])
     }
     
     private func hoverActionButton(icon: ImageResource, hoverAction: @escaping () -> Void) -> some View {
@@ -222,14 +222,14 @@ extension ContextTag {
         } label: {
             Image(icon)
                 .addIconStyles(
-                    foregroundColor: isHoveredRemove ? Color.primary : .gray100,
+                    foregroundColor: isHoveredAction ? Color.primary : .gray100,
                     iconSize: 9
                 )
-                .addAnimation(dependency: isHoveredRemove)
+                .addAnimation(dependency: isHoveredAction)
         }
         .background(hoverBackground)
         .onHover { isHovering in
-            isHoveredRemove = isHovering
+            isHoveredAction = isHovering
         }
     }
 }
