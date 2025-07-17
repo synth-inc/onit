@@ -174,8 +174,8 @@ extension PromptCore {
     
     private var contextAndInput: some View {
         VStack(alignment: .leading, spacing: 0) {
-            if showHighlightedTextInput, let windowState = windowState, let pendingInput = windowState.pendingInput {
-                InputView(input: pendingInput, inputExpanded: true)
+            if showHighlightedTextInput, let windowState = windowState, let selectedPendingInput = windowState.selectedPendingInput {
+                InputView(input: selectedPendingInput, inputExpanded: true)
             }
             
             if !appState.subscriptionPlanError.isEmpty {

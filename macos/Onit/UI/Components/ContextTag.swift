@@ -21,10 +21,12 @@ struct ContextTag: View {
     private let borderColor: Color?
     private let iconBundleURL: URL?
     private let iconView: (any View)?
+    private let iconViewCornerIcon: ImageResource?
     private let caption: String?
     private let tooltip: String?
     private let errorDotColor: Color?
     private let action: (() -> Void)?
+    private let pinAction: (() -> Void)?
     private let removeAction: (() -> Void)?
     
     init(
@@ -41,10 +43,12 @@ struct ContextTag: View {
         borderColor: Color? = nil,
         iconBundleURL: URL? = nil,
         iconView: (any View)? = nil,
+        iconViewCornerIcon: ImageResource? = nil,
         caption: String? = nil,
         tooltip: String? = nil,
         errorDotColor: Color? = nil,
         action: (() -> Void)? = nil,
+        pinAction: (() -> Void)? = nil,
         removeAction: (() -> Void)? = nil
     ) {
         self.text = text
@@ -60,10 +64,12 @@ struct ContextTag: View {
         self.borderColor = borderColor
         self.iconBundleURL = iconBundleURL
         self.iconView = iconView
+        self.iconViewCornerIcon = iconViewCornerIcon
         self.caption = caption
         self.tooltip = tooltip
         self.errorDotColor = errorDotColor
         self.action = action
+        self.pinAction = pinAction
         self.removeAction = removeAction
     }
     
@@ -76,6 +82,10 @@ struct ContextTag: View {
     private var bundleUrlIcon: NSImage? {
         guard let bundleUrl = iconBundleURL else { return nil }
         return NSWorkspace.shared.icon(forFile: bundleUrl.path)
+    }
+    
+    private var hasHoverActions: Bool {
+        pinAction != nil || removeAction != nil
     }
     
     var body: some View {
@@ -103,7 +113,21 @@ struct ContextTag: View {
                 }
                 
                 if let iconView = iconView {
-                    AnyView(iconView)
+                    ZStack(alignment: .bottomTrailing) {
+                        AnyView(iconView)
+                        
+                        if let cornerIcon = iconViewCornerIcon {
+                            ZStack(alignment: .center) {
+                                Circle()
+                                    .fill(isHoveredBody ? hoverBackground : background)
+                                    .frame(width: 13, height: 13)
+                                
+                                Image(cornerIcon)
+                                    .addIconStyles(iconSize: 7.45)
+                            }
+                            .offset(x: 4, y: 4)
+                        }
+                    }
                 }
                 
                 if isLoading { textView.shimmering() }
@@ -120,16 +144,29 @@ struct ContextTag: View {
                 }
             }
             
-            HStack(spacing: 0) {
-                Spacer()
-                
-                if let removeAction = removeAction {
+            if hasHoverActions {
+                HStack(spacing: 0) {
+                    Spacer()
+                    
                     FadeHorizontal(color: hoverBackground)
-                    removeButton(removeAction)
+                    
+                    HStack(spacing: 6) {
+                        if let pinAction = pinAction {
+                            hoverActionButton(icon: .pin) {
+                                pinAction()
+                            }
+                        }
+                        
+                        if let removeAction = removeAction {
+                            hoverActionButton(icon: .cross) {
+                                removeAction()
+                            }
+                        }
+                    }
                 }
+                .frame(height: height)
+                .opacity(isHoveredBody ? 1 : 0)
             }
-            .frame(height: height)
-            .opacity(isHoveredBody ? 1 : 0)
         }
         .padding(.leading, 4)
         .padding(.trailing, 6)
@@ -185,13 +222,13 @@ extension ContextTag {
             .addAnimation(dependency: [isHoveredBody, isHoveredRemove])
     }
     
-    private func removeButton(_ removeAction: @escaping () -> Void) -> some View {
+    private func hoverActionButton(icon: ImageResource, hoverAction: @escaping () -> Void) -> some View {
         Button {
-            removeAction()
+            hoverAction()
         } label: {
-            Image(.cross)
+            Image(icon)
                 .addIconStyles(
-                    foregroundColor: isHoveredRemove ? .white : .gray100,
+                    foregroundColor: isHoveredRemove ? Color.primary : .gray100,
                     iconSize: 9
                 )
                 .addAnimation(dependency: isHoveredRemove)

@@ -36,7 +36,7 @@ struct GeneratedView: View {
 #if DEBUG
     #Preview {
         var prompt = Prompt.sample
-        prompt.input = Input(selectedText: "blablabla", application: "Xcode")
+        prompt.inputs = [Input(selectedText: "blablabla", application: "Xcode")]
         
         return GeneratedView(prompt: prompt)
     }
