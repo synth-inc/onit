@@ -12,7 +12,7 @@ import SwiftData
 
     var instruction: String
     var timestamp: Date
-    var input: Input?
+    var inputs: [Input]
     var contextList: [Context] = []
 
     //    @Relationship(deleteRule: .cascade, inverse: \Response.prompt)
@@ -30,12 +30,12 @@ import SwiftData
     var generationIndex = -1
 
     init(
-        instruction: String, timestamp: Date, input: Input? = nil,
+        instruction: String, timestamp: Date, inputs: [Input] = [],
         contextList: [Context] = [], responses: [Response] = []
     ) {
         self.instruction = instruction
         self.timestamp = timestamp
-        self.input = input
+        self.inputs = inputs
         self.contextList = contextList
         self.responses = responses
         self.generationState = GenerationState.done

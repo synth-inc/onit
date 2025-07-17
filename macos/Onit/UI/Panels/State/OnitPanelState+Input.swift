@@ -215,7 +215,7 @@ extension OnitPanelState {
         pendingInstruction = ""
         if (clearContext) {
             pendingContextList.removeAll()
-            pendingInput = nil
+            clearHighlightedTextStates()
         }
         focusText()
         
