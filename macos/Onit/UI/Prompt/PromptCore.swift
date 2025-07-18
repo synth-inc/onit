@@ -17,6 +17,7 @@ struct PromptCore: View {
     
     @Default(.mode) var mode
     @Default(.showTwoWeekProTrialEndedAlert) var showTwoWeekProTrialEndedAlert
+    @Default(.showHighlightedTextInput) var showHighlightedTextInput
     
     private var chats: [Chat] {
         let chatsFilteredByAccount = allChats
@@ -70,8 +71,8 @@ struct PromptCore: View {
     
     var body: some View {
         VStack(spacing: 0) {
-            if let windowState = windowState, let pendingInput = windowState.pendingInput {
-                InputView(input: pendingInput)
+            if showHighlightedTextInput, let windowState = windowState, let pendingInput = windowState.pendingInput {
+                InputView(input: pendingInput, inputExpanded: true)
             }
             
             VStack(spacing: 6) {

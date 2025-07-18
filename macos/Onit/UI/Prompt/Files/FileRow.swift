@@ -120,11 +120,11 @@ struct FileRow: View {
             FlowLayout(spacing: 6) {
                 PaperclipButton()
                 
-                addHighlightedTextToContextButton
                 addWindowToContextButton
+                addHighlightedTextToContextButton
                 pendingWindowContextItems
-                highlightedTextContext
                 addedWindowContextItems
+                highlightedTextContext
             }
             
             ocrDetailsLink
@@ -183,7 +183,7 @@ extension FileRow {
            let trackedPendingInput = windowState.trackedPendingInput
         {
             ghostContextTag(
-                text: trackedPendingInput.selectedText,
+                text: StringHelpers.removeWhiteSpaceAndNewLines(trackedPendingInput.selectedText),
                 iconView: Image(.text).addIconStyles(iconSize: 14),
                 tooltip: "Add Highlighted Text To Context"
             ) {
@@ -251,7 +251,7 @@ extension FileRow {
     private var highlightedTextContext: some View {
         if let pendingInput = windowState?.pendingInput {
             ContextTag(
-                text: pendingInput.selectedText,
+                text: StringHelpers.removeWhiteSpaceAndNewLines(pendingInput.selectedText),
                 iconView: Image(.text).addIconStyles(iconSize: 14)
             ) {
                 Defaults[.showHighlightedTextInput] = true

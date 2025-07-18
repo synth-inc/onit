@@ -10,8 +10,11 @@ import SwiftUI
 
 struct InputButtons: View {
     @Environment(\.windowState) private var state
+    
+    @Binding var inputExpanded: Bool
 
     var input: Input
+    var isEditing: Bool
 
     var body: some View {
         Group {
@@ -26,14 +29,18 @@ struct InputButtons: View {
             }
 
             Button {
-                Defaults[.showHighlightedTextInput] = false
+                if isEditing {
+                    Defaults[.showHighlightedTextInput] = false
+                } else {
+                    inputExpanded.toggle()
+                }
             } label: {
                 Color.clear
                     .frame(width: 20, height: 20)
                     .overlay {
                         Image(.smallChevRight)
                             .renderingMode(.template)
-                            .rotationEffect(.degrees(90))
+                            .rotationEffect(isEditing ? .degrees(90) : inputExpanded ? .degrees(90) : .zero)
                     }
             }
         }
@@ -43,6 +50,6 @@ struct InputButtons: View {
 
 #if DEBUG
     #Preview {
-        InputButtons(input: .sample)
+        InputButtons(inputExpanded: .constant(true), input: .sample, isEditing: true)
     }
 #endif
