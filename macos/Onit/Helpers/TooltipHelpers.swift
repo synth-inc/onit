@@ -8,8 +8,6 @@
 import SwiftUI
 
 struct TooltipHelpers {
-    static let defaultConfig = TooltipConfig(maxWidth: 320)
-    
     @MainActor
     static func setTooltipOnHover(
         isHovering: Bool,

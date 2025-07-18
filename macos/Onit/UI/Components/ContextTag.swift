@@ -142,7 +142,7 @@ struct ContextTag: View {
             TooltipHelpers.setTooltipOnHover(
                 isHovering: isHovering,
                 tooltipPrompt: tooltip,
-                tooltipConfig: TooltipHelpers.defaultConfig
+                tooltipConfig: TooltipConfig(maxWidth: 320)
             )
         }
         .addAnimation(dependency: isHoveredBody)
