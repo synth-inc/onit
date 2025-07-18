@@ -20,13 +20,16 @@ struct ViewOffsetKey: @preconcurrency PreferenceKey {
 struct QuickEditResponseView: View {
     @Environment(\.windowState) private var state
     @Environment(\.openURL) var openURL
-    
+        
     @State private var previousViewOffset: CGFloat = 0
     @State private var hasUserManuallyScrolled: Bool = false
     @State private var isAutoScrolling: Bool = false
     @State private var lastAutoScrollTime: Date = Date.distantPast
     @State private var scrollProxy: ScrollViewProxy?
     @State private var isButtonScrolling: Bool = false
+    
+    @Default(.fontSize) var fontSize
+    @Default(.lineHeight) var lineHeight
     
     private let minimumOffset: CGFloat = 16
     private let autoScrollThrottleInterval: TimeInterval = 0.03
@@ -54,12 +57,13 @@ struct QuickEditResponseView: View {
     }
     
     private var configuration: LLMStreamConfiguration {
+        let font = FontConfiguration(size: fontSize, lineHeight: lineHeight)
         let color = ColorConfiguration(citationBackgroundColor: .gray600,
                                        citationHoverBackgroundColor: .gray400,
                                        citationTextColor: .gray100)
         let thought = ThoughtConfiguration(icon: Image(.lightBulb))
         
-        return LLMStreamConfiguration(colors: color, thought: thought)
+        return LLMStreamConfiguration(font: font, colors: color, thought: thought)
     }
     
     var body: some View {
@@ -159,6 +163,8 @@ extension QuickEditResponseView {
     }
     
     private var scrollView: some View {
+        // By reading fontSize and lineHeight here, we ensure SwiftUI observes them.
+        
         ScrollViewReader { proxy in
             ScrollView {
                 VStack(spacing: 0) {
@@ -167,6 +173,7 @@ extension QuickEditResponseView {
                         configuration: configuration,
                         onUrlClicked: onUrlClicked,
                         onCodeAction: codeAction)
+                    .id("\(fontSize)-\(lineHeight)") // Force recreation when font settings change
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(.vertical, 8)
                     .id("content")

@@ -29,21 +29,27 @@ struct GeneratedContentView: View {
     }
     
     var configuration: LLMStreamConfiguration {
+        let font = FontConfiguration(size: fontSize, lineHeight: lineHeight)
         let color = ColorConfiguration(citationBackgroundColor: .gray600,
                                        citationHoverBackgroundColor: .gray400,
                                        citationTextColor: .gray100)
         let thought = ThoughtConfiguration(icon: Image(.lightBulb))
         
-        return LLMStreamConfiguration(colors: color, thought: thought)
+        return LLMStreamConfiguration(font: font, colors: color, thought: thought)
     }
     
+
     var body: some View {
+        // By reading fontSize and lineHeight here, we ensure SwiftUI observes them.
+        let _ = fontSize
+        let _ = lineHeight
 
         VStack(alignment: .leading, spacing: 8) {
             LLMStreamView(text: textToRead,
-                          configuration: configuration,
-                          onUrlClicked: onUrlClicked,
-                          onCodeAction: codeAction)
+                        configuration: configuration,
+                        onUrlClicked: onUrlClicked,
+                        onCodeAction: codeAction)
+                .id("\(fontSize)-\(lineHeight)") // Force recreation when font settings change
                 .padding(.horizontal, 12)
 
             if let response = prompt.currentResponse, response.hasToolCall {
