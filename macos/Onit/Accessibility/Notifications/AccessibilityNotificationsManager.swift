@@ -111,12 +111,16 @@ class AccessibilityNotificationsManager: ObservableObject {
          
         Task.detached {
             await self.highlightedTextCoordinator.startPollingIfNeeded(pid: processID, selectionChangedHandler: { [weak self] element, text in
-                guard let self = self, let element = element else { return }
-                
+                guard let self = self else { return }
                 nonisolated(unsafe) let unsafeElement = element
                 
                 Task { @MainActor in
-                    self.processSelectionChange(for: unsafeElement)
+                    if let element = unsafeElement {
+                        self.processSelectionChange(for: element)
+                    } else {
+                        // Handle text deselection - clear pendingInput
+                        self.processSelectedText(nil)
+                    }
                 }
             })
         }
@@ -581,7 +585,7 @@ class AccessibilityNotificationsManager: ObservableObject {
             // On every apps, when caret position changed, we receive AXSelectedTextChanged notification with nil value.
             // This code is used to hide the QuickEdit hint for a real deselection
             let now = Date()
-            let caretPositionChangeRecently = now.timeIntervalSince(lastCaretPositionChangeTimestamp ?? .distantPast) < 0.5
+            let caretPositionChangeRecently = now.timeIntervalSince(lastCaretPositionChangeTimestamp ?? .distantPast) < 0.5 
             let isEditableField = element.role() == kAXTextFieldRole || element.role() == kAXTextAreaRole
             
             if !caretPositionChangeRecently && !isEditableField {
