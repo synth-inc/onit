@@ -40,7 +40,7 @@ struct InputButtons: View {
                     .overlay {
                         Image(.smallChevRight)
                             .renderingMode(.template)
-                            .rotationEffect(isEditing ? .degrees(90) : inputExpanded ? .degrees(90) : .zero)
+                            .rotationEffect(isEditing ? .degrees(90) : inputExpanded ? .degrees(-90) : .degrees(90))
                     }
             }
         }
