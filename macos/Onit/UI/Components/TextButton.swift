@@ -28,13 +28,13 @@ struct TextButton<Child: View>: View {
     private let fontWeight: Font.Weight
     private let fontColor: Color
     
-    private let tooltipShortcut: Tooltip.Shortcut
-    private let tooltipPrompt: String?
-    
     private let icon: ImageResource?
     private let iconImage: NSImage?
     private let text: String?
     private let width: CGFloat?
+    
+    private let tooltipPrompt: String?
+    private let tooltipShortcut: Tooltip.Shortcut?
     
     @ViewBuilder private let child: () -> Child
     private let action: () -> Void
@@ -59,14 +59,14 @@ struct TextButton<Child: View>: View {
         fontSize: CGFloat = 14,
         fontWeight: Font.Weight = Font.Weight.medium,
         fontColor: Color = Color.primary,
-        
-        tooltipShortcut: Tooltip.Shortcut = .none,
-        tooltipPrompt: String? = nil,
 
         icon: ImageResource? = nil,
         iconImage: NSImage? = nil,
         text: String? = nil,
         width: CGFloat? = nil,
+        
+        tooltipPrompt: String? = nil,
+        tooltipShortcut: Tooltip.Shortcut? = nil,
         
         @ViewBuilder child: @escaping () -> Child = { EmptyView() },
         action: @escaping () -> Void
@@ -91,13 +91,13 @@ struct TextButton<Child: View>: View {
         self.fontWeight = fontWeight
         self.fontColor = fontColor
         
-        self.tooltipShortcut = tooltipShortcut
-        self.tooltipPrompt = tooltipPrompt
-        
         self.icon = icon
         self.iconImage = iconImage
         self.text = text
         self.width = width
+        
+        self.tooltipPrompt = tooltipPrompt
+        self.tooltipShortcut = tooltipShortcut
         
         self.child = child
         self.action = action
@@ -146,8 +146,7 @@ struct TextButton<Child: View>: View {
             
             TooltipHelpers.setTooltipOnHover(
                 isHovering: isHovering,
-                ignoreMouseEvents: true,
-                tooltipShortcut: tooltipShortcut,
+                tooltipShortcut: tooltipShortcut ?? .none,
                 tooltipPrompt: tooltipPrompt
             )
         }

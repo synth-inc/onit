@@ -142,7 +142,6 @@ struct ExternalTetheredButtonStyle: ButtonStyle {
         
         TooltipHelpers.setTooltipOnHover(
             isHovering: hovering,
-            ignoreMouseEvents: true,
             tooltipPrompt: tooltipText
         )
     }

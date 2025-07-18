@@ -46,7 +46,7 @@ struct ContextItem: View {
                     maxWidth: isEditing ? 155 : .infinity,
                     iconView: ContextImage(context: item),
                     caption: item.fileType,
-                    tooltipPrompt: isEditing ? name : "View \(item.fileType ?? "") file",
+                    tooltip: isEditing ? name : "View \(item.fileType ?? "") file",
                     action: showContextWindow,
                     removeAction: isEditing ? { removeContextItem() } : nil
                 )

@@ -13,7 +13,6 @@ struct TooltipHelpers {
     @MainActor
     static func setTooltipOnHover(
         isHovering: Bool,
-        ignoreMouseEvents: Bool = false,
         tooltipShortcut: Tooltip.Shortcut = .none,
         tooltipPrompt: String?,
         tooltipConfig: TooltipConfig? = nil
@@ -27,8 +26,7 @@ struct TooltipHelpers {
                     ),
                     tooltipConfig: tooltipConfig,
                     delayStart: 0.4,
-                    delayEnd: 0,
-                    ignoreMouseEvents: ignoreMouseEvents
+                    delayEnd: 0
                 )
             } else {
                 TooltipManager.shared.setTooltip(

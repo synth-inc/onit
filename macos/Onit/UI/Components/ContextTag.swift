@@ -22,7 +22,7 @@ struct ContextTag: View {
     private let iconBundleURL: URL?
     private let iconView: (any View)?
     private let caption: String?
-    private let tooltipPrompt: String?
+    private let tooltip: String?
     private let errorDotColor: Color?
     private let action: (() -> Void)?
     private let removeAction: (() -> Void)?
@@ -42,7 +42,7 @@ struct ContextTag: View {
         iconBundleURL: URL? = nil,
         iconView: (any View)? = nil,
         caption: String? = nil,
-        tooltipPrompt: String? = nil,
+        tooltip: String? = nil,
         errorDotColor: Color? = nil,
         action: (() -> Void)? = nil,
         removeAction: (() -> Void)? = nil
@@ -61,7 +61,7 @@ struct ContextTag: View {
         self.iconBundleURL = iconBundleURL
         self.iconView = iconView
         self.caption = caption
-        self.tooltipPrompt = tooltipPrompt
+        self.tooltip = tooltip
         self.errorDotColor = errorDotColor
         self.action = action
         self.removeAction = removeAction
@@ -70,7 +70,6 @@ struct ContextTag: View {
     @State private var isHoveredBody: Bool = false
     @State private var isPressedBody: Bool = false
     @State private var isHoveredRemove: Bool = false
-    @State private var isPopoverOpen: Bool = false
     
     private let height: CGFloat = 24
     
@@ -142,8 +141,7 @@ struct ContextTag: View {
             
             TooltipHelpers.setTooltipOnHover(
                 isHovering: isHovering,
-                ignoreMouseEvents: true,
-                tooltipPrompt: tooltipPrompt,
+                tooltipPrompt: tooltip,
                 tooltipConfig: TooltipHelpers.defaultConfig
             )
         }
@@ -193,13 +191,5 @@ extension ContextTag {
         .onHover { isHovering in
             isHoveredRemove = isHovering
         }
-    }
-}
-
-// MARK: - Private Functions
-
-extension ContextTag {
-    private func togglePopover() {
-        isPopoverOpen.toggle()
     }
 }

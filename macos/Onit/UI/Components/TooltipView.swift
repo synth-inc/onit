@@ -19,9 +19,9 @@ struct TooltipView: View {
 
     var body: some View {
         if let config = config {
-            truncatedText(config)
+            truncatedTextView(config)
         } else {
-            fixedText
+            fixedTextView
         }
     }
     
@@ -33,9 +33,8 @@ struct TooltipView: View {
             .trimmingCharacters(in: .whitespaces)
         ?? ""
     }
-    
     @ViewBuilder
-    var text: some View {
+    var textView: some View {
         let newlineCharacters = CharacterSet.newlines
         let textSubstrings: [String] = tooltip.prompt.components(separatedBy: newlineCharacters)
         let textFirstLine: String = findValidSubstring(textSubstrings)
@@ -68,17 +67,17 @@ struct TooltipView: View {
         }
     }
     
-    var fixedText: some View {
+    var fixedTextView: some View {
         textWithShortcutWrapper(
-            text
+            textView
                 .fixedSize()
         )
         .frame(minHeight: 78)
     }
     
-    func truncatedText(_ config: TooltipConfig) -> some View {
+    func truncatedTextView(_ config: TooltipConfig) -> some View {
         textWithShortcutWrapper(
-            text
+            textView
                 .truncateText(lineLimit: config.lineLimit ?? 6)
                 .frame(
                     maxWidth: config.maxWidth,

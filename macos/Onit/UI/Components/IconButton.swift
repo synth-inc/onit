@@ -19,8 +19,8 @@ struct IconButton: View {
     private let cornerRadius: CGFloat
     private let activeBorderColor: Color
     
-    private let tooltipShortcut: Tooltip.Shortcut
     private let tooltipPrompt: String?
+    private let tooltipShortcut: Tooltip.Shortcut?
     
     private let action: () -> Void
     
@@ -36,8 +36,8 @@ struct IconButton: View {
         cornerRadius: CGFloat = ToolbarButtonStyle.cornerRadius,
         activeBorderColor: Color = .gray500,
         
-        tooltipShortcut: Tooltip.Shortcut = .none,
         tooltipPrompt: String? = nil,
+        tooltipShortcut: Tooltip.Shortcut? = nil,
         
         action: @escaping () -> Void
     ) {
@@ -53,8 +53,8 @@ struct IconButton: View {
         self.cornerRadius = cornerRadius
         self.activeBorderColor = activeBorderColor
         
-        self.tooltipShortcut = tooltipShortcut
         self.tooltipPrompt = tooltipPrompt
+        self.tooltipShortcut = tooltipShortcut
         
         self.action = action
     }
@@ -99,8 +99,7 @@ struct IconButton: View {
             .onChange(of: isHovered) { _, isHovering in
                 TooltipHelpers.setTooltipOnHover(
                     isHovering: isHovering,
-                    ignoreMouseEvents: true,
-                    tooltipShortcut: tooltipShortcut,
+                    tooltipShortcut: tooltipShortcut ?? .none,
                     tooltipPrompt: tooltipPrompt,
                 )
             }
