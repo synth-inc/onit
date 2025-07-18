@@ -16,7 +16,7 @@ struct TooltipView: View {
     var tooltip: Tooltip
     var config: TooltipConfig? = nil
     
-    private var text: String {
+    private var truncatedTooltipText: String {
         let trimmedTooltipText = tooltip.prompt.trimmingCharacters(in: .whitespacesAndNewlines)
         
         let textSubstrings: [String] = trimmedTooltipText.components(separatedBy: CharacterSet.newlines)
@@ -81,7 +81,7 @@ struct TooltipView: View {
     }
     
     var textView: some View {
-        Text(text)
+        Text(truncatedTooltipText)
             .appFont(.medium12)
             .padding(.vertical, 8)
     }
