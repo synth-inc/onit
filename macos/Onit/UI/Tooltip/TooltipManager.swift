@@ -24,6 +24,7 @@ class TooltipManager {
     
     func setTooltip(
         _ tooltip: Tooltip?,
+        tooltipConfig: TooltipConfig? = nil,
         delayStart: Double = 0,
         delayEnd: Double = 0.2
     ) {
@@ -31,7 +32,7 @@ class TooltipManager {
 
         if let tooltip {
             if isTooltipActive {
-                resetTooltip(tooltip)
+                resetTooltip(tooltip, tooltipConfig)
                 updateTooltipWindowSize()
                 moveTooltip()
                 showWindowWithoutAnimation()
@@ -40,7 +41,7 @@ class TooltipManager {
                     try? await Task.sleep(for: .seconds(delayStart))
                     if Task.isCancelled { return }
                     isTooltipActive = true
-                    setupTooltip(tooltip)
+                    setupTooltip(tooltip, tooltipConfig)
                     updateTooltipWindowSize()
                     moveTooltip()
                     showWindowWithoutAnimation()
@@ -138,9 +139,10 @@ class TooltipManager {
         tooltipWindow.alphaValue = 1.0
     }
 
-    func setupTooltip(_ tooltip: Tooltip) {
+    func setupTooltip(_ tooltip: Tooltip, _ tooltipConfig: TooltipConfig?) {
         if tooltipWindow == nil {
-            let contentView = TooltipView(tooltip: tooltip).fixedSize()
+            let contentView = TooltipView(tooltip: tooltip, config: tooltipConfig)
+            
             let hostingController = NSHostingController(rootView: contentView)
 
             let window = NSWindow(contentViewController: hostingController)
@@ -150,23 +152,25 @@ class TooltipManager {
             window.level = .floating
             window.hasShadow = true
             window.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
+            window.ignoresMouseEvents = true
 
             self.tooltipWindow = window
             tooltipWindow?.orderOut(nil)  // Ensures tooltip is initially hidden
 
             updateTooltipWindowSize()
         } else {
-            resetTooltip(tooltip)
+            resetTooltip(tooltip, tooltipConfig)
         }
     }
 
-    func resetTooltip(_ tooltip: Tooltip) {
+    func resetTooltip(_ tooltip: Tooltip, _ tooltipConfig: TooltipConfig?) {
         guard let tooltipWindow = self.tooltipWindow else {
             print("No window available to reset.")
             return
         }
 
-        let content = TooltipView(tooltip: tooltip).fixedSize()
+        let content = TooltipView(tooltip: tooltip, config: tooltipConfig)
+        
         let newHostingController = NSHostingController(rootView: content)
 
         tooltipWindow.contentViewController = newHostingController

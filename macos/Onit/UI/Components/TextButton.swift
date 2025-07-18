@@ -144,23 +144,11 @@ struct TextButton<Child: View>: View {
         .onHover{ isHovering in
             isHovered = isHovering
             
-            if tooltipPrompt != nil {
-                if isHovering {
-                    TooltipManager.shared.setTooltip(
-                        Tooltip(
-                            prompt: tooltipPrompt!,
-                            shortcut: tooltipShortcut ?? .none
-                        ),
-                        delayStart: 0.4,
-                        delayEnd: 0
-                    )
-                } else {
-                    TooltipManager.shared.setTooltip(
-                        nil,
-                        delayEnd: 0
-                    )
-                }
-            }
+            TooltipHelpers.setTooltipOnHover(
+                isHovering: isHovering,
+                tooltipPrompt: tooltipPrompt,
+                tooltipShortcut: tooltipShortcut ?? .none
+            )
         }
         .addButtonEffects(
             background: disabled ? .clear : background,

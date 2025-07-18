@@ -96,24 +96,12 @@ struct IconButton: View {
                 stroke: isActive ? activeBorderColor : .clear
             )
             .addAnimation(dependency: isActive)
-            .onChange(of: isHovered) { _, new in
-                if tooltipPrompt != nil {
-                    if new {
-                        TooltipManager.shared.setTooltip(
-                            Tooltip(
-                                prompt: tooltipPrompt!,
-                                shortcut: tooltipShortcut ?? .none
-                            ),
-                            delayStart: 0.4,
-                            delayEnd: 0
-                        )
-                    } else {
-                        TooltipManager.shared.setTooltip(
-                            nil,
-                            delayEnd: 0
-                        )
-                    }
-                }
+            .onChange(of: isHovered) { _, isHovering in
+                TooltipHelpers.setTooltipOnHover(
+                    isHovering: isHovering,
+                    tooltipPrompt: tooltipPrompt,
+                    tooltipShortcut: tooltipShortcut ?? .none
+                )
             }
     }
 }

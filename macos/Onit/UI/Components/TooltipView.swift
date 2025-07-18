@@ -8,14 +8,50 @@
 import KeyboardShortcuts
 import SwiftUI
 
+struct TooltipConfig {
+    var maxWidth: CGFloat
+}
+
 struct TooltipView: View {
     var tooltip: Tooltip
+    var config: TooltipConfig? = nil
+    
+    private var truncatedTooltipText: String {
+        let trimmedTooltipText = tooltip.prompt.trimmingCharacters(in: .whitespacesAndNewlines)
+        
+        let textSubstrings: [String] = trimmedTooltipText.components(separatedBy: CharacterSet.newlines)
+        let textSubstringsCount = textSubstrings.count
+        
+        if textSubstringsCount > 1 {
+            let maxLines = 4
+            let maxIndex = textSubstringsCount > maxLines ? maxLines : textSubstringsCount
+            var trimmedTextSubstrings = textSubstrings[0..<maxIndex].joined(separator: "\n")
+            
+            if trimmedTextSubstrings.count > 200 {
+                trimmedTextSubstrings = String(trimmedTextSubstrings.prefix(200)) + "..."
+            }
+            
+            if textSubstringsCount > maxLines {
+                trimmedTextSubstrings += "\n..."
+            }
+            
+            return trimmedTextSubstrings
+        } else {
+            return trimmedTooltipText
+        }
+    }
 
     var body: some View {
         HStack(spacing: 0) {
-            Text(tooltip.prompt)
-                .appFont(.medium12)
-                .padding(.vertical, 8)
+            if let config = config {
+                textView
+                    .frame(
+                        maxWidth: config.maxWidth,
+                        alignment: .leading
+                    )
+            } else {
+                textView
+            }
 
             Group {
                 switch tooltip.shortcut {
@@ -43,7 +79,13 @@ struct TooltipView: View {
         }
         .frame(minHeight: 78)
     }
-
+    
+    var textView: some View {
+        Text(truncatedTooltipText)
+            .appFont(.medium12)
+            .padding(.vertical, 8)
+    }
+    
     var tooltipBackground: some View {
         RoundedRectangle(cornerRadius: 8)
             .fill(Color.gray500)

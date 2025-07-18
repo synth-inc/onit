@@ -139,20 +139,11 @@ struct ContextTag: View {
         .onHover { isHovering in
             isHoveredBody = isHovering
             
-            if tooltip != nil {
-                if isHovering {
-                    TooltipManager.shared.setTooltip(
-                        Tooltip(prompt: tooltip ?? ""),
-                        delayStart: 0.4,
-                        delayEnd: 0
-                    )
-                } else {
-                    TooltipManager.shared.setTooltip(
-                        nil,
-                        delayEnd: 0
-                    )
-                }
-            }
+            TooltipHelpers.setTooltipOnHover(
+                isHovering: isHovering,
+                tooltipPrompt: tooltip,
+                tooltipConfig: TooltipConfig(maxWidth: 320)
+            )
         }
         .addAnimation(dependency: isHoveredBody)
         .addBorder(
