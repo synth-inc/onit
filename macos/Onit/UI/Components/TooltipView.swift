@@ -23,14 +23,15 @@ struct TooltipView: View {
         let textSubstringsCount = textSubstrings.count
         
         if textSubstringsCount > 1 {
-            let maxIndex = textSubstringsCount > 4 ? 4 : textSubstringsCount
+            let maxLines = 4
+            let maxIndex = textSubstringsCount > maxLines ? maxLines : textSubstringsCount
             var trimmedTextSubstrings = textSubstrings[0..<maxIndex].joined(separator: "\n")
             
             if trimmedTextSubstrings.count > 200 {
                 trimmedTextSubstrings = String(trimmedTextSubstrings.prefix(200)) + "..."
             }
             
-            if textSubstringsCount > 4 {
+            if textSubstringsCount > maxLines {
                 trimmedTextSubstrings += "\n..."
             }
             
