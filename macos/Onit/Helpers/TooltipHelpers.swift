@@ -20,7 +20,7 @@ struct TooltipHelpers {
                 TooltipManager.shared.setTooltip(
                     Tooltip(
                         prompt: tooltipPrompt!,
-                        shortcut: tooltipShortcut,
+                        shortcut: tooltipShortcut
                     ),
                     tooltipConfig: tooltipConfig,
                     delayStart: 0.4,
