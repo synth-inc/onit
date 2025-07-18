@@ -18,9 +18,11 @@ struct InputButtons: View {
 
     var body: some View {
         Group {
-            if let state = state, input == state.pendingInput {
+            if let state = state, input == state.selectedPendingInput {
                 Button {
-                    state.pendingInput = nil
+                    clearHighlightedText(state: state)
+                    
+                    state.selectedPendingInput = nil
                 } label: {
                     Image(.smallRemove)
                         .renderingMode(.template)
@@ -45,6 +47,14 @@ struct InputButtons: View {
             }
         }
         .foregroundStyle(.gray200)
+    }
+
+    // MARK: - Private Functions
+
+    private func clearHighlightedText(state: OnitPanelState) {
+        if state.selectedPendingInput == state.unpinnedPendingInput {
+            state.unpinnedPendingInput = nil
+        }
     }
 }
 

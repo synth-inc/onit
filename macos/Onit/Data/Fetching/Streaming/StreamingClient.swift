@@ -13,7 +13,7 @@ actor StreamingClient {
 
     func chat(systemMessage: String,
               instructions: [String],
-              inputs: [Input?],
+              inputs: [[Input]],
               files: [[URL]],
               images: [[URL]],
               autoContexts: [[String: String]],
@@ -56,7 +56,7 @@ actor StreamingClient {
     
     func localChat(systemMessage: String,
                    instructions: [String],
-                   inputs: [Input?],
+                   inputs: [[Input]],
                    files: [[URL]],
                    images: [[URL]],
                    autoContexts: [[String: String]],
