@@ -25,7 +25,7 @@ class TooltipManager {
     func setTooltip(
         _ tooltip: Tooltip?,
         tooltipConfig: TooltipConfig? = nil,
-        delayStart: Double = 0,
+        delayStart: Double = 0.4,
         delayEnd: Double = 0.2
     ) {
         tooltipTask?.cancel()
