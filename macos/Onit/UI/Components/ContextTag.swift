@@ -14,9 +14,11 @@ struct ContextTag: View {
     private let background: Color
     private let hoverBackground: Color
     private let hasHoverBorder: Bool
+    private let hasDottedBorder: Bool
     private let maxWidth: CGFloat
     private let isLoading: Bool
     private let shouldFadeIn: Bool
+    private let borderColor: Color?
     private let iconBundleURL: URL?
     private let iconView: (any View)?
     private let caption: String?
@@ -32,9 +34,11 @@ struct ContextTag: View {
         background: Color = .gray500,
         hoverBackground: Color = .gray400,
         hasHoverBorder: Bool = false,
+        hasDottedBorder: Bool = false,
         maxWidth: CGFloat = 155,
         isLoading: Bool = false,
         shouldFadeIn: Bool = false,
+        borderColor: Color? = nil,
         iconBundleURL: URL? = nil,
         iconView: (any View)? = nil,
         caption: String? = nil,
@@ -49,9 +53,11 @@ struct ContextTag: View {
         self.background = background
         self.hoverBackground = hoverBackground
         self.hasHoverBorder = hasHoverBorder
+        self.hasDottedBorder = hasDottedBorder
         self.maxWidth = maxWidth
         self.isLoading = isLoading
         self.shouldFadeIn = shouldFadeIn
+        self.borderColor = borderColor
         self.iconBundleURL = iconBundleURL
         self.iconView = iconView
         self.caption = caption
@@ -151,8 +157,8 @@ struct ContextTag: View {
         .addAnimation(dependency: isHoveredBody)
         .addBorder(
             cornerRadius: 4,
-            stroke: hasHoverBorder && isHoveredBody ? .T_4 : .clear,
-            dotted: true
+            stroke: hasHoverBorder && isHoveredBody ? .T_4 : borderColor ?? .clear,
+            dotted: hasDottedBorder
         )
         .addButtonEffects(
             background: background,

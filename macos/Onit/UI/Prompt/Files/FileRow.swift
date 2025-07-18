@@ -15,6 +15,8 @@ struct FileRow: View {
     
     @Default(.autoContextFromCurrentWindow) var autoContextFromCurrentWindow
     @Default(.autoAddHighlightedTextToContext) var autoAddHighlightedTextToContext
+    @Default(.autoContextFromHighlights) var autoContextFromHighlights
+    @Default(.showHighlightedTextInput) var showHighlightedTextInput
     
     @State private var ocrComparisonResult: OCRComparisonResult? = nil
     @State private var showOCRDetails = false
@@ -166,6 +168,7 @@ extension FileRow {
             background: contextTagBackground,
             hoverBackground: contextTagHoverBackground,
             hasHoverBorder: true,
+            hasDottedBorder: true,
             shouldFadeIn: true,
             iconBundleURL: iconBundleURL,
             iconView: iconView,
@@ -178,7 +181,7 @@ extension FileRow {
     @ViewBuilder
     private var addHighlightedTextToContextButton: some View {
         if accessibilityEnabled,
-           Defaults[.autoContextFromHighlights],
+           autoContextFromHighlights,
            let windowState = windowState,
            let trackedPendingInput = windowState.trackedPendingInput
         {
@@ -252,9 +255,10 @@ extension FileRow {
         if let pendingInput = windowState?.pendingInput {
             ContextTag(
                 text: StringHelpers.removeWhiteSpaceAndNewLines(pendingInput.selectedText),
+                borderColor: showHighlightedTextInput ? .gray400 : .clear,
                 iconView: Image(.text).addIconStyles(iconSize: 14)
             ) {
-                Defaults[.showHighlightedTextInput] = true
+                showHighlightedTextInput = true
             } removeAction: {
                 windowState?.pendingInput = nil
             }

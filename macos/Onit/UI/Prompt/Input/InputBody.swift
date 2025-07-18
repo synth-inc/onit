@@ -22,7 +22,7 @@ struct InputBody: View {
     }
 
     var height: CGFloat {
-        min(textHeight, 73)
+        min(textHeight, 222)
     }
 
     var body: some View {
