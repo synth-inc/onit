@@ -130,6 +130,8 @@ class OnitPanelState: NSObject {
         }
     }
     
+    var trackedPendingInput: Input? = nil
+    
     var systemPromptId: String = SystemPrompt.outputOnly.id
     
     var imageUploads: [URL: UploadProgress] = [:]

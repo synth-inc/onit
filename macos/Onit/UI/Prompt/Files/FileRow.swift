@@ -14,6 +14,7 @@ struct FileRow: View {
     @ObservedObject private var debugManager = DebugManager.shared
     
     @Default(.autoContextFromCurrentWindow) var autoContextFromCurrentWindow
+    @Default(.autoAddHighlightedTextToContext) var autoAddHighlightedTextToContext
     
     @State private var ocrComparisonResult: OCRComparisonResult? = nil
     @State private var showOCRDetails = false
@@ -119,7 +120,8 @@ struct FileRow: View {
             FlowLayout(spacing: 6) {
                 PaperclipButton()
                 
-                addForegroundWindowToContextButton
+                addHighlightedTextToContextButton
+                addWindowToContextButton
                 pendingWindowContextItems
                 highlightedTextContext
                 addedWindowContextItems
@@ -150,28 +152,70 @@ struct FileRow: View {
 // MARK: - Child Components
 
 extension FileRow {
+    private func ghostContextTag(
+        text: String,
+        iconBundleURL: URL? = nil,
+        iconView: (any View)? = nil,
+        tooltip: String,
+        action: @escaping () -> Void
+    ) -> some View {
+        ContextTag(
+            text: text,
+            textColor: .T_2,
+            hoverTextColor: .white,
+            background: contextTagBackground,
+            hoverBackground: contextTagHoverBackground,
+            hasHoverBorder: true,
+            shouldFadeIn: true,
+            iconBundleURL: iconBundleURL,
+            iconView: iconView,
+            tooltip: tooltip
+        ) {
+            action()
+        }
+    }
+    
     @ViewBuilder
-    private var addForegroundWindowToContextButton: some View {
+    private var addHighlightedTextToContextButton: some View {
+        if accessibilityEnabled,
+           Defaults[.autoContextFromHighlights],
+           let windowState = windowState,
+           let trackedPendingInput = windowState.trackedPendingInput
+        {
+            ghostContextTag(
+                text: trackedPendingInput.selectedText,
+                iconView: Image(.text).addIconStyles(iconSize: 14),
+                tooltip: "Add Highlighted Text To Context"
+            ) {
+                windowState.pendingInput = trackedPendingInput
+                windowState.trackedPendingInput = nil
+            }
+            .onChange(of: autoAddHighlightedTextToContext) { _, autoAddHighlightedText in
+                if autoAddHighlightedText {
+                    windowState.pendingInput = trackedPendingInput
+                    windowState.trackedPendingInput = nil
+                }
+            }
+        }
+    }
+    
+    @ViewBuilder
+    private var addWindowToContextButton: some View {
         if accessibilityEnabled,
            autoContextFromCurrentWindow,
            !(windowBeingAddedToContext || windowAlreadyInContext),
-           let foregroundWindow = windowState?.foregroundWindow
+           let windowState = windowState,
+           let foregroundWindow = windowState.foregroundWindow
         {
             let foregroundWindowName = WindowHelpers.getWindowName(window: foregroundWindow.element)
             let iconBundleURL = WindowHelpers.getWindowAppBundleUrl(window: foregroundWindow.element)
-
-            ContextTag(
+            
+            ghostContextTag(
                 text: contextTagText,
-                textColor: .T_2,
-                hoverTextColor: .white,
-                background: contextTagBackground,
-                hoverBackground: contextTagHoverBackground,
-                hasHoverBorder: true,
-                shouldFadeIn: true,
                 iconBundleURL: iconBundleURL,
                 tooltip: "Add \(foregroundWindowName) Context"
             ) {
-                windowState?.addWindowToContext(window: foregroundWindow.element)
+                windowState.addWindowToContext(window: foregroundWindow.element)
             }
         }
     }
@@ -211,6 +255,8 @@ extension FileRow {
                 iconView: Image(.text).addIconStyles(iconSize: 14)
             ) {
                 Defaults[.showHighlightedTextInput] = true
+            } removeAction: {
+                windowState?.pendingInput = nil
             }
         }
     }

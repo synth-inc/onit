@@ -606,13 +606,19 @@ class AccessibilityNotificationsManager: ObservableObject {
             
             screenResult.userInteraction.selectedText = nil
             PanelStateCoordinator.shared.state.pendingInput = nil
+            PanelStateCoordinator.shared.state.trackedPendingInput = nil
             return
         }
         
         screenResult.userInteraction.selectedText = selectedText
         
         let input = Input(selectedText: selectedText, application: currentSource ?? "")
-        PanelStateCoordinator.shared.state.pendingInput = input
+        
+        if Defaults[.autoAddHighlightedTextToContext] {
+            PanelStateCoordinator.shared.state.pendingInput = input
+        } else {
+            PanelStateCoordinator.shared.state.trackedPendingInput = input
+        }
     }
 
 	// MARK: Caret Position Handling
