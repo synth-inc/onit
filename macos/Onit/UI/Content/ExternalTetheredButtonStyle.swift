@@ -138,7 +138,7 @@ struct ExternalTetheredButtonStyle: ButtonStyle {
     }
 
     private func handleHover(_ hovering: Bool) {
-        self.hovering = hovering
+        self.isHovering = hovering
         
         TooltipHelpers.setTooltipOnHover(
             isHovering: hovering,
