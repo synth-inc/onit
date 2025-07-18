@@ -5,6 +5,7 @@
 //  Created by Benjamin Sage on 10/8/24.
 //
 
+import Defaults
 import SwiftUI
 
 struct InputButtons: View {
@@ -13,6 +14,7 @@ struct InputButtons: View {
     @Binding var inputExpanded: Bool
 
     var input: Input
+    var isEditing: Bool
 
     var body: some View {
         Group {
@@ -26,18 +28,19 @@ struct InputButtons: View {
                 .buttonStyle(DarkerButtonStyle())
             }
 
-            CopyButton(text: input.selectedText)
-                .frame(width: 20, height: 20)
-
             Button {
-                inputExpanded.toggle()
+                if isEditing {
+                    Defaults[.showHighlightedTextInput] = false
+                } else {
+                    inputExpanded.toggle()
+                }
             } label: {
                 Color.clear
                     .frame(width: 20, height: 20)
                     .overlay {
                         Image(.smallChevRight)
                             .renderingMode(.template)
-                            .rotationEffect(inputExpanded ? .degrees(90) : .zero)
+                            .rotationEffect(isEditing ? .degrees(90) : inputExpanded ? .degrees(-90) : .degrees(90))
                     }
             }
         }
@@ -47,6 +50,6 @@ struct InputButtons: View {
 
 #if DEBUG
     #Preview {
-        InputButtons(inputExpanded: .constant(true), input: .sample)
+        InputButtons(inputExpanded: .constant(true), input: .sample, isEditing: true)
     }
 #endif

@@ -18,6 +18,8 @@ struct GeneralTab: View {
     @Default(.tetheredButtonHiddenApps) var tetheredButtonHiddenApps
     @Default(.tetheredButtonHideAllApps) var tetheredButtonHideAllApps
     @Default(.tetheredButtonHideAllAppsTimerDate) var tetheredButtonHideAllAppsTimerDate
+    @Default(.showHighlightedTextInput) var showHighlightedTextInput
+    @Default(.autoAddHighlightedTextToContext) var autoAddHighlightedTextToContext
     
     @State var isLaunchAtStartupEnabled: Bool = SMAppService.mainApp.status == .enabled
     @State var isAnalyticsEnabled: Bool = PostHogSDK.shared.isOptOut() == false
@@ -73,6 +75,8 @@ struct GeneralTab: View {
             appearanceSection
             
             GeneralTabVoice()
+            
+            showHighlightedTextInputSection
                         
             hiddenAppsSection
             
@@ -410,6 +414,39 @@ struct GeneralTab: View {
                 //                        }
                 //                    }
                 //                }
+            }
+        }
+    }
+    
+    var showHighlightedTextInputSection: some View {
+        SettingsSection(
+            iconImage: .text,
+            title: "Highlighted Text"
+        ) {
+            VStack(alignment: .leading, spacing: 20) {
+                HStack {
+                    Text("Show highlighted text input")
+                        .font(.system(size: 13))
+                    
+                    Spacer()
+                    
+                    Toggle("", isOn: $showHighlightedTextInput)
+                        .toggleStyle(.switch)
+                        .controlSize(.small)
+                }
+            }
+            
+            VStack(alignment: .leading, spacing: 20) {
+                HStack {
+                    Text("Auto-add highlighted text to context.")
+                        .font(.system(size: 13))
+                    
+                    Spacer()
+                    
+                    Toggle("", isOn: $autoAddHighlightedTextToContext)
+                        .toggleStyle(.switch)
+                        .controlSize(.small)
+                }
             }
         }
     }

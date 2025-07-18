@@ -17,6 +17,7 @@ struct PromptCore: View {
     
     @Default(.mode) var mode
     @Default(.showTwoWeekProTrialEndedAlert) var showTwoWeekProTrialEndedAlert
+    @Default(.showHighlightedTextInput) var showHighlightedTextInput
     
     private var chats: [Chat] {
         let chatsFilteredByAccount = allChats
@@ -70,10 +71,6 @@ struct PromptCore: View {
     
     var body: some View {
         VStack(spacing: 0) {
-            if let windowState = windowState, let pendingInput = windowState.pendingInput {
-                InputView(input: pendingInput)
-            }
-            
             VStack(spacing: 6) {
                 contextAndInput
                 PromptCoreFooter(
@@ -175,7 +172,11 @@ extension PromptCore {
     }
     
     private var contextAndInput: some View {
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: 0) {
+            if showHighlightedTextInput, let windowState = windowState, let pendingInput = windowState.pendingInput {
+                InputView(input: pendingInput, inputExpanded: true)
+            }
+            
             if !appState.subscriptionPlanError.isEmpty {
                 Text(appState.subscriptionPlanError)
                     .styleText(
@@ -185,10 +186,15 @@ extension PromptCore {
                     )
             }
             
-            FileRow(contextList: windowState?.pendingContextList ?? [])
-            textField
+            VStack(alignment: .leading, spacing: 8) {
+                FileRow(contextList: windowState?.pendingContextList ?? [])
+                textField
+            }
+            .padding(.top, 6)
+            .padding([.horizontal, .bottom], 12)
         }
-        .padding(12)
+        .padding(.top, 2)
+        .padding([.horizontal, .bottom], 0)
         .background(.gray800)
         .addGradientBorder(
             cornerRadius: 8,

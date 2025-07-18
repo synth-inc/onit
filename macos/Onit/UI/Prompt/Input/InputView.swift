@@ -5,31 +5,32 @@
 //  Created by Benjamin Sage on 10/3/24.
 //
 
+import Defaults
 import SwiftUI
 
 struct InputView: View {
-
-    @State var inputExpanded: Bool = true
-
     var input: Input
     var isEditing: Bool = true
+    
+    @State var inputExpanded: Bool = false
 
     var body: some View {
         VStack(spacing: 0) {
-            InputTitle(inputExpanded: $inputExpanded, input: input)
+            InputTitle(inputExpanded: $inputExpanded, input: input, isEditing: isEditing)
             divider
             InputBody(inputExpanded: $inputExpanded, input: input)
         }
         .background {
-            RoundedRectangle(cornerRadius: 10)
-                .fill(.gray800)
-                .strokeBorder(.gray600)
+            RoundedRectangle(cornerRadius: 6)
+                .fill(.gray500)
+                .strokeBorder(.gray400)
         }
-        .padding([.horizontal, .top], isEditing ? 12 : 0)
+        .padding(.top, isEditing ? 6 : 0)
+        .padding([.horizontal], isEditing ? 8 : 0)
     }
 
     var divider: some View {
-        Color.gray600
+        Color.gray400
             .frame(height: 1)
             .opacity(inputExpanded ? 1 : 0)
     }
