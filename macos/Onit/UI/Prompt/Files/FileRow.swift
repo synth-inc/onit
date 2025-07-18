@@ -260,6 +260,7 @@ extension FileRow {
         {
             ContextTag(
                 text: StringHelpers.removeWhiteSpaceAndNewLines(unpinnedPendingInput.selectedText),
+                borderColor: unpinnedPendingInput == windowState.selectedPendingInput ? .gray400 : .clear,
                 iconView: Image(.text).addIconStyles(iconSize: 14)
             ) {
                 showHighlightedText(input: unpinnedPendingInput)
@@ -277,6 +278,7 @@ extension FileRow {
             ForEach(windowState.pinnedPendingInputs, id: \.self) { pinnedPendingInput in
                 ContextTag(
                     text: pinnedPendingInput.selectedText,
+                    borderColor: pinnedPendingInput == windowState.selectedPendingInput ? .gray400 : .clear,
                     iconView: Image(.text).addIconStyles(iconSize: 14),
                     iconViewCornerIcon: .pin
                 ) {
