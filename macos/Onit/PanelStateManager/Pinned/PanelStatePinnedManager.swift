@@ -183,7 +183,7 @@ class PanelStatePinnedManager: PanelStateBaseManager, ObservableObject {
     
     @objc private func spaceChangedReceived(notification: Notification) {
         guard state.panelOpened, let panel = state.panel, let screen = panel.screen else { return }
-        
+
         panel.orderFrontRegardless()
         
         resizeWindows(for: screen)
