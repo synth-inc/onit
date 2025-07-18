@@ -13,8 +13,8 @@ struct TooltipHelpers {
     @MainActor
     static func setTooltipOnHover(
         isHovering: Bool,
-        tooltipShortcut: Tooltip.Shortcut = .none,
         tooltipPrompt: String?,
+        tooltipShortcut: Tooltip.Shortcut = .none,
         tooltipConfig: TooltipConfig? = nil
     ) {
         if tooltipPrompt != nil {

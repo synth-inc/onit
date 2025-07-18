@@ -99,8 +99,8 @@ struct IconButton: View {
             .onChange(of: isHovered) { _, isHovering in
                 TooltipHelpers.setTooltipOnHover(
                     isHovering: isHovering,
-                    tooltipShortcut: tooltipShortcut ?? .none,
                     tooltipPrompt: tooltipPrompt,
+                    tooltipShortcut: tooltipShortcut ?? .none
                 )
             }
     }

@@ -146,8 +146,8 @@ struct TextButton<Child: View>: View {
             
             TooltipHelpers.setTooltipOnHover(
                 isHovering: isHovering,
-                tooltipShortcut: tooltipShortcut ?? .none,
-                tooltipPrompt: tooltipPrompt
+                tooltipPrompt: tooltipPrompt,
+                tooltipShortcut: tooltipShortcut ?? .none
             )
         }
         .addButtonEffects(
