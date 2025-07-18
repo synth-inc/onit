@@ -164,8 +164,6 @@ extension QuickEditResponseView {
     
     private var scrollView: some View {
         // By reading fontSize and lineHeight here, we ensure SwiftUI observes them.
-//        let _ = fontSize
-//        let _ = lineHeight
         
         ScrollViewReader { proxy in
             ScrollView {
