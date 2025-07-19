@@ -267,6 +267,9 @@ private class CustomTextView: NSTextView {
         autoresizingMask = [.width]
         maxSize = NSSize(width: CGFloat.greatestFiniteMagnitude, height: CGFloat.greatestFiniteMagnitude)
         
+        // Set consistent text container inset to align cursor and placeholder
+        textContainerInset = NSSize(width: 0, height: 2)
+        
         typingAttributes = [
             .font: customFont,
             .foregroundColor: textColor
@@ -288,9 +291,11 @@ private class CustomTextView: NSTextView {
                 .foregroundColor: placeholderColor
             ]
             
-            let rect = NSRect(x: textContainerInset.width,
+            // Use the same positioning logic as the actual text to ensure cursor alignment
+            let lineFragmentPadding = textContainer?.lineFragmentPadding ?? 0
+            let rect = NSRect(x: textContainerInset.width + lineFragmentPadding,
                             y: textContainerInset.height,
-                            width: bounds.width - textContainerInset.width * 2,
+                            width: bounds.width - (textContainerInset.width + lineFragmentPadding) * 2,
                             height: bounds.height)
             
             placeholder.draw(in: rect, withAttributes: attributes)
