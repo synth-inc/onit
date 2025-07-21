@@ -13,12 +13,15 @@ class TooltipManager {
     // MARK: - Singleton
     
     static let shared = TooltipManager()
-    
+    static let animationDuration: TimeInterval = 0.1
+
     // MARK: - Properties
     
     var tooltipWindow: NSWindow?
     var tooltipTask: Task<Void, Never>?
     var isTooltipActive = false
+    var animateOut = true
+    
     
     // MARK: - Functions
     
@@ -26,10 +29,11 @@ class TooltipManager {
         _ tooltip: Tooltip?,
         tooltipConfig: TooltipConfig? = nil,
         delayStart: Double = 0.4,
-        delayEnd: Double = 0.2
+        delayEnd: Double = 0.0,
+        animateOut: Bool = true
     ) {
         tooltipTask?.cancel()
-
+        self.animateOut = animateOut
         if let tooltip {
             if isTooltipActive {
                 resetTooltip(tooltip, tooltipConfig)
@@ -52,7 +56,7 @@ class TooltipManager {
                 try? await Task.sleep(for: .seconds(delayEnd))
                 if Task.isCancelled { return }
                 isTooltipActive = false
-                if delayEnd == 0 {
+                if self.animateOut {
                     hideWindowWithoutAnimation()
                 } else {
                     hideWindowWithAnimation()
@@ -123,7 +127,7 @@ class TooltipManager {
 
         NSAnimationContext.runAnimationGroup(
             { context in
-                context.duration = 0.3  // Adjust duration as needed
+                context.duration = TooltipManager.animationDuration 
                 context.timingFunction = CAMediaTimingFunction(name: .easeOut)
                 tooltipWindow.animator().alphaValue = 0.0
             },

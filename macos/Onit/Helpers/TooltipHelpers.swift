@@ -22,15 +22,10 @@ struct TooltipHelpers {
                         prompt: tooltipPrompt!,
                         shortcut: tooltipShortcut
                     ),
-                    tooltipConfig: tooltipConfig,
-                    delayStart: 0.4,
-                    delayEnd: 0
+                    tooltipConfig: tooltipConfig
                 )
             } else {
-                TooltipManager.shared.setTooltip(
-                    nil,
-                    delayEnd: 0
-                )
+                TooltipManager.shared.setTooltip(nil)
             }
         }
     }
