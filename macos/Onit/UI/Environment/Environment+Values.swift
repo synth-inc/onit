@@ -22,12 +22,17 @@ private struct OnitPanelStateKey: @preconcurrency EnvironmentKey {
 private struct OnitAppStateKey: @preconcurrency EnvironmentKey {
     
     @MainActor
-    static let defaultValue: AppState = AppState()
+    static let defaultValue: AppState? = nil
 }
 
 extension EnvironmentValues {
-    var appState: AppState {
-        get { self[OnitAppStateKey.self] }
+    var appState: AppState? {
+        get {
+            guard Thread.isMainThread else {
+                return nil
+            }
+            return self[OnitAppStateKey.self]
+        }
         set { self[OnitAppStateKey.self] = newValue }
     }
     

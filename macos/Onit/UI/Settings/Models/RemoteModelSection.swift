@@ -100,12 +100,12 @@ struct RemoteModelSection: View {
             save(use: use)
             save(validated: validated)
             // If we've turned off everything go into local mode.
-            if appState.listedModels.isEmpty {
+            if (appState?.listedModels ?? []).isEmpty {
                 mode = .local
             } else {
                 // If it's our first time adding models, set the remoteModel
                 if remoteModel == nil {
-                    remoteModel = appState.listedModels.first
+                    remoteModel = (appState?.listedModels ?? []).first
                 }
             }
         }
@@ -218,7 +218,7 @@ struct RemoteModelSection: View {
     @ViewBuilder
     var modelsView: some View {
         // If their logged in, we shoudl show these since they can always use them through the free plan.
-        if use && (appState.account != nil || validated) {
+        if use && ((appState?.account != nil) || validated) {
             GroupBox {
                 VStack(alignment: .leading, spacing: 0) {
                     ForEach(models) { model in

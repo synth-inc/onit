@@ -6,15 +6,18 @@ struct SettingsView: View {
     @Environment(\.appState) var appState
     @ObservedObject private var accessibilityPermissionManager = AccessibilityPermissionManager.shared
 
+    private var selectedTab: Binding<SettingsTab> {
+        .init(
+            get: { appState?.settingsTab ?? .general },
+            set: {
+                appState?.settingsTab = $0
+            }
+        )
+    }
+
     var body: some View {
         TabView(
-            selection: Binding(
-                get: { appState.settingsTab },
-                set: {
-                    AnalyticsManager.Settings.tabPressed(tabName: $0.rawValue)
-                    appState.settingsTab = $0
-                }
-            )
+            selection: selectedTab
         ) {
             GeneralTab()
                 .tabItem {
@@ -89,7 +92,7 @@ struct SettingsView: View {
         .frame(idealWidth: 569, minHeight: 500)
         .fixedSize(horizontal: true, vertical: false)
         .onAppear {
-            AnalyticsManager.Settings.opened(on: appState.settingsTab.rawValue)
+            AnalyticsManager.Settings.opened(on: appState?.settingsTab.rawValue ?? "unknown")
         }
     }
 }

@@ -14,7 +14,7 @@ struct RemoteModelPicker: View {
 
     var body: some View {
         Picker("Model", selection: $remoteModel) {
-            ForEach(appState.listedModels) { aiModel in
+            ForEach(appState?.listedModels ?? []) { aiModel in
                 Text(aiModel.displayName)
                     .tag(aiModel)
             }

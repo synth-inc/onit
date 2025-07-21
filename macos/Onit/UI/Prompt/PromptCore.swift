@@ -21,7 +21,7 @@ struct PromptCore: View {
     
     private var chats: [Chat] {
         let chatsFilteredByAccount = allChats
-            .filter { $0.accountId == appState.account?.id }
+            .filter { $0.accountId == appState?.account?.id }
         
         return PanelStateCoordinator.shared.filterPanelChats(chatsFilteredByAccount)
     }
@@ -177,8 +177,8 @@ extension PromptCore {
                 InputView(input: pendingInput, inputExpanded: true)
             }
             
-            if !appState.subscriptionPlanError.isEmpty {
-                Text(appState.subscriptionPlanError)
+            if !(appState?.subscriptionPlanError.isEmpty ?? true) {
+                Text(appState?.subscriptionPlanError ?? "")
                     .styleText(
                         size: 13,
                         weight: .regular,
@@ -258,7 +258,7 @@ extension PromptCore {
     }
     
     private var showingAlert: Bool {
-        showTwoWeekProTrialEndedAlert || appState.showFreeLimitAlert || appState.showProLimitAlert
+        showTwoWeekProTrialEndedAlert || (appState?.showFreeLimitAlert == true) || (appState?.showProLimitAlert == true)
     }
     
     private var isRemote: Bool {
@@ -298,8 +298,8 @@ extension PromptCore {
 extension PromptCore {
     private func handleSend() {
         Task {
-            await appState.checkSubscriptionAlerts {
-                windowState?.sendAction(accountId: appState.account?.id)
+            await appState?.checkSubscriptionAlerts {
+                windowState?.sendAction(accountId: appState?.account?.id)
             }
         }
     }

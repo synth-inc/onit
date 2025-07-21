@@ -107,7 +107,7 @@ struct SetUpDialogs: View {
 //                restartLocal
 //            #endif
             
-            if availableRemoteModels.isEmpty && appState.remoteFetchFailed && !closedNoRemoteModels {
+            if availableRemoteModels.isEmpty && (appState?.remoteFetchFailed ?? false) && !closedNoRemoteModels {
                 noRemote
             }
             if availableRemoteModels.contains(where: {
@@ -143,7 +143,7 @@ struct SetUpDialogs: View {
         } action: {
             Task {
                 fetchingRemote = true
-                await appState.fetchRemoteModels()
+                await appState?.fetchRemoteModels()
                 fetchingRemote = false
             }
         } closeAction: {
@@ -238,7 +238,7 @@ struct SetUpDialogs: View {
         } action: {
             Task {
                 fetchingLocal = true
-                await appState.fetchLocalModels()
+                await appState?.fetchLocalModels()
                 fetchingLocal = false
             }
         } closeAction: {
@@ -249,7 +249,7 @@ struct SetUpDialogs: View {
     func settings() {
         NSApp.activate()
         if NSApp.isActive {
-            appState.setSettingsTab(tab: .models)
+            appState?.setSettingsTab(tab: .models)
             openSettings()
         }
     }

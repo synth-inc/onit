@@ -41,7 +41,7 @@ struct RemoteModelButton: View {
             selectedModel.wrappedValue = .remote(remoteModel)
             modelSelectionViewOpen.wrappedValue = false
             Task {
-                await appState.checkSubscriptionAlerts {}
+                await appState?.checkSubscriptionAlerts {}
             }
         }
         .task {
@@ -75,6 +75,8 @@ extension RemoteModelButton {
     }
     
     private func checkApiKeyExistsForProvider() -> Bool {
+        guard let appState = appState else { return false }
+        
         switch remoteModel.provider {
         case .openAI:
             return appState.isOpenAITokenValidated
@@ -94,6 +96,8 @@ extension RemoteModelButton {
     }
     
     private func checkPlanLimitReached() async {
+        guard let appState = appState else { return }
+        
         do {
             let userLoggedIn = appState.account != nil
             

@@ -44,8 +44,6 @@ struct App: SwiftUI.App {
     }
 
     var body: some Scene {
-        @Bindable var appState = appState
-
         MenuBarExtra {
             MenuBarContent()
         } label: {
@@ -70,7 +68,10 @@ struct App: SwiftUI.App {
                 }
         }
         .menuBarExtraStyle(.window)
-        .menuBarExtraAccess(isPresented: $appState.showMenuBarExtra)
+        .menuBarExtraAccess(isPresented: Binding(
+            get: { appState?.showMenuBarExtra ?? false },
+            set: { appState?.showMenuBarExtra = $0 }
+        ))
         .commands {}
 
         Settings {
@@ -100,12 +101,12 @@ struct App: SwiftUI.App {
                     }
                 }
                 .onOpenURL { url in
-                    appState.handleDeeplink(url)
+                    appState?.handleDeeplink(url)
                 }
         }
         
         Window("Create an Account or Log In",id: windowOnboardingAuthId) {
-            if authFlowStatus != .hideAuth && appState.account == nil {
+            if authFlowStatus != .hideAuth && appState?.account == nil {
                 VStack {
                     AuthFlow()
                 }
@@ -121,7 +122,7 @@ struct App: SwiftUI.App {
         }
         .windowResizability(.contentSize)
         .defaultPosition(.center)
-        .onChange(of: appState.account) { _, new in
+        .onChange(of: appState?.account) { _, new in
             if new != nil {
                 dismissWindow(id: windowOnboardingAuthId)
             }
@@ -169,6 +170,8 @@ struct App: SwiftUI.App {
     }
 
     private func restoreSession() {
+        guard let appState = appState else { return }
+        
         if TokenManager.token != nil && appState.account == nil {
             Task { @MainActor in 
                 let client = FetchingClient()

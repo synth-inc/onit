@@ -117,7 +117,7 @@ struct SystemPromptSelectionView: View {
         MenuSection(showTopBorder: true) {
             HStack(alignment: .center, spacing: 8) {
                 Button {
-                    appState.setSettingsTab(tab: .prompts)
+                    appState?.setSettingsTab(tab: .prompts)
                     openSettings()
                 } label: {
                     Label("Settings", systemImage: "message")

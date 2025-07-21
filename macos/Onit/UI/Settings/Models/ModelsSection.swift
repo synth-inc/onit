@@ -23,7 +23,7 @@ struct ModelsSection<Content: View>: View {
                 Button(action: {
                     fetching = true
                     Task {
-                        await appState.fetchRemoteModels()
+                        await appState?.fetchRemoteModels()
                         fetching = false
                     }
                 }) {

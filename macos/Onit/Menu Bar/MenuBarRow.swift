@@ -27,8 +27,10 @@ struct MenuBarRow<Leading: View, Trailing: View>: View {
     var body: some View {
         Button {
             action()
-            @Bindable var appState = appState
-            appState.showMenuBarExtra = false
+            if let appState = appState {
+                @Bindable var appState = appState
+                appState.showMenuBarExtra = false
+            }
         } label: {
             label
         }

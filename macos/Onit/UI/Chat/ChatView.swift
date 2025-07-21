@@ -111,7 +111,7 @@ struct ChatView: View {
         }
         .drag()
         .onAppear {
-            appState.checkForAvailableUpdate()
+            appState?.checkForAvailableUpdate()
         }
     }
 }

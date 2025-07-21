@@ -16,7 +16,7 @@ struct HistoryView: View {
     
     private var chats: [Chat] {
         let chatsFilteredByAccount = allChats
-            .filter { $0.accountId == appState.account?.id }
+            .filter { $0.accountId == appState?.account?.id }
         
         return PanelStateCoordinator.shared.filterHistoryChats(chatsFilteredByAccount)
     }

@@ -11,7 +11,7 @@ struct EnableAutocontextTag: View {
         HStack(spacing: 4) {
             Button {
                 closedAutoContextTag = true
-                appState.settingsTab = .accessibility
+                appState?.settingsTab = .accessibility
                 openSettings()
             } label: {
                 Image(.stars)

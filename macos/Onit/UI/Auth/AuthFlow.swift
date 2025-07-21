@@ -285,7 +285,7 @@ extension AuthFlow {
     @MainActor
     private func handleLogin(loginResponse: LoginResponse) {
         TokenManager.token = loginResponse.token
-        appState.account = loginResponse.account
+        appState?.account = loginResponse.account
 
         if loginResponse.isNewAccount {
             AnalyticsManager.Identity.identify(account: loginResponse.account)

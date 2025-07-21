@@ -45,7 +45,7 @@ struct ProLimitAlert: View {
             title: "Pro Limit Reached",
             close: {
                 AnalyticsManager.Billing.Alert.closed(name: alertName)
-                appState.showProLimitAlert = false
+                appState?.showProLimitAlert = false
             },
             description: description,
             descriptionLoading: fetchingData,

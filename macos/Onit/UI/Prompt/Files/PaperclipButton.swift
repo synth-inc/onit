@@ -80,6 +80,7 @@ struct PaperclipButton: View {
 
     private func handleAddContext() {
         guard let windowState = windowState else { return }
+        guard let appState = appState else { return }
         
         if accessibilityAutoContextEnabled {
             if let panel = windowState.panel {

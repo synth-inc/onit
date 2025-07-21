@@ -33,7 +33,7 @@ struct QuickEditView: View {
     private let maxTextHeight: CGFloat = 100
     
     private var showingAlert: Bool {
-        showTwoWeekProTrialEndedAlert || appState.showFreeLimitAlert || appState.showProLimitAlert
+        showTwoWeekProTrialEndedAlert || (appState?.showFreeLimitAlert == true) || (appState?.showProLimitAlert == true)
     }
     
     var accessibilityEnabled: Bool {
@@ -227,8 +227,8 @@ extension QuickEditView {
               !windowState.pendingInstruction.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return }
         
         Task {
-            await appState.checkSubscriptionAlerts {
-                windowState.sendAction(accountId: appState.account?.id)
+            await appState?.checkSubscriptionAlerts {
+                windowState.sendAction(accountId: appState?.account?.id)
             }
         }
     }

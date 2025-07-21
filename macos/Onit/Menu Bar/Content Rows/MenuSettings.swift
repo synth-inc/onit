@@ -16,7 +16,7 @@ struct MenuSettings: View {
         MenuBarRow {
             NSApp.activate()
             if NSApp.isActive {
-                appState.setSettingsTab(tab: .general)
+                appState?.setSettingsTab(tab: .general)
                 openSettings()
             }
         } leading: {

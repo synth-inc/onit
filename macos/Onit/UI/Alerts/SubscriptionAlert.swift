@@ -214,7 +214,7 @@ extension SubscriptionAlert {
         NSApp.activate()
         
         if NSApp.isActive {
-            appState.setSettingsTab(tab: .models)
+            appState?.setSettingsTab(tab: .models)
             openSettings()
         }
     }

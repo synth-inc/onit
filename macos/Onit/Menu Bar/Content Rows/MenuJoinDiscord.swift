@@ -14,7 +14,9 @@ struct MenuJoinDiscord: View {
 
     var body: some View {
         MenuBarRow {
-            Self.openDiscord(appState)
+            if let appState = appState {
+                Self.openDiscord(appState)
+            }
         } leading: {
             Text("Join Discord →")
                 .padding(.horizontal, 10)

@@ -24,7 +24,11 @@ struct GeneralTabPlanAndBilling: View {
     @State private var subscriptionDataErrorMessage: String = ""
     
     private var userLoggedIn: Bool {
-        appState.account != nil
+        appState?.account != nil
+    }
+    
+    private var shouldShowBillingSection: Bool {
+        appState?.account != nil
     }
     
     var body: some View {
@@ -60,7 +64,7 @@ struct GeneralTabPlanAndBilling: View {
                 
                 if !userLoggedIn {
                     upgradeToProButton
-                } else if appState.subscriptionStatus == SubscriptionStatus.free {
+                } else if appState?.subscriptionStatus == SubscriptionStatus.free {
                     HStack(spacing: 11) {
                         if checkingFreeTrialAvailable {
                             Loader()
@@ -72,13 +76,13 @@ struct GeneralTabPlanAndBilling: View {
                             }
                         }
                         
-                        if let _ = appState.subscription {
+                        if let _ = appState?.subscription {
                             viewPastBillingInfoButton
                         }
                     }
-                } else if appState.subscriptionStatus == SubscriptionStatus.trialing || appState.subscriptionStatus == SubscriptionStatus.active {
+                } else if appState?.subscriptionStatus == SubscriptionStatus.trialing || appState?.subscriptionStatus == SubscriptionStatus.active {
                     HStack(spacing: 11) {
-                        if appState.subscriptionCanceled {
+                        if appState?.subscriptionCanceled == true {
                             renewSubscriptionButton
                         }
                         
@@ -87,7 +91,7 @@ struct GeneralTabPlanAndBilling: View {
                 }
                 
                 if !userLoggedIn ||
-                    appState.subscriptionCanceled ||
+                    appState?.subscriptionCanceled == true ||
                     planType == SubscriptionStatus.free
                 {
                     SubscriptionFeatures()
@@ -195,7 +199,7 @@ extension GeneralTabPlanAndBilling {
     }
     
     private func getCanceledText(_ renewalDate: String) -> String? {
-        if let subscriptionCanceled = appState.subscription?.cancelAtPeriodEnd,
+        if let subscriptionCanceled = appState?.subscription?.cancelAtPeriodEnd,
            subscriptionCanceled
         {
             return "Your Onit subscription expires on \(renewalDate)."
@@ -232,11 +236,11 @@ extension GeneralTabPlanAndBilling {
     ) -> some View {
         VStack(alignment: .leading, spacing: 6) {
             Text(
-                appState.subscriptionCanceled ? "Pro plan expiring soon" : planType
+                appState?.subscriptionCanceled == true ? "Pro plan expiring soon" : planType
             ).styleText(size: 13, weight: .regular)
             
             VStack(alignment: .leading, spacing: 1) {
-                if !appState.subscriptionCanceled {
+                if !(appState?.subscriptionCanceled == true) {
                     if planType == SubscriptionStatus.active {
                         captionText("You are subscribed to the Onit Pro plan!")
                     } else if planType == SubscriptionStatus.trialing {
@@ -246,7 +250,7 @@ extension GeneralTabPlanAndBilling {
                 
                 captionText("\(usage)/\(quota) generations used.")
 
-                if appState.hasUserAPITokens {
+                if appState?.hasUserAPITokens == true {
                     captionText(
                         "Prompts sent using your own API tokens do not count against your free quota."
                     )
@@ -269,9 +273,9 @@ extension GeneralTabPlanAndBilling {
             if userLoggedIn {
                 await refreshSubscriptionState()
                 
-                planType = appState.subscriptionStatus
+                planType = appState?.subscriptionStatus
                 
-                if appState.subscriptionStatus == SubscriptionStatus.free {
+                if appState?.subscriptionStatus == SubscriptionStatus.free {
                     checkingFreeTrialAvailable = true
                     
                     let (isFreeTrialAvailable, errorMessage) = await Stripe.checkFreeTrialAvailable()
@@ -335,7 +339,7 @@ extension GeneralTabPlanAndBilling {
     private func refreshSubscriptionState() async {
         do {
             let client = FetchingClient()
-            appState.subscription = try await client.getSubscription()
+            appState?.subscription = try await client.getSubscription()
         } catch {
             subscriptionDataErrorMessage = error.localizedDescription
         }

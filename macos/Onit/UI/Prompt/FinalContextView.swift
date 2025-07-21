@@ -195,7 +195,7 @@ struct FinalContextView: View {
 
 extension FinalContextView {
     private func handleSend() async {
-        await appState.checkSubscriptionAlerts {
+        await appState?.checkSubscriptionAlerts {
             windowState?.generate(prompt)
         }
     }

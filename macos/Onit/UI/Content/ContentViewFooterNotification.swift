@@ -76,18 +76,20 @@ extension ContentViewFooterNotification {
     private func dismiss() {
         switch footerNotification {
         case .discord:
-            appState.removeDiscordFooterNotifications()
+            appState?.removeDiscordFooterNotifications()
         default:
-            appState.removeUpdateFooterNotifications()
+            appState?.removeUpdateFooterNotifications()
         }
     }
     
     private func action() {
         switch footerNotification {
         case .discord:
-            MenuJoinDiscord.openDiscord(appState)
+            if let appState = appState {
+                MenuJoinDiscord.openDiscord(appState)
+            }
         default:
-            appState.checkForAvailableUpdateWithDownload()
+            appState?.checkForAvailableUpdateWithDownload()
         }
     }
 }

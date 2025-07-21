@@ -34,7 +34,7 @@ struct FreeLimitAlert: View {
             title: "Free Limit Reached",
             close: {
                 AnalyticsManager.Billing.Alert.closed(name: alertName)
-                appState.showFreeLimitAlert = false
+                appState?.showFreeLimitAlert = false
             },
             description: "You have used your free requests for this month.",
             subscriptionText: "Upgrade to Pro!",

@@ -24,11 +24,11 @@ struct ModelSelectionView: View {
     
     private var filteredRemoteModels: [AIModel] {
         if searchQuery.isEmpty {
-            return appState.listedModels
+            return appState?.listedModels ?? []
         } else {
-            return appState.listedModels.filter {
+            return appState?.listedModels.filter {
                 $0.displayName.localizedCaseInsensitiveContains(searchQuery)
-            }
+            } ?? []
         }
     }
     
@@ -133,7 +133,7 @@ struct ModelSelectionView: View {
             if availableLocalModels.isEmpty {
                 Button("Setup local models") {
                     AnalyticsManager.ModelPicker.localSetupPressed()
-                    appState.settingsTab = .models
+                    appState?.settingsTab = .models
                     openSettings()
                 }
                 .buttonStyle(SetUpButtonStyle(showArrow: true))
@@ -225,7 +225,9 @@ extension ModelSelectionView {
         NSApp.activate()
         
         if NSApp.isActive {
-            appState.setSettingsTab(tab: .models)
+            if let appState = appState {
+                appState.setSettingsTab(tab: .models)
+            }
             openSettings()
             OverlayManager.shared.dismissOverlay()
         }

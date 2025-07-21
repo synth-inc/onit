@@ -29,7 +29,7 @@ struct ContentView: View {
     }
     
     private var showToolbar: Bool {
-        !shouldShowOnboardingAccessibility && appState.account != nil
+        !shouldShowOnboardingAccessibility && appState?.account != nil
     }
     
     private var showFileImporterBinding: Binding<Bool> {
@@ -76,13 +76,13 @@ struct ContentView: View {
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .background(Color.black)
                 .onAppear {
-                    if appState.account == nil {
+                    if appState?.account == nil {
                         authFlowStatus = .showSignUp
                     } else {
                         authFlowStatus = .hideAuth
                     }
                 }
-            } else if appState.account == nil {
+            } else if appState?.account == nil {
                 AuthFlow()
             } else {
                 ZStack {
@@ -106,20 +106,20 @@ struct ContentView: View {
                             )
                             
                             alertView(
-                                isPresented: appState.showFreeLimitAlert,
+                                isPresented: appState?.showFreeLimitAlert == true,
                                 id: "free_limit_alert",
                                 content: FreeLimitAlert()
                             )
                             
                             alertView(
-                                isPresented: appState.showProLimitAlert,
+                                isPresented: appState?.showProLimitAlert == true,
                                 id: "pro_limit_alert",
                                 content: ProLimitAlert()
                             )
                         }
                         .animation(.spring(response: 0.3, dampingFraction: 0.8), value: showTwoWeekProTrialEndedAlert)
-                        .animation(.spring(response: 0.3, dampingFraction: 0.8), value: appState.showFreeLimitAlert)
-                        .animation(.spring(response: 0.3, dampingFraction: 0.8), value: appState.showProLimitAlert)
+                        .animation(.spring(response: 0.3, dampingFraction: 0.8), value: appState?.showFreeLimitAlert)
+                        .animation(.spring(response: 0.3, dampingFraction: 0.8), value: appState?.showProLimitAlert)
                     }
                 }
             }
@@ -146,11 +146,11 @@ struct ContentView: View {
         .addAnimation(dependency: state?.showChatView)
         .onAppear {
             if !hasClosedTrialEndedAlert {
-                if let subscriptionStatus = appState.subscription?.status {
+                if let subscriptionStatus = appState?.subscription?.status {
                     if subscriptionStatus == "active" {
                         hasClosedTrialEndedAlert = true
                     } else if subscriptionStatus == "canceled",
-                       let trialEndDate = appState.subscription?.trialEnd
+                       let trialEndDate = appState?.subscription?.trialEnd
                     {
                         let today = getTodayAsEpochDate()
                         let trialExpired = today >= trialEndDate

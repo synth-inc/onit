@@ -99,9 +99,9 @@ struct LocalModelsSection: View {
                         if let localEndpointURL = URL(string: localEndpointString) {
                             self.localEndpointURL = localEndpointURL
 
-                            await appState.fetchLocalModels()
+                            await appState?.fetchLocalModels()
 
-                            if appState.localFetchFailed {
+                            if appState?.localFetchFailed == true {
                                 message = "Couldn't find any models at the provided URL."
                             } else {
                                 message = "Models loaded successfully!"
@@ -395,7 +395,7 @@ struct LocalModelsSection: View {
         Button(action: {
             fetching = true
             Task {
-                await appState.fetchLocalModels()
+                await appState?.fetchLocalModels()
                 fetching = false
             }
         }) {

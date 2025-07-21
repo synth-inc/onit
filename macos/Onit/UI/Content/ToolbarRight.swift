@@ -68,7 +68,9 @@ struct ToolbarRight: View {
             iconSize: 21,
             tooltipPrompt: "Join Discord"
         ) {
-            MenuJoinDiscord.openDiscord(appState)
+            if let appState = appState {
+                MenuJoinDiscord.openDiscord(appState)
+            }
         }
     }
    
@@ -107,7 +109,7 @@ struct ToolbarRight: View {
         
         NSApp.activate()
         if NSApp.isActive {
-            appState.setSettingsTab(tab: .general)
+            appState?.setSettingsTab(tab: .general)
             openSettings()
         }
     }
@@ -129,7 +131,7 @@ struct ToolbarRight: View {
             hoverBackground: .blue300.opacity(0.2),
             tooltipPrompt: "Install Update"
         ) {
-            appState.checkForAvailableUpdateWithDownload()
+            appState?.checkForAvailableUpdateWithDownload()
         }
     }
 }

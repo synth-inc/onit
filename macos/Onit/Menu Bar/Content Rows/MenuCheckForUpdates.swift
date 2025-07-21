@@ -19,7 +19,7 @@ struct MenuCheckForUpdates: View {
 
     var body: some View {
         MenuBarRow {
-            appState.updater.updater.checkForUpdates()
+            appState?.updater.updater.checkForUpdates()
         } leading: {
             Text("Check for updates...")
                 .padding(.horizontal, 10)
@@ -28,7 +28,9 @@ struct MenuCheckForUpdates: View {
         }
         .disabled(disabled)
         .task {
-            checkUpdates = CheckForUpdatesViewModel(updater: appState.updater.updater)
+            if let appState = appState {
+                checkUpdates = CheckForUpdatesViewModel(updater: appState.updater.updater)
+            }
         }
     }
 }

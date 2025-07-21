@@ -23,11 +23,11 @@ struct GeneralTabAccount: View {
             title: "Account"
         ) {
             VStack(alignment: .leading) {
-                if appState.account == nil { loggedOutText }
+                if appState?.account == nil { loggedOutText }
                 else { loggedInText }
                 
                 HStack(spacing: 9) {
-                    if appState.account == nil {
+                    if appState?.account == nil {
                         createAnAccountButton
                         signInButton
                     } else {
@@ -66,10 +66,10 @@ extension GeneralTabAccount {
     
     private var loggedInText: some View {
         HStack(spacing: 4) {
-            if let email = appState.account?.email {
+            if let email = appState?.account?.email {
                 text(text: "You are signed in as")
                 text(text: email, weight: .semibold)
-            } else if let appleEmail = appState.account?.appleEmail {
+            } else if let appleEmail = appState?.account?.appleEmail {
                 text(text: "You are signed in as")
                 text(text: appleEmail, weight: .semibold)
             } else {
@@ -137,7 +137,7 @@ extension GeneralTabAccount {
     @MainActor
     private func logout() {
         TokenManager.token = nil
-        appState.account = nil
+        appState?.account = nil
         Defaults[.authFlowStatus] = .showSignIn
         GIDSignIn.sharedInstance.signOut()
         
