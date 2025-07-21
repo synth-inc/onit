@@ -142,8 +142,14 @@ class GoogleDocsService: GoogleDocumentServiceProtocol {
     }
     
     private func readStructuredFile(fileId: String) async throws -> [String: Any] {
-        guard let user = GIDSignIn.sharedInstance.currentUser else {
+        guard var user = GIDSignIn.sharedInstance.currentUser else {
             throw GoogleDriveServiceError.notAuthenticated("Not authenticated with Google Drive")
+        }
+        
+        do {
+            user = try await user.refreshTokensIfNeeded()
+        } catch {
+            print("Token refresh was unsuccessful: \(error)")
         }
         
         let accessToken = user.accessToken.tokenString
@@ -165,17 +171,21 @@ class GoogleDocsService: GoogleDocumentServiceProtocol {
         if httpResponse.statusCode == 404 {
             throw GoogleDriveServiceError.notFound("Onit needs permission to access this file.")
         } else if httpResponse.statusCode == 403 {
-            var errorMessage = "Onit can't access this file."
-            if let errorData = String(data: data, encoding: .utf8) {
-                errorMessage += "\n\nError message: \(errorData)"
+            var extractionError = "Onit can't access this file."
+            
+            if let errorMessage = await GoogleDriveService.extractApiErrorMessage(from: data) {
+                extractionError += "\n\nError message: \(errorMessage)"
             }
-            throw GoogleDriveServiceError.accessDenied(errorMessage)
+            
+            throw GoogleDriveServiceError.accessDenied(extractionError)
         } else if httpResponse.statusCode != 200 {
-            var errorMessage = "Failed to retrieve document (HTTP \(httpResponse.statusCode))"
-            if let errorData = String(data: data, encoding: .utf8) {
-                errorMessage += "\n\nError message: \(errorData)"
+            var extractionError = "Failed to retrieve document"
+            
+            if let errorMessage = await GoogleDriveService.extractApiErrorMessage(from: data) {
+                extractionError += "\n\nError message: \(errorMessage)"
             }
-            throw GoogleDriveServiceError.httpError(httpResponse.statusCode, errorMessage)
+            
+            throw GoogleDriveServiceError.httpError(httpResponse.statusCode, extractionError)
         }
         
         guard let json = try JSONSerialization.jsonObject(with: data) as? [String: Any] else {

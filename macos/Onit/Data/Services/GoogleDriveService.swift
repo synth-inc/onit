@@ -153,91 +153,21 @@ class GoogleDriveService: NSObject, ObservableObject {
             self.isExtracting = false
             throw GoogleDriveServiceError.invalidUrl(error)
         }
-
-        guard var user = GIDSignIn.sharedInstance.currentUser else {
-            let error = "Not authenticated with Google Drive"
-            self.extractionError = error
-            self.isExtracting = false
-            throw GoogleDriveServiceError.notAuthenticated(error)
-        }
-
+        
         do {
-            user = try await user.refreshTokensIfNeeded()
-        } catch {
-            print("Token refresh was unsuccessful: \(error)")
-        }
-
-        let accessToken = user.accessToken.tokenString
-
-        // Determine document type and appropriate MIME type for export
-        let mimeType = getMimeTypeForUrl(driveUrl)
-
-        // Use Google Drive API to export the document
-        let exportUrl =
-            "https://www.googleapis.com/drive/v3/files/\(fileId)/export?mimeType=\(mimeType)"
-
-        guard let url = URL(string: exportUrl) else {
-            let error = "Invalid export URL"
-            self.extractionError = error
+            let text = try await GoogleDocumentManager.readPlainText(fileId: fileId)
             self.isExtracting = false
-            throw GoogleDriveServiceError.invalidUrl(error)
-        }
-
-        var request = URLRequest(url: url)
-        request.setValue("Bearer \(accessToken)", forHTTPHeaderField: "Authorization")
-
-        let (data, response) = try await URLSession.shared.data(for: request)
-
-        self.isExtracting = false
-
-        guard let httpResponse = response as? HTTPURLResponse else {
-            let error = "Invalid response"
-            self.extractionError = error
-            throw GoogleDriveServiceError.invalidResponse(error)
-        }
-
-        if httpResponse.statusCode == 404 {
-            let extractionError =
-                "Onit needs permission to access this file."
-            self.extractionError = extractionError
-            throw GoogleDriveServiceError.notFound(extractionError)
-        } else if httpResponse.statusCode == 403 {
-            var extractionError =
-                "Onit can't access this file."
-            if let errorMessage = extractApiErrorMessage(from: data) {
-                extractionError += "\n\nError message: \(errorMessage)"
+            
+            if text.isEmpty {
+                return "(Document appears to be empty)"
+            } else {
+                return text
             }
-            self.extractionError = extractionError
-            throw GoogleDriveServiceError.accessDenied(extractionError)
-        } else if httpResponse.statusCode != 200 {
-            var extractionError =
-                "Failed to retrieve document"
-            if let errorMessage = extractApiErrorMessage(from: data) {
-                extractionError += "\n\nError message: \(errorMessage)"
-            }
-            self.extractionError = extractionError
-            throw GoogleDriveServiceError.httpError(httpResponse.statusCode, extractionError)
+        } catch {
+            self.extractionError = error.localizedDescription
+            self.isExtracting = false
+            throw error
         }
-
-        guard let text = String(data: data, encoding: .utf8) else {
-            let error = "Failed to decode document content"
-            self.extractionError = error
-            throw GoogleDriveServiceError.decodingError(error)
-        }
-
-        if text.isEmpty {
-            return "(Document appears to be empty)"
-        } else {
-            return text
-        }
-    }
-
-    private func extractApiErrorMessage(from data: Data) -> String? {
-        if let googleDriveError = try? JSONDecoder().decode(GoogleDriveAPIError.self, from: data),
-           let errorMessage = googleDriveError.error?.message {
-            return errorMessage
-        }
-        return String(data: data, encoding: .utf8)
     }
 
     private func getMimeTypeForUrl(_ url: String) -> String {
@@ -258,6 +188,14 @@ class GoogleDriveService: NSObject, ObservableObject {
     }
 
     // MARK: - Public Static Utilities
+    
+    static func extractApiErrorMessage(from data: Data) -> String? {
+        if let googleDriveError = try? JSONDecoder().decode(GoogleDriveAPIError.self, from: data),
+           let errorMessage = googleDriveError.error?.message {
+            return errorMessage
+        }
+        return String(data: data, encoding: .utf8)
+    }
     
     static func extractFileId(from url: String) -> String? {
         // Handle various Google Drive URL formats
