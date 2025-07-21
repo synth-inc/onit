@@ -47,7 +47,9 @@ extension PanelStatePinnedManager {
            let windowFrame = window.getFrame() {
             
             let panelWidth = state.panelWidth - (TetheredButton.width / 2) + 1
-            let resizeRadiusWidth = panelResizedOriginalWidth != nil ?  panelResizedOriginalWidth! - (TetheredButton.width / 2) + 1 : panelWidth
+            let resizeRadiusWidth = panelResizedOriginalWidth.map {
+                $0 - (TetheredButton.width / 2) + 1
+            } ?? panelWidth
             
             let screenFrame = screen.visibleFrame
             let availableSpace = screenFrame.maxX - windowFrame.maxX
@@ -68,7 +70,7 @@ extension PanelStatePinnedManager {
         
         var panelWidth = state.panelWidth - (TetheredButton.width / 2) + 1
 
-        // If we've made the panel smaller, than we actually want to look for bordering windows on the prior width
+        // If we've made the panel smaller, then we actually want to look for bordering windows on the prior width
         if let panelResizedOriginalWidth = panelResizedOriginalWidth,
            panelResizedOriginalWidth > panelWidth {
             panelWidth = panelResizedOriginalWidth - (TetheredButton.width / 2) + 1
