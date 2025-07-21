@@ -17,7 +17,7 @@ struct RemoteModelSection: View {
     @State private var loading = false
     @State private var showAdvanced: Bool = false  
     @State private var localState: TokenValidationState.ValidationState = .notValidated
-    @State private var showRemovePopover: Bool = false
+    @State private var showRemoveModelsSheet: Bool = false
 
     @Default(.mode) var mode
     @Default(.remoteModel) var remoteModel
@@ -268,7 +268,7 @@ struct RemoteModelSection: View {
                         // TODO: LOYD - Add "add custom model" button here.
                         
                         UpdateAvailableRemoteModelsButton(isRemove: true) {
-                            showRemovePopover = true
+                            showRemoveModelsSheet = true
                         }
                         .disabled(noAvailableRemoteModels)
                         .allowsHitTesting(!noAvailableRemoteModels)
@@ -279,10 +279,10 @@ struct RemoteModelSection: View {
                 .padding(.horizontal, -4)
                 .frame(maxWidth: .infinity, alignment: .leading)
                 // TODO: LOYD - Add "add custom model" sheet/form here.
-                .sheet(isPresented: $showRemovePopover) {
+                .sheet(isPresented: $showRemoveModelsSheet) {
                     RemoteModelRemoveModel(
                         provider: provider,
-                        showRemovePopover: $showRemovePopover
+                        showRemoveModelsSheet: $showRemoveModelsSheet
                     )
                 }
             }

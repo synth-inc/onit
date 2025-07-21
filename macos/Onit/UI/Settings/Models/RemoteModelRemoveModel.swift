@@ -15,14 +15,14 @@ struct RemoteModelRemoveModel: View {
     // MARK: - Properties
     
     private var provider: AIModel.ModelProvider
-    @Binding private var showRemovePopover: Bool
+    @Binding private var showRemoveModelsSheet: Bool
     
     init(
         provider: AIModel.ModelProvider,
-        showRemovePopover: Binding<Bool>
+        showRemoveModelsSheet: Binding<Bool>
     ) {
         self.provider = provider
-        self._showRemovePopover = showRemovePopover
+        self._showRemoveModelsSheet = showRemoveModelsSheet
     }
     
     // MARK: - States
@@ -60,7 +60,7 @@ struct RemoteModelRemoveModel: View {
                 Spacer()
                 
                 SimpleButton(text: "Cancel") {
-                    showRemovePopover = false
+                    showRemoveModelsSheet = false
                 }
                 
                 SimpleButton(
@@ -113,6 +113,6 @@ struct RemoteModelRemoveModel: View {
         
         availableRemoteModels.removeAll { selectedRemoteModels.contains($0) }
         
-        showRemovePopover = false
+        showRemoveModelsSheet = false
     }
 }
