@@ -9,15 +9,15 @@ import AppKit
 
 extension PanelStatePinnedManager {
     
-    func resizeWindows(for screen: NSScreen, isPanelResized: Bool = false) {
+    func resizeWindows(for screen: NSScreen, panelResizedOriginalWidth: CGFloat? = nil) {
         guard !isResizingWindows else { return }
 
         isResizingWindows = true
 
         // First, handle the bordering windows if they exists
-        let borderingWindows = findBorderingWindows().compactMap { $0 }
+        let borderingWindows = findBorderingWindows(panelResizedOriginalWidth: panelResizedOriginalWidth).compactMap { $0 }
         for window in borderingWindows {
-            resizeWindow(for: screen, window: window, isPanelResized: isPanelResized)
+            resizeWindow(for: screen, window: window, panelResizedOriginalWidth: panelResizedOriginalWidth)
         }
 
         // Then, handle all other windows, skipping the foregroundWindow if present
@@ -27,7 +27,7 @@ extension PanelStatePinnedManager {
                 continue
             }
             DispatchQueue.main.async {
-                self.resizeWindow(for: screen, window: window, isPanelResized: isPanelResized)
+                self.resizeWindow(for: screen, window: window, panelResizedOriginalWidth: panelResizedOriginalWidth)
             }
         }
         isResizingWindows = false
@@ -36,7 +36,7 @@ extension PanelStatePinnedManager {
         for screen: NSScreen,
         window: AXUIElement,
         windowFrameChanged: Bool = false,
-        isPanelResized: Bool = false
+        panelResizedOriginalWidth: CGFloat? = nil
     ) {
         // We pass when the panel is in the process of closing.
         if !shouldResizeWindows { return }
@@ -47,11 +47,15 @@ extension PanelStatePinnedManager {
            let windowFrame = window.getFrame() {
             
             let panelWidth = state.panelWidth - (TetheredButton.width / 2) + 1
+            let resizeRadiusWidth = panelResizedOriginalWidth.map {
+                $0 - (TetheredButton.width / 2) + 1
+            } ?? panelWidth
+            
             let screenFrame = screen.visibleFrame
             let availableSpace = screenFrame.maxX - windowFrame.maxX
             
             // Only resize when the window occupies the same space as the panel. 
-            if availableSpace < panelWidth {
+            if availableSpace < resizeRadiusWidth {
                 let overlapAmount = panelWidth - availableSpace
                 let newWidth = windowFrame.width - overlapAmount
                 let newFrame = CGRect(x: windowFrame.origin.x, y: windowFrame.origin.y, width: newWidth, height: windowFrame.height)
@@ -60,9 +64,18 @@ extension PanelStatePinnedManager {
         }
     }
     
-    func findBorderingWindows() -> [AXUIElement?] {
+    func findBorderingWindows(panelResizedOriginalWidth: CGFloat? = nil) -> [AXUIElement?] {
+        
         guard let screenFrame = self.attachedScreen?.visibleFrame ?? NSScreen.main?.visibleFrame else { return [] }
-        let panelWidth = state.panelWidth - (TetheredButton.width / 2) + 1
+        
+        var panelWidth = state.panelWidth - (TetheredButton.width / 2) + 1
+
+        // If we've made the panel smaller, then we actually want to look for bordering windows on the prior width
+        if let panelResizedOriginalWidth = panelResizedOriginalWidth,
+           panelResizedOriginalWidth > panelWidth {
+            panelWidth = panelResizedOriginalWidth - (TetheredButton.width / 2) + 1
+        }
+        
         let panelMinX = screenFrame.maxX - panelWidth
         let panelYMin = screenFrame.minY
         let panelYMax = screenFrame.maxY
