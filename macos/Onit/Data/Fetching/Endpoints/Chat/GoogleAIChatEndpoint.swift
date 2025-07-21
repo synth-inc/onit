@@ -165,14 +165,14 @@ enum GoogleAIChatTool: Codable {
 }
 
 struct GoogleAIChatToolDeclaration: Codable {
-    let name: String?
-    let description: String?
-    let parameters: GoogleAIChatToolParameters?
+    let name: String
+    let description: String
+    let parameters: GoogleAIChatToolParameters
 
     init(type: String,
-         name: String? = nil,
-         description: String? = nil,
-         parameters: GoogleAIChatToolParameters? = nil) {
+         name: String,
+         description: String,
+         parameters: GoogleAIChatToolParameters) {
         self.name = name
         self.description = description
         self.parameters = parameters
