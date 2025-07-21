@@ -33,7 +33,7 @@ struct GoogleAIChatEndpoint: Endpoint {
     var requestBody: GoogleAIChatRequest? {
         var systemInstruction: GoogleAIChatSystemInstruction?
         if let system = system {
-            systemInstruction = GoogleAIChatSystemInstruction(parts: [GoogleAIChatPart(text: system, inlineData: nil, functionCall: nil)])
+            systemInstruction = GoogleAIChatSystemInstruction(parts: [GoogleAIChatPart(text: system)])
         }
         var apiTools: [GoogleAIChatTool] = []
         if supportsToolCalling {
@@ -79,6 +79,12 @@ struct GoogleAIChatPart: Codable {
     let text: String?
     let inlineData: InlineData?
     let functionCall: FunctionCall?
+
+    init(text: String? = nil, inlineData: InlineData? = nil, functionCall: FunctionCall? = nil) {
+        self.text = text
+        self.inlineData = inlineData
+        self.functionCall = functionCall
+    }
 
     struct InlineData: Codable {
         let mimeType: String

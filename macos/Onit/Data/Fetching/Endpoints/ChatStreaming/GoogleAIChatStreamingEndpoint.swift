@@ -33,7 +33,7 @@ struct GoogleAIChatStreamingEndpoint: StreamingEndpoint {
     var requestBody: GoogleAIChatRequest? {
         var systemInstruction: GoogleAIChatSystemInstruction?
         if let system = system {
-            systemInstruction = GoogleAIChatSystemInstruction(parts: [GoogleAIChatPart(text: system, inlineData: nil, functionCall: nil)])
+            systemInstruction = GoogleAIChatSystemInstruction(parts: [GoogleAIChatPart(text: system)])
         }
         var apiTools: [GoogleAIChatTool] = []
         if supportsToolCalling {
