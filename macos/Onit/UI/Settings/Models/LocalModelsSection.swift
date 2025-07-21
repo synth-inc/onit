@@ -375,13 +375,8 @@ struct LocalModelsSection: View {
             GroupBox {
                 VStack(alignment: .leading, spacing: 0) {
                     ForEach(availableLocalModels, id: \.self) { model in
-                        Toggle(isOn: .constant(true)) {
-                            Text(model)
-                                .font(.system(size: 13))
-                                .fontWeight(.regular)
-                                .opacity(0.85)
-                        }
-                        .frame(height: 36)
+                        LocalModelToggle(modelName: model)
+                            .frame(height: 36)
                     }
                 }
                 .padding(.vertical, -4)

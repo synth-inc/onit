@@ -115,10 +115,24 @@ class AppState: NSObject, SPUUpdaterDelegate {
             let localModel = Defaults[.localModel]
 
             Defaults[.availableLocalModels] = models
+            
+            // Initialize visible local models if empty (first time or after being cleared)
+            if Defaults[.visibleLocalModels].isEmpty && !models.isEmpty {
+                Defaults[.visibleLocalModels] = Set(models)
+            } else {
+                // Update visible models to only include currently available models
+                let currentVisible = Defaults[.visibleLocalModels]
+                Defaults[.visibleLocalModels] = currentVisible.intersection(Set(models))
+            }
+            
             if models.isEmpty {
                 Defaults[.localModel] = nil
             } else if localModel == nil || !models.contains(localModel!) {
-                Defaults[.localModel] = models[0]
+                // Choose from visible models if available
+                let visibleModels = Defaults[.visibleLocalModels]
+                if let firstVisibleModel = visibleModels.first {
+                    Defaults[.localModel] = firstVisibleModel
+                }
             }
             localFetchFailed = false
 

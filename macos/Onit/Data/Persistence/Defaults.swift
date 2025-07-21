@@ -79,6 +79,7 @@ extension Defaults.Keys {
 
     // Stores unique model identifiers in the format "provider-id" or "customProviderName-id" for custom providers
     static let visibleModelIds = Key<Set<String>>("visibleModelIds", default: Set([]))
+    static let visibleLocalModels = Key<Set<String>>("visibleLocalModels", default: Set([]))
     static let hasPerformedModelIdMigration = Key<Bool>(
         "hasPerformedModelIdMigration", default: false)
 
