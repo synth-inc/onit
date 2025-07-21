@@ -41,7 +41,7 @@ struct GoogleAIChatEndpoint: Endpoint {
                 apiTools.append(.functionDeclarations(tools.map { GoogleAIChatToolDeclaration(tool: $0) }))
             }
             if includeSearch == true {
-                apiTools.append(.googleSearch(GoogleAIChatTool.GoogleSearch()))
+                apiTools.append(.googleSearch())
             }
         }
         return GoogleAIChatRequest(systemInstruction: systemInstruction, contents: messages, tools: apiTools)
@@ -136,7 +136,7 @@ struct GoogleAIChatResponse: Codable {
 }
 
 enum GoogleAIChatTool: Codable {
-    case googleSearch(GoogleSearch)
+    case googleSearch(GoogleSearch = GoogleSearch())
     case functionDeclarations([GoogleAIChatToolDeclaration])
 
     struct GoogleSearch: Codable {}

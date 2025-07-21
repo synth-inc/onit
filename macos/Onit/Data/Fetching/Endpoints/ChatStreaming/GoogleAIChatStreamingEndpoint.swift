@@ -41,7 +41,7 @@ struct GoogleAIChatStreamingEndpoint: StreamingEndpoint {
                 apiTools.append(.functionDeclarations(tools.map { GoogleAIChatToolDeclaration(tool: $0) }))
             }
             if includeSearch == true {
-                apiTools.append(.googleSearch(GoogleAIChatTool.GoogleSearch()))
+                apiTools.append(.googleSearch())
             }
         }
         return GoogleAIChatRequest(systemInstruction: systemInstruction, contents: messages, tools: apiTools)
