@@ -16,14 +16,14 @@ class GoogleSheetsService: GoogleDocumentServiceProtocol {
     
     private func readStructuredFile(fileId: String) async throws -> [String: Any] {
         guard let user = GIDSignIn.sharedInstance.currentUser else {
-            throw GoogleDriveError.notAuthenticated("Not authenticated with Google Drive")
+            throw GoogleDriveServiceError.notAuthenticated("Not authenticated with Google Drive")
         }
         
         let accessToken = user.accessToken.tokenString
         let apiUrl = "https://sheets.googleapis.com/v4/spreadsheets/\(fileId)"
         
         guard let url = URL(string: apiUrl) else {
-            throw GoogleDriveError.invalidUrl("Invalid Google Sheets API URL")
+            throw GoogleDriveServiceError.invalidUrl("Invalid Google Sheets API URL")
         }
         
         var request = URLRequest(url: url)
@@ -32,27 +32,27 @@ class GoogleSheetsService: GoogleDocumentServiceProtocol {
         let (data, response) = try await URLSession.shared.data(for: request)
         
         guard let httpResponse = response as? HTTPURLResponse else {
-            throw GoogleDriveError.invalidResponse("Invalid response")
+            throw GoogleDriveServiceError.invalidResponse("Invalid response")
         }
         
         if httpResponse.statusCode == 404 {
-            throw GoogleDriveError.notFound("Onit needs permission to access this file.")
+            throw GoogleDriveServiceError.notFound("Onit needs permission to access this file.")
         } else if httpResponse.statusCode == 403 {
             var errorMessage = "Onit can't access this file."
             if let errorData = String(data: data, encoding: .utf8) {
                 errorMessage += "\n\nError message: \(errorData)"
             }
-            throw GoogleDriveError.accessDenied(errorMessage)
+            throw GoogleDriveServiceError.accessDenied(errorMessage)
         } else if httpResponse.statusCode != 200 {
             var errorMessage = "Failed to retrieve document (HTTP \(httpResponse.statusCode))"
             if let errorData = String(data: data, encoding: .utf8) {
                 errorMessage += "\n\nError message: \(errorData)"
             }
-            throw GoogleDriveError.httpError(httpResponse.statusCode, errorMessage)
+            throw GoogleDriveServiceError.httpError(httpResponse.statusCode, errorMessage)
         }
         
         guard let json = try JSONSerialization.jsonObject(with: data) as? [String: Any] else {
-            throw GoogleDriveError.decodingError("Failed to decode document content")
+            throw GoogleDriveServiceError.decodingError("Failed to decode document content")
         }
         
         return json
@@ -60,14 +60,14 @@ class GoogleSheetsService: GoogleDocumentServiceProtocol {
     
     func updateFile(fileId: String, operations: [GoogleSheetsOperation]) async throws {
         guard let user = GIDSignIn.sharedInstance.currentUser else {
-            throw GoogleDriveError.notAuthenticated("Not authenticated with Google Drive")
+            throw GoogleDriveServiceError.notAuthenticated("Not authenticated with Google Drive")
         }
         
         let accessToken = user.accessToken.tokenString
         let urlString = "https://sheets.googleapis.com/v4/spreadsheets/\(fileId):batchUpdate"
         
         guard let url = URL(string: urlString) else {
-            throw GoogleDriveError.invalidUrl("Invalid batchUpdate URL")
+            throw GoogleDriveServiceError.invalidUrl("Invalid batchUpdate URL")
         }
 
         var request = URLRequest(url: url)
@@ -83,7 +83,7 @@ class GoogleSheetsService: GoogleDocumentServiceProtocol {
         let (_, response) = try await URLSession.shared.data(for: request)
 
         guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 else {
-            throw GoogleDriveError.invalidResponse("Invalid response")
+            throw GoogleDriveServiceError.invalidResponse("Invalid response")
         }
     }
     
@@ -325,7 +325,7 @@ class GoogleSheetsService: GoogleDocumentServiceProtocol {
         guard let spreadsheetId = data["spreadsheetId"] as? String,
               let propertiesData = data["properties"] as? [String: Any],
               let sheetsArray = data["sheets"] as? [[String: Any]] else {
-            throw GoogleDriveError.invalidResponse("Invalid Google Sheets structure")
+            throw GoogleDriveServiceError.invalidResponse("Invalid Google Sheets structure")
         }
         
         let properties = parseGoogleSheetsSpreadsheetProperties(from: propertiesData)

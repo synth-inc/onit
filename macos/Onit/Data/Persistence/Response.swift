@@ -58,7 +58,7 @@ enum ResponseType: String, Codable {
 
 extension Response {
     var isDiffResponse: Bool {
-        return toolCallFunctionName?.hasPrefix("diff_") == true
+        return toolCallName?.hasPrefix("diff_") == true
     }
     
     var diffArguments: DiffTool.PlainTextDiffArguments? {

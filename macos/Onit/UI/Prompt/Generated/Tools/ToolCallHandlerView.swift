@@ -12,7 +12,7 @@ struct ToolCallHandlerView: View {
     
     var body: some View {
         Group {
-            if let functionName = response.toolCallFunctionName, !functionName.isEmpty {
+            if let functionName = response.toolCallName, !functionName.isEmpty {
                 toolView(for: functionName)
             } else {
                 EmptyView()

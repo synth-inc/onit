@@ -226,9 +226,9 @@ class GoogleDriveService: NSObject, ObservableObject {
         }
 
         if text.isEmpty {
-            return ("(Document appears to be empty)", mimeType)
+            return "(Document appears to be empty)"
         } else {
-            return (text, mimeType)
+            return text
         }
     }
 

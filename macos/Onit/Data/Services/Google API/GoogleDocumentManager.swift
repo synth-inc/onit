@@ -20,7 +20,7 @@ class GoogleDocumentManager {
         diffChanges: [DiffChangeData]
     ) async throws {
         guard let fileId = await GoogleDriveService.extractFileId(from: documentUrl) else {
-            throw GoogleDriveError.invalidUrl("Could not extract file ID from URL: \(documentUrl)")
+            throw GoogleDriveServiceError.invalidUrl("Could not extract file ID from URL: \(documentUrl)")
         }
         
         let approvedChanges = diffChanges.filter { $0.status == .approved }

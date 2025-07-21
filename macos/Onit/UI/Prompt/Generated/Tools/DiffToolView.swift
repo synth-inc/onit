@@ -69,6 +69,8 @@ struct DiffToolView: View {
     }
     
     private func showDiffTapped() {
+        guard let windowState = windowState else { return }
+        
         NotepadWindowController.shared.showWindow(windowState: windowState, response: response)
     }
 }

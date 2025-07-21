@@ -32,7 +32,7 @@ class GoogleDocsService: GoogleDocumentServiceProtocol {
     
     func updateFile(fileId: String, operations: [GoogleDocsOperation]) async throws {
         guard let user = GIDSignIn.sharedInstance.currentUser else {
-            throw GoogleDriveError.notAuthenticated("Not authenticated with Google Drive")
+            throw GoogleDriveServiceError.notAuthenticated("Not authenticated with Google Drive")
         }
         
         let accessToken = user.accessToken.tokenString
@@ -41,7 +41,7 @@ class GoogleDocsService: GoogleDocumentServiceProtocol {
         guard let url = URL(string: urlString) else {
             let error = "Invalid batchUpdate URL"
             
-            throw GoogleDriveError.invalidUrl(error)
+            throw GoogleDriveServiceError.invalidUrl(error)
         }
 
         var request = URLRequest(url: url)
@@ -58,7 +58,7 @@ class GoogleDocsService: GoogleDocumentServiceProtocol {
         let (_, response) = try await URLSession.shared.data(for: request)
 
         guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 else {
-            throw GoogleDriveError.invalidResponse("Invalid response")
+            throw GoogleDriveServiceError.invalidResponse("Invalid response")
         }
     }
     
@@ -143,14 +143,14 @@ class GoogleDocsService: GoogleDocumentServiceProtocol {
     
     private func readStructuredFile(fileId: String) async throws -> [String: Any] {
         guard let user = GIDSignIn.sharedInstance.currentUser else {
-            throw GoogleDriveError.notAuthenticated("Not authenticated with Google Drive")
+            throw GoogleDriveServiceError.notAuthenticated("Not authenticated with Google Drive")
         }
         
         let accessToken = user.accessToken.tokenString
         let apiUrl = "https://docs.googleapis.com/v1/documents/\(fileId)"
         
         guard let url = URL(string: apiUrl) else {
-            throw GoogleDriveError.invalidUrl("Invalid Google Docs API URL")
+            throw GoogleDriveServiceError.invalidUrl("Invalid Google Docs API URL")
         }
         
         var request = URLRequest(url: url)
@@ -159,27 +159,27 @@ class GoogleDocsService: GoogleDocumentServiceProtocol {
         let (data, response) = try await URLSession.shared.data(for: request)
         
         guard let httpResponse = response as? HTTPURLResponse else {
-            throw GoogleDriveError.invalidResponse("Invalid response")
+            throw GoogleDriveServiceError.invalidResponse("Invalid response")
         }
         
         if httpResponse.statusCode == 404 {
-            throw GoogleDriveError.notFound("Onit needs permission to access this file.")
+            throw GoogleDriveServiceError.notFound("Onit needs permission to access this file.")
         } else if httpResponse.statusCode == 403 {
             var errorMessage = "Onit can't access this file."
             if let errorData = String(data: data, encoding: .utf8) {
                 errorMessage += "\n\nError message: \(errorData)"
             }
-            throw GoogleDriveError.accessDenied(errorMessage)
+            throw GoogleDriveServiceError.accessDenied(errorMessage)
         } else if httpResponse.statusCode != 200 {
             var errorMessage = "Failed to retrieve document (HTTP \(httpResponse.statusCode))"
             if let errorData = String(data: data, encoding: .utf8) {
                 errorMessage += "\n\nError message: \(errorData)"
             }
-            throw GoogleDriveError.httpError(httpResponse.statusCode, errorMessage)
+            throw GoogleDriveServiceError.httpError(httpResponse.statusCode, errorMessage)
         }
         
         guard let json = try JSONSerialization.jsonObject(with: data) as? [String: Any] else {
-            throw GoogleDriveError.decodingError("Failed to decode document content")
+            throw GoogleDriveServiceError.decodingError("Failed to decode document content")
         }
         
         return json
@@ -431,7 +431,7 @@ class GoogleDocsService: GoogleDocumentServiceProtocol {
                 }
                 
             default:
-                throw GoogleDriveError.unsupportedFileType("Unknown operation type: \(change.operationType)")
+                throw GoogleDriveServiceError.unsupportedFileType("Unknown operation type: \(change.operationType)")
             }
         }
         

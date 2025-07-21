@@ -13,7 +13,7 @@ class GoogleDocsParser {
               let title = data["title"] as? String,
               let bodyData = data["body"] as? [String: Any],
               let revisionId = data["revisionId"] as? String else {
-            throw GoogleDriveError.invalidResponse("Invalid Google Docs document structure")
+            throw GoogleDriveServiceError.invalidResponse("Invalid Google Docs document structure")
         }
         
         let body = try parseGoogleDocsBody(from: bodyData)
@@ -28,7 +28,7 @@ class GoogleDocsParser {
     
     private func parseGoogleDocsBody(from data: [String: Any]) throws -> GoogleDocsBody {
         guard let contentArray = data["content"] as? [[String: Any]] else {
-            throw GoogleDriveError.invalidResponse("Invalid Google Docs body structure")
+            throw GoogleDriveServiceError.invalidResponse("Invalid Google Docs body structure")
         }
         
         let content = contentArray.compactMap { elementData in

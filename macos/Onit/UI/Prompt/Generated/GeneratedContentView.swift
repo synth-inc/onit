@@ -31,20 +31,10 @@ struct GeneratedContentView: View {
                                        citationHoverBackgroundColor: .gray400,
                                        citationTextColor: .gray100)
         let thought = ThoughtConfiguration(icon: Image(.lightBulb))
-        let citation = CitationConfiguration(
-            backgroundColor: .gray600,
-            hoverBackgroundColor: .gray400,
-            textColor: .gray100,
-            hoverTextColor: .white,
-            borderRadius: 6,
-            padding: EdgeInsets(top: 2, leading: 4, bottom: 2, trailing: 4),
-            margin: EdgeInsets(top: 0, leading: 4, bottom: 0, trailing: 4)
-        )
         
         return LLMStreamConfiguration(font: font,
 									  colors: color,
-									  thought: thought,
-									  citation: citation)
+									  thought: thought)
     }
     
 
@@ -57,10 +47,11 @@ struct GeneratedContentView: View {
             LLMStreamView(text: textToRead,
                           configuration: configuration,
                           onUrlClicked: onUrlClicked)
+                .id("\(fontSize)-\(lineHeight)") // Force recreation when font settings change
                 .padding(.horizontal, 12)
 
             if let response = prompt.currentResponse, response.hasToolCall {
-                ToolCallView(response: response)
+                ToolCallHandlerView(response: response)
                     .padding(.horizontal, 12)
             }
 
