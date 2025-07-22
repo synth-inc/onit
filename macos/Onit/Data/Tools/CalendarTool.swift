@@ -226,7 +226,7 @@ class CalendarTool: ToolProtocol {
 
             resultMessage += " in calendar '\(calendar.title)'"
 
-            return .success(ToolCallResult(toolName: toolName, result: resultMessage))
+            return .success(ToolCallResult(toolName: toolName, result: resultMessage, isComplete: true))
         } catch {
             return .failure(
                 ToolCallError(
