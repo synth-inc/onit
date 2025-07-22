@@ -218,26 +218,26 @@ struct RemoteModelAddCustomModel: View {
         verifyingModel = true
         defer { verifyingModel = false }
         
-        let remoteModelAlreadyAdded = availableRemoteModels.contains(where: { $0.id == modelName })
+        guard let remoteModel = AIModel(
+            from: ModelInfo(
+                id: modelName,
+                displayName: displayName.isEmpty ? modelName : displayName,
+                provider: provider.title,
+                defaultOn: true,
+                supportsVision: supportsVision,
+                supportsSystemPrompts: supportsSystemPrompts,
+                supportsToolCalling: supportsToolCalling
+            )
+        ) else {
+            errorMessage = "Unable to verify model. Please try again."
+            return
+        }
+        
+        let remoteModelAlreadyAdded = availableRemoteModels.contains(where: { $0.uniqueId == remoteModel.uniqueId })
         
         if remoteModelAlreadyAdded {
             errorMessage = "Model already added."
         } else {
-            guard let remoteModel = AIModel(
-                from: ModelInfo(
-                    id: modelName,
-                    displayName: displayName.isEmpty ? modelName : displayName,
-                    provider: provider.title,
-                    defaultOn: true,
-                    supportsVision: supportsVision,
-                    supportsSystemPrompts: supportsSystemPrompts,
-                    supportsToolCalling: supportsToolCalling
-                )
-            ) else {
-                errorMessage = "Unable to verify model. Please try again."
-                return
-            }
-            
             guard let verificationErrorMessage = await verifyRemoteModel(remoteModel)
             else {
                 addRemoteModel(remoteModel)
