@@ -62,12 +62,14 @@ class TokenValidationManager {
             case .custom:
                 throw FetchingError.invalidRequest(message: "Custom provider token validation is not supported")   
             }
-            Self.setTokenIsValid(true)
+            Self.setTokenIsValid(true, provider: provider)
         } catch let error as FetchingError {
             print("Error: \(error.localizedDescription)")
             state.setInvalid(provider: provider, error: error)
+            Self.setTokenIsValid(false, provider: provider)
         } catch {
             state.setInvalid(provider: provider, error: error)
+            Self.setTokenIsValid(false, provider: provider)
         }
 
         tokenValidation = state
@@ -80,7 +82,6 @@ class TokenValidationManager {
     }
 
     static func setTokenIsValid(_ isValid: Bool, provider: AIModel.ModelProvider) {
-        if Defaults[.mode] == .local { return }
         switch provider {
         case .openAI:
             Defaults[.isOpenAITokenValidated] = isValid
@@ -102,8 +103,8 @@ class TokenValidationManager {
         }
     }
 
-    static func getTokenForModel(_ model: AIModel?) -> String? {
-        if let provider = model?.provider {
+    static func getTokenForProviderOrModel(provider: AIModel.ModelProvider? = nil, model: AIModel? = nil) -> String? {
+        if let provider = provider ?? model?.provider {
             switch provider {
             case .openAI:
                 return Defaults[.isOpenAITokenValidated] ? Defaults[.openAIToken] : nil

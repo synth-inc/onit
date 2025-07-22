@@ -140,6 +140,18 @@ class AppState: NSObject, SPUUpdaterDelegate {
             /// Removing user-removed remote models from fetched result.
             let userRemovedRemoteModelUniqueIds = Set(Defaults[.userRemovedRemoteModels].map { $0.uniqueId })
             models.removeAll { userRemovedRemoteModelUniqueIds.contains($0.uniqueId) }
+            
+            /// Removing user-added remote models from fetched result to prevent:
+            ///     1. Overriding of custom user-added models (e.g. custom display names).
+            ///     2. Duplication.
+            let userAddedRemoteModelUniqueIds = Set(Defaults[.userAddedRemoteModels].map { $0.uniqueId })
+            models.removeAll { userAddedRemoteModelUniqueIds.contains($0.uniqueId) }
+            
+            for userAddedRemoteModel in Defaults[.userAddedRemoteModels] {
+                if !models.contains(where: { $0.uniqueId == userAddedRemoteModel.uniqueId }) {
+                    models.append(userAddedRemoteModel)
+                }
+            }
 
             // This means we've never successfully fetched before
             if Defaults[.availableRemoteModels].isEmpty {
