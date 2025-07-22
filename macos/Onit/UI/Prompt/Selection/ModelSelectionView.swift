@@ -16,6 +16,7 @@ struct ModelSelectionView: View {
     @Default(.localModel) var localModel
     @Default(.remoteModel) var remoteModel
     @Default(.availableLocalModels) var availableLocalModels
+    @Default(.visibleLocalModels) var visibleLocalModels
     
     private var open: Binding<Bool>
     init(open: Binding<Bool>) { self.open = open }
@@ -33,10 +34,11 @@ struct ModelSelectionView: View {
     }
     
     private var filteredLocalModels: [String] {
+        let visibleModels = availableLocalModels.filter { visibleLocalModels.contains($0) }
         if searchQuery.isEmpty {
-            return availableLocalModels
+            return visibleModels
         } else {
-            return availableLocalModels.filter {
+            return visibleModels.filter {
                 $0.localizedCaseInsensitiveContains(searchQuery)
             }
         }
