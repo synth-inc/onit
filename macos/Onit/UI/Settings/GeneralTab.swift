@@ -15,6 +15,7 @@ struct GeneralTab: View {
     @Default(.usePinnedMode) var usePinnedMode
     @Default(.autoContextOnLaunchTethered) var autoContextOnLaunchTethered
     @Default(.stopMode) var stopMode
+    @Default(.hideDockIcon) var hideDockIcon
     @Default(.tetheredButtonHiddenApps) var tetheredButtonHiddenApps
     @Default(.tetheredButtonHideAllApps) var tetheredButtonHideAllApps
     @Default(.tetheredButtonHideAllAppsTimerDate) var tetheredButtonHideAllAppsTimerDate
@@ -233,11 +234,33 @@ struct GeneralTab: View {
                         }
                     }
                 }
+                
+                // Hide dock icon section
+                VStack(alignment: .leading, spacing: 4) {
+                    HStack {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("Hide dock icon")
+                                .font(.system(size: 13))
+                            Text("Show only the menu bar icon")
+                                .font(.system(size: 11))
+                                .foregroundStyle(.gray200)
+                        }
+                        
+                        Spacer()
+                        
+                        Toggle("", isOn: $hideDockIcon)
+                            .toggleStyle(.switch)
+                            .controlSize(.small)
+                    }
+                }
+                .onChange(of: hideDockIcon, initial: false) { _, _ in
+                    toggleDockIconVisibility()
+                }
             }
         } header: {
             HStack {
                 Image(systemName: "rectangle.on.rectangle")
-                Text("Display Mode")
+                Text("Display")
             }
         }
     }
@@ -666,6 +689,10 @@ struct GeneralTab: View {
     private func stopTimerUpdateTask() {
         timerUpdateTask?.cancel()
         timerUpdateTask = nil
+    }
+    
+    private func toggleDockIconVisibility() {
+        AppDelegate.configureDockIconVisibility()
     }
 }
 
