@@ -115,28 +115,9 @@ struct GeneralTab: View {
                         .toggleStyle(.switch)
                         .controlSize(.small)
                 }
-                
-                HStack {
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text("Hide dock icon")
-                            .font(.system(size: 13))
-                        Text("Show only the menu bar icon")
-                            .font(.system(size: 11))
-                            .foregroundStyle(.gray200)
-                    }
-                    
-                    Spacer()
-                    
-                    Toggle("", isOn: $hideDockIcon)
-                        .toggleStyle(.switch)
-                        .controlSize(.small)
-                }
             }
             .onChange(of: isLaunchAtStartupEnabled, initial: false) { _, _ in
                 toggleLaunchAtStartup()
-            }
-            .onChange(of: hideDockIcon, initial: false) { _, _ in
-                toggleDockIconVisibility()
             }
         }
     }
@@ -253,11 +234,33 @@ struct GeneralTab: View {
                         }
                     }
                 }
+                
+                // Hide dock icon section
+                VStack(alignment: .leading, spacing: 4) {
+                    HStack {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("Hide dock icon")
+                                .font(.system(size: 13))
+                            Text("Show only the menu bar icon")
+                                .font(.system(size: 11))
+                                .foregroundStyle(.gray200)
+                        }
+                        
+                        Spacer()
+                        
+                        Toggle("", isOn: $hideDockIcon)
+                            .toggleStyle(.switch)
+                            .controlSize(.small)
+                    }
+                }
+                .onChange(of: hideDockIcon, initial: false) { _, _ in
+                    toggleDockIconVisibility()
+                }
             }
         } header: {
             HStack {
                 Image(systemName: "rectangle.on.rectangle")
-                Text("Display Mode")
+                Text("Display")
             }
         }
     }
@@ -689,17 +692,7 @@ struct GeneralTab: View {
     }
     
     private func toggleDockIconVisibility() {
-        let hideDockIcon = Defaults[.hideDockIcon]
-        
-        Task { @MainActor in
-            if hideDockIcon {
-                // Hide the dock icon - app becomes an accessory (background app)
-                NSApp.setActivationPolicy(.accessory)
-            } else {
-                // Show the dock icon - app becomes a regular app
-                NSApp.setActivationPolicy(.regular)
-            }
-        }
+        AppDelegate.configureDockIconVisibility()
     }
 }
 

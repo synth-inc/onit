@@ -21,7 +21,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         GIDSignIn.sharedInstance.restorePreviousSignIn()
         
         // Configure dock icon visibility based on user preference
-        configureDockIconVisibility()
+        AppDelegate.configureDockIconVisibility()
         
         // This is helpful for debugging the new user experience, but should never be committed!
         //        if let appDomain = Bundle.main.bundleIdentifier {
@@ -43,7 +43,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         return true
     }
     
-    private func configureDockIconVisibility() {
+    static func configureDockIconVisibility() {
         let hideDockIcon = Defaults[.hideDockIcon]
         
         Task { @MainActor in
