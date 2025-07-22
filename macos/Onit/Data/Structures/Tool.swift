@@ -31,7 +31,6 @@ struct ToolPropertyItem: Codable {
 struct ToolCallResult {
     let toolName: String
     let result: String
-    let isComplete: Bool
 }
 
 struct ToolCallError: Error {
