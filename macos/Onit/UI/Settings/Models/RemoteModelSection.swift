@@ -17,6 +17,7 @@ struct RemoteModelSection: View {
     @State private var loading = false
     @State private var showAdvanced: Bool = false  
     @State private var localState: TokenValidationState.ValidationState = .notValidated
+    @State private var showAddModelSheet: Bool = false
     @State private var showRemoveModelsSheet: Bool = false
 
     @Default(.mode) var mode
@@ -78,6 +79,10 @@ struct RemoteModelSection: View {
         case .custom:
             return .constant(false)
         }
+    }
+    
+    var userProvidedOwnApiToken: Bool {
+        TokenValidationManager.getTokenForProviderOrModel(provider: provider) != nil
     }
 
     // MARK: - Body
@@ -264,21 +269,37 @@ struct RemoteModelSection: View {
                     
                     Divider()
                     
-                    HStack(alignment: .center, spacing: 2) {
-                        // TODO: LOYD - Add "add custom model" button here.
-                        
-                        UpdateAvailableRemoteModelsButton(isRemove: true) {
-                            showRemoveModelsSheet = true
+                    if userProvidedOwnApiToken {
+                        HStack(alignment: .center, spacing: 2) {
+                            UpdateAvailableRemoteModelsButton() {
+                                showAddModelSheet = true
+                            }
+                            
+                            Divider()
+                                .frame(width: 1, height: 26)
+                            
+                            UpdateAvailableRemoteModelsButton(isRemove: true) {
+                                showRemoveModelsSheet = true
+                            }
+                            .disabled(noAvailableRemoteModels)
+                            .allowsHitTesting(!noAvailableRemoteModels)
                         }
-                        .disabled(noAvailableRemoteModels)
-                        .allowsHitTesting(!noAvailableRemoteModels)
+                        .padding(2)
+                    } else {
+                        Text("Provide your own API token to add and remove models.")
+                            .styleText(size: 13, weight: .regular, color: .gray200)
+                            .padding(8)
                     }
-                    .padding(2)
                 }
                 .padding(.vertical, -4)
                 .padding(.horizontal, -4)
                 .frame(maxWidth: .infinity, alignment: .leading)
-                // TODO: LOYD - Add "add custom model" sheet/form here.
+                .sheet(isPresented: $showAddModelSheet) {
+                    RemoteModelAddCustomModel(
+                        provider: provider,
+                        showAddModelSheet: $showAddModelSheet
+                    )
+                }
                 .sheet(isPresented: $showRemoveModelsSheet) {
                     RemoteModelRemoveModel(
                         provider: provider,

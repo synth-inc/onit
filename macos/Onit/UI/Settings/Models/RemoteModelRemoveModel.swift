@@ -13,6 +13,7 @@ struct RemoteModelRemoveModel: View {
     
     @Default(.availableRemoteModels) var availableRemoteModels
     @Default(.userRemovedRemoteModels) var userRemovedRemoteModels
+    @Default(.userAddedRemoteModels) var userAddedRemoteModels
     
     // MARK: - Properties
     

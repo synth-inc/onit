@@ -10,6 +10,7 @@ import SwiftUI
 struct SimpleButton: View {
     let iconText: String?
     let iconImage: ImageResource?
+    let isLoading: Bool
     let text: String
     let textColor: Color
     let action: () -> Void
@@ -18,6 +19,7 @@ struct SimpleButton: View {
     init(
         iconText: String? = nil,
         iconImage: ImageResource? = nil,
+        isLoading: Bool = false,
         text: String,
         textColor: Color = Color.white,
         action: @escaping () -> Void,
@@ -25,6 +27,7 @@ struct SimpleButton: View {
     ) {
         self.iconText = iconText
         self.iconImage = iconImage
+        self.isLoading = isLoading
         self.text = text
         self.textColor = textColor
         self.action = action
@@ -40,6 +43,10 @@ struct SimpleButton: View {
                 Text(iconText).styleText(size: 12)
             } else if let iconImage = iconImage {
                 Image(iconImage)
+            }
+            
+            if isLoading {
+                Loader()
             }
             
             Text(text).styleText(size: 13, weight: .light, color: textColor)
