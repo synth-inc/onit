@@ -21,6 +21,8 @@ class DiffViewModel {
     var currentOperationIndex: Int = 0
     var hasUnsavedChanges: Bool = false
     var isPreviewingAllApproved: Bool = false
+    var isInserting: Bool = false
+    var insertionError: String? = nil
     
     // Computed properties
     var diffArguments: DiffTool.PlainTextDiffArguments? {
@@ -422,32 +424,43 @@ class DiffViewModel {
         return text
     }
     
-    func markAsSaved() {
-        hasUnsavedChanges = false
+    func clearInsertionError() {
+        insertionError = nil
     }
     
     // MARK: - Insertion
     
     func insert() {
         guard let diffArguments = diffArguments else {
-            log.error("no arguments")
+            insertionError = "No arguments available"
             return
         }
         
         if let documentUrl = diffArguments.document_url {
             Task {
-                do {
-                    try await applyApprovedChangesToDocument(documentUrl: documentUrl)
-                } catch {
-                    log.error("error: \(error.localizedDescription)")
-                }
+                await insertToDocument(documentUrl: documentUrl)
             }
         } else {
-            log.error("no document url")
+            // Copy to clipboard when no document URL
             let previewText = generatePreviewText()
             NSPasteboard.general.clearContents()
-            NSPasteboard.general.setString(previewText, forType: .string) 
+            NSPasteboard.general.setString(previewText, forType: .string)
         }
+    }
+    
+    @MainActor
+    private func insertToDocument(documentUrl: String) async {
+        isInserting = true
+        insertionError = nil
+        
+        do {
+            try await applyApprovedChangesToDocument(documentUrl: documentUrl)
+        } catch {
+            insertionError = error.localizedDescription
+        }
+        
+        hasUnsavedChanges = false
+        isInserting = false
     }
     
     func applyApprovedChangesToDocument(documentUrl: String) async throws {

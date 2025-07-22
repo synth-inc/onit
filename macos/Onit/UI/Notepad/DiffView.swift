@@ -78,10 +78,21 @@ struct DiffView: View {
                 downArrowListener
                 acceptListener
                 rejectListener
+                insertListener
             }
         }
         .onChange(of: viewModel.currentOperationIndex) { _, _ in
             currentSegmentRect = nil
+        }
+        .alert("Insertion Error", isPresented: Binding<Bool>(
+            get: { viewModel.insertionError != nil },
+            set: { if !$0 { viewModel.clearInsertionError() } }
+        )) {
+            Button("OK", role: .cancel) {
+                viewModel.clearInsertionError()
+            }
+        } message: {
+            Text(viewModel.insertionError ?? "An unknown error occurred")
         }
     }
     
@@ -225,7 +236,7 @@ struct DiffView: View {
             .buttonStyle(.plain)
             .foregroundStyle(.FG)
             .background(
-                RoundedRectangle(cornerRadius: 4)
+                RoundedRectangle(cornerRadius: 7)
                     .fill(.T_7)
             )
             .disabled(!viewModel.hasUnsavedChanges)
@@ -237,15 +248,30 @@ struct DiffView: View {
             Button {
                 viewModel.insert()
             } label: {
-                Text("Insert")
-                    .padding(6)
+                HStack(spacing: 6) {
+                    let text = viewModel.diffArguments?.document_url != nil ? "Update" : "Insert"
+                    
+                    Text(text)
+                    
+                    if viewModel.isInserting {
+                        Loader(size: 14, scaleEffect: 0.5)
+                    } else {
+                        KeyboardShortcutView(shortcut: KeyboardShortcut(.return))
+                            .font(.system(size: 13, weight: .medium))
+                            .padding(.horizontal, 4)
+                            .padding(.vertical, 4)
+                            .background(.blue300, in: .rect(cornerRadius: 5))
+                    }
+                }
+                .padding(6)
             }
             .buttonStyle(.plain)
             .foregroundStyle(.FG)
             .background(
-                RoundedRectangle(cornerRadius: 4)
+                RoundedRectangle(cornerRadius: 7)
                     .fill(.blue400)
             )
+            .disabled(!viewModel.hasUnsavedChanges || viewModel.isInserting)
         }
         .padding(.horizontal, 10)
         .padding(.vertical, 8)
@@ -405,6 +431,12 @@ extension DiffView {
     private var rejectListener: some View {
         KeyListener(key: KeyEquivalent("n"), modifiers: [.command]) {
             viewModel.rejectCurrentChange()
+        }
+    }
+    
+    private var insertListener: some View {
+        KeyListener(key: .return, modifiers: [.command]) {
+            viewModel.insert()
         }
     }
 }

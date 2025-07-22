@@ -291,17 +291,11 @@ class GoogleDocsService: GoogleDocumentServiceProtocol {
         if let elementStartIndex = element.startIndex,
            let placeholderChar = getStructuralElementPlaceholderCharacter(for: element) {
             let currentStartPosition = startPosition + reconstructedText.count
-            let mappingResult = createTextToGoogleMapping(
-                content: placeholderChar,
-                startPosition: currentStartPosition,
-                elementStartIndex: elementStartIndex
-            )
             
-            for (textPos, googleIndex) in mappingResult.mapping {
-                offsetToGoogleIndexMap[textPos] = googleIndex
-            }
+            offsetToGoogleIndexMap[currentStartPosition] = elementStartIndex
             
-            reconstructedText += mappingResult.processedContent
+            let elementEndIndex = elementStartIndex + placeholderChar.count
+            offsetToGoogleIndexMap[currentStartPosition] = elementEndIndex
         }
         
         return (reconstructedText, offsetToGoogleIndexMap)
@@ -322,10 +316,9 @@ class GoogleDocsService: GoogleDocumentServiceProtocol {
                 mapping[textPosition] = googleIndex
                 googleIndex += 1
             } else if isGoogleDocsPlaceholderCharacter(char) {
-				mapping[textPosition] = googleIndex
+                mapping[textPosition] = googleIndex
                 googleIndex += 1
-				textPosition += 1
-			} else {
+            } else {
                 mapping[textPosition] = googleIndex
                 processedContent.append(char)
                 textPosition += 1
