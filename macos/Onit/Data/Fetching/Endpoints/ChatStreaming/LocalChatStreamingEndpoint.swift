@@ -17,6 +17,8 @@ struct LocalChatStreamingEndpoint: StreamingEndpoint {
 
     let model: String?
     let messages: [LocalChatMessage]
+    let tools: [Tool]
+    
     var baseURL: URL {
         var url: URL!
         DispatchQueue.main.sync {
@@ -53,10 +55,13 @@ struct LocalChatStreamingEndpoint: StreamingEndpoint {
             }
         }
         
+        let ollamaTools = tools.map { LocalChatTool(tool: $0) }
+        
         return LocalChatRequestJSON(
             model: model,
             messages: messages,
             stream: true,
+            tools: ollamaTools.isEmpty ? nil : ollamaTools,
             keep_alive: keepAlive,
             options: options
         )
@@ -65,6 +70,14 @@ struct LocalChatStreamingEndpoint: StreamingEndpoint {
     func getContentFromSSE(event: EVEvent) throws -> StreamingEndpointResponse? {
         if let data = event.data?.data(using: .utf8) {
             let response = try JSONDecoder().decode(Response.self, from: data)
+			
+            if let toolCalls = response.message?.tool_calls, let toolCall = toolCalls.first {
+                return StreamingEndpointResponse(
+                    content: nil,
+                    toolName: toolCall.function.name,
+                    toolArguments: toolCall.function.arguments
+                )
+            }
             
             if let content = response.message?.content {
                 return StreamingEndpointResponse(content: content, toolName: nil, toolArguments: nil)
@@ -88,6 +101,7 @@ struct LocalChatStreamingResponse: Codable {
     struct Message: Codable {
         let role: String
         let content: String
+        let tool_calls: [LocalChatToolCall]?
     }
 }
 

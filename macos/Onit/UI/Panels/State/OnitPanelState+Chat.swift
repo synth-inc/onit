@@ -137,9 +137,6 @@ extension OnitPanelState {
                         message: "Mismatched array lengths in chat history: instructions, inputs, files, autoContexts and images must be the same length, and one longer than responses."
                     )
                 }
-
-                var toolName = ""
-                var toolArguments = ""
                 
                 let isNewInstruction = !prompt.priorInstructions.dropLast().contains(prompt.instruction)
 
@@ -217,18 +214,11 @@ extension OnitPanelState {
                             includeSearch: (useWebSearch && !useTavilySearch) ? true : nil)
                         for try await response in asyncText {
                             partialResponse.text += response.content ?? ""
+                            partialResponse.toolCallName = response.toolName
+                            partialResponse.toolCallArguments = response.toolArguments ?? partialResponse.toolCallArguments
                             
-                            if let responseToolName = response.toolName {
-                                toolName = responseToolName
-                            }
-                            toolArguments += response.toolArguments ?? ""
-                            
-                            if let responseToolName = response.toolName,
-                               let responseToolArguments = response.toolArguments,
-                               !responseToolArguments.isEmpty {
-                                
-                                partialResponse.toolCallName = responseToolName
-                                partialResponse.toolCallArguments = responseToolArguments
+                            if !response.isToolComplete {
+                                self.executeToolCall(partialResponse: partialResponse)
                             }
                         }
                     } else {
@@ -247,12 +237,10 @@ extension OnitPanelState {
                             tools: ToolRouter.activeTools,
                             includeSearch: (useWebSearch && !useTavilySearch) ? true : nil)
                         partialResponse.text = chatResponse.content ?? ""
-						if let responseToolName = chatResponse.toolName {
-							toolName = responseToolName
-						}
-						toolArguments = chatResponse.toolArguments ?? ""
+                        partialResponse.toolCallName = chatResponse.toolName
+                        partialResponse.toolCallArguments = chatResponse.toolArguments ?? ""
                     }
-                
+                    
                 case .local:
                     guard let model = Defaults[.localModel] else {
                         throw FetchingError.invalidRequest(message: "Model is required")
@@ -269,26 +257,16 @@ extension OnitPanelState {
                             autoContexts: autoContextsHistory,
                             webSearchContexts: webSearchContextsHistory,
                             responses: responsesHistory,
-                            model: model)
+                            model: model,
+                            tools: ToolRouter.activeTools)
                         for try await response in asyncText {
                             partialResponse.text += response.content ?? ""
-                            
-                            if let responseToolName = response.toolName {
-                                toolName = responseToolName
-                            }
-                            toolArguments += response.toolArguments ?? ""
-                            
-                            if let responseToolName = response.toolName,
-                               let responseToolArguments = response.toolArguments,
-                               !responseToolArguments.isEmpty {
-                                
-                                partialResponse.toolCallName = responseToolName
-                                partialResponse.toolCallArguments = responseToolArguments
-                            }
+                            partialResponse.toolCallName = response.toolName
+                            partialResponse.toolCallArguments = response.toolArguments ?? ""
                         }
                     } else {
                         prompt.generationState = .generating
-                        let localResult = try await client.localChat(
+                        let chatResponse = try await client.localChat(
                             systemMessage: systemPrompt.prompt,
                             instructions: instructionsHistory,
                             inputs: inputsHistory,
@@ -297,30 +275,17 @@ extension OnitPanelState {
                             autoContexts: autoContextsHistory,
                             webSearchContexts: webSearchContextsHistory,
                             responses: responsesHistory,
-                            model: model)
-                        
-                        partialResponse.text = localResult
+                            model: model,
+                            tools: ToolRouter.activeTools)
+                        partialResponse.text = chatResponse.content ?? ""
+                        partialResponse.toolCallName = chatResponse.toolName
+                        partialResponse.toolCallArguments = chatResponse.toolArguments ?? ""
                     }
                 }
                 
-
-                if !toolArguments.isEmpty {
-                    let toolResult = await ToolRouter.parseAndExecuteToolCalls(toolName: toolName, toolArguments: toolArguments)
-                    
-                    partialResponse.toolCallName = toolName
-                    partialResponse.toolCallArguments = toolArguments
-
-                    switch toolResult {
-                    case .success(let success):
-                        partialResponse.toolCallResult = success.result
-                        partialResponse.toolCallSuccess = true
-                    case .failure(let failure):
-                        partialResponse.toolCallResult = failure.message
-                        partialResponse.toolCallSuccess = false
-                    }
-                }
-
-                partialResponse.type = .success
+                _ = await executeToolCallSync(partialResponse: partialResponse, isComplete: true)
+                
+				partialResponse.type = .success
                 prompt.generationState = .done
                 
                 do { 
@@ -329,7 +294,7 @@ extension OnitPanelState {
                     container.mainContext.rollback()
                     print("Final response save failed!")
                 }
-                
+
                 TokenValidationManager.setTokenIsValid(true)
             } catch let error as FetchingError {
                 print("Fetching Error: \(error.localizedDescription)")
@@ -371,6 +336,8 @@ extension OnitPanelState {
     func cancelGenerate() {
         generateTask?.cancel()
         generateTask = nil
+        toolExecutionTask = nil
+        lastToolExecutionTime = nil
         if let curPrompt = generatingPrompt, let priorState = generatingPromptPriorState {
             curPrompt.generationState = priorState
         }
@@ -477,6 +444,64 @@ extension OnitPanelState {
             guard !inputText.isEmpty else { return }
             createAndSavePrompt(accountId: accountId)
         }
+    }
+    
+    // MARK: - Tool Execution
+    
+    private func executeToolCall(
+        partialResponse: Response,
+        isComplete: Bool = false,
+        throttleMs: Int = 150
+    ) {
+        let now = Date()
+        let throttleSeconds = Double(throttleMs) / 1000.0
+        
+        guard self.lastToolExecutionTime == nil || now.timeIntervalSince(self.lastToolExecutionTime!) >= throttleSeconds else {
+            return
+        }
+        
+        toolExecutionTask = Task { @MainActor in
+            guard await executeToolCallSync(
+                partialResponse: partialResponse,
+                isComplete: isComplete
+            ) else {
+                return
+            }
+            
+            self.lastToolExecutionTime = now
+        }
+    }
+    
+    private func executeToolCallSync(
+        partialResponse: Response,
+        isComplete: Bool = true
+    ) async -> Bool {
+        guard let toolName = partialResponse.toolCallName,
+              let toolArguments = partialResponse.toolCallArguments,
+              !toolArguments.isEmpty else {
+            return false
+        }
+        
+        let toolResult = await ToolRouter.parseAndExecuteToolCalls(
+            toolName: toolName,
+            toolArguments: toolArguments,
+            isComplete: isComplete
+        )
+        
+        if let toolResult = toolResult {
+            switch toolResult {
+            case .success(let success):
+                partialResponse.toolCallResult = success.result
+                partialResponse.toolCallSuccess = true
+            case .failure(let failure):
+                partialResponse.toolCallResult = failure.message
+                partialResponse.toolCallSuccess = false
+            }
+            
+            return true
+        }
+        
+        return false
     }
 }
 

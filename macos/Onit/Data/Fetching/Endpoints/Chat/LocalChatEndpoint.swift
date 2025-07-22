@@ -17,6 +17,7 @@ struct LocalChatEndpoint: Endpoint {
 
     let model: String?
     let messages: [LocalChatMessage]
+    let tools: [Tool]
     var baseURL: URL {
         var url: URL!
         DispatchQueue.main.sync {
@@ -53,13 +54,40 @@ struct LocalChatEndpoint: Endpoint {
             }
         }
         
+        let ollamaTools = tools.map { LocalChatTool(tool: $0) }
+        
         return LocalChatRequestJSON(
             model: model,
             messages: messages,
             stream: false,
+            tools: ollamaTools.isEmpty ? nil : ollamaTools,
             keep_alive: keepAlive,
             options: options
         )
+    }
+    
+    func getContent(response: Response) -> String? {
+        return response.message.content
+    }
+    
+    func getToolResponse(response: Response) -> ChatResponse? {
+        if let toolCalls = response.message.tool_calls, let toolCall = toolCalls.first {
+            return ChatResponse(
+                content: nil,
+                toolName: toolCall.function.name,
+                toolArguments: toolCall.function.arguments
+            )
+        }
+        
+        if !response.message.content.isEmpty {
+            return ChatResponse(
+                content: response.message.content,
+                toolName: nil,
+                toolArguments: nil
+            )
+        }
+        
+        return nil
     }
 }
 
@@ -68,6 +96,7 @@ struct LocalChatRequestJSON: Codable {
     let model: String?
     let messages: [LocalChatMessage]
     var stream: Bool
+    var tools: [LocalChatTool]?
     var keep_alive: String?
     var options: LocalChatOptions?
 }
@@ -102,5 +131,128 @@ struct LocalChatResponseJSON: Codable {
 struct LocalChatMessageResponse: Codable {
     let role: String
     let content: String
+    let tool_calls: [LocalChatToolCall]?
 }
 
+struct LocalChatTool: Codable {
+    let type: String
+    let function: LocalChatToolFunction
+    
+    init(tool: Tool) {
+        self.type = "function"
+        self.function = LocalChatToolFunction(tool: tool)
+    }
+}
+
+struct LocalChatToolFunction: Codable {
+    let name: String
+    let description: String
+    let parameters: LocalChatToolParameters
+    
+    init(tool: Tool) {
+        self.name = tool.name
+        self.description = tool.description
+        self.parameters = LocalChatToolParameters(toolParameters: tool.parameters)
+    }
+}
+
+struct LocalChatToolParameters: Codable {
+    let type: String
+    let properties: [String: LocalChatToolProperty]
+    let required: [String]
+    
+    init(toolParameters: ToolParameters) {
+        self.type = "object"
+        self.required = toolParameters.required
+        
+        var convertedProperties: [String: LocalChatToolProperty] = [:]
+        
+        for (key, toolProperty) in toolParameters.properties {
+            var items: [String: Any]? = nil
+            
+            if let toolPropertyItem = toolProperty.items {
+                items = [
+                    "type": toolPropertyItem.type
+                ]
+            }
+            
+            convertedProperties[key] = LocalChatToolProperty(
+                type: toolProperty.type,
+                description: toolProperty.description,
+                items: items
+            )
+        }
+        
+        self.properties = convertedProperties
+    }
+}
+
+struct LocalChatToolProperty: Codable {
+    let type: String
+    let description: String
+    let items: AnyCodable?
+    
+    enum CodingKeys: String, CodingKey {
+        case type, description, items
+    }
+    
+    init(type: String, description: String, items: [String: Any]? = nil) {
+        self.type = type
+        self.description = description
+        self.items = items.map(AnyCodable.init)
+    }
+    
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(type, forKey: .type)
+        try container.encode(description, forKey: .description)
+        
+        if let items = items {
+            try container.encode(items, forKey: .items)
+        }
+    }
+    
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        type = try container.decode(String.self, forKey: .type)
+        description = try container.decode(String.self, forKey: .description)
+        
+        if let itemsData = try container.decodeIfPresent(AnyCodable.self, forKey: .items) {
+            items = itemsData
+        } else {
+            items = nil
+        }
+    }
+}
+
+struct LocalChatToolCall: Codable {
+    let function: LocalChatToolCallFunction
+}
+
+struct LocalChatToolCallFunction: Codable {
+    let name: String?
+    let arguments: String?
+    
+    enum CodingKeys: String, CodingKey {
+        case name, arguments
+    }
+    
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(name, forKey: .name)
+        try container.encode(arguments, forKey: .arguments)
+    }
+    
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        name = try container.decodeIfPresent(String.self, forKey: .name)
+
+        if let argsValue = try container.decodeIfPresent(AnyCodable.self, forKey: .arguments) {
+            let encoder = JSONEncoder()
+            let data = try encoder.encode(argsValue)
+            arguments = String(data: data, encoding: .utf8)
+        } else {
+            arguments = nil
+        }
+    }
+}

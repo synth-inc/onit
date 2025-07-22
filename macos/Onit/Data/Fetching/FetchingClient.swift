@@ -81,8 +81,9 @@ actor FetchingClient {
         autoContexts: [[String: String]],
         webSearchContexts: [[(title: String, content: String, source: String, url: URL?)]],
         responses: [String],
-        model: String
-    ) async throws -> String {
+        model: String,
+        tools: [Tool] = []
+    ) async throws -> ChatResponse {
          // Create the user messages by appending any text files
         let userMessages = ChatEndpointMessagesBuilder.user(
             instructions: instructions,
@@ -97,8 +98,11 @@ actor FetchingClient {
             systemMessage: systemMessage,
             userMessages: userMessages)
         
-        let endpoint = LocalChatEndpoint(model: model, messages: localMessages)
-        let response = try await execute(endpoint)
-        return response.message.content
+        let endpoint = LocalChatEndpoint(
+			model: model,
+			messages: localMessages,
+			tools: tools)
+		
+        return try await fetchChatContent(from: endpoint)
     }
 }

@@ -140,5 +140,14 @@ struct AIModel: Codable, Identifiable, Hashable, Defaults.Serializable {
                 return URL(string: "about:blank")!
             }
         }
+        
+        var isStreamingPartialTool: Bool {
+            switch self {
+            case .openAI, .anthropic:
+                return true
+            default:
+                return false
+            }
+        }
     }
 }

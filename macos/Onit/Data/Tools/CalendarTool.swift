@@ -8,8 +8,9 @@
 import EventKit
 import Foundation
 
-struct CalendarTool {
-    static let availableTools: [String: Tool] = [
+class CalendarTool: ToolProtocol {
+    
+    let availableTools: [String: Tool] = [
         "create_event": Tool(
             name: "calendar_create_event",
             description: "Create a new calendar event",
@@ -56,20 +57,18 @@ struct CalendarTool {
         )
     ]
 
-    @MainActor
-    static var selectedTools: [String] = ["create_event"]
+    var selectedTools: [String] = ["create_event"]
 
-    @MainActor
-    static var activeTools: [Tool] {
-        return
-            availableTools
-            .filter { selectedTools.contains($0.key) }
-            .map { availableTools[$0.key]! }
+    var activeTools: [Tool] {
+        return availableTools
+            .compactMap { selectedTools.contains($0.key) ? $0.value : nil }
+    }
+    
+    func canExecute(partialArguments: String) -> Bool {
+        false
     }
 
-    static func executeToolCall(toolName: String, arguments: String) async -> Result<
-        ToolCallResult, ToolCallError
-    > {
+    func execute(toolName: String, arguments: String) async -> Result<ToolCallResult, ToolCallError> {
         switch toolName {
         case "create_event":
             return await createCalendarEvent(toolName: toolName, arguments: arguments)
@@ -90,9 +89,7 @@ struct CalendarTool {
         let is_all_day: Bool?
     }
 
-    static func createCalendarEvent(toolName: String, arguments: String) async -> Result<
-        ToolCallResult, ToolCallError
-    > {
+    func createCalendarEvent(toolName: String, arguments: String) async -> Result<ToolCallResult, ToolCallError> {
         do {
             // Parse arguments
             guard let data = arguments.data(using: .utf8) else {
