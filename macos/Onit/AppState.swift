@@ -135,11 +135,11 @@ class AppState: NSObject, SPUUpdaterDelegate {
     @MainActor
     func fetchRemoteModels() async {
         do {
-            var fetchedModels = try await AIModel.fetchModels()
+            var models = try await AIModel.fetchModels()
             
-            var models = fetchedModels.filter {
-                !Defaults[.removedRemoteModels].contains($0)
-            }
+            /// Removing user-removed remote models from fetched result.
+            let userRemovedRemoteModelUniqueIds = Set(Defaults[.userRemovedRemoteModels].map { $0.uniqueId })
+            models.removeAll { userRemovedRemoteModelUniqueIds.contains($0.uniqueId) }
 
             // This means we've never successfully fetched before
             if Defaults[.availableRemoteModels].isEmpty {

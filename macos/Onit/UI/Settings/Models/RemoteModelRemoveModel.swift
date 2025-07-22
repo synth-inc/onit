@@ -10,7 +10,7 @@ import SwiftUI
 
 struct RemoteModelRemoveModel: View {
     @Default(.availableRemoteModels) var availableRemoteModels
-    @Default(.removedRemoteModels) var removedRemoteModels
+    @Default(.userRemovedRemoteModels) var userRemovedRemoteModels
     
     // MARK: - Properties
     
@@ -105,13 +105,17 @@ struct RemoteModelRemoveModel: View {
     // MARK: - Private Functions
     
     private func removeSelectedRemoteModels() {
-        for remoteModel in selectedRemoteModels {
-            if !removedRemoteModels.contains(remoteModel) {
-                removedRemoteModels.append(remoteModel)
+        let userRemovedRemoteModelUniqueIds = Set(userRemovedRemoteModels.map { $0.uniqueId })
+        
+        for selectedRemoteModel in selectedRemoteModels {
+            if !userRemovedRemoteModelUniqueIds.contains(selectedRemoteModel.uniqueId) {
+                userRemovedRemoteModels.append(selectedRemoteModel)
             }
         }
         
-        availableRemoteModels.removeAll { selectedRemoteModels.contains($0) }
+        let selectedRemoteModelUniqueIds = Set(selectedRemoteModels.map { $0.uniqueId })
+        
+        availableRemoteModels.removeAll { selectedRemoteModelUniqueIds.contains($0.uniqueId) }
         
         showRemoveModelsSheet = false
     }
