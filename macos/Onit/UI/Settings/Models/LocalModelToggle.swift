@@ -11,7 +11,8 @@ import SwiftUI
 struct LocalModelToggle: View {
     @Default(.visibleLocalModels) var visibleLocalModels
     @Default(.localModel) var localModel
-    @Default(.mode) var mode
+    @Default(.visibleLocalModels) var visibleLocalModels
+    @Default(.localModel) var localModel
 
     let modelName: String
 
