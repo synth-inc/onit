@@ -103,8 +103,8 @@ class TokenValidationManager {
         }
     }
 
-    static func getTokenForModel(_ model: AIModel?) -> String? {
-        if let provider = model?.provider {
+    static func getTokenForProviderOrModel(provider: AIModel.ModelProvider? = nil, model: AIModel? = nil) -> String? {
+        if let provider = provider ?? model?.provider {
             switch provider {
             case .openAI:
                 return Defaults[.isOpenAITokenValidated] ? Defaults[.openAIToken] : nil

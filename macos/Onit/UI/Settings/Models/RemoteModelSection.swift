@@ -80,6 +80,10 @@ struct RemoteModelSection: View {
             return .constant(false)
         }
     }
+    
+    var userProvidedOwnApiToken: Bool {
+        TokenValidationManager.getTokenForProviderOrModel(provider: provider) != nil
+    }
 
     // MARK: - Body
 
@@ -276,10 +280,12 @@ struct RemoteModelSection: View {
                         UpdateAvailableRemoteModelsButton(isRemove: true) {
                             showRemoveModelsSheet = true
                         }
-                        .disabled(noAvailableRemoteModels)
-                        .allowsHitTesting(!noAvailableRemoteModels)
+                        .padding(2)
+                    } else {
+                        Text("Provide your own API token to add and remove models.")
+                            .styleText(size: 13, weight: .regular, color: .gray200)
+                            .padding(8)
                     }
-                    .padding(2)
                 }
                 .padding(.vertical, -4)
                 .padding(.horizontal, -4)
