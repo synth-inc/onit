@@ -42,7 +42,6 @@ struct OpenAIChatStreamingEndpoint: StreamingEndpoint {
     
     func getContentFromSSE(event: EVEvent) throws -> StreamingEndpointResponse? {
         if let data = event.data?.data(using: .utf8) {
-            //log.error("\(String(data: data, encoding: .utf8) ?? "")")
             let response = try JSONDecoder().decode(Response.self, from: data)
             
             if response.type == "response.output_text.delta" {
