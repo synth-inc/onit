@@ -359,13 +359,13 @@ struct ChatEndpointMessagesBuilder {
                 googleAIMessageStack.append(
                     GoogleAIChatMessage(
                         role: "user",
-                        parts: [GoogleAIChatPart(text: userMessage, inlineData: nil)]
+                        parts: [GoogleAIChatPart(text: userMessage)]
                     )
                 )
             } else {
                 let parts =
                     [
-                        GoogleAIChatPart(text: userMessage, inlineData: nil)
+                        GoogleAIChatPart(text: userMessage)
                     ]
                     + images[index].compactMap { url in
                         guard let imageData = try? Data(contentsOf: url) else {
@@ -374,10 +374,7 @@ struct ChatEndpointMessagesBuilder {
                         }
                         let base64EncodedData = imageData.base64EncodedString()
                         let mimeType = url.mimeType
-                        return GoogleAIChatPart(
-                            text: nil,
-                            inlineData: GoogleAIChatPart.InlineData(mimeType: mimeType, data: base64EncodedData)
-                        )
+                        return GoogleAIChatPart(inlineData: GoogleAIChatPart.InlineData(mimeType: mimeType, data: base64EncodedData))
                     }
                 googleAIMessageStack.append(
                     GoogleAIChatMessage(role: "user", parts: parts))
@@ -387,7 +384,7 @@ struct ChatEndpointMessagesBuilder {
             if index < responses.count {
                 let responseMessage = GoogleAIChatMessage(
                     role: "model",
-                    parts: [GoogleAIChatPart(text: responses[index], inlineData: nil)]
+                    parts: [GoogleAIChatPart(text: responses[index])]
                 )
                 googleAIMessageStack.append(responseMessage)
             }
