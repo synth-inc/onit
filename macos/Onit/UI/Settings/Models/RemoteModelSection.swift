@@ -91,16 +91,10 @@ struct RemoteModelSection: View {
             "Verified"
         } else {
             switch localState {
-            case .notValidated, .invalid:
-                "Verify →"
             case .validating:
                 "Verifying"
-            case .valid:
-                if validated {
-                    "Verified"
-                } else {
-                    "Verify →"
-                }
+            default:
+                "Verify →"
             }
         }
     }
@@ -182,7 +176,7 @@ struct RemoteModelSection: View {
                     text: "Remove",
                     action: {
                         tokenManager.tokenValidation.setNotValidated(provider: provider)
-                        TokenValidationManager.removeTokenForProvider(provider)
+                        TokenValidationManager.removeTokenForNonCustomProvider(provider)
                         fetchKey()
                         checkValidated()
                         
