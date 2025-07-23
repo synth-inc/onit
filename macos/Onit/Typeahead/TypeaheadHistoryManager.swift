@@ -80,10 +80,12 @@ struct TypedInputEntry: Codable, Identifiable, Sendable {
     let deletedText: String?
     let changeType: String?
     let keystrokes: String? // Store as JSON string
+    let confidence: Double? // Confidence score from TextChange calculation
+    let confidenceVersion: Double? // Version of the confidence calculation algorithm
     let couldntFindInitialText: Bool
     let timestamp: Date
     
-    init(id: Int64? = nil, applicationName: String, applicationTitle: String?, screenContent: String, currentText: String, precedingInputText: String, followingInputText: String, preceedingWindowText: String, followingWindowText: String, addedText: String?, deletedText: String?, changeType: String?, keystrokes: [String]? = nil, couldntFindInitialText: Bool = false, timestamp: Date = Date()) {
+    init(id: Int64? = nil, applicationName: String, applicationTitle: String?, screenContent: String, currentText: String, precedingInputText: String, followingInputText: String, preceedingWindowText: String, followingWindowText: String, addedText: String?, deletedText: String?, changeType: String?, keystrokes: [String]? = nil, confidence: Double? = nil, confidenceVersion: Double? = nil, couldntFindInitialText: Bool = false, timestamp: Date = Date()) {
         self.id = id
         self.applicationName = applicationName
         self.applicationTitle = applicationTitle
@@ -102,6 +104,8 @@ struct TypedInputEntry: Codable, Identifiable, Sendable {
         } else {
             self.keystrokes = nil
         }
+        self.confidence = confidence
+        self.confidenceVersion = confidenceVersion
         self.couldntFindInitialText = couldntFindInitialText
         self.timestamp = timestamp
     }
@@ -191,7 +195,7 @@ extension TypedInputEntry: FetchableRecord, PersistableRecord {
     static let databaseTableName = "typed_input_history"
     
     enum Columns: String, ColumnExpression {
-        case id, applicationName, applicationTitle, screenContent, currentText, precedingInputText, followingInputText, preceedingWindowText, followingWindowText, addedText, deletedText, changeType, keystrokes, couldntFindInitialText, timestamp
+        case id, applicationName, applicationTitle, screenContent, currentText, precedingInputText, followingInputText, preceedingWindowText, followingWindowText, addedText, deletedText, changeType, keystrokes, confidence, confidenceVersion, couldntFindInitialText, timestamp
     }
     
     init(row: Row) throws {
@@ -208,6 +212,8 @@ extension TypedInputEntry: FetchableRecord, PersistableRecord {
         deletedText = row[Columns.deletedText]
         changeType = row[Columns.changeType]
         keystrokes = row[Columns.keystrokes]
+        confidence = row[Columns.confidence]
+        confidenceVersion = row[Columns.confidenceVersion]
         couldntFindInitialText = row[Columns.couldntFindInitialText]
         timestamp = row[Columns.timestamp]
     }
@@ -226,6 +232,8 @@ extension TypedInputEntry: FetchableRecord, PersistableRecord {
         container[Columns.deletedText] = deletedText
         container[Columns.changeType] = changeType
         container[Columns.keystrokes] = keystrokes
+        container[Columns.confidence] = confidence
+        container[Columns.confidenceVersion] = confidenceVersion
         container[Columns.couldntFindInitialText] = couldntFindInitialText
         container[Columns.timestamp] = timestamp
     }
@@ -292,7 +300,7 @@ extension TypedInputEntry {
 // MARK: - HistoryManager
 
 
-final class TypeaheadHistoryManager: ObservableObject {
+final class TypeaheadHistoryManager: ObservableObject, @unchecked Sendable {
     @MainActor
     static let shared = TypeaheadHistoryManager()
 
@@ -323,6 +331,9 @@ final class TypeaheadHistoryManager: ObservableObject {
 
     private init() {
         setupDatabase()
+//        Task {
+//            await TypeaheadHistoryManager.shared.migrateOutdatedConfidenceScores()
+//        }
     }
 
     // MARK: - Database Setup
@@ -389,6 +400,8 @@ final class TypeaheadHistoryManager: ObservableObject {
             t.column("deletedText", .text)
             t.column("changeType", .text)
             t.column("keystrokes", .text) // JSON string
+            t.column("confidence", .double)
+            t.column("confidenceVersion", .double)
             t.column("couldntFindInitialText", .boolean).notNull().defaults(to: false)
             t.column("timestamp", .datetime).notNull()
         }
@@ -423,10 +436,12 @@ final class TypeaheadHistoryManager: ObservableObject {
                         deletedText: String?,
                         changeType: String?,
                         keystrokes: [String] = [],
+                        confidence: Double? = nil,
+                        confidenceVersion: Double? = nil,
                         couldntFindInitialText: Bool = false,
                         timestamp: Date = Date()) async {
         guard Defaults[.collectTypeaheadTestCases] else { return }
-        print("historyManager - addTypedPhrase | applicationName: \(applicationName) applicationTitle: \(applicationTitle ?? "nil") screenContent: \(screenContent.prefix(20)) currentText: \(currentText.prefix(20)) precedingInputText: \(precedingInputText.prefix(20)) followingInputText: \(followingInputText.prefix(20)) preceedingWindowText: \(preceedingWindowText.prefix(20)) followingWindowText: \(followingWindowText.prefix(20)) addedText: \(addedText?.prefix(20) ?? "nil") deletedText: \(deletedText?.prefix(20) ?? "nil") changeType: \(changeType ?? "nil") keystrokes: \(keystrokes) couldntFindInitialText: \(couldntFindInitialText) timestamp: \(timestamp)")
+        print("historyManager - addTypedPhrase | applicationName: \(applicationName) applicationTitle: \(applicationTitle ?? "nil") screenContent: \(screenContent.prefix(20)) currentText: \(currentText.prefix(20)) precedingInputText: \(precedingInputText.prefix(20)) followingInputText: \(followingInputText.prefix(20)) preceedingWindowText: \(preceedingWindowText.prefix(20)) followingWindowText: \(followingWindowText.prefix(20)) addedText: \(addedText?.prefix(20) ?? "nil") deletedText: \(deletedText?.prefix(20) ?? "nil") changeType: \(changeType ?? "nil") keystrokes: \(keystrokes) confidence: \(confidence ?? -1) confidenceVersion: \(confidenceVersion ?? -1) couldntFindInitialText: \(couldntFindInitialText) timestamp: \(timestamp)")
         let entry = TypedInputEntry(
             applicationName: applicationName,
             applicationTitle: applicationTitle,
@@ -440,6 +455,8 @@ final class TypeaheadHistoryManager: ObservableObject {
             deletedText: deletedText,
             changeType: changeType,
             keystrokes: keystrokes,
+            confidence: confidence,
+            confidenceVersion: confidenceVersion,
             couldntFindInitialText: couldntFindInitialText,
             timestamp: timestamp)
         await saveTypedEntry(entry)
@@ -476,6 +493,71 @@ final class TypeaheadHistoryManager: ObservableObject {
         await saveContentEntry(entry)
     }
     
+    // MARK: - Confidence Version Update
+    /// Migrates all outdated confidence scores in the database
+//    func migrateOutdatedConfidenceScores() async {
+//        guard let dbQueue = dbQueue else { return }
+//        do {
+//            let outdatedEntries = try await dbQueue.read { db in
+//                try TypedInputEntry
+//                    .filter(TypedInputEntry.Columns.confidenceVersion == nil || TypedInputEntry.Columns.confidenceVersion < TextChangeHelper.confidenceCalculatorVersion)
+//                    .fetchAll(db)
+//            }
+//            print("TypeaheadHistoryManager: Found \(outdatedEntries.count) entries with outdated confidence scores")
+//            for entry in outdatedEntries {
+//                // Recalculate confidence using the latest version
+//                let keystrokesArray = entry.keystrokesArray
+//                let textChange = TextChangeHelper.shared.calculateTextChangeFast(
+//                    from: entry.precedingInputText + (entry.deletedText ?? ""),
+//                    to: entry.currentText,
+//                    keystrokes: keystrokesArray
+//                )
+//                let newConfidence = textChange?.confidence
+//                let newVersion = TextChangeHelper.confidenceCalculatorVersion
+//                // Update the record in the database
+//                do {
+//                    try await dbQueue.write { db in
+//                        try db.execute(sql: "UPDATE \(TypedInputEntry.databaseTableName) SET confidence = ?, confidenceVersion = ? WHERE id = ?", arguments: [newConfidence, newVersion, entry.id])
+//                    }
+//                } catch {
+//                    print("Failed to update confidence for entry id \(entry.id ?? -1): \(error)")
+//                }
+//            }
+//            if !outdatedEntries.isEmpty {
+//                print("TypeaheadHistoryManager: Successfully migrated \(outdatedEntries.count) confidence scores to version \(TextChangeHelper.confidenceCalculatorVersion)")
+//            }
+//        } catch {
+//            print("TypeaheadHistoryManager: Failed to migrate confidence scores: \(error)")
+//        }
+//    }
+
+    /// Checks and updates confidence/confidenceVersion for outdated entries
+//    nonisolated func updateOutdatedConfidenceScores(entries: [TypedInputEntry]) async {
+//        guard let dbQueue = dbQueue else { return }
+//        for entry in entries {
+//            let needsUpdate = entry.confidenceVersion == nil || (entry.confidenceVersion ?? 0) < TextChangeHelper.confidenceCalculatorVersion
+//            if needsUpdate {
+//                // Recalculate confidence using the latest version
+//                let keystrokesArray = entry.keystrokesArray
+//                let textChange = TextChangeHelper.shared.calculateTextChangeFast(
+//                    from: entry.precedingInputText + (entry.deletedText ?? ""),
+//                    to: entry.currentText,
+//                    keystrokes: keystrokesArray
+//                )
+//                let newConfidence = textChange?.confidence
+//                let newVersion = TextChangeHelper.confidenceCalculatorVersion
+//                // Update the record in the database
+//                do {
+//                    try await dbQueue.write { db in
+//                        try db.execute(sql: "UPDATE \(TypedInputEntry.databaseTableName) SET confidence = ?, confidenceVersion = ? WHERE id = ?", arguments: [newConfidence, newVersion, entry.id])
+//                    }
+//                } catch {
+//                    print("Failed to update confidence for entry id \(entry.id ?? -1): \(error)")
+//                }
+//            }
+//        }
+//    }
+
     // MARK: - Fetching TypedInputEntry
     
     nonisolated func fetchTypedInputEntries(limit: Int = 100) async -> [TypedInputEntry] {

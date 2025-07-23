@@ -8,17 +8,26 @@ struct TypeaheadTestCasesView: View {
     @State private var selectedEntry: TypedInputEntry? = nil
     @State private var sortColumn: SortColumn = .timestamp
     @State private var sortAscending = false
+    @State private var minConfidenceThreshold = ""
     
     enum SortColumn {
-        case timestamp, changeType, application
+        case timestamp, changeType, application, confidence
     }
     
     var filteredTestCases: [TypedInputEntry] {
-        let filtered = searchText.isEmpty ? testCases : testCases.filter { entry in
+        var filtered = searchText.isEmpty ? testCases : testCases.filter { entry in
             entry.applicationName.localizedCaseInsensitiveContains(searchText) ||
             entry.changeType?.localizedCaseInsensitiveContains(searchText) == true ||
             entry.addedText?.localizedCaseInsensitiveContains(searchText) == true ||
             entry.deletedText?.localizedCaseInsensitiveContains(searchText) == true
+        }
+        
+        // Filter by minimum confidence threshold if specified
+        if !minConfidenceThreshold.isEmpty, let threshold = Double(minConfidenceThreshold) {
+            filtered = filtered.filter { entry in
+                guard let confidence = entry.confidence else { return true } // Show entries without confidence
+                return confidence < threshold
+            }
         }
         
         return filtered.sorted { lhs, rhs in
@@ -30,6 +39,10 @@ struct TypeaheadTestCasesView: View {
                 comparison = (lhs.changeType ?? "") < (rhs.changeType ?? "")
             case .application:
                 comparison = lhs.applicationName < rhs.applicationName
+            case .confidence:
+                let lhsConfidence = lhs.confidence ?? 0.0
+                let rhsConfidence = rhs.confidence ?? 0.0
+                comparison = lhsConfidence < rhsConfidence
             }
             return sortAscending ? comparison : !comparison
         }
@@ -83,6 +96,16 @@ struct TypeaheadTestCasesView: View {
                     .textFieldStyle(.roundedBorder)
                     .font(.system(size: 12))
                 
+                Text("Min Confidence:")
+                    .font(.system(size: 12))
+                    .foregroundColor(.secondary)
+                
+                TextField("0.0-1.0", text: $minConfidenceThreshold)
+                    .textFieldStyle(.roundedBorder)
+                    .font(.system(size: 12))
+                    .frame(width: 80)
+                    .help("Show only entries with confidence below this value (0.0-1.0)")
+                
                 Text("\(filteredTestCases.count) cases")
                     .font(.system(size: 12))
                     .foregroundColor(.secondary)
@@ -119,7 +142,7 @@ struct TypeaheadTestCasesView: View {
                     testCaseRow(entry: entry, isEven: index % 2 == 0)
                 }
             }
-            .frame(minWidth: 1150, maxHeight: 800) // Ensure table has enough width to show all columns properly
+            .frame(maxWidth: .infinity, maxHeight: .infinity) // Allow full width expansion
         }
         .background(Color.gray.opacity(0.05))
         .cornerRadius(8)
@@ -138,6 +161,8 @@ struct TypeaheadTestCasesView: View {
             tableHeaderCellWithHelp("Added", width: 120, help: "Added text (scroll horizontally in cells)")
             tableHeaderCellWithHelp("Deleted", width: 120, help: "Deleted text (scroll horizontally in cells)")
             sortableHeader("Type", column: .changeType, width: 80)
+            sortableHeader("Confidence", column: .confidence, width: 80)
+            tableHeaderCellWithHelp("Version", width: 60, help: "Confidence calculation version")
             tableHeaderCellWithHelp("Keystrokes", width: 150, help: "Full keystroke sequence (scroll horizontally in cells)")
             tableHeaderCell("Actions", width: 60)
         }
@@ -269,6 +294,36 @@ struct TypeaheadTestCasesView: View {
                 .background(changeTypeColor(entry.changeType))
                 .cornerRadius(4)
             
+            // Confidence Score
+            HStack(spacing: 2) {
+                if let confidence = entry.confidence {
+                    Text(String(format: "%.2f", confidence))
+                        .font(.system(size: 10, design: .monospaced))
+                        .foregroundColor(confidenceColor(confidence))
+                } else {
+                    Text("N/A")
+                        .font(.system(size: 10))
+                        .foregroundColor(.secondary)
+                }
+            }
+            .frame(width: 80, alignment: .leading)
+            .help("Confidence score (0.0-1.0) - higher is better")
+            
+            // Version
+            HStack(spacing: 2) {
+                if let version = entry.confidenceVersion {
+                    Text(String(format: "%.1f", version))
+                        .font(.system(size: 10, design: .monospaced))
+                        .foregroundColor(.secondary)
+                } else {
+                    Text("N/A")
+                        .font(.system(size: 10))
+                        .foregroundColor(.secondary)
+                }
+            }
+            .frame(width: 60, alignment: .leading)
+            .help("Confidence calculation version")
+            
             // Keystrokes
             ScrollView(.horizontal, showsIndicators: false) {
                 Text(entry.keystrokesArray.joined(separator: ", "))
@@ -316,6 +371,19 @@ struct TypeaheadTestCasesView: View {
         }
     }
     
+    private func confidenceColor(_ confidence: Double) -> Color {
+        switch confidence {
+        case 0.9...:
+            return .green
+        case 0.7..<0.9:
+            return .orange
+        case 0.5..<0.7:
+            return .yellow
+        default:
+            return .red
+        }
+    }
+    
     private func copyTestCaseDetails(_ entry: TypedInputEntry) {
         let fullTextBefore = entry.precedingInputText + (entry.deletedText ?? "") + entry.followingInputText
         let fullTextAfter = entry.currentText
@@ -327,6 +395,8 @@ struct TypeaheadTestCasesView: View {
         Added text: "\(entry.addedText ?? "")"
         Deleted text: "\(entry.deletedText ?? "")"
         Change type: \(entry.changeType ?? "unknown")
+        Confidence: \(entry.confidence.map { String(format: "%.3f", $0) } ?? "N/A")
+        Confidence Version: \(entry.confidenceVersion.map { String(format: "%.1f", $0) } ?? "N/A")
         Keystrokes: \(entry.keystrokesArray)
         Application: \(entry.applicationName)
         Timestamp: \(entry.timestamp)

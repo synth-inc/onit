@@ -19,7 +19,8 @@ private struct AccessibilityValue {
 struct TypingSession {
     var initialText: String = ""
     var currentText: String = ""
-    var keystrokes: [String] = []  // Changed from [Int64] to [String]
+    var keystrokes: [String] = []  // Output-producing keystrokes
+    var nonOutputKeystrokes: [String] = []  // Non-output-producing keystrokes
     var couldntFindInitialText: Bool = false
     var startTime: Date = Date()
     var lastKeystroke: Date = Date()
@@ -31,12 +32,17 @@ struct TypingSession {
 
     mutating func updateText(_ newText: String, readableKey: String) {
         currentText = newText
-        addKeystroke(readableKey: readableKey)
+        addOutputKeystroke(readableKey: readableKey)
     }
     
-    mutating func addKeystroke(readableKey: String) {
+    mutating func addOutputKeystroke(readableKey: String) {
         lastKeystroke = Date()
         keystrokes.append(readableKey)
+    }
+    
+    mutating func addNonOutputKeystroke(readableKey: String) {
+        lastKeystroke = Date()
+        nonOutputKeystrokes.append(readableKey)
     }
    
     var timeSinceLastKeystroke: TimeInterval {
@@ -202,7 +208,6 @@ final class TypingChangeDelegate: AccessibilityNotificationsDelegate {
         let keyProducesOutput = KeyCodeTranslator.shared.keyProducesOutputWithModifiers(keyCode, modifierStates: modifierStates)
         let readableKey = KeyCodeTranslator.shared.translateKeyCodeWithModifiers(keyCode, modifierStates: modifierStates)
 
-
         if keyProducesOutput {
             if currentSession == nil {
                 // TODO: Tim - This logic is not working becuase of common overlap cases.For example, if the text field becomes empty and has been empty in the past, it will choose some random starting point.
@@ -229,7 +234,7 @@ final class TypingChangeDelegate: AccessibilityNotificationsDelegate {
             if let currentValue = element.value() {
                 currentSession?.updateText(currentValue, readableKey: readableKey)
             } else {
-                currentSession?.addKeystroke(readableKey: readableKey)
+                currentSession?.addOutputKeystroke(readableKey: readableKey)
             }
             
             if isPhraseCompletionCharacter(readableKey) {
@@ -245,6 +250,11 @@ final class TypingChangeDelegate: AccessibilityNotificationsDelegate {
             
             // Set up debounce timer
             schedulePhraseDebouncedCompletion()
+        } else {
+            // If we're in a session, add the non-output keystroke for debugging purposes.
+            if currentSession != nil {
+                currentSession?.addNonOutputKeystroke(readableKey: readableKey)
+            }
         }
     }
     

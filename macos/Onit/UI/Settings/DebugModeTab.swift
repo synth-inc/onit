@@ -101,12 +101,6 @@ struct DebugModeTab: View {
                     }
                     #endif
                     
-                    // Typeahead Test Cases Section
-                    Divider()
-                    
-                    TypeaheadTestCasesView()
-                        .frame(minHeight: 400)
-
                     if !debugManager.ocrComparisonResults.isEmpty {
                         Divider()
                         

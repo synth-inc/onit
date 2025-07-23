@@ -305,7 +305,6 @@
 				"Preview Content/PreviewSampleData.swift",
 				ScreenRecording/ScreenRecordingPermissionManager.swift,
 				Sparkle/Sparkle.swift,
-				Testing/ModelMigrationTests.swift,
 				TokenValidation/TokenValidationManager.swift,
 				TokenValidation/TokenValidationState.swift,
 				Typeahead/KeyCodeTranslator.swift,

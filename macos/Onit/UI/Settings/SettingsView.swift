@@ -64,6 +64,12 @@ struct SettingsView: View {
 //                }
 //                .tag(SettingsTab.webSearch)
 
+            TypeaheadTab()
+                .tabItem {
+                    Label("Typeahead", systemImage: "textformat.abc")
+                }
+                .tag(SettingsTab.typeahead)
+
 //            #if DEBUG || BETA
 //            DatabaseSettingsView()
 //                .tabItem {

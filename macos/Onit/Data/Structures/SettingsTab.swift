@@ -8,6 +8,7 @@ enum SettingsTab: String {
     case accessibility
     case quickEdit
     case webSearch
+    case typeahead
     case about
 //    #if DEBUG
         case database

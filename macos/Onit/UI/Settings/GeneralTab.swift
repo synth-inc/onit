@@ -385,14 +385,7 @@ struct GeneralTab: View {
                     }
                 }
                 
-                HStack {
-                    Text("Collect local typeahead test cases")
-                        .font(.system(size: 13))
-                    Spacer()
-                    Toggle("", isOn: $debugManager.collectTypeaheadTestCases)
-                        .toggleStyle(.switch)
-                        .controlSize(.small)
-                }
+
                 
                 //                VStack(alignment: .leading, spacing: 8) {
                 //                    Text("Panel Position")
