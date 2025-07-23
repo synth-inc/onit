@@ -12,16 +12,13 @@ struct SettingsAuthCTA: View {
 
     private let title: String
     private let caption: String
-    private let fitContainer: Bool
 
     init(
         title: String = "Sign Up to Access All providers!",
         caption: String,
-        fitContainer: Bool = false
     ) {
         self.title = title
         self.caption = caption
-        self.fitContainer = fitContainer
     }
 
     private var isLoggedIn: Bool {
@@ -49,13 +46,13 @@ struct SettingsAuthCTA: View {
                     GeneralTabAccount.signInButton
                 }
             }
-            .padding(.horizontal, fitContainer ? 0 : 8)
-            .padding(.vertical, fitContainer ? 0 : 12)
+            .padding(.horizontal, 8)
+            .padding(.vertical, 12)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .background(fitContainer ? .clear : .systemGray900)
+            .background(.systemGray900)
             .addBorder(
                 cornerRadius: 6,
-                stroke: fitContainer ? .clear : .systemGray800
+                stroke: .systemGray800
             )
         }
     }
