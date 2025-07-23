@@ -83,7 +83,7 @@ struct CustomProviderRow: View {
                             .padding(.horizontal, 4)
 
                         ScrollView {
-                            VStack(alignment: .leading, spacing: 0) {
+                            LazyVStack(alignment: .leading, spacing: 0) {
                                 ForEach(filteredProviderModels, id: \.self) { model in
                                     ModelToggle(aiModel: model)
                                         .frame(height: 36)
