@@ -121,7 +121,7 @@ struct WebSearchTab: View {
                 .font(.system(size: 13))
                 .foregroundStyle(.gray200)
             
-            DisclosureGroup("Tavlily API Key\(isTavilyAPITokenValidated ? " ✅" : "")", isExpanded: $showApiKey) {
+            DisclosureGroup("Tavily API Key\(isTavilyAPITokenValidated ? " ✅" : "")", isExpanded: $showApiKey) {
                 VStack(alignment: .leading, spacing: 8) {
                     HStack(alignment: .center, spacing: 16) {
                         Text("Enter API key:")
