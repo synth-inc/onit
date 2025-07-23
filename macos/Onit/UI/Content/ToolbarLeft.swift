@@ -59,11 +59,6 @@ struct ToolbarLeft: View {
             state?.systemPromptState.shouldShowSelection = true
             state?.systemPromptState.shouldShowSystemPrompt = true
         }
-        .onHover(perform: { isHovered in
-            if isHovered && state?.currentChat?.systemPrompt == nil && state?.systemPromptState.shouldShowSystemPrompt != true {
-                state?.systemPromptState.shouldShowSystemPrompt = true
-            }
-        })
     }
 }
 
