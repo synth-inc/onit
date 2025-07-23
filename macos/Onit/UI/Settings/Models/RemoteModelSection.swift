@@ -15,7 +15,8 @@ struct RemoteModelSection: View {
     @State private var key = ""
     @State private var validated = false
     @State private var loading = false
-    @State private var showAdvanced: Bool = false  
+    @State private var showAdvanced: Bool = false
+    @State private var showApiKey: Bool = false
     @State private var localState: TokenValidationState.ValidationState = .notValidated
     @State private var showAddModelSheet: Bool = false
     @State private var showRemoveModelsSheet: Bool = false
@@ -84,6 +85,25 @@ struct RemoteModelSection: View {
     var userProvidedOwnApiToken: Bool {
         TokenValidationManager.getTokenForProviderOrModel(provider: provider) != nil
     }
+    
+    var verifyButtonText: String {
+        if validated {
+            "Verified"
+        } else {
+            switch localState {
+            case .notValidated, .invalid:
+                "Verify →"
+            case .validating:
+                "Verifying"
+            case .valid:
+                if validated {
+                    "Verified"
+                } else {
+                    "Verify →"
+                }
+            }
+        }
+    }
 
     // MARK: - Body
 
@@ -91,11 +111,13 @@ struct RemoteModelSection: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
             titleView
-            textField
             errorView
-            caption
             modelsView
             advancedSettings
+            apiKeySettings
+            
+            Divider()
+                .padding(.top, 8)
         }
         .onAppear {
             fetchKey()
@@ -120,62 +142,58 @@ struct RemoteModelSection: View {
     // MARK: - Subviews
 
     var titleView: some View {
-        ModelTitle(title: provider.title, isOn: $use)
+        ModelTitle(title: provider.title, isOn: $use, showToggle: appState.account != nil || validated)
     }
 
     var textField: some View {
-        HStack(spacing: 7) {
-            TextField("Enter your \(provider.title) API key", text: $key)
-                .textFieldStyle(.roundedBorder)
-                .frame(height: 22)
+        HStack(alignment: .center, spacing: 8) {
+            SecureField("Enter your \(provider.title) API key", text: $key)
+                .textFieldStyle(PlainTextFieldStyle())
                 .font(.system(size: 13, weight: .regular))
                 .foregroundColor(.primary)  // Ensure placeholder text is not dimmed
-
-            Button {
-                Task {
-                    loading = true
-                    save(key: key)
-                    tokenManager.tokenValidation.setNotValidated(provider: provider)
-                    TokenValidationManager.setTokenIsValid(false, provider: provider)
-                    await validate()
-                    loading = false
-                }
-            } label: {
-                if validated {
-                    Text("Verified")
-                } else {
-                    buttonOverlay
-                }
+                .padding(0)
+                .padding(.vertical, 4)
+                .padding(.horizontal, 7)
+                .background(.systemGray900)
+                .addBorder(cornerRadius: 5, stroke: .systemGray800)
+            
+            SimpleButton(
+                isLoading: loading,
+                disabled: validated || state.isValidating,
+                text: verifyButtonText,
+                textColor: validated ? .black : .white,
+                action: {
+                    if !validated {
+                        Task {
+                            loading = true
+                            save(key: key)
+                            tokenManager.tokenValidation.setNotValidated(provider: provider)
+                            TokenValidationManager.setTokenIsValid(false, provider: provider)
+                            await validate()
+                            loading = false
+                        }
+                    }
+                },
+                background: validated ? .gray400 : .blue
+            )
+            
+            if validated {
+                SimpleButton(
+                    text: "Remove",
+                    action: {
+                        tokenManager.tokenValidation.setNotValidated(provider: provider)
+                        TokenValidationManager.removeTokenForProvider(provider)
+                        fetchKey()
+                        checkValidated()
+                        
+                        if appState.account == nil {
+                            checkUse()
+                        }
+                    }
+                )
             }
-            .disabled(loading || state.isValidating)
-            .foregroundStyle(.white)
-            .buttonStyle(.borderedProminent)
-            .frame(height: 22)
-            .fontWeight(.regular)
         }
         .font(.system(size: 13).weight(.regular))
-    }
-
-    @ViewBuilder
-    var buttonOverlay: some View {
-        if loading {
-            ProgressView()
-                .controlSize(.small)
-        } else {
-            switch localState {
-            case .notValidated, .invalid:
-                Text("Verify →")
-            case .validating:
-                ProgressView()
-                    .controlSize(.small)
-            case .valid:
-                if validated {
-                    Text("Verified")
-                } else {
-                    Text("Verify →")
-                }
-            }
-        }
     }
 
     @ViewBuilder
@@ -196,12 +214,11 @@ struct RemoteModelSection: View {
     }
 
     var caption: some View {
-        (Text("Add ")
+        (Text("You can put in ")
             + Text(.init(link))
             + Text(
                 """
-                 to use Onit with \(provider.title) \
-                models like \(provider.sample).
+                 to use \(provider.title) models at cost.
                 """
             ))
             .foregroundStyle(.foreground.opacity(0.65))
@@ -219,6 +236,17 @@ struct RemoteModelSection: View {
                     .padding(.top, 4)
             }
         }
+    }
+    
+    var apiKeySettings: some View {
+        DisclosureGroup("\(provider.title) API Key\(validated ? " ✅" : "")", isExpanded: $showApiKey) {
+            VStack(alignment: .leading, spacing: 8) {
+                textField
+                caption
+            }
+            .padding(.top, 10)
+        }
+        .styleText(size: 12, weight: .regular)
     }
     
     private struct UpdateAvailableRemoteModelsButton: View {
