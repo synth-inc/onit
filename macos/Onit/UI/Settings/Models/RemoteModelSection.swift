@@ -246,9 +246,9 @@ struct RemoteModelSection: View {
             let noAvailableRemoteModels: Bool = models.isEmpty
             
             GroupBox {
-                VStack(alignment: .leading, spacing: 0) {
+                LazyVStack(alignment: .leading, spacing: 0) {
                     if noAvailableRemoteModels {
-                        Text("No models added")
+                        Text("No models")
                             .styleText(size: 13, weight: .regular)
                             .frame(maxWidth: .infinity, alignment: .center)
                             .frame(height: 29, alignment: .center)

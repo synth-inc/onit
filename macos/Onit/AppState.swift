@@ -550,6 +550,20 @@ class AppState: NSObject, SPUUpdaterDelegate {
 //    var remoteNeedsSetup: Bool {
 //        listedModels.isEmpty
 //    }
+    
+    func removeSelectedRemoteModels(_ selectedRemoteModels: [AIModel]) {
+        let userRemovedRemoteModelUniqueIds = Set(Defaults[.userRemovedRemoteModels].map { $0.uniqueId })
+        
+        for selectedRemoteModel in selectedRemoteModels {
+            if !userRemovedRemoteModelUniqueIds.contains(selectedRemoteModel.uniqueId) {
+                Defaults[.userRemovedRemoteModels].append(selectedRemoteModel)
+            }
+        }
+        
+        let selectedRemoteModelUniqueIds = Set(selectedRemoteModels.map { $0.uniqueId })
+        
+        availableRemoteModels.removeAll { selectedRemoteModelUniqueIds.contains($0.uniqueId) }
+    }
 }
 
 // MARK: - App Update Listeners

@@ -9,6 +9,8 @@ import Defaults
 import SwiftUI
 
 struct RemoteModelRemoveModel: View {
+    @Environment(\.appState) var appState
+    
     @Default(.availableRemoteModels) var availableRemoteModels
     @Default(.userRemovedRemoteModels) var userRemovedRemoteModels
     
@@ -28,11 +30,24 @@ struct RemoteModelRemoveModel: View {
     // MARK: - States
     
     @State private var selectedRemoteModels: [AIModel] = []
+    @State private var searchQuery: String = ""
     
     // MARK: - Private Variables
     
     private var remoteModels: [AIModel] {
         availableRemoteModels.filter { $0.provider == self.provider }
+    }
+    
+    private var filteredRemoteModels: [AIModel] {
+        if searchQuery.isEmpty {
+            remoteModels
+        } else {
+            remoteModels.filter { $0.displayName.lowercased().contains(searchQuery.lowercased()) }
+        }
+    }
+    
+    private var selectedAll: Bool {
+        filteredRemoteModels.allSatisfy { selectedRemoteModels.contains($0) }
     }
     
     private var noSelectedRemoteModels: Bool {
@@ -43,13 +58,34 @@ struct RemoteModelRemoveModel: View {
     
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("Remove added models")
-                .styleText(size: 13)
-                .truncateText()
+            HStack(alignment: .top) {
+                Text("Remove added models")
+                    .styleText(size: 13)
+                    .truncateText()
+                
+                Spacer()
+                
+                SimpleButton(
+                    text: "\(selectedAll ? "Unselect" : "Select") All",
+                    action: {
+                        if selectedAll {
+                            selectedRemoteModels.removeAll { filteredRemoteModels.contains($0) }
+                        } else {
+                            selectedRemoteModels = filteredRemoteModels
+                        }
+                    }
+                )
+            }
+            
+            SearchBar(
+                searchQuery: $searchQuery, 
+                placeholder: "Filter by display name",
+                background: .clear
+            )
             
             DynamicScrollView(maxHeight: 260) {
-                VStack(alignment: .leading, spacing: 2) {
-                    ForEach(remoteModels) { remoteModel in
+                LazyVStack(alignment: .leading, spacing: 2) {
+                    ForEach(filteredRemoteModels) { remoteModel in
                         modelToggleButton(remoteModel)
                     }
                 }
@@ -66,7 +102,10 @@ struct RemoteModelRemoveModel: View {
                 SimpleButton(
                     text: "Remove Selected",
                     textColor: .red,
-                    action: removeSelectedRemoteModels,
+                    action: {
+                        appState.removeSelectedRemoteModels(selectedRemoteModels)
+                        showRemoveModelsSheet = false
+                    },
                     background: .redBrick
                 )
                 .opacity(noSelectedRemoteModels ? 0.5 : 1)
@@ -100,23 +139,5 @@ struct RemoteModelRemoveModel: View {
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .frame(height: 36)
-    }
-    
-    // MARK: - Private Functions
-    
-    private func removeSelectedRemoteModels() {
-        let userRemovedRemoteModelUniqueIds = Set(userRemovedRemoteModels.map { $0.uniqueId })
-        
-        for selectedRemoteModel in selectedRemoteModels {
-            if !userRemovedRemoteModelUniqueIds.contains(selectedRemoteModel.uniqueId) {
-                userRemovedRemoteModels.append(selectedRemoteModel)
-            }
-        }
-        
-        let selectedRemoteModelUniqueIds = Set(selectedRemoteModels.map { $0.uniqueId })
-        
-        availableRemoteModels.removeAll { selectedRemoteModelUniqueIds.contains($0.uniqueId) }
-        
-        showRemoveModelsSheet = false
     }
 }
