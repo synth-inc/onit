@@ -129,4 +129,38 @@ class TokenValidationManager {
         }
         return nil
     }
+    
+    static func removeTokenForProvider(_ provider: AIModel.ModelProvider) {
+        switch provider {
+        case .openAI:
+            Defaults[.isOpenAITokenValidated] = false
+            Defaults[.openAIToken] = nil
+            Defaults[.useOpenAI] = false
+        case .anthropic:
+            Defaults[.isAnthropicTokenValidated] = false
+            Defaults[.anthropicToken] = nil
+            Defaults[.useAnthropic] = false
+        case .xAI:
+            Defaults[.isXAITokenValidated] = false
+            Defaults[.xAIToken] = nil
+            Defaults[.useXAI] = false
+        case .googleAI:
+            Defaults[.isGoogleAITokenValidated] = false
+            Defaults[.googleAIToken] = nil
+            Defaults[.useGoogleAI] = false
+        case .deepSeek:
+            Defaults[.isDeepSeekTokenValidated] = false
+            Defaults[.deepSeekToken] = nil
+            Defaults[.useDeepSeek] = false
+        case .perplexity:
+            Defaults[.isPerplexityTokenValidated] = false
+            Defaults[.perplexityToken] = nil
+            Defaults[.usePerplexity] = false
+        case .custom:
+            if let customProviderName = Defaults[.remoteModel]?.customProviderName,
+               let index = Defaults[.availableCustomProviders].firstIndex(where: { $0.name == customProviderName }) {
+                Defaults[.availableCustomProviders][index].isTokenValidated = false
+            }
+        }
+    }
 }
