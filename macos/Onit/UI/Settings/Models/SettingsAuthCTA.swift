@@ -14,7 +14,7 @@ struct SettingsAuthCTA: View {
     private let caption: String
 
     init(
-        title: String = "Sign Up to Access All providers!",
+        title: String = "Sign Up to Access All Providers!",
         caption: String,
     ) {
         self.title = title

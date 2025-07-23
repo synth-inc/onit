@@ -46,6 +46,10 @@ struct SimpleButton: View {
     @State private var isHovered: Bool = false
     @State private var isPressed: Bool = false
     
+    private var allowHitTesting: Bool {
+        !isLoading && !disabled
+    }
+    
     var body: some View {
         HStack(alignment: .center, spacing: spacing) {
             if isLoading {
@@ -66,7 +70,7 @@ struct SimpleButton: View {
         .background(background)
         .cornerRadius(5)
         .opacity(disabled ? 0.5 : isPressed ? 0.7 : 1)
-        .allowsHitTesting(!isLoading || !disabled)
+        .allowsHitTesting(allowHitTesting)
         .shadow(color: .black.opacity(0.05), radius: 0, x: 0, y: 0)
         .shadow(color: .black.opacity(0.3), radius: 1.25, x: 0, y: 0.5)
         .addAnimation(dependency: isHovered)
@@ -76,6 +80,8 @@ struct SimpleButton: View {
                 .onChanged {_ in isPressed = true }
                 .onEnded{ _ in
                     isPressed = false
+                    
+                    guard allowHitTesting else { return }
                     action()
                 }
         )

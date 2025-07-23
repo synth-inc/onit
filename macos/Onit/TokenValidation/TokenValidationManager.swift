@@ -130,7 +130,7 @@ class TokenValidationManager {
         return nil
     }
     
-    static func removeTokenForProvider(_ provider: AIModel.ModelProvider) {
+    static func removeTokenForNonCustomProvider(_ provider: AIModel.ModelProvider) {
         switch provider {
         case .openAI:
             Defaults[.isOpenAITokenValidated] = false
@@ -156,11 +156,8 @@ class TokenValidationManager {
             Defaults[.isPerplexityTokenValidated] = false
             Defaults[.perplexityToken] = nil
             Defaults[.usePerplexity] = false
-        case .custom:
-            if let customProviderName = Defaults[.remoteModel]?.customProviderName,
-               let index = Defaults[.availableCustomProviders].firstIndex(where: { $0.name == customProviderName }) {
-                Defaults[.availableCustomProviders][index].isTokenValidated = false
-            }
+        default: // Custom
+            break /// This logic is handled in `CustomProviderRow` → `removeProvider()`
         }
     }
 }
