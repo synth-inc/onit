@@ -17,6 +17,7 @@ struct RemoteModelSection: View {
     @State private var loading = false
     @State private var showAdvanced: Bool = false  
     @State private var localState: TokenValidationState.ValidationState = .notValidated
+    @State private var showAddModelSheet: Bool = false
     @State private var showRemoveModelsSheet: Bool = false
 
     @Default(.mode) var mode
@@ -265,7 +266,12 @@ struct RemoteModelSection: View {
                     Divider()
                     
                     HStack(alignment: .center, spacing: 2) {
-                        // TODO: LOYD - Add "add custom model" button here.
+                        UpdateAvailableRemoteModelsButton() {
+                            showAddModelSheet = true
+                        }
+                        
+                        Divider()
+                            .frame(width: 1, height: 26)
                         
                         UpdateAvailableRemoteModelsButton(isRemove: true) {
                             showRemoveModelsSheet = true
@@ -278,7 +284,12 @@ struct RemoteModelSection: View {
                 .padding(.vertical, -4)
                 .padding(.horizontal, -4)
                 .frame(maxWidth: .infinity, alignment: .leading)
-                // TODO: LOYD - Add "add custom model" sheet/form here.
+                .sheet(isPresented: $showAddModelSheet) {
+                    RemoteModelAddCustomModel(
+                        provider: provider,
+                        showAddModelSheet: $showAddModelSheet
+                    )
+                }
                 .sheet(isPresented: $showRemoveModelsSheet) {
                     RemoteModelRemoveModel(
                         provider: provider,
