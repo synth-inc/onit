@@ -152,7 +152,7 @@ extension OnitPanelState {
                 var hasValidProviderSearchToken = false
                 var onitSupportsSearchProvider = false
                 if Defaults[.mode] == .remote, let model = Defaults[.remoteModel] {
-                    let apiToken = TokenValidationManager.getTokenForProviderOrModel(model: model)
+                    let apiToken = TokenValidationManager.getTokenForModel(model)
                     let hasValidToken = apiToken?.isEmpty == false
                     hasValidProviderSearchToken = hasValidToken && (model.provider == .openAI || model.provider == .anthropic || model.provider == .googleAI)
 
@@ -197,7 +197,7 @@ extension OnitPanelState {
                     guard let model = Defaults[.remoteModel] else {
                         throw FetchingError.invalidRequest(message: "Model is required")
                     }
-                    let apiToken = TokenValidationManager.getTokenForProviderOrModel(model: model)
+                    let apiToken = TokenValidationManager.getTokenForModel(model)
                     let useOnitChat = apiToken == nil || apiToken == ""
                     
                     if useOnitChat || shouldUseStream(model) {

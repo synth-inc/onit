@@ -49,7 +49,7 @@ struct SimpleButton: View {
                 Loader()
             }
             
-            Text(text).styleText(size: 13, weight: .light, color: textColor)
+            Text(text).styleText(size: 13, weight: .regular, color: textColor)
         }
         .padding(.horizontal, 7)
         .padding(.vertical, 3)
