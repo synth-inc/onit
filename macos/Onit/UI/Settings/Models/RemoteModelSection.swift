@@ -94,25 +94,6 @@ struct RemoteModelSection: View {
             }
         }
     }
-    
-    var verifyButtonText: String {
-        if validated {
-            "Verified"
-        } else {
-            switch localState {
-            case .notValidated, .invalid:
-                "Verify →"
-            case .validating:
-                "Verifying"
-            case .valid:
-                if validated {
-                    "Verified"
-                } else {
-                    "Verify →"
-                }
-            }
-        }
-    }
 
     // MARK: - Body
 
