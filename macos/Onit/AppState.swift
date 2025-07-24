@@ -606,6 +606,7 @@ class AppState: NSObject, SPUUpdaterDelegate {
         let remoteModelsToRemoveUniqueIds = Set(remoteModelsToRemove.map { $0.uniqueId })
         availableRemoteModels.removeAll { remoteModelsToRemoveUniqueIds.contains($0.uniqueId) }
         Defaults[.visibleModelIds].subtract(remoteModelsToRemoveUniqueIds)
+        Defaults[.userAddedRemoteModels].removeAll { selectedRemoteModelUniqueIds.contains($0.uniqueId) }
         
         /// Properly setting the currently selected model in the case where the user removes the previously selected one.
         resetCurrentRemoteModel()
