@@ -82,10 +82,6 @@ struct RemoteModelSection: View {
         }
     }
     
-    var userProvidedOwnApiToken: Bool {
-        TokenValidationManager.getTokenForProviderOrModel(provider: provider) != nil
-    }
-    
     var verifyButtonText: String {
         if validated {
             "Verified"
@@ -303,10 +299,6 @@ struct RemoteModelSection: View {
                             showRemoveModelsSheet = true
                         }
                         .padding(2)
-                    } else {
-                        Text("Provide your own API token to add and remove models.")
-                            .styleText(size: 13, weight: .regular, color: .gray200)
-                            .padding(8)
                     }
                 }
                 .padding(.vertical, -4)
