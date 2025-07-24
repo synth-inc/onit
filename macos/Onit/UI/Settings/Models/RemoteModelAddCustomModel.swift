@@ -9,6 +9,8 @@ import Defaults
 import SwiftUI
 
 struct RemoteModelAddCustomModel: View {
+    @Environment(\.appState) var appState
+    
     @Default(.availableRemoteModels) var availableRemoteModels
     @Default(.userAddedRemoteModels) var userAddedRemoteModels
     @Default(.userRemovedRemoteModels) var userRemovedRemoteModels
@@ -38,13 +40,54 @@ struct RemoteModelAddCustomModel: View {
     @State private var submitDisabled: Bool = true
     @State private var errorMessage: String = ""
     
+    @State private var showRemovedRemoteModels: Bool = false
+    @State private var removedRemoteModelsSearchQuery: String = ""
+    
+    // MARK: - Private Variables
+    
+    private var filteredUserRemovedRemoteModels: [AIModel] {
+        let removedRemoteModels = userRemovedRemoteModels.filter{ $0.provider == provider }
+        
+        if removedRemoteModelsSearchQuery.isEmpty {
+            return removedRemoteModels
+        } else {
+            return removedRemoteModels.filter({ $0.displayName.lowercased().contains(removedRemoteModelsSearchQuery.lowercased())} )
+        }
+    }
+    
+    private let spacingBetweenRemovedModelsButtons: CGFloat = 2
+    
+    private var removedRemoteModelsViewScrollHeight: CGFloat {
+        let totalSpacingHeight: CGFloat =
+            filteredUserRemovedRemoteModels.isEmpty ? 0 :
+            spacingBetweenRemovedModelsButtons * CGFloat(filteredUserRemovedRemoteModels.count - 1)
+        
+        let totalButtonsHeight: CGFloat = ButtonConstants.textButtonHeight * CGFloat(filteredUserRemovedRemoteModels.count)
+        
+        return min(260, totalSpacingHeight + totalButtonsHeight)
+    }
+    
     // MARK: - Body
     
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("Add a new model")
-                .styleText(size: 13)
-                .truncateText()
+            HStack(alignment: .top) {
+                Text("Add a new model")
+                    .styleText(size: 13)
+                    .truncateText()
+                
+                Spacer()
+                
+                SimpleButton(text: "Removed Models") {
+                    showRemovedRemoteModels.toggle()
+                }
+                .popover(
+                    isPresented: $showRemovedRemoteModels,
+                    arrowEdge: .bottom
+                ) {
+                    removedRemoteModelsView
+                }
+            }
             
             VStack(alignment: .leading, spacing: 16) {
                 inputField(
@@ -160,31 +203,45 @@ struct RemoteModelAddCustomModel: View {
         }
     }
     
-    // MARK: - Private Functions
-    
-    private func addRemoteModel(_ remoteModel: AIModel) {
-        let availableRemoteModelUniqueIds = Set(availableRemoteModels.map { $0.uniqueId })
-        
-        if !availableRemoteModelUniqueIds.contains(remoteModel.uniqueId) {
-            availableRemoteModels.append(remoteModel)
+    private var removedRemoteModelsView: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            SearchBar(
+                searchQuery: $removedRemoteModelsSearchQuery,
+                placeholder: "Filter by display name",
+                background: .clear
+            )
+            
+            if filteredUserRemovedRemoteModels.isEmpty {
+                Text("No models.")
+                    .padding(.horizontal, 8)
+                    .styleText(size: 13, color: .gray100)
+            } else {
+                ScrollView {
+                    LazyVStack(alignment: .leading, spacing: spacingBetweenRemovedModelsButtons) {
+                        ForEach(filteredUserRemovedRemoteModels) { remoteModel in
+                            TextButton(text: remoteModel.displayName) {
+                                modelName = remoteModel.id
+                                displayName = remoteModel.displayName
+                                supportsVision = remoteModel.supportsVision
+                                supportsSystemPrompts = remoteModel.supportsSystemPrompts
+                                supportsToolCalling = remoteModel.supportsToolCalling
+                                
+                                showRemovedRemoteModels = false
+                            }
+                        }
+                    }
+                }
+                .frame(height: removedRemoteModelsViewScrollHeight)
+            }
         }
-        
-        let userAddedRemoteModelUniqueIds = Set(userAddedRemoteModels.map { $0.uniqueId })
-        
-        if !userAddedRemoteModelUniqueIds.contains(remoteModel.uniqueId) {
-            userAddedRemoteModels.append(remoteModel)
-        }
-        
-        userRemovedRemoteModels.removeAll { $0.uniqueId == remoteModel.uniqueId }
-        
-        Defaults[.visibleModelIds].insert(remoteModel.uniqueId)
+        .padding(8)
+        .frame(width: 240)
     }
     
+    // MARK: - Private Functions
+    
     private func verifyRemoteModel(_ remoteModel: AIModel) async -> String? {
-        guard let apiToken = TokenValidationManager.getTokenForProviderOrModel(provider: provider)
-        else {
-            return "Please provide a valid \(provider.title) API token."
-        }
+        let apiToken = TokenValidationManager.getTokenForModel(remoteModel)
         
         do {
             _ = try await FetchingClient().chat(
@@ -222,7 +279,7 @@ struct RemoteModelAddCustomModel: View {
             from: ModelInfo(
                 id: modelName,
                 displayName: displayName.isEmpty ? modelName : displayName,
-                provider: provider.title,
+                provider: provider.rawValue,
                 defaultOn: true,
                 supportsVision: supportsVision,
                 supportsSystemPrompts: supportsSystemPrompts,
@@ -240,7 +297,7 @@ struct RemoteModelAddCustomModel: View {
         } else {
             guard let verificationErrorMessage = await verifyRemoteModel(remoteModel)
             else {
-                addRemoteModel(remoteModel)
+                appState.addRemoteModel(remoteModel)
                 showAddModelSheet = false
                 return
             }

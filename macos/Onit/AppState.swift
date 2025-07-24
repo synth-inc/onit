@@ -158,11 +158,10 @@ class AppState: NSObject, SPUUpdaterDelegate {
             /// Removing user-added remote models from fetched result to prevent:
             ///     1. Overriding of custom user-added models (e.g. custom display names).
             ///     2. Duplication.
-            let userAddedRemoteModelUniqueIds = Set(Defaults[.userAddedRemoteModels].map { $0.uniqueId })
-            models.removeAll { userAddedRemoteModelUniqueIds.contains($0.uniqueId) }
-            
             for userAddedRemoteModel in Defaults[.userAddedRemoteModels] {
-                if !models.contains(where: { $0.uniqueId == userAddedRemoteModel.uniqueId }) {
+                if let existingModelIndex = models.firstIndex(where: { $0.uniqueId == userAddedRemoteModel.uniqueId }) {
+                    models[existingModelIndex] = userAddedRemoteModel
+                } else {
                     models.append(userAddedRemoteModel)
                 }
             }
@@ -610,6 +609,26 @@ class AppState: NSObject, SPUUpdaterDelegate {
         
         /// Properly setting the currently selected model in the case where the user removes the previously selected one.
         resetCurrentRemoteModel()
+    }
+    
+    func addRemoteModel(_ remoteModel: AIModel) {
+        let availableRemoteModelUniqueIds = Set(availableRemoteModels.map { $0.uniqueId })
+        
+        if !availableRemoteModelUniqueIds.contains(remoteModel.uniqueId) {
+            availableRemoteModels.append(remoteModel)
+        }
+        
+        let userAddedRemoteModelUniqueIds = Set(Defaults[.userAddedRemoteModels].map { $0.uniqueId })
+        
+        if !userAddedRemoteModelUniqueIds.contains(remoteModel.uniqueId) {
+            Defaults[.userAddedRemoteModels].append(remoteModel)
+        }
+        
+        Defaults[.userRemovedRemoteModels].removeAll { $0.uniqueId == remoteModel.uniqueId }
+        
+        Defaults[.visibleModelIds].insert(remoteModel.uniqueId)
+        
+        AnalyticsManager.Settings.Models.remoteModelAdded(remoteModel)
     }
 }
 
