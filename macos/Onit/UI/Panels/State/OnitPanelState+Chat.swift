@@ -493,6 +493,8 @@ extension OnitPanelState {
             case .success(let success):
                 partialResponse.toolCallResult = success.result
                 partialResponse.toolCallSuccess = true
+
+				completionAfterToolCallSucceed(response: partialResponse)
             case .failure(let failure):
                 partialResponse.toolCallResult = failure.message
                 partialResponse.toolCallSuccess = false
@@ -502,6 +504,12 @@ extension OnitPanelState {
         }
         
         return false
+    }
+    
+    private func completionAfterToolCallSucceed(response: Response) {
+        if response.toolCallName?.hasPrefix("diff_") == true {
+            NotepadWindowController.shared.showWindow(windowState: self, response: response)
+        }
     }
 }
 

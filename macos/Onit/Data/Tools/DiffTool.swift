@@ -60,10 +60,20 @@ class DiffTool: ToolProtocol {
     }
     
     func canExecute(partialArguments: String) -> Bool {
-        let hasOriginalStart = partialArguments.contains("\"original_content\"")
-        let hasImprovedStart = partialArguments.contains("\"improved_content\"")
+        guard let data = partialArguments.data(using: .utf8) else {
+            return false
+        }
         
-        return hasOriginalStart && hasImprovedStart
+        do {
+            let decoded = try JSONDecoder().decode(PlainTextDiffArguments.self, from: data)
+            
+            let originalHasContent = decoded.original_content.count >= 10
+            let improvedHasContent = decoded.improved_content.count >= 10
+            
+            return originalHasContent && improvedHasContent
+        } catch {
+            return false
+        }
     }
 
     func execute(toolName: String, arguments: String) async -> Result<ToolCallResult, ToolCallError> {
@@ -295,7 +305,7 @@ class DiffTool: ToolProtocol {
         return operations
 	}
     
-    private static func reconstructReplacementText(
+    private func reconstructReplacementText(
         originalText: String,
         insertSequence: [(type: String, index: Int, text: String?)],
         startIndex: Int,
@@ -327,7 +337,7 @@ class DiffTool: ToolProtocol {
         return result
     }
     
-    private static func optimizedDiff(text1: String, text2: String) -> [DiffOperation] {
+    private func optimizedDiff(text1: String, text2: String) -> [DiffOperation] {
         if text1 == text2 {
             return text1.isEmpty ? [] : [.equal(text1)]
         }
@@ -383,7 +393,7 @@ class DiffTool: ToolProtocol {
         return result
     }
 
-    private static func computeOptimalDiff(text1: String, text2: String) -> [DiffOperation] {
+    private func computeOptimalDiff(text1: String, text2: String) -> [DiffOperation] {
         let chars1 = Array(text1)
         let chars2 = Array(text2)
         let n = chars1.count
@@ -422,7 +432,7 @@ class DiffTool: ToolProtocol {
         return mergeConsecutiveOperations(result)
     }
     
-    private static func mergeConsecutiveOperations(_ operations: [DiffOperation]) -> [DiffOperation] {
+    private func mergeConsecutiveOperations(_ operations: [DiffOperation]) -> [DiffOperation] {
         guard !operations.isEmpty else { return [] }
         
         var result: [DiffOperation] = []
@@ -477,6 +487,10 @@ private func extractCommonSuffix(text1: String, text2: String) -> (String, Strin
     let chars1 = Array(text1)
     let chars2 = Array(text2)
     let minLength = min(chars1.count, chars2.count)
+    
+    if minLength == 0 {
+        return ("", text1, text2)
+    }
     
     var suffixLength = 0
     for i in 1...minLength {
