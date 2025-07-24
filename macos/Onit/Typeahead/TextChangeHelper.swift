@@ -582,12 +582,14 @@ final class TextChangeHelper {
         guard let old = oldValue, let new = newValue else { 
             if let new = newValue {
                 // Calculate confidence for pure addition
-                let confidence = calculateConfidence(
-                    textChange: TextChange(type: .addition, addedText: new, deletedText: nil, insertionIndex: 0, textPrefixRange: nil, textSuffixRange: nil, confidence: 0.0, confidenceVersion: TextChangeHelper.confidenceCalculatorVersion, initialText: nil, endText: nil, trigger: nil),
-                    keystrokes: keystrokes,
-                    oldText: "",
-                    newText: new
-                )
+                let confidence = 0.0 
+                // TODO: Tim - need to fix confidence calculation to account for non-output keystrokes, modifier keys, etc. 
+                // calculateConfidence(
+                //     textChange: TextChange(type: .addition, addedText: new, deletedText: nil, insertionIndex: 0, textPrefixRange: nil, textSuffixRange: nil, confidence: 0.0, confidenceVersion: TextChangeHelper.confidenceCalculatorVersion, initialText: nil, endText: nil, trigger: nil),
+                //     keystrokes: keystrokes,
+                //     oldText: "",
+                //     newText: new
+                // )
                 return TextChange(type: .addition, addedText: new, deletedText: nil, insertionIndex: 0, textPrefixRange: nil, textSuffixRange: nil, confidence: confidence, confidenceVersion: TextChangeHelper.confidenceCalculatorVersion, initialText: nil, endText: nil, trigger: nil)
             }
             return nil
@@ -624,6 +626,7 @@ final class TextChangeHelper {
         if let keystrokes = keystrokes, !keystrokes.isEmpty {
             let typedText = KeyCodeTranslator.shared.keystrokesToText(keystrokes)
             
+            // TODO: Tim - need to fix ambiguity resolution to account for non-output keystrokes, modifier keys, etc. 
             // Check if there's potential ambiguity that keystrokes can help resolve
             if let correctedLengths = resolveAmbiguityWithKeystrokes(
                 old: old, new: new, typedText: typedText, keystrokes: keystrokes,
@@ -662,7 +665,8 @@ final class TextChangeHelper {
         }
         
         // Calculate confidence score
-        let confidence = calculateConfidence(textChange: textChange, keystrokes: keystrokes, oldText: old, newText: new)
+        // TODO: Tim - need to fix confidence calculation to account for non-output keystrokes, modifier keys, etc. 
+        let confidence = 0.0 //  calculateConfidence(textChange: textChange, keystrokes: keystrokes, oldText: old, newText: new)
         
         // Return the text change with calculated confidence
         return TextChange(

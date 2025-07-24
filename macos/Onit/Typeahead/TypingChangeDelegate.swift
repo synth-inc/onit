@@ -19,8 +19,7 @@ private struct AccessibilityValue {
 struct TypingSession {
     var initialText: String = ""
     var currentText: String = ""
-    var keystrokes: [String] = []  // Output-producing keystrokes
-    var nonOutputKeystrokes: [String] = []  // Non-output-producing keystrokes
+    var keystrokes: [String] = []  // All keystrokes, output and non-output
     var couldntFindInitialText: Bool = false
     var startTime: Date = Date()
     var lastKeystroke: Date = Date()
@@ -32,17 +31,12 @@ struct TypingSession {
 
     mutating func updateText(_ newText: String, readableKey: String) {
         currentText = newText
-        addOutputKeystroke(readableKey: readableKey)
+        addKeystroke(readableKey: readableKey)
     }
     
-    mutating func addOutputKeystroke(readableKey: String) {
+    mutating func addKeystroke(readableKey: String) {
         lastKeystroke = Date()
         keystrokes.append(readableKey)
-    }
-    
-    mutating func addNonOutputKeystroke(readableKey: String) {
-        lastKeystroke = Date()
-        nonOutputKeystrokes.append(readableKey)
     }
    
     var timeSinceLastKeystroke: TimeInterval {
@@ -234,26 +228,26 @@ final class TypingChangeDelegate: AccessibilityNotificationsDelegate {
             if let currentValue = element.value() {
                 currentSession?.updateText(currentValue, readableKey: readableKey)
             } else {
-                currentSession?.addOutputKeystroke(readableKey: readableKey)
+                currentSession?.addKeystroke(readableKey: readableKey)
             }
             
             if isPhraseCompletionCharacter(readableKey) {
-                finishCurrentSession(trigger: "phraseEndCharacter")
+                finishCurrentPhrase(trigger: "phraseEndCharacter")
                 return
             }
         
             // Handle special keys that should complete phrases
             if isPhraseTriggerKey(keyCode: keyCode) {
-                finishCurrentSession(trigger: "specialKey")
+                finishCurrentPhrase(trigger: "specialKey")
                 return
             }
             
             // Set up debounce timer
             schedulePhraseDebouncedCompletion()
         } else {
-            // If we're in a session, add the non-output keystroke for debugging purposes.
+            // If we're in a session, add the keystroke for debugging purposes.
             if currentSession != nil {
-                currentSession?.addNonOutputKeystroke(readableKey: readableKey)
+                currentSession?.addKeystroke(readableKey: readableKey)
             }
         }
     }
@@ -280,14 +274,14 @@ final class TypingChangeDelegate: AccessibilityNotificationsDelegate {
         phraseDebounceWorkItem?.cancel()
         
         let workItem = DispatchWorkItem { [weak self] in
-            self?.finishCurrentSession(trigger: "timeout")
+            self?.finishCurrentPhrase(trigger: "timeout")
         }
         
         phraseDebounceWorkItem = workItem
         DispatchQueue.main.asyncAfter(deadline: .now() + Config.typingDebounceInterval, execute: workItem)
     }
     
-    private func finishCurrentSession(trigger: String) {
+    private func finishCurrentPhrase(trigger: String) {
         guard let session = currentSession else { return }
         if let focusedTextElement = focusedTextElement,
            let finalText = focusedTextElement.value() {
@@ -340,7 +334,7 @@ final class TypingChangeDelegate: AccessibilityNotificationsDelegate {
         
         guard let role = element.role(), [kAXTextFieldRole, kAXTextAreaRole].contains(role) else {
             print("typeaheadDebug - didFocusTextElement - skipping non-text-field element: \(element.role() ?? "")")
-            finishCurrentSession(trigger: "focusChange")
+            finishCurrentPhrase(trigger: "focusChange")
             focusedTextFieldId = nil
             focusedTextElement = nil
             return
@@ -351,9 +345,9 @@ final class TypingChangeDelegate: AccessibilityNotificationsDelegate {
         if elementId != focusedTextFieldId {
             // Finish any current session before switching elements
             if element.appName() != focusedTextElement?.appName() {
-                finishCurrentSession(trigger: "appChange")
+                finishCurrentPhrase(trigger: "appChange")
             } else {
-                finishCurrentSession(trigger: "elementChange")
+                finishCurrentPhrase(trigger: "elementChange")
             }
             
             // Update focused element
@@ -412,7 +406,7 @@ final class TypingChangeDelegate: AccessibilityNotificationsDelegate {
         if let newApp = newWindow.element.appName(),
            let currentSessionApp = currentSession?.element?.appName(),
            newApp != currentSessionApp {
-            finishCurrentSession(trigger: "appChange")
+            finishCurrentPhrase(trigger: "appChange")
             focusedTextFieldId = nil
             focusedTextElement = nil
         }
