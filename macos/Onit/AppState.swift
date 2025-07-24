@@ -639,6 +639,26 @@ class AppState: NSObject, SPUUpdaterDelegate {
         
         AnalyticsManager.Settings.Models.remoteModelAdded(remoteModel)
     }
+    
+    func addRemoteModel(_ remoteModel: AIModel) {
+        let availableRemoteModelUniqueIds = Set(availableRemoteModels.map { $0.uniqueId })
+        
+        if !availableRemoteModelUniqueIds.contains(remoteModel.uniqueId) {
+            availableRemoteModels.append(remoteModel)
+        }
+        
+        let userAddedRemoteModelUniqueIds = Set(Defaults[.userAddedRemoteModels].map { $0.uniqueId })
+        
+        if !userAddedRemoteModelUniqueIds.contains(remoteModel.uniqueId) {
+            Defaults[.userAddedRemoteModels].append(remoteModel)
+        }
+        
+        Defaults[.userRemovedRemoteModels].removeAll { $0.uniqueId == remoteModel.uniqueId }
+        
+        Defaults[.visibleModelIds].insert(remoteModel.uniqueId)
+        
+        AnalyticsManager.Settings.Models.remoteModelAdded(remoteModel)
+    }
 }
 
 // MARK: - App Update Listeners
