@@ -28,8 +28,8 @@ struct GeneralTabAccount: View {
                 
                 HStack(spacing: 9) {
                     if appState.account == nil {
-                        createAnAccountButton
-                        signInButton
+                        Self.createAnAccountButton
+                        Self.signInButton
                     } else {
                         logoutButton
                         deleteAccountButton
@@ -78,25 +78,25 @@ extension GeneralTabAccount {
         }
     }
     
-    private var createAnAccountButton: some View {
+    static var createAnAccountButton: some View {
         SimpleButton(
-            iconText: "👤",
+            iconSystem: "person.crop.circle",
             text: "Create an account",
             action: {
                 AnalyticsManager.AccountEvents.createAccountPressed()
-                authFlowStatus = .showSignUp
+                Defaults[.authFlowStatus] = .showSignUp
                 openPanel()
             },
             background: .blue
         )
     }
     
-    private var signInButton: some View {
+    static var signInButton: some View {
         SimpleButton(
             text: "Sign in",
             action: {
                 AnalyticsManager.AccountEvents.signInPressed()
-                authFlowStatus = .showSignIn
+                Defaults[.authFlowStatus] = .showSignIn
                 openPanel()
             }
         )
@@ -147,7 +147,9 @@ extension GeneralTabAccount {
         }
     }
     
-    private func openPanel() {
-        PanelStateCoordinator.shared.launchPanel()
+    static func openPanel() {
+        if !PanelStateCoordinator.shared.state.panelOpened {
+            PanelStateCoordinator.shared.launchPanel()
+        }
     }
 }

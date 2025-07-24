@@ -8,10 +8,15 @@
 import SwiftUI
 
 struct ModelsTab: View {
+    @Environment(\.appState) var appState
     
     var body: some View {
         ScrollView {
             VStack(spacing: 25) {
+                SettingsAuthCTA(
+                    caption: "Create an account to access all remote providers and use models like GPT-4o, Gemini, Grok and more without API Keys."
+                )
+                
                 RemoteModelsSection()
                 LocalModelsSection()
                 DefaultModelsSection()
