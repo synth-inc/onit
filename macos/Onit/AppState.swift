@@ -574,6 +574,7 @@ class AppState: NSObject, SPUUpdaterDelegate {
         let selectedRemoteModelUniqueIds = Set(selectedRemoteModels.map { $0.uniqueId })
         
         availableRemoteModels.removeAll { selectedRemoteModelUniqueIds.contains($0.uniqueId) }
+        Defaults[.userAddedRemoteModels].removeAll { selectedRemoteModelUniqueIds.contains($0.uniqueId) }
     }
     
     func addRemoteModel(_ remoteModel: AIModel) {
