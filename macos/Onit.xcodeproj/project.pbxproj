@@ -307,7 +307,6 @@
 				Sparkle/Sparkle.swift,
 				TokenValidation/TokenValidationManager.swift,
 				TokenValidation/TokenValidationState.swift,
-				Typeahead/KeyCodeTranslator.swift,
 				Typeahead/TextChangeHelper.swift,
 				Typeahead/TypeaheadHistoryManager.swift,
 				Typeahead/TypeaheadLearningManager.swift,

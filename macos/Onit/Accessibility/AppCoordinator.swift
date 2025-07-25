@@ -19,6 +19,7 @@ class AppCoordinator {
     private let permissionManager: AccessibilityPermissionManager
     private let observerManager: AccessibilityObserversManager
     private let notificationsManager: AccessibilityNotificationsManager
+    private let keystrokeNotificationManager: KeystrokeNotificationManager
     private let panelStateCoordinator: PanelStateCoordinator
     private let featureFlagManager: FeatureFlagManager
 
@@ -37,6 +38,7 @@ class AppCoordinator {
         permissionManager = AccessibilityPermissionManager.shared
         observerManager = AccessibilityObserversManager.shared
         notificationsManager = AccessibilityNotificationsManager.shared
+        keystrokeNotificationManager = KeystrokeNotificationManager.shared
         panelStateCoordinator = PanelStateCoordinator.shared
         featureFlagManager = FeatureFlagManager.shared
         #if DEBUG || BETA
@@ -61,6 +63,9 @@ class AppCoordinator {
         panelStateCoordinator.configure(frontmostPidAtLaunch: frontmostPidAtLaunch)
         KeyboardShortcutsManager.configure()
         featureFlagManager.configure()
+        
+        // Start keystroke monitoring
+        KeystrokeNotificationManager.shared.startMonitoring()
     }
     
     // MARK: - Private function

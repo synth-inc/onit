@@ -50,11 +50,8 @@ struct TypingSession {
 
 // MARK: - Typing Change Delegate
 
-final class TypingChangeDelegate: AccessibilityNotificationsDelegate {
-    // MARK: - Keyboard Monitoring Properties
-    
-    private nonisolated(unsafe) var eventTap: CFMachPort?
-    private nonisolated(unsafe) var runLoopSource: CFRunLoopSource?
+final class TypingChangeDelegate: AccessibilityNotificationsDelegate, KeystrokeNotificationDelegate {
+    // MARK: - Properties
     
     private var focusedTextFieldId: UInt? = nil
     private var focusedTextElement: AXUIElement? = nil
@@ -62,143 +59,56 @@ final class TypingChangeDelegate: AccessibilityNotificationsDelegate {
     private var currentSession: TypingSession?
     private var phraseDebounceWorkItem: DispatchWorkItem?
     
-    // MARK: - Modifier Key Tracking
+    // MARK: - Keystroke Notification Delegate
     
-    private var isCommandPressed: Bool = false
-    private var isControlPressed: Bool = false
-    private var isShiftPressed: Bool = false
-    private var isOptionPressed: Bool = false
-    
+    // Removed keystrokeManager property as it's now managed by KeystrokeNotificationManager.shared
+
     private let onPhraseEntered: (AXUIElement?, String?, TextChange?, [String], Bool) -> Void  // Changed [Int64] to [String]
     private let onTextFocused: (AXUIElement?) -> Void
     
     init(onPhraseEntered: @escaping (AXUIElement?, String?, TextChange?, [String], Bool) -> Void, onTextFocused: @escaping (AXUIElement?) -> Void) {  // Changed [Int64] to [String]
         self.onPhraseEntered = onPhraseEntered
         self.onTextFocused = onTextFocused
-        startKeyboardMonitoring()
+        setupDelegateRegistration()
     }
     
-    deinit {
-        // Clean up synchronously in deinit
-        if let eventTap = eventTap {
-            CGEvent.tapEnable(tap: eventTap, enable: false)
-            if let runLoopSource = runLoopSource {
-                CFRunLoopRemoveSource(CFRunLoopGetMain(), runLoopSource, .commonModes)
-            }
-        }
-    }
-    
-    // MARK: - Keyboard Monitoring
-    
-    private func startKeyboardMonitoring() {
-        let eventMask = (1 << CGEventType.keyDown.rawValue) | (1 << CGEventType.keyUp.rawValue) | (1 << CGEventType.flagsChanged.rawValue)
-        
-        guard let eventTap = CGEvent.tapCreate(
-            tap: .cgSessionEventTap,
-            place: .headInsertEventTap,
-            options: .defaultTap,
-            eventsOfInterest: CGEventMask(eventMask),
-            callback: { (proxy, type, event, refcon) -> Unmanaged<CGEvent>? in
-                guard let refcon = refcon else { return Unmanaged.passRetained(event) }
-                
-   
-                let delegate = Unmanaged<TypingChangeDelegate>.fromOpaque(refcon).takeUnretainedValue()
-                delegate.handleKeyboardEvent(type: type, event: event)
-                
-                return Unmanaged.passRetained(event)
-            },
-            userInfo: Unmanaged.passUnretained(self).toOpaque()
-        ) else {
-            print("typeaheadDebug - Failed to create event tap")
+    // Removed deinit block as it's no longer needed
+
+    func keystrokeNotificationManager(_ manager: KeystrokeNotificationManager, didReceiveKeystroke event: KeystrokeEvent) {
+        // Process keystrokes only when focused on a text element
+        guard let focusedElement = self.focusedTextElement else {
+            print("TypingChangeDelegate: No focused element, ignoring keystroke.")
             return
         }
-        
-        self.eventTap = eventTap
-        self.runLoopSource = CFMachPortCreateRunLoopSource(kCFAllocatorDefault, eventTap, 0)
-        
-        CFRunLoopAddSource(CFRunLoopGetMain(), runLoopSource, .commonModes)
-        CGEvent.tapEnable(tap: eventTap, enable: true)
-        
-        print("typeaheadDebug - Keyboard monitoring started")
-    }
-    
-    private func stopKeyboardMonitoring() {
-        if let eventTap = eventTap {
-            CGEvent.tapEnable(tap: eventTap, enable: false)
-            CFRunLoopRemoveSource(CFRunLoopGetMain(), runLoopSource, .commonModes)
+        // We need to read beforeText before the delay. 
+        let beforeText = focusedElement.value() ?? ""
+
+        let elementId = CFHash(focusedElement)
+        if elementId == self.focusedTextFieldId {
+            print("TypingChangeDelegate: Handling keystroke for focused element.")
             
-            self.eventTap = nil
-            self.runLoopSource = nil
-        }
-        
-        print("typeaheadDebug - Keyboard monitoring stopped")
-    }
-    
-    private func handleKeyboardEvent(type: CGEventType, event: CGEvent) {
-        print("typeaheadDebug - handleKeyboardEvent | type: \(type)")
-        switch type {
-        case .flagsChanged:
-            self.updateModifierKeys(event: event)
-        case .keyDown:
-            self.handleKeyDown(event: event)
-        case .keyUp:
-            self.handleKeyUp(event: event)
-        case .tapDisabledByUserInput:
-            self.restartEventTapIfNeeded()
-        case .tapDisabledByTimeout:
-            self.restartEventTapIfNeeded()
-        default:
-            break
-        }
-    }
-    
-    private func restartEventTapIfNeeded() {
-        if let eventTap = self.eventTap {
-            DispatchQueue.main.async {
-                CGEvent.tapEnable(tap: eventTap, enable: true)
+            // Process text change after a short delay to allow the system to update the text value
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) { [weak self] in
+                self?.handleTextChange(element: focusedElement, beforeText: beforeText, modifierStates: event.modifierStates, keyCode: Int64(event.keyCode))
             }
         }
     }
     
-    private func updateModifierKeys(event: CGEvent) {
-        let flags = event.flags
-        isCommandPressed = flags.contains(.maskCommand)
-        isControlPressed = flags.contains(.maskControl)
-        isShiftPressed = flags.contains(.maskShift)
-        isOptionPressed = flags.contains(.maskAlternate)
-    }
+    // MARK: - Setup
     
-    private func handleKeyDown(event: CGEvent) {
-        let keyCode = event.getIntegerValueField(.keyboardEventKeycode)
+    private func setupDelegateRegistration() {
+        // Register TypingChangeDelegate with KeystrokeNotificationManager
+        KeystrokeNotificationManager.shared.addDelegate(self)
         
-        print("typeaheadDebug - timlx - CGEvent - handleKeyDown | keyCode: \(keyCode)")
-        
-        // Only process typing when focused on a text element
-        // This means we ignore the ignored apps from the main AXNotificationObserver, since they won't have provided us with a focusedTextElement.
-        guard let focusedElement = focusedTextElement else {
-            print("typeaheadDebug - no focused element, early return")
-            return
-        }
-        
-        if let beforeText = focusedElement.value() {
-            // Schedule text change detection after a short delay to let the keystroke process
-            DispatchQueue.main.async { [weak self] in
-                self?.handleTextChange(element: focusedElement, beforeText: beforeText, keyCode: keyCode)
-            }
-        }
+        // Start monitoring if not already started (this might be redundant if AppCoordinator already does it, but ensures it if not)
+        KeystrokeNotificationManager.shared.startMonitoring()
     }
-    
-    private func handleKeyUp(event: CGEvent) {
-        // Currently not needed for our use case
-    }
-    
+
     // MARK: - Text Processing
     // TODO: TIm - remove beforeText.
-    private func handleTextChange(element: AXUIElement, beforeText: String, keyCode: Int64) {
+    private func handleTextChange(element: AXUIElement, beforeText: String, modifierStates: (command: Bool, control: Bool, shift: Bool, option: Bool), keyCode: Int64) {
         let elementId = CFHash(element)
     
-        // Update session with current modifier states
-        let modifierStates = (command: isCommandPressed, control: isControlPressed, shift: isShiftPressed, option: isOptionPressed)
         let keyProducesOutput = KeyCodeTranslator.shared.keyProducesOutputWithModifiers(keyCode, modifierStates: modifierStates)
         let readableKey = KeyCodeTranslator.shared.translateKeyCodeWithModifiers(keyCode, modifierStates: modifierStates)
 
@@ -252,7 +162,6 @@ final class TypingChangeDelegate: AccessibilityNotificationsDelegate {
         }
     }
     
-
     private func isPhraseTriggerKey(keyCode: Int64) -> Bool {
         switch keyCode {
         case 36: // Return/Enter
