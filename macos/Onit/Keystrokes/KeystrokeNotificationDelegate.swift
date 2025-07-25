@@ -9,5 +9,5 @@ import Foundation
 import AppKit
 
 @MainActor protocol KeystrokeNotificationDelegate: AnyObject {
-    func keystrokeNotificationManager(_ manager: KeystrokeNotificationManager, didReceiveKeystroke event: KeystrokeEvent)
+    func keystrokeNotificationManager(_ manager: KeystrokeNotificationManager, didReceiveKeystroke event: NSEvent)
 } 

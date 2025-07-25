@@ -7,19 +7,8 @@
 
 import Foundation
 import AppKit
-import ApplicationServices
-
-// MARK: - Keystroke Event Info
-
-struct KeystrokeEvent {
-    let type: CGEventType
-    let keyCode: Int64
-    let flags: CGEventFlags
-    let modifierStates: (command: Bool, control: Bool, shift: Bool, option: Bool)
-}
 
 // MARK: - Keystroke Notification Manager
-
 @MainActor
 final class KeystrokeNotificationManager: ObservableObject {
 
@@ -29,8 +18,8 @@ final class KeystrokeNotificationManager: ObservableObject {
 
     // MARK: - Properties
 
-    private nonisolated(unsafe) var eventTap: CFMachPort?
-    private nonisolated(unsafe) var runLoopSource: CFRunLoopSource?
+    private var localEventMonitor: Any?
+    private var globalEventMonitor: Any?
 
     private var isCommandPressed: Bool = false
     private var isControlPressed: Bool = false
@@ -57,129 +46,77 @@ final class KeystrokeNotificationManager: ObservableObject {
         }
     }
 
-    // MARK: - Callbacks
-
-    private var keystrokeCallbacks: [(KeystrokeEvent) -> Void] = []
-
     // MARK: - Private initializer
 
-    private init() { }
+    private init() {
+        startMonitoring()
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
 
     // MARK: - Public Methods
 
     func startMonitoring() {
-        guard !isMonitoring else {
-            print("KeystrokeNotificationManager: Already monitoring")
-            return
+        guard !isMonitoring else { return }
+
+        // Monitor key down events
+        localEventMonitor = NSEvent.addLocalMonitorForEvents(matching: [.keyDown, .flagsChanged]) { [weak self] event in
+            self?.handleKeyboardEvent(event)
+            return event
         }
 
-        let eventMask = (1 << CGEventType.keyDown.rawValue) | (1 << CGEventType.keyUp.rawValue) | (1 << CGEventType.flagsChanged.rawValue)
-
-        guard let eventTap = CGEvent.tapCreate(
-            tap: .cgSessionEventTap,
-            place: .headInsertEventTap,
-            options: .defaultTap,
-            eventsOfInterest: CGEventMask(eventMask),
-            callback: { (proxy, type, event, refcon) -> Unmanaged<CGEvent>? in
-                guard let refcon = refcon else { return Unmanaged.passRetained(event) }
-
-                let manager = Unmanaged<KeystrokeNotificationManager>.fromOpaque(refcon).takeUnretainedValue()
-                manager.handleKeyboardEvent(type: type, event: event)
-
-                return Unmanaged.passRetained(event)
-            },
-            userInfo: Unmanaged.passUnretained(self).toOpaque()
-        ) else {
-            print("KeystrokeNotificationManager: Failed to create event tap")
-            return
+        globalEventMonitor = NSEvent.addGlobalMonitorForEvents(matching: [.keyDown, .flagsChanged]) { [weak self] event in
+            self?.handleKeyboardEvent(event)
         }
-
-        self.eventTap = eventTap
-        self.runLoopSource = CFMachPortCreateRunLoopSource(kCFAllocatorDefault, eventTap, 0)
-
-        CFRunLoopAddSource(CFRunLoopGetMain(), runLoopSource, .commonModes)
-        CGEvent.tapEnable(tap: eventTap, enable: true)
 
         isMonitoring = true
-        print("KeystrokeNotificationManager: Keyboard monitoring started")
     }
 
     func stopMonitoring() {
         guard isMonitoring else {
-            print("KeystrokeNotificationManager: Not monitoring")
             return
         }
 
-        if let eventTap = eventTap {
-            CGEvent.tapEnable(tap: eventTap, enable: false)
-            CFRunLoopRemoveSource(CFRunLoopGetMain(), runLoopSource, .commonModes)
+        if let localEventMonitor = localEventMonitor {
+            NSEvent.removeMonitor(localEventMonitor)
+            self.localEventMonitor = nil
+        }
 
-            self.eventTap = nil
-            self.runLoopSource = nil
+        if let globalEventMonitor = globalEventMonitor {
+            NSEvent.removeMonitor(globalEventMonitor)
+            self.globalEventMonitor = nil
         }
 
         isMonitoring = false
-        print("KeystrokeNotificationManager: Keyboard monitoring stopped")
-    }
-
-    func addKeystrokeCallback(_ callback: @escaping (KeystrokeEvent) -> Void) {
-        keystrokeCallbacks.append(callback)
-    }
-
-    func removeAllCallbacks() {
-        keystrokeCallbacks.removeAll()
     }
 
     // MARK: - Private Methods
 
-    private func handleKeyboardEvent(type: CGEventType, event: CGEvent) {
-        switch type {
+    private func handleKeyboardEvent(_ event: NSEvent) {
+        switch event.type {
         case .flagsChanged:
             updateModifierKeys(event: event)
         case .keyDown:
             handleKeyDown(event: event)
-        case .tapDisabledByUserInput:
-            restartEventTapIfNeeded()
-        case .tapDisabledByTimeout:
-            restartEventTapIfNeeded()
         default:
             break
         }
     }
 
-    private func restartEventTapIfNeeded() {
-        if let eventTap = self.eventTap {
-            DispatchQueue.main.async {
-                CGEvent.tapEnable(tap: eventTap, enable: true)
-            }
-        }
+    private func updateModifierKeys(event: NSEvent) {
+        let flags = event.modifierFlags
+        isCommandPressed = flags.contains(.command)
+        isControlPressed = flags.contains(.control)
+        isShiftPressed = flags.contains(.shift)
+        isOptionPressed = flags.contains(.option)
     }
 
-    private func updateModifierKeys(event: CGEvent) {
-        let flags = event.flags
-        isCommandPressed = flags.contains(.maskCommand)
-        isControlPressed = flags.contains(.maskControl)
-        isShiftPressed = flags.contains(.maskShift)
-        isOptionPressed = flags.contains(.maskAlternate)
-    }
-
-    private func handleKeyDown(event: CGEvent) {
-        let keyCode = event.getIntegerValueField(.keyboardEventKeycode)
-        let flags = event.flags
-
-        let modifierStates = (command: isCommandPressed, control: isControlPressed, shift: isShiftPressed, option: isOptionPressed)
-
-
-        let keystrokeEvent = KeystrokeEvent(
-            type: .keyDown,
-            keyCode: keyCode,
-            flags: flags,
-            modifierStates: modifierStates
-        )
-
+    private func handleKeyDown(event: NSEvent) {
         // Notify all callbacks
         notifyDelegates { delegate in
-            delegate.keystrokeNotificationManager(self, didReceiveKeystroke: keystrokeEvent)
+            delegate.keystrokeNotificationManager(self, didReceiveKeystroke: event)
         }
     }
 
