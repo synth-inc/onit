@@ -23,8 +23,7 @@ final class MouseNotificationManager: ObservableObject {
 
     private var isMonitoring: Bool = false
     private var isDragging: Bool = false
-    private var lastClickTime: TimeInterval = 0
-    private var clickCount: Int = 0
+
     private var dragStartLocation: NSPoint = .zero
 
     // MARK: - Delegates
@@ -47,9 +46,7 @@ final class MouseNotificationManager: ObservableObject {
 
     // MARK: - Private initializer
 
-    private init() {
-        startMonitoring()
-    }
+    private init() {}
     
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
@@ -165,12 +162,5 @@ final class MouseNotificationManager: ObservableObject {
 
     func getCurrentDragState() -> Bool {
         return isDragging
-    }
-    
-    func getLastClickCount() -> Int {
-        return clickCount
-    }
-deinit {
-        stopMonitoring()
     }
 }
