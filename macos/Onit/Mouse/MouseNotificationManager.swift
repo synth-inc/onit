@@ -170,4 +170,7 @@ final class MouseNotificationManager: ObservableObject {
     func getLastClickCount() -> Int {
         return clickCount
     }
+deinit {
+        stopMonitoring()
+    }
 }
