@@ -137,5 +137,80 @@ struct AIModel: Codable, Identifiable, Hashable, Defaults.Serializable {
                 return URL(string: "about:blank")!
             }
         }
+        
+        var hasValidRemoteToken: Bool {
+            switch self {
+            case .openAI:
+                guard let token = Defaults[.openAIToken] else { return false }
+                return !token.isEmpty && Defaults[.isOpenAITokenValidated]
+            case .anthropic:
+                guard let token = Defaults[.anthropicToken] else { return false }
+                return !token.isEmpty && Defaults[.isAnthropicTokenValidated]
+            case .xAI:
+                guard let token = Defaults[.xAIToken] else { return false }
+                return !token.isEmpty && Defaults[.isXAITokenValidated]
+            case .googleAI:
+                guard let token = Defaults[.googleAIToken] else { return false }
+                return !token.isEmpty && Defaults[.isGoogleAITokenValidated]
+            case .deepSeek:
+                guard let token = Defaults[.deepSeekToken] else { return false }
+                return !token.isEmpty && Defaults[.isDeepSeekTokenValidated]
+            case .perplexity:
+                guard let token = Defaults[.perplexityToken] else { return false }
+                return !token.isEmpty && Defaults[.isPerplexityTokenValidated]
+            case .custom:
+                return false /// When checking for valid tokens on custom providers, use `hasValidCustomToken()` below.
+            }
+        }
+        
+        static var userHasRemoteAPITokens: Bool {
+            Self.openAI.hasValidRemoteToken ||
+            Self.anthropic.hasValidRemoteToken ||
+            Self.xAI.hasValidRemoteToken ||
+            Self.googleAI.hasValidRemoteToken ||
+            Self.deepSeek.hasValidRemoteToken ||
+            Self.perplexity.hasValidRemoteToken
+        }
+        
+        static func hasValidCustomToken(name: String) -> Bool {
+            if let customProvider = Defaults[.availableCustomProviders].first(where: { $0.name == name }) {
+                return !customProvider.token.isEmpty && customProvider.isTokenValidated
+            } else {
+                return false
+            }
+        }
+        
+        static func getIsRemoteProviderOn(_ provider: ModelProvider) -> Bool  {
+            switch provider {
+            case .openAI:
+                return Defaults[.useOpenAI]
+            case .anthropic:
+                return Defaults[.useAnthropic]
+            case .xAI:
+                return Defaults[.useXAI]
+            case .googleAI:
+                return Defaults[.useGoogleAI]
+            case .deepSeek:
+                return Defaults[.useDeepSeek]
+            case .perplexity:
+                return Defaults[.usePerplexity]
+            case .custom:
+                return false
+            }
+        }
+        
+        static var remoteProvidersOnCount: Int {
+            var count: Int = 0
+            
+            let providers: [ModelProvider] = [.openAI, .anthropic, .xAI, .googleAI, .deepSeek, .perplexity]
+            
+            for provider in providers {
+                if Self.getIsRemoteProviderOn(provider) {
+                    count += 1
+                }
+            }
+            
+            return count
+        }
     }
 }

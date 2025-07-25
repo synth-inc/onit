@@ -56,6 +56,10 @@ struct ContentView: View {
         }
     }
     
+    private var canAccessRemoteModels: Bool {
+        !appState.listedModels.isEmpty
+    }
+    
     // MARK: - Private Functions
     
     @ViewBuilder
@@ -131,6 +135,7 @@ struct ContentView: View {
                     }
                 }
                 .onAppear {
+                    /// Checking if any of the API tokens added by the user is invalid, at least once every 24 hours.
                     Task {
                         let now: Date = Date()
                         var shouldCheck: Bool = false
@@ -172,7 +177,7 @@ struct ContentView: View {
         }
         .addAnimation(dependency: state?.showChatView)
         .onAppear {
-            setModeAndAuthOnLoginStatus()
+            setModeAndValidRemoteModelWithAuth()
             
             if !hasClosedTrialEndedAlert {
                 if let subscriptionStatus = appState.subscription?.status {
@@ -192,45 +197,51 @@ struct ContentView: View {
             }
         }
         .onChange(of: appState.userLoggedIn) { _, userLoggedIn in
-            setModeAndAuthOnLoginStatus()
+            setModeAndValidRemoteModelWithAuth()
+            
+            if userLoggedIn && canAccessRemoteModels {
+                mode = .remote
+            }
         }
         .onChange(of: availableLocalModels) {_, localModelsList in
             if !appState.userLoggedIn {
-                let canAccessRemoteModels = appState.canAccessRemoteModels
-                let hasNoLocalModels = localModelsList.isEmpty
+                let canAccessLocalModels = !localModelsList.isEmpty
                 
-                if hasNoLocalModels && canAccessRemoteModels {
+                if !canAccessLocalModels && canAccessRemoteModels {
                     mode = .remote
                 }
                 
-                authFlowStatus = !canAccessRemoteModels && hasNoLocalModels ? .showSignUp : .hideAuth
+                let cannotAccessModels = !canAccessRemoteModels && !canAccessLocalModels
+                
+                authFlowStatus = cannotAccessModels ? .showSignUp : .hideAuth
             }
         }
-        .onChange(of: appState.canAccessRemoteModels) { _, canAccessRemoteModels in
-            Defaults[.modeToggleShortcutDisabled] = !canAccessRemoteModels
-            mode = !canAccessRemoteModels ? .local : .remote
+        .onChange(of: appState.numberRemoteProvidersInUse) { _, _ in
+            appState.setModeAndValidRemoteModel()
             
-            let hasNoAvailableModels = !canAccessRemoteModels && availableLocalModels.isEmpty
-            authFlowStatus = !appState.userLoggedIn && hasNoAvailableModels ? .showSignUp : .hideAuth
-        }
-        .onChange(of: appState.remoteProvidersOnCount) { _, _ in
-            appState.setValidRemoteModel()
+            if canAccessRemoteModels {
+                mode = .remote
+            }
         }
         .onChange(of: visibleModelIds) { _, _ in
-            appState.setValidRemoteModel()
+            appState.setModeAndValidRemoteModel()
+            
+            if canAccessRemoteModels {
+                mode = .remote
+            }
         }
     }
     
-    private func setModeAndAuthOnLoginStatus() {
-        Defaults[.modeToggleShortcutDisabled] = !appState.canAccessRemoteModels
-        mode = !appState.canAccessRemoteModels ? .local : .remote
+    private func setModeAndValidRemoteModelWithAuth() {
+        appState.setModeAndValidRemoteModel()
         
         if appState.userLoggedIn {
-            appState.setValidRemoteModel()
             authFlowStatus = .hideAuth
         } else {
-            let hasNoAvailableModels = !appState.hasUserAPITokens && availableLocalModels.isEmpty
-            authFlowStatus = hasNoAvailableModels ? .showSignUp : .hideAuth
+            let canAccessLocalModels = !availableLocalModels.isEmpty
+            let cannotAccessModels = !canAccessRemoteModels && !canAccessLocalModels
+            
+            authFlowStatus = cannotAccessModels ? .showSignUp : .hideAuth
         }
     }
     
