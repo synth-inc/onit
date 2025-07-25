@@ -10,6 +10,8 @@ import SwiftUI
 
 struct RemoteModelSection: View {
     @Environment(\.appState) var appState
+    
+    @ObservedObject private var authManager = AuthManager.shared
 
     @State private var use = false
     @State private var key = ""
@@ -215,7 +217,7 @@ struct RemoteModelSection: View {
     @ViewBuilder
     var modelsView: some View {
         // If their logged in, we shoudl show these since they can always use them through the free plan.
-        if use && (appState.account != nil || validated) {
+        if use && (!authManager.userLoggedIn || validated) {
             GroupBox {
                 VStack(alignment: .leading, spacing: 0) {
                     ForEach(models) { model in

@@ -12,6 +12,8 @@ struct GeneralTabPlanAndBilling: View {
     @Environment(\.appState) var appState
     @Environment(\.openURL) var openURL
     
+    @ObservedObject private var authManager = AuthManager.shared
+    
     @State private var planType: String? = nil
     @State private var chatGenerationsUsage: Int? = nil
     @State private var chatGenerationsQuota: Int? = nil
@@ -22,10 +24,6 @@ struct GeneralTabPlanAndBilling: View {
     
     @State private var fetchingSubscriptionData: Bool = false
     @State private var subscriptionDataErrorMessage: String = ""
-    
-    private var userLoggedIn: Bool {
-        appState.account != nil
-    }
     
     var body: some View {
         SettingsSection(
@@ -44,7 +42,7 @@ struct GeneralTabPlanAndBilling: View {
                 
                 if fetchingSubscriptionData {
                     shimmers
-                } else if userLoggedIn,
+                } else if authManager.userLoggedIn,
                    let planType = planType,
                    let usage = chatGenerationsUsage,
                    let quota = chatGenerationsQuota,
@@ -58,7 +56,7 @@ struct GeneralTabPlanAndBilling: View {
                     )
                 }
                 
-                if !userLoggedIn {
+                if !authManager.userLoggedIn {
                     upgradeToProButton
                 } else if appState.subscriptionStatus == SubscriptionStatus.free {
                     HStack(spacing: 11) {
@@ -86,7 +84,7 @@ struct GeneralTabPlanAndBilling: View {
                     }
                 }
                 
-                if !userLoggedIn ||
+                if !authManager.userLoggedIn ||
                     appState.subscriptionCanceled ||
                     planType == SubscriptionStatus.free
                 {
@@ -97,7 +95,7 @@ struct GeneralTabPlanAndBilling: View {
         .task() {
             await fetchSubscriptionData()
         }
-        .onChange(of: userLoggedIn) {
+        .onChange(of: authManager.userLoggedIn) { _, userLoggedIn in
             if userLoggedIn {
                 Task {
                     await fetchSubscriptionData()
@@ -266,7 +264,7 @@ extension GeneralTabPlanAndBilling {
             subscriptionDataErrorMessage = ""
             fetchingSubscriptionData = true
             
-            if userLoggedIn {
+            if authManager.userLoggedIn {
                 await refreshSubscriptionState()
                 
                 planType = appState.subscriptionStatus

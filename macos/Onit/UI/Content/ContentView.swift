@@ -12,6 +12,7 @@ struct ContentView: View {
     @Environment(\.appState) var appState
     @Environment(\.windowState) private var state
     
+    @ObservedObject private var authManager = AuthManager.shared
     @ObservedObject private var accessibilityPermissionManager = AccessibilityPermissionManager.shared
     @Namespace private var animation
     
@@ -90,7 +91,7 @@ struct ContentView: View {
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .background(Color.black)
                 .onAppear {
-                    if appState.account == nil {
+                    if !authManager.userLoggedIn {
                         authFlowStatus = .showSignUp
                     } else {
                         authFlowStatus = .hideAuth
@@ -198,16 +199,13 @@ struct ContentView: View {
                 }
             }
         }
-        .onChange(of: appState.userLoggedIn) { _, userLoggedIn in
-            setModeAndValidRemoteModelWithAuth()
-            
-            if userLoggedIn && canAccessRemoteModels {
-                mode = .remote
-            }
+        .onChange(of: authManager.userLoggedIn) { _, _ in
+            setModeAndAuthOnLoginStatus()
         }
         .onChange(of: availableLocalModels) {_, localModelsList in
-            if !appState.userLoggedIn {
-                let canAccessLocalModels = !localModelsList.isEmpty
+            if !authManager.userLoggedIn {
+                let canAccessRemoteModels = appState.canAccessRemoteModels
+                let hasNoLocalModels = localModelsList.isEmpty
                 
                 if !canAccessLocalModels && canAccessRemoteModels {
                     mode = .remote
@@ -237,7 +235,8 @@ struct ContentView: View {
     private func setModeAndValidRemoteModelWithAuth() {
         appState.setModeAndValidRemoteModel()
         
-        if appState.userLoggedIn {
+        if authManager.userLoggedIn {
+            appState.setValidRemoteModel()
             authFlowStatus = .hideAuth
         } else {
             let canAccessLocalModels = !availableLocalModels.isEmpty

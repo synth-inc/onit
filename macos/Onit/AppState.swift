@@ -5,6 +5,7 @@
 //  Created by Kévin Naudin on 02/04/2025.
 //
 
+import Combine
 import Defaults
 import DefaultsMacros
 import Sparkle
@@ -13,6 +14,7 @@ import SwiftUI
 @MainActor
 @Observable
 class AppState: NSObject, SPUUpdaterDelegate {
+    private let authManager = AuthManager.shared
     
     private var modelProvidersManager = ModelProvidersManager.shared
     
@@ -27,26 +29,8 @@ class AppState: NSObject, SPUUpdaterDelegate {
     var remoteFetchFailed: Bool = false
     var localFetchFailed: Bool = false
     
-    var account: Account? {
-        didSet {
-            if account == nil {
-                fetchSubscriptionTask?.cancel()
-                fetchSubscriptionTask = nil
-                subscription = nil
-            } else {
-                fetchSubscriptionTask?.cancel()
-                fetchSubscriptionTask = Task {
-                    subscription = try? await FetchingClient().getSubscription()
-                }
-            }
-        }
-    }
     private var fetchSubscriptionTask: Task<Void, Never>?
     private var chatGenerationLimitTask: Task<Void, Never>? = nil
-    
-    var userLoggedIn: Bool {
-        account != nil
-    }
     
     var subscription: Subscription?
 //    var subscriptionActive: Bool { subscription?.status == "active" || subscription?.status == "trialing" }
@@ -60,7 +44,7 @@ class AppState: NSObject, SPUUpdaterDelegate {
     }
     
     var subscriptionStatus: String? {
-        if account != nil && subscription == nil {
+        if authManager.userLoggedIn && subscription == nil {
             return SubscriptionStatus.free
         } else if let subscription = subscription {
             switch subscription.status {
@@ -79,11 +63,37 @@ class AppState: NSObject, SPUUpdaterDelegate {
     var showFreeLimitAlert: Bool = false
     var showProLimitAlert: Bool = false
     var subscriptionPlanError: String = ""
+    
+    /// This value isn't used anywhere but here.
+    /// This is to handle updates to subscription related variables in reaction to updates to `AuthManager.shared.account`.
+    private var account: Account? = nil {
+        didSet {
+            if account == nil {
+                fetchSubscriptionTask?.cancel()
+                fetchSubscriptionTask = nil
+                subscription = nil
+            } else {
+                fetchSubscriptionTask?.cancel()
+                fetchSubscriptionTask = Task {
+                    subscription = try? await FetchingClient().getSubscription()
+                }
+            }
+        }
+    }
+    
+    private var authCancellable: AnyCancellable? = nil
 
     // MARK: - Initializer
     
     override init() {
         super.init()
+        
+        // Used for updating subscription variables in response to account updates.
+        authCancellable = AuthManager.shared.$account
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] account in
+                self?.account = account
+            }
         
         // Used for showing/removing update available footer notification.
         updater = SPUStandardUpdaterController(
@@ -210,53 +220,6 @@ class AppState: NSObject, SPUUpdaterDelegate {
         }
     }
     
-    func handleTokenLogin(_ url: URL) {
-        guard url.scheme == "onit" else {
-            return
-        }
-        
-        let provider = "email"
-        
-        guard let components = URLComponents(url: url, resolvingAgainstBaseURL: true) else {
-            let errorMsg = "Invalid URL"
-            
-            AnalyticsManager.Auth.failed(provider: provider, error: errorMsg)
-            print(errorMsg)
-            return
-        }
-
-        guard let token = components.queryItems?.first(where: { $0.name == "token" })?.value else {
-            let errorMsg = "Login token not found"
-            
-            AnalyticsManager.Auth.failed(provider: provider, error: errorMsg)
-            print(errorMsg)
-            return
-        }
-
-        Task { @MainActor in
-            do {
-                let loginResponse = try await FetchingClient().loginToken(loginToken: token)
-
-                AnalyticsManager.Auth.success(provider: provider)
-                TokenManager.token = loginResponse.token
-                account = loginResponse.account
-
-                if loginResponse.isNewAccount {
-                    AnalyticsManager.Identity.identify(account: loginResponse.account)
-                    modelProvidersManager.useOpenAI = true
-                    modelProvidersManager.useAnthropic = true
-                    modelProvidersManager.useXAI = true
-                    modelProvidersManager.useGoogleAI = true
-                    modelProvidersManager.useDeepSeek = true
-                    modelProvidersManager.usePerplexity = true
-                }
-            } catch {
-                AnalyticsManager.Auth.failed(provider: provider, error: error.localizedDescription)
-                print("Login by token failed with error: \(error)")
-            }
-        }
-    }
-    
     // MARK: - Alert Functions
     
     func checkApiKeyExistsForCurrentModelProvider() -> Bool {
@@ -327,7 +290,7 @@ class AppState: NSObject, SPUUpdaterDelegate {
         // If the user is logged out...
         //   Prevent the user from sending any messages or updating any past prompts
         //   if they haven't provided an API key for the current model.
-        if account == nil {
+        if !authManager.userLoggedIn {
             if !providerApiKeyExists {
                 subscriptionPlanError = "Add the provider API key to send a message."
             } else {
