@@ -49,16 +49,12 @@ struct AuthFlow: View {
         !appState.userLoggedIn
     }
     
-    private var hasRemoteModels: Bool {
-        appState.hasUserAPITokens
-    }
-    
     private var hasLocalModels: Bool {
         !availableLocalModels.isEmpty
     }
     
     private var hasModels: Bool {
-        hasRemoteModels || hasLocalModels
+        AIModel.ModelProvider.userHasRemoteAPITokens || hasLocalModels
     }
     
     var body: some View {
