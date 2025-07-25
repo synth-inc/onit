@@ -26,7 +26,7 @@ struct PromptView: View {
             switch prompt.generationState {
             case .generating:
                 GeneratingView(prompt: prompt)
-            case .streaming,.done:
+            case .streaming, .done:
                 GeneratedView(prompt: prompt)
             default:
                 EmptyView()

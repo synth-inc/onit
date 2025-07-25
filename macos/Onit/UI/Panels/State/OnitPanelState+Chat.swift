@@ -77,7 +77,6 @@ extension OnitPanelState {
         cancelGenerate()
         
         let systemPrompt = currentChat?.systemPrompt ?? SystemPrompt.outputOnly
-        addPartialResponse(prompt: prompt)
         generatingPrompt = prompt
         generatingPromptPriorState = prompt.generationState
         generationStopped = false
@@ -89,7 +88,9 @@ extension OnitPanelState {
 
             prompt.generationState = .starting
             let curInstruction = prompt.instruction
-            
+            let currentModelName = Defaults[.mode] == .local ? Defaults[.localModel] ?? "" : Defaults[.remoteModel]?.displayName ?? ""
+            let partialResponse = addPartialResponse(prompt: prompt, instruction: curInstruction, model: currentModelName)
+
             var filesHistory: [[URL]] = [prompt.contextList.files]
             var inputsHistory: [Input?] = [prompt.input]
             var imagesHistory: [[URL]] = [prompt.contextList.images]
@@ -99,7 +100,6 @@ extension OnitPanelState {
             var responsesHistory: [String] = []
 
             // Go through prior prompts and add them to the history
-            let currentModelName = Defaults[.mode] == .local ? Defaults[.localModel] ?? "" : Defaults[.remoteModel]?.displayName ?? ""
             var currentPrompt: Prompt? = prompt.priorPrompt
             while currentPrompt != nil {
                 if let generationIndex = currentPrompt?.generationIndex,
@@ -138,7 +138,6 @@ extension OnitPanelState {
                     )
                 }
 
-                streamedResponse = ""
                 var toolName = ""
                 var toolArguments = ""
                 
@@ -217,11 +216,20 @@ extension OnitPanelState {
                             apiToken: apiToken,
                             includeSearch: (useWebSearch && !useTavilySearch) ? true : nil)
                         for try await response in asyncText {
-                            streamedResponse += response.content ?? ""
+                            partialResponse.text += response.content ?? ""
+                            
                             if let responseToolName = response.toolName {
                                 toolName = responseToolName
                             }
                             toolArguments += response.toolArguments ?? ""
+                            
+                            if let responseToolName = response.toolName,
+                               let responseToolArguments = response.toolArguments,
+                               !responseToolArguments.isEmpty {
+                                
+                                partialResponse.toolCallName = responseToolName
+                                partialResponse.toolCallArguments = responseToolArguments
+                            }
                         }
                     } else {
                         prompt.generationState = .generating
@@ -238,7 +246,7 @@ extension OnitPanelState {
                             apiToken: apiToken,
                             tools: ToolRouter.activeTools,
                             includeSearch: (useWebSearch && !useTavilySearch) ? true : nil)
-                        streamedResponse = chatResponse.content ?? ""
+                        partialResponse.text = chatResponse.content ?? ""
 						if let responseToolName = chatResponse.toolName {
 							toolName = responseToolName
 						}
@@ -263,15 +271,24 @@ extension OnitPanelState {
                             responses: responsesHistory,
                             model: model)
                         for try await response in asyncText {
-                            streamedResponse += response.content ?? ""
+                            partialResponse.text += response.content ?? ""
+                            
                             if let responseToolName = response.toolName {
                                 toolName = responseToolName
                             }
                             toolArguments += response.toolArguments ?? ""
+                            
+                            if let responseToolName = response.toolName,
+                               let responseToolArguments = response.toolArguments,
+                               !responseToolArguments.isEmpty {
+                                
+                                partialResponse.toolCallName = responseToolName
+                                partialResponse.toolCallArguments = responseToolArguments
+                            }
                         }
                     } else {
                         prompt.generationState = .generating
-                        streamedResponse = try await client.localChat(
+                        let localResult = try await client.localChat(
                             systemMessage: systemPrompt.prompt,
                             instructions: instructionsHistory,
                             inputs: inputsHistory,
@@ -281,27 +298,38 @@ extension OnitPanelState {
                             webSearchContexts: webSearchContextsHistory,
                             responses: responsesHistory,
                             model: model)
+                        
+                        partialResponse.text = localResult
                     }
                 }
                 
-                let response = Response(text: String(streamedResponse), instruction: curInstruction, type: .success, model: currentModelName)
 
                 if !toolArguments.isEmpty {
                     let toolResult = await ToolRouter.parseAndExecuteToolCalls(toolName: toolName, toolArguments: toolArguments)
-                    response.toolCallName = toolName
-                    response.toolCallArguments = toolArguments
+                    
+                    partialResponse.toolCallName = toolName
+                    partialResponse.toolCallArguments = toolArguments
 
                     switch toolResult {
                     case .success(let success):
-                        response.toolCallResult = success.result
-                        response.toolCallSuccess = true
+                        partialResponse.toolCallResult = success.result
+                        partialResponse.toolCallSuccess = true
                     case .failure(let failure):
-                        response.toolCallResult = failure.message
-                        response.toolCallSuccess = false
+                        partialResponse.toolCallResult = failure.message
+                        partialResponse.toolCallSuccess = false
                     }
                 }
 
-                replacePartialResponse(prompt: prompt, response: response)
+                partialResponse.type = .success
+                prompt.generationState = .done
+                
+                do { 
+                    try container.mainContext.save() 
+                } catch {
+                    container.mainContext.rollback()
+                    print("Final response save failed!")
+                }
+                
                 TokenValidationManager.setTokenIsValid(true)
             } catch let error as FetchingError {
                 print("Fetching Error: \(error.localizedDescription)")
@@ -311,12 +339,30 @@ extension OnitPanelState {
                 if case .unauthorized = error {
                     TokenValidationManager.setTokenIsValid(false)
                 }
-                let response = Response(text: error.localizedDescription, instruction: curInstruction, type: .error, model: currentModelName)
-                replacePartialResponse(prompt: prompt, response: response)
+                
+                partialResponse.text = error.localizedDescription
+                partialResponse.type = .error
+                prompt.generationState = .done
+                
+                do { 
+                    try container.mainContext.save() 
+                } catch {
+                    container.mainContext.rollback()
+                    print("Error response save failed!")
+                }
             } catch {
                 print("Unexpected Error: \(error.localizedDescription)")
-                let response = Response(text: error.localizedDescription, instruction: curInstruction, type: .error, model: currentModelName)
-                replacePartialResponse(prompt: prompt, response: response)
+                
+                partialResponse.text = error.localizedDescription
+                partialResponse.type = .error
+                prompt.generationState = .done
+                
+                do { 
+                    try container.mainContext.save() 
+                } catch {
+                    container.mainContext.rollback()
+                    print("Error response save failed!")
+                }
             }
             generatingPrompt = nil
         }
@@ -342,7 +388,44 @@ extension OnitPanelState {
         generatingPrompt = nil
     }
     
-    func removePartialResponse(prompt: Prompt) {
+    func shouldUseStream(_ aiModel: AIModel) -> Bool {
+        switch aiModel.provider {
+        case .openAI:
+            return Defaults[.streamResponse].openAI
+        case .anthropic:
+            return Defaults[.streamResponse].anthropic
+        case .xAI:
+            return Defaults[.streamResponse].xAI
+        case .googleAI:
+            return Defaults[.streamResponse].googleAI
+        case .deepSeek:
+            return Defaults[.streamResponse].deepSeek
+        case .perplexity:
+            return Defaults[.streamResponse].perplexity
+        case .custom:
+            guard let providerId = aiModel.customProviderName else {
+                return false
+            }
+            return Defaults[.streamResponse].customProviders[providerId] ?? false
+        }
+    }
+    
+    func addPartialResponse(prompt: Prompt, instruction: String, model: String) -> Response {
+        let partialResponse = Response(text: "", instruction: instruction, type: .partial, model: model)
+        prompt.responses.append(partialResponse)
+        prompt.priorInstructions.append(instruction)
+        prompt.generationIndex = (prompt.responses.count - 1)
+        
+        do {
+            try container.mainContext.save()
+        } catch {
+            print("addPartialResponse - Save failed!")
+            container.mainContext.rollback()
+        }
+        return partialResponse
+    }
+
+	func removePartialResponse(prompt: Prompt) {
         // If the prompt already has a response, we can just remove the last, partial response.
         if prompt.responses.count > 1, let lastResponse = prompt.responses.last, let lastInstruction = prompt.priorInstructions.last {
             prompt.removeLastResponse()  // Use safe removal method
@@ -388,50 +471,6 @@ extension OnitPanelState {
         }
     }
     
-    func shouldUseStream(_ aiModel: AIModel) -> Bool {
-        switch aiModel.provider {
-        case .openAI:
-            return Defaults[.streamResponse].openAI
-        case .anthropic:
-            return Defaults[.streamResponse].anthropic
-        case .xAI:
-            return Defaults[.streamResponse].xAI
-        case .googleAI:
-            return Defaults[.streamResponse].googleAI
-        case .deepSeek:
-            return Defaults[.streamResponse].deepSeek
-        case .perplexity:
-            return Defaults[.streamResponse].perplexity
-        case .custom:
-            guard let providerId = aiModel.customProviderName else {
-                return false
-            }
-            return Defaults[.streamResponse].customProviders[providerId] ?? false
-        }
-    }
-    
-    func addPartialResponse(prompt: Prompt) {
-        prompt.responses.append(Response.partial)
-        prompt.priorInstructions.append(prompt.instruction)
-        prompt.generationIndex = (prompt.responses.count - 1)
-    }
-    
-    func replacePartialResponse(prompt: Prompt, response: Response) {
-        // TODO could this cause isues where the generation index is beyond the length of responses?
-        if let partialResponseIndex = prompt.responses.firstIndex(where: { $0.isPartial }) {
-            prompt.responses.remove(at: partialResponseIndex)
-        }
-        // We don't need to add the response if the generation was stopped we're removing the partial responses.
-        if generationStopped == false || FeatureFlagManager.shared.stopMode != .removePartial {
-            prompt.responses.append(response)
-            prompt.generationState = .done
-            do { try container.mainContext.save() } catch {
-                container.mainContext.rollback()
-                print("replacePartialResponse - Save failed!")
-            }
-        }
-    }
-    
     func sendAction(accountId: Int?) {
         if websiteUrlsScrapeQueue.isEmpty && windowContextTasks.isEmpty {
             let inputText = (pendingInstruction).trimmingCharacters(in: .whitespacesAndNewlines)
@@ -440,3 +479,4 @@ extension OnitPanelState {
         }
     }
 }
+

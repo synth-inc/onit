@@ -19,13 +19,10 @@ struct GeneratedContentView: View {
 
     var prompt: Prompt
     
-    var textToRead: String {
-        let safeIndex = prompt.safeGenerationIndex
-        guard safeIndex >= 0 && safeIndex < prompt.sortedResponses.count else {
-            return ""
-        }
-        let response = prompt.sortedResponses[safeIndex]
-        return response.isPartial ? (state?.streamedResponse ?? "") : response.text
+    private var textToRead: String {
+        guard let response = prompt.currentResponse else { return "" }
+        
+        return response.text
     }
     
     var configuration: LLMStreamConfiguration {

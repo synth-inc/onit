@@ -150,9 +150,6 @@ class OnitPanelState: NSObject {
     var generatingPromptPriorState: GenerationState?
     var generationStopped: Bool = false
     
-    /// Don't leave this text empty to ensure the first scroll works.
-    var streamedResponse: String = " "
-    
     // Web search states
     var webSearchError: Error? = nil
     var isSearchingWeb: [PersistentIdentifier: Bool] = [:]
