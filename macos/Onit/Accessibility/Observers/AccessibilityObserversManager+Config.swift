@@ -55,5 +55,11 @@ extension AccessibilityObserversManager {
             kAXWindowDeminiaturizedNotification,
             kAXWindowMiniaturizedNotification,
         ]
+
+        // We want to collect typeahead tests from both Onit and ignore processes.
+        static let onitNotifications: [String] = [
+            kAXValueChangedNotification,
+            kAXFocusedUIElementChangedNotification,
+        ]
     }
 }

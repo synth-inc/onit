@@ -77,6 +77,9 @@ extension PanelStatePinnedManager: AccessibilityNotificationsDelegate {
             state.foregroundWindow = window
         }
     }
+    
+    var wantsNotificationsFromIgnoredProcesses: Bool { false }
+    var wantsNotificationsFromOnit: Bool { false }
 }
 
 extension PanelStatePinnedManager: OnitPanelStateDelegate {
