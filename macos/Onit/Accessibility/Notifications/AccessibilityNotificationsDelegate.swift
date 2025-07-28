@@ -18,4 +18,7 @@ import SwiftUI
     func accessibilityManager(_ manager: AccessibilityNotificationsManager, didResizeWindow window: TrackedWindow)
     
     func accessibilityManager(_ manager: AccessibilityNotificationsManager, didChangeWindowTitle window: TrackedWindow)
+
+    var wantsNotificationsFromIgnoredProcesses: Bool { get }
+    var wantsNotificationsFromOnit: Bool { get }
 }

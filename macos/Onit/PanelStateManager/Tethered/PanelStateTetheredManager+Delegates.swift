@@ -101,6 +101,9 @@ extension PanelStateTetheredManager: AccessibilityNotificationsDelegate {
             }
          }
     }
+    
+    var wantsNotificationsFromIgnoredProcesses: Bool { false }
+    var wantsNotificationsFromOnit: Bool { false }
 }
 
 // MARK: - OnitPanelStateDelegate

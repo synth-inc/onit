@@ -81,7 +81,50 @@ class AccessibilityNotificationsManager: ObservableObject {
         }
     }
 
+    /// Notifies delegates with filtering based on element's process type
+    private func notifyDelegates(for element: AXUIElement, _ notification: (AccessibilityNotificationsDelegate) -> Void) {
+       guard let elementPid = element.pid() else {
+           // If we can't determine PID, notify all delegates
+           notifyDelegates(notification)
+           return
+       }
+
+       let processType = determineProcessType(for: elementPid)
+
+       for case let delegate as AccessibilityNotificationsDelegate in delegates.allObjects {
+           switch processType {
+           case .ownProcess:
+               if delegate.wantsNotificationsFromOnit {
+                   notification(delegate)
+               }
+           case .ignoreProcess:
+               if delegate.wantsNotificationsFromIgnoredProcesses {
+                   notification(delegate)
+               }
+           case .eligible:
+               notification(delegate)
+           }
+       }
+   }
+
+   /// Determines the process type for a given PID using shared logic from AccessibilityObserversManager
+   private func determineProcessType(for pid: pid_t) -> ProcessObservationEligibility {
+       return AccessibilityObserversManager.determineProcessObservationEligibility(
+           for: pid,
+           ignoredAppNames: AccessibilityObserversManager.currentIgnoredAppNames
+       )
+   }
+    
     // MARK: - Functions
+    
+    func hasAnyDelegateWantingIgnoredProcesses() -> Bool {
+        for case let delegate as AccessibilityNotificationsDelegate in delegates.allObjects {
+            if delegate.wantsNotificationsFromIgnoredProcesses {
+                return true
+            }
+        }
+        return false
+    }
     
     func reset() {
         windowsManager.reset()
@@ -243,7 +286,7 @@ class AccessibilityNotificationsManager: ObservableObject {
         guard let role = element.role(), [kAXTextFieldRole, kAXTextAreaRole].contains(role) else {
             return
         }
-
+        
         valueDebounceWorkItem?.cancel()
 
         let workItem = DispatchWorkItem { [weak self] in
@@ -679,10 +722,11 @@ class AccessibilityNotificationsManager: ObservableObject {
 // MARK: - AccessibilityObserversDelegate
 
 extension AccessibilityNotificationsManager: AccessibilityObserversDelegate {
+
     func accessibilityObserversManager(didActivateApplication appName: String?, processID: pid_t) {
         handleAppActivation(appName: appName, processID: processID)
     }
-    
+
     func accessibilityObserversManager(didActivateIgnoredApplication appName: String?) {
         notifyDelegates { delegate in
             delegate.accessibilityManager(self, didActivateIgnoredWindow: nil)
@@ -696,4 +740,12 @@ extension AccessibilityNotificationsManager: AccessibilityObserversDelegate {
     func accessibilityObserversManager(didDeactivateApplication appName: String?, processID: pid_t) {
         handleAppDeactivation(appName: appName, processID: processID)
     }
+    
+    func accessibilityObserversManager(didActivateIgnoredApplication appName: String?, processID: pid_t) { }
+
+    func accessibilityObserversManager(didDeactivateIgnoredApplication appName: String?, processID: pid_t) { }
+
+    func accessibilityObserversManager(didActivateOnit processID: pid_t) { }
+    
+    func accessibilityObserversManager(didDeactivateOnit processID: pid_t) { }
 }

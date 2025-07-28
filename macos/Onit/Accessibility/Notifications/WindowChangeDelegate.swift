@@ -148,4 +148,7 @@ final class WindowChangeDelegate: AccessibilityNotificationsDelegate {
     func accessibilityManager(_ manager: AccessibilityNotificationsManager, didDeminimizeWindow window: TrackedWindow) {}
     func accessibilityManager(_ manager: AccessibilityNotificationsManager, didActivateIgnoredWindow window: TrackedWindow?) {}
     func accessibilityManager(_ manager: AccessibilityNotificationsManager, didDestroyWindow window: TrackedWindow) {}
+    
+    var wantsNotificationsFromIgnoredProcesses: Bool { false }
+    var wantsNotificationsFromOnit: Bool { false }
 }
