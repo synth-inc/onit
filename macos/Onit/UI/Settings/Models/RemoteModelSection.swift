@@ -217,7 +217,7 @@ struct RemoteModelSection: View {
     @ViewBuilder
     var modelsView: some View {
         // If their logged in, we shoudl show these since they can always use them through the free plan.
-        if use && (!authManager.userLoggedIn || validated) {
+        if use && (authManager.userLoggedIn || validated) {
             GroupBox {
                 VStack(alignment: .leading, spacing: 0) {
                     ForEach(models) { model in

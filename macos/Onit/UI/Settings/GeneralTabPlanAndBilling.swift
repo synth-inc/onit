@@ -14,6 +14,8 @@ struct GeneralTabPlanAndBilling: View {
     
     @ObservedObject private var authManager = AuthManager.shared
     
+    @State private var modelProvidersManager = ModelProvidersManager.shared
+    
     @State private var planType: String? = nil
     @State private var chatGenerationsUsage: Int? = nil
     @State private var chatGenerationsQuota: Int? = nil
@@ -244,7 +246,7 @@ extension GeneralTabPlanAndBilling {
                 
                 captionText("\(usage)/\(quota) generations used.")
 
-                if AIModel.ModelProvider.userHasRemoteAPITokens {
+                if modelProvidersManager.userHasRemoteAPITokens {
                     captionText(
                         "Prompts sent using your own API tokens do not count against your free quota."
                     )

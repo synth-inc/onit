@@ -26,6 +26,8 @@ struct RemoteModelButton: View {
         self.remoteModel = remoteModel
     }
     
+    @State private var modelProvidersManager = ModelProvidersManager.shared
+    
     @State var planLimitReached: Bool = false
     
     var body: some View {
@@ -86,7 +88,7 @@ extension RemoteModelButton {
                    let quota = chatUsageResponse?.quota
                 {
                     let hitPlanLimit = usage >= quota
-                    let providerApiKeyExists = AIModel.ModelProvider.hasValidRemoteToken(provider: remoteModel.provider)
+                    let providerApiKeyExists = modelProvidersManager.hasValidRemoteToken(provider: remoteModel.provider)
                     
                     if hitPlanLimit && !providerApiKeyExists {
                         planLimitReached = true

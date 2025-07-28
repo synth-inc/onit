@@ -26,6 +26,8 @@ struct AuthFlow: View {
     @Default(.useGoogleAI) var useGoogleAI
     @Default(.useDeepSeek) var useDeepSeek
     @Default(.usePerplexity) var usePerplexity
+    
+    @State private var modelProvidersManager = ModelProvidersManager.shared
 
     @State private var isHoveredContinueWithEmailButton: Bool = false
     @State private var isPressedContinueWithEmailButton: Bool = false
@@ -52,7 +54,7 @@ struct AuthFlow: View {
     }
     
     private var hasModels: Bool {
-        AIModel.ModelProvider.userHasRemoteAPITokens || hasLocalModels
+        modelProvidersManager.userHasRemoteAPITokens || hasLocalModels
     }
     
     var body: some View {

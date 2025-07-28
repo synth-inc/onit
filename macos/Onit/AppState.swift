@@ -232,7 +232,7 @@ class AppState: NSObject, SPUUpdaterDelegate {
         if currentModel.provider == .custom {
             return true
         } else {
-            return AIModel.ModelProvider.hasValidRemoteToken(provider: currentModel.provider)
+            return modelProvidersManager.hasValidRemoteToken(provider: currentModel.provider)
         }
     }
     
@@ -325,12 +325,12 @@ class AppState: NSObject, SPUUpdaterDelegate {
             Defaults[.visibleModelIds].contains($0.uniqueId)
         }
         
-        let cannotAccessOpenAI = !authManager.userLoggedIn && !AIModel.ModelProvider.hasValidRemoteToken(provider: .openAI)
-        let cannotAccessAnthropic = !authManager.userLoggedIn && !AIModel.ModelProvider.hasValidRemoteToken(provider: .anthropic)
-        let cannotAccessXAI = !authManager.userLoggedIn && !AIModel.ModelProvider.hasValidRemoteToken(provider: .xAI)
-        let cannotAccessGoogleAI = !authManager.userLoggedIn && !AIModel.ModelProvider.hasValidRemoteToken(provider: .googleAI)
-        let cannotAccessDeepSeek = !authManager.userLoggedIn && !AIModel.ModelProvider.hasValidRemoteToken(provider: .deepSeek)
-        let cannotAccessPerplexity = !authManager.userLoggedIn && !AIModel.ModelProvider.hasValidRemoteToken(provider: .perplexity)
+        let cannotAccessOpenAI = !authManager.userLoggedIn && !modelProvidersManager.hasValidRemoteToken(provider: .openAI)
+        let cannotAccessAnthropic = !authManager.userLoggedIn && !modelProvidersManager.hasValidRemoteToken(provider: .anthropic)
+        let cannotAccessXAI = !authManager.userLoggedIn && !modelProvidersManager.hasValidRemoteToken(provider: .xAI)
+        let cannotAccessGoogleAI = !authManager.userLoggedIn && !modelProvidersManager.hasValidRemoteToken(provider: .googleAI)
+        let cannotAccessDeepSeek = !authManager.userLoggedIn && !modelProvidersManager.hasValidRemoteToken(provider: .deepSeek)
+        let cannotAccessPerplexity = !authManager.userLoggedIn && !modelProvidersManager.hasValidRemoteToken(provider: .perplexity)
         
         if cannotAccessOpenAI || !modelProvidersManager.useOpenAI {
             models = models.filter { $0.provider != .openAI }
@@ -357,7 +357,7 @@ class AppState: NSObject, SPUUpdaterDelegate {
         }
 
         // Filter out models from disabled custom providers
-        for customProvider in modelProvidersManager.availableCustomProvider {
+        for customProvider in modelProvidersManager.availableCustomProviders {
             models = models.filter { model in
                 if model.customProviderName == customProvider.name {
                     return customProvider.isEnabled
@@ -383,7 +383,9 @@ class AppState: NSObject, SPUUpdaterDelegate {
             return
         } else {
             if let currentRemoteModel = Defaults[.remoteModel] {
-                let isCurrentProviderInUse = modelProvidersManager.getIsRemoteProviderInUse(currentRemoteModel.provider)
+                let isCurrentProviderInUse =
+                    modelProvidersManager.getIsRemoteProviderInUse(currentRemoteModel.provider) ||
+                    modelProvidersManager.getIsCustomRemoteProviderInUse(currentRemoteModel.customProviderName)
                 
                 if !isCurrentProviderInUse || !listedModels.contains(currentRemoteModel) {
                     Defaults[.remoteModel] = listedModels.first
