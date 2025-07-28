@@ -138,8 +138,8 @@ struct AIModel: Codable, Identifiable, Hashable, Defaults.Serializable {
             }
         }
         
-        var hasValidRemoteToken: Bool {
-            switch self {
+        static func hasValidRemoteToken(provider: Self) -> Bool {
+            switch provider {
             case .openAI:
                 guard let token = Defaults[.openAIToken] else { return false }
                 return !token.isEmpty && Defaults[.isOpenAITokenValidated]
@@ -163,15 +163,6 @@ struct AIModel: Codable, Identifiable, Hashable, Defaults.Serializable {
             }
         }
         
-        static var userHasRemoteAPITokens: Bool {
-            Self.openAI.hasValidRemoteToken ||
-            Self.anthropic.hasValidRemoteToken ||
-            Self.xAI.hasValidRemoteToken ||
-            Self.googleAI.hasValidRemoteToken ||
-            Self.deepSeek.hasValidRemoteToken ||
-            Self.perplexity.hasValidRemoteToken
-        }
-        
         static func hasValidCustomToken(name: String) -> Bool {
             if let customProvider = Defaults[.availableCustomProviders].first(where: { $0.name == name }) {
                 return !customProvider.token.isEmpty && customProvider.isTokenValidated
@@ -180,37 +171,13 @@ struct AIModel: Codable, Identifiable, Hashable, Defaults.Serializable {
             }
         }
         
-        static func getIsRemoteProviderOn(_ provider: ModelProvider) -> Bool  {
-            switch provider {
-            case .openAI:
-                return Defaults[.useOpenAI]
-            case .anthropic:
-                return Defaults[.useAnthropic]
-            case .xAI:
-                return Defaults[.useXAI]
-            case .googleAI:
-                return Defaults[.useGoogleAI]
-            case .deepSeek:
-                return Defaults[.useDeepSeek]
-            case .perplexity:
-                return Defaults[.usePerplexity]
-            case .custom:
-                return false
-            }
-        }
-        
-        static var remoteProvidersOnCount: Int {
-            var count: Int = 0
-            
-            let providers: [ModelProvider] = [.openAI, .anthropic, .xAI, .googleAI, .deepSeek, .perplexity]
-            
-            for provider in providers {
-                if Self.getIsRemoteProviderOn(provider) {
-                    count += 1
-                }
-            }
-            
-            return count
+        static var userHasRemoteAPITokens: Bool {
+            Self.hasValidRemoteToken(provider: .openAI) ||
+            Self.hasValidRemoteToken(provider: .anthropic) ||
+            Self.hasValidRemoteToken(provider: .xAI) ||
+            Self.hasValidRemoteToken(provider: .googleAI) ||
+            Self.hasValidRemoteToken(provider: .deepSeek) ||
+            Self.hasValidRemoteToken(provider: .perplexity)
         }
     }
 }

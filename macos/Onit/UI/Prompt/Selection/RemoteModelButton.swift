@@ -74,25 +74,6 @@ extension RemoteModelButton {
         }
     }
     
-    private func checkApiKeyExistsForProvider() -> Bool {
-        switch remoteModel.provider {
-        case .openAI:
-            return appState.isOpenAITokenValidated
-        case .anthropic:
-            return appState.isAnthropicTokenValidated
-        case .xAI:
-            return appState.isXAITokenValidated
-        case .googleAI:
-            return appState.isGoogleAITokenValidated
-        case .deepSeek:
-            return appState.isDeepSeekTokenValidated
-        case .perplexity:
-            return appState.isPerplexityTokenValidated
-        case .custom:
-            return true
-        }
-    }
-    
     private func checkPlanLimitReached() async {
         do {
             let userLoggedIn = appState.account != nil
@@ -105,7 +86,7 @@ extension RemoteModelButton {
                    let quota = chatUsageResponse?.quota
                 {
                     let hitPlanLimit = usage >= quota
-                    let providerApiKeyExists = checkApiKeyExistsForProvider()
+                    let providerApiKeyExists = AIModel.ModelProvider.hasValidRemoteToken(provider: remoteModel.provider)
                     
                     if hitPlanLimit && !providerApiKeyExists {
                         planLimitReached = true

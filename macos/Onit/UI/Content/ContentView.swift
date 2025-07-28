@@ -25,6 +25,8 @@ struct ContentView: View {
     @Default(.visibleModelIds) var visibleModelIds
     @Default(.remoteModel) var remoteModel
     
+    @State private var modelProvidersManager = ModelProvidersManager.shared
+    
     static let bottomPadding: CGFloat = 0
     
     private var shouldShowOnboardingAccessibility: Bool {
@@ -216,7 +218,7 @@ struct ContentView: View {
                 authFlowStatus = cannotAccessModels ? .showSignUp : .hideAuth
             }
         }
-        .onChange(of: appState.numberRemoteProvidersInUse) { _, _ in
+        .onChange(of: modelProvidersManager.numberRemoteProvidersInUse) { _, _ in
             appState.setModeAndValidRemoteModel()
             
             if canAccessRemoteModels {
