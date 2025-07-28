@@ -198,11 +198,6 @@ struct ContentView: View {
         .onChange(of: availableLocalModels) {_, localModelsList in
             if !authManager.userLoggedIn {
                 let canAccessLocalModels = !localModelsList.isEmpty
-                
-                if !canAccessLocalModels && canAccessRemoteModels {
-                    mode = .remote
-                }
-                
                 let cannotAccessModels = !canAccessRemoteModels && !canAccessLocalModels
                 
                 authFlowStatus = cannotAccessModels ? .showSignUp : .hideAuth
@@ -210,17 +205,9 @@ struct ContentView: View {
         }
         .onChange(of: modelProvidersManager.numberRemoteProvidersInUse) { _, _ in
             appState.setModeAndValidRemoteModel()
-            
-            if canAccessRemoteModels {
-                mode = .remote
-            }
         }
         .onChange(of: visibleModelIds) { _, _ in
             appState.setModeAndValidRemoteModel()
-            
-            if canAccessRemoteModels {
-                mode = .remote
-            }
         }
     }
     
