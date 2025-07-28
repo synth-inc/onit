@@ -326,12 +326,12 @@ class AppState: NSObject, SPUUpdaterDelegate {
             Defaults[.visibleModelIds].contains($0.uniqueId)
         }
         
-        let cannotAccessOpenAI = !userLoggedIn && !AIModel.ModelProvider.hasValidRemoteToken(provider: .openAI)
-        let cannotAccessAnthropic = !userLoggedIn && !AIModel.ModelProvider.hasValidRemoteToken(provider: .anthropic)
-        let cannotAccessXAI = !userLoggedIn && !AIModel.ModelProvider.hasValidRemoteToken(provider: .xAI)
-        let cannotAccessGoogleAI = !userLoggedIn && !AIModel.ModelProvider.hasValidRemoteToken(provider: .googleAI)
-        let cannotAccessDeepSeek = !userLoggedIn && !AIModel.ModelProvider.hasValidRemoteToken(provider: .deepSeek)
-        let cannotAccessPerplexity = !userLoggedIn && !AIModel.ModelProvider.hasValidRemoteToken(provider: .perplexity)
+        let cannotAccessOpenAI = !authManager.userLoggedIn && !AIModel.ModelProvider.hasValidRemoteToken(provider: .openAI)
+        let cannotAccessAnthropic = !authManager.userLoggedIn && !AIModel.ModelProvider.hasValidRemoteToken(provider: .anthropic)
+        let cannotAccessXAI = !authManager.userLoggedIn && !AIModel.ModelProvider.hasValidRemoteToken(provider: .xAI)
+        let cannotAccessGoogleAI = !authManager.userLoggedIn && !AIModel.ModelProvider.hasValidRemoteToken(provider: .googleAI)
+        let cannotAccessDeepSeek = !authManager.userLoggedIn && !AIModel.ModelProvider.hasValidRemoteToken(provider: .deepSeek)
+        let cannotAccessPerplexity = !authManager.userLoggedIn && !AIModel.ModelProvider.hasValidRemoteToken(provider: .perplexity)
         
         if cannotAccessOpenAI || !modelProvidersManager.useOpenAI {
             models = models.filter { $0.provider != .openAI }

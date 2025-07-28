@@ -47,10 +47,6 @@ struct AuthFlow: View {
         authFlowStatus == .showSignUp
     }
     
-    private var hasRemoteModels: Bool {
-        appState.hasUserAPITokens
-    }
-    
     private var hasLocalModels: Bool {
         !availableLocalModels.isEmpty
     }

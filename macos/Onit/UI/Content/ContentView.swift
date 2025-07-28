@@ -200,12 +200,11 @@ struct ContentView: View {
             }
         }
         .onChange(of: authManager.userLoggedIn) { _, _ in
-            setModeAndAuthOnLoginStatus()
+            setModeAndValidRemoteModelWithAuth()
         }
         .onChange(of: availableLocalModels) {_, localModelsList in
             if !authManager.userLoggedIn {
-                let canAccessRemoteModels = appState.canAccessRemoteModels
-                let hasNoLocalModels = localModelsList.isEmpty
+                let canAccessLocalModels = !localModelsList.isEmpty
                 
                 if !canAccessLocalModels && canAccessRemoteModels {
                     mode = .remote
@@ -236,7 +235,6 @@ struct ContentView: View {
         appState.setModeAndValidRemoteModel()
         
         if authManager.userLoggedIn {
-            appState.setValidRemoteModel()
             authFlowStatus = .hideAuth
         } else {
             let canAccessLocalModels = !availableLocalModels.isEmpty
