@@ -14,6 +14,8 @@ import SwiftUI
 @Observable
 class AppState: NSObject, SPUUpdaterDelegate {
     
+    private var modelProvidersManager = ModelProvidersManager.shared
+    
     // MARK: - Properties
     
     var settingsTab: SettingsTab = .models
@@ -290,12 +292,12 @@ class AppState: NSObject, SPUUpdaterDelegate {
 
                 if loginResponse.isNewAccount {
                     AnalyticsManager.Identity.identify(account: loginResponse.account)
-                    useOpenAI = true
-                    useAnthropic = true
-                    useXAI = true
-                    useGoogleAI = true
-                    useDeepSeek = true
-                    usePerplexity = true
+                    modelProvidersManager.useOpenAI = true
+                    modelProvidersManager.useAnthropic = true
+                    modelProvidersManager.useXAI = true
+                    modelProvidersManager.useGoogleAI = true
+                    modelProvidersManager.useDeepSeek = true
+                    modelProvidersManager.usePerplexity = true
                 }
             } catch {
                 AnalyticsManager.Auth.failed(provider: provider, error: error.localizedDescription)
@@ -319,46 +321,11 @@ class AppState: NSObject, SPUUpdaterDelegate {
         // Don't allow check to pass when a remote model isn't selected.
         guard let currentModel = Defaults[.remoteModel] else { return false }
         
-        switch currentModel.provider {
-        case .openAI:
-            if Defaults[.openAIToken] != nil {
-                return isOpenAITokenValidated
-            } else {
-                return false
-            }
-        case .anthropic:
-            if Defaults[.anthropicToken] != nil {
-                return isAnthropicTokenValidated
-            } else {
-                return false
-            }
-        case .xAI:
-            if Defaults[.xAIToken] != nil {
-                return isXAITokenValidated
-            } else {
-                return false
-            }
-        case .googleAI:
-            if Defaults[.googleAIToken] != nil {
-                return isGoogleAITokenValidated
-            } else {
-                return false
-            }
-        case .deepSeek:
-            if Defaults[.deepSeekToken] != nil {
-                return isDeepSeekTokenValidated
-            } else {
-                return false
-            }
-        case .perplexity:
-            if Defaults[.perplexityToken] != nil {
-                return isPerplexityTokenValidated
-            } else {
-                return false
-            }
-        case .custom:
-            // Custom providers don't require subscription validation.
+        // Custom providers don't require subscription validation.
+        if currentModel.provider == .custom {
             return true
+        } else {
+            return AIModel.ModelProvider.hasValidRemoteToken(provider: currentModel.provider)
         }
     }
     
@@ -445,135 +412,45 @@ class AppState: NSObject, SPUUpdaterDelegate {
     @ObservableDefault(.availableRemoteModels)
     @ObservationIgnored
     var availableRemoteModels: [AIModel]
-
-    @ObservableDefault(.availableCustomProviders)
-    @ObservationIgnored
-    var availableCustomProvider: [CustomProvider]
     
-    /// OpenAI
-
-    @ObservableDefault(.openAIToken)
-    @ObservationIgnored
-    var openAIToken: String?
-    
-    @ObservableDefault(.isOpenAITokenValidated)
-    @ObservationIgnored
-    var isOpenAITokenValidated: Bool
-
-    @ObservableDefault(.useOpenAI)
-    @ObservationIgnored
-    var useOpenAI: Bool
-    
-    /// Anthropic
-    
-    @ObservableDefault(.anthropicToken)
-    @ObservationIgnored
-    var anthropicToken: String?
-
-    @ObservableDefault(.isAnthropicTokenValidated)
-    @ObservationIgnored
-    var isAnthropicTokenValidated: Bool
-
-    @ObservableDefault(.useAnthropic)
-    @ObservationIgnored
-    var useAnthropic: Bool
-    
-    /// XAI
-    
-    @ObservableDefault(.xAIToken)
-    @ObservationIgnored
-    var xAIToken: String?
-
-    @ObservableDefault(.isXAITokenValidated)
-    @ObservationIgnored
-    var isXAITokenValidated: Bool
-
-    @ObservableDefault(.useXAI)
-    @ObservationIgnored
-    var useXAI: Bool
-    
-    /// GoogleAI
-    
-    @ObservableDefault(.googleAIToken)
-    @ObservationIgnored
-    var googleAIToken: String?
-
-    @ObservableDefault(.isGoogleAITokenValidated)
-    @ObservationIgnored
-    var isGoogleAITokenValidated: Bool
-
-    @ObservableDefault(.useGoogleAI)
-    @ObservationIgnored
-    var useGoogleAI: Bool
-    
-    /// DeepSeek
-    
-    @ObservableDefault(.deepSeekToken)
-    @ObservationIgnored
-    var deepSeekToken: String?
-
-    @ObservableDefault(.isDeepSeekTokenValidated)
-    @ObservationIgnored
-    var isDeepSeekTokenValidated: Bool
-
-    @ObservableDefault(.useDeepSeek)
-    @ObservationIgnored
-    var useDeepSeek: Bool
-    
-    /// Perplexity
-    
-    @ObservableDefault(.perplexityToken)
-    @ObservationIgnored
-    var perplexityToken: String?
-
-    @ObservableDefault(.isPerplexityTokenValidated)
-    @ObservationIgnored
-    var isPerplexityTokenValidated: Bool
-
-    @ObservableDefault(.usePerplexity)
-    @ObservationIgnored
-    var usePerplexity: Bool
-    
-    ///
-
     var listedModels: [AIModel] {
         var models = availableRemoteModels.filter {
             Defaults[.visibleModelIds].contains($0.uniqueId)
         }
         
-        let cannotAccessOpenAI = !userLoggedIn && !AIModel.ModelProvider.openAI.hasValidRemoteToken
-        let cannotAccessAnthropic = !userLoggedIn && !AIModel.ModelProvider.anthropic.hasValidRemoteToken
-        let cannotAccessXAI = !userLoggedIn && !AIModel.ModelProvider.xAI.hasValidRemoteToken
-        let cannotAccessGoogleAI = !userLoggedIn && !AIModel.ModelProvider.googleAI.hasValidRemoteToken
-        let cannotAccessDeepSeek = !userLoggedIn && !AIModel.ModelProvider.deepSeek.hasValidRemoteToken
-        let cannotAccessPerplexity = !userLoggedIn && !AIModel.ModelProvider.perplexity.hasValidRemoteToken
+        let cannotAccessOpenAI = !userLoggedIn && !AIModel.ModelProvider.hasValidRemoteToken(provider: .openAI)
+        let cannotAccessAnthropic = !userLoggedIn && !AIModel.ModelProvider.hasValidRemoteToken(provider: .anthropic)
+        let cannotAccessXAI = !userLoggedIn && !AIModel.ModelProvider.hasValidRemoteToken(provider: .xAI)
+        let cannotAccessGoogleAI = !userLoggedIn && !AIModel.ModelProvider.hasValidRemoteToken(provider: .googleAI)
+        let cannotAccessDeepSeek = !userLoggedIn && !AIModel.ModelProvider.hasValidRemoteToken(provider: .deepSeek)
+        let cannotAccessPerplexity = !userLoggedIn && !AIModel.ModelProvider.hasValidRemoteToken(provider: .perplexity)
         
-        if cannotAccessOpenAI || !useOpenAI {
+        if cannotAccessOpenAI || !modelProvidersManager.useOpenAI {
             models = models.filter { $0.provider != .openAI }
         }
         
-        if cannotAccessAnthropic || !useAnthropic {
+        if cannotAccessAnthropic || !modelProvidersManager.useAnthropic {
             models = models.filter { $0.provider != .anthropic }
         }
         
-        if cannotAccessXAI || !useXAI {
+        if cannotAccessXAI || !modelProvidersManager.useXAI {
             models = models.filter { $0.provider != .xAI }
         }
         
-        if cannotAccessGoogleAI || !useGoogleAI {
+        if cannotAccessGoogleAI || !modelProvidersManager.useGoogleAI {
             models = models.filter { $0.provider != .googleAI }
         }
         
-        if cannotAccessDeepSeek || !useDeepSeek {
+        if cannotAccessDeepSeek || !modelProvidersManager.useDeepSeek {
             models = models.filter { $0.provider != .deepSeek }
         }
         
-        if cannotAccessPerplexity || !usePerplexity {
+        if cannotAccessPerplexity || !modelProvidersManager.usePerplexity {
             models = models.filter { $0.provider != .perplexity }
         }
 
         // Filter out models from disabled custom providers
-        for customProvider in availableCustomProvider {
+        for customProvider in modelProvidersManager.availableCustomProvider {
             models = models.filter { model in
                 if model.customProviderName == customProvider.name {
                     return customProvider.isEnabled
@@ -695,7 +572,7 @@ class AppState: NSObject, SPUUpdaterDelegate {
             return
         } else {
             if let currentRemoteModel = Defaults[.remoteModel] {
-                let isCurrentProviderInUse = AIModel.ModelProvider.getIsRemoteProviderOn(currentRemoteModel.provider)
+                let isCurrentProviderInUse = modelProvidersManager.getIsRemoteProviderInUse(currentRemoteModel.provider)
                 
                 if !isCurrentProviderInUse || !listedModels.contains(currentRemoteModel) {
                     Defaults[.remoteModel] = listedModels.first
