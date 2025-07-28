@@ -90,13 +90,6 @@ struct ContentView: View {
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .background(Color.black)
-                .onAppear {
-                    if !authManager.userLoggedIn {
-                        authFlowStatus = .showSignUp
-                    } else {
-                        authFlowStatus = .hideAuth
-                    }
-                }
             } else if showAuthFlow {
                 AuthFlow()
             } else {
