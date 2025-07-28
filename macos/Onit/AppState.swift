@@ -63,23 +63,6 @@ class AppState: NSObject, SPUUpdaterDelegate {
     var showProLimitAlert: Bool = false
     var subscriptionPlanError: String = ""
     
-    /// This value isn't used anywhere but here.
-    /// This is to handle updates to subscription related variables in reaction to updates to `AuthManager.shared.account`.
-    private var account: Account? = nil {
-        didSet {
-            if account == nil {
-                fetchSubscriptionTask?.cancel()
-                fetchSubscriptionTask = nil
-                subscription = nil
-            } else {
-                fetchSubscriptionTask?.cancel()
-                fetchSubscriptionTask = Task {
-                    subscription = try? await FetchingClient().getSubscription()
-                }
-            }
-        }
-    }
-    
     private var authCancellable: AnyCancellable? = nil
 
     // MARK: - Initializer
@@ -91,7 +74,18 @@ class AppState: NSObject, SPUUpdaterDelegate {
         authCancellable = AuthManager.shared.$account
             .receive(on: DispatchQueue.main)
             .sink { [weak self] account in
-                self?.account = account
+                if let self = self {
+                    if account == nil {
+                        fetchSubscriptionTask?.cancel()
+                        fetchSubscriptionTask = nil
+                        subscription = nil
+                    } else {
+                        fetchSubscriptionTask?.cancel()
+                        fetchSubscriptionTask = Task {
+                            subscription = try? await FetchingClient().getSubscription()
+                        }
+                    }
+                }
             }
         
         // Used for showing/removing update available footer notification.
