@@ -21,6 +21,15 @@ class AccessibilityObserversManager {
     // MARK: - Singleton
     
     static let shared = AccessibilityObserversManager()
+
+    // Static method to get the current ignored app names (for consistency across managers)
+    static var currentIgnoredAppNames: [String] {
+    #if DEBUG
+        return ["Xcode"]
+    #else
+        return []
+    #endif
+    }
     
     // MARK: - Properties
     
@@ -122,7 +131,7 @@ class AccessibilityObserversManager {
         let currentPid = getpid()
         let appName = currentPid.appName ?? "Onit"
 
-        // This will depend on whether typeahead is enabled or not. For now, we can disable it by default.
+        // TODO: TIM - Typeahead - Enable notifications for Onit when needed
         if false {
             startNotificationsObserver(for: currentPid, notifications: Config.onitNotifications)
         }
@@ -402,15 +411,6 @@ class AccessibilityObserversManager {
         return .eligible
     }
     
-    // Static method to get the current ignored app names (for consistency across managers)
-    static var currentIgnoredAppNames: [String] {
-#if DEBUG
-        return ["Xcode"]
-#else
-        return []
-#endif
-    }
-
     private func isAXServerInitialized(pid: pid_t) -> Bool {
         func isAppleApplication(for pid: pid_t) -> Bool {
             guard let bundleIdentifier = pid.bundleIdentifier else {
