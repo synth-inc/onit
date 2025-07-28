@@ -122,7 +122,7 @@ class AccessibilityObserversManager {
         let currentPid = getpid()
         let appName = currentPid.appName ?? "Onit"
 
-        // This will depend on whether typeahead is enabled or not. For now, we can disble it by default.
+        // This will depend on whether typeahead is enabled or not. For now, we can disable it by default.
         if false {
             startNotificationsObserver(for: currentPid, notifications: Config.onitNotifications)
         }
