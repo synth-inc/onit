@@ -198,21 +198,12 @@ struct ContentView: View {
                 }
             }
         }
-        .onChange(of: appState.userLoggedIn) { _, userLoggedIn in
+        .onChange(of: appState.userLoggedIn) { _, _ in
             setModeAndValidRemoteModelWithAuth()
-            
-            if userLoggedIn && canAccessRemoteModels {
-                mode = .remote
-            }
         }
         .onChange(of: availableLocalModels) {_, localModelsList in
             if !appState.userLoggedIn {
                 let canAccessLocalModels = !localModelsList.isEmpty
-                
-                if !canAccessLocalModels && canAccessRemoteModels {
-                    mode = .remote
-                }
-                
                 let cannotAccessModels = !canAccessRemoteModels && !canAccessLocalModels
                 
                 authFlowStatus = cannotAccessModels ? .showSignUp : .hideAuth
@@ -220,17 +211,9 @@ struct ContentView: View {
         }
         .onChange(of: modelProvidersManager.numberRemoteProvidersInUse) { _, _ in
             appState.setModeAndValidRemoteModel()
-            
-            if canAccessRemoteModels {
-                mode = .remote
-            }
         }
         .onChange(of: visibleModelIds) { _, _ in
             appState.setModeAndValidRemoteModel()
-            
-            if canAccessRemoteModels {
-                mode = .remote
-            }
         }
     }
     
