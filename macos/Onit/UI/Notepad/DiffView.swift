@@ -16,8 +16,11 @@ struct DiffView: View {
     @State private var currentOperationBarSize: CGSize = CGSize(width: 140, height: 30)
     @State private var shouldScrollToSegment: Bool = false
     @State private var isScrolling: Bool = false
+    
+    private let response: Response
 
     init(response: Response, modelContext: ModelContext) {
+        self.response = response
         self._viewModel = State(initialValue: DiffViewModel(response: response))
     }
     
@@ -83,6 +86,11 @@ struct DiffView: View {
         }
         .onChange(of: viewModel.currentOperationIndex) { _, _ in
             currentSegmentRect = nil
+        }
+        .onChange(of: response.isPartial) { oldValue, newValue in
+            if oldValue == true && newValue == false {
+                viewModel.refreshForResponseUpdate()
+            }
         }
         .alert("Insertion Error", isPresented: Binding<Bool>(
             get: { viewModel.insertionError != nil },

@@ -114,4 +114,22 @@ extension Response {
         guard index >= 0 && index < diffRevisions.count else { return }
         currentDiffRevisionIndex = index
     }
+    
+    func addDiffChangesToCurrentRevision(_ diffChanges: [DiffChangeState]) {
+        if diffRevisions.isEmpty {
+            let newRevision = DiffRevision(index: 0)
+            diffRevisions.append(newRevision)
+            currentDiffRevisionIndex = 0
+        }
+        
+        if let currentRevision = currentDiffRevision {
+            currentRevision.diffChanges.append(contentsOf: diffChanges)
+        }
+    }
+    
+    func clearCurrentDiffRevision() {
+        if let currentRevision = currentDiffRevision {
+            currentRevision.diffChanges.removeAll()
+        }
+    }
 }

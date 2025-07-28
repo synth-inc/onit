@@ -218,7 +218,7 @@ extension OnitPanelState {
                             partialResponse.toolCallArguments = response.toolArguments ?? partialResponse.toolCallArguments
                             
                             if !response.isToolComplete {
-                                self.executeToolCall(partialResponse: partialResponse)
+                                self.executeToolCall(partialResponse: partialResponse, throttleMs: 300)
                             }
                         }
                     } else {
@@ -338,6 +338,7 @@ extension OnitPanelState {
         generateTask = nil
         toolExecutionTask = nil
         lastToolExecutionTime = nil
+        lastToolCallExecutedHash = nil
         if let curPrompt = generatingPrompt, let priorState = generatingPromptPriorState {
             curPrompt.generationState = priorState
         }
@@ -453,6 +454,13 @@ extension OnitPanelState {
         isComplete: Bool = false,
         throttleMs: Int = 150
     ) {
+        let currentToolCallHash = createToolCallHash(response: partialResponse)
+        
+		// Skip execution if toolCall hasn't changed
+		if currentToolCallHash == lastToolCallExecutedHash {
+            return
+        }
+        
         let now = Date()
         let throttleSeconds = Double(throttleMs) / 1000.0
         
@@ -461,14 +469,18 @@ extension OnitPanelState {
         }
         
         toolExecutionTask = Task { @MainActor in
+            let lastToolExecutionTimeBackup = self.lastToolExecutionTime
+            self.lastToolExecutionTime = now
+            
             guard await executeToolCallSync(
                 partialResponse: partialResponse,
                 isComplete: isComplete
             ) else {
+                self.lastToolExecutionTime = lastToolExecutionTimeBackup
                 return
             }
             
-            self.lastToolExecutionTime = now
+            self.lastToolCallExecutedHash = currentToolCallHash
         }
     }
     
@@ -478,7 +490,7 @@ extension OnitPanelState {
     ) async -> Bool {
         guard let toolName = partialResponse.toolCallName,
               let toolArguments = partialResponse.toolCallArguments,
-              !toolArguments.isEmpty else {
+              !toolName.isEmpty, !toolArguments.isEmpty else {
             return false
         }
         
@@ -508,8 +520,20 @@ extension OnitPanelState {
     
     private func completionAfterToolCallSucceed(response: Response) {
         if response.toolCallName?.hasPrefix("diff_") == true {
+            guard !isDiffViewActive else { return }
+            
             NotepadWindowController.shared.showWindow(windowState: self, response: response)
         }
+    }
+    
+    private func createToolCallHash(response: Response) -> String {
+        guard let toolName = response.toolCallName,
+              let arguments = response.toolCallArguments else {
+            return ""
+        }
+        let combined = "\(toolName)|\(arguments)"
+		
+        return String(combined.hashValue)
     }
 }
 

@@ -45,7 +45,7 @@ actor ToolRouter {
         
         guard let tool = tool else {
             return .failure(
-                ToolCallError(toolName: toolName, message: "Unrecognized app name: \(appName)")
+                ToolCallError(toolName: toolName, message: "Unrecognized tool name: \(appName)")
             )
         }
         

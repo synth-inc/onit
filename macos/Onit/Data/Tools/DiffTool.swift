@@ -21,19 +21,14 @@ class DiffTool: ToolProtocol {
             description: "Generate structured text modifications by comparing original plain text content with your improved version.",
             parameters: ToolParameters(
                 properties: [
-                    "source_name": ToolProperty(
+                    "app_name": ToolProperty(
                         type: "string",
-                        description: "Name of the source from which text content was extracted",
-                        items: nil
-                    ),
-                    "source_title": ToolProperty(
-                        type: "string",
-                        description: "Title of the source document or window",
+                        description: "Name of the app from which text content was extracted",
                         items: nil
                     ),
                     "document_url": ToolProperty(
                         type: "string",
-                        description: "Optional URL of the Google Drive document for structured updates",
+                        description: "Optional URL of the document",
                         items: nil
                     ),
                     "original_content": ToolProperty(
@@ -47,7 +42,7 @@ class DiffTool: ToolProtocol {
                         items: nil
                     )
                 ],
-                required: ["source_name", "source_title", "original_content", "improved_content"]
+                required: ["app_name", "original_content", "improved_content"]
             )
         )
     ]
@@ -88,11 +83,10 @@ class DiffTool: ToolProtocol {
     }
 
     struct PlainTextDiffArguments: Codable {
-        let source_name: String
-        let source_title: String
-        let document_url: String?
+        let app_name: String
         let original_content: String
         let improved_content: String
+        let document_url: String?
     }
 
     struct PlainTextDiffOperation: Codable {

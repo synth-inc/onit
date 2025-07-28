@@ -9,10 +9,12 @@ struct AccessibilityParsedElements {
     static let applicationName = "applicationName"
     static let applicationTitle = "applicationTitle"
     static let elapsedTime = "elapsedTime"
-    static let documentUrl = "documentUrl"
+
+    static let documentContent = "Document's content"
+    static let documentUrl = "Document's URL"
 
     static let highlightedText = "highlightedText"
-    static let screen = "screen"
+    static let screen = "App's content"
 
     struct Xcode {
         static let editor = "editor"

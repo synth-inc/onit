@@ -93,6 +93,10 @@ class PanelStateCoordinator {
         guard let _ = targetState.panel else { return }
         
         currentManager.closePanel(for: targetState)
+        
+        if targetState.isDiffViewActive {
+            NotepadWindowController.shared.closeWindow()
+        }
     }
 
     func fetchWindowContext() {

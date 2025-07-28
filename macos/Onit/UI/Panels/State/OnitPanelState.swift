@@ -158,6 +158,7 @@ class OnitPanelState: NSObject {
 		}
 	}
     var lastToolExecutionTime: Date? = nil
+	var lastToolCallExecutedHash: String?
 
     // Web search states
     var webSearchError: Error? = nil

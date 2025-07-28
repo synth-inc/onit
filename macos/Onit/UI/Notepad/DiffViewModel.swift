@@ -81,14 +81,44 @@ class DiffViewModel {
         loadOrCreateDiffChanges()
     }
     
+    func refreshForResponseUpdate() {
+        let hadChanges = !diffChanges.isEmpty
+        loadOrCreateDiffChanges()
+        
+        if hadChanges && !diffChanges.isEmpty {
+            if currentOperationIndex >= diffChanges.count {
+                if let firstPending = diffChanges.first(where: { $0.status == .pending }) {
+                    currentOperationIndex = firstPending.operationIndex
+                }
+            }
+        }
+    }
+    
     // MARK: - Data Management
     
     private func loadOrCreateDiffChanges() {
         diffChanges = getDiffChanges()
         
-        if diffChanges.isEmpty {
-            createDiffChanges()
-            diffChanges = getDiffChanges()
+        if response.isPartial {
+            if diffChanges.isEmpty && response.diffResult != nil {
+                createDiffChanges()
+                diffChanges = getDiffChanges()
+            }
+            else if let diffResult = response.diffResult,
+                    diffResult.operations.count > diffChanges.count {
+                updateDiffChangesForNewOperations()
+                diffChanges = getDiffChanges()
+            }
+        } else {
+            if diffChanges.isEmpty && response.diffResult != nil {
+                createDiffChanges()
+                diffChanges = getDiffChanges()
+            }
+            else if let diffResult = response.diffResult,
+                    diffResult.operations.count > diffChanges.count {
+                updateDiffChangesForNewOperations()
+                diffChanges = getDiffChanges()
+            }
         }
         
         if let firstPending = diffChanges.first(where: { $0.status == .pending }) {
@@ -111,6 +141,12 @@ class DiffViewModel {
             return
         }
         
+        if !diffChanges.isEmpty {
+            if diffChanges.count == diffResult.operations.count {
+                return
+            }
+        }
+        
         var newRevisionChanges: [DiffChangeState] = []
         
         for (index, operation) in diffResult.operations.enumerated() {
@@ -127,8 +163,45 @@ class DiffViewModel {
         }
         
         response.createNewDiffRevision(with: newRevisionChanges)
-        
         saveContext(modelContext)
+    }
+    
+    private func updateDiffChangesForNewOperations() {
+        guard let diffResult = response.diffResult else { return }
+        
+        let existingCount = diffChanges.count
+        let totalOperations = diffResult.operations.count
+        
+        guard totalOperations > existingCount else { return }
+        
+        var newChanges: [DiffChangeState] = []
+        
+        for index in existingCount..<totalOperations {
+            let operation = diffResult.operations[index]
+            let diffChange = DiffChangeState(
+                operationIndex: index,
+                operationType: operation.type,
+                status: .pending,
+                operationText: operation.text ?? operation.newText,
+                operationStartIndex: operation.startIndex ?? operation.index,
+                operationEndIndex: operation.endIndex
+            )
+            modelContext.insert(diffChange)
+            newChanges.append(diffChange)
+        }
+        
+        response.addDiffChangesToCurrentRevision(newChanges)
+        saveContext(modelContext)
+    }
+    
+    private func recreateDiffChanges() {
+        for change in diffChanges {
+            modelContext.delete(change)
+        }
+        
+        response.clearCurrentDiffRevision()
+        saveContext(modelContext)
+        createDiffChanges()
     }
     
     private func updateDiffChangeStatus(operationIndex: Int, status: DiffChangeStatus) {
@@ -441,10 +514,30 @@ class DiffViewModel {
                 await insertToDocument(documentUrl: documentUrl)
             }
         } else {
-            // Copy to clipboard when no document URL
-            let previewText = generatePreviewText()
+            let appName = diffArguments.app_name
+            let runningApps = NSWorkspace.shared.runningApplications
+            
+            guard let runningApp = runningApps.first(where: { app in
+                app.localizedName?.localizedCaseInsensitiveContains(appName) == true
+            }) else {
+                return
+            }
+            
+            runningApp.activate()
+            
+            let textToInsert = generatePreviewText()
+            let source = CGEventSource(stateID: .hidSystemState)
+            let pasteDown = CGEvent(keyboardEventSource: source, virtualKey: 0x09, keyDown: true)
+            let pasteUp = CGEvent(keyboardEventSource: source, virtualKey: 0x09, keyDown: false)
+            
+            pasteDown?.flags = .maskCommand
+            pasteUp?.flags = .maskCommand
+            
             NSPasteboard.general.clearContents()
-            NSPasteboard.general.setString(previewText, forType: .string)
+            NSPasteboard.general.setString(textToInsert, forType: .string)
+            
+            pasteDown?.post(tap: .cghidEventTap)
+            pasteUp?.post(tap: .cghidEventTap)
         }
     }
     

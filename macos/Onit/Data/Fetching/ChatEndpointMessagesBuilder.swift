@@ -15,51 +15,58 @@ struct ChatEndpointMessagesBuilder {
     static func user(instructions: [String], inputs: [Input?], files: [[URL]], autoContexts: [[String: String]], webSearchContexts: [[(title: String, content: String, source: String, url: URL?)]]) -> [String] {
         var userMessages: [String] = []
         for (index, instruction) in instructions.enumerated() {
-            var message = ""
-            
-     
-            // TODO: add error handling for contexts too long & incorrect file types
-            if !files[index].isEmpty {
-                message += "\n\nUse the following files as context:"
-                for file in files[index] {
-                    if let fileContent = try? String(contentsOf: file, encoding: .utf8) {
-                        message += "\n\nFile: \(file.lastPathComponent)\nContent:\n\(fileContent)"
-                    }
-                }
-            }
-            
+            var message = """
+    You are provided with multiple context sources below. Use them to fulfill the final instruction.
+    **Important rules:**
+    - If there is "Selected Text", prioritize it over all other content.
+    - Use only relevant information to fulfill the task;
+
+    """
+
+            // 1. Application Contexts
             if !autoContexts[index].isEmpty {
-                message += "\n\nUse the following application content as context:"
+                message += "\n---\n**Application Context**\n"
                 for (appName, appContent) in autoContexts[index] {
-                    message += "\n\nContent from application \(appName):\n\(appContent)"
+                    message += "\n[App: \(appName)]\n\(appContent)"
                 }
             }
-            
-            // Add web contexts
-            if index < webSearchContexts.count && !webSearchContexts[index].isEmpty {
-                message += "\n\nUse the following web search results as context:"
-                for webSearchContext in webSearchContexts[index] {
-                    message += "\n\nWeb Search Result: \(webSearchContext.title)"
-                    if !webSearchContext.source.isEmpty {
-                        message += " (Source: \(webSearchContext.source))"
+
+            // 2. Web Search Results
+            if index < webSearchContexts.count, !webSearchContexts[index].isEmpty {
+                message += "\n---\n**Web Search Results**\n"
+                for web in webSearchContexts[index] {
+                    message += "\n- Title: \(web.title)"
+                    if !web.source.isEmpty {
+                        message += " (Source: \(web.source))"
                     }
-                    message += "\n\(webSearchContext.content)"
+                    message += "\n\(web.content)"
                 }
             }
 
-           if let input = inputs[index], !input.selectedText.isEmpty { 
-                message += "\n\nUse the following selected text as context. When present, selected text should take priority over other context."
-                if let application = input.application {
-                    message += "\n\nSelected Text from \(application): \(input.selectedText)"
+            // 3. Files
+            if !files[index].isEmpty {
+                message += "\n---\n**Attached Files**\n"
+                for file in files[index] {
+                    if let content = try? String(contentsOf: file, encoding: .utf8) {
+                        message += "\n[File: \(file.lastPathComponent)]\n\(content)"
+                    }
+                }
+            }
+
+            // 4. Selected Text
+            if let input = inputs[index], !input.selectedText.isEmpty {
+                message += "\n---\n**Selected Text** (Highest Priority)\n"
+                if let app = input.application {
+                    message += "From application \(app):\n\(input.selectedText)"
                 } else {
-                    message += "\n\nSelected Text: \(input.selectedText)"
+                    message += input.selectedText
                 }
             }
-            
 
-            // Intuitively, I (tim) think the message should be the last thing.
-            // TODO: evaluate this
-            message += "\n\n\(instruction)"
+            // 5. Final Instruction
+            message += "\n---\n**Instruction**\n"
+            message += instruction
+            log.error(message)
             userMessages.append(message)
         }
 
