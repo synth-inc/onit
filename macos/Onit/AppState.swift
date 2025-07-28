@@ -14,9 +14,8 @@ import SwiftUI
 @MainActor
 @Observable
 class AppState: NSObject, SPUUpdaterDelegate {
-    private let authManager = AuthManager.shared
-    
     private var modelProvidersManager = ModelProvidersManager.shared
+    private var authManager = AuthManager.shared
     
     // MARK: - Properties
     

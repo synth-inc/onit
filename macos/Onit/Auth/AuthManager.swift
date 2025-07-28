@@ -21,7 +21,7 @@ final class AuthManager: ObservableObject {
     
     @Published private(set) var account: Account? = nil
     
-    // MARK: - Variables
+    // MARK: - Public Variables
     
     var userLoggedIn: Bool {
         self.account != nil
@@ -68,7 +68,7 @@ final class AuthManager: ObservableObject {
     
     // MARK: - Google Log In
     
-    func logInWithGoogle() -> String? {
+    func logInWithGoogle() async -> String? {
         let provider = "google"
         
         AnalyticsManager.Auth.pressed(provider: provider)
@@ -77,58 +77,60 @@ final class AuthManager: ObservableObject {
 
         AnalyticsManager.Auth.requested(provider: provider)
         
-        var GIDSignInErrorMessage: String? = nil
-        
-        GIDSignIn.sharedInstance.signIn(withPresenting: window) { result, error in
-            guard let result = result else {
-                if let error = error as? NSError, error.domain == "com.google.GIDSignIn", error.code == -5 {
-                    // The user canceled the sign-in flow
-                    AnalyticsManager.Auth.cancelled(provider: provider)
-                    return
-                } else if let error = error {
-                    let errorMsg = error.localizedDescription
-                    GIDSignInErrorMessage = errorMsg
-                    
-                    AnalyticsManager.Auth.error(provider: provider, error: errorMsg)
-                } else {
-                    let errorMsg = "Unknown Google sign in error"
-                    GIDSignInErrorMessage = errorMsg
-                    
-                    AnalyticsManager.Auth.error(provider: provider, error: errorMsg)
+        /// `GIDSignIn.sharedInstance.signIn` is an asynchronous callback-based function, so, by wrapping it
+        ///     in `withCheckedContinuation`, we can suspend it until each callback completes and either return the proper
+        ///     error message or `nil` (success).
+        /// This is useful for when we want the UI to properly capture error messages.
+        return await withCheckedContinuation { continuation in
+            var didAlreadyFinish: Bool = false
+            
+            func finish(_ errorMessage: String?) {
+                guard !didAlreadyFinish else { return } /// Ensures that we only ever `finish()` once.
+                didAlreadyFinish = true
+                continuation.resume(returning: errorMessage)
+            }
+            
+            GIDSignIn.sharedInstance.signIn(withPresenting: window) { result, error in
+                guard let result = result else {
+                    if let error = error as? NSError, error.domain == "com.google.GIDSignIn", error.code == -5 {
+                        // The user canceled the sign-in flow
+                        AnalyticsManager.Auth.cancelled(provider: provider)
+                        return finish(nil)
+                    } else if let error = error {
+                        let errorMsg = error.localizedDescription
+                        AnalyticsManager.Auth.error(provider: provider, error: errorMsg)
+                        return finish(errorMsg)
+                    } else {
+                        let errorMsg = "Unknown Google sign in error"
+                        AnalyticsManager.Auth.error(provider: provider, error: errorMsg)
+                        return finish(errorMsg)
+                    }
                 }
-                return
-            }
 
-            guard let idToken = result.user.idToken?.tokenString else {
-                let errorMsg = "Failed to get Google identity token"
-                GIDSignInErrorMessage = errorMsg
-                
-                AnalyticsManager.Auth.error(provider: provider, error: errorMsg)
-                return
-            }
+                guard let idToken = result.user.idToken?.tokenString else {
+                    let errorMsg = "Failed to get Google identity token"
+                    AnalyticsManager.Auth.error(provider: provider, error: errorMsg)
+                    return finish(errorMsg)
+                }
 
-            Task {
-                do {
-                    let loginResponse = try await FetchingClient().loginGoogle(idToken: idToken)
-                    
-                    self.handleLogin(provider: provider, loginResponse: loginResponse)
-
-                    AnalyticsManager.Auth.success(provider: provider)
-                } catch {
-                    let errorMsg = error.localizedDescription
-                    GIDSignInErrorMessage = errorMsg
-                    
-                    AnalyticsManager.Auth.failed(provider: provider, error: errorMsg)
+                Task { @MainActor in
+                    do {
+                        let loginResponse = try await FetchingClient().loginGoogle(idToken: idToken)
+                        self.handleLogin(provider: provider, loginResponse: loginResponse)
+                        return finish(nil)
+                    } catch {
+                        let errorMsg = error.localizedDescription
+                        AnalyticsManager.Auth.failed(provider: provider, error: errorMsg)
+                        return finish(errorMsg)
+                    }
                 }
             }
         }
-        
-        return GIDSignInErrorMessage
     }
     
     // MARK: - Apple Login
     
-    func logInWithApple(_ authResults: ASAuthorization) async throws -> String? {
+    func logInWithApple(_ authResults: ASAuthorization) async -> String? {
         guard
             let credentials = authResults.credential as? ASAuthorizationAppleIDCredential,
             let identityToken = credentials.identityToken,
@@ -137,17 +139,13 @@ final class AuthManager: ObservableObject {
             return "Failed to get Apple identity token"
         }
         
-        var errorMessage: String? = nil
-        
         do {
             let loginResponse = try await FetchingClient().loginApple(idToken: identityTokenString)
-            
             handleLogin(provider: "Apple", loginResponse: loginResponse)
+            return nil
         } catch {
-            errorMessage = error.localizedDescription
+            return error.localizedDescription
         }
-        
-        return errorMessage
     }
 
     

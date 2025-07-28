@@ -83,8 +83,10 @@ extension AuthFlow {
             OnboardingAuthButton(
                 icon: .logoGoogle,
                 action: {
-                    if let errorMessage = authManager.logInWithGoogle() {
-                        errorMessageAuth = errorMessage
+                    Task { @MainActor in
+                        if let errorMessage = await authManager.logInWithGoogle() {
+                            errorMessageAuth = errorMessage
+                        }
                     }
                 }
             )
