@@ -285,7 +285,7 @@ extension QuickEditManager {
     }
     
     func caretDidDisappear() {
-        if !hasTextSelection(PanelStateCoordinator.shared.state.pendingInput?.selectedText ?? PanelStateCoordinator.shared.state.trackedPendingInput?.selectedText) {
+        if !hasTextSelection(highlightedTextManager.selectedText) {
             hideHint()
         }
     }

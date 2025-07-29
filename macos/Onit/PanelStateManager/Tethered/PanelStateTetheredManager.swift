@@ -81,7 +81,9 @@ class PanelStateTetheredManager: PanelStateBaseManager, ObservableObject {
         dragManager.stopMonitoring()
         dragManagerCancellable?.cancel()
         draggingState = nil
-        
+        for (_, state) in statesByWindow {
+            state.unsubscribeFromDelegates()
+        }
         super.stop()
         
         statesByWindow = [:]
@@ -241,7 +243,7 @@ class PanelStateTetheredManager: PanelStateBaseManager, ObservableObject {
             panelState = activeState
         } else {
             panelState = OnitPanelState(trackedWindow: trackedWindow)
-            
+            panelState.subscribeToDelegates()
             statesByWindow[trackedWindow] = panelState
         }
         
