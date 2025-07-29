@@ -98,16 +98,18 @@ class ContextFetchingService {
                             errorCode = 1500
                         }
                         
-                        // Update screenResult with error information
-                        AccessibilityNotificationsManager.shared.screenResult.applicationName = appName
-                        AccessibilityNotificationsManager.shared.screenResult.applicationTitle = appTitle
-                        AccessibilityNotificationsManager.shared.screenResult.errorMessage = errorMessage
-                        AccessibilityNotificationsManager.shared.screenResult.errorCode = errorCode
-                        AccessibilityNotificationsManager.shared.screenResult.appBundleUrl = appBundleUrl
-                        AccessibilityNotificationsManager.shared.screenResult.others = nil
+                        // Create ScreenResult with error information
+                        let screenResult = ScreenResult(
+                            applicationName: appName,
+                            applicationTitle: appTitle,
+                            others: nil,
+                            errorMessage: errorMessage,
+                            errorCode: errorCode,
+                            appBundleUrl: appBundleUrl
+                        )
                         
                         // Call addAutoContext to handle the error case
-                        state.addAutoContext(trackedWindow: trackedWindow)
+                        state.addAutoContext(trackedWindow: trackedWindow, screenResult: screenResult)
                     }
                 } else {
                     // This creates an error state for when google drive is not authorized
@@ -119,16 +121,18 @@ class ContextFetchingService {
                         }
                     }
                     
-                    // Update screenResult with unauthorized error
-                    AccessibilityNotificationsManager.shared.screenResult.applicationName = appName
-                    AccessibilityNotificationsManager.shared.screenResult.applicationTitle = appTitle
-                    AccessibilityNotificationsManager.shared.screenResult.errorMessage = "Google Drive Plugin Required"
-                    AccessibilityNotificationsManager.shared.screenResult.errorCode = 1500
-                    AccessibilityNotificationsManager.shared.screenResult.appBundleUrl = appBundleUrl
-                    AccessibilityNotificationsManager.shared.screenResult.others = nil
+                    // Create ScreenResult with unauthorized error
+                    let screenResult = ScreenResult(
+                        applicationName: appName,
+                        applicationTitle: appTitle,
+                        others: nil,
+                        errorMessage: "Google Drive Plugin Required",
+                        errorCode: 1500,
+                        appBundleUrl: appBundleUrl
+                    )
                     
                     // Call addAutoContext to handle the error case
-                    state.addAutoContext(trackedWindow: trackedWindow)
+                    state.addAutoContext(trackedWindow: trackedWindow, screenResult: screenResult)
                 }
             }  else {
                 parseAccessibility(
@@ -260,16 +264,18 @@ class ContextFetchingService {
                     self.timedOutWindowHash.insert(windowHash)
                     AnalyticsManager.Accessibility.parseTimedOut(appName: appName)
                     
-                    // Update screenResult with timeout error
-                    AccessibilityNotificationsManager.shared.screenResult.applicationName = appName
-                    AccessibilityNotificationsManager.shared.screenResult.applicationTitle = ""
-                    AccessibilityNotificationsManager.shared.screenResult.errorMessage = "Timeout occurred, could not read application in reasonable amount of time."
-                    AccessibilityNotificationsManager.shared.screenResult.errorCode = 1500
-                    AccessibilityNotificationsManager.shared.screenResult.appBundleUrl = nil
-                    AccessibilityNotificationsManager.shared.screenResult.others = nil
+                    // Create ScreenResult with timeout error
+                    let screenResult = ScreenResult(
+                        applicationName: appName,
+                        applicationTitle: "",
+                        others: nil,
+                        errorMessage: "Timeout occurred, could not read application in reasonable amount of time.",
+                        errorCode: 1500,
+                        appBundleUrl: nil
+                    )
                     
                     // Call addAutoContext to handle the error case
-                    state.addAutoContext(trackedWindow: trackedWindow)
+                    state.addAutoContext(trackedWindow: trackedWindow, screenResult: screenResult)
                 }
             }
         }
@@ -293,16 +299,18 @@ class ContextFetchingService {
         let appName = results?[AccessibilityParsedElements.applicationName] ?? ""
         let appTitle = results?[AccessibilityParsedElements.applicationTitle] ?? ""
         
-        // Update screenResult with the parsed content
-        AccessibilityNotificationsManager.shared.screenResult.applicationName = appName
-        AccessibilityNotificationsManager.shared.screenResult.applicationTitle = appTitle
-        AccessibilityNotificationsManager.shared.screenResult.errorMessage = nil
-        AccessibilityNotificationsManager.shared.screenResult.errorCode = nil
-        AccessibilityNotificationsManager.shared.screenResult.appBundleUrl = appBundleUrl
-        AccessibilityNotificationsManager.shared.screenResult.others = results
+        // Create ScreenResult object
+        let screenResult = ScreenResult(
+            applicationName: appName,
+            applicationTitle: appTitle,
+            others: results,
+            errorMessage: nil,
+            errorCode: nil,
+            appBundleUrl: appBundleUrl
+        )
         
         // Call addAutoContext to handle the context creation and cleanup
-        state.addAutoContext(trackedWindow: trackedWindow)
+        state.addAutoContext(trackedWindow: trackedWindow, screenResult: screenResult)
     }
     
     func reset() {
@@ -314,8 +322,7 @@ class ContextFetchingService {
     // MARK: - Debug
     
     private func showDebug() {
-        // This method is called to update debug information
-        // Since we're no longer using screenResult, we'll just clear the debug text
-        DebugManager.shared.debugText = "Context fetching moved to ContextFetchingService"
+        // Debug information is now handled by individual ScreenResult objects
+        DebugManager.shared.debugText = "Context fetching using ScreenResult objects"
     }
 }
