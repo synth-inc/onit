@@ -1,5 +1,5 @@
 //
-//  HighlightedTextManager.swift
+//  HighlightedTextManager+Delegates.swift
 //  Onit
 //
 //  Created by TimL on 28/04/2025.
