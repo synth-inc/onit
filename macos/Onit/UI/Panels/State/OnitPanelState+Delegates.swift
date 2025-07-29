@@ -6,6 +6,7 @@
 //
 
 import AppKit
+import Defaults
 
 extension OnitPanelState: NSWindowDelegate {
     
@@ -26,6 +27,24 @@ extension OnitPanelState: NSWindowDelegate {
     func windowDidDeminiaturize(_ notification: Notification) {
         if panelMiniaturized {
             panelMiniaturized = false
+        }
+    }
+}
+
+extension OnitPanelState: HighlightedTextDelegate {
+    func highlightedTextDidChange(selectedText: String?, application: String?) {
+        if let selectedText = selectedText {
+            let input = Input(selectedText: selectedText, application: application ?? "")
+
+            if Defaults[.autoAddHighlightedTextToContext] {
+                pendingInput = input
+            } else {
+                trackedPendingInput = input
+            }
+        } else {
+            // Text was deselected
+            pendingInput = nil
+            trackedPendingInput = nil
         }
     }
 }

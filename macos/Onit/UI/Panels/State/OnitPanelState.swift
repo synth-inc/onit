@@ -202,6 +202,17 @@ class OnitPanelState: NSObject {
         currentAnimationTask = nil
     }
     
+    // MARK: - Setup
+    
+    public func subscribeToDelegates() {
+        HighlightedTextManager.shared.addDelegate(self)
+    }
+    
+    public func unsubscribeFromDelegates() {
+        HighlightedTextManager.shared.removeDelegate(self)
+    }
+    
+
     // MARK: - Delegates
     
     func addDelegate(_ delegate: OnitPanelStateDelegate) {

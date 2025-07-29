@@ -26,6 +26,10 @@ class HighlightedTextManager: ObservableObject {
     // Published property for selected text that QuickEditManager can observe
     @Published var selectedText: String?
     
+    // MARK: - Delegates
+    
+    private var delegates = NSHashTable<AnyObject>.weakObjects()
+    
     // MARK: - Private initializer
     
     private init() {
@@ -38,6 +42,22 @@ class HighlightedTextManager: ObservableObject {
     var wantsNotificationsFromOnit: Bool { false }
     
     // MARK: - Functions
+    
+    // MARK: - Delegate Management
+    
+    func addDelegate(_ delegate: HighlightedTextDelegate) {
+        delegates.add(delegate)
+    }
+    
+    func removeDelegate(_ delegate: HighlightedTextDelegate) {
+        delegates.remove(delegate)
+    }
+    
+    private func notifyDelegates(selectedText: String?, application: String?) {
+        for case let delegate as HighlightedTextDelegate in delegates.allObjects {
+            delegate.highlightedTextDidChange(selectedText: selectedText, application: application)
+        }
+    }
     
     func setCurrentSource(_ source: String?) {
         currentSource = source
@@ -97,22 +117,19 @@ class HighlightedTextManager: ObservableObject {
               let selectedText = text,
               HighlightedTextValidator.isValid(text: selectedText) else {
             
-            PanelStateCoordinator.shared.state.pendingInput = nil
-            PanelStateCoordinator.shared.state.trackedPendingInput = nil
+            // Update the published selectedText property
             self.selectedText = nil
+            
+            // Notify delegates that text was deselected
+            notifyDelegates(selectedText: nil, application: currentSource)
             return
         }
         
         // Update the published selectedText property
         self.selectedText = selectedText
 
-        let input = Input(selectedText: selectedText, application: currentSource ?? "")
-        
-        if Defaults[.autoAddHighlightedTextToContext] {
-            PanelStateCoordinator.shared.state.pendingInput = input
-        } else {
-            PanelStateCoordinator.shared.state.trackedPendingInput = input
-        }
+        // Notify delegates about the text change
+        notifyDelegates(selectedText: selectedText, application: currentSource)
     }
     
     func handleCaretPositionChange(for element: AXUIElement) {
