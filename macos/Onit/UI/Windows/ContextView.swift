@@ -204,7 +204,7 @@ struct ContextView: View {
 
         let trackedWindow = AccessibilityNotificationsManager.shared.windowsManager.findTrackedWindow(trackedWindowHash: autoContext.appHash)
 
-        AccessibilityNotificationsManager.shared.retrieveWindowContent(
+        ContextFetchingService.shared.retrieveWindowContent(
             state: state,
             trackedWindow: trackedWindow,
             customAppBundleUrl: autoContext.appBundleUrl

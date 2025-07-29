@@ -38,7 +38,7 @@ class AccessibilityNotificationsManager: ObservableObject {
 
     // MARK: - Properties
     
-    @Published private(set) var screenResult: ScreenResult = .init()
+    @Published var screenResult: ScreenResult = .init()
     
     let windowsManager = AccessibilityWindowsManager()
     
@@ -54,8 +54,6 @@ class AccessibilityNotificationsManager: ObservableObject {
     private var valueDebounceWorkItem: DispatchWorkItem?
     private var selectionDebounceWorkItem: DispatchWorkItem?
     private var parseDebounceWorkItem: DispatchWorkItem?
-
-    private var timedOutWindowHash: Set<UInt> = []  // Track window's hash that have timed out
     
     private var lastActiveWindowPid: pid_t?
 
@@ -141,10 +139,9 @@ class AccessibilityNotificationsManager: ObservableObject {
         selectionDebounceWorkItem?.cancel()
         parseDebounceWorkItem?.cancel()
         
-        /// I (Kevin) don't think we should reset the timed out windows
-        // timedOutWindowHash.removeAll()
-        
         lastActiveWindowPid = nil
+        
+        ContextFetchingService.shared.reset()
     }
 
     // MARK: Handling app activated/deactived
@@ -316,282 +313,6 @@ class AccessibilityNotificationsManager: ObservableObject {
         selectionDebounceWorkItem = workItem
 
         DispatchQueue.main.asyncAfter(deadline: .now() + Config.textSelectionDebounceInterval, execute: workItem)
-    }
-    
-    // MARK: Parsing
-    
-    func retrieveWindowContent(
-        pid: pid_t? = nil,
-        state: OnitPanelState? = nil,
-        trackedWindow: TrackedWindow? = nil,
-        customAppBundleUrl: URL? = nil
-    ) {
-        guard let pid = trackedWindow?.pid ?? pid ?? lastActiveWindowPid,
-              let mainWindow = trackedWindow?.element ?? pid.firstMainWindow,
-              let state = state ?? PanelStateCoordinator.shared.getState(for: CFHash(mainWindow))
-        else {
-            return
-        }
-        
-        let windowHash = trackedWindow?.hash ?? CFHash(mainWindow)
-        
-        state.windowContextTasks[windowHash]?.cancel()
-        
-        // This task will automatically be cleaned up way down the call stack when it hits `addAutoContext()`.
-        state.windowContextTasks[windowHash] = Task {
-            if let documentInfo = findDocument(in: mainWindow) {
-                handleWindowContent(
-                    documentInfo,
-                    for: state,
-                    trackedWindow: trackedWindow,
-                    customAppBundleUrl: customAppBundleUrl
-                )
-                // TODO: KNA - uncomment this to use WebContentFetchService with AXURL
-            } else if let url = findUrl(in: mainWindow), url.absoluteString.contains("docs.google.com") {
-                
-                let appName = mainWindow.parent()?.title() ?? ""
-                let appTitle = mainWindow.title() ?? ""
-                let startTime = CFAbsoluteTimeGetCurrent()
-                if GoogleDriveService.shared.checkAuthorizationStatus() {
-                    do {
-                        let documentContent = try await GoogleDriveService.shared.extractTextFromGoogleDrive(driveUrl: url.absoluteString)
-                        let contentArray = [
-                            AccessibilityParsedElements.applicationName: appName,
-                            AccessibilityParsedElements.applicationTitle: appTitle,
-                            AccessibilityParsedElements.elapsedTime: "\(CFAbsoluteTimeGetCurrent() - startTime)",
-                            "document": documentContent
-                        ]
-                        handleWindowContent(
-                            contentArray,
-                            for: state,
-                            customAppBundleUrl: customAppBundleUrl
-                        )
-                    } catch {
-                        // Handle error case
-                        var appBundleUrl = customAppBundleUrl
-                        if appBundleUrl == nil {
-                            if let pid = lastActiveWindowPid,
-                            let app = NSRunningApplication(processIdentifier: pid) {
-                                appBundleUrl = app.bundleURL
-                            }
-                        }
-                        self.screenResult = .init()
-                        self.screenResult.applicationName = appName
-                        self.screenResult.applicationTitle = appTitle
-                        self.screenResult.appBundleUrl = appBundleUrl
-                        if let googleDriveError = error as? GoogleDriveServiceError {
-                            self.screenResult.errorMessage = "\(googleDriveError.localizedDescription)"
-                            switch googleDriveError {
-                            case .notFound:
-                                self.screenResult.errorCode = 1501
-                                break
-                            default:
-                                self.screenResult.errorCode = 1500
-                            }
-                        } else {
-                            self.screenResult.errorMessage = "Failed to extract Google Drive document content: \(error.localizedDescription)"
-                            self.screenResult.errorCode = 1500
-                        }
-                        state.addAutoContext(trackedWindow: trackedWindow)
-                    }
-                } else {
-                    // This creates an error state for when google drive is not authorized
-                    var appBundleUrl = customAppBundleUrl
-                    if appBundleUrl == nil {
-                        if let pid = lastActiveWindowPid,
-                        let app = NSRunningApplication(processIdentifier: pid) {
-                            appBundleUrl = app.bundleURL
-                        }
-                    }
-                    self.screenResult = .init()
-                    self.screenResult.applicationName = appName
-                    self.screenResult.applicationTitle = appTitle
-                    self.screenResult.appBundleUrl = appBundleUrl
-                    self.screenResult.errorMessage = "Google Drive Plugin Required"
-                    self.screenResult.errorCode = 1500
-                    state.addAutoContext(trackedWindow: trackedWindow)
-                }
-            }  else {
-                parseAccessibility(
-                    for: pid,
-                    in: mainWindow,
-                    state: state,
-                    trackedWindow: trackedWindow,
-                    customAppBundleUrl: customAppBundleUrl
-                )
-            }
-        }
-    }
-    
-    private func findDocument(in focusedWindow: AXUIElement) -> [String: String]? {
-        let startTime = CFAbsoluteTimeGetCurrent()
-        var documentValue: CFTypeRef?
-        
-        let hasDocument = AXUIElementCopyAttributeValue(focusedWindow, kAXDocumentAttribute as CFString, &documentValue) == .success
-        
-        if hasDocument, let document = documentValue as? String,
-            document.hasPrefix("file:///"), let fileURL = URL(string: document) {
-            do {
-                let appName = focusedWindow.parent()?.title() ?? ""
-                let appTitle = focusedWindow.title() ?? ""
-                let content = try String(contentsOf: fileURL, encoding: .utf8)
-                
-                return [
-                    AccessibilityParsedElements.applicationName: appName,
-                    AccessibilityParsedElements.applicationTitle: appTitle,
-                    AccessibilityParsedElements.elapsedTime: "\(CFAbsoluteTimeGetCurrent() - startTime)",
-                    "document": content
-                ]
-            } catch {
-                return nil
-            }
-        }
-        
-        return nil
-    }
-    
-    private func findUrl(in element: AXUIElement, maxDepth: Int = 5) -> URL? {
-        func findURLInChildren(element: AXUIElement, depth: Int = 0) -> URL? {
-            if depth >= maxDepth {
-                return nil
-            }
-            
-            if let children = element.children() {
-                for child in children {
-                    if child.role() == "AXWebArea", let url = child.url() {
-                        return url
-                    }
-                    
-                    if let url = findURLInChildren(element: child, depth: depth + 1) {
-                        return url
-                    }
-                }
-            }
-            
-            return nil
-        }
-        return findURLInChildren(element: element)
-    }
-    
-    private func findUrlAndProcessURL(in focusedWindow: AXUIElement) async -> [String: String]? {
-        func processUrl(_ url: URL, from element: AXUIElement) async -> [String: String]? {
-            do {
-                let appName = element.parent()?.title() ?? ""
-                let appTitle = element.title() ?? ""
-                
-                let (_, content) = try await WebContentFetchService.fetchWebpageContent(websiteUrl: url)
-                
-                return [
-                    AccessibilityParsedElements.applicationName: appName,
-                    AccessibilityParsedElements.applicationTitle: appTitle,
-                    AccessibilityParsedElements.elapsedTime: "\(CFAbsoluteTimeGetCurrent() - startTime)",
-                    "url": url.absoluteString,
-                    "content": content
-                ]
-            } catch {
-                print("Error fetching webpage content: \(error)")
-                return nil
-            }
-        }
-        
-        let maxDepth = 5
-        let startTime = CFAbsoluteTimeGetCurrent()
-        
-        if let url = findUrl(in: focusedWindow) {
-            return await processUrl(url, from: focusedWindow)
-        }
-        return nil
-    }
-
-    private func parseAccessibility(
-        for pid: pid_t,
-        in window: AXUIElement,
-        state: OnitPanelState,
-        trackedWindow: TrackedWindow? = nil,
-        customAppBundleUrl: URL? = nil
-    ) {
-        let windowHash = trackedWindow?.hash ?? CFHash(window)
-        let appName = trackedWindow?.element.parent()?.title() ?? window.parent()?.title() ?? "Unknown"
-        let mainWindow = trackedWindow?.element ?? window
-        
-        if timedOutWindowHash.contains(windowHash) {
-            print("Skipping parsing for window's hash \(windowHash) due to previous timeout.")
-            return
-        }
-        
-        guard Defaults[.autoContextFromCurrentWindow] else {
-            self.screenResult = .init()
-            return
-        }
-        
-        parseDebounceWorkItem?.cancel()
-        
-        let workItem = DispatchWorkItem { [weak self] in
-            guard let self = self else { return }
-            
-            Task {
-                do {
-                    let (results, boundingBoxes) = try await AccessibilityParser.shared.getAllTextInElement(windowElement: mainWindow)
-                    self.handleWindowContent(
-                        results,
-                        for: state,
-                        trackedWindow: trackedWindow,
-                        customAppBundleUrl: customAppBundleUrl
-                    )
-                } catch {
-                    await MainActor.run {
-                        print("Accessibility timeout")
-                        self.timedOutWindowHash.insert(windowHash)
-                        AnalyticsManager.Accessibility.parseTimedOut(appName: appName)
-                        self.screenResult = .init()
-                        self.screenResult.errorMessage = "Timeout occurred, could not read application in reasonable amount of time."
-                        self.showDebug()
-                    }
-                }
-            }
-        }
-        
-        parseDebounceWorkItem = workItem
-        
-        DispatchQueue.main.asyncAfter(deadline: .now() + Config.debounceInterval, execute: workItem)
-    }
-    
-    private func handleWindowContent(
-        _ results: [String: String]?,
-        for state: OnitPanelState,
-        trackedWindow: TrackedWindow? = nil,
-        customAppBundleUrl: URL? = nil
-    ) {
-        var appBundleUrl: URL? = customAppBundleUrl
-        
-        if appBundleUrl == nil,
-           let pid = lastActiveWindowPid,
-           let app = NSRunningApplication(processIdentifier: pid)
-        {
-            appBundleUrl = app.bundleURL
-        }
-        
-        let elapsedTime = results?[AccessibilityParsedElements.elapsedTime]
-        let appName = results?[AccessibilityParsedElements.applicationName]
-        let appTitle = results?[AccessibilityParsedElements.applicationTitle]
-        let highlightedText = results?[AccessibilityParsedElements.highlightedText]
-        
-        var results = results
-        
-        results?.removeValue(forKey: AccessibilityParsedElements.elapsedTime)
-        results?.removeValue(forKey: AccessibilityParsedElements.applicationName)
-        results?.removeValue(forKey: AccessibilityParsedElements.applicationTitle)
-        results?.removeValue(forKey: AccessibilityParsedElements.highlightedText)
-        
-        self.screenResult.elapsedTime = elapsedTime
-        self.screenResult.applicationName = appName
-        self.screenResult.applicationTitle = appTitle
-        self.screenResult.others = results
-        self.screenResult.errorMessage = nil
-        self.screenResult.appBundleUrl = appBundleUrl
-        self.showDebug()
-        
-        state.addAutoContext(trackedWindow: trackedWindow)
     }
 
     // MARK: Value Changed
