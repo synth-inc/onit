@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import Accessibility  
 
 @MainActor protocol AccessibilityNotificationsDelegate: AnyObject {
     func accessibilityManager(_ manager: AccessibilityNotificationsManager, didActivateWindow window: TrackedWindow)
