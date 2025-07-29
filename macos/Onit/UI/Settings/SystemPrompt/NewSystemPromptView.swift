@@ -16,6 +16,8 @@ struct NewSystemPromptView: View {
     @Binding var shortcutChanged: Bool
     
     @FocusState private var isFocused: Bool
+    @State private var appSearchText: String = ""
+    @State private var showAppSelector: Bool = false
     
     init(prompt: Binding<SystemPrompt>, isSaved: Binding<Bool>, shortcutChanged: Binding<Bool>) {
         self._savedPrompt = prompt
@@ -25,6 +27,17 @@ struct NewSystemPromptView: View {
     
     private var allApps: [URL] {
         FileManager.default.installedApps().filter { !savedPrompt.applications.contains($0) }
+    }
+    
+    private var filteredApps: [URL] {
+        if appSearchText.isEmpty {
+            return allApps
+        } else {
+            return allApps.filter { url in
+                url.deletingPathExtension().lastPathComponent
+                    .localizedCaseInsensitiveContains(appSearchText)
+            }
+        }
     }
     
     static private let promptPlaceholder = "Enter instructions to define role, tone and boundaries of the AI"
@@ -45,6 +58,65 @@ struct NewSystemPromptView: View {
     
     private var saveButtonDisabled: Bool {
         savedPrompt.name.isEmpty || promptIsPlaceholder || savedPrompt.prompt.isEmpty
+    }
+    
+    private var appSelectorPopover: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("Select Applications")
+                .font(.headline)
+                .foregroundStyle(.gray100)
+            
+            // Search field
+            TextField("Search applications...", text: $appSearchText)
+                .textFieldStyle(.plain)
+                .padding(8)
+                .background(.gray700)
+                .cornerRadius(5)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 5)
+                        .stroke(.gray500)
+                )
+            
+            // Apps list
+            VStack {
+                if filteredApps.isEmpty {
+                    Text("No applications found")
+                        .foregroundStyle(.gray200)
+                        .padding(.vertical, 8)
+                } else {
+                    ScrollView {
+                        LazyVStack(spacing: 2) {
+                            ForEach(filteredApps, id: \.self) { url in
+                                Button(action: {
+                                    savedPrompt.applications.append(url)
+                                    appSearchText = "" // Clear search after selection
+                                    showAppSelector = false // Close popover
+                                }) {
+                                    HStack {
+                                        Image(nsImage: NSWorkspace.shared.icon(forFile: url.path))
+                                            .resizable()
+                                            .frame(width: 16, height: 16)
+                                        Text(url.deletingPathExtension().lastPathComponent)
+                                            .foregroundStyle(.white)
+                                        Spacer()
+                                    }
+                                }
+                                .buttonStyle(.plain)
+                                .padding(.vertical, 6)
+                                .padding(.horizontal, 8)
+                                .background(.clear)
+                                .cornerRadius(4)
+                                .contentShape(Rectangle())
+                            }
+                        }
+                    }
+                }
+            }
+            .frame(minHeight: 200, maxHeight: 300)
+        }
+        .padding(16)
+        .frame(width: 300)
+        .background(.gray800)
     }
     
     // MARK: - Views
@@ -165,17 +237,8 @@ struct NewSystemPromptView: View {
                 .foregroundStyle(.gray100)
             
             HStack {
-                Menu {
-                    ForEach(allApps, id: \.self) { url in
-                        Button(action: {
-                            savedPrompt.applications.append(url)
-                        }) {
-                            HStack {
-                                Image(nsImage: NSWorkspace.shared.icon(forFile: url.path))
-                                Text(url.deletingPathExtension().lastPathComponent)
-                            }
-                        }
-                    }
+                Button {
+                    showAppSelector = true
                 } label: {
                     Image(systemName: "plus.circle.fill")
                         .resizable()
@@ -183,6 +246,9 @@ struct NewSystemPromptView: View {
                         .foregroundColor(.gray100)
                 }
                 .buttonStyle(.plain)
+                .popover(isPresented: $showAppSelector) {
+                    appSelectorPopover
+                }
                 
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: 4) {
