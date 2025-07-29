@@ -306,7 +306,8 @@ class ContextFetchingService {
     }
     
     func reset() {
-        timedOutWindowHash.removeAll()
+        /// I (Kevin) don't think we should reset the timed out windows
+        // timedOutWindowHash.removeAll()
         lastActiveWindowPid = nil
     }
     
