@@ -80,6 +80,7 @@ class NotepadWindowController: NSObject, NSWindowDelegate {
         positionWindow(windowState: windowState)
         bringToFront()
         self.windowState?.isDiffViewActive = true
+        self.windowState?.responseUsedForDiffView = response
     }
 
     func bringToFront() {

@@ -22,10 +22,12 @@ class Response {
     var toolCallResult: String?
     var toolCallSuccess: Bool?
     
-    @Relationship(deleteRule: .cascade) 
-	var diffRevisions: [DiffRevision] = []
-	
+    // Diff view
     var currentDiffRevisionIndex: Int = 0
+    var shouldDisplayDiffToolView = true
+    
+    @Relationship(deleteRule: .cascade, inverse: \DiffRevision.response)
+	var diffRevisions: [DiffRevision] = []
 
     init(text: String, instruction: String?, type: ResponseType, model: String, time: Date = .now) {
         self.text = text
@@ -76,31 +78,40 @@ extension Response {
     
 // MARK: - Diff Revisions
 extension Response {
+    var sortedDiffRevisions: [DiffRevision] {
+        return diffRevisions.sorted { $0.index < $1.index }
+    }
+    
     var currentDiffChanges: [DiffChangeState] {
-        guard currentDiffRevisionIndex < diffRevisions.count else { return [] }
-        return diffRevisions[currentDiffRevisionIndex].diffChanges
+        guard let currentRevision = currentDiffRevision else { return [] }
+        return currentRevision.diffChanges
     }
     
     var currentDiffRevision: DiffRevision? {
-        guard currentDiffRevisionIndex < diffRevisions.count else { return nil }
-        return diffRevisions[currentDiffRevisionIndex]
+        return diffRevisions.first { $0.index == currentDiffRevisionIndex }
     }
     
     var totalDiffRevisions: Int {
         return diffRevisions.count
     }
     
-    func createNewDiffRevision(with diffChanges: [DiffChangeState]) {
-        let newRevision = DiffRevision(index: diffRevisions.count)
-        newRevision.diffChanges = diffChanges
-        diffRevisions.append(newRevision)
-        currentDiffRevisionIndex = diffRevisions.count - 1
+    private var nextRevisionIndex: Int {
+        return (diffRevisions.map { $0.index }.max() ?? -1) + 1
     }
     
-    /// Adds a diff change to the current revision, creating one if none exists
+    func createNewDiffRevision(with diffChanges: [DiffChangeState]) {
+        let newIndex = nextRevisionIndex
+        let newRevision = DiffRevision(index: newIndex)
+        newRevision.diffChanges = diffChanges
+        newRevision.response = self
+        diffRevisions.append(newRevision)
+        currentDiffRevisionIndex = newIndex
+    }
+    
     func addDiffChangeToCurrentRevision(_ diffChange: DiffChangeState) {
         if diffRevisions.isEmpty {
             let newRevision = DiffRevision(index: 0)
+            newRevision.response = self
             diffRevisions.append(newRevision)
             currentDiffRevisionIndex = 0
         }
@@ -111,13 +122,14 @@ extension Response {
     }
     
     func setCurrentRevision(index: Int) {
-        guard index >= 0 && index < diffRevisions.count else { return }
+        guard diffRevisions.contains(where: { $0.index == index }) else { return }
         currentDiffRevisionIndex = index
     }
     
     func addDiffChangesToCurrentRevision(_ diffChanges: [DiffChangeState]) {
         if diffRevisions.isEmpty {
             let newRevision = DiffRevision(index: 0)
+            newRevision.response = self
             diffRevisions.append(newRevision)
             currentDiffRevisionIndex = 0
         }
@@ -130,6 +142,51 @@ extension Response {
     func clearCurrentDiffRevision() {
         if let currentRevision = currentDiffRevision {
             currentRevision.diffChanges.removeAll()
+        }
+    }
+    
+    func createNewRevisionFromOriginal() -> [DiffChangeState] {
+        guard let diffResult = diffResult else { return [] }
+        
+        var newRevisionChanges: [DiffChangeState] = []
+        
+        for (index, operation) in diffResult.operations.enumerated() {
+            let diffChange = DiffChangeState(
+                operationIndex: index,
+                operationType: operation.type,
+                status: .pending,
+                operationText: operation.text ?? operation.newText,
+                operationStartIndex: operation.startIndex ?? operation.index,
+                operationEndIndex: operation.endIndex
+            )
+            newRevisionChanges.append(diffChange)
+        }
+        
+        let newIndex = nextRevisionIndex
+        let newRevision = DiffRevision(index: newIndex)
+        newRevision.diffChanges = newRevisionChanges
+        newRevision.response = self
+        diffRevisions.append(newRevision)
+        currentDiffRevisionIndex = newIndex
+        
+        return newRevisionChanges
+    }
+    
+    func createVariantWithContext(_ modelContext: ModelContext) {
+        let newChanges = createNewRevisionFromOriginal()
+        
+        if let newRevision = diffRevisions.last {
+            modelContext.insert(newRevision)
+        }
+        
+        for change in newChanges {
+            modelContext.insert(change)
+        }
+        
+        do {
+            try modelContext.save()
+        } catch {
+            print("Error saving variant: \(error)")
         }
     }
 }

@@ -13,17 +13,19 @@ struct NotepadView: View {
     let closeCompletion: (() -> Void)
     
     @Environment(\.modelContext) private var modelContext
+    @State private var viewModel: DiffViewModel
     
     init(response: Response, closeCompletion: @escaping () -> Void) {
         self.response = response
         self.closeCompletion = closeCompletion
+        self._viewModel = State(initialValue: DiffViewModel(response: response))
     }
     
     var body: some View {
         VStack(spacing: 0) {
             toolbar
             PromptDivider()
-            DiffView(response: response, modelContext: modelContext)
+            DiffView(viewModel: viewModel)
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         }
     }
@@ -38,7 +40,10 @@ struct NotepadView: View {
     }
     
     private var close: some View {
-        Button(action: closeCompletion) {
+        Button(action: {
+            // viewModel.createVariant()
+            closeCompletion()
+        }) {
             Image(.smallCross)
                 .frame(width: 48, height: 32)
                 .foregroundStyle(.gray200)

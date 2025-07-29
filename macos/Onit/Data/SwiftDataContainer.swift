@@ -17,6 +17,8 @@ actor SwiftDataContainer {
             let schema = Schema([
                 Chat.self,
                 SystemPrompt.self,
+                Prompt.self,
+                Response.self,
                 DiffChangeState.self,
                 DiffRevision.self,
             ])
@@ -55,6 +57,8 @@ actor SwiftDataContainer {
         let schema = Schema([
             Chat.self,
             SystemPrompt.self,
+            Prompt.self,
+            Response.self,
             DiffChangeState.self,
             DiffRevision.self,
         ])

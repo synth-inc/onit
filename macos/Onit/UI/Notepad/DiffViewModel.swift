@@ -14,7 +14,7 @@ import SwiftData
 @Observable
 class DiffViewModel {
     private let modelContext: ModelContext
-    private let response: Response
+    let response: Response
     
     // Current state
     var diffChanges: [DiffChangeState] = []
@@ -83,6 +83,7 @@ class DiffViewModel {
     
     func refreshForResponseUpdate() {
         let hadChanges = !diffChanges.isEmpty
+        
         loadOrCreateDiffChanges()
         
         if hadChanges && !diffChanges.isEmpty {
@@ -92,6 +93,18 @@ class DiffViewModel {
                 }
             }
         }
+    }
+    
+    func refreshForRevisionChange() {
+        diffChanges = getDiffChanges()
+        
+        if let firstPending = diffChanges.first(where: { $0.status == .pending }) {
+            currentOperationIndex = firstPending.operationIndex
+        } else {
+            currentOperationIndex = 0
+        }
+        
+        isPreviewingAllApproved = false
     }
     
     // MARK: - Data Management
@@ -194,16 +207,6 @@ class DiffViewModel {
         saveContext(modelContext)
     }
     
-    private func recreateDiffChanges() {
-        for change in diffChanges {
-            modelContext.delete(change)
-        }
-        
-        response.clearCurrentDiffRevision()
-        saveContext(modelContext)
-        createDiffChanges()
-    }
-    
     private func updateDiffChangeStatus(operationIndex: Int, status: DiffChangeStatus) {
         if let diffChange = getDiffChange(operationIndex: operationIndex) {
             diffChange.status = status
@@ -218,7 +221,8 @@ class DiffViewModel {
     }
     
     private func recalculateIndicesAfterApproval(approvedOperationIndex: Int) {
-        guard let diffResult = response.diffResult else { return }
+        guard let diffResult = response.diffResult,
+              approvedOperationIndex < diffResult.operations.count else { return }
         
         let allChanges = getDiffChanges().sorted { $0.operationIndex < $1.operationIndex }
         let approvedOperation = diffResult.operations[approvedOperationIndex]
@@ -369,6 +373,12 @@ class DiffViewModel {
     
     // MARK: - Actions
     
+    func createVariant() {
+        response.createVariantWithContext(modelContext)
+        
+        resetViewModel()
+    }
+    
     func approveCurrentChange() {
         updateCurrentChangeStatus(.approved)
     }
@@ -387,7 +397,7 @@ class DiffViewModel {
                 status: .approved
             )
         }
-        
+
         refreshChanges()
         hasUnsavedChanges = true
     }
@@ -403,20 +413,6 @@ class DiffViewModel {
         }
         
         refreshChanges()
-    }
-    
-    private func updateCurrentChangeStatus(_ status: DiffChangeStatus) {
-        updateDiffChangeStatus(
-            operationIndex: currentOperationIndex,
-            status: status
-        )
-        refreshChanges()
-        
-        if status == .approved {
-            hasUnsavedChanges = true
-        }
-        
-        navigateToNextAvailablePendingChange()
     }
     
     // MARK: - Navigation
@@ -601,8 +597,31 @@ class DiffViewModel {
     }
     
     // MARK: - Private
+
+	private func updateCurrentChangeStatus(_ status: DiffChangeStatus) {
+        updateDiffChangeStatus(
+            operationIndex: currentOperationIndex,
+            status: status
+        )
+        refreshChanges()
+        
+        if status == .approved {
+            hasUnsavedChanges = true
+        }
+        
+        navigateToNextAvailablePendingChange()
+    }
     
     private func refreshChanges() {
         diffChanges = getDiffChanges()
+    }
+
+	private func resetViewModel() {
+        loadOrCreateDiffChanges()
+        
+        hasUnsavedChanges = false
+        isPreviewingAllApproved = false
+        isInserting = false
+        insertionError = nil
     }
 } 

@@ -61,7 +61,7 @@ class ClickableTextView: NSTextView {
                 guard let opIndex = segment.operationIndex else { return nil }
                 return effectiveChanges.first { $0.operationIndex == opIndex }?.status
             }()
-            let isSegmentVisible = DiffTextView.shouldSegmentBeVisible(segment: segment, status: segmentStatus)
+            let isSegmentVisible = DiffSegmentUtils.shouldSegmentBeVisible(segment: segment, status: segmentStatus)
             
             if isSegmentVisible {
                 let segmentRange = NSRange(location: currentIndex, length: segment.content.count)
@@ -188,12 +188,6 @@ struct DiffTextView: NSViewRepresentable {
         }
     }
 
-	static func shouldSegmentBeVisible(segment: DiffSegment, status: DiffChangeStatus?) -> Bool {
-		return segment.type == .unchanged ||
-			(segment.type == .added && status != .rejected) ||
-			(segment.type == .removed && status != .approved)
-    }
-    
     private func findCurrentSegmentRect(textView: NSTextView) -> CGRect? {
         guard let layoutManager = textView.layoutManager,
               let textContainer = textView.textContainer else {
@@ -210,7 +204,7 @@ struct DiffTextView: NSViewRepresentable {
                 guard let opIndex = segment.operationIndex else { return nil }
                 return effectiveChanges.first { $0.operationIndex == opIndex }?.status
             }()
-            let isSegmentVisible = DiffTextView.shouldSegmentBeVisible(segment: segment, status: segmentStatus)
+            let isSegmentVisible = DiffSegmentUtils.shouldSegmentBeVisible(segment: segment, status: segmentStatus)
             
             if let segmentOpIndex = segment.operationIndex, segmentOpIndex == currentOperationIndex && isSegmentVisible {
                 currentSegmentStart = characterIndex

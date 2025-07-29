@@ -12,7 +12,10 @@ import SwiftData
 class DiffRevision {
     var index: Int
     var createdAt: Date
+    @Relationship(deleteRule: .cascade, inverse: \DiffChangeState.revision)
     var diffChanges: [DiffChangeState] = []
+    
+    var response: Response?
     
     init(index: Int) {
         self.index = index
@@ -29,6 +32,8 @@ class DiffChangeState {
     var operationText: String?
     var operationStartIndex: Int?
     var operationEndIndex: Int?
+    
+    var revision: DiffRevision?
     
     init(operationIndex: Int, operationType: String, status: DiffChangeStatus = .pending, operationText: String? = nil, operationStartIndex: Int? = nil, operationEndIndex: Int? = nil) {
         self.operationIndex = operationIndex

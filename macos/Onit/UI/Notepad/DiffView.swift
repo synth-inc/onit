@@ -11,17 +11,17 @@ import SwiftData
 
 struct DiffView: View {
 	@Environment(\.modelContext) private var modelContext
-    @State private var viewModel: DiffViewModel
     @State private var currentSegmentRect: CGRect? = nil
     @State private var currentOperationBarSize: CGSize = CGSize(width: 140, height: 30)
     @State private var shouldScrollToSegment: Bool = false
     @State private var isScrolling: Bool = false
-    
+	
+	let viewModel: DiffViewModel
     private let response: Response
 
-    init(response: Response, modelContext: ModelContext) {
-        self.response = response
-        self._viewModel = State(initialValue: DiffViewModel(response: response))
+    init(viewModel: DiffViewModel) {
+        self.viewModel = viewModel
+        self.response = viewModel.response
     }
     
     var body: some View {
@@ -43,7 +43,7 @@ struct DiffView: View {
                     }
                 )
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .id("\(viewModel.diffChanges.count)-\(viewModel.isPreviewingAllApproved)")
+                .id("\(viewModel.response.currentDiffRevisionIndex)-\(viewModel.diffChanges.count)-\(viewModel.isPreviewingAllApproved)")
             }
             
             if viewModel.currentDiffChange?.status == .pending && !isScrolling && !viewModel.isPreviewingAllApproved {
@@ -236,9 +236,9 @@ struct DiffView: View {
     private var bottomToolbar: some View {
         HStack {
             Button {
-                //insertApprovedChanges()
+                viewModel.createVariant()
             } label: {
-                Text("Saved")
+                Text("Create variant")
                     .padding(6)
             }
             .buttonStyle(.plain)
@@ -247,7 +247,11 @@ struct DiffView: View {
                 RoundedRectangle(cornerRadius: 7)
                     .fill(.T_7)
             )
-            .disabled(!viewModel.hasUnsavedChanges)
+            
+            if viewModel.response.totalDiffRevisions > 1 {
+                ToggleDiffVariantView(response: viewModel.response, viewModel: viewModel)
+                    .padding(.leading, 8)
+            }
             
             Spacer()
             
@@ -291,117 +295,14 @@ struct DiffView: View {
         .padding(.horizontal, 16)
         .padding(.bottom, 24)
     }
-    
-    // Define operation priority: deletions first, then replacements, then insertions
-    private func operationPriority(_ type: String) -> Int {
-        switch type {
-        case "deleteContentRange": return 0  // Highest priority
-        case "replaceText": return 1         // Medium priority  
-        case "insertText": return 2          // Lowest priority
-        default: return 3                    // Unknown operations last
-        }
-    }
-    
     private func generateDiffSegments() -> [DiffSegment]? {
         guard let arguments = viewModel.diffArguments,
               let result = viewModel.diffResult else { return nil }
         
-        let originalText = arguments.original_content
-        let operations = result.operations.sorted { (op1, op2) in
-            let pos1 = op1.startIndex ?? op1.index ?? 0
-            let pos2 = op2.startIndex ?? op2.index ?? 0
-            
-            if pos1 == pos2 {
-                let priority1 = operationPriority(op1.type)
-                let priority2 = operationPriority(op2.type)
-                return priority1 < priority2
-            }
-            
-            return pos1 < pos2
-        }
-        
-        var segments: [DiffSegment] = []
-        var currentPosition = 0
-        
-        for (opIndex, operation) in operations.enumerated() {
-            let operationStart: Int
-            
-            switch operation.type {
-            case "insertText":
-                operationStart = operation.index ?? 0
-            case "deleteContentRange", "replaceText":
-                operationStart = operation.startIndex ?? 0
-            default:
-                continue
-            }
-            
-            if currentPosition < operationStart {
-                let unchangedText = String(originalText[originalText.index(originalText.startIndex, offsetBy: currentPosition)..<originalText.index(originalText.startIndex, offsetBy: operationStart)])
-                if !unchangedText.isEmpty {
-                    segments.append(DiffSegment(
-                        content: unchangedText,
-                        type: .unchanged,
-                        operationIndex: nil
-                    ))
-                }
-            }
-            
-            switch operation.type {
-            case "insertText":
-                if let text = operation.text {
-                    segments.append(DiffSegment(
-                        content: text,
-                        type: .added,
-                        operationIndex: opIndex
-                    ))
-                }
-                currentPosition = max(currentPosition, operationStart)
-                
-            case "deleteContentRange":
-                if let endIndex = operation.endIndex {
-                    let deletedText = String(originalText[originalText.index(originalText.startIndex, offsetBy: operationStart)..<originalText.index(originalText.startIndex, offsetBy: endIndex)])
-                    segments.append(DiffSegment(
-                        content: deletedText,
-                        type: .removed,
-                        operationIndex: opIndex
-                    ))
-                    currentPosition = endIndex
-                }
-                
-            case "replaceText":
-                if let endIndex = operation.endIndex,
-                   let newText = operation.newText {
-                    let deletedText = String(originalText[originalText.index(originalText.startIndex, offsetBy: operationStart)..<originalText.index(originalText.startIndex, offsetBy: endIndex)])
-                    segments.append(DiffSegment(
-                        content: deletedText,
-                        type: .removed,
-                        operationIndex: opIndex
-                    ))
-                    segments.append(DiffSegment(
-                        content: newText,
-                        type: .added,
-                        operationIndex: opIndex
-                    ))
-                    currentPosition = endIndex
-                }
-                
-            default:
-                break
-            }
-        }
-        
-        if currentPosition < originalText.count {
-            let remainingText = String(originalText[originalText.index(originalText.startIndex, offsetBy: currentPosition)...])
-            if !remainingText.isEmpty {
-                segments.append(DiffSegment(
-                    content: remainingText,
-                    type: .unchanged,
-                    operationIndex: nil
-                ))
-            }
-        }
-        
-        return segments
+        return DiffSegmentUtils.generateDiffSegments(
+            originalText: arguments.original_content,
+            operations: result.operations
+        )
     }
     
     private func calculateBarXOffset(segmentRect: CGRect, containerWidth: CGFloat, barWidth: CGFloat) -> CGFloat {

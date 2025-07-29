@@ -144,6 +144,7 @@ class OnitPanelState: NSObject {
     var historyIndex = -1
     
     var isDiffViewActive: Bool = false
+    var responseUsedForDiffView: Response?
     
     var setUpHeight: CGFloat = 0
     

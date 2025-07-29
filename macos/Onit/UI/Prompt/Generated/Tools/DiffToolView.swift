@@ -5,14 +5,33 @@
 //  Created by Kévin Naudin on 07/07/2025.
 //
 
+import Defaults
 import SwiftUI
 
 struct DiffToolView: View {
+    @Environment(\.windowState) private var windowState
+    @Default(.lineHeight) var lineHeight
+    @Default(.fontSize) var fontSize
+    
     let response: Response
     
-    @Environment(\.windowState) private var windowState
+    private var message: String {
+        if response.isPartial {
+            return "Streaming in Diff View..."
+        } else {
+            return "Content in Diff View"
+        }
+    }
     
     var body: some View {
+        if response.shouldDisplayDiffToolView {
+            toolView
+        } else {
+            contentView
+        }
+    }
+    
+    private var toolView: some View {
         HStack(alignment: .center, spacing: 2) {
             ZStack(alignment: .center) {
                 RoundedRectangle(cornerRadius: 4)
@@ -34,7 +53,7 @@ struct DiffToolView: View {
                     .frame(alignment: .center)
             }
             
-            Text("Content in Diff View")
+            Text(message)
                 .foregroundStyle(.gray100)
                 .padding(.leading, 2)
             
@@ -50,9 +69,9 @@ struct DiffToolView: View {
             Spacer()
             
             Button {
-                showDiffTapped()
+                switchToChat()
             } label: {
-                Text("Show Diff")
+                Text("Switch to Chat →")
                     .foregroundStyle(.FG)
             }
         }
@@ -63,14 +82,50 @@ struct DiffToolView: View {
         }
     }
     
+    private var contentView: some View {
+        Text(generatePreviewText())
+            .textSelection(.enabled)
+            .font(.system(size: fontSize))
+            .lineSpacing(lineHeight)
+            .foregroundStyle(.FG)
+            .frame(maxWidth: .infinity, alignment: .leading)
+    }
+    
+    private func generatePreviewText() -> String {
+        guard let diffArguments = response.diffArguments,
+              let diffResult = response.diffResult else { return "" }
+        
+        let segments = DiffSegmentUtils.generateDiffSegments(
+            originalText: diffArguments.original_content,
+            operations: diffResult.operations
+        )
+        
+        let currentChanges = response.currentDiffChanges
+        let effectiveChanges = currentChanges.map { change in
+            DiffChangeData(
+                operationIndex: change.operationIndex,
+                operationType: change.operationType,
+                status: change.status == .pending ? .rejected : change.status,
+                operationText: change.operationText,
+                operationStartIndex: change.operationStartIndex,
+                operationEndIndex: change.operationEndIndex
+            )
+        }
+        
+        return DiffSegmentUtils.generateTextFromSegments(
+            segments: segments,
+            effectiveChanges: effectiveChanges
+        )
+    }
+    
     private func infoTapped() {
         log.error("Info tapped")
 		// TODO: KNA - Diff view
     }
     
-    private func showDiffTapped() {
+    private func switchToChat() {
         guard let windowState = windowState else { return }
         
-        NotepadWindowController.shared.showWindow(windowState: windowState, response: response)
+        response.shouldDisplayDiffToolView = false
     }
 }

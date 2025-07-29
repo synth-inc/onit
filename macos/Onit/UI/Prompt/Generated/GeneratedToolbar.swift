@@ -13,23 +13,45 @@ struct GeneratedToolbar: View {
     @Default(.mode) var mode
 
     var prompt: Prompt
+    
+    private var isDiffViewActive: Bool {
+        state?.responseUsedForDiffView == prompt.currentResponse &&
+        state?.isDiffViewActive == true
+    }
 
     var body: some View {
         HStack(spacing: 8) {
+            diffView
             copy
             regenerate
             selector
             
             Spacer()
             
-            if prompt.safeGenerationIndex >= 0 &&
-                prompt.safeGenerationIndex < prompt.responses.count,
-                let model = prompt.sortedResponses[prompt.safeGenerationIndex].model {
+            if let model = prompt.currentResponse?.model {
                 Text("\(model)")
                     .foregroundColor(Color.gray300)
             }
         }
         .padding(.horizontal, 12)
+    }
+    
+    @ViewBuilder
+    var diffView: some View {
+        if let response = prompt.currentResponse,
+           let state = state,
+           response.isDiffResponse {
+            IconButton(
+                icon: .lucideDiff,
+                isActive: isDiffViewActive,
+                activeBackground: .gray800,
+                tooltipPrompt: "Diff"
+            ) {
+                if !isDiffViewActive {
+                    NotepadWindowController.shared.showWindow(windowState: state, response: response)
+                }
+            }
+        }
     }
 
     @ViewBuilder
