@@ -28,17 +28,10 @@ class AccessibilityNotificationsManager: ObservableObject {
 
     private var currentSource: String?
 
-    private var lastHighlightingProcessedAt: Date?
-    private var lastCaretPositionChangeTimestamp: Date?
-
     private var valueDebounceWorkItem: DispatchWorkItem?
-    private var selectionDebounceWorkItem: DispatchWorkItem?
     private var parseDebounceWorkItem: DispatchWorkItem?
     
     private var lastActiveWindowPid: pid_t?
-    
-    // Published property for selected text that QuickEditManager can observe
-    @Published var selectedText: String?
 
     // MARK: - Private initializer
 
@@ -115,14 +108,10 @@ class AccessibilityNotificationsManager: ObservableObject {
         }
         
         currentSource = nil
-        lastHighlightingProcessedAt = nil
-		lastCaretPositionChangeTimestamp = nil
         valueDebounceWorkItem?.cancel()
-        selectionDebounceWorkItem?.cancel()
         parseDebounceWorkItem?.cancel()
         
         lastActiveWindowPid = nil
-        selectedText = nil
         
         ContextFetchingService.shared.reset()
     }
@@ -139,10 +128,9 @@ class AccessibilityNotificationsManager: ObservableObject {
                 
                 Task { @MainActor in
                     if let element = unsafeElement {
-                        self.processSelectionChange(for: element)
+                        self.handleSelectionChange(for: element)
                     } else {
-                        // Handle text deselection - clear pendingInput
-                        self.processSelectedText(nil)
+                        // wut
                     }
                 }
             })
@@ -181,7 +169,7 @@ class AccessibilityNotificationsManager: ObservableObject {
             self.handleValueChanged(for: element)
             // self.handleCaretPositionChange(for: element)
         case kAXFocusedUIElementChangedNotification:
-            self.handleCaretPositionChange(for: element)
+            self.handleFocusedUIElementChanged(for: element)
         case kAXWindowMovedNotification:
             self.handleWindowMoved(for: element, elementPid: elementPid)
         case kAXWindowResizedNotification:
@@ -279,23 +267,15 @@ class AccessibilityNotificationsManager: ObservableObject {
     }
 
     private func handleSelectionChange(for element: AXUIElement) {
-        guard HighlightedTextValidator.isValid(element: element) else { return }
-        
-        // Fix to work with PDF in Chrome
-        if let lastHighlightingProcessedAt = lastHighlightingProcessedAt, Date().timeIntervalSince(lastHighlightingProcessedAt) < 0.002 {
-            return
+        self.notifyDelegates(for: element) { delegate in
+            delegate.accessibilityManager(self, didChangeSelection: element)
         }
-        
-        lastHighlightingProcessedAt = Date()
-        selectionDebounceWorkItem?.cancel()
+    }
 
-        let workItem = DispatchWorkItem { [weak self] in
-            self?.processSelectionChange(for: element)
+    private func handleFocusedUIElementChanged(for element: AXUIElement) {
+        self.notifyDelegates(for: element) { delegate in
+            delegate.accessibilityManager(self, didChangeFocusedUIElement: element)
         }
-
-        selectionDebounceWorkItem = workItem
-
-        DispatchQueue.main.asyncAfter(deadline: .now() + Config.textSelectionDebounceInterval, execute: workItem)
     }
 
     // MARK: Value Changed
@@ -312,73 +292,7 @@ class AccessibilityNotificationsManager: ObservableObject {
         showDebug()
     }
 
-    // MARK: Text Selection
 
-    private func processSelectionChange(for element: AXUIElement) {
-        // Ensure we're on the main thread
-        dispatchPrecondition(condition: .onQueue(.main))
-
-        let selectedText = element.selectedText()
-        
-        if let selectedText = selectedText, HighlightedTextValidator.isValid(text: selectedText) {
-            Task {
-                _ = await HighlightedTextBoundsExtractor.shared.getBounds(for: element, selectedText: selectedText)
-                
-                processSelectedText(selectedText)
-            }
-        } else {
-            // On every apps, when caret position changed, we receive AXSelectedTextChanged notification with nil value.
-            // This code is used to hide the QuickEdit hint for a real deselection
-            let now = Date()
-            let caretPositionChangeRecently = now.timeIntervalSince(lastCaretPositionChangeTimestamp ?? .distantPast) < 0.5 
-            let isEditableField = element.role() == kAXTextFieldRole || element.role() == kAXTextAreaRole
-            
-            if !caretPositionChangeRecently && !isEditableField {
-                processSelectedText(nil)
-                HighlightedTextBoundsExtractor.shared.reset()
-                QuickEditManager.shared.hideHint()
-            } else if isEditableField {
-                handleCaretPositionChange(for: element)
-            }
-        }
-        
-        showDebug()
-    }
-
-    private func processSelectedText(_ text: String?) {
-        guard Defaults[.autoContextFromHighlights],
-              let selectedText = text,
-              HighlightedTextValidator.isValid(text: selectedText) else {
-            
-            PanelStateCoordinator.shared.state.pendingInput = nil
-            PanelStateCoordinator.shared.state.trackedPendingInput = nil
-            self.selectedText = nil
-            return
-        }
-        
-        // Update the published selectedText property
-        self.selectedText = selectedText
-
-        let input = Input(selectedText: selectedText, application: currentSource ?? "")
-        
-        if Defaults[.autoAddHighlightedTextToContext] {
-            PanelStateCoordinator.shared.state.pendingInput = input
-        } else {
-            PanelStateCoordinator.shared.state.trackedPendingInput = input
-        }
-    }
-
-	// MARK: Caret Position Handling
-    
-    private func handleCaretPositionChange(for element: AXUIElement) {
-        guard element.supportsCaretTracking() else { return }
-        
-        selectionDebounceWorkItem?.cancel()
-        selectionDebounceWorkItem = nil
-        processSelectedText(nil)
-		lastCaretPositionChangeTimestamp = Date()
-        caretPositionManager.updateCaretPosition(for: element)
-    }
 
     // MARK: Debug
 

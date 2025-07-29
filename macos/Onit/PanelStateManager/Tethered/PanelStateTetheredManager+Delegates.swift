@@ -7,6 +7,9 @@
 
 // MARK: - AccessibilityNotificationsDelegate
 
+import Accessibility
+import ApplicationServices
+
 extension PanelStateTetheredManager: AccessibilityNotificationsDelegate {
     //  MARK: - DID ACTIVATE WINDOW
     
@@ -101,6 +104,9 @@ extension PanelStateTetheredManager: AccessibilityNotificationsDelegate {
             }
          }
     }
+    
+    func accessibilityManager(_ manager: AccessibilityNotificationsManager, didChangeSelection element: AXUIElement) { }
+    func accessibilityManager(_ manager: AccessibilityNotificationsManager, didChangeFocusedUIElement element: AXUIElement) { }
     
     var wantsNotificationsFromIgnoredProcesses: Bool { false }
     var wantsNotificationsFromOnit: Bool { false }

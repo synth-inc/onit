@@ -6,6 +6,7 @@
 //
 
 import AppKit
+import ApplicationServices
 
 extension PanelStatePinnedManager: AccessibilityNotificationsDelegate {
     //  MARK: - DID ACTIVATE WINDOW
@@ -80,6 +81,12 @@ extension PanelStatePinnedManager: AccessibilityNotificationsDelegate {
     
     var wantsNotificationsFromIgnoredProcesses: Bool { false }
     var wantsNotificationsFromOnit: Bool { false }
+    
+    // MARK: - Highlighted Text Related Notifications (Not needed for panel state)
+    
+    func accessibilityManager(_ manager: AccessibilityNotificationsManager, didChangeSelection element: AXUIElement) { }
+    
+    func accessibilityManager(_ manager: AccessibilityNotificationsManager, didChangeFocusedUIElement element: AXUIElement) { }
 }
 
 extension PanelStatePinnedManager: OnitPanelStateDelegate {
