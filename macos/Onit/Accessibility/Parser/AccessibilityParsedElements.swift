@@ -14,7 +14,7 @@ struct AccessibilityParsedElements {
     static let documentUrl = "Document's URL"
 
     static let highlightedText = "highlightedText"
-    static let screen = "App's content"
+    static let screen = "Plain text content"
 
     struct Xcode {
         static let editor = "editor"

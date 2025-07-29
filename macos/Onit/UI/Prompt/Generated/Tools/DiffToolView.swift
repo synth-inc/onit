@@ -27,7 +27,7 @@ struct DiffToolView: View {
         if response.shouldDisplayDiffToolView {
             toolView
         } else {
-            contentView
+            previewText
         }
     }
     
@@ -82,7 +82,7 @@ struct DiffToolView: View {
         }
     }
     
-    private var contentView: some View {
+    private var previewText: some View {
         Text(generatePreviewText())
             .textSelection(.enabled)
             .font(.system(size: fontSize))
@@ -124,8 +124,7 @@ struct DiffToolView: View {
     }
     
     private func switchToChat() {
-        guard let windowState = windowState else { return }
-        
+        NotepadWindowController.shared.closeWindow()
         response.shouldDisplayDiffToolView = false
     }
 }

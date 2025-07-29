@@ -18,7 +18,7 @@ class DiffTool: ToolProtocol {
     private let availableTools: [String: Tool] = [
         "plain_text": Tool(
             name: "diff_plain_text",
-            description: "Generate structured text modifications by comparing original plain text content with your improved version.",
+            description: "Generate structured text modifications for any text improvements including corrections, edits, proofreading, grammar fixes, spelling fixes, or content enhancements. Use this tool whenever you need to apply changes to existing text content.",
             parameters: ToolParameters(
                 properties: [
                     "app_name": ToolProperty(
