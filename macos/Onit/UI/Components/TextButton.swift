@@ -27,6 +27,7 @@ struct TextButton<Child: View>: View {
     private let fontSize: CGFloat
     private let fontWeight: Font.Weight
     private let fontColor: Color
+    private let hoverFontColor: Color
     
     private let icon: ImageResource?
     private let iconImage: NSImage?
@@ -42,8 +43,8 @@ struct TextButton<Child: View>: View {
     init(
         iconSize: CGFloat = 20,
         iconImageSize: CGFloat = 18,
-        iconColor: Color = Color.primary,
-        hoverIconColor: Color = Color.primary,
+        iconColor: Color = Color.S_0,
+        hoverIconColor: Color = Color.S_0,
         disabled: Bool = false,
         selected: Bool = false,
 
@@ -55,10 +56,11 @@ struct TextButton<Child: View>: View {
         cornerRadius: CGFloat = 8,
 
         background: Color = .clear,
-        hoverBackground: Color = .gray600,
+        hoverBackground: Color = Color.T_8,
         fontSize: CGFloat = 14,
         fontWeight: Font.Weight = Font.Weight.medium,
-        fontColor: Color = Color.primary,
+        fontColor: Color = Color.S_0,
+        hoverFontColor: Color = Color.S_0,
 
         icon: ImageResource? = nil,
         iconImage: NSImage? = nil,
@@ -90,6 +92,7 @@ struct TextButton<Child: View>: View {
         self.fontSize = fontSize
         self.fontWeight = fontWeight
         self.fontColor = fontColor
+        self.hoverFontColor = hoverFontColor
         
         self.icon = icon
         self.iconImage = iconImage
@@ -128,7 +131,7 @@ struct TextButton<Child: View>: View {
                     .styleText(
                         size: fontSize,
                         weight: fontWeight,
-                        color: disabled ? .gray200 : selected ? .blue300 : isHovered ? .white : fontColor
+                        color: disabled ? Color.S_2 : selected ? Color.blue300 : isHovered ? hoverFontColor : fontColor
                     )
                     .truncateText()
             }

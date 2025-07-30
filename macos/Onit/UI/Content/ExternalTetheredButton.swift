@@ -214,7 +214,7 @@ extension ExternalTetheredButton {
     private func icon(_ imageResource: ImageResource) -> some View {
         Image(imageResource)
             .renderingMode(.template)
-            .foregroundColor(.white)
+            .foregroundColor(Color.S_0)
             .frame(
                 width: Self.width,
                 height: Self.height
@@ -227,7 +227,7 @@ extension ExternalTetheredButton {
                 .styleText(
                     size: 13,
                     weight: .regular,
-                    color: .gray100
+                    color: Color.S_1
                 )
                 .padding(.top, 4)
                 .padding(.horizontal, 8)
@@ -265,7 +265,6 @@ extension ExternalTetheredButton {
             }
         }
         .padding(8)
-        .background(.gray900)
     }
 }
 

@@ -40,7 +40,7 @@ struct ContextMenuWindowButton: View {
     
     var body: some View {
         TextButton(
-            background: selected ? .gray600 : .clear,
+            background: selected ? Color.T_8 : .clear,
             icon: windowIcon == nil ? .stars : nil,
             iconImage: windowIcon,
             text: windowName

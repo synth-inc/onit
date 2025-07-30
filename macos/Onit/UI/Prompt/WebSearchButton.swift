@@ -10,7 +10,7 @@ struct WebSearchButton: View {
             icon: .web,
             iconSize: 17,
             isActive: webSearchEnabled,
-            activeColor: .white,
+            activeColor: Color.S_0,
             inactiveColor: webSearchEnabled ? .blue400 : .gray200
         ) {
             toggleWebSearch()

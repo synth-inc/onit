@@ -26,7 +26,7 @@ struct ChatSystemPromptView: View {
                     isExpanded.toggle()
                 }
             } label: {
-                HStack(alignment: .top, spacing: 6) {
+                HStack(alignment: .center, spacing: 6) {
                     Image(.chatSettings)
                         .renderingMode(.template)
                     Text(systemPrompt.name)
@@ -48,11 +48,12 @@ struct ChatSystemPromptView: View {
                         .appFont(.medium14)
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .padding([.horizontal, .top], 12)
+                        .foregroundColor(Color.S_1)
                     
                     ScrollView {
                         Text(systemPrompt.prompt)
                             .appFont(.medium14)
-                            .foregroundStyle(.gray100)
+                            .foregroundStyle(Color.S_1)
                             .padding(.horizontal, 12)
                             .background(
                                 GeometryReader { geometry in
@@ -69,7 +70,7 @@ struct ChatSystemPromptView: View {
                     .scrollBounceBehavior(.basedOnSize)
                     .frame(height: min(contentHeight, 165))
                     
-                    PromptDivider()
+                    DividerHorizontal()
                     
                     HStack(alignment: .top, spacing: 4) {
                         Image(systemName: "info.circle")
@@ -79,16 +80,16 @@ struct ChatSystemPromptView: View {
                         VStack(alignment: .leading, spacing: 4) {
                             Text(infoFirstLine)
                                 .appFont(.medium13)
-                                .foregroundStyle(.white.opacity(0.5))
+                                .foregroundStyle(Color.S_0.opacity(0.5))
                             
                             HStack(spacing: 0) {
                                 Text(infoSecondLinePrefix)
                                     .appFont(.medium13)
-                                    .foregroundStyle(.white.opacity(0.5))
+                                    .foregroundStyle(Color.S_0.opacity(0.5))
                                 
                                 Text(infoClickableText)
                                     .appFont(.medium13)
-                                    .foregroundStyle(.blue300)
+                                    .foregroundStyle(Color.blue300)
                                     .underline()
                                     .onTapGesture {
                                         state?.newChat(shouldSystemPrompt: true)
@@ -99,9 +100,9 @@ struct ChatSystemPromptView: View {
                     .padding([.horizontal, .bottom], 12)
                 }
                 .background {
-                    RoundedRectangle(cornerRadius: 8)
-                        .stroke(lineWidth: 1)
-                        .fill(.gray600)
+                    RoundedRectangle(cornerRadius: 10)
+                        .fill(Color.messageBG)
+                        .strokeBorder(Color.genericBorder, lineWidth: 1)
                 }
             }
         }

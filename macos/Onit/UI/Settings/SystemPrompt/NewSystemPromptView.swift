@@ -146,35 +146,35 @@ struct NewSystemPromptView: View {
                     VStack(alignment: .leading, spacing: 8) {
                         Text("Name")
                             .font(.headline)
-                            .foregroundStyle(.gray100)
+                            .foregroundStyle(Color.S_1)
                         TextField("Helpful Assistant", text: $savedPrompt.name)
                             .textFieldStyle(.plain)
                             .padding(8)
-                            .background(.gray700)
+                            .background(Color.T_9)
                             .cornerRadius(5)
                             .overlay(
                                 RoundedRectangle(cornerRadius: 8)
-                                    .stroke(.gray500)
+                                    .stroke(Color.genericBorder)
                             )
                     }
                     VStack(alignment: .leading, spacing: 8) {
                         Text("System Prompt*")
                             .font(.headline)
-                            .foregroundStyle(.gray100)
+                            .foregroundStyle(Color.S_1)
                         VStack {
                             TextEditor(text: $savedPrompt.prompt)
                                 .textEditorStyle(.plain)
                                 .frame(height: 100)
-                                .foregroundStyle(promptIsPlaceholder ? .white.opacity(0.3) : .white)
+                                .foregroundStyle(promptIsPlaceholder ? Color.S_0.opacity(0.3) : Color.S_0)
                                 .focused($isFocused)
                         }
                         .padding(.vertical, 12)
                         .padding(.horizontal, 3)
-                        .background(.gray700)
+                        .background(Color.T_9)
                         .cornerRadius(5)
                         .overlay(
                             RoundedRectangle(cornerRadius: 8)
-                                .stroke(.gray500)
+                                .stroke(Color.genericBorder)
                         )
                     }
                     KeyboardShortcuts.Recorder(
@@ -185,14 +185,14 @@ struct NewSystemPromptView: View {
                         }
                     }
                     .font(.headline)
-                    .foregroundStyle(.gray100)
+                    .foregroundStyle(Color.S_1)
                     
                     VStack(alignment: .leading, spacing: 8) {
                         Text("Rules for suggestions")
                             .font(.headline)
-                            .foregroundStyle(.gray100)
+                            .foregroundStyle(Color.S_1)
                         Text("Make this system prompt the default suggestion for specific applications and keywords.")
-                            .foregroundStyle(.gray200)
+                            .foregroundStyle(Color.S_2)
                     }
                     applications
                     tags
@@ -210,7 +210,7 @@ struct NewSystemPromptView: View {
                 }
             })
         }
-        .background(.gray800)
+        .background(GlassBackground())
         .frame(maxWidth: 400, alignment: .leading)
     }
     
@@ -222,8 +222,9 @@ struct NewSystemPromptView: View {
                         dismiss()
                     }) {
                         Image(.smallCross)
+                            .renderingMode(.template)
                             .frame(width: 48, height: 32)
-                            .foregroundStyle(.gray200)
+                            .foregroundStyle(Color.S_2)
                     }
                     .buttonStyle(.plain)
                     Spacer()
@@ -231,9 +232,9 @@ struct NewSystemPromptView: View {
                 
                 Text("System Prompt")
                     .frame(maxWidth: .infinity, alignment: .center)
-                    .foregroundStyle(.gray200)
+                    .foregroundStyle(Color.S_2)
             }
-            Divider()
+            DividerHorizontal()
         }
     }
     
@@ -241,7 +242,7 @@ struct NewSystemPromptView: View {
         VStack(alignment: .leading, spacing: 8) {
             Text("Applications")
                 .font(.headline)
-                .foregroundStyle(.gray100)
+                .foregroundStyle(Color.S_1)
             
             HStack {
                 Button {
@@ -250,7 +251,7 @@ struct NewSystemPromptView: View {
                     Image(systemName: "plus.circle.fill")
                         .resizable()
                         .frame(width: 20, height: 20)
-                        .foregroundColor(.gray100)
+                        .foregroundColor(Color.S_1)
                 }
                 .buttonStyle(.plain)
                 .popover(isPresented: $showAppSelector) {
@@ -261,7 +262,7 @@ struct NewSystemPromptView: View {
                     HStack(spacing: 4) {
                         if savedPrompt.applications.isEmpty {
                             Text("No app added")
-                                .foregroundColor(.white.opacity(0.3))
+                                .foregroundColor(Color.S_0.opacity(0.3))
                         } else {
                             ForEach(savedPrompt.applications, id: \.self) { url in
                                 HStack(spacing: 2) {
@@ -276,13 +277,14 @@ struct NewSystemPromptView: View {
                                     }) {
                                         Image(.smallCross)
                                             .resizable()
+                                            .renderingMode(.template)
                                             .frame(width: 16, height: 16)
-                                            .foregroundColor(.gray)
+                                            .foregroundColor(Color.S_0)
                                     }
                                     .buttonStyle(.plain)
                                 }
                                 .padding(4)
-                                .background(.gray400)
+                                .background(Color.S_4)
                                 .cornerRadius(3)
                             }
                         }
@@ -292,8 +294,8 @@ struct NewSystemPromptView: View {
                 .frame(height: 34)
                 .background {
                     RoundedRectangle(cornerRadius: 8)
-                        .fill(.gray700)
-                        .stroke(.gray500, lineWidth: 1)
+                        .fill(Color.T_9)
+                        .stroke(Color.genericBorder, lineWidth: 1)
                 }
             }
         }
@@ -303,18 +305,18 @@ struct NewSystemPromptView: View {
         VStack(alignment: .leading, spacing: 8) {
             Text("Tags")
                 .font(.headline)
-                .foregroundStyle(.gray100)
+                .foregroundStyle(Color.S_1)
             TextField("Separate with commas", text: keywordsBinding)
                 .textFieldStyle(.plain)
                 .padding(8)
-                .background(.gray700)
+                .background(Color.T_9)
                 .cornerRadius(5)
                 .overlay(
                     RoundedRectangle(cornerRadius: 8)
-                        .stroke(.gray500)
+                        .stroke(Color.genericBorder)
                 )
             Text("e.g. frameworks, languages, emails, websites, topics...")
-                .foregroundStyle(.gray200)
+                .foregroundStyle(Color.S_2)
         }
     }
     

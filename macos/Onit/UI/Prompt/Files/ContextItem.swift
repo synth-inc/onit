@@ -26,10 +26,10 @@ struct ContextItem: View {
             case .auto(let autoContext):
                 ContextTag(
                     text: name,
-                    textColor: isEditing ? autoContextTextColor : .white,
-                    hoverTextColor: isEditing ? autoContextHoverTextColor : .white,
-                    background: isEditing ? autoContextBackground : .clear,
-                    hoverBackground: isEditing ? autoContextHoverBackground : .gray600,
+                    textColor: isEditing ? autoContextTextColor : Color.S_0,
+                    hoverTextColor: isEditing ? autoContextHoverTextColor : Color.S_0,
+                    background: isEditing ? autoContextBackground : Color.clear,
+                    hoverBackground: isEditing ? autoContextHoverBackground : Color.T_9,
                     maxWidth: isEditing ? 155 : .infinity,
                     iconBundleURL: autoContext.appBundleUrl,
                     tooltip: isEditing ? name : "View auto-context file",
@@ -40,9 +40,9 @@ struct ContextItem: View {
             default:
                 ContextTag(
                     text: name,
-                    textColor: isEditing ? .T_2 : .white,
-                    background: isEditing ? .gray500 : .clear,
-                    hoverBackground: isEditing ? .gray400 : .gray600,
+                    textColor: isEditing ? Color.T_2 : Color.S_0,
+                    background: isEditing ? Color.T_8 : Color.clear,
+                    hoverBackground: isEditing ? Color.S_4 : Color.T_9,
                     maxWidth: isEditing ? 155 : .infinity,
                     iconView: ContextImage(context: item),
                     caption: item.fileType,
@@ -111,38 +111,38 @@ struct ContextItem: View {
     }
         
     private var autoContextTextColor: Color {
-        return .T_2
+        return Color.T_2
     }
     
     private var autoContextHoverTextColor: Color {
-        return .white
+        return Color.S_0
     }
     
     private var autoContextBackground: Color {
         if hasError {
-            return .redDisabled
+            return Color.redDisabled
         } else if hasWarning {
-            return .warningDisabled
+            return Color.warningDisabled
         } else {
-            return .gray500
+            return Color.T_8
         }
     }
     
     private var autoContextHoverBackground: Color {
         if hasError {
-            return .redDisabledHover
+            return Color.redDisabledHover
         } else if hasWarning {
-            return .warningDisabledHover
+            return Color.warningDisabledHover
         } else {
-            return .gray400
+            return Color.S_4
         }
     }
     
     private var autoContextErrorDotColor: Color? {
         if hasError {
-            return .red
+            return Color.red500
         } else if hasWarning {
-            return .yellow
+            return Color.orange500
         } else {
             return nil
         }

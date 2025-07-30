@@ -60,12 +60,12 @@ struct ExternalTetheredButtonStyle: ButtonStyle {
                 }
                 .background {
                     RoundedCorners(radius: buttonCornerRadius, corners: .left)
-                        .fill(.gray800)
+                        .fill(Color.hintBG)
                 }
                 .overlay {
                     RoundedCorners(radius: buttonCornerRadius, corners: .left)
                         .stroke(
-                            isHovering ? .gray300 : .gray600,
+                            isHovering ? Color.T_2 : Color.T_5,
                             lineWidth: buttonBorderWidth
                         )
                 }
@@ -133,7 +133,7 @@ struct ExternalTetheredButtonStyle: ButtonStyle {
     @ViewBuilder
     private func clickBackground(_ clicked: Bool) -> some View {
         RoundedCorners(radius: buttonCornerRadius, corners: .left)
-            .fill(.gray900)
+            .fill(Color.T_8)
             .opacity(clicked ? 1 : 0)
     }
 

@@ -19,9 +19,9 @@ struct SimpleButton: View {
         iconText: String? = nil,
         iconImage: ImageResource? = nil,
         text: String,
-        textColor: Color = Color.white,
+        textColor: Color = Color.S_0,
         action: @escaping () -> Void,
-        background: Color = Color.gray400
+        background: Color = Color.S_4
     ) {
         self.iconText = iconText
         self.iconImage = iconImage
@@ -49,8 +49,8 @@ struct SimpleButton: View {
         .background(background)
         .cornerRadius(5)
         .opacity(isPressed ? 0.7 : 1)
-        .shadow(color: .black.opacity(0.05), radius: 0, x: 0, y: 0)
-        .shadow(color: .black.opacity(0.3), radius: 1.25, x: 0, y: 0.5)
+        .shadow(color: Color.black.opacity(0.05), radius: 0, x: 0, y: 0)
+        .shadow(color: Color.black.opacity(0.4), radius: 1.25, x: 0, y: 0.5)
         .addAnimation(dependency: isHovered)
         .onHover { isHovering in isHovered = isHovering}
         .gesture(

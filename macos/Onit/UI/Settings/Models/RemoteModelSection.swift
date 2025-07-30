@@ -123,7 +123,7 @@ struct RemoteModelSection: View {
                 .textFieldStyle(.roundedBorder)
                 .frame(height: 22)
                 .font(.system(size: 13, weight: .regular))
-                .foregroundColor(.primary)  // Ensure placeholder text is not dimmed
+                .foregroundColor(Color.S_0)  // Ensure placeholder text is not dimmed
 
             Button {
                 Task {
@@ -142,7 +142,7 @@ struct RemoteModelSection: View {
                 }
             }
             .disabled(loading || state.isValidating)
-            .foregroundStyle(.white)
+            .foregroundStyle(Color.S_0)
             .buttonStyle(.borderedProminent)
             .frame(height: 22)
             .fontWeight(.regular)

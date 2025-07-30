@@ -36,7 +36,7 @@ struct ResizeHandle: View {
         }
         .background(
             RoundedCorners(radius: 14, corners: .bottomLeft)
-                .fill(Color.white)
+                .fill(Color.T_1)
                 .opacity(isHovered ? 0.2 : 0)
         )
         .clipped()

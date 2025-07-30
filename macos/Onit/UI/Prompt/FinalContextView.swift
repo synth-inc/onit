@@ -67,9 +67,8 @@ struct FinalContextView: View {
                 .allowsHitTesting(isEditing)
                 .textSelection(.enabled)
                 .focused($isTextFieldFocused)
-                .foregroundColor(.white)
+                .foregroundColor(Color.S_0)
                 .scrollContentBackground(.hidden)
-                .background(.gray800) // To match the TextField style
                 .padding(0) // To match the TextField padding
                 .onChange(of: cursorPosition) {
                     windowState?.detectIsTyping()
@@ -84,8 +83,8 @@ struct FinalContextView: View {
                         }
                         .padding(.vertical, 6)
                         .padding(.horizontal, 8)
-                        .background(Color.gray500)
-                        .foregroundColor(.white)
+                        .background(Color.S_4)
+                        .foregroundColor(Color.S_0)
                         .cornerRadius(8)
 
                         Button("Send") {
@@ -101,7 +100,7 @@ struct FinalContextView: View {
                         .padding(.vertical, 6)
                         .padding(.horizontal, 8)
                         .background(Color.blue400)
-                        .foregroundColor(.white)
+                        .foregroundColor(Color.white)
                         .cornerRadius(8)
                         .keyboardShortcut(.return, modifiers: [])
                     }
@@ -110,7 +109,8 @@ struct FinalContextView: View {
             }
             .padding(.horizontal, 8)
             .padding(.vertical, 12)
-            .background(.gray800, in: .rect(cornerRadius: 8))
+            .background(Color.messageBG, in: .rect(cornerRadius: 10))
+            .addBorder()
             .contentShape(Rectangle()) // Make the entire VStack tappable
             .onTapGesture {
                 isEditing = true
@@ -119,10 +119,11 @@ struct FinalContextView: View {
             .overlay(alignment: .topTrailing) {
                 Image(.edit)
                     .resizable()
+                    .renderingMode(.template)
                     .frame(width: 16, height: 16)
                     .padding(4)
-                    .background(.gray500)
-                    .foregroundColor(.gray200)
+                    .background(Color.T_5)
+                    .foregroundColor(Color.S_0)
                     .cornerRadius(6)
                     .opacity(isHoveringInstruction && !isEditing ? 1 : 0) // Initially hidden
                     .offset(x: -8, y: 6) // 6 pixels down from the top edge and 8 pixels in from the right edge
@@ -138,10 +139,10 @@ struct FinalContextView: View {
                         .resizable()
                         .frame(width: 16, height: 16)
                         .padding(4)
-                        .foregroundColor(.gray200)
+                        .foregroundColor(Color.S_2)
                     Text("Searching the web")
                         .appFont(.medium16)
-                        .foregroundColor(.gray200)
+                        .foregroundColor(Color.S_2)
                     Spacer()
                 }
                 .shimmering()
@@ -150,16 +151,21 @@ struct FinalContextView: View {
                     isExpanded.toggle()
                 } label: {
                     HStack(alignment: .center) {
-                        Image(.paperclipStars)
+                        Image(.paperclip)
+                            .addIconStyles(
+                                foregroundColor: Color.S_2,
+                                iconSize: 16
+                            )
                         Text("Final context used")
                             .appFont(.medium14)
                         Image(.smallChevDown)
                             .renderingMode(.template)
                             .rotationEffect(isExpanded ? .degrees(180) : .degrees(0))
+                            .foregroundColor(Color.S_3)
                         Spacer()
                     }
                 }
-                .foregroundStyle(.gray100)
+                .foregroundStyle(Color.S_2)
                 .buttonStyle(.plain)
 
                 if isExpanded {
@@ -180,7 +186,7 @@ struct FinalContextView: View {
                             .background {
                                 RoundedRectangle(cornerRadius: 8)
                                     .fill(.clear)
-                                    .strokeBorder(.gray700)
+                                    .strokeBorder(Color.genericBorder)
                             }
                     }
                 }

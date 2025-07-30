@@ -45,9 +45,6 @@ struct MenuList<Sections: View>: View {
             
             sections()
         }
-        .background(.gray900)
         .frame(width: width)
-        .addBorder()
-        .addShadow()
     }
 }

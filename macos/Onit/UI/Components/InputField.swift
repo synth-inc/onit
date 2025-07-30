@@ -35,10 +35,10 @@ struct InputField: View {
                 .frame(height: 40)
                 .styleText(size: 14)
                 .padding(.horizontal, 14)
-                .background(isHovered ? .gray800 : .gray900)
+                .background(isHovered ? Color.T_8 : Color.T_9)
                 .addBorder(
                     cornerRadius: 9,
-                    stroke: errorMessage.isEmpty ? .gray500 : .red
+                    stroke: errorMessage.isEmpty ? Color.genericBorder : Color.red500
                 )
                 .focused($isFocused)
                 .onHover{ isHovering in isHovered = isHovering }
@@ -49,7 +49,7 @@ struct InputField: View {
             
             if !errorMessage.isEmpty {
                 Text(errorMessage)
-                    .styleText(size: 12, weight: .medium, color: .red)
+                    .styleText(size: 12, weight: .medium, color: Color.red500)
                     .opacity(errorMessage.isEmpty ? 0 : 1)
                     .addAnimation(dependency: errorMessage)
             }

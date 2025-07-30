@@ -115,7 +115,7 @@ struct LocalModelsSection: View {
                     Text("Set")
                 }
                 .disabled(fetching)
-                .foregroundStyle(.white)
+                .foregroundStyle(Color.S_0)
                 .buttonStyle(.borderedProminent)
                 .frame(height: 22)
                 .fontWeight(.regular)
@@ -297,7 +297,7 @@ struct LocalModelsSection: View {
                         }
                         SettingErrorMessage(message: topPError)
 
-                        Divider()
+                        DividerHorizontal()
                             .padding(.vertical, 4)
 
                         Button {

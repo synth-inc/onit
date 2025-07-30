@@ -77,7 +77,7 @@ struct HistoryView: View {
 extension HistoryView {
     private var emptyText: some View {
         Text("No prompts found")
-            .foregroundStyle(.gray200)
+            .foregroundStyle(Color.S_2)
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(.horizontal, 8)
             .padding(.bottom, 8)
@@ -89,7 +89,7 @@ extension HistoryView {
                 VStack(alignment: .leading, spacing: 8) {
                     Text(section)
                         .appFont(.medium13)
-                        .foregroundStyle(.white.opacity(0.6))
+                        .foregroundStyle(Color.S_0.opacity(0.6))
                         .padding(.top, 4)
                         .padding(.leading, 4)
 

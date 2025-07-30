@@ -24,7 +24,7 @@ struct MenuHeader<Child: View>: View {
             Text(title)
                 .styleText(
                     size: 13,
-                    color: .gray100
+                    color: Color.S_1
                 )
                 .truncateText()
             

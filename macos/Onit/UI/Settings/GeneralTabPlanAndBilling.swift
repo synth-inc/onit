@@ -38,7 +38,7 @@ struct GeneralTabPlanAndBilling: View {
                         .styleText(
                             size: 13,
                             weight: .regular,
-                            color: .red
+                            color: Color.red500
                         )
                 }
                 
@@ -114,6 +114,7 @@ extension GeneralTabPlanAndBilling {
         SimpleButton(
             iconText: "🚀",
             text: "Upgrade to PRO",
+            textColor: Color.white,
             action: {
                 AnalyticsManager.Billing.upgradeProPressed()
                 Task {
@@ -122,7 +123,7 @@ extension GeneralTabPlanAndBilling {
                     }
                 }
             },
-            background: .blue
+            background: Color.blue
         )
     }
     
@@ -130,6 +131,7 @@ extension GeneralTabPlanAndBilling {
         SimpleButton(
             iconText: "🚀",
             text: "Start 2-Week PRO Trial",
+            textColor: Color.white,
             action: {
                 AnalyticsManager.Billing.startFreeTrialPressed()
                 Task {
@@ -138,7 +140,7 @@ extension GeneralTabPlanAndBilling {
                     }
                 }
             },
-            background: .blue
+            background: Color.blue
         )
     }
     
@@ -146,13 +148,14 @@ extension GeneralTabPlanAndBilling {
         SimpleButton(
             iconText: "💫",
             text: "Renew Subscription",
+            textColor: Color.white,
             action: {
                 AnalyticsManager.Billing.renewSubscriptionPressed()
                 Task {
                     await renewSubscription()
                 }
             },
-            background: .blue
+            background: Color.blue
         )
     }
     
@@ -190,7 +193,7 @@ extension GeneralTabPlanAndBilling {
             .styleText(
                 size: 13,
                 weight: .regular,
-                color: Color(hex: "#A1A4AF") ?? .gray100
+                color: Color.S_1
             )
     }
     

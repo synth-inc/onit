@@ -14,10 +14,10 @@ struct CustomTextField: View {
     private let sidePadding: CGFloat
     
     struct Config {
-        var background: Color = .clear
-        var strokeColor: Color = .gray600
-        var hoverStrokeColor: Color = .gray500
-        var focusedStrokeColor: Color = .gray400
+        var background: Color = Color.clear
+        var strokeColor: Color = Color.genericBorder
+        var hoverStrokeColor: Color = Color.T_5
+        var focusedStrokeColor: Color = Color.genericBorder
         var clear: Bool = false
         var leftIcon: ImageResource? = nil
     }
@@ -47,7 +47,7 @@ struct CustomTextField: View {
                 Image(leftIcon)
                     .resizable()
                     .renderingMode(.template)
-                    .foregroundColor(.gray200)
+                    .foregroundColor(Color.S_2)
                     .frame(width: iconSize, height: iconSize)
             }
             
@@ -55,7 +55,7 @@ struct CustomTextField: View {
                 TextField("", text: $text)
                     .textFieldStyle(.plain)
                     .font(.system(size: 14, weight: .medium))
-                    .foregroundColor(.white)
+                    .foregroundColor(Color.S_0)
                     .fixedSize(horizontal: false, vertical: true)
                     .focused($focused)
                 
@@ -86,7 +86,7 @@ struct CustomTextField: View {
 extension CustomTextField {
     private var placeholderView: some View {
         Text(placeholder)
-            .styleText(color: .gray300)
+            .styleText(color: Color.placeholderText)
             .allowsHitTesting(false)
     }
     
@@ -97,7 +97,7 @@ extension CustomTextField {
             Image(.smallCross)
                 .resizable()
                 .renderingMode(.template)
-                .foregroundColor(closeButtonHovered ? .white : .gray200)
+                .foregroundColor(closeButtonHovered ? Color.S_0 : Color.S_2)
                 .frame(maxWidth: .infinity)
                 .frame(maxHeight: .infinity)
         }
