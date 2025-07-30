@@ -74,6 +74,35 @@ extension Response {
         
         return try? JSONDecoder().decode(DiffTool.PlainTextDiffResult.self, from: resultData)
     }
+    
+    var diffPreview: String? {
+        guard let diffArguments = diffArguments,
+              let diffResult = diffResult else { return "" }
+        
+        let segments = DiffSegmentUtils.generateDiffSegments(
+            originalText: diffArguments.original_content,
+            operations: diffResult.operations
+        )
+        
+        let currentChanges = currentDiffChanges
+        let effectiveChanges = currentChanges.map { change in
+            DiffChangeData(
+                operationIndex: change.operationIndex,
+                operationType: change.operationType,
+                status: change.status == .pending ? .rejected : change.status,
+                operationText: change.operationText,
+                operationStartIndex: change.operationStartIndex,
+                operationEndIndex: change.operationEndIndex
+            )
+        }
+        
+        let result = DiffSegmentUtils.generateTextFromSegments(
+            segments: segments,
+            effectiveChanges: effectiveChanges
+        )
+        
+        return result.isEmpty ? nil : result
+    }
 }
     
 // MARK: - Diff Revisions

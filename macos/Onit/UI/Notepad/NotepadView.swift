@@ -9,6 +9,8 @@ import SwiftUI
 import SwiftData
 
 struct NotepadView: View {
+    static let toolbarHeight: CGFloat = 32
+    
     let response: Response
     let closeCompletion: (() -> Void)
     
@@ -36,7 +38,7 @@ struct NotepadView: View {
             Spacer()
             
         }
-        .frame(height: 32)
+        .frame(height: Self.toolbarHeight)
     }
     
     private var close: some View {

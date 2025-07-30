@@ -46,7 +46,8 @@ import SwiftData
     }
 
     var currentResponse: Response? {
-        guard generationIndex >= 0,
+        guard sortedResponses.count > 0,
+              generationIndex >= 0,
               generationIndex < sortedResponses.count else {
             return nil
         }
@@ -72,8 +73,16 @@ import SwiftData
 
     var generation: String? {
         guard case .done = generationState else { return nil }
-        guard sortedResponses.count > 0 && sortedResponses.count > generationIndex else { return nil }
-        return sortedResponses[generationIndex].text
+        
+        guard let currentResponse = currentResponse else { return nil }
+        
+        if currentResponse.isDiffResponse {
+            if let previewText = currentResponse.diffPreview {
+                return previewText
+            }
+        }
+        
+        return currentResponse.text
     }
 
     var generationCount: Int? {

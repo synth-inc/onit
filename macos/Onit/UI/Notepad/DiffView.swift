@@ -255,7 +255,9 @@ struct DiffView: View {
             
             Spacer()
             
-            CopyButton(text: viewModel.generatePreviewText())
+            if let diffPreview = response.diffPreview {
+                CopyButton(text: diffPreview)
+            }
             
             Button {
                 viewModel.insert()

@@ -329,5 +329,6 @@ private final class NotificationDelegate: OnitPanelStateDelegate {
     
     // These are required to conform to the OnitPanelStateDelegate protocol, but they aren't needed in this implementation.
     func panelStateDidChange(state: OnitPanelState) {}
+    func panelFrameDidChange(state: OnitPanelState) {}
     func userInputsDidChange(instruction: String, contexts: [Context], input: Input?) {}
 }

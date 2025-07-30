@@ -15,6 +15,7 @@ import SwiftUI
     func panelBecomeKey(state: OnitPanelState)
     func panelResignKey(state: OnitPanelState)
     func panelStateDidChange(state: OnitPanelState)
+    func panelFrameDidChange(state: OnitPanelState)
     func userInputsDidChange(instruction: String, contexts: [Context], input: Input?)
 }
 
@@ -105,7 +106,13 @@ class OnitPanelState: NSObject {
     
     var tetheredButtonYRelativePosition: CGFloat?
     
-    var panelWidth: CGFloat 
+    var panelWidth: CGFloat {
+        didSet {
+            notifyDelegates { delegate in
+                delegate.panelFrameDidChange(state: self)
+            }
+        }
+    }
     
     var currentChat: Chat?
     var currentPrompts: [Prompt]?

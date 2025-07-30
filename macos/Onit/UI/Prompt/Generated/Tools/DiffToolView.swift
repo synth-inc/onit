@@ -82,40 +82,16 @@ struct DiffToolView: View {
         }
     }
     
+    @ViewBuilder
     private var previewText: some View {
-        Text(generatePreviewText())
-            .textSelection(.enabled)
-            .font(.system(size: fontSize))
-            .lineSpacing(lineHeight)
-            .foregroundStyle(.FG)
-            .frame(maxWidth: .infinity, alignment: .leading)
-    }
-    
-    private func generatePreviewText() -> String {
-        guard let diffArguments = response.diffArguments,
-              let diffResult = response.diffResult else { return "" }
-        
-        let segments = DiffSegmentUtils.generateDiffSegments(
-            originalText: diffArguments.original_content,
-            operations: diffResult.operations
-        )
-        
-        let currentChanges = response.currentDiffChanges
-        let effectiveChanges = currentChanges.map { change in
-            DiffChangeData(
-                operationIndex: change.operationIndex,
-                operationType: change.operationType,
-                status: change.status == .pending ? .rejected : change.status,
-                operationText: change.operationText,
-                operationStartIndex: change.operationStartIndex,
-                operationEndIndex: change.operationEndIndex
-            )
+        if let diffPreview = response.diffPreview {
+            Text(diffPreview)
+                .textSelection(.enabled)
+                .font(.system(size: fontSize))
+                .lineSpacing(lineHeight)
+                .foregroundStyle(.FG)
+                .frame(maxWidth: .infinity, alignment: .leading)
         }
-        
-        return DiffSegmentUtils.generateTextFromSegments(
-            segments: segments,
-            effectiveChanges: effectiveChanges
-        )
     }
     
     private func infoTapped() {

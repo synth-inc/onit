@@ -21,7 +21,7 @@ struct GeneratedToolbar: View {
 
     var body: some View {
         HStack(spacing: 8) {
-            diffView
+            diffButton
             copy
             regenerate
             selector
@@ -37,7 +37,7 @@ struct GeneratedToolbar: View {
     }
     
     @ViewBuilder
-    var diffView: some View {
+    var diffButton: some View {
         if let response = prompt.currentResponse,
            let state = state,
            response.isDiffResponse {
@@ -57,7 +57,9 @@ struct GeneratedToolbar: View {
     @ViewBuilder
     var copy: some View {
         if let generation = prompt.generation {
-            CopyButton(text: generation, stripMarkdown: true)
+            let stripMarkdown = generation != prompt.currentResponse?.diffPreview
+            
+            CopyButton(text: generation, stripMarkdown: stripMarkdown)
         }
     }
 

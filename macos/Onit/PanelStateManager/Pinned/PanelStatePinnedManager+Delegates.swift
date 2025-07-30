@@ -102,5 +102,7 @@ extension PanelStatePinnedManager: OnitPanelStateDelegate {
         }
     }
     
+    func panelFrameDidChange(state: OnitPanelState) { }
+    
     func userInputsDidChange(instruction: String, contexts: [Context], input: Input?) {}
 }

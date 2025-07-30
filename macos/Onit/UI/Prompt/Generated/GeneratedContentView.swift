@@ -53,9 +53,11 @@ struct GeneratedContentView: View {
             if let response = prompt.currentResponse, response.hasToolCall {
                 ToolCallHandlerView(response: response)
                     .padding(.horizontal, 12)
+                    .padding(.bottom, 12)
+            } else {
+                Spacer()
             }
 
-            Spacer()
             if textToRead.isEmpty && !(state?.isSearchingWeb[prompt.id] ?? false) && prompt.currentResponse?.hasToolCall != true {
                 HStack {
                     Spacer()

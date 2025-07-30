@@ -447,52 +447,6 @@ class DiffViewModel {
     
     // MARK: - Text Generation
     
-    func generatePreviewText() -> String {
-        guard let arguments = diffArguments else { return "" }
-        
-        let effectiveChanges = getEffectiveDiffChanges()
-        let approvedChanges = effectiveChanges.filter { $0.status == .approved }
-            .sorted { ($0.operationStartIndex ?? $0.operationEndIndex ?? 0) > ($1.operationStartIndex ?? $1.operationEndIndex ?? 0) }
-        
-        var text = arguments.original_content
-        
-        for change in approvedChanges {
-            switch change.operationType {
-            case "insertText":
-                if let insertIndex = change.operationStartIndex,
-                   let newText = change.operationText,
-                   insertIndex <= text.count {
-                    let index = text.index(text.startIndex, offsetBy: insertIndex)
-                    text.insert(contentsOf: newText, at: index)
-                }
-                
-            case "deleteContentRange":
-                if let startIndex = change.operationStartIndex,
-                   let endIndex = change.operationEndIndex,
-                   startIndex < text.count && endIndex <= text.count && startIndex <= endIndex {
-                    let start = text.index(text.startIndex, offsetBy: startIndex)
-                    let end = text.index(text.startIndex, offsetBy: endIndex)
-                    text.removeSubrange(start..<end)
-                }
-                
-            case "replaceText":
-                if let startIndex = change.operationStartIndex,
-                   let endIndex = change.operationEndIndex,
-                   let newText = change.operationText,
-                   startIndex < text.count && endIndex <= text.count && startIndex <= endIndex {
-                    let start = text.index(text.startIndex, offsetBy: startIndex)
-                    let end = text.index(text.startIndex, offsetBy: endIndex)
-                    text.replaceSubrange(start..<end, with: newText)
-                }
-                
-            default:
-                break
-            }
-        }
-        
-        return text
-    }
-    
     func clearInsertionError() {
         insertionError = nil
     }
@@ -516,12 +470,17 @@ class DiffViewModel {
             guard let runningApp = runningApps.first(where: { app in
                 app.localizedName?.localizedCaseInsensitiveContains(appName) == true
             }) else {
+                insertionError = "Application '\(appName)' is not running. Please open the application and try again."
+                return
+            }
+            
+            guard let diffPreview = response.diffPreview else {
+                insertionError = "No text available. Please approve some changes before inserting."
                 return
             }
             
             runningApp.activate()
             
-            let textToInsert = generatePreviewText()
             let source = CGEventSource(stateID: .hidSystemState)
             let pasteDown = CGEvent(keyboardEventSource: source, virtualKey: 0x09, keyDown: true)
             let pasteUp = CGEvent(keyboardEventSource: source, virtualKey: 0x09, keyDown: false)
@@ -530,7 +489,7 @@ class DiffViewModel {
             pasteUp?.flags = .maskCommand
             
             NSPasteboard.general.clearContents()
-            NSPasteboard.general.setString(textToInsert, forType: .string)
+            NSPasteboard.general.setString(diffPreview, forType: .string)
             
             pasteDown?.post(tap: .cghidEventTap)
             pasteUp?.post(tap: .cghidEventTap)
