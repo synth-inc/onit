@@ -26,7 +26,14 @@ struct NewSystemPromptView: View {
     }
     
     private var allApps: [URL] {
-        FileManager.default.installedApps().filter { !savedPrompt.applications.contains($0) }
+        FileManager.default.installedApps()
+            .sorted {
+                let left = $0.deletingPathExtension().lastPathComponent.lowercased()
+                let right = $1.deletingPathExtension().lastPathComponent.lowercased()
+                
+                return left < right
+            }
+            .filter { !savedPrompt.applications.contains($0) }
     }
     
     private var filteredApps: [URL] {
@@ -97,7 +104,7 @@ struct NewSystemPromptView: View {
                                             .resizable()
                                             .frame(width: 16, height: 16)
                                         Text(url.deletingPathExtension().lastPathComponent)
-                                            .foregroundStyle(.white)
+                                            .foregroundStyle(.FG)
                                         Spacer()
                                     }
                                 }
