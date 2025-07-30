@@ -35,6 +35,7 @@ struct PaperclipButton: View {
             IconButton(
                 icon: .paperclip,
                 iconSize: 18,
+                inactiveColor: Color.S_1,
                 tooltipPrompt: accessibilityAutoContextEnabled ? "Add context" : "Upload file"
             ) {
                 AnalyticsManager.Chat.paperclipPressed()

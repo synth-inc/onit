@@ -26,8 +26,8 @@ struct TextViewWrapper: NSViewRepresentable {
     var isDisabled: Bool = false
     
     var font: NSFont = AppFont.medium14.nsFont
-    var textColor: NSColor = .white
-    var placeholderColor: NSColor = .gray300
+    var textColor: NSColor = .S_0
+    var placeholderColor: NSColor = .placeholderText
     var detectLinks: Bool = true // TODO remove this once we use TextInputView for prompt editing
 
     func makeNSView(context: Self.Context) -> NSScrollView {

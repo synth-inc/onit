@@ -31,13 +31,13 @@ struct MicrophoneButton: View {
     
     var body: some View {
         PromptCoreFooterButton(
-            iconColor: audioRecorder.isRecording ? .red : .gray200,
+            iconColor: audioRecorder.isRecording ? .red : Color.S_2,
             icon: .microphone,
             text: audioRecorder.isRecording ? "Stop" : "Voice",
             action: { handleMicrophonePress() },
             background: audioRecorder.isRecording ? Color.red.opacity(0.15) : .clear,
-            hoverBackground: audioRecorder.isRecording ? Color.red.opacity(0.3) : .gray600,
-            fontColor: audioRecorder.isRecording ? .red : .gray200
+            hoverBackground: audioRecorder.isRecording ? Color.red.opacity(0.3) : Color.T_8,
+            fontColor: audioRecorder.isRecording ? .red : Color.S_2
         )
         .disabled(audioRecorder.isTranscribing)
         .help(microphoneButtonHelpText)

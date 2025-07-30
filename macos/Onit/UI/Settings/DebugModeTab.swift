@@ -69,14 +69,14 @@ struct DebugModeTab: View {
                                 }
                                 .buttonStyle(.plain)
                                 .font(.system(size: 12))
-                                .foregroundColor(.blue)
+                                .foregroundColor(Color.blue)
                                 
                                 Button("Clear All") {
                                     debugManager.clearOCRComparisonResults()
                                     loadedItemsCount = itemsPerPage
                                 }
                                 .buttonStyle(.plain)
-                                .foregroundColor(.red)
+                                .foregroundColor(Color.red500)
                                 .font(.system(size: 12))
                             }
                         }
@@ -98,7 +98,7 @@ struct DebugModeTab: View {
                                     searchText = ""
                                 } label: {
                                     Image(systemName: "xmark.circle.fill")
-                                        .foregroundColor(.secondary)
+                                        .foregroundColor(Color.secondary)
                                         .font(.system(size: 12))
                                 }
                                 .buttonStyle(.plain)
@@ -111,7 +111,7 @@ struct DebugModeTab: View {
                         
                         Text(resultCountText)
                             .font(.system(size: 12))
-                            .foregroundColor(.secondary)
+                            .foregroundColor(Color.secondary)
                         
                         if !failingApps.isEmpty {
                             VStack(alignment: .leading, spacing: 8) {
@@ -127,7 +127,7 @@ struct DebugModeTab: View {
                                     }
                                     .buttonStyle(.plain)
                                     .font(.system(size: 12))
-                                    .foregroundColor(.blue)
+                                    .foregroundColor(Color.blue)
                                     .padding(.top, 16)
                                 }
                                 
@@ -158,7 +158,7 @@ struct DebugModeTab: View {
                                             .scaleEffect(0.8)
                                         Text("Loading more results...")
                                             .font(.system(size: 12))
-                                            .foregroundColor(.secondary)
+                                            .foregroundColor(Color.secondary)
                                     }
                                     .padding()
                                 } else {
@@ -167,7 +167,7 @@ struct DebugModeTab: View {
                                     }
                                     .buttonStyle(.plain)
                                     .font(.system(size: 12))
-                                    .foregroundColor(.blue)
+                                    .foregroundColor(Color.blue)
                                     .padding()
                                 }
                             }

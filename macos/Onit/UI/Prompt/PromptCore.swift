@@ -51,18 +51,18 @@ struct PromptCore: View {
     @FocusState private var isFocused: Bool
     
     private var unfocusedBorder = GradientBorder(
-        colorOne: .gray500,
-        colorTwo: .gray500
+        colorOne: Color.S_5,
+        colorTwo: Color.S_5
     )
     
     private var remoteBorder = GradientBorder(
-        colorOne: Color(hex: "#6D6AFD") ?? .gray800,
-        colorTwo: Color(hex: "#B3ADDA") ?? .gray800
+        colorOne: Color(hex: "#6D6AFD") ?? Color.S_5,
+        colorTwo: Color(hex: "#B3ADDA") ?? Color.S_5
     )
     
     private var localBorder = GradientBorder(
-        colorOne: Color(hex: "#7ECD8C") ?? .gray800,
-        colorTwo: Color(hex: "#4AA4BF") ?? .gray800
+        colorOne: Color(hex: "#7ECD8C") ?? Color.S_5,
+        colorTwo: Color(hex: "#4AA4BF") ?? Color.S_5
     )
     
     private var text: String {
@@ -148,7 +148,6 @@ extension PromptCore {
                 detectLinks: true
             )
             .frame(height: min(textHeight, maxHeightLimit))
-            .foregroundStyle(.white)
             .opacity(shouldIndicateDisabled ? 0.5 : 1)
             .focused($isFocused)
             .onAppear { isFocused = true }
@@ -195,7 +194,7 @@ extension PromptCore {
         }
         .padding(.top, 2)
         .padding([.horizontal, .bottom], 0)
-        .background(.gray800)
+        .background(Color.messageBG)
         .addGradientBorder(
             cornerRadius: 8,
             lineWidth: 1.6,

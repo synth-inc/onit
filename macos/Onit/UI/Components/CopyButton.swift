@@ -21,6 +21,7 @@ struct CopyButton: View {
         IconButton(
             icon: .copy,
             iconSize: 18,
+            inactiveColor: Color.S_0,
             tooltipPrompt: "Copy"
         ) {
             let pasteboard = NSPasteboard.general
@@ -36,7 +37,7 @@ struct CopyButton: View {
         .opacity(showCheckmark ? 0 : 1)
         .overlay {
             Image(systemName: "checkmark.circle.fill")
-                .foregroundStyle(Color.limeGreen)
+                .foregroundStyle(Color.lime400)
                 .opacity(showCheckmark ? 1 : 0)
         }
         .addAnimation(dependency: showCheckmark)

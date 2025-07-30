@@ -120,7 +120,7 @@ struct LocalModelsSection: View {
                             fetching = false
                         }
                     },
-                    background: .blue
+                    background: Color.blue
                 )
             }
             
@@ -302,7 +302,7 @@ struct LocalModelsSection: View {
                         }
                         SettingErrorMessage(message: topPError)
 
-                        Divider()
+                        DividerHorizontal()
                             .padding(.vertical, 4)
 
                         Button {

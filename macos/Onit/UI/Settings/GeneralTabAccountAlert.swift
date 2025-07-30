@@ -19,18 +19,6 @@ struct GeneralTabAccountAlert: View {
     @State private var isHoveredDelete: Bool = false
     @State private var isPressedDelete: Bool = false
     
-    var containerBackgroundColor: Color {
-        return Color(hex: "#2B2B2B") ?? .gray600
-    }
-    
-    var customGrayBackgroundColor: Color {
-        return Color(hex: "#414141") ?? .gray500
-    }
-    
-    var deleteButtonBorderColor: Color {
-        return Color(hex: "#7D3535") ?? .red
-    }
-    
     var body: some View {
         VStack(alignment: .center, spacing: 16) {
             VStack(alignment: .center, spacing: 10) {
@@ -42,7 +30,7 @@ struct GeneralTabAccountAlert: View {
                 .textFieldStyle(PlainTextFieldStyle())
                 .frame(height: 22)
                 .padding(.horizontal, 7)
-                .background(customGrayBackgroundColor)
+                .background(Color.T_9)
                 .cornerRadius(5)
                 .shadow(color: .black.opacity(0.05), radius: 0, x: 0, y: 0)
                 .shadow(color: .black.opacity(0.3), radius: 1.25, x: 0, y: 0.5)
@@ -54,7 +42,7 @@ struct GeneralTabAccountAlert: View {
         }
         .frame(width: 260)
         .padding(16)
-        .background(containerBackgroundColor)
+        .background(GlassBackground())
         .cornerRadius(10)
     }
 }
@@ -84,14 +72,14 @@ extension GeneralTabAccountAlert {
     ) -> some View {
         VStack(alignment: .center) {
             Text(text)
-                .styleText(size: 13, weight: .regular, color: isCritical ? .red : Color.primary)
+                .styleText(size: 13, weight: .regular, color: isCritical ? Color.red500 : Color.S_0)
         }
         .frame(height: 28)
         .frame(maxWidth: .infinity)
-        .addBorder(cornerRadius: 5, stroke: isCritical ? deleteButtonBorderColor : .clear)
+        .cornerRadius(5)
         .addButtonEffects(
-            background: isCritical ? .redBrick : customGrayBackgroundColor,
-            hoverBackground: isCritical ? .redBrick.opacity(0.5) : Color(hex: "#3C3C3C") ?? .gray600,
+            background: isCritical ? Color.redDisabled : Color.T_9,
+            hoverBackground: isCritical ? Color.redDisabledHover : Color.T_8,
             cornerRadius: 5,
             disabled: disabled,
             allowsHitTesting: allowsHitTesting,

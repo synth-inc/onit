@@ -52,7 +52,7 @@ struct ToolbarRight: View {
             icon: mode == .local ? .localModeActive : .localMode,
             iconSize: 22,
             isActive: mode == .local,
-            activeColor: .limeGreen,
+            activeColor: Color.lime400,
             activeBackground: .clear,
             activeBorderColor: .clear,
             tooltipPrompt: "Local Mode",

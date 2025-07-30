@@ -134,7 +134,7 @@ extension ContextMenuWindows {
         let selected = currentArrowKeyIndex == allBrowserTabsButtonIndex
         
         return TextButton(
-            background: selected ? .gray600 : .clear,
+            background: selected ? Color.T_8 : .clear,
             icon: .compass,
             text: "All Browser Tabs..."
         ) {
@@ -176,7 +176,7 @@ extension ContextMenuWindows {
         let selected = currentArrowKeyIndex == uploadFileButtonIndex
         
         return TextButton(
-            background: selected ? .gray600 : .clear,
+            background: selected ? Color.T_8 : .clear,
             icon: .file,
             text: "Upload File"
         ) {

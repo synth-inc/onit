@@ -63,8 +63,8 @@ struct QuickEditView: View {
     
     var body: some View {
         mainContent
-            .background(VibrantVisualEffectView { Color.quickEditBG })
-            .addBorder(cornerRadius: 14, lineWidth: 1, stroke: .T_4)
+            .background(VibrantVisualEffectView { Color.baseBG })
+            .addBorder(cornerRadius: 14, lineWidth: 1, stroke: Color.T_4)
             .frame(minWidth: 360, minHeight: 120, maxHeight: 605)
             .onAppear(perform: handleOnAppear)
             .modifier(GeneratingPromptModifier(
@@ -107,7 +107,7 @@ struct QuickEditView: View {
                 isEditableElement: quickEditManager.isEditableElement
             )
             
-            Color.gray500
+            Color.genericBorder
                 .frame(height: 1)
         }
     }
@@ -149,10 +149,9 @@ extension QuickEditView {
                let windowName = currentWindowInfo.name {
                 ContextTag(
                     text: windowName,
-                    textColor: .T_2,
-                    hoverTextColor: .T_2,
-                    background: .clear,
-                    hoverBackground: .T_8,
+                    hoverTextColor: Color.T_2,
+                    background: Color.clear,
+                    hoverBackground: Color.T_8,
                     maxWidth: 250,
                     isLoading: isAddingContext,
                     iconBundleURL: isAddingContext ? nil : appBundleUrl,
@@ -166,6 +165,7 @@ extension QuickEditView {
                 IconButton(
                     icon: .addContext,
                     iconSize: 18,
+                    inactiveColor: Color.S_0,
                     tooltipPrompt: "Add window context"
                 ) {
                     addCurrentWindowToContext()
@@ -177,6 +177,7 @@ extension QuickEditView {
             IconButton(
                 icon: .layoutRight,
                 iconSize: 16,
+                inactiveColor: Color.S_0,
                 tooltipPrompt: "Open Onit"
             ) {
                 PanelStateCoordinator.shared.launchPanel(for: windowState, createNewChat: false)
@@ -205,7 +206,6 @@ extension QuickEditView {
         .frame(height: min(textHeight, maxTextHeight))
         .padding(.horizontal, 16)
         .padding(.vertical, 6)
-        .foregroundStyle(.white)
         .focused($isFocused)
         .onAppear { 
             isFocused = true

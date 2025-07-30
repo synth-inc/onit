@@ -15,7 +15,7 @@ struct GradientBorder {
 }
 
 struct DefaultBorderValues {
-    var cornerRadius: CGFloat = 12
+    var cornerRadius: CGFloat = 10
     var inset: CGFloat = 0.5
     var lineWidth: CGFloat = 1
 }
@@ -25,7 +25,7 @@ extension View {
         cornerRadius: CGFloat = DefaultBorderValues().cornerRadius,
         inset: CGFloat = DefaultBorderValues().inset,
         lineWidth: CGFloat = DefaultBorderValues().lineWidth,
-        stroke: Color = Color.gray500,
+        stroke: Color = Color.genericBorder,
         dotted: Bool = false
     ) -> some View {
         self
@@ -85,7 +85,7 @@ extension View {
     func styleText(
         size: CGFloat = 14,
         weight: Font.Weight = Font.Weight.medium,
-        color: Color = Color.primary,
+        color: Color = Color.S_0,
         align: TextAlignment = TextAlignment.leading,
         underline: Bool = false
     ) -> some View {
@@ -107,7 +107,7 @@ extension View {
 extension View {
     func addButtonEffects(
         background: Color = .clear,
-        hoverBackground: Color = .gray600,
+        hoverBackground: Color = Color.T_8,
         cornerRadius: CGFloat = 8,
         disabled: Bool = false,
         allowsHitTesting: Bool = true,

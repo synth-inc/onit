@@ -29,12 +29,12 @@ struct IconButton: View {
         iconSize: CGFloat = 20,
         buttonSize: CGFloat = ToolbarButtonStyle.height,
         isActive: Bool = false,
-        activeColor: Color = .gray100,
-        inactiveColor: Color = .gray200,
-        hoverBackground: Color = .gray800,
-        activeBackground: Color = .gray800,
+        activeColor: Color = Color.S_1,
+        inactiveColor: Color = Color.T_3,
+        hoverBackground: Color = Color.T_8,
+        activeBackground: Color = Color.T_8,
         cornerRadius: CGFloat = ToolbarButtonStyle.cornerRadius,
-        activeBorderColor: Color = .gray500,
+        activeBorderColor: Color = Color.T_6,
         
         tooltipPrompt: String? = nil,
         tooltipShortcut: Tooltip.Shortcut? = nil,
@@ -63,7 +63,7 @@ struct IconButton: View {
     @State private var isPressed: Bool = false
     
     var iconColor: Color {
-        if isHovered { return .white }
+        if isHovered { return Color.S_0 }
         else if isActive { return activeColor }
         else { return inactiveColor }
     }

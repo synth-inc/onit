@@ -140,18 +140,18 @@ struct RemoteModelSection: View {
             SecureField("Enter your \(provider.title) API key", text: $key)
                 .textFieldStyle(PlainTextFieldStyle())
                 .font(.system(size: 13, weight: .regular))
-                .foregroundColor(.primary)  // Ensure placeholder text is not dimmed
+                .foregroundColor(Color.S_0)  // Ensure placeholder text is not dimmed
                 .padding(0)
                 .padding(.vertical, 4)
                 .padding(.horizontal, 7)
-                .background(.systemGray900)
-                .addBorder(cornerRadius: 5, stroke: .systemGray800)
+                .background(Color.systemGray900)
+                .addBorder(cornerRadius: 5, stroke: Color.systemGray800)
             
             SimpleButton(
                 isLoading: loading,
                 disabled: validated || state.isValidating,
                 text: verifyButtonText,
-                textColor: validated ? .black : .white,
+                textColor: validated ? Color.black : Color.white,
                 action: {
                     if !validated {
                         Task {
@@ -164,7 +164,7 @@ struct RemoteModelSection: View {
                         }
                     }
                 },
-                background: validated ? .gray400 : .blue
+                background: validated ? Color.S_4 : Color.blue
             )
             
             if validated {

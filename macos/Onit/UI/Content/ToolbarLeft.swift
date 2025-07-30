@@ -26,8 +26,8 @@ struct ToolbarLeft: View {
             height: ToolbarButtonStyle.height,
             fillContainer: false,
             cornerRadius: ToolbarButtonStyle.cornerRadius,
-            fontSize: 13,
-            fontColor: .gray200,
+            fontSize: 11,
+            fontColor: Color.S_2,
             text: "ESC",
             tooltipPrompt: "Close Onit",
             tooltipShortcut: .keyboardShortcuts(.escape)
@@ -35,6 +35,7 @@ struct ToolbarLeft: View {
             AnalyticsManager.Toolbar.escapePressed()
             PanelStateCoordinator.shared.closePanel()
         }
+        .padding(.trailing, 4)
     }
     
     private var newChatButton: some View {

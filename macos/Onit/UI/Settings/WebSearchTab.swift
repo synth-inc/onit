@@ -27,9 +27,9 @@ struct WebSearchTab: View {
                     VStack(alignment: .leading, spacing: 16) {
                         Text("Web search can enhance your AI responses with real-time information from the internet.")
                             .font(.system(size: 13))
-                            .foregroundStyle(.gray200)
+                            .foregroundStyle(Color.S_2)
                         
-                        Divider()
+                        DividerHorizontal()
                         
                         tavilySection
                     }
@@ -58,14 +58,13 @@ struct WebSearchTab: View {
                         .font(.system(size: 13))
                 }
 
-                Text("When enabled, web search will be available in local mode. Please note that your queries will be sent to the search provider's servers, and we cannot guarantee that your data won't be stored or logged by the provider.")
-                    .font(.system(size: 12))
-                    .foregroundStyle(.gray200)
-                    .fixedSize(horizontal: false, vertical: true)
-            }
-            .padding(.horizontal, 8)
-            .padding(.vertical, 12)
-            .frame(maxWidth: .infinity, alignment: .leading)
+            Text("When enabled, web search will be available in local mode. Please note that your queries will be sent to the search provider's servers, and we cannot guarantee that your data won't be stored or logged by the provider.")
+                .font(.system(size: 12))
+                .foregroundStyle(Color.S_2)
+                .padding(.horizontal, 8)
+                .padding(.vertical, 12)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                // .fixedSize(horizontal: false, vertical: true)
         }
     }
     
@@ -111,17 +110,17 @@ struct WebSearchTab: View {
                 Text(isTavilyAPITokenValidated ? "Connected" : "Not Connected")
                     .font(.system(size: 12))
                     .fontWeight(.medium)
-                    .foregroundStyle(isTavilyAPITokenValidated ? .green : .gray100)
+                    .foregroundStyle(isTavilyAPITokenValidated ? Color.green : Color.S_1)
                     .padding(.horizontal, 6)
                     .padding(.vertical, 5)
-                    .background(isTavilyAPITokenValidated ? Color.green.opacity(0.2) : Color.gray200.opacity(0.2))
+                    .background(isTavilyAPITokenValidated ? Color.green.opacity(0.2) : Color.S_2.opacity(0.2))
                     .cornerRadius(4)
                     .opacity(isTavilyAPITokenValidated ? 1 : 0.5)
             }
             
             Text("Tavily is a powerful search API that provides real-time information from the web.")
                 .font(.system(size: 13))
-                .foregroundStyle(.gray200)
+                .foregroundStyle(Color.S_2)
             
             DisclosureGroup("Tavily API Key\(isTavilyAPITokenValidated ? " ✅" : "")", isExpanded: $showApiKey) {
                 VStack(alignment: .leading, spacing: 8) {
@@ -135,7 +134,7 @@ struct WebSearchTab: View {
                     if let error = validationError {
                         Text(error)
                             .font(.system(size: 12))
-                            .foregroundStyle(.red)
+                            .foregroundStyle(Color.red500)
                     }
                     
                     Text("You can put in [your Tavily API key](https://app.tavily.com) to use Tavily web search at cost.")
@@ -146,7 +145,7 @@ struct WebSearchTab: View {
             .styleText(size: 12, weight: .regular)
 
             if isTavilyAPITokenValidated {
-                Divider()
+                DividerHorizontal()
 
                 VStack(alignment: .leading, spacing: 8) {
                     HStack {
@@ -156,7 +155,7 @@ struct WebSearchTab: View {
 
                     Text("When enabled, Onit will use your Tavily token to perform searches instead of Onit credits. By default, Onit uses model provider search tools when available for optimal quality.")
                         .font(.system(size: 12))
-                        .foregroundStyle(.gray200)
+                        .foregroundStyle(Color.S_2)
                         .fixedSize(horizontal: false, vertical: true)
                 }
             }

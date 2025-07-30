@@ -24,14 +24,15 @@ struct StreamingToggle: View {
                 showInfo.toggle()
             }) {
                 Image(systemName: "info.circle")
-                    .foregroundColor(.accentColor)
+                    .foregroundStyle(Color.S_0.opacity(0.65))
                     .font(.system(size: 12))
             }
             .buttonStyle(PlainButtonStyle())
             .popover(isPresented: $showInfo) {
                 Text("If enabled, Onit streams partial responses from model providers, offering quicker replies. This may not function with all providers.")
-                    .padding()
+                    .padding(12)
                     .frame(width: 200)
+                    .foregroundColor(Color.S_0)
             }
             
             Spacer()

@@ -37,7 +37,7 @@ struct ModelToggle: View {
                     Text("NEW")
                         .font(.system(size: 11))
                         .fontWeight(.bold)
-                        .foregroundColor(.blue400)
+                        .foregroundColor(Color.blue400)
                 }
                 if aiModel.isDeprecated {
                     HStack(spacing: 4) {

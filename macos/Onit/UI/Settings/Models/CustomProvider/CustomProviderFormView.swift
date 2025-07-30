@@ -52,7 +52,7 @@ struct CustomProviderFormView: View {
 
             if let errorMessage = errorMessage {
                 Text(errorMessage)
-                    .foregroundColor(.red)
+                    .foregroundColor(Color.red500)
             }
         }
         .padding()
