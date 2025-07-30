@@ -48,3 +48,19 @@ extension OnitPanelState: HighlightedTextDelegate {
         }
     }
 }
+
+extension OnitPanelState: FocusedTextFieldDelegate {
+    func focusedTextFieldDidChange(_ textField: AXUIElement?) {
+        if let textField = textField {
+            var value: AnyObject?
+            let result = AXUIElementCopyAttributeValue(textField, kAXValueAttribute as CFString, &value)
+            if result == .success, let stringValue = value as? String {
+                print("FocusedTextFieldDelegate - Focused text field value (first 100 chars): \(stringValue.prefix(100))")
+            } else {
+                print("FocusedTextFieldDelegate - Focused text field value could not be retrieved")
+            }
+        } else {
+            print("FocusedTextFieldDelegate - Focused text field is nil")
+        }
+    }
+}

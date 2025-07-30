@@ -202,10 +202,12 @@ class OnitPanelState: NSObject {
     
     public func subscribeToDelegates() {
         HighlightedTextManager.shared.addDelegate(self)
+        FocusedTextFieldManager.shared.addDelegate(self)
     }
     
     public func unsubscribeFromDelegates() {
         HighlightedTextManager.shared.removeDelegate(self)
+        FocusedTextFieldManager.shared.removeDelegate(self)
     }
     
 
