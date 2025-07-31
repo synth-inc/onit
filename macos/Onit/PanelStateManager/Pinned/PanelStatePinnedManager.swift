@@ -156,7 +156,9 @@ class PanelStatePinnedManager: PanelStateBaseManager, ObservableObject {
     }
 
     override func fetchWindowContext() {
-        AccessibilityNotificationsManager.shared.retrieveWindowContent(trackedWindow: state.trackedWindow)
+        ContextFetchingService.shared.retrieveWindowContent(
+            trackedWindow: state.trackedWindow
+        )
     }
     
     // MARK: - Functions
