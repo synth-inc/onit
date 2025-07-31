@@ -90,9 +90,8 @@ extension View {
         underline: Bool = false
     ) -> some View {
         self
-            .font(.system(
-                size: size, weight: weight
-            ))
+            .font(.system(size: size))
+            .fontWeight(weight)
             .foregroundColor(color)
             .multilineTextAlignment(align)
             .underline(underline)
@@ -115,7 +114,7 @@ extension View {
         shouldFadeOnClick: Bool = true,
         isHovered: Binding<Bool>,
         isPressed: Binding<Bool>,
-        action: (() -> Void)?
+        action: (() -> Void)? = nil
     ) -> some View {
         self
             .background(isHovered.wrappedValue ? hoverBackground : background)

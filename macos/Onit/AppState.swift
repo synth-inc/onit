@@ -150,6 +150,10 @@ class AppState: NSObject, SPUUpdaterDelegate {
     func fetchRemoteModels() async {
         do {
             var models = try await AIModel.fetchModels()
+            
+            /// Removing user-removed remote models from fetched result.
+            let userRemovedRemoteModelUniqueIds = Set(Defaults[.userRemovedRemoteModels].map { $0.uniqueId })
+            models.removeAll { userRemovedRemoteModelUniqueIds.contains($0.uniqueId) }
 
             // This means we've never successfully fetched before
             if Defaults[.availableRemoteModels].isEmpty {
@@ -560,6 +564,20 @@ class AppState: NSObject, SPUUpdaterDelegate {
 //    var remoteNeedsSetup: Bool {
 //        listedModels.isEmpty
 //    }
+    
+    func removeSelectedRemoteModels(_ selectedRemoteModels: [AIModel]) {
+        let userRemovedRemoteModelUniqueIds = Set(Defaults[.userRemovedRemoteModels].map { $0.uniqueId })
+        
+        for selectedRemoteModel in selectedRemoteModels {
+            if !userRemovedRemoteModelUniqueIds.contains(selectedRemoteModel.uniqueId) {
+                Defaults[.userRemovedRemoteModels].append(selectedRemoteModel)
+            }
+        }
+        
+        let selectedRemoteModelUniqueIds = Set(selectedRemoteModels.map { $0.uniqueId })
+        
+        availableRemoteModels.removeAll { selectedRemoteModelUniqueIds.contains($0.uniqueId) }
+    }
 }
 
 // MARK: - App Update Listeners
