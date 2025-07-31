@@ -18,7 +18,7 @@ class GoogleDocsService: GoogleDocumentServiceProtocol {
     
     private let parser = GoogleDocsParser()
     
-	var plainTextMimeType: String {
+    var plainTextMimeType: String {
         return "text/plain"
     }
     
@@ -114,9 +114,7 @@ class GoogleDocsService: GoogleDocumentServiceProtocol {
             let pos2 = change2.operationStartIndex ?? change2.operationEndIndex ?? 0
             
             if pos1 == pos2 {
-                let priority1 = operationPriority(change1.operationType)
-                let priority2 = operationPriority(change2.operationType)
-                return priority1 < priority2
+                return change1.operationType.priority < change2.operationType.priority
             }
             
             return pos1 > pos2
@@ -130,15 +128,6 @@ class GoogleDocsService: GoogleDocumentServiceProtocol {
         )
         
         try await updateFile(fileId: fileId, operations: googleDocsOperations)
-    }
-    
-    private func operationPriority(_ type: String) -> Int {
-        switch type {
-        case "deleteContentRange": return 0  // Highest priority
-        case "replaceText": return 1         // Medium priority  
-        case "insertText": return 2          // Lowest priority
-        default: return 3                    // Unknown operations last
-        }
     }
     
     private func readStructuredFile(fileId: String) async throws -> [String: Any] {
@@ -295,7 +284,9 @@ class GoogleDocsService: GoogleDocumentServiceProtocol {
             offsetToGoogleIndexMap[currentStartPosition] = elementStartIndex
             
             let elementEndIndex = elementStartIndex + placeholderChar.count
-            offsetToGoogleIndexMap[currentStartPosition] = elementEndIndex
+            let currentEndPosition = currentStartPosition + placeholderChar.count
+            
+            offsetToGoogleIndexMap[currentEndPosition] = elementEndIndex
         }
         
         return (reconstructedText, offsetToGoogleIndexMap)
@@ -351,18 +342,18 @@ class GoogleDocsService: GoogleDocumentServiceProtocol {
         return false
     }
 
-	private func isGoogleDocsPlaceholderCharacter(_ char: Character) -> Bool {
-		let unicodeScalars = char.unicodeScalars
-		for scalar in unicodeScalars {
-			switch scalar.value {
-			case 0xE907, 0xE000, 0xE001, 0xE002, 0xE003, 0xE004, 0xE005, 0xE006, 0xE008, 0xE009:
-				return true
-			default:
-				continue
-			}
-		}
-		return false
-	}
+    private func isGoogleDocsPlaceholderCharacter(_ char: Character) -> Bool {
+        let unicodeScalars = char.unicodeScalars
+        for scalar in unicodeScalars {
+            switch scalar.value {
+            case 0xE907, 0xE000, 0xE001, 0xE002, 0xE003, 0xE004, 0xE005, 0xE006, 0xE008, 0xE009:
+                return true
+            default:
+                continue
+            }
+        }
+        return false
+    }
     
     private func getPlaceholderCharacter(for paragraphElement: GoogleDocsParagraphElement) -> String? {
         if paragraphElement.inlineObjectElement != nil {
@@ -406,7 +397,7 @@ class GoogleDocsService: GoogleDocumentServiceProtocol {
         
         for (_, change) in diffChanges.enumerated() {
             switch change.operationType {
-            case "insertText":
+            case .insertText:
                 if let textPosition = change.operationStartIndex,
                    let text = change.operationText {
                     let googleIndex = getGoogleDocsIndex(for: textPosition, offsetMap: offsetMap)
@@ -414,7 +405,7 @@ class GoogleDocsService: GoogleDocumentServiceProtocol {
                     operations.append(.insertText(index: googleIndex, text: text))
                 }
                 
-            case "deleteContentRange":
+            case .deleteContentRange:
                 if let startPosition = change.operationStartIndex,
                    let endPosition = change.operationEndIndex {
                     let startGoogleIndex = getGoogleDocsIndex(for: startPosition, offsetMap: offsetMap)
@@ -423,7 +414,7 @@ class GoogleDocsService: GoogleDocumentServiceProtocol {
                     operations.append(.deleteContentRange(startIndex: startGoogleIndex, endIndex: endGoogleIndex))
                 }
                 
-            case "replaceText":
+            case .replaceText:
                 if let startPosition = change.operationStartIndex,
                    let endPosition = change.operationEndIndex,
                    let newText = change.operationText {
@@ -432,9 +423,6 @@ class GoogleDocsService: GoogleDocumentServiceProtocol {
                     
                     operations.append(.replaceText(startIndex: startGoogleIndex, endIndex: endGoogleIndex, newText: newText))
                 }
-                
-            default:
-                throw GoogleDriveServiceError.unsupportedFileType("Unknown operation type: \(change.operationType)")
             }
         }
         
@@ -448,12 +436,12 @@ class GoogleDocsService: GoogleDocumentServiceProtocol {
         
         for change in changes {
             switch change.operationType {
-            case "deleteContentRange":
+            case .deleteContentRange:
                 resolvedChanges.append(change)
                 
-            case "insertText", "replaceText":
+            case .insertText, .replaceText:
                 let conflictsWithDelete = resolvedChanges.contains { deleteOp in
-                    guard deleteOp.operationType == "deleteContentRange",
+                    guard deleteOp.operationType == .deleteContentRange,
                           let deleteStart = deleteOp.operationStartIndex,
                           let deleteEnd = deleteOp.operationEndIndex,
                           let insertPos = change.operationStartIndex else {
@@ -465,7 +453,7 @@ class GoogleDocsService: GoogleDocumentServiceProtocol {
                 
                 if conflictsWithDelete {
                     if let conflictingDelete = resolvedChanges.first(where: { deleteOp in
-                        guard deleteOp.operationType == "deleteContentRange",
+                        guard deleteOp.operationType == .deleteContentRange,
                               let deleteStart = deleteOp.operationStartIndex,
                               let deleteEnd = deleteOp.operationEndIndex,
                               let insertPos = change.operationStartIndex else {
@@ -487,9 +475,6 @@ class GoogleDocsService: GoogleDocumentServiceProtocol {
                 } else {
                     resolvedChanges.append(change)
                 }
-                
-            default:
-                resolvedChanges.append(change)
             }
         }
         

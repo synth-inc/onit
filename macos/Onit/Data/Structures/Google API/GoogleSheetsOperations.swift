@@ -207,4 +207,4 @@ struct GoogleSheetsGridCoordinate {
     let sheetId: Int
     let rowIndex: Int
     let columnIndex: Int
-} 
+}

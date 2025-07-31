@@ -90,7 +90,7 @@ class DiffTool: ToolProtocol {
     }
 
     struct PlainTextDiffOperation: Codable {
-        let type: String // "insertText", "deleteContentRange", "replaceText"
+        let type: DiffOperationType
         let index: Int? // For insertText operations
         let startIndex: Int? // For delete/replace operations
         let endIndex: Int? // For delete/replace operations
@@ -189,7 +189,7 @@ class DiffTool: ToolProtocol {
                 
                 if let deleteOp = deleteOp, let insertOp = insertOp {
                     operations.append(PlainTextDiffOperation(
-                        type: "replaceText",
+                        type: .replaceText,
                         index: nil,
                         startIndex: deleteOp.index,
                         endIndex: deleteOp.index + (deleteOp.text?.count ?? 0),
@@ -232,7 +232,7 @@ class DiffTool: ToolProtocol {
                         )
                         
                         operations.append(PlainTextDiffOperation(
-                            type: "replaceText",
+                            type: .replaceText,
                             index: nil,
                             startIndex: firstInsert.index,
                             endIndex: lastInsert.index,
@@ -242,7 +242,7 @@ class DiffTool: ToolProtocol {
                     } else {
                         for insert in insertSequence {
                             operations.append(PlainTextDiffOperation(
-                                type: "insertText",
+                                type: .insertText,
                                 index: insert.index,
                                 startIndex: nil,
                                 endIndex: nil,
@@ -254,7 +254,7 @@ class DiffTool: ToolProtocol {
                 } else {
                     for insert in insertSequence {
                         operations.append(PlainTextDiffOperation(
-                            type: "insertText",
+                            type: .insertText,
                             index: insert.index,
                             startIndex: nil,
                             endIndex: nil,
@@ -271,7 +271,7 @@ class DiffTool: ToolProtocol {
             switch current.type {
             case "delete":
                 operations.append(PlainTextDiffOperation(
-                    type: "deleteContentRange",
+                    type: .deleteContentRange,
                     index: nil,
                     startIndex: current.index,
                     endIndex: current.index + (current.text?.count ?? 0),
@@ -281,7 +281,7 @@ class DiffTool: ToolProtocol {
                 
             case "insert":
                 operations.append(PlainTextDiffOperation(
-                    type: "insertText",
+                    type: .insertText,
                     index: current.index,
                     startIndex: nil,
                     endIndex: nil,

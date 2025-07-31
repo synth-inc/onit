@@ -27,7 +27,7 @@ class Response {
     var shouldDisplayDiffToolView = true
     
     @Relationship(deleteRule: .cascade, inverse: \DiffRevision.response)
-	var diffRevisions: [DiffRevision] = []
+    var diffRevisions: [DiffRevision] = []
 
     init(text: String, instruction: String?, type: ResponseType, model: String, time: Date = .now) {
         self.text = text
@@ -77,7 +77,7 @@ extension Response {
     
     var diffPreview: String? {
         guard let diffArguments = diffArguments,
-              let diffResult = diffResult else { return "" }
+              let diffResult = diffResult else { return nil }
         
         let segments = DiffSegmentUtils.generateDiffSegments(
             originalText: diffArguments.original_content,

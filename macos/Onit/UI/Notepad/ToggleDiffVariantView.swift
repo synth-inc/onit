@@ -13,6 +13,14 @@ struct ToggleDiffVariantView: View {
     let response: Response
     let viewModel: DiffViewModel
     
+    private var currentPosition: Int? {
+        let sortedRevisions = response.sortedDiffRevisions
+        
+        return sortedRevisions.firstIndex(where: {
+            $0.index == response.currentDiffRevisionIndex
+        })
+    }
+    
     var body: some View {
         HStack(spacing: 0) {
             `left`
@@ -44,6 +52,7 @@ struct ToggleDiffVariantView: View {
             let currentPosition = sortedRevisions.firstIndex { $0.index == response.currentDiffRevisionIndex } ?? 0
             Text("\(currentPosition + 1) / \(response.totalDiffRevisions)")
                 .font(.system(size: 13, weight: .medium))
+                .foregroundStyle(.FG)
         }
     }
 
@@ -64,21 +73,15 @@ struct ToggleDiffVariantView: View {
     // MARK: - Computed Properties
     
     private var canDecrementRevision: Bool {
-        let sortedRevisions = response.sortedDiffRevisions
-
-        guard let currentPosition = sortedRevisions.firstIndex(where: { 
-			$0.index == response.currentDiffRevisionIndex
-		}) else { return false }
+        guard let currentPosition = currentPosition else { return false }
 		
         return currentPosition > 0
     }
     
     private var canIncrementRevision: Bool {
+        guard let currentPosition = currentPosition else { return false }
+        
         let sortedRevisions = response.sortedDiffRevisions
-
-        guard let currentPosition = sortedRevisions.firstIndex(where: { 
-			$0.index == response.currentDiffRevisionIndex
-		}) else { return false }
 		
         return currentPosition < sortedRevisions.count - 1
     }
@@ -89,12 +92,9 @@ struct ToggleDiffVariantView: View {
 extension ToggleDiffVariantView {
     private func decrementRevisionIndex() {
         if canDecrementRevision {
-            let sortedRevisions = response.sortedDiffRevisions
-
-            guard let currentPosition = sortedRevisions.firstIndex(where: { 
-				$0.index == response.currentDiffRevisionIndex 
-			}), currentPosition > 0 else { return }
+            guard let currentPosition = currentPosition, currentPosition > 0 else { return }
             
+            let sortedRevisions = response.sortedDiffRevisions
             let previousRevision = sortedRevisions[currentPosition - 1]
 			
             response.setCurrentRevision(index: previousRevision.index)
@@ -105,10 +105,9 @@ extension ToggleDiffVariantView {
     private func incrementRevisionIndex() {
         if canIncrementRevision {
             let sortedRevisions = response.sortedDiffRevisions
-
-            guard let currentPosition = sortedRevisions.firstIndex(where: { 
-				$0.index == response.currentDiffRevisionIndex
-			}), currentPosition < sortedRevisions.count - 1 else { return }
+            
+            guard let currentPosition = currentPosition,
+                  currentPosition < sortedRevisions.count - 1 else { return }
             
             let nextRevision = sortedRevisions[currentPosition + 1]
 			

@@ -9,7 +9,6 @@ import Defaults
 import SwiftUI
 
 struct DiffToolView: View {
-    @Environment(\.windowState) private var windowState
     @Default(.lineHeight) var lineHeight
     @Default(.fontSize) var fontSize
     
@@ -58,12 +57,13 @@ struct DiffToolView: View {
                 .padding(.leading, 2)
             
             Button {
-                infoTapped()
+                
             } label: {
                 Image(systemName: "info.circle")
                     .foregroundStyle(.gray200)
                     .frame(width: 16, height: 16)
             }
+            .tooltip(prompt: "Diff view automatically activates\nwhen an iteration or edit is\ndetected.")
             .padding(.leading, 2)
             
             Spacer()
@@ -92,11 +92,6 @@ struct DiffToolView: View {
                 .foregroundStyle(.FG)
                 .frame(maxWidth: .infinity, alignment: .leading)
         }
-    }
-    
-    private func infoTapped() {
-        log.error("Info tapped")
-		// TODO: KNA - Diff view
     }
     
     private func switchToChat() {

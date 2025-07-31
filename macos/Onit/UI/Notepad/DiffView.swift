@@ -121,6 +121,7 @@ struct DiffView: View {
                         .font(.system(size: 13, weight: .medium))
                     Text("Accept")
                         .font(.system(size: 13, weight: .medium))
+                        .foregroundStyle(.FG)
                 }
                 .padding(.horizontal, 6)
                 .padding(.vertical, 3)
@@ -140,6 +141,7 @@ struct DiffView: View {
                         .font(.system(size: 13, weight: .medium))
                     Text("Reject")
                         .font(.system(size: 13, weight: .medium))
+                        .foregroundStyle(.FG)
                 }
                 .padding(.horizontal, 6)
                 .padding(.vertical, 3)
@@ -177,6 +179,7 @@ struct DiffView: View {
             } label: {
                 Text("Accept all")
                     .padding(6)
+                    .foregroundStyle(.FG)
             }
             .buttonStyle(.plain)
             .foregroundStyle(.FG)

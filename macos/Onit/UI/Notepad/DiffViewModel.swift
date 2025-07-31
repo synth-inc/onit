@@ -112,26 +112,13 @@ class DiffViewModel {
     private func loadOrCreateDiffChanges() {
         diffChanges = getDiffChanges()
         
-        if response.isPartial {
-            if diffChanges.isEmpty && response.diffResult != nil {
-                createDiffChanges()
-                diffChanges = getDiffChanges()
-            }
-            else if let diffResult = response.diffResult,
-                    diffResult.operations.count > diffChanges.count {
-                updateDiffChangesForNewOperations()
-                diffChanges = getDiffChanges()
-            }
-        } else {
-            if diffChanges.isEmpty && response.diffResult != nil {
-                createDiffChanges()
-                diffChanges = getDiffChanges()
-            }
-            else if let diffResult = response.diffResult,
-                    diffResult.operations.count > diffChanges.count {
-                updateDiffChangesForNewOperations()
-                diffChanges = getDiffChanges()
-            }
+        if diffChanges.isEmpty && response.diffResult != nil {
+            createDiffChanges()
+            diffChanges = getDiffChanges()
+        } else if let diffResult = response.diffResult,
+                  diffResult.operations.count > diffChanges.count {
+            updateDiffChangesForNewOperations()
+            diffChanges = getDiffChanges()
         }
         
         if let firstPending = diffChanges.first(where: { $0.status == .pending }) {
@@ -237,16 +224,16 @@ class DiffViewModel {
     
     private func calculateOffsetForOperation(_ operation: DiffTool.PlainTextDiffOperation) -> Int {
         switch operation.type {
-        case "insertText":
+        case .insertText:
             return operation.text?.count ?? 0
             
-        case "deleteContentRange":
+        case .deleteContentRange:
             if let startIndex = operation.startIndex, let endIndex = operation.endIndex {
                 return -(endIndex - startIndex)
             }
             return 0
             
-        case "replaceText":
+        case .replaceText:
             if let startIndex = operation.startIndex, 
                let endIndex = operation.endIndex,
                let newText = operation.newText {
@@ -254,9 +241,6 @@ class DiffViewModel {
                 let insertedLength = newText.count
                 return insertedLength - deletedLength
             }
-            return 0
-            
-        default:
             return 0
         }
     }
@@ -283,15 +267,12 @@ class DiffViewModel {
                     let originalEndIndex: Int?
                     
                     switch operation.type {
-                    case "insertText":
+                    case .insertText:
                         originalStartIndex = operation.index
                         originalEndIndex = nil
-                    case "deleteContentRange", "replaceText":
+                    case .deleteContentRange, .replaceText:
                         originalStartIndex = operation.startIndex
                         originalEndIndex = operation.endIndex
-                    default:
-                        originalStartIndex = change.operationStartIndex
-                        originalEndIndex = change.operationEndIndex
                     }
                     
                     adjustedChanges.append(DiffChangeData(
@@ -558,7 +539,7 @@ class DiffViewModel {
     
     // MARK: - Private
 
-	private func updateCurrentChangeStatus(_ status: DiffChangeStatus) {
+    private func updateCurrentChangeStatus(_ status: DiffChangeStatus) {
         updateDiffChangeStatus(
             operationIndex: currentOperationIndex,
             status: status
@@ -576,7 +557,7 @@ class DiffViewModel {
         diffChanges = getDiffChanges()
     }
 
-	private func resetViewModel() {
+    private func resetViewModel() {
         loadOrCreateDiffChanges()
         
         hasUnsavedChanges = false

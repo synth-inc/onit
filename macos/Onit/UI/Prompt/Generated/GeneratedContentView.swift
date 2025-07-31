@@ -33,8 +33,8 @@ struct GeneratedContentView: View {
         let thought = ThoughtConfiguration(icon: Image(.lightBulb))
         
         return LLMStreamConfiguration(font: font,
-									  colors: color,
-									  thought: thought)
+                                      colors: color,
+                                      thought: thought)
     }
     
 

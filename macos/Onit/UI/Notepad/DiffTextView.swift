@@ -160,7 +160,9 @@ struct DiffTextView: NSViewRepresentable {
         
         textView.textStorage?.setAttributedString(attributedText)
         
-        textView.layoutManager?.ensureLayout(for: textView.textContainer!)
+        if let textContainer = textView.textContainer {
+            textView.layoutManager?.ensureLayout(for: textContainer)
+        }
 		
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
             self.calculateCurrentSegmentPosition(textView: textView)

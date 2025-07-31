@@ -26,7 +26,7 @@ class DiffRevision {
 @Model
 class DiffChangeState {
     var operationIndex: Int
-    var operationType: String // "insertText", "deleteContentRange", "replaceText"
+    var operationType: DiffOperationType
     var status: DiffChangeStatus
     var timestamp: Date
     var operationText: String?
@@ -35,7 +35,7 @@ class DiffChangeState {
     
     var revision: DiffRevision?
     
-    init(operationIndex: Int, operationType: String, status: DiffChangeStatus = .pending, operationText: String? = nil, operationStartIndex: Int? = nil, operationEndIndex: Int? = nil) {
+    init(operationIndex: Int, operationType: DiffOperationType, status: DiffChangeStatus = .pending, operationText: String? = nil, operationStartIndex: Int? = nil, operationEndIndex: Int? = nil) {
         self.operationIndex = operationIndex
         self.operationType = operationType
         self.status = status
@@ -50,19 +50,33 @@ class DiffChangeState {
 
 struct DiffChangeData: Sendable {
     let operationIndex: Int
-    let operationType: String
+    let operationType: DiffOperationType
     let status: DiffChangeStatus
     let operationText: String?
     let operationStartIndex: Int?
     let operationEndIndex: Int?
     
-    init(operationIndex: Int, operationType: String, status: DiffChangeStatus, operationText: String? = nil, operationStartIndex: Int? = nil, operationEndIndex: Int? = nil) {
+    init(operationIndex: Int, operationType: DiffOperationType, status: DiffChangeStatus, operationText: String? = nil, operationStartIndex: Int? = nil, operationEndIndex: Int? = nil) {
         self.operationIndex = operationIndex
         self.operationType = operationType
         self.status = status
         self.operationText = operationText
         self.operationStartIndex = operationStartIndex
         self.operationEndIndex = operationEndIndex
+    }
+}
+
+enum DiffOperationType: String, Codable, CaseIterable, Sendable {
+    case insertText = "insertText"
+    case deleteContentRange = "deleteContentRange"
+    case replaceText = "replaceText"
+    
+    var priority: Int {
+        switch self {
+        case .deleteContentRange: return 0  // Highest priority
+        case .replaceText: return 1         // Medium priority  
+        case .insertText: return 2          // Lowest priority
+        }
     }
 }
 
@@ -78,4 +92,4 @@ enum DiffChangeStatus: String, Codable, CaseIterable, Sendable {
         case .rejected: return "Rejected"
         }
     }
-} 
+}

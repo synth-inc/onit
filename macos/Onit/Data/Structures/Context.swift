@@ -333,19 +333,19 @@ extension [Context] {
         for context in self {
             if case .auto(let autoContext) = context {
                 var parts: [String] = []
-
-				for (key, value) in autoContext.appContent {
-					parts.append("### \(key.uppercased()) ###")
-					parts.append(value)
-				}
-
-				let contentString = parts.joined(separator: "\n")
-				
-				if let existing = result[autoContext.appName] {
-					result[autoContext.appName] = existing + "\n" + contentString
-				} else {
-					result[autoContext.appName] = contentString
-				}
+                
+                for (key, value) in autoContext.appContent {
+                    parts.append("### \(key.uppercased()) ###")
+                    parts.append(value)
+                }
+                
+                let contentString = parts.joined(separator: "\n")
+                
+                if let existing = result[autoContext.appName] {
+                    result[autoContext.appName] = existing + "\n" + contentString
+                } else {
+                    result[autoContext.appName] = contentString
+                }
             }
         }
         

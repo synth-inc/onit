@@ -14,7 +14,6 @@ struct NotepadView: View {
     let response: Response
     let closeCompletion: (() -> Void)
     
-    @Environment(\.modelContext) private var modelContext
     @State private var viewModel: DiffViewModel
     
     init(response: Response, closeCompletion: @escaping () -> Void) {

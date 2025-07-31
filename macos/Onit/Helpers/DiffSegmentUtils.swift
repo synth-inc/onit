@@ -24,9 +24,7 @@ struct DiffSegmentUtils {
             let pos2 = op2.startIndex ?? op2.index ?? 0
             
             if pos1 == pos2 {
-                let priority1 = operationPriority(op1.type)
-                let priority2 = operationPriority(op2.type)
-                return priority1 < priority2
+                return op1.type.priority < op2.type.priority
             }
             
             return pos1 < pos2
@@ -39,12 +37,10 @@ struct DiffSegmentUtils {
             let operationStart: Int
             
             switch operation.type {
-            case "insertText":
+            case .insertText:
                 operationStart = operation.index ?? 0
-            case "deleteContentRange", "replaceText":
+            case .deleteContentRange, .replaceText:
                 operationStart = operation.startIndex ?? 0
-            default:
-                continue
             }
             
             if currentPosition < operationStart {
@@ -59,7 +55,7 @@ struct DiffSegmentUtils {
             }
             
             switch operation.type {
-            case "insertText":
+            case .insertText:
                 if let text = operation.text {
                     segments.append(DiffSegment(
                         content: text,
@@ -69,7 +65,7 @@ struct DiffSegmentUtils {
                 }
                 currentPosition = max(currentPosition, operationStart)
                 
-            case "deleteContentRange":
+            case .deleteContentRange:
                 if let endIndex = operation.endIndex {
                     let deletedText = String(originalText[originalText.index(originalText.startIndex, offsetBy: operationStart)..<originalText.index(originalText.startIndex, offsetBy: endIndex)])
                     segments.append(DiffSegment(
@@ -80,7 +76,7 @@ struct DiffSegmentUtils {
                     currentPosition = endIndex
                 }
                 
-            case "replaceText":
+            case .replaceText:
                 if let endIndex = operation.endIndex,
                    let newText = operation.newText {
                     let deletedText = String(originalText[originalText.index(originalText.startIndex, offsetBy: operationStart)..<originalText.index(originalText.startIndex, offsetBy: endIndex)])
@@ -96,9 +92,6 @@ struct DiffSegmentUtils {
                     ))
                     currentPosition = endIndex
                 }
-                
-            default:
-                break
             }
         }
         
@@ -133,14 +126,5 @@ struct DiffSegmentUtils {
             }
         }
         return result
-    }
-    
-    private static func operationPriority(_ type: String) -> Int {
-        switch type {
-        case "deleteContentRange": return 0  // Highest priority
-        case "replaceText": return 1         // Medium priority  
-        case "insertText": return 2          // Lowest priority
-        default: return 3                    // Unknown operations last
-        }
     }
 } 

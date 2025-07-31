@@ -76,10 +76,8 @@ import SwiftData
         
         guard let currentResponse = currentResponse else { return nil }
         
-        if currentResponse.isDiffResponse {
-            if let previewText = currentResponse.diffPreview {
-                return previewText
-            }
+        if currentResponse.isDiffResponse, let previewText = currentResponse.diffPreview {
+            return previewText
         }
         
         return currentResponse.text

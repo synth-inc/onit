@@ -66,7 +66,6 @@ struct ChatEndpointMessagesBuilder {
             // 5. Final Instruction
             message += "\n---\n**Instruction**\n"
             message += instruction
-            log.error(message)
             userMessages.append(message)
         }
 

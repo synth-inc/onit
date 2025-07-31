@@ -10,9 +10,9 @@ import GoogleSignIn
 
 class GoogleDocumentServiceFactory {
 
-	static func createService(for fileId: String) async throws -> GoogleDocumentServiceProtocol {
+    static func createService(for fileId: String) async throws -> GoogleDocumentServiceProtocol {
         let mimeType = try await getMimeType(for: fileId)
-		
+        
         switch mimeType {
         case .docs:
             return GoogleDocsService()
@@ -26,8 +26,14 @@ class GoogleDocumentServiceFactory {
     }
     
     private static func getMimeType(for fileId: String) async throws -> GoogleDocumentMimeType {
-        guard let user = GIDSignIn.sharedInstance.currentUser else {
+        guard var user = GIDSignIn.sharedInstance.currentUser else {
             throw GoogleDriveServiceError.notAuthenticated("Not authenticated with Google Drive")
+        }
+        
+        do {
+            user = try await user.refreshTokensIfNeeded()
+        } catch {
+            print("Token refresh was unsuccessful: \(error)")
         }
         
         let accessToken = user.accessToken.tokenString
