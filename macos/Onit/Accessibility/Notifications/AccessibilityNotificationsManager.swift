@@ -54,8 +54,6 @@ class AccessibilityNotificationsManager: ObservableObject {
     private var valueDebounceWorkItem: DispatchWorkItem?
     private var selectionDebounceWorkItem: DispatchWorkItem?
     private var parseDebounceWorkItem: DispatchWorkItem?
-    
-    private var lastActiveWindowPid: pid_t?
 
     // MARK: - Private initializer
 
@@ -139,8 +137,6 @@ class AccessibilityNotificationsManager: ObservableObject {
         selectionDebounceWorkItem?.cancel()
         parseDebounceWorkItem?.cancel()
         
-        lastActiveWindowPid = nil
-        
         ContextFetchingService.shared.reset()
     }
 
@@ -166,7 +162,7 @@ class AccessibilityNotificationsManager: ObservableObject {
         }
 
         currentSource = appName
-        lastActiveWindowPid = processID
+        ContextFetchingService.shared.setLastActive(windowPid: processID)
         
         caretPositionManager.updateCaretLost()
         

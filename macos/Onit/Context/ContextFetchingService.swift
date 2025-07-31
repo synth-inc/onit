@@ -26,12 +26,15 @@ class ContextFetchingService {
     
     // MARK: - Functions
     
+    func setLastActive(windowPid: pid_t?) {
+        lastActiveWindowPid = windowPid
+    }
+    
     func retrieveWindowContent(
         pid: pid_t? = nil,
         state: OnitPanelState? = nil,
         trackedWindow: TrackedWindow? = nil,
-        customAppBundleUrl: URL? = nil,
-        lastActiveWindowPid: pid_t? = nil
+        customAppBundleUrl: URL? = nil
     ) {
         guard let pid = trackedWindow?.pid ?? pid ?? lastActiveWindowPid,
               let mainWindow = trackedWindow?.element ?? pid.firstMainWindow,
