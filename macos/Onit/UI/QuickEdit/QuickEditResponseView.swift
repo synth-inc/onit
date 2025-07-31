@@ -20,6 +20,7 @@ struct ViewOffsetKey: @preconcurrency PreferenceKey {
 struct QuickEditResponseView: View {
     @Environment(\.windowState) private var state
     @Environment(\.openURL) var openURL
+    @Environment(\.colorScheme) var colorScheme
         
     @State private var previousViewOffset: CGFloat = 0
     @State private var hasUserManuallyScrolled: Bool = false
@@ -54,7 +55,10 @@ struct QuickEditResponseView: View {
     
     private var configuration: LLMStreamConfiguration {
         let font = FontConfiguration(size: fontSize, lineHeight: lineHeight)
-        let color = ColorConfiguration(textColor: .S_0,
+        
+        let textColor = colorScheme == .dark ? Color.white : Color.black
+        
+        let color = ColorConfiguration(textColor: textColor,
                                        citationBackgroundColor: Color.S_6,
                                        citationHoverBackgroundColor: Color.S_4,
                                        citationTextColor: Color.S_1)
@@ -168,7 +172,7 @@ extension QuickEditResponseView {
                         configuration: configuration,
                         onUrlClicked: onUrlClicked,
                         onCodeAction: codeAction)
-                    .id("\(fontSize)-\(lineHeight)") // Force recreation when font settings change
+                    .id("\(fontSize)-\(lineHeight)-\(colorScheme.hashValue)") // Force recreation when font settings change
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(.vertical, 8)
                     .id("content")
