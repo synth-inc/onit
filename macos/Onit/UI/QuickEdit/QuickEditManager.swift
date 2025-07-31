@@ -31,7 +31,7 @@ class QuickEditManager: ObservableObject, CaretPositionDelegate {
     private let windowController = QuickEditWindowController()
     private let hintWindowController = QuickEditHintWindowController()
     private let caretPositionManager = CaretPositionManager.shared
-    private let accessibilityManager = AccessibilityNotificationsManager.shared
+    private let highlightedTextManager = HighlightedTextManager.shared
     private var cancellables = Set<AnyCancellable>()
     private var currentHintPosition: CGPoint?
     private var currentHintHeight: CGFloat?
@@ -106,8 +106,8 @@ class QuickEditManager: ObservableObject, CaretPositionDelegate {
     }
     
     private func setupTextSelectionMonitoring() {
-        // Monitor the selectedText property from AccessibilityNotificationsManager
-        AccessibilityNotificationsManager.shared.$selectedText
+        // Monitor the selectedText property from HighlightedTextManager
+        highlightedTextManager.$selectedText
             .removeDuplicates()
             .sink { [weak self] selectedText in
                 self?.handleTextSelectionChange(selectedText)

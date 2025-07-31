@@ -7,6 +7,7 @@
 
 import Foundation
 import AppKit
+import ApplicationServices
 
 // MARK: - Window Change Info
 
@@ -148,7 +149,9 @@ final class WindowChangeDelegate: AccessibilityNotificationsDelegate {
     func accessibilityManager(_ manager: AccessibilityNotificationsManager, didDeminimizeWindow window: TrackedWindow) {}
     func accessibilityManager(_ manager: AccessibilityNotificationsManager, didActivateIgnoredWindow window: TrackedWindow?) {}
     func accessibilityManager(_ manager: AccessibilityNotificationsManager, didDestroyWindow window: TrackedWindow) {}
-    
+    func accessibilityManager(_ manager: AccessibilityNotificationsManager, didChangeSelection element: AXUIElement) {}
+    func accessibilityManager(_ manager: AccessibilityNotificationsManager, didChangeFocusedUIElement element: AXUIElement) {}
+
     var wantsNotificationsFromIgnoredProcesses: Bool { false }
     var wantsNotificationsFromOnit: Bool { false }
 }
