@@ -56,7 +56,15 @@ extension StreamingEndpoint {
 }
 
 struct StreamingEndpointResponse {
-    let content: String?
+    var content: String?
     let toolName: String?
     let toolArguments: String?
+    let isToolComplete: Bool
+    
+    init(content: String?, toolName: String?, toolArguments: String?, isToolComplete: Bool = true) {
+        self.content = content
+        self.toolName = toolName
+        self.toolArguments = toolArguments
+        self.isToolComplete = isToolComplete
+    }
 }

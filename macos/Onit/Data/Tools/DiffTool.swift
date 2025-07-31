@@ -13,8 +13,9 @@ public enum DiffOperation {
     case insert(String)
 }
 
-struct DiffTool {
-    static let availableTools: [String: Tool] = [
+class DiffTool: ToolProtocol {
+    
+    private let availableTools: [String: Tool] = [
         "plain_text": Tool(
             name: "diff_plain_text",
             description: "Generate structured text modifications by comparing original plain text content with your improved version.",
@@ -46,20 +47,21 @@ struct DiffTool {
         )
     ]
 
-    @MainActor
-    static var selectedTools: [String] = ["plain_text"]
+    private var selectedTools: [String] = ["plain_text"]
 
-    @MainActor
-    static var activeTools: [Tool] {
-        return
-            availableTools
-            .filter { selectedTools.contains($0.key) }
-            .map { availableTools[$0.key]! }
+    var activeTools: [Tool] {
+        return availableTools
+            .compactMap { selectedTools.contains($0.key) ? $0.value : nil }
+    }
+    
+    func canExecute(partialArguments: String) -> Bool {
+        let hasOriginalStart = partialArguments.contains("\"original_content\"")
+        let hasImprovedStart = partialArguments.contains("\"improved_content\"")
+        
+        return hasOriginalStart && hasImprovedStart
     }
 
-    static func executeToolCall(toolName: String, arguments: String) async -> Result<
-        ToolCallResult, ToolCallError
-    > {
+    func execute(toolName: String, arguments: String) async -> Result<ToolCallResult, ToolCallError> {
         switch toolName {
         case "plain_text":
             return await generatePlainTextDiff(toolName: toolName, arguments: arguments)
@@ -90,7 +92,7 @@ struct DiffTool {
         let operations: [PlainTextDiffOperation]
     }
 
-    static func generatePlainTextDiff(toolName: String, arguments: String) async -> Result<
+    func generatePlainTextDiff(toolName: String, arguments: String) async -> Result<
         ToolCallResult, ToolCallError
     > {
         do {
@@ -124,7 +126,7 @@ struct DiffTool {
         }
     }
 
-    private static func generateDiffOperations(original: String, improved: String) -> [PlainTextDiffOperation] {
+    private func generateDiffOperations(original: String, improved: String) -> [PlainTextDiffOperation] {
         let diffs = diff(text1: original, text2: improved)
         var operations: [PlainTextDiffOperation] = []
         var currentIndex = 0

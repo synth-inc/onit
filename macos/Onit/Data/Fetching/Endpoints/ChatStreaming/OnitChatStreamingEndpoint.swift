@@ -23,13 +23,15 @@ struct OnitChatStreamingEndpoint: StreamingEndpoint {
 
     var token: String? { TokenManager.token }
 
-    let model: String
+    let model: AIModel
     let messages: [OnitChatMessage]
     let tools: [Tool]
     let includeSearch: Bool?
+    
+    private let streamToolAccumulator = StreamToolAccumulator()
 
     var requestBody: OnitChatRequest? {
-        OnitChatRequest(model: model, messages: messages, tools: tools, includeSearch: includeSearch)
+        return OnitChatRequest(model: model.id, messages: messages, tools: tools, includeSearch: includeSearch)
     }
 
     var additionalHeaders: [String : String]? { nil }
@@ -39,8 +41,31 @@ struct OnitChatStreamingEndpoint: StreamingEndpoint {
     func getContentFromSSE(event: EVEvent) throws -> StreamingEndpointResponse? {
         if let data = event.data?.data(using: .utf8) {
             let response = try JSONDecoder().decode(Response.self, from: data)
-
-            return StreamingEndpointResponse(content: response.content, toolName: response.toolName, toolArguments: response.toolArguments)
+            
+            var endpointResponse: StreamingEndpointResponse?
+            
+            if model.provider.isStreamingPartialTool {
+                if let toolName = response.toolName, !streamToolAccumulator.hasActiveTool() {
+                    endpointResponse = streamToolAccumulator.startTool(name: toolName)
+                }
+                
+                if let toolArguments = response.toolArguments, streamToolAccumulator.hasActiveTool() {
+                    endpointResponse = streamToolAccumulator.addArguments(toolArguments)
+                }
+                
+                if response.toolComplete == true, streamToolAccumulator.hasActiveTool() {
+                    endpointResponse = streamToolAccumulator.finishTool()
+                }
+                
+                if let content = response.content, !content.isEmpty {
+                    endpointResponse = endpointResponse ?? StreamingEndpointResponse(content: nil, toolName: nil, toolArguments: nil)
+                    endpointResponse?.content = response.content
+                }
+                
+                return endpointResponse
+            } else {
+                return StreamingEndpointResponse(content: response.content, toolName: response.toolName, toolArguments: response.toolArguments)
+            }
         }
         return nil
     }
@@ -78,6 +103,7 @@ struct OnitChatStreamingResponse: Codable {
     let content: String?
     let toolName: String?
     let toolArguments: String?
+    let toolComplete: Bool?
 }
 
 struct OnitChatStreamingError: Codable {

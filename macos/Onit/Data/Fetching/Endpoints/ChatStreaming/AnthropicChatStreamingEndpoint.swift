@@ -21,7 +21,7 @@ struct AnthropicChatStreamingEndpoint: StreamingEndpoint {
     let tools: [Tool]
     let searchTool: ChatSearchTool?
     
-    let toolAccumulator = StreamToolAccumulator()
+    private let toolAccumulator = StreamToolAccumulator()
     
     var path: String { "/v1/messages" }
     var getParams: [String: String]? { nil }
@@ -72,27 +72,20 @@ struct AnthropicChatStreamingEndpoint: StreamingEndpoint {
             
             if response.type == "content_block_start" && response.contentBlock?.type == "tool_use" {
                 if let toolName = response.contentBlock?.name {
-                    toolAccumulator.startTool(name: toolName)
+                    return toolAccumulator.startTool(name: toolName)
                 }
-                return nil
             }
             
             if response.type == "content_block_delta" && response.delta?.type == "input_json_delta" {
                 if toolAccumulator.hasActiveTool(), let partialJson = response.delta?.partialJson {
-                    toolAccumulator.addArguments(partialJson)
+                    return toolAccumulator.addArguments(partialJson)
                 }
-                return nil
             }
             
             if response.type == "message_delta" && response.delta?.stopReason == "tool_use" {
-                if toolAccumulator.hasActiveTool(), let toolData = toolAccumulator.finishTool() {
-                    return StreamingEndpointResponse(
-                        content: nil,
-                        toolName: toolData.name,
-                        toolArguments: toolData.arguments
-                    )
+                if toolAccumulator.hasActiveTool() {
+                    return toolAccumulator.finishTool()
                 }
-                return nil
             }
         }
         

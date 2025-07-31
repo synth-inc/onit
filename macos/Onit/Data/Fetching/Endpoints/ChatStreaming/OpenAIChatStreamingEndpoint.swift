@@ -19,6 +19,8 @@ struct OpenAIChatStreamingEndpoint: StreamingEndpoint {
     let tools: [Tool]
     let searchTool: ChatSearchTool?
     
+    private let toolAccumulator = StreamToolAccumulator()
+    
     var path: String { "/v1/responses" }
     var getParams: [String: String]? { nil }
     var method: HTTPMethod { .post }
@@ -45,13 +47,25 @@ struct OpenAIChatStreamingEndpoint: StreamingEndpoint {
             if response.type == "response.output_text.delta" {
                 return StreamingEndpointResponse(content: response.delta, toolName: nil, toolArguments: nil)
             }
-            if response.type == "response.completed" {
-                if let toolCall = response.response?.output?.first {
-                    return StreamingEndpointResponse(content: nil,
-                                                     toolName: toolCall.name,
-                                                     toolArguments: toolCall.arguments)
+            
+            if response.type == "response.output_item.added" && response.item?.type == "function_call" {
+                if let toolName = response.item?.name {
+                    return toolAccumulator.startTool(name: toolName)
                 }
             }
+            
+            if response.type == "response.function_call_arguments.delta" {
+                if toolAccumulator.hasActiveTool(), let partialJson = response.delta {
+                    return toolAccumulator.addArguments(partialJson)
+                }
+            }
+            
+            if response.type == "response.function_call_arguments.done" {
+                if toolAccumulator.hasActiveTool() {
+                    return toolAccumulator.finishTool()
+                }
+            }
+            
             return nil
         }
         
@@ -68,6 +82,7 @@ struct OpenAIChatStreamingEndpoint: StreamingEndpoint {
 struct OpenAIChatStreamingResponse: Codable {
     let type: String?
     let delta: String?
+    let item: OpenAIChatStreamingFunctionCall?
     let response: OpenAIChatStreamingCompletedResponse?
 }
 

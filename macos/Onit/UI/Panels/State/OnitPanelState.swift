@@ -150,6 +150,13 @@ class OnitPanelState: NSObject {
     var generatingPromptPriorState: GenerationState?
     var generationStopped: Bool = false
     
+    var toolExecutionTask: Task<Void, Never>? = nil {
+		willSet {
+			toolExecutionTask?.cancel()
+		}
+	}
+    var lastToolExecutionTime: Date? = nil
+
     // Web search states
     var webSearchError: Error? = nil
     var isSearchingWeb: [PersistentIdentifier: Bool] = [:]

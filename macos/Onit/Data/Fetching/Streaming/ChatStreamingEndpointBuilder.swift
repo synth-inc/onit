@@ -114,7 +114,7 @@ struct ChatStreamingEndpointBuilder {
             userMessages: userMessages)
 
         return OnitChatStreamingEndpoint(
-            model: model.id, messages: messages, tools: tools, includeSearch: includeSearch)
+            model: model, messages: messages, tools: tools, includeSearch: includeSearch)
     }
 
     private static func openAI(
