@@ -204,11 +204,11 @@ class OnitPanelState: NSObject {
     
     // MARK: - Setup
     
-    public func subscribeToDelegates() {
+    public func subscribeAsHighlightedTextDelegate() {
         HighlightedTextManager.shared.addDelegate(self)
     }
     
-    public func unsubscribeFromDelegates() {
+    public func unsubscribeAsHighlightedTextDelegate() {
         HighlightedTextManager.shared.removeDelegate(self)
     }
     

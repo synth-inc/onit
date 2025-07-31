@@ -32,7 +32,8 @@ extension OnitPanelState: NSWindowDelegate {
 }
 
 extension OnitPanelState: HighlightedTextDelegate {
-    func highlightedTextDidChange(selectedText: String?, application: String?) {
+    
+    func highlightedTextManager(_ manager: HighlightedTextManager, didChange selectedText: String?, application: String?) {
         if let selectedText = selectedText {
             let input = Input(selectedText: selectedText, application: application ?? "")
 

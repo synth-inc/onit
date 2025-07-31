@@ -74,7 +74,7 @@ class PanelStateBaseManager: PanelStateManagerLogic {
         closePanels()
         hideTetherWindow()
         for state in states {
-            state.unsubscribeFromDelegates()
+            state.unsubscribeAsHighlightedTextDelegate()
         }
         
         state = defaultState

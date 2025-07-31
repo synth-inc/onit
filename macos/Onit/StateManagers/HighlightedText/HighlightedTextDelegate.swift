@@ -13,5 +13,5 @@ protocol HighlightedTextDelegate: AnyObject {
     /// - Parameters:
     ///   - selectedText: The newly selected text, or nil if text was deselected
     ///   - application: The name of the application where the text was selected
-    func highlightedTextDidChange(selectedText: String?, application: String?)
+    func highlightedTextManager(_ manager: HighlightedTextManager, didChange selectedText: String?, application: String?)
 }

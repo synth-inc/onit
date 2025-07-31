@@ -54,7 +54,7 @@ class PanelStatePinnedManager: PanelStateBaseManager, ObservableObject {
         
         self.state = state
         states = [state]
-        state.subscribeToDelegates()
+        state.subscribeAsHighlightedTextDelegate()
         
         globalMouseMonitor = NSEvent.addGlobalMonitorForEvents(matching: .mouseMoved) { [weak self] event in
             guard let self = self else { return }
@@ -115,7 +115,7 @@ class PanelStatePinnedManager: PanelStateBaseManager, ObservableObject {
         dragManager.stopMonitoring()
         dragManagerCancellable?.cancel()
         draggingWindow = nil
-        state.unsubscribeFromDelegates()
+        state.unsubscribeAsHighlightedTextDelegate()
         state.removeDelegate(self)
         
         hintYRelativePosition = nil

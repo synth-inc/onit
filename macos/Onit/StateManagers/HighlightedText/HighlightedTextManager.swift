@@ -53,9 +53,9 @@ class HighlightedTextManager: ObservableObject {
         delegates.remove(delegate)
     }
     
-    private func notifyDelegates(selectedText: String?, application: String?) {
+    private func notifyDelegates(_ notification: (HighlightedTextDelegate) -> Void) {
         for case let delegate as HighlightedTextDelegate in delegates.allObjects {
-            delegate.highlightedTextDidChange(selectedText: selectedText, application: application)
+            notification(delegate)
         }
     }
     
@@ -121,7 +121,9 @@ class HighlightedTextManager: ObservableObject {
             self.selectedText = nil
             
             // Notify delegates that text was deselected
-            notifyDelegates(selectedText: nil, application: currentSource)
+            notifyDelegates {
+                $0.highlightedTextManager(self, didChange: nil, application: currentSource)
+            }
             return
         }
         
@@ -129,7 +131,9 @@ class HighlightedTextManager: ObservableObject {
         self.selectedText = selectedText
 
         // Notify delegates about the text change
-        notifyDelegates(selectedText: selectedText, application: currentSource)
+        notifyDelegates {
+            $0.highlightedTextManager(self, didChange: selectedText, application: currentSource)
+        }
     }
     
     func handleCaretPositionChange(for element: AXUIElement) {
