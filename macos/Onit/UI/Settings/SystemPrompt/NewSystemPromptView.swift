@@ -71,24 +71,24 @@ struct NewSystemPromptView: View {
         VStack(alignment: .leading, spacing: 12) {
             Text("Select Applications")
                 .font(.headline)
-                .foregroundStyle(.gray100)
+                .foregroundStyle(Color.S_1)
             
             // Search field
             TextField("Search applications...", text: $appSearchText)
                 .textFieldStyle(.plain)
                 .padding(8)
-                .background(.gray700)
+                .background(Color.S_7)
                 .cornerRadius(5)
                 .overlay(
                     RoundedRectangle(cornerRadius: 5)
-                        .stroke(.gray500)
+                        .stroke(Color.S_5)
                 )
             
             // Apps list
             VStack {
                 if filteredApps.isEmpty {
                     Text("No applications found")
-                        .foregroundStyle(.gray200)
+                        .foregroundStyle(Color.S_2)
                         .padding(.vertical, 8)
                 } else {
                     ScrollView {
@@ -123,7 +123,7 @@ struct NewSystemPromptView: View {
         }
         .padding(16)
         .frame(width: 300)
-        .background(.gray800)
+        .background(Color.S_8)
     }
     
     // MARK: - Views

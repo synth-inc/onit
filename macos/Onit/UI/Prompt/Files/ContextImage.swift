@@ -53,7 +53,7 @@ struct ContextImage: View {
             .clipShape(imageRect)
             .overlay {
                 imageRect
-                    .strokeBorder(.gray500)
+                    .strokeBorder(Color.S_5)
             }
     }
 
