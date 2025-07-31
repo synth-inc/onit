@@ -15,6 +15,7 @@ import SwiftUI
     func panelBecomeKey(state: OnitPanelState)
     func panelResignKey(state: OnitPanelState)
     func panelStateDidChange(state: OnitPanelState)
+    func panelFrameDidChange(state: OnitPanelState)
     func userInputsDidChange(instruction: String, contexts: [Context], input: Input?)
 }
 
@@ -105,7 +106,13 @@ class OnitPanelState: NSObject {
     
     var tetheredButtonYRelativePosition: CGFloat?
     
-    var panelWidth: CGFloat 
+    var panelWidth: CGFloat {
+        didSet {
+            notifyDelegates { delegate in
+                delegate.panelFrameDidChange(state: self)
+            }
+        }
+    }
     
     var currentChat: Chat?
     var currentPrompts: [Prompt]?
@@ -143,6 +150,9 @@ class OnitPanelState: NSObject {
     var showHistory: Bool = false
     var historyIndex = -1
     
+    var isDiffViewActive: Bool = false
+    var responseUsedForDiffView: Response?
+    
     var setUpHeight: CGFloat = 0
     
     var generateTask: Task<Void, Never>? = nil
@@ -156,6 +166,7 @@ class OnitPanelState: NSObject {
 		}
 	}
     var lastToolExecutionTime: Date? = nil
+	var lastToolCallExecutedHash: String?
 
     // Web search states
     var webSearchError: Error? = nil

@@ -82,7 +82,7 @@ struct PromptCore: View {
         }
         .background {
             if !isEditing, let windowState = windowState {
-                if !showSlashMenu && (windowState.showContextMenu != true) && (windowState.isTyping != true) {
+                if !showSlashMenu && (windowState.showContextMenu != true) && (windowState.isTyping != true) && (windowState.isDiffViewActive != true) {
                     upListener
                     downListener
                 }
@@ -144,7 +144,7 @@ extension PromptCore {
                 maxHeight: maxHeightLimit,
                 placeholder: placeholderText,
                 audioRecorder: audioRecorder,
-                isDisabled: showingAlert,
+                isDisabled: showingAlert || windowState.isDiffViewActive,
                 detectLinks: true
             )
             .frame(height: min(textHeight, maxHeightLimit))
@@ -329,5 +329,6 @@ private final class NotificationDelegate: OnitPanelStateDelegate {
     
     // These are required to conform to the OnitPanelStateDelegate protocol, but they aren't needed in this implementation.
     func panelStateDidChange(state: OnitPanelState) {}
+    func panelFrameDidChange(state: OnitPanelState) {}
     func userInputsDidChange(instruction: String, contexts: [Context], input: Input?) {}
 }

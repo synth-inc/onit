@@ -332,11 +332,17 @@ extension [Context] {
         
         for context in self {
             if case .auto(let autoContext) = context {
-                let contentString = autoContext.appContent.values.joined(separator: "\n")
+                var parts: [String] = []
+                
+                for (key, value) in autoContext.appContent {
+                    parts.append("### \(key.uppercased()) ###")
+                    parts.append(value)
+                }
+                
+                let contentString = parts.joined(separator: "\n")
+                
                 if let existing = result[autoContext.appName] {
-                    let combined = existing + "\n" + contentString
-                    
-                    result[autoContext.appName] = combined
+                    result[autoContext.appName] = existing + "\n" + contentString
                 } else {
                     result[autoContext.appName] = contentString
                 }

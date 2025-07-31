@@ -340,7 +340,7 @@ class DebugManager: ObservableObject {
         print("ocrTiming - OCR took: \(ocrEndTime - ocrStartTime) seconds")
         
         let heavy2StartTime = CFAbsoluteTimeGetCurrent()
-        let accessibilityText = accessibilityResults["screen"] ?? ""
+        let accessibilityText = accessibilityResults[AccessibilityParsedElements.screen] ?? ""
         let computationResult = await Task {
             await self.performHeavyComputation(
                 observations: ocrObservations,

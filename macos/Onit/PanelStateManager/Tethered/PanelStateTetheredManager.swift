@@ -288,6 +288,8 @@ class PanelStateTetheredManager: PanelStateBaseManager, ObservableObject {
                 }
             }
         }
+        state.notifyDelegates { $0.panelFrameDidChange(state: state) }
+        
         handlePanelStateChange(state: state, action: .moveEnd)
     }
     

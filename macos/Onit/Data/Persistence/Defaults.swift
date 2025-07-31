@@ -108,6 +108,7 @@ extension Defaults.Keys {
 
     // Window state
     static let panelWidth = Key<Double>("panelWidth", default: 400)
+    static let notepadWidth = Key<Double>("notepadWidth", default: 400)
 
     // General settings
     static let launchOnStartupRequested = Key<Bool>("launchOnStartupRequested", default: false)

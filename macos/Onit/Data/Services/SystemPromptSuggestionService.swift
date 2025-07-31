@@ -211,6 +211,7 @@ extension SystemPromptSuggestionService: OnitPanelStateDelegate {
     func panelStateDidChange(state: OnitPanelState) {
         processIfNeeded()
     }
+    func panelFrameDidChange(state: OnitPanelState) { }
     func userInputsDidChange(instruction: String, contexts: [Context], input: Input?) {
         self.instruction = instruction
         self.contexts = contexts

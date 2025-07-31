@@ -52,6 +52,18 @@ struct QuickEditResponseView: View {
         return response.text
     }
     
+    private var shouldDisplayLoader: Bool {
+        displayText.isEmpty &&
+        (prompt.currentResponse?.toolCallName?.isEmpty ?? true) &&
+        (prompt.currentResponse?.toolCallArguments?.isEmpty ?? true) &&
+        !(state?.isSearchingWeb[prompt.id] ?? false)
+    }
+    
+    private var isDiffViewActive: Bool {
+        state?.responseUsedForDiffView == prompt.currentResponse &&
+        state?.isDiffViewActive == true
+    }
+    
     private var configuration: LLMStreamConfiguration {
         let font = FontConfiguration(size: fontSize, lineHeight: lineHeight)
         let color = ColorConfiguration(citationBackgroundColor: .gray600,
@@ -106,7 +118,7 @@ extension QuickEditResponseView {
                 .frame(maxWidth: .infinity, alignment: .leading)
                 
             case .streaming, .done:
-                if displayText.isEmpty && !(state?.isSearchingWeb[prompt.id] ?? false) {
+                if shouldDisplayLoader {
                     HStack {
                         Spacer()
                         QLImage("loader_rotated-200")
@@ -174,8 +186,14 @@ extension QuickEditResponseView {
                     .padding(.vertical, 8)
                     .id("content")
                     
+                    if let response = prompt.currentResponse, response.hasToolCall {
+                        ToolCallHandlerView(response: response)
+                            .buttonStyle(.plain)
+                            .padding(.vertical, 8)
+                    }
+                    
                     Color.clear
-                    .frame(height: 1)
+                    .frame(height: 4)
                     .id("bottom")
                 }
                 .background(
@@ -254,27 +272,33 @@ extension QuickEditResponseView {
     
     private var generatedToolbar: some View {
         HStack(spacing: 8) {
-            if let generation = prompt.generation {
-                if isEditableElement {
-                    Button(
-                        action: {
-                            insertGeneratedText(generation)
-                        },
-                        label: {
-                            HStack {
-                                KeyboardShortcutView(shortcut: insertShortcut)
-                                Text("Insert")
-                            }
-                            .padding(.horizontal, 8)
+            if let generation = prompt.generation, isEditableElement {
+                Button(
+                    action: {
+                        let stripMarkdown = generation != prompt.currentResponse?.diffPreview
+                        
+                        insertGeneratedText(generation, shouldStripMarkdown: stripMarkdown)
+                    },
+                    label: {
+                        HStack {
+                            KeyboardShortcutView(shortcut: insertShortcut)
+                            Text("Insert")
                         }
-                    )
-                    .buttonStyle(.plain)
-                    .frame(height: 24)
-                    .background(.blue400)
-                    .clipShape(RoundedRectangle(cornerRadius: 5))
-                }
+                        .padding(.horizontal, 8)
+                    }
+                )
+                .buttonStyle(.plain)
+                .frame(height: 24)
+                .background(.blue400)
+                .clipShape(RoundedRectangle(cornerRadius: 5))
+            }
+            
+            diffButton
+            
+            if let generation = prompt.generation {
+                let stripMarkdown = generation != prompt.currentResponse?.diffPreview
                 
-                CopyButton(text: generation, stripMarkdown: true)
+                CopyButton(text: generation, stripMarkdown: stripMarkdown)
             }
             
             IconButton(
@@ -283,6 +307,24 @@ extension QuickEditResponseView {
             ) {
                 if let state = state {
                     state.generate(prompt)
+                }
+            }
+        }
+    }
+    
+    @ViewBuilder
+    var diffButton: some View {
+        if let response = prompt.currentResponse,
+           let state = state,
+           response.isDiffResponse {
+            IconButton(
+                icon: .lucideDiff,
+                isActive: isDiffViewActive,
+                activeBackground: .gray800,
+                tooltipPrompt: "Diff"
+            ) {
+                if !isDiffViewActive {
+                    NotepadWindowController.shared.showWindow(windowState: state, response: response)
                 }
             }
         }
@@ -303,10 +345,10 @@ extension QuickEditResponseView {
         // TODO: Implement code action if needed
     }
     
-    private func insertGeneratedText(_ text: String) {
+    private func insertGeneratedText(_ text: String, shouldStripMarkdown: Bool = true) {
         QuickEditManager.shared.activateLastApp()
         
-        let textToInsert = text.stripMarkdown()
+        let textToInsert = shouldStripMarkdown ? text.stripMarkdown() : text
         let source = CGEventSource(stateID: .hidSystemState)
         let pasteDown = CGEvent(keyboardEventSource: source, virtualKey: 0x09, keyDown: true)
         let pasteUp = CGEvent(keyboardEventSource: source, virtualKey: 0x09, keyDown: false)

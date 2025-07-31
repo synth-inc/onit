@@ -210,6 +210,7 @@ extension PanelStateUntetheredManager: OnitPanelStateDelegate {
     func panelStateDidChange(state: OnitPanelState) {
         handlePanelStateChange(state: state)
     }
+    func panelFrameDidChange(state: OnitPanelState) { }
     func userInputsDidChange(instruction: String, contexts: [Context], input: Input?) { }
 }
 

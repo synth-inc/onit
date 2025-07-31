@@ -359,6 +359,7 @@ class AccessibilityNotificationsManager: ObservableObject {
                             AccessibilityParsedElements.applicationName: appName,
                             AccessibilityParsedElements.applicationTitle: appTitle,
                             AccessibilityParsedElements.elapsedTime: "\(CFAbsoluteTimeGetCurrent() - startTime)",
+                            AccessibilityParsedElements.documentUrl: "Google drive document's url: " + url.absoluteString,
                             "document": documentContent
                         ]
                         handleWindowContent(

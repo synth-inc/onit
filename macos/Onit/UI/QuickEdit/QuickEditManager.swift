@@ -88,6 +88,10 @@ class QuickEditManager: ObservableObject, CaretPositionDelegate {
         hintWindowController.hideMenu()
     }
     
+    func getWindow() -> NSWindow? {
+        return windowController.window
+    }
+    
     func activateLastApp() {
         guard let element = lastElement, let pid = element.pid() else { return }
         

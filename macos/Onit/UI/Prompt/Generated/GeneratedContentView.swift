@@ -32,7 +32,9 @@ struct GeneratedContentView: View {
                                        citationTextColor: .gray100)
         let thought = ThoughtConfiguration(icon: Image(.lightBulb))
         
-        return LLMStreamConfiguration(font: font, colors: color, thought: thought)
+        return LLMStreamConfiguration(font: font,
+                                      colors: color,
+                                      thought: thought)
     }
     
 
@@ -43,18 +45,19 @@ struct GeneratedContentView: View {
 
         VStack(alignment: .leading, spacing: 8) {
             LLMStreamView(text: textToRead,
-                        configuration: configuration,
-                        onUrlClicked: onUrlClicked,
-                        onCodeAction: codeAction)
+                          configuration: configuration,
+                          onUrlClicked: onUrlClicked)
                 .id("\(fontSize)-\(lineHeight)") // Force recreation when font settings change
                 .padding(.horizontal, 12)
 
             if let response = prompt.currentResponse, response.hasToolCall {
-                ToolCallView(response: response)
+                ToolCallHandlerView(response: response)
                     .padding(.horizontal, 12)
+                    .padding(.bottom, 12)
+            } else {
+                Spacer()
             }
 
-            Spacer()
             if textToRead.isEmpty && !(state?.isSearchingWeb[prompt.id] ?? false) && prompt.currentResponse?.hasToolCall != true {
                 HStack {
                     Spacer()
@@ -71,10 +74,6 @@ struct GeneratedContentView: View {
         if let url = URL(string: urlString) {
             openURL(url)
         }
-    }
-    
-    private func codeAction(code: String) {
-        
     }
 }
 

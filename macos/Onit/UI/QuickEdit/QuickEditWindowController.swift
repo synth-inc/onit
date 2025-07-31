@@ -387,6 +387,10 @@ class QuickEditWindowController: NSObject, NSWindowDelegate {
     }
     
     func windowDidResignKey(_ notification: Notification) {
-        hide()
+        let state = PanelStateCoordinator.shared.state
+        
+        if !state.isDiffViewActive {
+            hide()
+        }
     }
 } 
