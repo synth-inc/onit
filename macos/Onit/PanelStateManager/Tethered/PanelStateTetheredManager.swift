@@ -6,7 +6,6 @@
 //
 
 @preconcurrency import AppKit
-import Accessibility
 import Combine
 import Defaults
 import PostHog
