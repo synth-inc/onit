@@ -106,8 +106,8 @@ class QuickEditManager: ObservableObject, CaretPositionDelegate {
     }
     
     private func setupTextSelectionMonitoring() {
-        accessibilityManager.$screenResult
-            .map(\.userInteraction.selectedText)
+        // Monitor the selectedText property from AccessibilityNotificationsManager
+        AccessibilityNotificationsManager.shared.$selectedText
             .removeDuplicates()
             .sink { [weak self] selectedText in
                 self?.handleTextSelectionChange(selectedText)
@@ -284,7 +284,7 @@ extension QuickEditManager {
     }
     
     func caretDidDisappear() {
-        if !hasTextSelection(accessibilityManager.screenResult.userInteraction.selectedText) {
+        if !hasTextSelection(PanelStateCoordinator.shared.state.pendingInput?.selectedText ?? PanelStateCoordinator.shared.state.trackedPendingInput?.selectedText) {
             hideHint()
         }
     }

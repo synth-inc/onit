@@ -9,25 +9,25 @@ import AppKit
 import Defaults
 
 extension OnitPanelState {
-    func addAutoContext(trackedWindow: TrackedWindow? = nil) {
+    func addAutoContext(trackedWindow: TrackedWindow? = nil, screenResult: ScreenResult? = nil) {
         guard Defaults[.autoContextFromCurrentWindow] else { return }
 
-        let appName = AccessibilityNotificationsManager.shared.screenResult.applicationName ?? "AutoContext"
+        let appName = screenResult?.applicationName ?? "AutoContext"
         let trackedWindowTitle = trackedWindow?.title
-        let trackedWindowHash = trackedWindow?.hash ?? 0 // This is all all horrible. There's no reason why we should be putting these things on the 'screenResult"
-        if let errorMessage = AccessibilityNotificationsManager.shared.screenResult.errorMessage {
+        let trackedWindowHash = trackedWindow?.hash ?? 0
+        if let errorMessage = screenResult?.errorMessage {
             let errorContext = Context(
                 appName: appName,
                 appHash: trackedWindow?.hash ?? 0,
                 appTitle: trackedWindowTitle ?? "Unknown",
-                appContent: ["error": errorMessage, "errorCode" : String(AccessibilityNotificationsManager.shared.screenResult.errorCode ?? 0)],
-                appBundleUrl: AccessibilityNotificationsManager.shared.screenResult.appBundleUrl)
+                appContent: ["error": errorMessage, "errorCode" : String(screenResult?.errorCode ?? 0)],
+                appBundleUrl: screenResult?.appBundleUrl)
             pendingContextList.insert(errorContext, at: 0)
             cleanupWindowContextTask(uniqueWindowIdentifier: trackedWindowHash)
             return
         }
 
-        guard var appContent = AccessibilityNotificationsManager.shared.screenResult.others else {
+        guard var appContent = screenResult?.others else {
             let errorContext = Context(appName: "Unable to add \(appName)", appHash: 0, appTitle: "", appContent: ["error": "Empty text"])
             pendingContextList.insert(errorContext, at: 0)
             cleanupWindowContextTask(uniqueWindowIdentifier: trackedWindowHash)
@@ -69,7 +69,7 @@ extension OnitPanelState {
                 appHash: appHash,
                 appTitle: appTitle,
                 appContent: appContent,
-                appBundleUrl: AccessibilityNotificationsManager.shared.screenResult.appBundleUrl,
+                appBundleUrl: screenResult?.appBundleUrl,
                 ocrMatchingPercentage: ocrMatchingPercentage
             )
             let newContext = Context.auto(autoContext)
@@ -106,7 +106,7 @@ extension OnitPanelState {
             appHash: appHash,
             appTitle: appTitle,
             appContent: appContent,
-            appBundleUrl: AccessibilityNotificationsManager.shared.screenResult.appBundleUrl,
+            appBundleUrl: screenResult?.appBundleUrl,
             ocrMatchingPercentage: ocrMatchingPercentage
         )
         
