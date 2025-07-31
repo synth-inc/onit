@@ -105,7 +105,6 @@ class ContextFetchingService {
                         let screenResult = ScreenResult(
                             applicationName: appName,
                             applicationTitle: appTitle,
-                            others: nil,
                             errorMessage: errorMessage,
                             errorCode: errorCode,
                             appBundleUrl: appBundleUrl
@@ -128,7 +127,6 @@ class ContextFetchingService {
                     let screenResult = ScreenResult(
                         applicationName: appName,
                         applicationTitle: appTitle,
-                        others: nil,
                         errorMessage: "Google Drive Plugin Required",
                         errorCode: 1500,
                         appBundleUrl: appBundleUrl
@@ -271,10 +269,8 @@ class ContextFetchingService {
                     let screenResult = ScreenResult(
                         applicationName: appName,
                         applicationTitle: "",
-                        others: nil,
                         errorMessage: "Timeout occurred, could not read application in reasonable amount of time.",
-                        errorCode: 1500,
-                        appBundleUrl: nil
+                        errorCode: 1500
                     )
                     
                     // Call addAutoContext to handle the error case
@@ -307,8 +303,6 @@ class ContextFetchingService {
             applicationName: appName,
             applicationTitle: appTitle,
             others: results,
-            errorMessage: nil,
-            errorCode: nil,
             appBundleUrl: appBundleUrl
         )
         
