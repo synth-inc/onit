@@ -539,7 +539,7 @@ struct GeneralTab: View {
                             .padding(.vertical, 6)
                             .padding(.horizontal, 10)
                             .foregroundColor(Color.S_0)
-                            .background(Color.red.opacity(0.1))
+                            .background(Color.red500.opacity(0.1))
                             .clipShape(RoundedRectangle(cornerRadius: 6))
                         }
                     }
