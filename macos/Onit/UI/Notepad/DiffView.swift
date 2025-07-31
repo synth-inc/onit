@@ -263,7 +263,8 @@ struct DiffView: View {
                 viewModel.insert()
             } label: {
                 HStack(spacing: 6) {
-                    let text = viewModel.diffArguments?.document_url != nil ? "Update" : "Insert"
+                    // TODO: KNA - Uncomment when we use the Google Docs API.
+                    let text = /*viewModel.diffArguments?.document_url != nil ? "Update" : */"Insert"
                     
                     Text(text)
                     

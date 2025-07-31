@@ -459,41 +459,42 @@ class DiffViewModel {
             return
         }
         
-        if let documentUrl = diffArguments.document_url {
-            Task {
-                await insertToDocument(documentUrl: documentUrl)
-            }
-        } else {
-            let appName = diffArguments.app_name
-            let runningApps = NSWorkspace.shared.runningApplications
-            
-            guard let runningApp = runningApps.first(where: { app in
-                app.localizedName?.localizedCaseInsensitiveContains(appName) == true
-            }) else {
-                insertionError = "Application '\(appName)' is not running. Please open the application and try again."
-                return
-            }
-            
-            guard let diffPreview = response.diffPreview else {
-                insertionError = "No text available. Please approve some changes before inserting."
-                return
-            }
-            
-            runningApp.activate()
-            
-            let source = CGEventSource(stateID: .hidSystemState)
-            let pasteDown = CGEvent(keyboardEventSource: source, virtualKey: 0x09, keyDown: true)
-            let pasteUp = CGEvent(keyboardEventSource: source, virtualKey: 0x09, keyDown: false)
-            
-            pasteDown?.flags = .maskCommand
-            pasteUp?.flags = .maskCommand
-            
-            NSPasteboard.general.clearContents()
-            NSPasteboard.general.setString(diffPreview, forType: .string)
-            
-            pasteDown?.post(tap: .cghidEventTap)
-            pasteUp?.post(tap: .cghidEventTap)
+        // TODO: KNA - Let's not use the Google Docs API update until it's working optimally.
+//        if let documentUrl = diffArguments.document_url {
+//            Task {
+//                await insertToDocument(documentUrl: documentUrl)
+//            }
+//        } else {
+        let appName = diffArguments.app_name
+        let runningApps = NSWorkspace.shared.runningApplications
+        
+        guard let runningApp = runningApps.first(where: { app in
+            app.localizedName?.localizedCaseInsensitiveContains(appName) == true
+        }) else {
+            insertionError = "Application '\(appName)' is not running. Please open the application and try again."
+            return
         }
+        
+        guard let diffPreview = response.diffPreview else {
+            insertionError = "No text available. Please approve some changes before inserting."
+            return
+        }
+        
+        runningApp.activate()
+        
+        let source = CGEventSource(stateID: .hidSystemState)
+        let pasteDown = CGEvent(keyboardEventSource: source, virtualKey: 0x09, keyDown: true)
+        let pasteUp = CGEvent(keyboardEventSource: source, virtualKey: 0x09, keyDown: false)
+        
+        pasteDown?.flags = .maskCommand
+        pasteUp?.flags = .maskCommand
+        
+        NSPasteboard.general.clearContents()
+        NSPasteboard.general.setString(diffPreview, forType: .string)
+        
+        pasteDown?.post(tap: .cghidEventTap)
+        pasteUp?.post(tap: .cghidEventTap)
+//        }
     }
     
     @MainActor
