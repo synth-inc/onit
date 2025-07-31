@@ -89,7 +89,7 @@ struct TooltipView: View {
     var tooltipBackground: some View {
         RoundedRectangle(cornerRadius: 8)
             .fill(Color.hintBG)
-        //            .shadow(color: .black.opacity(0.36), radius: 2.5, x: 0, y: 0)
+//            .shadow(color: Color.black.opacity(0.36), radius: 2.5, x: 0, y: 0)
     }
 }
 

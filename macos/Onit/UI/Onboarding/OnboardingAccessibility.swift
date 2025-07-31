@@ -59,7 +59,7 @@ extension OnboardingAccessibility {
     private var instructions: some View {
         VStack(alignment: .leading, spacing: 2) {
             ForEach(instructionItems, id: \.self) { instruction in
-                Text(instruction).styleText(size: 13, color: .gray100)
+                Text(instruction).styleText(size: 13, color: Color.S_1)
             }
         }
         .padding(.bottom, 23)
@@ -70,11 +70,11 @@ extension OnboardingAccessibility {
             height: 40,
             fillContainer: false,
             cornerRadius: 9,
-            background: .blue400,
-            hoverBackground: .blue350
+            background: Color.blue400,
+            hoverBackground: Color.blue350
         ) {
             Text("Grant access")
-                .styleText(size: 14, weight: .regular, align: .center)
+                .styleText(size: 14, weight: .regular, color: Color.white, align: .center)
                 .frame(maxWidth: .infinity)
         } action: {
             AnalyticsManager.Onboarding.grandAccessPressed()
@@ -83,14 +83,14 @@ extension OnboardingAccessibility {
     }
     
     private func privacyBlurbText(text: String) -> some View {
-        Text(text).styleText(size: 12, color: .gray200)
+        Text(text).styleText(size: 12, color: Color.S_2)
     }
     
     private var privacyBlurb: some View {
         VStack(alignment: .center, spacing: 0) {
             HStack(alignment: .center, spacing: 2) {
                 Image(.lock).addIconStyles(
-                    foregroundColor: .gray200,
+                    foregroundColor: Color.S_2,
                     iconSize: 13
                 )
                 privacyBlurbText(text: "You are always in control of the information")
@@ -126,11 +126,11 @@ extension OnboardingAccessibility {
         var skipText = AttributedString("")
         
         var orText = AttributedString("Or, ")
-        orText.foregroundColor = .gray100
+        orText.foregroundColor = Color.S_1
         skipText.append(orText)
         
         var mainText = AttributedString("use without accessibility →")
-        mainText.foregroundColor = Color.primary
+        mainText.foregroundColor = Color.S_0
         skipText.append(mainText)
         
         return skipText

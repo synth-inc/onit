@@ -27,7 +27,7 @@ struct SubscriptionFeatures: View {
                     .styleText(
                         size: 13,
                         weight: .regular,
-                        color: .red,
+                        color: Color.red500,
                         align: centerErrorText ? .center : .leading
                     )
             } else if let features = features {

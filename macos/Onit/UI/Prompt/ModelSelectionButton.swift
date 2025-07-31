@@ -23,12 +23,12 @@ struct ModelSelectionButton: View {
             horizontalPadding: 4,
             cornerRadius: 4,
             fontSize: 13,
-            fontColor: .gray200,
+            fontColor: Color.S_2,
             text: text
         ) {
             Image(.smallChevDown)
                 .addIconStyles(
-                    foregroundColor: open ? .white : .gray100,
+                    foregroundColor: open ? Color.S_0 : Color.S_1,
                     iconSize: 18
                 )
                 .addAnimation(dependency: open)

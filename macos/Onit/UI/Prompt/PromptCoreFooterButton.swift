@@ -25,7 +25,7 @@ struct PromptCoreFooterButton: View {
         disabled: Bool = false,
         action: @escaping () -> Void,
         
-        background: Color = .clear,
+        background: Color = Color.clear,
         hoverBackground: Color = Color.T_8,
         fontColor: Color = Color.S_2
     ) {

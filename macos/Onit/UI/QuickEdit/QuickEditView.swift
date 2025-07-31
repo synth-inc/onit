@@ -107,8 +107,7 @@ struct QuickEditView: View {
                 isEditableElement: quickEditManager.isEditableElement
             )
             
-            Color.genericBorder
-                .frame(height: 1)
+            DividerHorizontal()
         }
     }
     

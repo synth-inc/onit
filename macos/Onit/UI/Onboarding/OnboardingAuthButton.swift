@@ -26,7 +26,7 @@ struct OnboardingAuthButton: View {
         Image(icon)
             .frame(maxWidth: .infinity)
             .frame(height: 40)
-            .foregroundColor(Color.primary)
+            .foregroundColor(Color.S_0)
             .addBorder(cornerRadius: 9, stroke: Color.genericBorder)
             .addButtonEffects(
                 background: isHovered ? Color.T_8 : Color.T_9,

@@ -217,7 +217,7 @@ final class WindowCaptureOCR: Sendable {
         nsImage.draw(in: NSRect(origin: .zero, size: nsImage.size))
         
         // Set up red highlight
-        NSColor.red.withAlphaComponent(0.3).set()
+        NSColor.red500.withAlphaComponent(0.3).set()
         
         // Draw rectangles around failed observations
         for observation in failedObservations {
@@ -253,7 +253,7 @@ final class WindowCaptureOCR: Sendable {
                 let font = NSFont.systemFont(ofSize: 10)
                 let attributes: [NSAttributedString.Key: Any] = [
                     .font: font,
-                    .foregroundColor: NSColor.white,
+                    .foregroundColor: NSColor.S_0,
                     .backgroundColor: NSColor.green.withAlphaComponent(0.8)
                 ]
                 

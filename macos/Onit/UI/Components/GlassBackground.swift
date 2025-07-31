@@ -11,5 +11,6 @@ struct GlassBackground: View {
     var body: some View {
         Rectangle()
             .fill(.thinMaterial)
+            .opacity(0.5)
     }
 }

@@ -91,7 +91,7 @@ struct App: SwiftUI.App {
                         window.setFrame(NSRect(x: 0, y: 0, width: 1, height: 1), display: false)
                         window.isOpaque = false
                         window.hasShadow = false
-                        window.backgroundColor = .clear
+                        window.backgroundColor = NSColor.clear
                         window.isReleasedWhenClosed = false
                         window.level = .floating
                         window.ignoresMouseEvents = true
@@ -114,7 +114,7 @@ struct App: SwiftUI.App {
                 .addBorder(
                     cornerRadius: 14,
                     lineWidth: 2,
-                    stroke: .gray600
+                    stroke: Color.genericBorder
                 )
                 .edgesIgnoringSafeArea(.top)
             }

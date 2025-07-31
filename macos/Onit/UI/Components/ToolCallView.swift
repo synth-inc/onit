@@ -30,16 +30,16 @@ struct ToolCallView: View {
         HStack(spacing: 10) {
             // Calendar icon
             Image(systemName: "calendar")
-                .foregroundColor(.white)
+                .foregroundColor(Color.S_0)
                 .frame(width: 16, height: 16)
                 .padding(.vertical, 6)
                 .padding(.horizontal, 8)
-                .background(Color.red)
+                .background(Color.red500)
                 .cornerRadius(6)
 
             // Tool name
             Text(displayToolName)
-                .foregroundColor(.primary)
+                .foregroundColor(Color.S_0)
                 .font(.system(size: 15, weight: .medium))
 
             Spacer()
@@ -47,17 +47,17 @@ struct ToolCallView: View {
             // Success/Error indicator
             if let success = response.toolCallSuccess {
                 Image(systemName: success ? "checkmark" : "xmark")
-                    .foregroundColor(success ? .green : .red)
+                    .foregroundColor(success ? Color.green : Color.red500)
                     .font(.system(size: 14, weight: .bold))
                     .frame(width: 18, height: 18)
                     .background(
-                        Circle().fill(success ? Color.green.opacity(0.1) : Color.red.opacity(0.1)))
+                        Circle().fill(success ? Color.green.opacity(0.1) : Color.red500.opacity(0.1)))
             }
 
             // Expand/Collapse arrow (only show when expandable)
             if hasExpandableContent {
                 Image(systemName: "chevron.right")
-                    .foregroundColor(.secondary)
+                    .foregroundColor(Color.secondary)
                     .font(.system(size: 12, weight: .medium))
                     .rotationEffect(.degrees(isExpanded ? 90 : 0))
                     .animation(.easeInOut(duration: 0.2), value: isExpanded)
@@ -90,11 +90,11 @@ struct ToolCallView: View {
                     HStack {
                         Text("Input")
                             .font(.system(size: 13, weight: .semibold))
-                            .foregroundColor(.secondary)
+                            .foregroundColor(Color.secondary)
 
                         Image(systemName: "chevron.down")
                             .font(.system(size: 10))
-                            .foregroundColor(.secondary)
+                            .foregroundColor(Color.secondary)
 
                         Spacer()
                     }
@@ -104,12 +104,12 @@ struct ToolCallView: View {
                             HStack(alignment: .top) {
                                 Text("\(argument.key):")
                                     .font(.system(size: 14, weight: .medium))
-                                    .foregroundColor(.primary)
+                                    .foregroundColor(Color.S_0)
                                     .frame(minWidth: 80, alignment: .leading)
 
                                 Text(argument.value)
                                     .font(.system(size: 14))
-                                    .foregroundColor(.primary)
+                                    .foregroundColor(Color.S_0)
                                     .multilineTextAlignment(.leading)
 
                                 Spacer()
@@ -127,18 +127,18 @@ struct ToolCallView: View {
                     HStack {
                         Text("Output")
                             .font(.system(size: 13, weight: .semibold))
-                            .foregroundColor(.secondary)
+                            .foregroundColor(Color.secondary)
 
                         Image(systemName: "chevron.down")
                             .font(.system(size: 10))
-                            .foregroundColor(.secondary)
+                            .foregroundColor(Color.secondary)
 
                         Spacer()
                     }
 
                     Text(result)
                         .font(.system(size: 14))
-                        .foregroundColor(.primary)
+                        .foregroundColor(Color.S_0)
                         .multilineTextAlignment(.leading)
                 }
             }

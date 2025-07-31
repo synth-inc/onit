@@ -44,7 +44,7 @@ struct AccessibilityTab: View {
                         }
                         .padding(.vertical, 6)
                     }
-                    .background(Color(.blue))
+                    .background(Color.blue)
                     .clipShape(RoundedRectangle(cornerRadius: 6))
                 }
             }

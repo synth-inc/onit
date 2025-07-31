@@ -14,14 +14,14 @@ struct HistoryTitle: View {
         HStack {
             Text("History")
                 .appFont(.medium14)
-                .foregroundStyle(.FG)
+                .foregroundStyle(Color.S_0)
             Spacer()
             Button {
                 state?.showHistory = false
             } label: {
                 Image(.smallCross)
                     .renderingMode(.template)
-                    .foregroundStyle(.gray200)
+                    .foregroundStyle(Color.S_2)
                     .frame(width: 20, height: 20)
             }
             .buttonStyle(BorderlessButtonStyle())

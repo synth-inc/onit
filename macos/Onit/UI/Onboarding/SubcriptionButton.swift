@@ -33,18 +33,20 @@ struct SubscriptionButton: View {
                     .styleText(
                         size: 13,
                         weight: .regular,
-                        color: .red,
+                        color: Color.red500,
                         align: .center
                     )
             }
             
             HStack(alignment: .center, spacing: 6) {
                 Image(.rocket)
-                    .shadow(color: .white.opacity(0.7), radius: 10, x: 0, y: 0)
+                    .renderingMode(.template)
+                    .foregroundColor(Color.white)
+                    .shadow(color: Color.white.opacity(0.7), radius: 10, x: 0, y: 0)
                 
                 Text(text)
-                    .styleText(size: 16, weight: .semibold)
-                    .shadow(color: .white.opacity(0.7), radius: 10, x: 0, y: 0)
+                    .styleText(size: 16, weight: .semibold, color: Color.white)
+                    .shadow(color: Color.white.opacity(0.7), radius: 10, x: 0, y: 0)
             }
             .frame(maxWidth: .infinity, alignment: .center)
             .padding(.horizontal, 10)

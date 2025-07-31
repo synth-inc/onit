@@ -54,7 +54,7 @@ struct SetUpButtonStyle: ButtonStyle {
     private var backgroundColor: Color {
         switch variant {
         case .primary:
-            return .blue400
+            return Color.blue400
         case .default:
             return Color.T_8
         }

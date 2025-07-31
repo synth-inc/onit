@@ -55,7 +55,7 @@ struct CustomProviderRow: View {
                     showAlert = true
                 }) {
                     Image(systemName: "trash")
-                        .foregroundColor(.red)
+                        .foregroundColor(Color.red500)
                 }
                 .alert(isPresented: $showAlert) {
                     Alert(
@@ -72,7 +72,7 @@ struct CustomProviderRow: View {
             tokenField
             if let message = message {
                 Text(message)
-                    .foregroundColor(isErrorMessage ? .red : .gray200)
+                    .foregroundColor(isErrorMessage ? Color.red500 : Color.S_2)
             }
 
             if provider.isEnabled {
@@ -108,7 +108,7 @@ struct CustomProviderRow: View {
                 .textFieldStyle(.roundedBorder)
                 .frame(height: 22)
                 .font(.system(size: 13, weight: .regular))
-                .foregroundColor(.primary)  // Ensure placeholder text is not dimmed
+                .foregroundColor(Color.S_0)  // Ensure placeholder text is not dimmed
 
             Button {
                 loading = true
@@ -143,7 +143,7 @@ struct CustomProviderRow: View {
                 }
             }
             .disabled(loading)
-            .foregroundStyle(.white)
+            .foregroundStyle(Color.S_0)
             .buttonStyle(.borderedProminent)
             .frame(height: 22)
             .fontWeight(.regular)

@@ -32,8 +32,8 @@ struct GeneralTabAccountAlert: View {
                 .padding(.horizontal, 7)
                 .background(Color.T_9)
                 .cornerRadius(5)
-                .shadow(color: .black.opacity(0.05), radius: 0, x: 0, y: 0)
-                .shadow(color: .black.opacity(0.3), radius: 1.25, x: 0, y: 0.5)
+                .shadow(color: Color.black.opacity(0.05), radius: 0, x: 0, y: 0)
+                .shadow(color: Color.black.opacity(0.3), radius: 1.25, x: 0, y: 0.5)
             
             HStack(spacing: 8) {
                 cancelButton

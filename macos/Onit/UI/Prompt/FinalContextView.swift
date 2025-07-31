@@ -157,7 +157,7 @@ struct FinalContextView: View {
                                 iconSize: 16
                             )
                         Text("Final context used")
-                            .appFont(.medium14)
+                            .appFont(.medium13)
                         Image(.smallChevDown)
                             .renderingMode(.template)
                             .rotationEffect(isExpanded ? .degrees(180) : .degrees(0))
@@ -185,7 +185,7 @@ struct FinalContextView: View {
                         })
                             .background {
                                 RoundedRectangle(cornerRadius: 8)
-                                    .fill(.clear)
+                                    .fill(Color.clear)
                                     .strokeBorder(Color.genericBorder)
                             }
                     }
