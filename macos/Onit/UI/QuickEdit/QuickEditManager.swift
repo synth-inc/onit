@@ -31,7 +31,6 @@ class QuickEditManager: ObservableObject, CaretPositionDelegate {
     private let windowController = QuickEditWindowController()
     private let hintWindowController = QuickEditHintWindowController()
     private let caretPositionManager = CaretPositionManager.shared
-    private let accessibilityManager = AccessibilityNotificationsManager.shared
     private let highlightedTextManager = HighlightedTextManager.shared
     private var cancellables = Set<AnyCancellable>()
     private var currentHintPosition: CGPoint?

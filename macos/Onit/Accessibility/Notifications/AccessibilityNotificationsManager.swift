@@ -126,7 +126,7 @@ class AccessibilityNotificationsManager: ObservableObject {
                     if let element = unsafeElement {
                         self.handleSelectionChange(for: element)
                     } else {
-                        // wut
+                        HighlightedTextManager.shared.processSelectedText(nil)
                     }
                 }
             })
