@@ -27,9 +27,10 @@ struct GeneratedContentView: View {
     
     var configuration: LLMStreamConfiguration {
         let font = FontConfiguration(size: fontSize, lineHeight: lineHeight)
-        let color = ColorConfiguration(citationBackgroundColor: .gray600,
-                                       citationHoverBackgroundColor: .gray400,
-                                       citationTextColor: .gray100)
+        let color = ColorConfiguration(textColor: .S_0,
+                                       citationBackgroundColor: Color.S_6,
+                                       citationHoverBackgroundColor: Color.S_4,
+                                       citationTextColor: Color.S_1)
         let thought = ThoughtConfiguration(icon: Image(.lightBulb))
         
         return LLMStreamConfiguration(font: font, colors: color, thought: thought)

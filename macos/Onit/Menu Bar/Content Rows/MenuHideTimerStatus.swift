@@ -62,14 +62,14 @@ struct MenuHideTimerStatus: View {
         } leading: {
             HStack(spacing: 9) {
                 Circle()
-                    .fill(Color.orange)
+                    .fill(Color.orange500)
                     .frame(width: 5, height: 5)
                 Text(statusText)
             }
             .padding(.horizontal, 10)
         } trailing: {
             Text("Unhide")
-                .foregroundStyle(.gray200)
+                .foregroundStyle(Color.S_2)
                 .font(.system(size: 13))
                 .padding(.trailing, 10)
         }

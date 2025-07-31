@@ -33,15 +33,17 @@ struct HistoryRowView: View {
         Text("\(chat.responseCount)")
             .appFont(.medium13)
             .monospacedDigit()
-            .foregroundStyle(.gray200)
+            .foregroundStyle(Color.S_2)
     }
     
     var deleteButton: some View {
         HStack(alignment: .center) {
             Text(windowState?.deleteChatFailed == true ? "Delete failed" : "")
-                .foregroundColor(Color.red)
+                .foregroundColor(Color.red500)
             
             Image(systemName: "trash")
+                .renderingMode(.template)
+                .foregroundColor(Color.S_2)
                 .frame(width: 14, height: 14)
         }
         .frame(height: 34)

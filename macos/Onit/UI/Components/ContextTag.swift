@@ -29,10 +29,10 @@ struct ContextTag: View {
     
     init(
         text: String,
-        textColor: Color = .T_2,
-        hoverTextColor: Color = .white,
-        background: Color = .gray500,
-        hoverBackground: Color = .gray400,
+        textColor: Color = Color.T_2,
+        hoverTextColor: Color = Color.S_0,
+        background: Color = Color.T_8,
+        hoverBackground: Color = Color.S_4,
         hasHoverBorder: Bool = false,
         hasDottedBorder: Bool = false,
         maxWidth: CGFloat = 155,
@@ -114,7 +114,7 @@ struct ContextTag: View {
                         .styleText(
                             size: 12,
                             weight: .regular,
-                            color: .gray100
+                            color: Color.S_1
                         )
                         .truncateText()
                 }
@@ -148,7 +148,7 @@ struct ContextTag: View {
         .addAnimation(dependency: isHoveredBody)
         .addBorder(
             cornerRadius: 4,
-            stroke: hasHoverBorder && isHoveredBody ? .T_4 : borderColor ?? .clear,
+            stroke: hasHoverBorder && isHoveredBody ? Color.T_4 : borderColor ?? Color.clear,
             dotted: hasDottedBorder
         )
         .addButtonEffects(
@@ -182,7 +182,7 @@ extension ContextTag {
         } label: {
             Image(.cross)
                 .addIconStyles(
-                    foregroundColor: isHoveredRemove ? .white : .gray100,
+                    foregroundColor: isHoveredRemove ? Color.S_0 : Color.T_3,
                     iconSize: 9
                 )
                 .addAnimation(dependency: isHoveredRemove)

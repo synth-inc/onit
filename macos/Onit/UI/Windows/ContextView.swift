@@ -81,6 +81,7 @@ struct ContextView: View {
         }
         .frame(idealWidth: 569, minHeight: 370, maxHeight: 569)
         .fixedSize(horizontal: true, vertical: false)
+        .background(Color.baseBG)
         .sheet(isPresented: $showOCRDetails) {
             // There is a weird SwiftUI bug here. We need to get the OCR result in this closure.
             // It fails when we try to use the "ocrComparisonResult" variable.
@@ -216,7 +217,7 @@ struct ContextView: View {
         return SetUpDialog(
             title: errorTitle,
             icon: "warning",
-            titleColor: .red,
+            titleColor: Color.red500,
             buttonText: buttonText,
             buttonStyle: .default
         ) {

@@ -40,13 +40,13 @@ struct SettingsSystemPromptTable: View {
                     KeyboardShortcutView(shortcut: shortcut, characterWidth: 12, spacing: 3)
                         .font(.system(size: 13, weight: .light))
                 } else {
-                    Text("record").foregroundColor(.gray)
+                    Text("record").foregroundColor(Color.gray)
                 }
             }
             TableColumn("Applications") { prompt in
                 switch prompt.applications.count {
                 case 0:
-                    Text("Add default").foregroundColor(.gray)
+                    Text("Add default").foregroundColor(Color.gray)
                 case 1:
                     Text(prompt.applications.first?.deletingPathExtension().lastPathComponent ?? "")
                 default:

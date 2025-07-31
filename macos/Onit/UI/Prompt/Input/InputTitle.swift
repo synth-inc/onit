@@ -29,7 +29,7 @@ struct InputTitle: View {
             Spacer()
             InputButtons(inputExpanded: $inputExpanded, input: input, isEditing: isEditing)
         }
-        .foregroundStyle(.gray100)
+        .foregroundStyle(Color.S_1)
         .padding(.horizontal, 12)
         .padding(.vertical, 4)
     }

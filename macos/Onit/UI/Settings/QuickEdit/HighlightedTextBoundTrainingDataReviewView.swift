@@ -72,14 +72,14 @@ struct HighlightedTextBoundTrainingDataReviewView: View {
             HStack {
                 VStack(alignment: .leading, spacing: 4) {
                     Label("\(trainingDataManager.samplesCount) total samples", systemImage: "photo.stack")
-                        .foregroundColor(.secondary)
+                        .foregroundColor(Color.secondary)
                     
                     HStack(spacing: 16) {
                         Label("\(validatedCount) validated", systemImage: "checkmark.circle.fill")
-                            .foregroundColor(.green)
+                            .foregroundColor(Color.green)
                         
                         Label("\(unvalidatedCount) to review", systemImage: "circle")
-                            .foregroundColor(.orange)
+                            .foregroundColor(Color.orange500)
                     }
                     .font(.caption)
                 }
@@ -92,14 +92,14 @@ struct HighlightedTextBoundTrainingDataReviewView: View {
                             .scaleEffect(0.7)
                         Text("Capturing...")
                             .font(.caption)
-                            .foregroundColor(.secondary)
+                            .foregroundColor(Color.secondary)
                     }
                 }
             }
             
             Text("Review and edit bounding boxes for training data. Only unvalidated samples are shown. Click on an image to edit its bounding box.")
                 .font(.caption)
-                .foregroundColor(.secondary)
+                .foregroundColor(Color.secondary)
         }
     }
     
@@ -251,10 +251,10 @@ struct SampleRowView: View {
                             VStack {
                                 Image(systemName: "photo")
                                     .font(.system(size: 32))
-                                    .foregroundColor(.secondary)
+                                    .foregroundColor(Color.secondary)
                                 Text("Image not available")
                                     .font(.caption)
-                                    .foregroundColor(.secondary)
+                                    .foregroundColor(Color.secondary)
                             }
                         )
                 }
@@ -270,22 +270,22 @@ struct SampleRowView: View {
                 HStack {
                     Text(sample.appName)
                         .font(.headline)
-                        .foregroundColor(.primary)
+                        .foregroundColor(Color.S_0)
                     
                     Spacer()
                     
                     Text(DateFormatters.mediumWithTime.string(from: sample.createdAt))
                         .font(.caption)
-                        .foregroundColor(.secondary)
+                        .foregroundColor(Color.secondary)
                 }
                 
                 Text("Highlighted text:")
                     .font(.caption)
-                    .foregroundColor(.secondary)
+                    .foregroundColor(Color.secondary)
                 
                 Text(sample.selectedText)
                     .font(.body)
-                    .foregroundColor(.primary)
+                    .foregroundColor(Color.S_0)
                     .padding(8)
                     .background(Color(NSColor.textBackgroundColor))
                     .cornerRadius(6)

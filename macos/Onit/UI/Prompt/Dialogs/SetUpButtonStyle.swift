@@ -45,18 +45,18 @@ struct SetUpButtonStyle: ButtonStyle {
     private var foregroundColor: Color {
         switch variant {
         case .primary:
-            return .FG
+            return Color.S_0
         case .default:
-            return .FG
+            return Color.S_0
         }
     }
     
     private var backgroundColor: Color {
         switch variant {
         case .primary:
-            return .blue400
+            return Color.blue400
         case .default:
-            return .gray700
+            return Color.T_8
         }
     }
 }

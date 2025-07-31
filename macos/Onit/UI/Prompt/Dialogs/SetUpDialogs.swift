@@ -65,8 +65,8 @@ struct SetUpDialogs: View {
                     if state.setUpHeight >= scrollMaxHeight {
                         LinearGradient(
                             gradient: Gradient(stops: [
-                                .init(color: Color.black, location: 0),
-                                .init(color: Color.black.opacity(0), location: 1)
+                                .init(color: Color.T_7, location: 0),
+                                .init(color: Color.T_7.opacity(0), location: 1)
                             ]),
                             startPoint: .bottom,
                             endPoint: .top

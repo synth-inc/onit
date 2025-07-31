@@ -11,7 +11,7 @@ struct MenuButtonStyle: ButtonStyle {
     @State private var hovering = false
 
     var style: AnyShapeStyle {
-        hovering ? AnyShapeStyle(.quinary) : AnyShapeStyle(Color.clear)
+        hovering ? AnyShapeStyle(Color.T_8) : AnyShapeStyle(Color.clear)
     }
 
     func makeBody(configuration: Configuration) -> some View {

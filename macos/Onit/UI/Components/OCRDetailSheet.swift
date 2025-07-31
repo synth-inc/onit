@@ -50,11 +50,11 @@ struct OCRDetailSheet: View {
                         if result.appTitle != result.appName {
                             Text(result.appTitle)
                                 .font(.subheadline)
-                                .foregroundColor(.secondary)
+                                .foregroundColor(Color.secondary)
                         }
                         Text("\(result.matchPercentage)% accessibility match")
                             .font(.subheadline)
-                            .foregroundColor(result.matchPercentage < 50 ? .red : result.matchPercentage < 75 ? .yellow : .green)
+                            .foregroundColor(result.matchPercentage < 50 ? Color.red500 : result.matchPercentage < 75 ? Color.yellow : Color.green)
                     }
                     
                     Spacer()
@@ -141,14 +141,14 @@ struct OCRDetailSheet: View {
                         if !missingText.isEmpty {
                             Text("Text Missing from Accessibility:")
                                 .font(.system(size: 13, weight: .medium))
-                                .foregroundColor(.red)
+                                .foregroundColor(Color.red500)
                             ScrollView {
                                 Text(missingText)
                                     .font(.system(size: 11, design: .monospaced))
                                     .frame(maxWidth: .infinity, alignment: .leading)
                             }
                             .padding(8)
-                            .background(Color.red.opacity(0.1))
+                            .background(Color.red500.opacity(0.1))
                             .cornerRadius(4)
                             .frame(maxHeight: 120)
                         }
@@ -369,11 +369,11 @@ private struct OCRImageViewerSheet: View {
                     if result.appTitle != result.appName {
                         Text(result.appTitle)
                             .font(.subheadline)
-                            .foregroundColor(.secondary)
+                            .foregroundColor(Color.secondary)
                     }
                     Text("\(result.matchPercentage)% accessibility match")
                         .font(.subheadline)
-                        .foregroundColor(result.matchPercentage < 50 ? .red : result.matchPercentage < 75 ? .yellow : .green)
+                        .foregroundColor(result.matchPercentage < 50 ? Color.red500 : result.matchPercentage < 75 ? Color.yellow : Color.green)
                 }
                 
                 Spacer()

@@ -14,7 +14,7 @@ struct AboutTab: View {
                 Text(
                     "Version \(Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0.0") (Build \(Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "1"))"
                 )
-                .foregroundColor(.secondary)
+                .foregroundColor(Color.secondary)
             }
 
             HStack(spacing: 12) {

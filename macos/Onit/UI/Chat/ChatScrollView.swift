@@ -56,7 +56,7 @@ class ChatScrollView: NSScrollView {
         autohidesScrollers = true
         
         drawsBackground = false
-        backgroundColor = .clear
+        backgroundColor = NSColor.clear
         
         lastScrollPosition = 0
         

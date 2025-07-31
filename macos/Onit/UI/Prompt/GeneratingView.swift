@@ -49,9 +49,9 @@ struct GeneratingView: View {
     var text: some View {
         HStack(spacing: 4) {
             Text("Cancel")
-                .foregroundStyle(.gray200)
+                .foregroundStyle(Color.S_2)
             KeyboardShortcutView(shortcut: delete)
-                .foregroundStyle(.gray300)
+                .foregroundStyle(Color.S_3)
         }
         .appFont(.medium13)
     }

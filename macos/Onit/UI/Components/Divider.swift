@@ -9,7 +9,7 @@ import SwiftUI
 
 struct DividerHorizontal : View {
     var height: CGFloat = 1
-    var foregroundColor: Color = Color.gray700
+    var foregroundColor: Color = Color.genericBorder
 
     var body: some View {
         return Rectangle()

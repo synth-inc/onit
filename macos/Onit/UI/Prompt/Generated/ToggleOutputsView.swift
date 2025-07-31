@@ -20,7 +20,7 @@ struct ToggleOutputsView: View {
             text
             `right`
         }
-        .foregroundStyle(.gray300)
+        .foregroundStyle(Color.S_2)
     }
 
     var left: some View {
@@ -31,9 +31,10 @@ struct ToggleOutputsView: View {
                 .frame(width: 20, height: 20)
                 .overlay {
                     Image(.chevLeft)
+                        .renderingMode(.template)
                 }
         }
-        .foregroundStyle(prompt.canDecrementGeneration ? .FG : .gray300)
+        .foregroundStyle(prompt.canDecrementGeneration ? Color.S_0 : Color.S_2)
         .disabled(!prompt.canDecrementGeneration)
         .background {
             if isTyping {
@@ -61,9 +62,10 @@ struct ToggleOutputsView: View {
                 .frame(width: 20, height: 20)
                 .overlay {
                     Image(.chevRight)
+                        .renderingMode(.template)
                 }
         }
-        .foregroundStyle(prompt.canIncrementGeneration ? .FG : .gray300)
+        .foregroundStyle(prompt.canIncrementGeneration ? Color.S_0 : Color.S_2)
         .disabled(!prompt.canIncrementGeneration)
         .background {
             if isTyping {

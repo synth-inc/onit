@@ -38,7 +38,7 @@ struct QuickEditHintView: View {
                         Image(.dots)
                             .resizable()
                             .renderingMode(.template)
-                            .foregroundColor(.FG)
+                            .foregroundColor(Color.white)
                             .aspectRatio(contentMode: .fit)
                             .frame(width: Self.hintWidth, height: Self.hintWidth)
                     } else {
@@ -52,8 +52,8 @@ struct QuickEditHintView: View {
             .padding(.horizontal, Self.horizontalPadding)
         }
         .frame(height: height)
-        .background(.blue300)
-        .addBorder(cornerRadius: 8, inset: 0, stroke: .blue400)
+        .background(Color.blue300)
+        .addBorder(cornerRadius: 8, inset: 0, stroke: Color.blue400)
         .onHover { hovering in
             isHovered = hovering
         }

@@ -14,7 +14,7 @@ struct DynamicScrollView<Children: View>: View {
     
     init(
         maxHeight: CGFloat,
-        gradientColor: Color = .gray900,
+        gradientColor: Color = Color.clear,
         @ViewBuilder children: @escaping () -> Children
     ) {
         self.maxHeight = maxHeight

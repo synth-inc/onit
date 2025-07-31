@@ -15,7 +15,7 @@ struct DragModifier: ViewModifier {
         if dragging {
             Color.white.opacity(0.12)
         } else {
-            Color.BG
+            Color.clear
         }
     }
 

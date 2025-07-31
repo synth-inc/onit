@@ -16,9 +16,9 @@ struct WebSearchTab: View {
                 VStack(alignment: .leading, spacing: 16) {
                     Text("Configure web search providers to enhance your AI responses with real-time information from the internet.")
                         .font(.system(size: 13))
-                        .foregroundStyle(.gray200)
+                        .foregroundStyle(Color.S_2)
                     
-                    Divider()
+                    DividerHorizontal()
                     
                     tavilySection
                 }
@@ -53,7 +53,7 @@ struct WebSearchTab: View {
 
             Text("When enabled, web search will be available in local mode. Please note that your queries will be sent to the search provider's servers, and we cannot guarantee that your data won't be stored or logged by the provider.")
                 .font(.system(size: 12))
-                .foregroundStyle(.gray200)
+                .foregroundStyle(Color.S_2)
                 .fixedSize(horizontal: false, vertical: true)
         }
     }
@@ -69,7 +69,7 @@ struct WebSearchTab: View {
                 if isTavilyAPITokenValidated {
                     Text("Connected")
                         .font(.system(size: 12))
-                        .foregroundStyle(.green)
+                        .foregroundStyle(Color.green)
                         .padding(.horizontal, 8)
                         .padding(.vertical, 4)
                         .background(Color.green.opacity(0.2))
@@ -79,7 +79,7 @@ struct WebSearchTab: View {
             
             Text("Tavily is a powerful search API that provides real-time information from the web. Get your API key at [tavily.com](https://app.tavily.com).")
                 .font(.system(size: 13))
-                .foregroundStyle(.gray200)
+                .foregroundStyle(Color.S_2)
             
             VStack(alignment: .leading, spacing: 8) {
                 Text("API Key")
@@ -104,12 +104,12 @@ struct WebSearchTab: View {
                 if let error = validationError {
                     Text(error)
                         .font(.system(size: 12))
-                        .foregroundStyle(.red)
+                        .foregroundStyle(Color.red500)
                 }
             }
 
             if isTavilyAPITokenValidated {
-                Divider()
+                DividerHorizontal()
 
                 VStack(alignment: .leading, spacing: 8) {
                     HStack {
@@ -119,7 +119,7 @@ struct WebSearchTab: View {
 
                     Text("When enabled, Onit will use your Tavily token to perform searches instead of Onit credits. By default, Onit uses model provider search tools when available for optimal quality.")
                         .font(.system(size: 12))
-                        .foregroundStyle(.gray200)
+                        .foregroundStyle(Color.S_2)
                         .fixedSize(horizontal: false, vertical: true)
                 }
             }
