@@ -46,14 +46,10 @@ struct QuickEditResponseView: View {
         self.isEditableElement = isEditableElement
     }
     
-    private var textToDisplay: String {
-        guard let state = state else { return "" }
-        guard !prompt.responses.isEmpty else {
-            return state.streamedResponse
-        }
+    private var displayText: String {
+        guard let response = prompt.currentResponse else { return "" }
         
-        let response = prompt.sortedResponses[prompt.generationIndex]
-        return response.isPartial ? state.streamedResponse : response.text
+        return response.text
     }
     
     private var configuration: LLMStreamConfiguration {
@@ -110,7 +106,7 @@ extension QuickEditResponseView {
                 .frame(maxWidth: .infinity, alignment: .leading)
                 
             case .streaming, .done:
-                if textToDisplay.isEmpty && !(state?.isSearchingWeb[prompt.id] ?? false) {
+                if displayText.isEmpty && !(state?.isSearchingWeb[prompt.id] ?? false) {
                     HStack {
                         Spacer()
                         QLImage("loader_rotated-200")
@@ -169,7 +165,7 @@ extension QuickEditResponseView {
             ScrollView {
                 VStack(spacing: 0) {
                     LLMStreamView(
-                        text: textToDisplay,
+                        text: displayText,
                         configuration: configuration,
                         onUrlClicked: onUrlClicked,
                         onCodeAction: codeAction)
@@ -212,7 +208,7 @@ extension QuickEditResponseView {
             .onAppear {
                 scrollProxy = proxy
             }
-            .onChange(of: textToDisplay) { oldValue, newValue in
+            .onChange(of: displayText) { oldValue, newValue in
                 if newValue.count > oldValue.count &&
                     prompt.generationState == .streaming &&
                     !hasUserManuallyScrolled {

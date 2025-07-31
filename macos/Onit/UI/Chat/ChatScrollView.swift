@@ -245,18 +245,18 @@ class ChatScrollView: NSScrollView {
 struct ChatScrollViewRepresentable: NSViewRepresentable {
     @Binding var hasUserManuallyScrolled: Bool
     
-    let streamedResponse: String
+    let shouldStartAutoScroll: Bool
     let currentChat: Any?
     let content: AnyView
     
     init<Content: View>(
         hasUserManuallyScrolled: Binding<Bool>,
-        streamedResponse: String,
+        shouldStartAutoScroll: Bool,
         currentChat: Any?,
         @ViewBuilder content: () -> Content
     ) {
         self._hasUserManuallyScrolled = hasUserManuallyScrolled
-        self.streamedResponse = streamedResponse
+        self.shouldStartAutoScroll = shouldStartAutoScroll
         self.currentChat = currentChat
         self.content = AnyView(content())
     }
@@ -287,8 +287,6 @@ struct ChatScrollViewRepresentable: NSViewRepresentable {
     }
     
     func updateNSView(_ nsView: ChatScrollView, context: Self.Context) {
-        let shouldStartAutoScroll = !streamedResponse.isEmpty
-        
         if hasUserManuallyScrolled {
             nsView.stopAutoScrolling()
         } else if shouldStartAutoScroll {

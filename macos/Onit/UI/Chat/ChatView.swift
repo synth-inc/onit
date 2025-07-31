@@ -35,7 +35,13 @@ struct ChatView: View {
                 ZStack(alignment: .bottom) {
                     ChatScrollViewRepresentable(
                         hasUserManuallyScrolled: $hasUserManuallyScrolled,
-                        streamedResponse: state?.streamedResponse ?? "",
+                        shouldStartAutoScroll: {
+                            if let prompt = state?.generatingPrompt,
+                               let response = prompt.currentResponse {
+                                return response.isPartial && !response.text.isEmpty
+                            }
+                            return false
+                        }(),
                         currentChat: state?.currentChat
                     ) {
                         VStack(alignment: .leading, spacing: 0) {
