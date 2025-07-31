@@ -71,7 +71,7 @@ struct IconButton: View {
     var background: Color {
         if isHovered { return hoverBackground }
         else if isActive { return activeBackground }
-        else { return .clear }
+        else { return Color.clear }
     }
     
     var body: some View {
@@ -93,7 +93,7 @@ struct IconButton: View {
             }
             .addBorder(
                 cornerRadius: cornerRadius,
-                stroke: isActive ? activeBorderColor : .clear
+                stroke: isActive ? activeBorderColor : Color.clear
             )
             .addAnimation(dependency: isActive)
             .onChange(of: isHovered) { _, isHovering in

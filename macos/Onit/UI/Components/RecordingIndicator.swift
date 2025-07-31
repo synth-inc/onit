@@ -52,7 +52,7 @@ struct WaveformIndicator: View {
         .padding(.horizontal, 8)
         .background(
             RoundedRectangle(cornerRadius: 11)
-                .fill(Color.red.opacity(0.2))
+                .fill(Color.red500.opacity(0.2))
         )
         .onAppear {
             withAnimation(.linear(duration: animationDuration).repeatForever(autoreverses: false)) {
@@ -61,7 +61,7 @@ struct WaveformIndicator: View {
     }
     private func bar(for index: Int) -> some View {
         return RoundedRectangle(cornerRadius: 1)
-            .fill(Color.red)
+            .fill(Color.red500)
             .frame(width: 2, height: barHeight(for: index))
             .animation(
                 .easeInOut(duration: 0.1), // Quick response to audio changes

@@ -10,8 +10,8 @@ import SwiftUI
 // MARK: - General View Styles
 
 struct GradientBorder {
-    var colorOne: Color = Color.white
-    var colorTwo: Color = Color.white
+    var colorOne: Color = Color.genericBorder
+    var colorTwo: Color = Color.genericBorder
 }
 
 struct DefaultBorderValues {
@@ -107,7 +107,7 @@ extension View {
 
 extension View {
     func addButtonEffects(
-        background: Color = .clear,
+        background: Color = Color.clear,
         hoverBackground: Color = Color.T_8,
         cornerRadius: CGFloat = 8,
         disabled: Bool = false,

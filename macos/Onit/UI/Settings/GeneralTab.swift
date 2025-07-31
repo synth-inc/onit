@@ -139,7 +139,7 @@ struct GeneralTab: View {
                                 .font(.system(size: 11))
                             Text("Fixed position")
                                 .font(.system(size: 9))
-                                .foregroundStyle(.secondary)
+                                .foregroundStyle(Color.secondary)
                         }
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 8)
@@ -164,7 +164,7 @@ struct GeneralTab: View {
                                 .font(.system(size: 11))
                             Text("Attaches to apps")
                                 .font(.system(size: 9))
-                                .foregroundStyle(.secondary)
+                                .foregroundStyle(Color.secondary)
                         }
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 8)

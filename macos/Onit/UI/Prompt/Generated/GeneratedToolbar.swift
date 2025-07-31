@@ -84,15 +84,15 @@ struct GeneratedToolbar: View {
 //                    .padding(.vertical, 5)
 //                    .background {
 //                        RoundedRectangle(cornerRadius: 7)
-//                            .fill(.blue350)
+//                            .fill(Color.blue350)
 //                    }
 //            }
 //            .padding(4)
 //            .background {
 //                RoundedRectangle(cornerRadius: 10)
-//                    .fill(mode == .local ? Color.lime400 : .blue400)
+//                    .fill(mode == .local ? Color.lime400 : Color.blue400)
 //            }
-//            .foregroundStyle(.FG)
+//            .foregroundStyle(Color.S_0)
 //        }
 //        .keyboardShortcut(insertShortcut)
 //        .buttonStyle(.plain)

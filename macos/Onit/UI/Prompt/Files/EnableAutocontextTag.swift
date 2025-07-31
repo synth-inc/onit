@@ -19,7 +19,7 @@ struct EnableAutocontextTag: View {
                     .frame(width: 12, height: 12)
                 Text("Enable AutoContext")
                     .appFont(.medium13)
-                    .foregroundStyle(.white)
+                    .foregroundStyle(Color.S_0)
             }
             .padding(.vertical, 3)
             Button {
@@ -29,6 +29,8 @@ struct EnableAutocontextTag: View {
                     .frame(width: 16, height: 16)
                     .overlay {
                         Image(.smallCross)
+                            .renderingMode(.template)
+                            .foregroundColor(Color.S_0)
                     }
             }
         }

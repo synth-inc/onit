@@ -324,5 +324,5 @@ extension QuickEditResponseView {
 
 #Preview {
     QuickEditResponseView(prompt: Prompt.sample, isEditableElement: true)
-        .background(.black)
+        .background(Color.black)
 }

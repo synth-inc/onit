@@ -122,7 +122,7 @@ struct ModelSelectionView: View {
     var local: some View {
         MenuSection(
             titleIcon: availableLocalModels.isEmpty ? .warningSettings : nil,
-            titleIconColor: .orange,
+            titleIconColor: Color.orange500,
             title: "Local",
             showTopBorder: true,
             maxScrollHeight: setModelListHeight(
@@ -175,7 +175,7 @@ struct ModelSelectionView: View {
 //            HStack {
 //                Text("Custom models")
 //                    .appFont(.medium13)
-//                    .foregroundStyle(.white.opacity(0.6))
+//                    .foregroundStyle(Color.S_0.opacity(0.6))
 //                Spacer()
 //                if appState.remoteNeedsSetup
 //                    || (!appState.remoteNeedsSetup && availableRemoteModels.isEmpty)

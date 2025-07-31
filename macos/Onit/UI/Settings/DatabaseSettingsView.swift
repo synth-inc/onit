@@ -69,7 +69,7 @@ struct DatabaseSettingsView: View {
                 
                 HStack {
                     Circle()
-                        .fill(info.secureExists ? Color.green : Color.orange)
+                        .fill(info.secureExists ? Color.green : Color.orange500)
                         .frame(width: 8, height: 8)
                     Text(info.secureExists ? "Database exists" : "Database not found")
                         .font(.caption)

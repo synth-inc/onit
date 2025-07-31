@@ -49,7 +49,7 @@ struct SystemPromptTab: View {
                     } label: {
                         Text("Add new")
                     }
-                    .foregroundStyle(.white)
+                    .foregroundStyle(Color.S_0)
                     .buttonStyle(.borderedProminent)
                     .frame(height: 22)
                     .fontWeight(.regular)

@@ -83,7 +83,7 @@ struct DebugModeTab: View {
                         
                         HStack {
                             Image(systemName: "magnifyingglass")
-                                .foregroundColor(.secondary)
+                                .foregroundColor(Color.secondary)
                                 .font(.system(size: 12))
                             
                             TextField("Search by app name...", text: $searchText)
@@ -301,11 +301,11 @@ struct FailingAppRow: View {
     
     private var failureColor: Color {
         if appSummary.failurePercentage < 30 {
-            return .green
+            return Color.green
         } else if appSummary.failurePercentage <= 50 {
-            return .yellow
+            return Color.yellow
         } else {
-            return .red
+            return Color.red500
         }
     }
     
@@ -371,19 +371,19 @@ struct OCRComparisonResultRow: View {
                     if result.appTitle != result.appName {
                         Text(result.appTitle.count > 50 ? result.appTitle.prefix(50) + "..." : result.appTitle)
                             .font(.system(size: 11))
-                            .foregroundColor(.secondary)
+                            .foregroundColor(Color.secondary)
                             .lineLimit(1)
                     }
                     Text("\(result.matchPercentage)% match")
                         .font(.system(size: 11))
-                        .foregroundColor(result.matchPercentage < 70 ? .red : .secondary)
+                        .foregroundColor(result.matchPercentage < 70 ? Color.red500 : Color.secondary)
                 }
                 
                 Spacer()
                 
                 Text(DateFormatter.shortDateTime.string(from: result.timestamp))
                     .font(.system(size: 11))
-                    .foregroundColor(.secondary)
+                    .foregroundColor(Color.secondary)
                 
                 Button(isExpanded ? "Collapse" : "Details") {
                     withAnimation(.easeInOut(duration: 0.2)) {
@@ -392,13 +392,13 @@ struct OCRComparisonResultRow: View {
                 }
                 .buttonStyle(.plain)
                 .font(.system(size: 11))
-                .foregroundColor(.blue)
+                .foregroundColor(Color.blue)
                 
                 Button(role: .destructive) {
                     debugManager.removeOCRComparisonResult(result)
                 } label: {
                     Image(systemName: "trash")
-                        .foregroundColor(.red.opacity(0.8))
+                        .foregroundColor(Color.red500.opacity(0.8))
                         .font(.system(size: 11))
                 }
                 .buttonStyle(.plain)
@@ -454,14 +454,14 @@ struct OCRComparisonResultRow: View {
                         if !missingText.isEmpty {
                             Text("Text Missing from Accessibility:")
                                 .font(.system(size: 11, weight: .medium))
-                                .foregroundColor(.red)
+                                .foregroundColor(Color.red500)
                             ScrollView {
                                 Text(missingText)
                                     .font(.system(size: 10, design: .monospaced))
                                     .frame(maxWidth: .infinity, alignment: .leading)
                             }
                             .padding(8)
-                            .background(Color.red.opacity(0.1))
+                            .background(Color.red500.opacity(0.1))
                             .cornerRadius(4)
                             .frame(maxHeight: 100)
                         }
@@ -475,7 +475,7 @@ struct OCRComparisonResultRow: View {
                                     }
                                     .buttonStyle(.plain)
                                     .font(.system(size: 11))
-                                    .foregroundColor(.blue)
+                                    .foregroundColor(Color.blue)
                                     
                                     Button("Export OCR Text →") {
                                         let ocrText = result.ocrObservations.map(\.text).joined(separator: "\n")
@@ -483,14 +483,14 @@ struct OCRComparisonResultRow: View {
                                     }
                                     .buttonStyle(.plain)
                                     .font(.system(size: 11))
-                                    .foregroundColor(.blue)
+                                    .foregroundColor(Color.blue)
                                     
                                     Button("Export Comparison →") {
                                         exportComparison()
                                     }
                                     .buttonStyle(.plain)
                                     .font(.system(size: 11))
-                                    .foregroundColor(.blue)
+                                    .foregroundColor(Color.blue)
                                     
                                     Button("Save Screenshot →") {
                                         if let screenshot = result.screenshot {
@@ -499,7 +499,7 @@ struct OCRComparisonResultRow: View {
                                     }
                                     .buttonStyle(.plain)
                                     .font(.system(size: 11))
-                                    .foregroundColor(.blue)
+                                    .foregroundColor(Color.blue)
                                     
                                     Button("Save OCR Debug Screenshot →") {
                                         if let screenshot = result.debugScreenshot {
@@ -508,7 +508,7 @@ struct OCRComparisonResultRow: View {
                                     }
                                     .buttonStyle(.plain)
                                     .font(.system(size: 11))
-                                    .foregroundColor(.blue)
+                                    .foregroundColor(Color.blue)
                                     
                                     Button("Save AX Debug Screenshot →") {
                                         if let screenshot = result.debugAccessibilityScreenshot {
@@ -517,7 +517,7 @@ struct OCRComparisonResultRow: View {
                                     }
                                     .buttonStyle(.plain)
                                     .font(.system(size: 11))
-                                    .foregroundColor(.blue)
+                                    .foregroundColor(Color.blue)
                                 }
                                 Spacer()
                             }
@@ -636,11 +636,11 @@ struct ImageViewerSheet: View {
                     if result.appTitle != result.appName {
                         Text(result.appTitle)
                             .font(.subheadline)
-                            .foregroundColor(.secondary)
+                            .foregroundColor(Color.secondary)
                     }
                     Text("\(result.matchPercentage)% accessibility match")
                         .font(.subheadline)
-                        .foregroundColor(result.matchPercentage < 70 ? .red : .green)
+                        .foregroundColor(result.matchPercentage < 70 ? Color.red500 : Color.green)
                 }
                 
                 Spacer()

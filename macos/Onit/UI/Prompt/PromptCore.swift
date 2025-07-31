@@ -56,13 +56,13 @@ struct PromptCore: View {
     )
     
     private var remoteBorder = GradientBorder(
-        colorOne: Color(hex: "#6D6AFD") ?? Color.S_5,
-        colorTwo: Color(hex: "#B3ADDA") ?? Color.S_5
+        colorOne: Color.borderRemoteModel1,
+        colorTwo: Color.borderRemoteModel2
     )
     
     private var localBorder = GradientBorder(
-        colorOne: Color(hex: "#7ECD8C") ?? Color.S_5,
-        colorTwo: Color(hex: "#4AA4BF") ?? Color.S_5
+        colorOne: Color.borderLocalModel1,
+        colorTwo: Color.borderLocalModel2
     )
     
     private var text: String {
@@ -181,7 +181,7 @@ extension PromptCore {
                     .styleText(
                         size: 13,
                         weight: .regular,
-                        color: .red
+                        color: Color.red500
                     )
             }
             

@@ -27,10 +27,13 @@ struct ChatSystemPromptView: View {
                 }
             } label: {
                 HStack(alignment: .center, spacing: 6) {
-                    Image(.chatSettings)
-                        .renderingMode(.template)
+                    Image(.info)
+                        .addIconStyles(
+                            foregroundColor: Color.S_2,
+                            iconSize: 13
+                        )
                     Text(systemPrompt.name)
-                        .appFont(.medium14)
+                        .styleText(size: 12, weight: .semibold, color: Color.S_2)
                         .lineLimit(1)
                     Image(.smallChevDown)
                         .renderingMode(.template)
@@ -38,7 +41,7 @@ struct ChatSystemPromptView: View {
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(.vertical, 0)
-                .foregroundStyle(.blue300)
+                .foregroundStyle(Color.S_2)
             }
             .buttonStyle(DarkerButtonStyle())
             
@@ -75,7 +78,7 @@ struct ChatSystemPromptView: View {
                     HStack(alignment: .top, spacing: 4) {
                         Image(systemName: "info.circle")
                             .frame(width: 16, height: 16)
-                            .foregroundStyle(.white.opacity(0.5))
+                            .foregroundStyle(Color.white.opacity(0.5))
                         
                         VStack(alignment: .leading, spacing: 4) {
                             Text(infoFirstLine)

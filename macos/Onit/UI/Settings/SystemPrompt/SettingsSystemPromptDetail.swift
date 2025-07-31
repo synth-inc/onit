@@ -52,7 +52,7 @@ struct SettingsSystemPromptDetail: View {
                                 .padding(.vertical, 4)
                                 .background {
                                     RoundedRectangle(cornerRadius: 5)
-                                        .stroke(.gray300)
+                                        .stroke(Color.S_3)
                                 }
                             }
                         }
@@ -71,7 +71,7 @@ struct SettingsSystemPromptDetail: View {
                                     .padding(.vertical, 4)
                                     .background {
                                         RoundedRectangle(cornerRadius: 5)
-                                            .stroke(.gray300)
+                                            .stroke(Color.S_3)
                                     }
                             }
                         }

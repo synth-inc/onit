@@ -18,7 +18,7 @@ struct ToolbarRight: View {
     @Default(.footerNotifications) var footerNotifications
 
     var body: some View {
-        HStack(alignment: .center, spacing: 6) {
+        HStack(alignment: .center, spacing: 12) {
             discord
             localMode
             history
@@ -29,7 +29,6 @@ struct ToolbarRight: View {
             }
         }
         .padding(.trailing, 6)
-        .foregroundStyle(.gray200)
         .padding(.horizontal, 0)
         .background { escListener }
     }
@@ -53,8 +52,8 @@ struct ToolbarRight: View {
             iconSize: 22,
             isActive: mode == .local,
             activeColor: Color.lime400,
-            activeBackground: .clear,
-            activeBorderColor: .clear,
+            activeBackground: Color.clear,
+            activeBorderColor: Color.clear,
             tooltipPrompt: "Local Mode",
             tooltipShortcut: .keyboardShortcuts(.toggleLocalMode)
         ) {
@@ -125,8 +124,8 @@ struct ToolbarRight: View {
         IconButton(
             icon: .lightning,
             iconSize: 21,
-            inactiveColor: .blue300,
-            hoverBackground: .blue300.opacity(0.2),
+            inactiveColor: Color.blue300,
+            hoverBackground: Color.blue300.opacity(0.2),
             tooltipPrompt: "Install Update"
         ) {
             appState.checkForAvailableUpdateWithDownload()

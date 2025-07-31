@@ -233,8 +233,8 @@ extension FileRow {
                     if let trackedWindow = trackedWindow {
                         ContextTag(
                             text: WindowHelpers.getWindowName(window: trackedWindow.element),
-                            background: .clear,
-                            hoverBackground: .clear,
+                            background: Color.clear,
+                            hoverBackground: Color.clear,
                             isLoading: true,
                             iconView: LoaderPulse(),
                             removeAction: {

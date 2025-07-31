@@ -23,7 +23,7 @@ struct OnboardingSkipAccessibility: View {
             header
             
             Text("Onit has been designed to work side-by-side with accessibility permission and relies on it for a lot of its features.")
-                .styleText(size: 13, color: .gray100)
+                .styleText(size: 13, color: Color.S_1)
                 .padding(0)
             HStack {
                 Spacer()
@@ -44,7 +44,7 @@ struct OnboardingSkipAccessibility: View {
         }
         .frame(maxWidth: .infinity)
         .padding(16)
-        .background(.gray900)
+        .background(Color.elevatedBG)
         .addBorder()
         .padding(.bottom, 27)
     }
@@ -66,7 +66,7 @@ extension OnboardingSkipAccessibility {
                     showSkipConfirmation.wrappedValue = false
                 } label: {
                     Image(.smallCross).addIconStyles(
-                        foregroundColor: isHoveringClose ? .white : .gray200
+                        foregroundColor: isHoveringClose ? Color.S_0 : Color.S_2
                     )
                 }
                 .buttonStyle(PlainButtonStyle())

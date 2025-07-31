@@ -17,7 +17,7 @@ struct StreamingToggle: View {
                 Text("Stream responses")
                     .font(.system(size: 12))
                     .fontWeight(.regular)
-                    .foregroundStyle(.primary.opacity(0.65))
+                    .foregroundStyle(Color.S_0.opacity(0.65))
             }
             
             Button(action: {

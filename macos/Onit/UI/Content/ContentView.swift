@@ -76,7 +76,6 @@ struct ContentView: View {
                     }
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .background(Color.black)
                 .onAppear {
                     if appState.account == nil {
                         authFlowStatus = .showSignUp

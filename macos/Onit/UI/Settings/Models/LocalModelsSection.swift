@@ -85,7 +85,7 @@ struct LocalModelsSection: View {
 
             HStack {
                 Text("Endpoint URL:")
-                    .foregroundStyle(.primary.opacity(0.65))
+                    .foregroundStyle(Color.S_0.opacity(0.65))
                     .font(.system(size: 12))
                     .fontWeight(.regular)
                 TextField("", text: $localEndpointString)
@@ -364,7 +364,7 @@ struct LocalModelsSection: View {
                  to use Onit with local models. Models running locally on Ollama will be available here
                 """
             ))
-            .foregroundStyle(.primary.opacity(0.65))
+            .foregroundStyle(Color.S_0.opacity(0.65))
             .font(.system(size: 12))
             .fontWeight(.regular)
     }

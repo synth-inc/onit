@@ -61,7 +61,7 @@ struct PaperclipButton: View {
                         .styleText(
                             size: 13,
                             weight: .medium,
-                            color: .gray200
+                            color: Color.S_2
                         )
                 }
             }

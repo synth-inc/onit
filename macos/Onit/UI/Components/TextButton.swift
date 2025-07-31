@@ -55,7 +55,7 @@ struct TextButton<Child: View>: View {
         horizontalPadding: CGFloat = 8,
         cornerRadius: CGFloat = 8,
 
-        background: Color = .clear,
+        background: Color = Color.clear,
         hoverBackground: Color = Color.T_8,
         fontSize: CGFloat = 14,
         fontWeight: Font.Weight = Font.Weight.medium,
@@ -114,7 +114,7 @@ struct TextButton<Child: View>: View {
             if let icon = icon {
                 Image(icon)
                     .addIconStyles(
-                        foregroundColor: selected ? .blue300 : isHovered ? hoverIconColor : iconColor,
+                        foregroundColor: selected ? Color.blue300 : isHovered ? hoverIconColor : iconColor,
                         iconSize: iconSize
                     )
             }
@@ -154,8 +154,8 @@ struct TextButton<Child: View>: View {
             )
         }
         .addButtonEffects(
-            background: disabled ? .clear : background,
-            hoverBackground: disabled ? .clear : hoverBackground,
+            background: disabled ? Color.clear : background,
+            hoverBackground: disabled ? Color.clear : hoverBackground,
             cornerRadius: cornerRadius,
             disabled: disabled,
             allowsHitTesting: !selected,
