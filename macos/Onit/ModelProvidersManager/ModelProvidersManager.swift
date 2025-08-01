@@ -12,6 +12,8 @@ import Foundation
 @MainActor
 @Observable
 class ModelProvidersManager {
+    private let authManager = AuthManager.shared
+    
     // MARK: - Singleton
     
     static let shared = ModelProvidersManager()
@@ -130,18 +132,46 @@ class ModelProvidersManager {
     var userHasRemoteAPITokens: Bool {
         let validCustomProviders = availableCustomProviders.filter(\.isTokenValidated)
         
-        return hasValidRemoteToken(provider: .openAI) ||
-            hasValidRemoteToken(provider: .anthropic) ||
-            hasValidRemoteToken(provider: .xAI) ||
-            hasValidRemoteToken(provider: .googleAI) ||
-            hasValidRemoteToken(provider: .deepSeek) ||
-            hasValidRemoteToken(provider: .perplexity) ||
+        return getHasValidRemoteProviderToken(provider: .openAI) ||
+            getHasValidRemoteProviderToken(provider: .anthropic) ||
+            getHasValidRemoteProviderToken(provider: .xAI) ||
+            getHasValidRemoteProviderToken(provider: .googleAI) ||
+            getHasValidRemoteProviderToken(provider: .deepSeek) ||
+            getHasValidRemoteProviderToken(provider: .perplexity) ||
             !validCustomProviders.isEmpty
+    }
+    
+    // MARK: - Private Functions
+    
+    private func getCustomRemoteProvider(_ customProviderName: String?) -> CustomProvider? {
+        guard let name = customProviderName,
+              let customProvider = availableCustomProviders.first(where: { $0.name == name })
+        else {
+            return nil
+        }
+        
+        return customProvider
+    }
+    
+    private func getIsCustomRemoteProviderInUse(_ customProviderName: String?) -> Bool {
+        guard let customProvider = self.getCustomRemoteProvider(customProviderName) else {
+            return false
+        }
+        
+        return customProvider.isEnabled
+    }
+    
+    private func getHasValidCustomRemoteProviderToken(_ customProviderName: String?) -> Bool {
+        guard let customProvider = self.getCustomRemoteProvider(customProviderName) else {
+            return false
+        }
+        
+        return !customProvider.token.isEmpty && customProvider.isTokenValidated
     }
     
     // MARK: - Public Functions
     
-    func getIsRemoteProviderInUse(_ provider: AIModel.ModelProvider) -> Bool  {
+    func getIsRemoteProviderInUse(provider: AIModel.ModelProvider, customProviderName: String? = nil) -> Bool  {
         switch provider {
         case .openAI:
             return useOpenAI
@@ -156,29 +186,11 @@ class ModelProvidersManager {
         case .perplexity:
             return usePerplexity
         case .custom:
-            return false
+            return self.getIsCustomRemoteProviderInUse(customProviderName)
         }
     }
     
-    func getCustomRemoteProvider(name: String?) -> CustomProvider? {
-        guard let name = name,
-              let customProvider = availableCustomProviders.first(where: { $0.name == name })
-        else {
-            return nil
-        }
-        
-        return customProvider
-    }
-    
-    func getIsCustomRemoteProviderInUse(_ customProviderName: String?) -> Bool {
-        guard let customProvider = getCustomRemoteProvider(name: customProviderName) else {
-            return false
-        }
-        
-        return customProvider.isEnabled
-    }
-    
-    func hasValidRemoteToken(provider: AIModel.ModelProvider) -> Bool {
+    func getHasValidRemoteProviderToken(provider: AIModel.ModelProvider, customProviderName: String? = nil) -> Bool {
         switch provider {
         case .openAI:
             guard let token = openAIToken else { return false }
@@ -199,15 +211,18 @@ class ModelProvidersManager {
             guard let token = perplexityToken else { return false }
             return !token.isEmpty && isPerplexityTokenValidated
         case .custom:
-            return false /// When checking for valid tokens on custom providers, use `hasValidCustomToken()` below.
+            return self.getHasValidCustomRemoteProviderToken(customProviderName)
         }
     }
     
-    func hasValidCustomToken(_ customProviderName: String?) -> Bool {
-        guard let customProvider = getCustomRemoteProvider(name: customProviderName) else {
-            return false
-        }
+    func getCanAccessStandardRemoteProvider(_ provider: AIModel.ModelProvider) -> Bool {
+        let isStandardRemoteProviderInUse = getIsRemoteProviderInUse(provider: provider)
         
-        return !customProvider.token.isEmpty && customProvider.isTokenValidated
+        if authManager.userLoggedIn {
+            return isStandardRemoteProviderInUse
+        } else {
+            let hasValidStandardRemoteToken = getHasValidRemoteProviderToken(provider: provider)
+            return hasValidStandardRemoteToken && isStandardRemoteProviderInUse
+        }
     }
 }

@@ -88,7 +88,7 @@ extension RemoteModelButton {
                    let quota = chatUsageResponse?.quota
                 {
                     let hitPlanLimit = usage >= quota
-                    let providerApiKeyExists = modelProvidersManager.hasValidRemoteToken(provider: remoteModel.provider)
+                    let providerApiKeyExists = modelProvidersManager.getHasValidRemoteProviderToken(provider: remoteModel.provider)
                     
                     if hitPlanLimit && !providerApiKeyExists {
                         planLimitReached = true

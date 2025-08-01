@@ -226,7 +226,7 @@ class AppState: NSObject, SPUUpdaterDelegate {
         if currentModel.provider == .custom {
             return true
         } else {
-            return modelProvidersManager.hasValidRemoteToken(provider: currentModel.provider)
+            return modelProvidersManager.getHasValidRemoteProviderToken(provider: currentModel.provider)
         }
     }
     
@@ -319,34 +319,27 @@ class AppState: NSObject, SPUUpdaterDelegate {
             Defaults[.visibleModelIds].contains($0.uniqueId)
         }
         
-        let cannotAccessOpenAI = !authManager.userLoggedIn && !modelProvidersManager.hasValidRemoteToken(provider: .openAI)
-        let cannotAccessAnthropic = !authManager.userLoggedIn && !modelProvidersManager.hasValidRemoteToken(provider: .anthropic)
-        let cannotAccessXAI = !authManager.userLoggedIn && !modelProvidersManager.hasValidRemoteToken(provider: .xAI)
-        let cannotAccessGoogleAI = !authManager.userLoggedIn && !modelProvidersManager.hasValidRemoteToken(provider: .googleAI)
-        let cannotAccessDeepSeek = !authManager.userLoggedIn && !modelProvidersManager.hasValidRemoteToken(provider: .deepSeek)
-        let cannotAccessPerplexity = !authManager.userLoggedIn && !modelProvidersManager.hasValidRemoteToken(provider: .perplexity)
-        
-        if cannotAccessOpenAI || !modelProvidersManager.useOpenAI {
+        if !modelProvidersManager.getCanAccessStandardRemoteProvider(.openAI) {
             models = models.filter { $0.provider != .openAI }
         }
         
-        if cannotAccessAnthropic || !modelProvidersManager.useAnthropic {
+        if !modelProvidersManager.getCanAccessStandardRemoteProvider(.anthropic) {
             models = models.filter { $0.provider != .anthropic }
         }
         
-        if cannotAccessXAI || !modelProvidersManager.useXAI {
+        if !modelProvidersManager.getCanAccessStandardRemoteProvider(.xAI) {
             models = models.filter { $0.provider != .xAI }
         }
         
-        if cannotAccessGoogleAI || !modelProvidersManager.useGoogleAI {
+        if !modelProvidersManager.getCanAccessStandardRemoteProvider(.googleAI) {
             models = models.filter { $0.provider != .googleAI }
         }
         
-        if cannotAccessDeepSeek || !modelProvidersManager.useDeepSeek {
+        if !modelProvidersManager.getCanAccessStandardRemoteProvider(.deepSeek) {
             models = models.filter { $0.provider != .deepSeek }
         }
         
-        if cannotAccessPerplexity || !modelProvidersManager.usePerplexity {
+        if !modelProvidersManager.getCanAccessStandardRemoteProvider(.perplexity) {
             models = models.filter { $0.provider != .perplexity }
         }
 
@@ -377,11 +370,12 @@ class AppState: NSObject, SPUUpdaterDelegate {
             return
         } else {
             if let currentRemoteModel = Defaults[.remoteModel] {
-                let isCurrentProviderInUse =
-                    modelProvidersManager.getIsRemoteProviderInUse(currentRemoteModel.provider) ||
-                    modelProvidersManager.getIsCustomRemoteProviderInUse(currentRemoteModel.customProviderName)
+                let isCurrentRemoteProviderInUse = modelProvidersManager.getIsRemoteProviderInUse(
+                    provider: currentRemoteModel.provider,
+                    customProviderName: currentRemoteModel.customProviderName
+                )
                 
-                if !isCurrentProviderInUse || !listedModels.contains(currentRemoteModel) {
+                if !isCurrentRemoteProviderInUse || !listedModels.contains(currentRemoteModel) {
                     Defaults[.remoteModel] = listedModels.first
                 }
             } else {
