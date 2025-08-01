@@ -137,47 +137,5 @@ struct AIModel: Codable, Identifiable, Hashable, Defaults.Serializable {
                 return URL(string: "about:blank")!
             }
         }
-        
-        static func hasValidRemoteToken(provider: Self) -> Bool {
-            switch provider {
-            case .openAI:
-                guard let token = Defaults[.openAIToken] else { return false }
-                return !token.isEmpty && Defaults[.isOpenAITokenValidated]
-            case .anthropic:
-                guard let token = Defaults[.anthropicToken] else { return false }
-                return !token.isEmpty && Defaults[.isAnthropicTokenValidated]
-            case .xAI:
-                guard let token = Defaults[.xAIToken] else { return false }
-                return !token.isEmpty && Defaults[.isXAITokenValidated]
-            case .googleAI:
-                guard let token = Defaults[.googleAIToken] else { return false }
-                return !token.isEmpty && Defaults[.isGoogleAITokenValidated]
-            case .deepSeek:
-                guard let token = Defaults[.deepSeekToken] else { return false }
-                return !token.isEmpty && Defaults[.isDeepSeekTokenValidated]
-            case .perplexity:
-                guard let token = Defaults[.perplexityToken] else { return false }
-                return !token.isEmpty && Defaults[.isPerplexityTokenValidated]
-            case .custom:
-                return false /// When checking for valid tokens on custom providers, use `hasValidCustomToken()` below.
-            }
-        }
-        
-        static func hasValidCustomToken(name: String) -> Bool {
-            if let customProvider = Defaults[.availableCustomProviders].first(where: { $0.name == name }) {
-                return !customProvider.token.isEmpty && customProvider.isTokenValidated
-            } else {
-                return false
-            }
-        }
-        
-        static var userHasRemoteAPITokens: Bool {
-            Self.hasValidRemoteToken(provider: .openAI) ||
-            Self.hasValidRemoteToken(provider: .anthropic) ||
-            Self.hasValidRemoteToken(provider: .xAI) ||
-            Self.hasValidRemoteToken(provider: .googleAI) ||
-            Self.hasValidRemoteToken(provider: .deepSeek) ||
-            Self.hasValidRemoteToken(provider: .perplexity)
-        }
     }
 }

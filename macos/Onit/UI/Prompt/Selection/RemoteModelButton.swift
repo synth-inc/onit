@@ -10,6 +10,8 @@ import SwiftUI
 struct RemoteModelButton: View {
     @Environment(\.appState) var appState
     
+    @ObservedObject private var authManager = AuthManager.shared
+    
     private let modelSelectionViewOpen: Binding<Bool>
     private let selectedModel: Binding<SelectedModel?>
     private let remoteModel: AIModel
@@ -23,6 +25,8 @@ struct RemoteModelButton: View {
         self.selectedModel = selectedModel
         self.remoteModel = remoteModel
     }
+    
+    @State private var modelProvidersManager = ModelProvidersManager.shared
     
     @State var planLimitReached: Bool = false
     
@@ -76,9 +80,7 @@ extension RemoteModelButton {
     
     private func checkPlanLimitReached() async {
         do {
-            let userLoggedIn = appState.account != nil
-            
-            if userLoggedIn {
+            if authManager.userLoggedIn {
                 let client = FetchingClient()
                 let chatUsageResponse = try await client.getChatUsage()
                 
@@ -86,7 +88,7 @@ extension RemoteModelButton {
                    let quota = chatUsageResponse?.quota
                 {
                     let hitPlanLimit = usage >= quota
-                    let providerApiKeyExists = AIModel.ModelProvider.hasValidRemoteToken(provider: remoteModel.provider)
+                    let providerApiKeyExists = modelProvidersManager.getHasValidRemoteProviderToken(provider: remoteModel.provider)
                     
                     if hitPlanLimit && !providerApiKeyExists {
                         planLimitReached = true

@@ -84,7 +84,6 @@ extension OnboardingSkipAccessibility {
 extension OnboardingSkipAccessibility {
     private func skipAccessibility() {
         AnalyticsManager.Onboarding.LimitedExperience.continuePressed()
-        Defaults[.authFlowStatus] = .showSignUp
         Defaults[.showOnboardingAccessibility] = false
     }
 }

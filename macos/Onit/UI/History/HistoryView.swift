@@ -14,9 +14,11 @@ struct HistoryView: View {
     @Query(sort: \Chat.timestamp, order: .reverse) private var allChats: [Chat]
     @State private var searchQuery: String = ""
     
+    @ObservedObject private var authManager = AuthManager.shared
+    
     private var chats: [Chat] {
         let chatsFilteredByAccount = allChats
-            .filter { $0.accountId == appState.account?.id }
+            .filter { $0.accountId == authManager.account?.id }
         
         return PanelStateCoordinator.shared.filterHistoryChats(chatsFilteredByAccount)
     }

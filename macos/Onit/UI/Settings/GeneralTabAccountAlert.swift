@@ -9,7 +9,6 @@ import SwiftUI
 
 struct GeneralTabAccountAlert: View {
     let show: Binding<Bool>
-    let logout: () -> Void
     
     @State private var deleteText: String = ""
     @State private var accountDeleteError: String = ""
@@ -139,7 +138,7 @@ extension GeneralTabAccountAlert {
         Task {
             do {
                 try await client.deleteAccount()
-                logout()
+                AuthManager.shared.logout()
             } catch {
                 accountDeleteError = error.localizedDescription
             }

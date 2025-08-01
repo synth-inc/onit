@@ -12,6 +12,8 @@ struct ModelSelectionView: View {
     @Environment(\.appState) var appState
     @Environment(\.openSettings) var openSettings
     
+    @ObservedObject private var authManager = AuthManager.shared
+    
     @Default(.mode) var mode
     @Default(.localModel) var localModel
     @Default(.remoteModel) var remoteModel
@@ -109,7 +111,7 @@ struct ModelSelectionView: View {
     
     @ViewBuilder
     private var signInCTA: some View {
-        if !appState.userLoggedIn {
+        if !authManager.userLoggedIn {
             VStack(alignment: .leading, spacing: 8) {
                 emptyText("Sign in to gain access to models from OpenAI, Anthropic, and more!")
                 
