@@ -103,7 +103,7 @@ struct RemoteModelRemoveModel: View {
                     text: "Remove Selected",
                     textColor: .red,
                     action: {
-                        appState.removeSelectedRemoteModels(selectedRemoteModels)
+                        appState.removeRemoteModels(selectedRemoteModels)
                         showRemoveModelsSheet = false
                     },
                     background: .redBrick
