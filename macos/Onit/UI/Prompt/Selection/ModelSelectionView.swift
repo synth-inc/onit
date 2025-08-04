@@ -101,26 +101,36 @@ struct ModelSelectionView: View {
             )
     }
     
-    private func arrowButton(_ text: String, action: @escaping () -> Void) -> some View {
-        Button(text) {
-            action()
-        }
-        .buttonStyle(SetUpButtonStyle(showArrow: true))
-        .frame(maxWidth: .infinity, alignment: .leading)
-    }
-    
     @ViewBuilder
     private var signInCTA: some View {
         if !authManager.userLoggedIn {
             VStack(alignment: .leading, spacing: 8) {
                 emptyText("Sign in to gain access to models from OpenAI, Anthropic, and more!")
                 
-                arrowButton("Sign In") {
+                Button("Sign In") {
                     GeneralTabAccount.openSignInAuth()
                 }
+                .buttonStyle(SetUpButtonStyle(showArrow: true))
+                .frame(maxWidth: .infinity, alignment: .leading)
             }
             .padding(.horizontal, 16)
             .padding(.bottom, 8)
+        }
+    }
+    
+    private func addModelCTAButton(isLocal: Bool = false) -> some View {
+        TextButton(
+            iconSize: 16,
+            icon: .plusThin,
+            text: "Add manually"
+        ) {
+            if isLocal {
+                AnalyticsManager.ModelPicker.localSetupPressed()
+            }
+            
+            appState.settingsTab = .models
+            openSettings()
+            open.wrappedValue = false
         }
     }
 
@@ -135,30 +145,38 @@ struct ModelSelectionView: View {
             contentBottomPadding: 0,
             contentLeftPadding: 0
         ) {
-            if filteredRemoteModels.isEmpty {                
-                VStack(alignment: .leading, spacing: 8) {
-                    emptyText("No remote models.")
-                    
-                    arrowButton("Setup remote models") {
-                        appState.settingsTab = .models
-                        openSettings()
-                    }
-                }
-                .padding([.horizontal, .bottom], 16)
-            } else {
-                remoteModelsView
-            }
+            remoteModelsView
         }
     }
     
     var remoteModelsView: some View {
         VStack(spacing: 0) {
-            ForEach(filteredRemoteModels) { remoteModel in
-                RemoteModelButton(
-                    modelSelectionViewOpen: open,
-                    selectedModel: selectedModel,
-                    remoteModel: remoteModel
-                )
+            if filteredRemoteModels.isEmpty {
+                if !authManager.userLoggedIn {
+                    TextButton(fillContainer: false) {
+                        HStack(alignment: .center, spacing: 10) {
+                            Image(.user)
+                                .padding(.leading, -1)
+                            
+                            Text("Sign up for access")
+                                .styleText(size: 14, color: .primary)
+                        }
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                    } action: {
+                        Defaults[.authFlowStatus] = .showSignUp
+                        open.wrappedValue = false
+                    }
+                }
+                
+                addModelCTAButton()
+            } else {
+                ForEach(filteredRemoteModels) { remoteModel in
+                    RemoteModelButton(
+                        modelSelectionViewOpen: open,
+                        selectedModel: selectedModel,
+                        remoteModel: remoteModel
+                    )
+                }
             }
         }
         .padding(.horizontal, 8)
@@ -176,37 +194,28 @@ struct ModelSelectionView: View {
             contentBottomPadding: 0,
             contentLeftPadding: 0
         ) {
-            if availableLocalModels.isEmpty {
-                VStack(alignment: .leading, spacing: 8) {
-                    emptyText("No local models.")
-                    
-                    arrowButton("Setup local models") {
-                        AnalyticsManager.ModelPicker.localSetupPressed()
-                        appState.settingsTab = .models
-                        openSettings()
-                    }
-                }
-                .padding([.horizontal, .bottom], 16)
-            } else {
-                localModelsView
-            }
+            localModelsView
         }
     }
 
     var localModelsView: some View {
         VStack(spacing: 0) {
-            ForEach(filteredLocalModels, id: \.self) { localModelName in
-                TextButton(
-                    iconSize: 16,
-                    selected: isSelectedLocalModel(modelName: localModelName),
-                    icon: localModelName.lowercased().contains("llama") ? .logoOllama : .logoProviderUnknown,
-                    text: localModelName,
-                    action: {
-                        AnalyticsManager.ModelPicker.modelSelected(local: true, model: localModelName)
-                        selectedModel.wrappedValue = .local(localModelName)
-                        open.wrappedValue = false
-                    }
-                )
+            if availableLocalModels.isEmpty {
+                addModelCTAButton(isLocal: true)
+            } else {
+                ForEach(filteredLocalModels, id: \.self) { localModelName in
+                    TextButton(
+                        iconSize: 16,
+                        selected: isSelectedLocalModel(modelName: localModelName),
+                        icon: localModelName.lowercased().contains("llama") ? .logoOllama : .logoProviderUnknown,
+                        text: localModelName,
+                        action: {
+                            AnalyticsManager.ModelPicker.modelSelected(local: true, model: localModelName)
+                            selectedModel.wrappedValue = .local(localModelName)
+                            open.wrappedValue = false
+                        }
+                    )
+                }
             }
         }
         .padding(.horizontal, 8)

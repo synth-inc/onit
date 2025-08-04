@@ -50,8 +50,6 @@ struct PromptCore: View {
     
     @State private var disableSend: Bool = false
     
-    @State private var isHoveredSignInButton: Bool = false
-    
     @FocusState private var isFocused: Bool
     
     private var unfocusedBorder = GradientBorder(
@@ -77,10 +75,6 @@ struct PromptCore: View {
         VStack(spacing: 0) {
             if let windowState = windowState, let pendingInput = windowState.pendingInput {
                 InputView(input: pendingInput)
-            }
-            
-            if !authManager.userLoggedIn {
-                signInButton
             }
             
             VStack(spacing: 6) {
@@ -143,27 +137,6 @@ struct PromptCore: View {
 // MARK: - Child Components
 
 extension PromptCore {
-    private var signInButton: some View {
-        Button {
-            GeneralTabAccount.openSignInAuth()
-        } label: {
-            Text("Sign In →")
-                .styleText(
-                    size: 13,
-                    weight: .regular,
-                    color: isHoveredSignInButton ? Color.primary : .gray100,
-                    underline: isHoveredSignInButton
-                )
-                .addAnimation(dependency: isHoveredSignInButton)
-                .onHover { isHovering in
-                    isHoveredSignInButton = isHovering
-                }
-        }
-        .padding(.top, 6)
-        .padding(.horizontal, 16)
-        .frame(maxWidth: .infinity, alignment: .leading)
-    }
-    
     @ViewBuilder
     private var textField: some View {
         if let windowState = windowState {
@@ -283,7 +256,7 @@ extension PromptCore {
     }
     
     private var showingAlert: Bool {
-        showTwoWeekProTrialEndedAlert || appState.showFreeLimitAlert || appState.showProLimitAlert
+        appState.showAddModelAlert || showTwoWeekProTrialEndedAlert || appState.showFreeLimitAlert || appState.showProLimitAlert
     }
     
     private var isRemote: Bool {
