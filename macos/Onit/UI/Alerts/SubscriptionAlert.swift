@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-struct SubscriptionAlert: View {
+struct SubscriptionAlert<Child: View>: View {
     @Environment(\.appState) var appState
     @Environment(\.openSettings) var openSettings
     
@@ -18,11 +18,14 @@ struct SubscriptionAlert: View {
     private let descriptionAction: (() -> Void)?
     private let descriptionActionLoading: Bool
     private let caption: String?
+    private let spacingBetweenSections: CGFloat
+    private let showApiCta: Bool
     private let subscriptionText: String?
     private let subscriptionAction: (() -> Void)?
     private let showSubscriptionPerks: Bool
     private let footerSupportingText: String?
     private let errorMessage: Binding<String>?
+    @ViewBuilder private let child: () -> Child
     
     init(
         title: String,
@@ -32,11 +35,14 @@ struct SubscriptionAlert: View {
         descriptionAction: (() -> Void)? = nil,
         descriptionActionLoading: Bool = false,
         caption: String? = nil,
+        spacingBetweenSections: CGFloat = 16,
+        showApiCta: Bool = true,
         subscriptionText: String? = nil,
         subscriptionAction: (() -> Void)? = nil,
         showSubscriptionPerks: Bool = false,
         footerSupportingText: String? = nil,
-        errorMessage: Binding<String>? = nil
+        errorMessage: Binding<String>? = nil,
+        @ViewBuilder child: @escaping () -> Child = { EmptyView() }
     ) {
         self.title = title
         self.close = close
@@ -45,16 +51,19 @@ struct SubscriptionAlert: View {
         self.descriptionAction = descriptionAction
         self.descriptionActionLoading = descriptionActionLoading
         self.caption = caption
+        self.spacingBetweenSections = spacingBetweenSections
+        self.showApiCta = showApiCta
         self.subscriptionText = subscriptionText
         self.subscriptionAction = subscriptionAction
         self.showSubscriptionPerks = showSubscriptionPerks
         self.footerSupportingText = footerSupportingText
         self.errorMessage = errorMessage
+        self.child = child
     }
     
     var body: some View {
         HStack(alignment: .center) {
-            VStack(alignment: .center, spacing: 16) {
+            VStack(alignment: .center, spacing: spacingBetweenSections) {
                 if let errorMessage = errorMessage,
                     !errorMessage.wrappedValue.isEmpty
                 {
@@ -80,7 +89,7 @@ struct SubscriptionAlert: View {
                     }
                     
                     if let caption = caption {
-                        Text(caption).styleText(size: 13, weight: .regular)
+                        captionText(caption)
                     }
                 }
                 
@@ -93,6 +102,8 @@ struct SubscriptionAlert: View {
                 }
                 
                 footer
+                
+                child()
             }
             .padding(16)
             .background(.gray900)
@@ -138,13 +149,7 @@ extension SubscriptionAlert {
     }
     
     private var descriptionText: some View {
-        Text(description)
-            .styleText(
-                size: 13,
-                weight: .regular,
-                color: .gray100,
-                align: .center
-            )
+        captionText(description)
     }
     
     private func descriptionButton(_ action: @escaping () -> Void) -> some View {
@@ -179,28 +184,30 @@ extension SubscriptionAlert {
           )
     }
     
-    private func footerTextView(_ text: String) -> some View {
-        Text(text).styleText(size: 11, color: .gray200)
+    private func captionText(_ text: String) -> some View {
+        Text(text).styleText(size: 13, weight: .regular, color: .gray100, align: .center)
     }
     
     private var footer: some View {
-        VStack(alignment: .center, spacing: 16) {
+        VStack(alignment: .center, spacing: spacingBetweenSections) {
             footerDivider
             
             VStack(alignment: .center, spacing: 4) {
                 if let footerSupportingText = footerSupportingText {
-                    footerTextView(footerSupportingText)
+                    captionText(footerSupportingText)
                 }
                 
-                HStack(spacing: 4) {
-                    footerTextView("Or, add your API key in")
-                    
-                    Button {
-                        openModelSettings()
-                    } label: {
-                        Text("Settings").styleText(size: 11, color: .gray100)
+                if showApiCta {
+                    HStack(spacing: 4) {
+                        captionText("Or, add your API key in")
+                        
+                        Button {
+                            openModelSettings()
+                        } label: {
+                            Text("Settings").styleText(size: 13, weight: .regular, color: .primary, align: .center)
+                        }
+                        .buttonStyle(PlainButtonStyle())
                     }
-                    .buttonStyle(PlainButtonStyle())
                 }
             }
         }

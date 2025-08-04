@@ -63,6 +63,8 @@ class AppState: NSObject, SPUUpdaterDelegate {
     var showProLimitAlert: Bool = false
     var subscriptionPlanError: String = ""
     
+    var showAddModelAlert: Bool = false
+    
     private var authCancellable: AnyCancellable? = nil
 
     // MARK: - Initializer
