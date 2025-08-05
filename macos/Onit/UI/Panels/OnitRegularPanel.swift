@@ -107,7 +107,7 @@ class OnitRegularPanel: NSPanel {
         hostingView.layer?.cornerRadius = 14
         hostingView.layer?.cornerCurve = .continuous
         hostingView.layer?.masksToBounds = true
-        hostingView.layer?.backgroundColor = .clear
+        hostingView.layer?.backgroundColor = CGColor.clear
 
         self.contentView = hostingView
         self.contentView?.setFrameOrigin(NSPoint(x: 0, y: 0))

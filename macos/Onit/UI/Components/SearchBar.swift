@@ -28,7 +28,7 @@ struct SearchBar: View {
             placeholder: placeholder,
             sidePadding: sidePadding,
             config: CustomTextField.Config(
-                background: .gray800,
+                background: Color.T_9,
                 clear: true,
                 leftIcon: .search
             )

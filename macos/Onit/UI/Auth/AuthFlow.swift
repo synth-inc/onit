@@ -58,6 +58,7 @@ struct AuthFlow: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .padding(.top, 134)
+        .background(Color.baseBG)
     }
 }
 
@@ -73,7 +74,7 @@ extension AuthFlow {
             
             if !errorMessageAuth.isEmpty {
                 Text(errorMessageAuth)
-                    .styleText(size: 12, weight: .medium, color: .red, align: .center)
+                    .styleText(size: 12, weight: .medium, color: Color.red500, align: .center)
             }
         }
     }
@@ -91,10 +92,10 @@ extension AuthFlow {
         Text("Continue with email")
             .frame(maxWidth: .infinity)
             .frame(height: 40)
-            .styleText(align: .center)
+            .styleText(color: Color.white, align: .center)
             .addButtonEffects(
-                background: .blue400,
-                hoverBackground: .blue350,
+                background: Color.blue400,
+                hoverBackground: Color.blue350,
                 cornerRadius: 9,
                 isHovered: $isHoveredContinueWithEmailButton,
                 isPressed: $isPressedContinueWithEmailButton,
@@ -113,7 +114,7 @@ extension AuthFlow {
             VStack(alignment: .center, spacing: 12) {
                 formAuthButtons
                 
-                Text("OR").styleText(size: 12, color: .gray300)
+                Text("OR").styleText(size: 12, color: Color.S_3)
                 
                 VStack(spacing: 20) {
                     VStack(spacing: 12) {
@@ -129,13 +130,14 @@ extension AuthFlow {
     
     private var agreement: some View {
         Text(generateAgreementText())
+            .frame(width: 320)
             .styleText(size: 12, align: .center)
     }
     
     private var redirectSection: some View {
         HStack(spacing: 6) {
             Text(isSignUp ? "Already have an account?" : "Don't have an account?")
-                .styleText(size: 13, weight: .regular, color: .gray100)
+                .styleText(size: 13, weight: .regular, color: Color.S_1)
             
             Button {
                 if isSignUp {
@@ -183,7 +185,7 @@ extension AuthFlow {
                     .styleText(
                         size: 13,
                         weight: .regular,
-                        color: .gray100
+                        color: Color.S_1
                     )
                 
                 Text(email).styleText(size: 15, weight: .regular)
@@ -195,12 +197,12 @@ extension AuthFlow {
             VStack(alignment: .center, spacing: 28) {
                 VStack(alignment: .center, spacing: 0) {
                     Text("Didn't get it? Check your spam folder and the spelling")
-                        .styleText(size: 12, color: .gray200, align: .center)
+                        .styleText(size: 12, color: Color.S_2, align: .center)
                         .frame(maxWidth: .infinity)
                     
                     HStack(spacing: 4) {
                         Text("of your email address, or")
-                            .styleText(size: 12, color: .gray200)
+                            .styleText(size: 12, color: Color.S_2)
                         
                         Button {
                             requestEmailLoginLink()
@@ -218,8 +220,8 @@ extension AuthFlow {
                 Text("← Back")
                     .frame(height: 40)
                     .padding(.horizontal, 14)
-                    .background(isHoveredBackButton ? .gray900 : .clear)
-                    .addBorder(cornerRadius: 9, stroke: .gray700)
+                    .background(isHoveredBackButton ? Color.T_8 : Color.T_9)
+                    .addBorder(cornerRadius: 9, stroke: Color.genericBorder)
                     .scaleEffect(isPressedBackButton ? 0.98 : 1)
                     .opacity(isPressedBackButton ? 0.7 : 1)
                     .addAnimation(dependency: isHoveredBackButton)
@@ -245,24 +247,24 @@ extension AuthFlow {
 extension AuthFlow {
     private func generateAgreementText() -> AttributedString {
         var agreementText = AttributedString("By continuing with Google or email, you agree to our ")
-        agreementText.foregroundColor = .gray300
+        agreementText.foregroundColor = Color.S_3
         
         var termsText = AttributedString("Terms of Service")
-        termsText.foregroundColor = .gray200
+        termsText.foregroundColor = Color.S_2
         termsText.link = URL(string: "https://www.getonit.ai/")
         agreementText.append(termsText)
         
         var andText = AttributedString(" and ")
-        andText.foregroundColor = .gray300
+        andText.foregroundColor = Color.S_3
         agreementText.append(andText)
         
         var privacyText = AttributedString("Privacy Policy")
-        privacyText.foregroundColor = .gray200
+        privacyText.foregroundColor = Color.S_2
         privacyText.link = URL(string: "https://www.getonit.ai/")
         agreementText.append(privacyText)
         
         var periodText = AttributedString(".")
-        periodText.foregroundColor = .gray300
+        periodText.foregroundColor = Color.S_3
         agreementText.append(periodText)
         
         return agreementText
@@ -272,11 +274,11 @@ extension AuthFlow {
         var skipText = AttributedString("")
         
         var orText = AttributedString("or, ")
-        orText.foregroundColor = .gray100
+        orText.foregroundColor = Color.S_1
         skipText.append(orText)
         
         var mainText = AttributedString("skip account creation & use own APIs →")
-        mainText.foregroundColor = Color.primary
+        mainText.foregroundColor = Color.S_0
         skipText.append(mainText)
         
         return skipText

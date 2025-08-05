@@ -64,19 +64,17 @@ struct ContextPickerItemView: View {
             VStack(alignment: .leading, spacing: 4) {
                 Text(title)
                     .frame(maxWidth: .infinity, alignment: .leading)
-                    .styleText(size: 14, weight: .regular, color: .white)
+                    .styleText(size: 14, weight: .regular)
                 
                 Text(subtitle)
                     .frame(maxWidth: .infinity, alignment: .leading)
-                    .styleText(size: 13, weight: .regular, color: .gray200)
+                    .styleText(size: 13, weight: .regular, color: Color.S_2)
                     .truncateText()
             }
         }
         .frame(width: 210)
         .padding(6)
         .addButtonEffects(
-            background: .gray600,
-            hoverBackground: .gray500,
             cornerRadius: 8,
             isHovered: $isHovered,
             isPressed: $isPressed,

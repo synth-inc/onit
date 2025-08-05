@@ -103,7 +103,7 @@ struct SystemPromptSelectionView: View {
     private func sectionView(title: String?, prompts: [SystemPrompt]) -> some View {
         VStack(alignment: .leading, spacing: 0) {
             if let title = title {
-                Text(title).foregroundStyle(.gray200)
+                Text(title).foregroundStyle(Color.S_2)
             }
             
             ForEach(prompts, id: \.id) { prompt in
@@ -121,7 +121,7 @@ struct SystemPromptSelectionView: View {
                     openSettings()
                 } label: {
                     Label("Settings", systemImage: "message")
-                        .foregroundStyle(.gray100)
+                        .foregroundStyle(Color.S_1)
                         .font(.system(size: 13))
                 }
                 .buttonStyle(PlainButtonStyle())
@@ -131,8 +131,13 @@ struct SystemPromptSelectionView: View {
                 Button {
                     showNewPrompt = true
                 } label: {
-                    Label("New Prompt", image: .plus)
-                        .foregroundStyle(.gray100)
+                    Label {
+                        Text("New Prompt")
+                    } icon: {
+                        Image(.plus)
+                            .renderingMode(.template)
+                    }
+                    .foregroundStyle(Color.S_1)
                 }
                 .buttonStyle(.plain)
             }

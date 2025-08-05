@@ -15,9 +15,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         FirebaseApp.configure()
-        if let darkAppearance = NSAppearance(named: .darkAqua) {
-            NSApp.appearance = darkAppearance
-        }
         GIDSignIn.sharedInstance.restorePreviousSignIn()
         
         // Configure dock icon visibility based on user preference

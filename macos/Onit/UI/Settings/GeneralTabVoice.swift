@@ -49,6 +49,7 @@ extension GeneralTabVoice {
                 .controlSize(.small)
             }
         }
+        .foregroundColor(Color.S_0)
     }
     
     var confidenceThreshold: some View {
@@ -73,5 +74,6 @@ extension GeneralTabVoice {
                 .controlSize(.small)
             }
         }
+        .foregroundColor(Color.S_0)
     }
 }

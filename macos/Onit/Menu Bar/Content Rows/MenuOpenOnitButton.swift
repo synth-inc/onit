@@ -17,7 +17,7 @@ struct MenuOpenOnitButton: View {
                 Image(.noodle)
                     .renderingMode(.template)
                     .resizable()
-                    .foregroundStyle(.primary)
+                    .foregroundStyle(Color.S_0)
                     .scaledToFit()
                     .padding(1)
                     .frame(width: 16, height: 16)
@@ -29,7 +29,7 @@ struct MenuOpenOnitButton: View {
                 shortcut: KeyboardShortcuts.getShortcut(
                     for: .launchWithAutoContext)?.native
             )
-            .foregroundStyle(.gray200)
+            .foregroundStyle(Color.S_2)
             .appFont(.medium13)
         }
     }

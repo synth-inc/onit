@@ -54,7 +54,7 @@ struct FileRow: View {
         }
     }
     
-    var contextTagText: String {
+    var foregroundWindowContextTagText: String {
         if let foregroundWindow = windowState?.foregroundWindow {
             let foregroundWindowName = WindowHelpers.getWindowName(window: foregroundWindow.element)
             if let ocrResult = ocrComparisonResult {
@@ -66,40 +66,40 @@ struct FileRow: View {
         return ""
     }
     
-    var contextTagBackground: Color {
+    var ghostContextTagBackground: Color {
         if let ocrResult = ocrComparisonResult {
             if ocrResult.matchPercentage < 50 {
-                return .redDisabled
+                return Color.redDisabled
             } else if ocrResult.matchPercentage < 75 {
-                return .warningDisabled
+                return Color.warningDisabled
             } else {
-                return .clear
+                return Color.clear
             }
         } else {
-            return .clear
+            return Color.clear
         }
     }
     
-    var contextTagHoverBackground: Color {
+    var ghostContextTagHoverBackground: Color {
         if let ocrResult = ocrComparisonResult {
             if ocrResult.matchPercentage < 50 {
-                return .redDisabledHover
+                return Color.redDisabledHover
             } else if ocrResult.matchPercentage < 75 {
-                return .warningDisabledHover
+                return Color.warningDisabledHover
             } else {
-                return .clear
+                return Color.clear
             }
         } else {
-            return .clear
+            return Color.clear
         }
     }
     
     var contextTagErrorDotColor: Color? {
         if let ocrResult = ocrComparisonResult {
             if ocrResult.matchPercentage < 50 {
-                return .red
+                return Color.red500
             } else if ocrResult.matchPercentage < 75 {
-                return .yellow
+                return Color.orange500
             } else {
                 return nil
             }
@@ -163,10 +163,9 @@ extension FileRow {
     ) -> some View {
         ContextTag(
             text: text,
-            textColor: .T_2,
-            hoverTextColor: .white,
-            background: contextTagBackground,
-            hoverBackground: contextTagHoverBackground,
+            hoverTextColor: Color.T_2,
+            background: ghostContextTagBackground,
+            hoverBackground: ghostContextTagHoverBackground,
             hasHoverBorder: true,
             hasDottedBorder: true,
             shouldFadeIn: true,
@@ -214,7 +213,7 @@ extension FileRow {
             let iconBundleURL = WindowHelpers.getWindowAppBundleUrl(window: foregroundWindow.element)
             
             ghostContextTag(
-                text: contextTagText,
+                text: foregroundWindowContextTagText,
                 iconBundleURL: iconBundleURL,
                 tooltip: "Add \(foregroundWindowName) Context"
             ) {
@@ -234,8 +233,8 @@ extension FileRow {
                     if let trackedWindow = trackedWindow {
                         ContextTag(
                             text: WindowHelpers.getWindowName(window: trackedWindow.element),
-                            background: .clear,
-                            hoverBackground: .clear,
+                            background: Color.clear,
+                            hoverBackground: Color.clear,
                             isLoading: true,
                             iconView: LoaderPulse(),
                             removeAction: {
@@ -255,7 +254,7 @@ extension FileRow {
         if let pendingInput = windowState?.pendingInput {
             ContextTag(
                 text: StringHelpers.removeWhiteSpaceAndNewLines(pendingInput.selectedText),
-                borderColor: showHighlightedTextInput ? .gray400 : .clear,
+                borderColor: showHighlightedTextInput ? Color.S_4 : Color.clear,
                 iconView: Image(.text).addIconStyles(iconSize: 14)
             ) {
                 showHighlightedTextInput = true

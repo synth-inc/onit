@@ -34,7 +34,7 @@ struct ContentViewFooterNotification: View {
     var body: some View {
         ZStack(alignment: .topTrailing) {
             VStack(alignment: .center, spacing: 0) {
-                DividerHorizontal(foregroundColor: .gray600)
+                DividerHorizontal()
                 
                 VStack(alignment: .center, spacing: 13) {
                     Text(content.0)
@@ -42,13 +42,17 @@ struct ContentViewFooterNotification: View {
                     
                     TextButton(
                         iconSize: content.3,
+                        iconColor: Color.white,
+                        hoverIconColor: Color.white,
                         gap: 4,
                         height: 36,
                         fillContainer: false,
-                        background: .blue400,
-                        hoverBackground: .blue350,
+                        background: Color.blue400,
+                        hoverBackground: Color.blue350,
                         fontSize: 13,
                         fontWeight: .regular,
+                        fontColor: Color.white,
+                        hoverFontColor: Color.white,
                         icon: content.2,
                         text: content.1
                     ) {
@@ -66,7 +70,6 @@ struct ContentViewFooterNotification: View {
             )
             .padding([.top, .trailing], 10)
         }
-        .background(.black)
     }
 }
 

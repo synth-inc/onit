@@ -21,7 +21,7 @@ struct MenuSection<Children: View>: View {
     
     init(
         titleIcon: ImageResource? = nil,
-        titleIconColor: Color = Color.white,
+        titleIconColor: Color = Color.S_0,
         title: String? = nil,
         showTopBorder: Bool = false,
         maxScrollHeight: CGFloat? = nil,
@@ -85,7 +85,7 @@ extension MenuSection {
                 
                 Text(title)
                     .font(.system(size: 13))
-                    .foregroundColor(.gray100)
+                    .foregroundColor(Color.S_1)
                     .truncateText()
             }
             .padding(.horizontal, 8)

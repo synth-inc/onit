@@ -64,21 +64,21 @@ struct TetheredButton: View {
                 PanelStateCoordinator.shared.closePanel(for: state)
             }) {
                 // Transparent rectangle that fills the entire button area
-                RoundedRectangle(cornerRadius: Self.width / 2)
-                    .fill(isHovering ? .gray800 : .black)
+                GlassBackground()
                     .frame(width: Self.width, height: Self.height)
+                    .cornerRadius(Self.width / 2)
                     .animation(.easeInOut(duration: 0.15), value: isHovering)
                     .overlay {
                         Image(.smallChevRight)
                             .renderingMode(.template)
-                            .foregroundColor(.white)
+                            .foregroundColor(Color.S_2)
                             .rotationEffect(arrowRotation)
                     }
             }
             .buttonStyle(.plain)
             .background {
                 RoundedRectangle(cornerRadius: Self.width / 2)
-                    .fill(isHovering ? .gray800 : .black)
+                    .fill(isHovering ? Color.S_8 : Color.baseBG)
                     .animation(.easeInOut(duration: 0.15), value: isHovering)
             }
              .onHover { hovering in
@@ -95,7 +95,7 @@ struct TetheredButton: View {
             .overlay {
                 TetheredButtonBorder(cornerRadius: Self.width / 2)
                     .stroke(
-                        .gray500,
+                        Color.genericBorder,
                         lineWidth: 1.5
                     )
             }

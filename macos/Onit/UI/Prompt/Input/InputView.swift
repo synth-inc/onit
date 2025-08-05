@@ -22,15 +22,15 @@ struct InputView: View {
         }
         .background {
             RoundedRectangle(cornerRadius: 6)
-                .fill(.gray500)
-                .strokeBorder(.gray400)
+                .fill(Color.messageBG)
+                .strokeBorder(Color.genericBorder)
         }
         .padding(.top, isEditing ? 6 : 0)
         .padding([.horizontal], isEditing ? 8 : 0)
     }
 
     var divider: some View {
-        Color.gray400
+        Color.genericBorder
             .frame(height: 1)
             .opacity(inputExpanded ? 1 : 0)
     }

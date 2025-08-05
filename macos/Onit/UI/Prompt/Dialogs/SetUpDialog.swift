@@ -22,10 +22,10 @@ struct SetUpDialog<Subtitle: View>: View {
     var borderGrad: LinearGradient {
         .init(
             stops: [
-                .init(color: .border1, location: 0),
-                .init(color: .border2, location: 0.46),
-                .init(color: .border2, location: 0.65),
-                .init(color: .border1, location: 1),
+                .init(color: Color.S_5, location: 0),
+                .init(color: Color.S_8, location: 0.46),
+                .init(color: Color.S_8, location: 0.65),
+                .init(color: Color.S_5, location: 1),
             ],
             startPoint: .bottomTrailing,
             endPoint: .topLeading
@@ -46,7 +46,7 @@ struct SetUpDialog<Subtitle: View>: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.horizontal, 12)
         .padding(.vertical, 12)
-        .background(.gray900, in: .rect(cornerRadius: 16))
+        .background(Color.messageBG, in: .rect(cornerRadius: 16))
         .overlay {
             RoundedRectangle(cornerRadius: 16)
                 .strokeBorder(borderGrad, lineWidth: 1)
@@ -63,13 +63,13 @@ struct SetUpDialog<Subtitle: View>: View {
                     .resizable()
                     .frame(width: 16, height: 16)
                     .padding(0)
-                    .foregroundStyle(titleColor ?? .FG)
+                    .foregroundStyle(titleColor ?? Color.S_0)
             }
             
             Text(title)
                 .fontWeight(.semibold)
                 .appFont(.medium14)
-                .foregroundStyle(titleColor ?? .FG)
+                .foregroundStyle(titleColor ?? Color.S_0)
 
             Spacer()
 
@@ -78,6 +78,8 @@ struct SetUpDialog<Subtitle: View>: View {
                     closeAction()
                 } label: {
                     Image(.smallCross)
+                        .renderingMode(.template)
+                        .foregroundColor(Color.S_0)
                         .padding(2)
                 }
                 .buttonStyle(HoverableButtonStyle(background: true))
@@ -88,7 +90,7 @@ struct SetUpDialog<Subtitle: View>: View {
     var main: some View {
         subtitle()
             .appFont(.medium13)
-            .foregroundStyle(.gray100)
+            .foregroundStyle(Color.S_1)
             .fixedSize(horizontal: false, vertical: true)
             .lineLimit(10)
             .padding(.leading, icon != nil ? 28 : 0)

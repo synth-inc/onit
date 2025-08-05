@@ -66,7 +66,7 @@ struct HighlightedTextBoundTrainingSampleDetailView: View {
             }) {
                 Image(systemName: "sidebar.right")
                     .font(.system(size: 18))
-                    .foregroundColor(.white)
+                    .foregroundColor(Color.S_0)
                     .frame(width: 40, height: 40)
                     .background(Color.black.opacity(0.7))
                     .cornerRadius(8)
@@ -81,7 +81,7 @@ struct HighlightedTextBoundTrainingSampleDetailView: View {
                 }) {
                     Image(systemName: hasChanges ? "checkmark.circle.fill" : "checkmark.circle")
                         .font(.system(size: 16))
-                        .foregroundColor(.white)
+                        .foregroundColor(Color.S_0)
                         .frame(width: 40, height: 40)
                         .background(hasChanges ? Color.green.opacity(0.8) : Color.gray.opacity(0.7))
                         .cornerRadius(8)
@@ -94,9 +94,9 @@ struct HighlightedTextBoundTrainingSampleDetailView: View {
                 }) {
                     Image(systemName: "trash")
                         .font(.system(size: 16))
-                        .foregroundColor(.white)
+                        .foregroundColor(Color.S_0)
                         .frame(width: 40, height: 40)
-                        .background(Color.red.opacity(0.8))
+                        .background(Color.red500.opacity(0.8))
                         .cornerRadius(8)
                 }
                 .buttonStyle(.plain)
@@ -106,7 +106,7 @@ struct HighlightedTextBoundTrainingSampleDetailView: View {
                 }) {
                     Image(systemName: "xmark")
                         .font(.system(size: 16))
-                        .foregroundColor(.white)
+                        .foregroundColor(Color.S_0)
                         .frame(width: 40, height: 40)
                         .background(Color.black.opacity(0.7))
                         .cornerRadius(8)
@@ -146,10 +146,10 @@ struct HighlightedTextBoundTrainingSampleDetailView: View {
                         VStack {
                             Image(systemName: "photo")
                                 .font(.system(size: 48))
-                                .foregroundColor(.white)
+                                .foregroundColor(Color.S_0)
                             Text("Image not available")
                                 .font(.title)
-                                .foregroundColor(.white)
+                                .foregroundColor(Color.S_0)
                         }
                     )
             }
@@ -161,7 +161,7 @@ struct HighlightedTextBoundTrainingSampleDetailView: View {
             HStack {
                 Text("Sample Details")
                     .font(.headline)
-                    .foregroundColor(.primary)
+                    .foregroundColor(Color.S_0)
                 
                 Spacer()
                 
@@ -172,7 +172,7 @@ struct HighlightedTextBoundTrainingSampleDetailView: View {
                 }) {
                     Image(systemName: "sidebar.right")
                         .font(.system(size: 16))
-                        .foregroundColor(.secondary)
+                        .foregroundColor(Color.secondary)
                 }
                 .buttonStyle(.plain)
             }
@@ -184,7 +184,7 @@ struct HighlightedTextBoundTrainingSampleDetailView: View {
                 VStack(alignment: .leading, spacing: 8) {
                     Text("Selected Text")
                         .font(.headline)
-                        .foregroundColor(.primary)
+                        .foregroundColor(Color.S_0)
                     
                     ScrollView {
                         Text(sample.selectedText)
@@ -204,7 +204,7 @@ struct HighlightedTextBoundTrainingSampleDetailView: View {
                 VStack(alignment: .leading, spacing: 8) {
                     Text("Application")
                         .font(.headline)
-                        .foregroundColor(.primary)
+                        .foregroundColor(Color.S_0)
                     
                     Text(sample.appName)
                         .font(.body)
@@ -217,7 +217,7 @@ struct HighlightedTextBoundTrainingSampleDetailView: View {
                 VStack(alignment: .leading, spacing: 8) {
                     Text("Created")
                         .font(.headline)
-                        .foregroundColor(.primary)
+                        .foregroundColor(Color.S_0)
                     
                     Text(DateFormatters.mediumWithTime.string(from: sample.createdAt))
                         .font(.body)
@@ -230,13 +230,13 @@ struct HighlightedTextBoundTrainingSampleDetailView: View {
                 HStack {
                     Text("Status:")
                         .font(.headline)
-                        .foregroundColor(.primary)
+                        .foregroundColor(Color.S_0)
                     
                     HStack(spacing: 4) {
                         Image(systemName: sample.isValidated ? "checkmark.circle.fill" : "circle")
-                            .foregroundColor(sample.isValidated ? .green : .secondary)
+                            .foregroundColor(sample.isValidated ? Color.green : Color.secondary)
                         Text(sample.isValidated ? "Validated" : "Not validated")
-                            .foregroundColor(sample.isValidated ? .green : .secondary)
+                            .foregroundColor(sample.isValidated ? Color.green : Color.secondary)
                     }
                 }
             }
@@ -250,7 +250,7 @@ struct HighlightedTextBoundTrainingSampleDetailView: View {
                     showDeleteAlert = true
                 }
                 .buttonStyle(.bordered)
-                .foregroundColor(.red)
+                .foregroundColor(Color.red500)
                 
                 Spacer()
                 
@@ -321,8 +321,8 @@ struct EditableBoundingBoxOverlay: View {
         
         ZStack(alignment: .topLeading) {
             Rectangle()
-                .stroke(Color.red, lineWidth: 1)
-                .background(Color.red.opacity(0.1))
+                .stroke(Color.red500, lineWidth: 1)
+                .background(Color.red500.opacity(0.1))
                 .frame(width: displayWidth, height: displayHeight)
                 .offset(
                     x: displayX + (isDragging ? dragOffset.width : 0),
@@ -371,7 +371,7 @@ struct EditableBoundingBoxOverlay: View {
         let (handleOffsetX, handleOffsetY) = handleOffset(for: anchor, displayX: displayX, displayY: displayY, displayWidth: displayWidth, displayHeight: displayHeight)
         
         return Circle()
-            .fill(Color.red.opacity(0.01))
+            .fill(Color.red500.opacity(0.01))
             .frame(width: handleSize, height: handleSize)
             .offset(
                 x: handleOffsetX - handleSize/2 + (isDragging ? dragOffset.width : 0),

@@ -47,7 +47,7 @@ struct HoverableButtonStyle: ButtonStyle {
     private func clickBackground(_ clicked: Bool) -> some View {
         if background {
             RoundedRectangle(cornerRadius: 6)
-                .fill(.gray600)
+                .fill(Color.T_7)
                 .opacity(clicked ? 1 : 0)
         }
     }
@@ -56,7 +56,7 @@ struct HoverableButtonStyle: ButtonStyle {
     private var hoverBackground: some View {
         if background {
             RoundedRectangle(cornerRadius: 6)
-                .fill(.gray800)
+                .fill(Color.T_8)
                 .opacity(hovering ? 1 : 0)
                 .animation(.easeInOut(duration: 0.15), value: hovering)
         }

@@ -42,7 +42,7 @@ struct PromptCoreFooter: View {
                 MicrophoneButton(audioRecorder: audioRecorder)
                 
                 PromptCoreFooterButton(
-                    iconColor: .gray200,
+                    iconColor: Color.S_2,
                     icon: .send2,
                     text: "Send",
                     disabled: disableSend,

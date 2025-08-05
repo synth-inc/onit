@@ -25,7 +25,7 @@ struct SystemPromptDetailView: View {
         VStack(alignment: .leading, spacing: 12) {
             VStack(alignment: .leading, spacing: 8) {
                 Text("Prompt")
-                    .foregroundStyle(.gray100)
+                    .foregroundStyle(Color.S_1)
                     .bold()
                 Text(storedPrompt.prompt)
             }
@@ -33,7 +33,7 @@ struct SystemPromptDetailView: View {
             if let shortcut = KeyboardShortcuts.Name(storedPrompt.id).shortcut?.native {
                 VStack(alignment: .leading, spacing: 8) {
                     Text("Hotkey")
-                        .foregroundStyle(.gray100)
+                        .foregroundStyle(Color.S_1)
                         .bold()
                     KeyboardShortcutView(shortcut: shortcut, characterWidth: 12, spacing: 3)
                         .font(.system(size: 13, weight: .light))
@@ -43,7 +43,7 @@ struct SystemPromptDetailView: View {
             if !storedPrompt.applications.isEmpty || !storedPrompt.tags.isEmpty {
                 VStack(alignment: .leading, spacing: 8) {
                     Text("Apps & Tags")
-                        .foregroundStyle(.gray100)
+                        .foregroundStyle(Color.S_1)
                         .bold()
                     appsAndTags
                 }
@@ -51,13 +51,8 @@ struct SystemPromptDetailView: View {
 
             buttons
         }
-        .padding(.vertical, 8)
-        .padding(.horizontal, 16)
-        .background {
-            RoundedRectangle(cornerRadius: 14)
-                .fill(.gray800)
-                .strokeBorder(.gray600)
-        }
+        .padding([.horizontal, .bottom], 16)
+        .padding(.top, 12)
         .frame(width: size.width - 16)
         .onChange(of: windowState?.systemPromptId, initial: true) { oldValue, newValue in
             let descriptor = FetchDescriptor<SystemPrompt>()
@@ -86,7 +81,7 @@ struct SystemPromptDetailView: View {
                 .padding(.vertical, 4)
                 .background {
                     RoundedRectangle(cornerRadius: 5)
-                        .fill(.gray500)
+                        .fill(Color.S_5)
                 }
             }
             
@@ -96,7 +91,7 @@ struct SystemPromptDetailView: View {
                     .padding(.vertical, 4)
                     .background {
                         RoundedRectangle(cornerRadius: 5)
-                            .fill(.gray500)
+                            .fill(Color.S_5)
                     }
             }
         }
@@ -109,7 +104,7 @@ struct SystemPromptDetailView: View {
                 dismiss()
             } label: {
                 Text("Select another prompt")
-                    .foregroundStyle(.gray100)
+                    .foregroundStyle(Color.S_1)
                     .underline()
             }.buttonStyle(.plain)
             
@@ -123,7 +118,7 @@ struct SystemPromptDetailView: View {
                     Image(.pencil)
                         .resizable()
                         .frame(width: 16, height: 16)
-                        .foregroundStyle(.gray100)
+                        .foregroundStyle(Color.S_1)
                 }.tooltip(prompt: "Edit")
             }
         }

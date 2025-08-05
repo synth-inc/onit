@@ -18,7 +18,7 @@ struct LoaderPulse: View {
     
     init(
         size: CGFloat = 12,
-        color: Color = .white,
+        color: Color = Color.S_1,
         duration: Double = 0.6,
         pauseDuration: Double = 0.5
     ) {

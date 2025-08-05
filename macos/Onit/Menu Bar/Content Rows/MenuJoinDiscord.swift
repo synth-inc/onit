@@ -18,7 +18,7 @@ struct MenuJoinDiscord: View {
         } leading: {
             Text("Join Discord →")
                 .padding(.horizontal, 10)
-                .foregroundColor(.primary)
+                .foregroundColor(Color.S_0)
         }
     }
 }

@@ -102,8 +102,8 @@ struct SystemPromptView: View {
         .padding(.vertical, 8)
         .background {
             RoundedRectangle(cornerRadius: 10)
-                .fill(.gray800)
-                .strokeBorder(.gray600)
+                .fill(Color.messageBG)
+                .strokeBorder(Color.genericBorder)
                 .onTapGesture {
                     showSelection = true
                 }

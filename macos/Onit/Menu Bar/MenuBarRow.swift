@@ -40,7 +40,7 @@ struct MenuBarRow<Leading: View, Trailing: View>: View {
             leading
             Spacer()
             trailing
-                .foregroundStyle(Color.primary.opacity(0.25))
+                .foregroundStyle(Color.S_0.opacity(0.25))
         }
         .font(.system(size: 13, weight: .medium))
         .frame(height: 22)

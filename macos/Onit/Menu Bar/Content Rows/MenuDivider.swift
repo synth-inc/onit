@@ -9,7 +9,7 @@ import SwiftUI
 
 struct MenuDivider: View {
     var body: some View {
-        Divider()
+        DividerHorizontal()
             .padding(.vertical, 4)
             .padding(.horizontal, 9)
     }

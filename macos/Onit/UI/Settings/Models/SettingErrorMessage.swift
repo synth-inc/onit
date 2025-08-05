@@ -6,7 +6,7 @@ struct SettingErrorMessage: View {
     var body: some View {
         if let message = message {
             Text(message)
-                .foregroundStyle(.red)
+                .foregroundStyle(Color.red500)
                 .font(.system(size: 10))
                 .padding(.leading, 4)
         }

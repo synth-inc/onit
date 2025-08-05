@@ -62,7 +62,7 @@ struct SubscriptionAlert: View {
                         .styleText(
                             size: 13,
                             weight: .regular,
-                            color: .red
+                            color: Color.red500
                         )
                 }
                 
@@ -95,15 +95,14 @@ struct SubscriptionAlert: View {
                 footer
             }
             .padding(16)
-            .background(.gray900)
+            .background(Color.elevatedBG)
             .addBorder()
             .padding(22)
             .transition(.opacity)
         }
         .frame(maxHeight: .infinity)
         .background(
-            Color.black
-                .opacity(0.8)
+            GlassBackground()
                 .onTapGesture {
                     close?()
                 }
@@ -119,7 +118,7 @@ extension SubscriptionAlert {
             close()
         } label: {
             Image(.smallCross)
-                .addIconStyles(foregroundColor: .gray200, iconSize: 18)
+                .addIconStyles(foregroundColor: Color.S_1, iconSize: 18)
         }
         .buttonStyle(PlainButtonStyle())
         .offset(x: 6, y: -6)
@@ -142,7 +141,7 @@ extension SubscriptionAlert {
             .styleText(
                 size: 13,
                 weight: .regular,
-                color: .gray100,
+                color: Color.S_1,
                 align: .center
             )
     }
@@ -161,31 +160,13 @@ extension SubscriptionAlert {
         .buttonStyle(PlainButtonStyle())
     }
     
-    private var footerDivider: some View {
-        Rectangle()
-          .foregroundColor(.clear)
-          .frame(height: 1)
-          .background(
-            LinearGradient(
-              stops: [
-                Gradient.Stop(color: Color(red: 0.09, green: 0.09, blue: 0.1), location: 0.00),
-                Gradient.Stop(color: Color(red: 0.2, green: 0.21, blue: 0.23), location: 0.31),
-                Gradient.Stop(color: Color(red: 0.2, green: 0.21, blue: 0.23), location: 0.73),
-                Gradient.Stop(color: Color(red: 0.09, green: 0.09, blue: 0.1), location: 1.00),
-              ],
-              startPoint: UnitPoint(x: 0, y: 0.5),
-              endPoint: UnitPoint(x: 1, y: 0.5)
-            )
-          )
-    }
-    
     private func footerTextView(_ text: String) -> some View {
-        Text(text).styleText(size: 11, color: .gray200)
+        Text(text).styleText(size: 11, color: Color.S_2)
     }
     
     private var footer: some View {
         VStack(alignment: .center, spacing: 16) {
-            footerDivider
+            DividerHorizontal()
             
             VStack(alignment: .center, spacing: 4) {
                 if let footerSupportingText = footerSupportingText {
@@ -198,7 +179,7 @@ extension SubscriptionAlert {
                     Button {
                         openModelSettings()
                     } label: {
-                        Text("Settings").styleText(size: 11, color: .gray100)
+                        Text("Settings").styleText(size: 11, color: Color.S_1)
                     }
                     .buttonStyle(PlainButtonStyle())
                 }
