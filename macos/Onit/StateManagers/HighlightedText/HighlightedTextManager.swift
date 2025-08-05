@@ -22,6 +22,7 @@ class HighlightedTextManager: ObservableObject {
     private var lastHighlightingProcessedAt: Date?
     private var selectionDebounceWorkItem: DispatchWorkItem?
     private var currentSource: String?
+    private var lastCaretPositionChangeTimestamp: Date?
     
     // Published property for selected text that QuickEditManager can observe
     @Published var selectedText: String?
@@ -130,10 +131,4 @@ class HighlightedTextManager: ObservableObject {
         selectionDebounceWorkItem?.cancel()
         selectedText = nil
     }
-    
-    // MARK: - Private Properties
-    
-    private var lastCaretPositionChangeTimestamp: Date?
-    
-
 }
