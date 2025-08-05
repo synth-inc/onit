@@ -18,27 +18,7 @@ class AccessibilityNotificationsManager: ObservableObject {
 
     static let shared = AccessibilityNotificationsManager()
     
-    // MARK: - ScreenResult
-
-    struct ScreenResult {
-        struct UserInteractions {
-            var selectedText: String?
-            var input: String?
-        }
-
-        var elapsedTime: String?
-        var applicationName: String?
-        var applicationTitle: String?
-        var userInteraction: UserInteractions = .init()
-        var others: [String: String]?
-        var errorMessage: String?  // Renamed field for error message
-        var errorCode: Int32?
-        var appBundleUrl: URL?
-    }
-
     // MARK: - Properties
-    
-    @Published var screenResult: ScreenResult = .init()
     
     let windowsManager = AccessibilityWindowsManager()
     
@@ -54,6 +34,9 @@ class AccessibilityNotificationsManager: ObservableObject {
     private var valueDebounceWorkItem: DispatchWorkItem?
     private var selectionDebounceWorkItem: DispatchWorkItem?
     private var parseDebounceWorkItem: DispatchWorkItem?
+    
+    // Published property for selected text that QuickEditManager can observe
+    @Published var selectedText: String?
 
     // MARK: - Private initializer
 
@@ -124,7 +107,6 @@ class AccessibilityNotificationsManager: ObservableObject {
     
     func reset() {
         windowsManager.reset()
-        screenResult = .init()
         
         Task.detached {
             await self.highlightedTextCoordinator.reset()
@@ -136,6 +118,8 @@ class AccessibilityNotificationsManager: ObservableObject {
         valueDebounceWorkItem?.cancel()
         selectionDebounceWorkItem?.cancel()
         parseDebounceWorkItem?.cancel()
+        
+        selectedText = nil
         
         ContextFetchingService.shared.reset()
     }
@@ -318,12 +302,10 @@ class AccessibilityNotificationsManager: ObservableObject {
         dispatchPrecondition(condition: .onQueue(.main))
 
         guard let value = element.value() else {
-            screenResult.userInteraction.input = nil
             showDebug()
             return
         }
 
-        screenResult.userInteraction.input = value
         showDebug()
     }
 
@@ -365,14 +347,15 @@ class AccessibilityNotificationsManager: ObservableObject {
               let selectedText = text,
               HighlightedTextValidator.isValid(text: selectedText) else {
             
-            screenResult.userInteraction.selectedText = nil
             PanelStateCoordinator.shared.state.pendingInput = nil
             PanelStateCoordinator.shared.state.trackedPendingInput = nil
+            self.selectedText = nil
             return
         }
         
-        screenResult.userInteraction.selectedText = selectedText
-        
+        // Update the published selectedText property
+        self.selectedText = selectedText
+
         let input = Input(selectedText: selectedText, application: currentSource ?? "")
         
         if Defaults[.autoAddHighlightedTextToContext] {
@@ -397,42 +380,8 @@ class AccessibilityNotificationsManager: ObservableObject {
     // MARK: Debug
 
     private func showDebug() {
-        var debugText = """
-            ===== Debug Information =====
-
-            Elapsed Time: \(screenResult.elapsedTime ?? "N/A")
-
-            Application Name: \(screenResult.applicationName ?? "N/A")
-
-            Application Title: \(screenResult.applicationTitle ?? "N/A")
-
-            Selected Text: \(screenResult.userInteraction.selectedText ?? "N/A")
-
-            User Input: \(screenResult.userInteraction.input ?? "N/A")
-
-            Error Message: \(screenResult.errorMessage ?? "N/A")
-
-            =============================
-
-            """
-
-        if let results = screenResult.others {
-            debugText += "\n======== Additional Data ========\n"
-            for result in results.sorted(by: { $0.key < $1.key }) {
-                debugText += """
-
-                    ---------------------------------
-                    Key: \(result.key)
-                    ---------------------------------
-                    \(result.value)
-                    """
-            }
-            debugText += "\n=================================\n"
-        } else {
-            debugText += "\nNo additional data available.\n"
-        }
-
-        DebugManager.shared.debugText = debugText
+        // Debug information is now handled by ContextFetchingService
+        DebugManager.shared.debugText = "Debug information moved to ContextFetchingService"
     }
 }
 
