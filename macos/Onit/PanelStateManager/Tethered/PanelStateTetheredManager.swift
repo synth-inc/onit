@@ -80,7 +80,9 @@ class PanelStateTetheredManager: PanelStateBaseManager, ObservableObject {
         dragManager.stopMonitoring()
         dragManagerCancellable?.cancel()
         draggingState = nil
-        
+        for (_, state) in statesByWindow {
+            state.unsubscribeAsHighlightedTextDelegate()
+        }
         super.stop()
         
         statesByWindow = [:]
@@ -240,7 +242,7 @@ class PanelStateTetheredManager: PanelStateBaseManager, ObservableObject {
             panelState = activeState
         } else {
             panelState = OnitPanelState(trackedWindow: trackedWindow)
-            
+            panelState.subscribeAsHighlightedTextDelegate()
             statesByWindow[trackedWindow] = panelState
         }
         
