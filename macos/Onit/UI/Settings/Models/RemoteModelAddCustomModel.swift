@@ -245,43 +245,21 @@ struct RemoteModelAddCustomModel: View {
         let useOnitServer = apiToken == nil || apiToken == ""
         
         do {
-            if useOnitServer {
-                let response = try await StreamingClient().chat(
-                    systemMessage: "",
-                    instructions: ["Hi"],
-                    inputs: [nil],
-                    files: [[]],
-                    images: [[]],
-                    autoContexts: [[:]],
-                    webSearchContexts: [[]],
-                    responses: [],
-                    tools: [],
-                    useOnitServer: useOnitServer,
-                    model: remoteModel,
-                    apiToken: apiToken,
-                    includeSearch: nil
-                )
-                
-                /// `StreamingClient().chat()` returns a lazy stream where the API call doesn't actually execute until the stream itself is consumed in some way.
-                /// Thus, the `asyncIterator` below is required to verify the authenticity of remote models and properly throw errors when required.
-                var asyncIterator = response.makeAsyncIterator()
-                _ = try await asyncIterator.next()
-            } else {
-                _ = try await FetchingClient().chat(
-                    systemMessage: "",
-                    instructions: ["Hi"],
-                    inputs: [nil],
-                    files: [[]],
-                    images: [[]],
-                    autoContexts: [[:]],
-                    webSearchContexts: [[]],
-                    responses: [],
-                    model: remoteModel,
-                    apiToken: apiToken,
-                    tools: [],
-                    includeSearch: nil
-                )
-            }
+            _ = try await FetchingClient().chat(
+                systemMessage: "Hi",
+                instructions: ["Hi"],
+                inputs: [nil],
+                files: [[]],
+                images: [[]],
+                autoContexts: [[:]],
+                webSearchContexts: [[]],
+                responses: [],
+                model: remoteModel,
+                apiToken: apiToken,
+                tools: [],
+                useOnitServer: useOnitServer,
+                includeSearch: nil
+            )
             
             return nil
         } catch FetchingError.noContent {
