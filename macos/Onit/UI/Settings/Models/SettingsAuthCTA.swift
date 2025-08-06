@@ -15,7 +15,7 @@ struct SettingsAuthCTA: View {
 
     init(
         title: String = "Sign Up to Access All Providers!",
-        caption: String,
+        caption: String
     ) {
         self.title = title
         self.caption = caption

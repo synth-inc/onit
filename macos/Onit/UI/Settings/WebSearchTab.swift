@@ -44,8 +44,9 @@ struct WebSearchTab: View {
                 
                 localModeSection
             }
-            .frame(width: 460)
+            .frame(maxWidth: .infinity, alignment: .leading)
             .padding(.vertical, 20)
+            .padding(.horizontal, 54)
         }
     }
     
