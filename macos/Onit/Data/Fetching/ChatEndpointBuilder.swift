@@ -11,7 +11,6 @@ import Foundation
 struct ChatEndpointBuilder {
 
     static func build(
-        useOnitServer: Bool,
         model: AIModel,
         images: [[URL]],
         responses: [String],
@@ -21,17 +20,6 @@ struct ChatEndpointBuilder {
         tools: [Tool] = [],
         includeSearch: Bool? = nil
     ) async throws -> any Endpoint {
-        if useOnitServer {
-            let messages = ChatEndpointMessagesBuilder.onit(
-                model: model,
-                images: images,
-                responses: responses,
-                systemMessage: systemMessage,
-                userMessages: userMessages)
-            
-            return OnitChatStreamingEndpoint(
-                model: model.id, messages: messages, tools: tools, includeSearch: includeSearch)
-        }
         switch model.provider {
         case .openAI:
             return await ChatEndpointBuilder.openAI(

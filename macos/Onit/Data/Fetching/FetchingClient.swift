@@ -37,7 +37,6 @@ actor FetchingClient {
         model: AIModel,
         apiToken: String?,
         tools: [Tool] = [],
-        useOnitServer: Bool = false,
         includeSearch: Bool? = nil
     ) async throws -> ChatResponse {
         let userMessages = ChatEndpointMessagesBuilder.user(
@@ -48,7 +47,6 @@ actor FetchingClient {
             webSearchContexts: webSearchContexts)
         
         let endpoint = try await ChatEndpointBuilder.build(
-            useOnitServer: useOnitServer,
             model: model,
             images: images,
             responses: responses,
