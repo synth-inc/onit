@@ -155,9 +155,7 @@ class AppState: NSObject, SPUUpdaterDelegate {
             let userRemovedRemoteModelUniqueIds = Set(Defaults[.userRemovedRemoteModels].map { $0.uniqueId })
             models.removeAll { userRemovedRemoteModelUniqueIds.contains($0.uniqueId) }
             
-            /// Removing user-added remote models from fetched result to prevent:
-            ///     1. Overriding of custom user-added models (e.g. custom display names).
-            ///     2. Duplication.
+            /// Updating fetched remote models with user-added remote models.
             for userAddedRemoteModel in Defaults[.userAddedRemoteModels] {
                 if let existingModelIndex = models.firstIndex(where: { $0.uniqueId == userAddedRemoteModel.uniqueId }) {
                     models[existingModelIndex] = userAddedRemoteModel

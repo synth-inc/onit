@@ -10,16 +10,14 @@ import SwiftUI
 struct RemoteModelsSection: View {
 
     var body: some View {
-        ScrollView {
-            ModelsSection(title: "Remote Models") {
-                RemoteModelSection(provider: .openAI)
-                RemoteModelSection(provider: .anthropic)
-                RemoteModelSection(provider: .xAI)
-                RemoteModelSection(provider: .googleAI)
-                RemoteModelSection(provider: .deepSeek)
-                RemoteModelSection(provider: .perplexity)
-                CustomProvidersSection()
-            }
+        ModelsSection(title: "Remote Models") {
+            RemoteModelSection(provider: .openAI)
+            RemoteModelSection(provider: .anthropic)
+            RemoteModelSection(provider: .xAI)
+            RemoteModelSection(provider: .googleAI)
+            RemoteModelSection(provider: .deepSeek)
+            RemoteModelSection(provider: .perplexity)
+            CustomProvidersSection()
         }
     }
 }
