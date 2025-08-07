@@ -154,6 +154,15 @@ class AppState: NSObject, SPUUpdaterDelegate {
             /// Removing user-removed remote models from fetched result.
             let userRemovedRemoteModelUniqueIds = Set(Defaults[.userRemovedRemoteModels].map { $0.uniqueId })
             models.removeAll { userRemovedRemoteModelUniqueIds.contains($0.uniqueId) }
+            
+            /// Updating fetched remote models with user-added remote models.
+            for userAddedRemoteModel in Defaults[.userAddedRemoteModels] {
+                if let existingModelIndex = models.firstIndex(where: { $0.uniqueId == userAddedRemoteModel.uniqueId }) {
+                    models[existingModelIndex] = userAddedRemoteModel
+                } else {
+                    models.append(userAddedRemoteModel)
+                }
+            }
 
             // This means we've never successfully fetched before
             if Defaults[.availableRemoteModels].isEmpty {
@@ -588,16 +597,45 @@ class AppState: NSObject, SPUUpdaterDelegate {
                 updatedUserRemovedRemoteModels.append(remoteModel)
             }
         }
-        Defaults[.userRemovedRemoteModels] = updatedUserRemovedRemoteModels
         
+        Defaults[.userRemovedRemoteModels] = updatedUserRemovedRemoteModels
         
         /// Actions for removing remote models.
         let remoteModelsToRemoveUniqueIds = Set(remoteModelsToRemove.map { $0.uniqueId })
+        
         availableRemoteModels.removeAll { remoteModelsToRemoveUniqueIds.contains($0.uniqueId) }
+        
+        Defaults[.userAddedRemoteModels].removeAll { remoteModelsToRemoveUniqueIds.contains($0.uniqueId) }
+        
         Defaults[.visibleModelIds].subtract(remoteModelsToRemoveUniqueIds)
         
         /// Properly setting the currently selected model in the case where the user removes the previously selected one.
         resetCurrentRemoteModel()
+    }
+    
+    func addRemoteModel(_ remoteModel: AIModel) {
+        /// Updating the list of available remote models.
+        let availableRemoteModelUniqueIds = Set(availableRemoteModels.map { $0.uniqueId })
+        
+        if !availableRemoteModelUniqueIds.contains(remoteModel.uniqueId) {
+            availableRemoteModels.append(remoteModel)
+        }
+        
+        /// Updating the list of user-added remote models.
+        var updatedUserAddedRemoteModels = Defaults[.userAddedRemoteModels]
+        let userAddedRemoteModelUniqueIds = Set(Defaults[.userAddedRemoteModels].map { $0.uniqueId })
+        
+        if !userAddedRemoteModelUniqueIds.contains(remoteModel.uniqueId) {
+            updatedUserAddedRemoteModels.append(remoteModel)
+        }
+        
+        Defaults[.userAddedRemoteModels] = updatedUserAddedRemoteModels
+        
+        /// Actions for adding remote models.
+        Defaults[.userRemovedRemoteModels].removeAll { $0.uniqueId == remoteModel.uniqueId }
+        Defaults[.visibleModelIds].insert(remoteModel.uniqueId)
+        
+        AnalyticsManager.Settings.Models.remoteModelAdded(remoteModel)
     }
 }
 

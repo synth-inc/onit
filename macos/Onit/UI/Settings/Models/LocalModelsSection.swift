@@ -59,7 +59,6 @@ struct LocalModelsSection: View {
                         .font(.system(size: 12))
                         .padding(.top, 5)
                 }
-                content
             }
             .frame(maxWidth: .infinity, alignment: .leading)
         }
@@ -83,43 +82,49 @@ struct LocalModelsSection: View {
             // The implementation to turn off local models doesn't exist, so we never show the toggle.
             ModelTitle(title: "Ollama", isOn: $isOn, showToggle: false)
 
-            HStack {
+            HStack(alignment: .center) {
                 Text("Endpoint URL:")
                     .foregroundStyle(.primary.opacity(0.65))
                     .font(.system(size: 12))
                     .fontWeight(.regular)
                 TextField("", text: $localEndpointString)
-                    .textFieldStyle(.roundedBorder)
-                    .font(.system(size: 12))
+                    .textFieldStyle(PlainTextFieldStyle())
+                    .font(.system(size: 13, weight: .regular))
                     .frame(maxWidth: 250)
+                    .padding(0)
+                    .padding(.vertical, 4)
+                    .padding(.horizontal, 7)
+                    .background(.systemGray900)
+                    .addBorder(cornerRadius: 5, stroke: .systemGray800)
                 Spacer()
-                Button {
-                    Task {
-                        fetching = true
-                        if let localEndpointURL = URL(string: localEndpointString) {
-                            self.localEndpointURL = localEndpointURL
+                SimpleButton(
+                    isLoading: fetching,
+                    disabled: fetching,
+                    text: "Set",
+                    action: {
+                        Task {
+                            fetching = true
+                            if let localEndpointURL = URL(string: localEndpointString) {
+                                self.localEndpointURL = localEndpointURL
 
-                            await appState.fetchLocalModels()
+                                await appState.fetchLocalModels()
 
-                            if appState.localFetchFailed {
-                                message = "Couldn't find any models at the provided URL."
+                                if appState.localFetchFailed {
+                                    message = "Couldn't find any models at the provided URL."
+                                } else {
+                                    message = "Models loaded successfully!"
+                                }
                             } else {
-                                message = "Models loaded successfully!"
+                                message = "Local endpoint must be a valid URL"
                             }
-                        } else {
-                            message = "Local endpoint must be a valid URL"
+                            fetching = false
                         }
-                        fetching = false
-                    }
-                } label: {
-                    Text("Set")
-                }
-                .disabled(fetching)
-                .foregroundStyle(.white)
-                .buttonStyle(.borderedProminent)
-                .frame(height: 22)
-                .fontWeight(.regular)
+                    },
+                    background: .blue
+                )
             }
+            
+            content
             
             DisclosureGroup("Advanced", isExpanded: $showAdvanced) {
                 VStack(alignment: .leading, spacing: 8) {
@@ -343,7 +348,7 @@ struct LocalModelsSection: View {
     @ViewBuilder
     var content: some View {
         if availableLocalModels.isEmpty {
-            HStack(spacing: 0) {
+            HStack(alignment: .top, spacing: 0) {
                 text
                 Spacer(minLength: 8)
                 button
@@ -361,7 +366,7 @@ struct LocalModelsSection: View {
         (Text(.init(link))
             + Text(
                 """
-                 to use Onit with local models. Models running locally on Ollama will be available here
+                 to use Onit with local models. Models running locally on Ollama will be available here.
                 """
             ))
             .foregroundStyle(.primary.opacity(0.65))
@@ -387,21 +392,19 @@ struct LocalModelsSection: View {
     }
 
     var button: some View {
-        Button(action: {
-            fetching = true
-            Task {
-                await appState.fetchLocalModels()
-                fetching = false
-            }
-        }) {
-            if fetching {
-                ProgressView()
-                    .controlSize(.small)
-            } else {
-                Text("Reload")
-            }
-        }
-        .buttonStyle(.borderedProminent)
+        SimpleButton(
+            isLoading: fetching,
+            disabled: fetching,
+            text: "Reload",
+            action: {
+                fetching = true
+                Task {
+                    await appState.fetchLocalModels()
+                    fetching = false
+                }
+            },
+            background: .blue
+        )
     }
 }
 
