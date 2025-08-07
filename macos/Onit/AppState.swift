@@ -150,6 +150,10 @@ class AppState: NSObject, SPUUpdaterDelegate {
     func fetchRemoteModels() async {
         do {
             var models = try await AIModel.fetchModels()
+            
+            /// Removing user-removed remote models from fetched result.
+            let userRemovedRemoteModelUniqueIds = Set(Defaults[.userRemovedRemoteModels].map { $0.uniqueId })
+            models.removeAll { userRemovedRemoteModelUniqueIds.contains($0.uniqueId) }
 
             // This means we've never successfully fetched before
             if Defaults[.availableRemoteModels].isEmpty {
@@ -560,6 +564,41 @@ class AppState: NSObject, SPUUpdaterDelegate {
 //    var remoteNeedsSetup: Bool {
 //        listedModels.isEmpty
 //    }
+    
+    private func resetCurrentRemoteModel() {
+        if let currentModel = Defaults[.remoteModel],
+           !availableRemoteModels.contains(currentModel)
+        {
+            if listedModels.isEmpty {
+                Defaults[.remoteModel] = nil
+                Defaults[.mode] = .local
+            } else {
+                Defaults[.remoteModel] = listedModels.first
+            }
+        }
+    }
+    
+    func removeRemoteModels(_ remoteModelsToRemove: [AIModel]) {
+        /// Updating the list of user-removed remote models.
+        var updatedUserRemovedRemoteModels = Defaults[.userRemovedRemoteModels]
+        let userRemovedRemoteModelUniqueIds = Set(Defaults[.userRemovedRemoteModels].map { $0.uniqueId })
+        
+        for remoteModel in remoteModelsToRemove {
+            if !userRemovedRemoteModelUniqueIds.contains(remoteModel.uniqueId) {
+                updatedUserRemovedRemoteModels.append(remoteModel)
+            }
+        }
+        Defaults[.userRemovedRemoteModels] = updatedUserRemovedRemoteModels
+        
+        
+        /// Actions for removing remote models.
+        let remoteModelsToRemoveUniqueIds = Set(remoteModelsToRemove.map { $0.uniqueId })
+        availableRemoteModels.removeAll { remoteModelsToRemoveUniqueIds.contains($0.uniqueId) }
+        Defaults[.visibleModelIds].subtract(remoteModelsToRemoveUniqueIds)
+        
+        /// Properly setting the currently selected model in the case where the user removes the previously selected one.
+        resetCurrentRemoteModel()
+    }
 }
 
 // MARK: - App Update Listeners

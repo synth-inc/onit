@@ -11,15 +11,18 @@ struct SearchBar: View {
     @Binding var searchQuery: String
     let placeholder: String
     let sidePadding: CGFloat
+    let background: Color
     
     init(
         searchQuery: Binding<String>,
         placeholder: String = "Search for...",
-        sidePadding: CGFloat = 0
+        sidePadding: CGFloat = 0,
+        background: Color = .gray800
     ) {
         self._searchQuery = searchQuery
         self.placeholder = placeholder
         self.sidePadding = sidePadding
+        self.background = background
     }
     
     var body: some View {
@@ -28,7 +31,7 @@ struct SearchBar: View {
             placeholder: placeholder,
             sidePadding: sidePadding,
             config: CustomTextField.Config(
-                background: .gray800,
+                background: background,
                 clear: true,
                 leftIcon: .search
             )

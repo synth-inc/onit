@@ -17,6 +17,7 @@ struct RemoteModelSection: View {
     @State private var loading = false
     @State private var showAdvanced: Bool = false  
     @State private var localState: TokenValidationState.ValidationState = .notValidated
+    @State private var showRemoveModelsSheet: Bool = false
 
     @Default(.mode) var mode
     @Default(.remoteModel) var remoteModel
@@ -214,21 +215,76 @@ struct RemoteModelSection: View {
             }
         }
     }
+    
+    private struct UpdateAvailableRemoteModelsButton: View {
+        var isRemove: Bool = false
+        var action: () -> Void
+        
+        @State private var isHovered: Bool = false
+        @State private var isPressed: Bool = false
+        
+        var body: some View {
+            Image(isRemove ? .minusThin : .plusThin)
+                .frame(width: 28, alignment: .center)
+                .frame(height: 28, alignment: .center)
+                .addButtonEffects(
+                    hoverBackground: .gray500,
+                    isHovered: $isHovered,
+                    isPressed: $isPressed
+                ) {
+                    action()
+                }
+                .addAnimation(dependency: isHovered)
+                .opacity(isHovered ? 1 : isRemove ? 0.3 : 1)
+        }
+    }
 
     @ViewBuilder
     var modelsView: some View {
-        // If their logged in, we shoudl show these since they can always use them through the free plan.
+        // If they're logged in, we should show these since they can always use them through the free plan.
         if use && (appState.account != nil || validated) {
+            let noAvailableRemoteModels: Bool = models.isEmpty
+            
             GroupBox {
-                VStack(alignment: .leading, spacing: 0) {
-                    ForEach(models) { model in
-                        ModelToggle(aiModel: model)
-                            .frame(height: 36)
+                LazyVStack(alignment: .leading, spacing: 0) {
+                    if noAvailableRemoteModels {
+                        Text("No models")
+                            .styleText(size: 13, weight: .regular)
+                            .frame(maxWidth: .infinity, alignment: .center)
+                            .frame(height: 29, alignment: .center)
+                            .padding(.horizontal, 8)
+                            .opacity(0.45)
+                    } else {
+                        ForEach(models) { model in
+                            ModelToggle(aiModel: model)
+                                .frame(height: 36)
+                        }
+                        .padding(.horizontal, 8)
                     }
+                    
+                    Divider()
+                    
+                    HStack(alignment: .center, spacing: 2) {
+                        // TODO: LOYD - Add "add custom model" button here.
+                        
+                        UpdateAvailableRemoteModelsButton(isRemove: true) {
+                            showRemoveModelsSheet = true
+                        }
+                        .disabled(noAvailableRemoteModels)
+                        .allowsHitTesting(!noAvailableRemoteModels)
+                    }
+                    .padding(2)
                 }
                 .padding(.vertical, -4)
-                .padding(.horizontal, 4)
+                .padding(.horizontal, -4)
                 .frame(maxWidth: .infinity, alignment: .leading)
+                // TODO: LOYD - Add "add custom model" sheet/form here.
+                .sheet(isPresented: $showRemoveModelsSheet) {
+                    RemoteModelRemoveModel(
+                        provider: provider,
+                        showRemoveModelsSheet: $showRemoveModelsSheet
+                    )
+                }
             }
         }
     }
