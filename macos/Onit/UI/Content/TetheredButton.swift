@@ -78,7 +78,7 @@ struct TetheredButton: View {
             .buttonStyle(.plain)
             .background {
                 RoundedRectangle(cornerRadius: Self.width / 2)
-                    .fill(isHovering ? Color.S_8 : Color.baseBG)
+                    .fill(isHovering ? Color.S_6 : Color.S_9.opacity(0.7))
                     .animation(.easeInOut(duration: 0.15), value: isHovering)
             }
              .onHover { hovering in
