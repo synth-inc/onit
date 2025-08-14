@@ -93,21 +93,17 @@ struct ModelSelectionView: View {
         }
     }
     
-    private func emptyText(_ text: String) -> some View {
-        Text(text)
-            .fixedSize(horizontal: false, vertical: true)
-            .styleText(
-                size: 13,
-                weight: .regular,
-                color: .gray100
-            )
-    }
-    
     @ViewBuilder
     private var signInCTA: some View {
         if !authManager.userLoggedIn {
             VStack(alignment: .leading, spacing: 8) {
-                emptyText("Sign in to gain access to models from OpenAI, Anthropic, and more!")
+                Text("Sign in to access 30+ models from OpenAI, Anthropic and more!")
+                    .fixedSize(horizontal: false, vertical: true)
+                    .styleText(
+                        size: 13,
+                        weight: .regular,
+                        color: .gray100
+                    )
                 
                 Button("Sign In") {
                     GeneralTabAccount.openSignInAuth()
