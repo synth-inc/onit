@@ -403,7 +403,7 @@ struct LocalModelsSection: View {
                     fetching = false
                 }
             },
-            background: .blue
+            background: Color.blue
         )
     }
 }

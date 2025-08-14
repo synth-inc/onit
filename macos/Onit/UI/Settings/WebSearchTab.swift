@@ -52,19 +52,20 @@ struct WebSearchTab: View {
     
     var localModeSection: some View {
         GroupBox {
-            VStack(alignment: .leading, spacing: 12) {
+            VStack(alignment: .leading, spacing: 8) {
                 HStack {
                     Toggle("Enable Web Search in Local Mode", isOn: $allowWebSearchInLocalMode)
                         .font(.system(size: 13))
                 }
-
-            Text("When enabled, web search will be available in local mode. Please note that your queries will be sent to the search provider's servers, and we cannot guarantee that your data won't be stored or logged by the provider.")
-                .font(.system(size: 12))
-                .foregroundStyle(Color.S_2)
-                .padding(.horizontal, 8)
-                .padding(.vertical, 12)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                // .fixedSize(horizontal: false, vertical: true)
+                
+                Text("When enabled, web search will be available in local mode. Please note that your queries will be sent to the search provider's servers, and we cannot guarantee that your data won't be stored or logged by the provider.")
+                    .font(.system(size: 12))
+                    .foregroundStyle(Color.S_2)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            .padding(.horizontal, 8)
+            .padding(.vertical, 12)
         }
     }
     
@@ -83,7 +84,7 @@ struct WebSearchTab: View {
                 isLoading: isValidating,
                 disabled: isTavilyAPITokenValidated || tavilyAPIToken.isEmpty || isValidating,
                 text: isValidating ? "Validating" : isTavilyAPITokenValidated ? "Validated" : "Validate",
-                textColor: isTavilyAPITokenValidated ? .black : .white,
+                textColor: isTavilyAPITokenValidated ? Color.black : Color.white,
                 action: validateTavilyAPIToken
             )
             
@@ -115,7 +116,6 @@ struct WebSearchTab: View {
                     .padding(.vertical, 5)
                     .background(isTavilyAPITokenValidated ? Color.green.opacity(0.2) : Color.S_2.opacity(0.2))
                     .cornerRadius(4)
-                    .opacity(isTavilyAPITokenValidated ? 1 : 0.5)
             }
             
             Text("Tavily is a powerful search API that provides real-time information from the web.")

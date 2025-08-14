@@ -72,7 +72,7 @@ extension GeneralTabAccountAlert {
     ) -> some View {
         VStack(alignment: .center) {
             Text(text)
-                .styleText(size: 13, weight: .regular, color: isCritical ? Color.red500 : Color.S_0)
+                .styleText(size: 13, weight: .regular, color: isCritical ? Color.red : Color.S_0)
         }
         .frame(height: 28)
         .frame(maxWidth: .infinity)

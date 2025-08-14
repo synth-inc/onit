@@ -137,7 +137,7 @@ struct RemoteModelAddCustomModel: View {
                             await verifyAndAdd()
                         }
                     },
-                    background: .blue
+                    background: Color.blue
                 )
                 .disabled(submitDisabled)
                 .allowsHitTesting(!submitDisabled)
@@ -198,7 +198,7 @@ struct RemoteModelAddCustomModel: View {
                 .styleText(
                     size: 11,
                     weight: .regular,
-                    color: .warning
+                    color: Color.warning
                 )
         }
     }
@@ -208,13 +208,13 @@ struct RemoteModelAddCustomModel: View {
             SearchBar(
                 searchQuery: $removedRemoteModelsSearchQuery,
                 placeholder: "Filter by display name",
-                background: .clear
+                background: Color.clear
             )
             
             if filteredUserRemovedRemoteModels.isEmpty {
                 Text("No models.")
                     .padding(.horizontal, 8)
-                    .styleText(size: 13, color: .gray100)
+                    .styleText(size: 13, color: Color.S_1)
             } else {
                 ScrollView {
                     LazyVStack(alignment: .leading, spacing: spacingBetweenRemovedModelsButtons) {

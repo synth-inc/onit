@@ -72,7 +72,7 @@ struct SimpleButton: View {
         .opacity(disabled ? 0.5 : isPressed ? 0.7 : 1)
         .allowsHitTesting(allowHitTesting)
         .shadow(color: Color.black.opacity(0.05), radius: 0, x: 0, y: 0)
-        .shadow(color: Color.black.opacity(0.4), radius: 1.25, x: 0, y: 0.5)
+        .shadow(color: Color.black.opacity(0.2), radius: 1.25, x: 0, y: 0.5)
         .addAnimation(dependency: isHovered)
         .onHover { isHovering in isHovered = isHovering}
         .gesture(

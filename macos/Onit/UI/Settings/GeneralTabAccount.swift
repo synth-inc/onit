@@ -116,7 +116,7 @@ extension GeneralTabAccount {
     private var deleteAccountButton: some View {
         SimpleButton(
             text: "Delete account",
-            textColor: Color.red500,
+            textColor: Color.red,
             action: {
                 AnalyticsManager.AccountEvents.deletePressed()
                 showDeleteAccountAlert = true

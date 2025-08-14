@@ -111,7 +111,7 @@ struct NewSystemPromptView: View {
                                 .buttonStyle(.plain)
                                 .padding(.vertical, 6)
                                 .padding(.horizontal, 8)
-                                .background(.clear)
+                                .background(Color.clear)
                                 .cornerRadius(4)
                                 .contentShape(Rectangle())
                             }
