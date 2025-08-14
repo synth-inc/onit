@@ -122,10 +122,17 @@ struct ModelSelectionView: View {
     
     private func addModelCTAButton(isLocal: Bool = false) -> some View {
         TextButton(
-            iconSize: 16,
-            icon: .plusThin,
-            text: "Add manually"
+            fillContainer: false
         ) {
+            HStack(alignment: .center, spacing: 10) {
+                Image(.plusThin)
+                    .padding(.leading, -1)
+                
+                Text("Add manually")
+                    .styleText(size: 14, color: .primary)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+        } action: {
             if isLocal {
                 AnalyticsManager.ModelPicker.localSetupPressed()
             }
@@ -176,7 +183,8 @@ struct ModelSelectionView: View {
                     RemoteModelButton(
                         modelSelectionViewOpen: open,
                         selectedModel: selectedModel,
-                        remoteModel: remoteModel
+                        remoteModel: remoteModel,
+                        mode: mode
                     )
                 }
             }

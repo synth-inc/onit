@@ -30,8 +30,8 @@ struct GeneralTabAccount: View {
                 
                 HStack(spacing: 9) {
                     if !authManager.userLoggedIn {
-                        createAnAccountButton
-                        signInButton
+                        Self.createAnAccountButton
+                        Self.signInButton
                     } else {
                         logoutButton
                         deleteAccountButton
@@ -88,14 +88,14 @@ extension GeneralTabAccount {
             textColor: Color.white,
             action: {
                 AnalyticsManager.AccountEvents.createAccountPressed()
-                authFlowStatus = .showSignUp
+                Defaults[.authFlowStatus] = .showSignUp
                 Self.openPanel()
             },
             background: Color.blue
         )
     }
     
-    private var signInButton: some View {
+    static var signInButton: some View {
         SimpleButton(text: "Sign in") {
             Self.openSignInAuth()
         }

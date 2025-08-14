@@ -118,20 +118,13 @@ struct RemoteModelSection: View {
         .onChange(of: use) {
             save(use: use)
             save(validated: validated)
-            
-            // If it's our first time adding models, set the remoteModel
-            if !appState.listedModels.isEmpty {
-                if remoteModel == nil {
-                    remoteModel = appState.listedModels.first
-                }
-            }
         }
     }
 
     // MARK: - Subviews
 
     var titleView: some View {
-        ModelTitle(title: provider.title, isOn: $use, showToggle: appState.account != nil || validated)
+        ModelTitle(title: provider.title, isOn: $use, showToggle: authManager.userLoggedIn || validated)
     }
 
     var textField: some View {
@@ -175,7 +168,7 @@ struct RemoteModelSection: View {
                         fetchKey()
                         checkValidated()
                         
-                        if appState.account == nil {
+                        if !authManager.userLoggedIn {
                             checkUse()
                         }
                     }
@@ -267,6 +260,8 @@ struct RemoteModelSection: View {
     var modelsView: some View {
         // If they're logged in, we should show these since they can always use them through the free plan.
         if use && (authManager.userLoggedIn || validated) {
+            let noAvailableRemoteModels: Bool = models.isEmpty
+            
             GroupBox {
                 LazyVStack(alignment: .leading, spacing: 0) {
                     if noAvailableRemoteModels {

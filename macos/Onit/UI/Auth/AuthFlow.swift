@@ -133,7 +133,7 @@ extension AuthFlow {
                     .styleText(size: 23, align: .center)
                 
                 Text("Sign up to access 30+ models from OpenAI, Anthropic & more!")
-                    .styleText(size: 15, color: .gray100, align: .center)
+                    .styleText(size: 15, weight: .regular, color: .gray100, align: .center)
             }
             .padding(.bottom, 24)
             .frame(width: 291)

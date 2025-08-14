@@ -24,7 +24,6 @@ struct ContentView: View {
     @Default(.hasClosedTrialEndedAlert) var hasClosedTrialEndedAlert
     @Default(.availableLocalModels) var availableLocalModels
     @Default(.visibleModelIds) var visibleModelIds
-    @Default(.remoteModel) var remoteModel
     
     @State private var modelProvidersManager = ModelProvidersManager.shared
     

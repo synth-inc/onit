@@ -417,19 +417,6 @@ class AppState: NSObject, SPUUpdaterDelegate {
 //        listedModels.isEmpty
 //    }
     
-    private func resetCurrentRemoteModel() {
-        if let currentModel = Defaults[.remoteModel],
-           !availableRemoteModels.contains(currentModel)
-        {
-            if listedModels.isEmpty {
-                Defaults[.remoteModel] = nil
-                Defaults[.mode] = .local
-            } else {
-                Defaults[.remoteModel] = listedModels.first
-            }
-        }
-    }
-    
     func removeRemoteModels(_ remoteModelsToRemove: [AIModel]) {
         /// Updating the list of user-removed remote models.
         var updatedUserRemovedRemoteModels = Defaults[.userRemovedRemoteModels]
@@ -451,9 +438,6 @@ class AppState: NSObject, SPUUpdaterDelegate {
         Defaults[.userAddedRemoteModels].removeAll { remoteModelsToRemoveUniqueIds.contains($0.uniqueId) }
         
         Defaults[.visibleModelIds].subtract(remoteModelsToRemoveUniqueIds)
-        
-        /// Properly setting the currently selected model in the case where the user removes the previously selected one.
-        resetCurrentRemoteModel()
     }
     
     func addRemoteModel(_ remoteModel: AIModel) {
@@ -479,38 +463,6 @@ class AppState: NSObject, SPUUpdaterDelegate {
         Defaults[.visibleModelIds].insert(remoteModel.uniqueId)
         
         AnalyticsManager.Settings.Models.remoteModelAdded(remoteModel)
-    }
-    private func getIsRemoteProviderOn(_ provider: AIModel.ModelProvider) -> Bool {
-        switch provider {
-        case .openAI:
-            return useOpenAI
-        case .anthropic:
-            return useAnthropic
-        case .xAI:
-            return useXAI
-        case .googleAI:
-            return useGoogleAI
-        case .deepSeek:
-            return useDeepSeek
-        case .perplexity:
-            return usePerplexity
-        case .custom:
-            return false
-        }
-    }
-    
-    var numberRemoteProvidersInUse: Int {
-        var count: Int = 0
-        
-        let providers: [AIModel.ModelProvider] = [.openAI, .anthropic, .xAI, .googleAI, .deepSeek, .perplexity]
-        
-        for provider in providers {
-            if getIsRemoteProviderInUse(provider) {
-                count += 1
-            }
-        }
-        
-        return count
     }
     
     func setModeAndValidRemoteModel() {

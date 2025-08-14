@@ -15,15 +15,18 @@ struct RemoteModelButton: View {
     private let modelSelectionViewOpen: Binding<Bool>
     private let selectedModel: Binding<SelectedModel?>
     private let remoteModel: AIModel
+    private let mode: InferenceMode
     
     init(
         modelSelectionViewOpen: Binding<Bool>,
         selectedModel: Binding<SelectedModel?>,
-        remoteModel: AIModel
+        remoteModel: AIModel,
+        mode: InferenceMode
     ) {
         self.modelSelectionViewOpen = modelSelectionViewOpen
         self.selectedModel = selectedModel
         self.remoteModel = remoteModel
+        self.mode = mode
     }
     
     @State private var modelProvidersManager = ModelProvidersManager.shared
@@ -70,8 +73,10 @@ extension RemoteModelButton {
     }
     
     private func isSelectedRemoteModel(model: AIModel) -> Bool {
-        if let currentModel = selectedModel.wrappedValue,
-           case let .remote(selectedModel) = currentModel {
+        if mode == .remote,
+           let currentModel = selectedModel.wrappedValue,
+           case let .remote(selectedModel) = currentModel
+        {
             return model.id == selectedModel.id
         } else {
             return false
