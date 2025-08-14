@@ -63,8 +63,7 @@ struct AuthFlow: View {
                 emailAuthTokenForm
             } else {
                 form
-                notLoggedInCTA
-                redirectSection
+                redirectCTA
                 Spacer()
                 closeButton
             }
@@ -128,9 +127,15 @@ extension AuthFlow {
         VStack(alignment: .center, spacing: 0) {
             Image("Logo").padding(.bottom, 19)
             
-            Text(isSignUp ? "Create your account" : "Sign in to Onit")
-                .styleText(size: 23)
-                .padding(.bottom, 28)
+            VStack(alignment: .center, spacing: 8) {
+                Text(isSignUp ? "Create your account" : "Sign in to Onit")
+                    .styleText(size: 23, align: .center)
+                
+                Text("Sign up to access 30+ models from OpenAI, Anthropic & more!")
+                    .styleText(size: 15, color: .gray100, align: .center)
+            }
+            .padding(.bottom, 24)
+            .frame(width: 291)
             
             VStack(alignment: .center, spacing: 12) {
                 formAuthButtons
@@ -154,102 +159,10 @@ extension AuthFlow {
             .styleText(size: 12, align: .center)
     }
     
-    private struct LocalModelsCTA: View {
-        @Environment(\.appState) var appState
-        @Environment(\.openSettings) var openSettings
-        
-        @State private var isHoveredFetchButton: Bool = false
-        @State private var isHoveredModelAddButton: Bool = false
-        @State private var isFetchingLocalModels: Bool = false
-        @State private var localModelFetchErrorMessage: String = ""
-        
-        var body: some View {
-            VStack(alignment: .center, spacing: 4) {
-                Text("No local models found.")
-                    .styleText(
-                        size: 13,
-                        weight: .regular,
-                        color: .gray100
-                    )
-                
-                Button {
-                    localModelFetchErrorMessage = ""
-                    appState.localFetchFailed = false
-                    isFetchingLocalModels = true
-                    
-                    Task {
-                        await appState.fetchLocalModels()
-                        
-                        if appState.localFetchFailed {
-                            localModelFetchErrorMessage = "Couldn't find local models."
-                        }
-                        
-                        isFetchingLocalModels = false
-                    }
-                } label: {
-                    if isFetchingLocalModels {
-                        Loader()
-                    } else {
-                        Text("Search for local models...")
-                            .styleText(
-                                size: 13,
-                                weight: .regular,
-                                underline: isHoveredFetchButton
-                            )
-                            .onHover { isHovering in isHoveredFetchButton = isHovering}
-                    }
-                }
-                
-                if !localModelFetchErrorMessage.isEmpty {
-                    VStack(alignment: .center, spacing: 4) {
-                        Text(localModelFetchErrorMessage)
-                            .styleText(
-                                size: 13,
-                                weight: .regular,
-                                color: .red
-                            )
-                        
-                        Button {
-                            appState.settingsTab = .models
-                            openSettings()
-                        } label: {
-                            Text("Manually add models →")
-                                .styleText(
-                                    size: 13,
-                                    weight: .regular,
-                                    underline: isHoveredModelAddButton
-                                )
-                                .onHover { isHovering in isHoveredModelAddButton = isHovering}
-                        }
-                    }
-                    .padding(.top, 8)
-                }
-            }
-        }
-    }
-    
-    @ViewBuilder
-    private var notLoggedInCTA: some View {
-        if !authManager.userLoggedIn {
-            if !hasLocalModels {
-                LocalModelsCTA()
-            } else {
-                Text("\(isSignUp ? "Sign Up" : "Sign in") to access the latest models from OpenAI, Anthropic, and more!")
-                    .padding(.horizontal, 40)
-                    .styleText(
-                        size: 13,
-                        weight: .regular,
-                        color: .gray100,
-                        align: .center
-                    )
-            }
-        }
-    }
-    
     private var redirectSection: some View {
         HStack(spacing: 6) {
             Text(isSignUp ? "Already have an account?" : "Don't have an account?")
-                .styleText(size: 13, weight: .regular, color: .gray100)
+                .styleText(size: 13, weight: .regular, color: .gray100, align: .center)
             
             Button {
                 if isSignUp {
@@ -268,19 +181,21 @@ extension AuthFlow {
         }
     }
     
-    private var signUpRedirect: some View {
-        VStack(alignment: .center, spacing: 12) {
+    private var redirectCTA: some View {
+        VStack(alignment: .center, spacing: 10) {
             redirectSection
             
-            Button {
-                authFlowStatus = .hideAuth
-            } label: {
-                Text(generateSkipText())
-                    .styleText(size: 13, weight: .regular, underline: isHoveredSkipButton)
-            }
-            .buttonStyle(PlainButtonStyle())
-            .onHover { isHovering in
-                isHoveredSkipButton = isHovering
+            if authFlowStatus == .showSignUp {
+                Button {
+                    authFlowStatus = .hideAuth
+                } label: {
+                    Text(generateSkipText())
+                        .styleText(size: 13, weight: .regular, align: .center, underline: isHoveredSkipButton)
+                }
+                .buttonStyle(PlainButtonStyle())
+                .onHover { isHovering in
+                    isHoveredSkipButton = isHovering
+                }
             }
         }
     }
