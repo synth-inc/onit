@@ -10,6 +10,8 @@ import SwiftUI
 
 struct RemoteModelSection: View {
     @Environment(\.appState) var appState
+    
+    @ObservedObject private var authManager = AuthManager.shared
 
     @State private var use = false
     @State private var key = ""
@@ -264,9 +266,7 @@ struct RemoteModelSection: View {
     @ViewBuilder
     var modelsView: some View {
         // If they're logged in, we should show these since they can always use them through the free plan.
-        if use && (appState.account != nil || validated) {
-            let noAvailableRemoteModels: Bool = models.isEmpty
-            
+        if use && (authManager.userLoggedIn || validated) {
             GroupBox {
                 LazyVStack(alignment: .leading, spacing: 0) {
                     if noAvailableRemoteModels {

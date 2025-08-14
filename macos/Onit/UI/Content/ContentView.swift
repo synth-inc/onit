@@ -12,6 +12,7 @@ struct ContentView: View {
     @Environment(\.appState) var appState
     @Environment(\.windowState) private var state
     
+    @ObservedObject private var authManager = AuthManager.shared
     @ObservedObject private var accessibilityPermissionManager = AccessibilityPermissionManager.shared
     @Namespace private var animation
     
@@ -90,13 +91,6 @@ struct ContentView: View {
                     }
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .onAppear {
-                    if appState.account == nil {
-                        authFlowStatus = .showSignUp
-                    } else {
-                        authFlowStatus = .hideAuth
-                    }
-                }
             } else if showAuthFlow {
                 AuthFlow()
             } else {
@@ -114,6 +108,12 @@ struct ContentView: View {
                     
                     if state?.showChatView == true {
                         ZStack {
+                            alertView(
+                                isPresented: appState.showAddModelAlert,
+                                id: "add_model_alert",
+                                content: AddModelAlert()
+                            )
+                            
                             alertView(
                                 isPresented: showTwoWeekProTrialEndedAlert,
                                 id: "trial_ended_alert",
@@ -195,15 +195,17 @@ struct ContentView: View {
                 }
             }
         }
-        .onChange(of: appState.userLoggedIn) { _, _ in
+        .onChange(of: authManager.userLoggedIn) { _, _ in
             setModeAndValidRemoteModelWithAuth()
         }
-        .onChange(of: availableLocalModels) {_, localModelsList in
-            if !appState.userLoggedIn {
-                let canAccessLocalModels = !localModelsList.isEmpty
-                let cannotAccessModels = !canAccessRemoteModels && !canAccessLocalModels
-                
-                authFlowStatus = cannotAccessModels ? .showSignUp : .hideAuth
+        .onChange(of: canAccessRemoteModels) {_, _ in
+            if !authManager.userLoggedIn {
+                handleShowAddModelAlert()
+            }
+        }
+        .onChange(of: availableLocalModels) {_, _ in
+            if !authManager.userLoggedIn {
+                handleShowAddModelAlert()
             }
         }
         .onChange(of: modelProvidersManager.numberRemoteProvidersInUse) { _, _ in
@@ -214,16 +216,20 @@ struct ContentView: View {
         }
     }
     
+    private func handleShowAddModelAlert() {
+        let canAccessLocalModels = !availableLocalModels.isEmpty
+        let cannotAccessModels = !modelProvidersManager.userHasRemoteAPITokens && !canAccessLocalModels
+        appState.showAddModelAlert = cannotAccessModels
+    }
+    
     private func setModeAndValidRemoteModelWithAuth() {
         appState.setModeAndValidRemoteModel()
         
-        if appState.userLoggedIn {
+        if authManager.userLoggedIn {
             authFlowStatus = .hideAuth
+            appState.showAddModelAlert = false
         } else {
-            let canAccessLocalModels = !availableLocalModels.isEmpty
-            let cannotAccessModels = !canAccessRemoteModels && !canAccessLocalModels
-            
-            authFlowStatus = cannotAccessModels ? .showSignUp : .hideAuth
+            handleShowAddModelAlert()
         }
     }
     
