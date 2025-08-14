@@ -20,6 +20,7 @@ struct ViewOffsetKey: @preconcurrency PreferenceKey {
 struct QuickEditResponseView: View {
     @Environment(\.windowState) private var state
     @Environment(\.openURL) var openURL
+    @Environment(\.colorScheme) var colorScheme
         
     @State private var previousViewOffset: CGFloat = 0
     @State private var hasUserManuallyScrolled: Bool = false
@@ -54,9 +55,13 @@ struct QuickEditResponseView: View {
     
     private var configuration: LLMStreamConfiguration {
         let font = FontConfiguration(size: fontSize, lineHeight: lineHeight)
-        let color = ColorConfiguration(citationBackgroundColor: .gray600,
-                                       citationHoverBackgroundColor: .gray400,
-                                       citationTextColor: .gray100)
+        
+        let textColor = colorScheme == .dark ? Color.white : Color.black
+        
+        let color = ColorConfiguration(textColor: textColor,
+                                       citationBackgroundColor: Color.S_6,
+                                       citationHoverBackgroundColor: Color.S_4,
+                                       citationTextColor: Color.S_1)
         let thought = ThoughtConfiguration(icon: Image(.lightBulb))
         
         return LLMStreamConfiguration(font: font, colors: color, thought: thought)
@@ -83,11 +88,11 @@ extension QuickEditResponseView {
     private var promptSection: some View {
         Text(prompt.instruction)
             .appFont(.medium13)
-            .foregroundColor(.white)
+            .foregroundColor(Color.S_0)
             .frame(maxWidth: .infinity, minHeight: 24, alignment: .leading)
             .padding(8)
-            .background(.gray700)
-            .addBorder(cornerRadius: 8, lineWidth: 1, stroke: .gray500)
+            .background(Color.messageBG)
+            .addBorder(cornerRadius: 8, lineWidth: 1, stroke: Color.genericBorder)
     }
     
     private var responseSection: some View {
@@ -100,7 +105,7 @@ extension QuickEditResponseView {
                     
                     Text("Generating...")
                         .appFont(.medium13)
-                        .foregroundColor(.gray300)
+                        .foregroundColor(Color.S_3)
                 }
                 .padding(.vertical, 16)
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -124,9 +129,7 @@ extension QuickEditResponseView {
                                 IconButton(
                                     icon: .arrowDown,
                                     buttonSize: 36,
-                                    activeColor: .white,
-                                    inactiveColor: .white,
-                                    hoverBackground: .gray400,
+                                    activeColor: Color.S_0,
                                     tooltipPrompt: "Scroll to bottom"
                                 ) {
                                     hasUserManuallyScrolled = false
@@ -142,8 +145,8 @@ extension QuickEditResponseView {
                                         }
                                     }
                                 }
-                                .background(.gray600)
-                                .addBorder(cornerRadius: 18, stroke: .gray400)
+                                .background(GlassBackground())
+                                .addBorder(cornerRadius: 18, stroke: Color.genericBorder)
                                 .transition(.scale.combined(with: .opacity))
                                 .padding(.trailing, 20)
                             }
@@ -169,7 +172,7 @@ extension QuickEditResponseView {
                         configuration: configuration,
                         onUrlClicked: onUrlClicked,
                         onCodeAction: codeAction)
-                    .id("\(fontSize)-\(lineHeight)") // Force recreation when font settings change
+                    .id("\(fontSize)-\(lineHeight)-\(colorScheme.hashValue)") // Force recreation when font settings change
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(.vertical, 8)
                     .id("content")
@@ -234,16 +237,16 @@ extension QuickEditResponseView {
         .mask(
             VStack(spacing: 0) {
                 LinearGradient(
-                    gradient: Gradient(colors: [Color.clear, Color.white]),
+                    gradient: Gradient(colors: [Color.clear, Color.S_0]),
                     startPoint: .top,
                     endPoint: .bottom
                 )
                 .frame(height: 20)
                 
-                Color.white
+                Color.S_0
                 
                 LinearGradient(
-                    gradient: Gradient(colors: [Color.white, Color.clear]),
+                    gradient: Gradient(colors: [Color.S_0, Color.clear]),
                     startPoint: .top,
                     endPoint: .bottom
                 )
@@ -270,7 +273,7 @@ extension QuickEditResponseView {
                     )
                     .buttonStyle(.plain)
                     .frame(height: 24)
-                    .background(.blue400)
+                    .background(Color.blue400)
                     .clipShape(RoundedRectangle(cornerRadius: 5))
                 }
                 
@@ -279,6 +282,7 @@ extension QuickEditResponseView {
             
             IconButton(
                 icon: .arrowsSpin,
+                inactiveColor: Color.S_0,
                 tooltipPrompt: "Retry"
             ) {
                 if let state = state {
@@ -324,5 +328,5 @@ extension QuickEditResponseView {
 
 #Preview {
     QuickEditResponseView(prompt: Prompt.sample, isEditableElement: true)
-        .background(.black)
+        .background(Color.black)
 }

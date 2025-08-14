@@ -42,9 +42,9 @@ struct WebContextItem: View {
 
         ContextTag(
             text: getCurrentWebsiteTitle(),
-            textColor: isEditing ? .T_2 : .white,
-            background: websiteUndergoingScrape || !isEditing ? .clear : .gray500,
-            hoverBackground: isEditing ? .gray400 : .gray600,
+            textColor: isEditing ? Color.T_2 : Color.S_0,
+            background: websiteUndergoingScrape || !isEditing ? Color.clear : Color.T_8,
+            hoverBackground: isEditing ? Color.S_4 : Color.S_6,
             maxWidth: isEditing ? 155 : .infinity,
             isLoading: websiteUndergoingScrape,
             iconView: websiteUndergoingScrape ? LoaderPulse() : favicon,

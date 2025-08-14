@@ -40,7 +40,7 @@ struct ContextMenuWindowButton: View {
     
     var body: some View {
         TextButton(
-            background: selected ? .gray600 : .clear,
+            background: selected ? Color.T_8 : Color.clear,
             icon: windowIcon == nil ? .stars : nil,
             iconImage: windowIcon,
             text: windowName
@@ -65,21 +65,21 @@ extension ContextMenuWindowButton {
     private var checkEmpty: some View {
         Circle()
             .frame(width: 14, height: 14)
-            .background(.T_8).opacity(0.2)
+            .background(Color.T_8).opacity(0.2)
             .addBorder(
                 cornerRadius: 999,
-                stroke: .T_7
+                stroke: Color.T_7
             )
     }
     
     private var checkFilled: some View {
         Image(.check)
-            .addIconStyles(iconSize: 8)
+            .addIconStyles(foregroundColor: Color.white, iconSize: 8)
             .frame(width: 14, height: 14)
-            .background(.blue400)
+            .background(Color.blue400)
             .addBorder(
                 cornerRadius: 999,
-                stroke: .blue300
+                stroke: Color.blue300
             )
     }
 }

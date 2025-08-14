@@ -116,6 +116,7 @@ struct GeneralTab: View {
                         .controlSize(.small)
                 }
             }
+            .foregroundColor(Color.S_0)
             .onChange(of: isLaunchAtStartupEnabled, initial: false) { _, _ in
                 toggleLaunchAtStartup()
             }
@@ -138,7 +139,7 @@ struct GeneralTab: View {
                                 .font(.system(size: 11))
                             Text("Fixed position")
                                 .font(.system(size: 9))
-                                .foregroundStyle(.secondary)
+                                .foregroundStyle(Color.secondary)
                         }
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 8)
@@ -148,6 +149,7 @@ struct GeneralTab: View {
                         .opacity(accessibilityGranted ? 1.0 : 0.5)
                     }
                     .buttonStyle(.plain)
+                    .foregroundColor(Color.S_0)
                     .disabled(!accessibilityGranted)
                     
                     Button {
@@ -162,7 +164,7 @@ struct GeneralTab: View {
                                 .font(.system(size: 11))
                             Text("Attaches to apps")
                                 .font(.system(size: 9))
-                                .foregroundStyle(.secondary)
+                                .foregroundStyle(Color.secondary)
                         }
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 8)
@@ -172,13 +174,14 @@ struct GeneralTab: View {
                         .opacity(accessibilityGranted ? 1.0 : 0.5)
                     }
                     .buttonStyle(.plain)
+                    .foregroundColor(Color.S_0)
                     .disabled(!accessibilityGranted)
                 }
                 if !accessibilityGranted {
                     VStack(alignment: .leading, spacing: 8) {
                         Text("To use Pinned or Tethered mode, enable Accessibility permission for Onit.")
                             .font(.system(size: 12))
-                            .foregroundStyle(.gray200)
+                            .foregroundStyle(Color.S_2)
                         Button(action: {
                             if let url = URL(string: MenuCheckForPermissions.link) {
                                 NSWorkspace.shared.open(url)
@@ -192,7 +195,7 @@ struct GeneralTab: View {
                             .padding(.vertical, 6)
                             .padding(.horizontal, 12)
                             .background(Color.accentColor)
-                            .foregroundColor(.white)
+                            .foregroundColor(Color.S_0)
                             .clipShape(RoundedRectangle(cornerRadius: 6))
                         }
                         .buttonStyle(.plain)
@@ -202,11 +205,11 @@ struct GeneralTab: View {
                         if isPinnedMode {
                             Text("Onit will always appear on the right side of your screen. You will only have one Onit panel at any given time. Other applications will be resized to make room for Onit.")
                                 .font(.system(size: 12))
-                                .foregroundStyle(.gray200)
+                                .foregroundStyle(Color.S_2)
                         } else {
                             Text("Onit will attach to your applications. There can be one Onit panel for each application window. If you move your app, Onit will move with it.")
                                 .font(.system(size: 12))
-                                .foregroundStyle(.gray200)
+                                .foregroundStyle(Color.S_2)
                         }
                     }
                 }
@@ -228,9 +231,11 @@ struct GeneralTab: View {
                                     valueType: "Bool"
                                 )
                             }
+                            .foregroundColor(Color.S_0)
+                            
                             Text("Adds context from the current window whenever Onit opens in Tethered mode.")
                                 .font(.system(size: 12))
-                                .foregroundStyle(.gray200)
+                                .foregroundStyle(Color.S_2)
                         }
                     }
                 }
@@ -241,9 +246,10 @@ struct GeneralTab: View {
                         VStack(alignment: .leading, spacing: 4) {
                             Text("Hide dock icon")
                                 .font(.system(size: 13))
+                                .foregroundColor(Color.S_0)
                             Text("Show only the menu bar icon")
                                 .font(.system(size: 11))
-                                .foregroundStyle(.gray200)
+                                .foregroundStyle(Color.S_2)
                         }
                         
                         Spacer()
@@ -293,15 +299,16 @@ struct GeneralTab: View {
                             } label: {
                                 HStack {
                                     Image(systemName: stopMode == mode ? "largecircle.fill.circle" : "circle")
-                                        .foregroundStyle(stopMode == mode ? .blue : .secondary)
+                                        .foregroundStyle(stopMode == mode ? Color.blue : Color.secondary)
                                     VStack(alignment: .leading, spacing: 2) {
                                         Text(mode == .removePartial ? "Remove Partial" : "Leave Partial")
                                             .font(.system(size: 13))
-                                        Text(mode == .removePartial 
+                                            .foregroundColor(Color.S_0)
+                                        Text(mode == .removePartial
                                              ? "Removes incomplete responses when stopped"
                                              : "Keeps partial responses visible when stopped")
                                             .font(.system(size: 11))
-                                            .foregroundStyle(.secondary)
+                                            .foregroundStyle(Color.secondary)
                                     }
                                     Spacer()
                                 }
@@ -324,6 +331,7 @@ struct GeneralTab: View {
                 HStack {
                     Text("Enable analytics")
                         .font(.system(size: 13))
+                        .foregroundColor(Color.S_0)
                     Spacer()
                     Toggle("", isOn: $isAnalyticsEnabled)
                         .toggleStyle(.switch)
@@ -331,7 +339,7 @@ struct GeneralTab: View {
                 }
                 Text("Help us improve your experience 🚀\nWe collect anonymous usage data to enhance performance and fix issues faster.")
                     .font(.system(size: 12))
-                    .foregroundStyle(.gray200)
+                    .foregroundStyle(Color.S_2)
             }
             .onChange(of: isAnalyticsEnabled, initial: false) {
                 toggleAnalyticsOptOut()
@@ -366,6 +374,7 @@ struct GeneralTab: View {
                         .controlSize(.small)
                     }
                 }
+                .foregroundColor(Color.S_0)
                 
                 VStack(spacing: 8) {
                     HStack {
@@ -388,6 +397,7 @@ struct GeneralTab: View {
                         .controlSize(.small)
                     }
                 }
+                .foregroundColor(Color.S_0)
                 
                 VStack(spacing: 8) {
                     HStack {
@@ -410,6 +420,7 @@ struct GeneralTab: View {
                         .controlSize(.small)
                     }
                 }
+                .foregroundColor(Color.S_0)
                 
                 //                VStack(alignment: .leading, spacing: 8) {
                 //                    Text("Panel Position")
@@ -458,6 +469,7 @@ struct GeneralTab: View {
                         .controlSize(.small)
                 }
             }
+            .foregroundColor(Color.S_0)
             
             VStack(alignment: .leading, spacing: 20) {
                 HStack {
@@ -471,6 +483,7 @@ struct GeneralTab: View {
                         .controlSize(.small)
                 }
             }
+            .foregroundColor(Color.S_0)
         }
     }
     
@@ -485,15 +498,17 @@ struct GeneralTab: View {
                     VStack(alignment: .leading, spacing: 8) {
                         Text("Hide Everywhere")
                             .font(.system(size: 13, weight: .medium))
+                            .foregroundColor(Color.S_0)
                         
                         if isHideAllAppsTimerActive {
                             HStack {
                                 VStack(alignment: .leading, spacing: 2) {
                                     Text("Hidden for 1 hour")
                                         .font(.system(size: 13))
+                                        .foregroundColor(Color.S_0)
                                     Text("Time remaining: \(remainingTimeString)")
                                         .font(.system(size: 11))
-                                        .foregroundStyle(.gray300)
+                                        .foregroundStyle(Color.S_3)
                                 }
                                 
                                 Spacer()
@@ -506,7 +521,7 @@ struct GeneralTab: View {
                             }
                             .padding(.vertical, 6)
                             .padding(.horizontal, 10)
-                            .background(Color.orange.opacity(0.1))
+                            .background(Color.orange500.opacity(0.1))
                             .clipShape(RoundedRectangle(cornerRadius: 6))
                         } else if tetheredButtonHideAllApps {
                             HStack {
@@ -523,7 +538,8 @@ struct GeneralTab: View {
                             }
                             .padding(.vertical, 6)
                             .padding(.horizontal, 10)
-                            .background(Color.red.opacity(0.1))
+                            .foregroundColor(Color.S_0)
+                            .background(Color.red500.opacity(0.1))
                             .clipShape(RoundedRectangle(cornerRadius: 6))
                         }
                     }
@@ -535,12 +551,12 @@ struct GeneralTab: View {
                         
                         Text("Applications where you've disabled the Onit entry point.")
                             .font(.system(size: 12))
-                            .foregroundStyle(.gray200)
+                            .foregroundStyle(Color.S_2)
                         
                         if tetheredButtonHiddenApps.isEmpty {
                             Text("You haven't disabled Onit on any apps yet. ")
                                 .font(.system(size: 13))
-                                .foregroundStyle(.gray400)
+                                .foregroundStyle(Color.S_4)
                                 .italic()
                         } else {
                             VStack(spacing: 8) {
@@ -559,6 +575,7 @@ struct GeneralTab: View {
                                     }
                                     .padding(.vertical, 4)
                                     .padding(.horizontal, 8)
+                                    .foregroundColor(Color.S_0)
                                     .background(Color.gray.opacity(0.1))
                                     .clipShape(RoundedRectangle(cornerRadius: 6))
                                 }

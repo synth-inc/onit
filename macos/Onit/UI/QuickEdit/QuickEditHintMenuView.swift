@@ -22,7 +22,7 @@ struct QuickEditHintMenuView: View {
             HStack {
                 Text("Onit Quick Edit")
                     .font(.system(size: 13))
-                    .foregroundColor(.gray100)
+                    .foregroundColor(Color.S_1)
                 Spacer()
             }
             .padding(.horizontal, 16)
@@ -48,8 +48,8 @@ struct QuickEditHintMenuView: View {
         }
         .background(
             RoundedRectangle(cornerRadius: 12)
-                .fill(.gray900)
-                .stroke(.gray500, lineWidth: 1)
+                .fill(Color.S_9)
+                .stroke(Color.S_5, lineWidth: 1)
         )
         .frame(width: 240, height: 120)
     }
@@ -71,11 +71,11 @@ struct QuickEditHintMenuView: View {
                     .resizable()
                     .aspectRatio(contentMode: .fit)
                     .frame(width: 18, height: 18)
-                    .foregroundColor(.white)
+                    .foregroundColor(Color.S_0)
                 
                 Text(title)
                     .font(.system(size: 14))
-                    .foregroundColor(.white)
+                    .foregroundColor(Color.S_0)
                     .multilineTextAlignment(.leading)
                 
                 Spacer()

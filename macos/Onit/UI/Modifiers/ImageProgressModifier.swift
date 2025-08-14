@@ -56,7 +56,7 @@ extension View {
 
 #if DEBUG
     #Preview {
-        Color.red
+        Color.red500
             .modifier(ImageProgressModifier(url: .applicationDirectory))
     }
 #endif

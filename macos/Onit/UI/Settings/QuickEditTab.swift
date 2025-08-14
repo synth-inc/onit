@@ -26,7 +26,7 @@ struct QuickEditTab: View {
                     "Quick Edit enhances your text editing experience by providing instant access to Onit's AI capabilities. When you highlight text in any application, a subtle hint appears, allowing you to quickly transform, analyze, or act upon the selected content. You can customize which applications can trigger Quick Edit, and temporarily pause it for specific apps when needed. All text processing happens locally on your device, ensuring your data remains private."
                 )
                 .font(.system(size: 12))
-                .foregroundStyle(.gray200)
+                .foregroundStyle(Color.S_2)
                 .lineSpacing(2)
             }
             
@@ -73,7 +73,7 @@ struct QuickEditTab: View {
                 
                 Text("Display quick edit anywhere")
                     .font(.system(size: 12))
-                    .foregroundStyle(.gray200)
+                    .foregroundStyle(Color.S_2)
             }
             
             if config.isEnabled {
@@ -111,7 +111,7 @@ struct QuickEditTab: View {
                                     .renderingMode(.template)
                                     .aspectRatio(contentMode: .fit)
                                     .frame(width: 16, height: 16)
-                                    .foregroundColor(.red)
+                                    .foregroundColor(Color.red500)
                             }
                             .buttonStyle(.borderless)
                         }
@@ -151,12 +151,12 @@ struct QuickEditTab: View {
             if let messageToShow = permissionManager.messageToShow {
                 Text(messageToShow)
                     .font(.system(size: 12))
-                    .foregroundStyle(.orange)
+                    .foregroundStyle(Color.orange500)
                     .transition(.opacity)
             } else {
                 Text("Required for precise hint positioning. This allows Onit to capture screenshots of highlighted text to accurately position the Quick Edit hint next to your selection.")
                     .font(.system(size: 12))
-                    .foregroundStyle(.gray200)
+                    .foregroundStyle(Color.S_2)
             }
         }
     }
@@ -174,7 +174,7 @@ struct QuickEditTab: View {
                                 .font(.system(size: 12))
                             Text("(until \(pauseEndDate.formatted(date: .omitted, time: .shortened)))")
                                 .font(.system(size: 12))
-                                .foregroundColor(.gray)
+                                .foregroundColor(Color.S_2)
                             
                             Spacer()
                             
@@ -186,7 +186,7 @@ struct QuickEditTab: View {
                                     .renderingMode(.template)
                                     .aspectRatio(contentMode: .fit)
                                     .frame(width: 16, height: 16)
-                                    .foregroundColor(.red)
+                                    .foregroundColor(Color.red500)
                             }
                             .buttonStyle(.borderless)
                         }
@@ -207,7 +207,7 @@ struct QuickEditTab: View {
                 .padding(.vertical, 2)
             Text("Collect and review training data for model to automatically detect text bounds from screenshots.")
                 .font(.system(size: 12))
-                .foregroundStyle(.gray200)
+                .foregroundStyle(Color.S_2)
                 .lineSpacing(2)
         }
     }

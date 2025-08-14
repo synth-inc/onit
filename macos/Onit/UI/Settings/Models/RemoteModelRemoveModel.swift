@@ -81,7 +81,7 @@ struct RemoteModelRemoveModel: View {
             SearchBar(
                 searchQuery: $searchQuery, 
                 placeholder: "Filter by display name",
-                background: .clear
+                background: Color.clear
             )
             
             DynamicScrollView(maxHeight: 260) {
@@ -107,7 +107,7 @@ struct RemoteModelRemoveModel: View {
                         appState.removeRemoteModels(selectedRemoteModels)
                         showRemoveModelsSheet = false
                     },
-                    background: .redBrick
+                    background: Color.redBrick
                 )
                 .opacity(noSelectedRemoteModels ? 0.5 : 1)
                 .disabled(noSelectedRemoteModels)

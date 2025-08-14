@@ -44,7 +44,7 @@ struct InputButtons: View {
                     }
             }
         }
-        .foregroundStyle(.gray200)
+        .foregroundStyle(Color.T_3)
     }
 }
 

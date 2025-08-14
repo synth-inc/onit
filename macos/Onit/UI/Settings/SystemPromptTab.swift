@@ -39,16 +39,9 @@ struct SystemPromptTab: View {
         GeometryReader { geometry in
             VStack {
                 HStack {
-                    CustomTextField(
-                        text: $searchText,
+                    SearchBar(
+                        searchQuery: $searchText,
                         placeholder: "Search name, prompt or tag...",
-                        config: CustomTextField.Config(
-                            strokeColor: .gray300,
-                            hoverStrokeColor: .gray200,
-                            focusedStrokeColor: .gray100,
-                            clear: true,
-                            leftIcon: .search
-                        )
                     )
                     
                     Button {
@@ -56,7 +49,7 @@ struct SystemPromptTab: View {
                     } label: {
                         Text("Add new")
                     }
-                    .foregroundStyle(.white)
+                    .foregroundStyle(Color.S_0)
                     .buttonStyle(.borderedProminent)
                     .frame(height: 22)
                     .fontWeight(.regular)

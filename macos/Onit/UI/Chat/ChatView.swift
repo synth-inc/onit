@@ -69,15 +69,13 @@ struct ChatView: View {
                                 IconButton(
                                     icon: .arrowDown,
                                     buttonSize: 36,
-                                    activeColor: .white,
-                                    inactiveColor: .white,
-                                    hoverBackground: .gray400,
+                                    activeColor: Color.S_0,
                                     tooltipPrompt: "Scroll to bottom"
                                 ) {
                                     hasUserManuallyScrolled = false
                                 }
-                                .background(.gray600)
-                                .addBorder(cornerRadius: 18, stroke: .gray400)
+                                .background(GlassBackground())
+                                .addBorder(cornerRadius: 18, stroke: Color.genericBorder)
                                 .transition(.scale.combined(with: .opacity))
                                 .padding(.trailing, 20)
                             } else {
@@ -87,7 +85,7 @@ struct ChatView: View {
                                     .padding(.trailing, 20)
                             }
                         }
-                        .background(.clear)
+                        .background(Color.clear)
                         .padding(.bottom, 4)
                     }
                 }

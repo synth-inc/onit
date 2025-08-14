@@ -34,7 +34,7 @@ struct RemoteModelButton: View {
             text: remoteModel.displayName
         ) {
             if planLimitReached {
-                Circle().fill(.blue300).frame(width: 6, height: 6)
+                Circle().fill(Color.blue300).frame(width: 6, height: 6)
             }
         } action: {
             AnalyticsManager.ModelPicker.modelSelected(local: false, model: remoteModel.displayName)

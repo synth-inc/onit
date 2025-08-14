@@ -13,6 +13,7 @@ import SwiftUI
 struct GeneratedContentView: View {
     @Environment(\.windowState) private var state
     @Environment(\.openURL) var openURL
+    @Environment(\.colorScheme) var colorScheme
     
     @Default(.fontSize) var fontSize
     @Default(.lineHeight) var lineHeight
@@ -27,9 +28,13 @@ struct GeneratedContentView: View {
     
     var configuration: LLMStreamConfiguration {
         let font = FontConfiguration(size: fontSize, lineHeight: lineHeight)
-        let color = ColorConfiguration(citationBackgroundColor: .gray600,
-                                       citationHoverBackgroundColor: .gray400,
-                                       citationTextColor: .gray100)
+        
+        let textColor = colorScheme == .dark ? Color.white : Color.black
+        
+        let color = ColorConfiguration(textColor: textColor,
+                                       citationBackgroundColor: Color.S_6,
+                                       citationHoverBackgroundColor: Color.S_4,
+                                       citationTextColor: Color.S_1)
         let thought = ThoughtConfiguration(icon: Image(.lightBulb))
         
         return LLMStreamConfiguration(font: font, colors: color, thought: thought)
@@ -46,7 +51,7 @@ struct GeneratedContentView: View {
                         configuration: configuration,
                         onUrlClicked: onUrlClicked,
                         onCodeAction: codeAction)
-                .id("\(fontSize)-\(lineHeight)") // Force recreation when font settings change
+                .id("\(fontSize)-\(lineHeight)-\(colorScheme.hashValue)") // Force recreation when font settings change
                 .padding(.horizontal, 12)
 
             if let response = prompt.currentResponse, response.hasToolCall {

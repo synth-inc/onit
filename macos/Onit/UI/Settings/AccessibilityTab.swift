@@ -28,7 +28,7 @@ struct AccessibilityTab: View {
                     "With AutoContext, Onit can load context directly from your computer using Apple's screen reader APIs. AutoContext spares you the hassle of manually uploading files or copy/pasting. Data loaded with AutoContext is not uploaded until you submit your conversation. In local mode, no context is ever uploaded."
                 )
                 .font(.system(size: 12))
-                .foregroundStyle(.gray200)
+                .foregroundStyle(Color.S_2)
                 .lineSpacing(2)
 
                 if let demoUrl = featureFlagsManager.autocontextDemoVideoUrl {
@@ -44,7 +44,7 @@ struct AccessibilityTab: View {
                         }
                         .padding(.vertical, 6)
                     }
-                    .background(Color(.blue))
+                    .background(Color.blue)
                     .clipShape(RoundedRectangle(cornerRadius: 6))
                 }
             }
@@ -71,7 +71,7 @@ struct AccessibilityTab: View {
                     }
                     Text("Required for automatic context loading, text insertion, window resizing, and many other Onit features.")
                         .font(.system(size: 12))
-                        .foregroundStyle(.gray200)
+                        .foregroundStyle(Color.S_2)
                 }
             }
 
@@ -95,7 +95,7 @@ struct AccessibilityTab: View {
                         }
                         Text("Automatically loads highlighted text as content.")
                             .font(.system(size: 12))
-                            .foregroundStyle(.gray200)
+                            .foregroundStyle(Color.S_2)
                     }
                 }
 
@@ -118,7 +118,7 @@ struct AccessibilityTab: View {
                         }
                         Text("Loads context from the active window. Note: this feature may not work in every application. ")
                             .font(.system(size: 12))
-                            .foregroundStyle(.gray200)
+                            .foregroundStyle(Color.S_2)
                     }
                 }
             }

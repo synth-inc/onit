@@ -16,7 +16,7 @@ struct GeneratedErrorView: View {
             ScrollView {
                 Text(errorDescription)
                     .appFont(.medium14)
-                    .foregroundStyle(.warning)
+                    .foregroundStyle(Color.orange500)
                     .textSelection(.enabled)
             }
             Spacer()

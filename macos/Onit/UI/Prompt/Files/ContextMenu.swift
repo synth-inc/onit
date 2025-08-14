@@ -79,7 +79,8 @@ extension ContextMenu {
 extension ContextMenu {
     private var backButton: IconButton {
         IconButton(
-            icon: .chevLeft
+            icon: .chevLeft,
+            inactiveColor: Color.S_0
         ) {
             searchQuery = ""
             windowState?.showContextMenuBrowserTabs = false

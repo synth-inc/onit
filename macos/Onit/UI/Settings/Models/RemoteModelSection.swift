@@ -140,18 +140,18 @@ struct RemoteModelSection: View {
             SecureField("Enter your \(provider.title) API key", text: $key)
                 .textFieldStyle(PlainTextFieldStyle())
                 .font(.system(size: 13, weight: .regular))
-                .foregroundColor(.primary)  // Ensure placeholder text is not dimmed
+                .foregroundColor(Color.S_0)  // Ensure placeholder text is not dimmed
                 .padding(0)
                 .padding(.vertical, 4)
                 .padding(.horizontal, 7)
-                .background(.systemGray900)
-                .addBorder(cornerRadius: 5, stroke: .systemGray800)
+                .background(Color.systemGray900)
+                .addBorder(cornerRadius: 5, stroke: Color.systemGray800)
             
             SimpleButton(
                 isLoading: loading,
-                disabled: validated || state.isValidating,
+                disabled: loading || validated || state.isValidating,
                 text: verifyButtonText,
-                textColor: validated ? .black : .white,
+                textColor: validated ? Color.black : Color.white,
                 action: {
                     if !validated {
                         Task {
@@ -164,7 +164,7 @@ struct RemoteModelSection: View {
                         }
                     }
                 },
-                background: validated ? .gray400 : .blue
+                background: validated ? Color.S_4 : Color.blue
             )
             
             if validated {
@@ -248,17 +248,19 @@ struct RemoteModelSection: View {
         
         var body: some View {
             Image(isRemove ? .minusThin : .plusThin)
+                .renderingMode(.template)
+                .foregroundColor(Color.S_0)
                 .frame(width: 28, alignment: .center)
                 .frame(height: 28, alignment: .center)
                 .addButtonEffects(
-                    hoverBackground: .gray500,
+                    hoverBackground: Color.T_8,
                     isHovered: $isHovered,
                     isPressed: $isPressed
                 ) {
                     action()
                 }
                 .addAnimation(dependency: isHovered)
-                .opacity(isHovered ? 1 : isRemove ? 0.3 : 1)
+                .opacity(isHovered ? 1 : isRemove ? 0.4 : 1)
         }
     }
 
@@ -298,8 +300,8 @@ struct RemoteModelSection: View {
                         UpdateAvailableRemoteModelsButton(isRemove: true) {
                             showRemoveModelsSheet = true
                         }
-                        .padding(2)
                     }
+                    .padding(2)
                 }
                 .padding(.vertical, -4)
                 .padding(.horizontal, -4)

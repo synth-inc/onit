@@ -30,7 +30,7 @@ struct FadeHorizontal: View {
             .fill(
                 LinearGradient(
                     gradient: Gradient(
-                        colors: toRight ? [color, .clear] : [.clear, color]
+                        colors: toRight ? [color, Color.clear] : [Color.clear, color]
                     ),
                     startPoint: .leading,
                     endPoint: .trailing

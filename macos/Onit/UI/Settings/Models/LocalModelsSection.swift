@@ -84,7 +84,7 @@ struct LocalModelsSection: View {
 
             HStack(alignment: .center) {
                 Text("Endpoint URL:")
-                    .foregroundStyle(.primary.opacity(0.65))
+                    .foregroundStyle(Color.S_0.opacity(0.65))
                     .font(.system(size: 12))
                     .fontWeight(.regular)
                 TextField("", text: $localEndpointString)
@@ -120,7 +120,7 @@ struct LocalModelsSection: View {
                             fetching = false
                         }
                     },
-                    background: .blue
+                    background: Color.blue
                 )
             }
             
@@ -302,7 +302,7 @@ struct LocalModelsSection: View {
                         }
                         SettingErrorMessage(message: topPError)
 
-                        Divider()
+                        DividerHorizontal()
                             .padding(.vertical, 4)
 
                         Button {
@@ -369,7 +369,7 @@ struct LocalModelsSection: View {
                  to use Onit with local models. Models running locally on Ollama will be available here.
                 """
             ))
-            .foregroundStyle(.primary.opacity(0.65))
+            .foregroundStyle(Color.S_0.opacity(0.65))
             .font(.system(size: 12))
             .fontWeight(.regular)
     }
@@ -403,7 +403,7 @@ struct LocalModelsSection: View {
                     fetching = false
                 }
             },
-            background: .blue
+            background: Color.blue
         )
     }
 }

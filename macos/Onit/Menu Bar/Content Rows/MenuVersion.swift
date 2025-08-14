@@ -23,7 +23,7 @@ struct MenuVersion: View {
         HStack {
             Text(versionText)
                 .font(.system(size: 13, weight: .medium))
-                .foregroundStyle(Color.primary.opacity(0.5))
+                .foregroundStyle(Color.S_0.opacity(0.5))
             Spacer()
         }
         .frame(height: 18)

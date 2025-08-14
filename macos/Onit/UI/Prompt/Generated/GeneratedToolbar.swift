@@ -26,7 +26,10 @@ struct GeneratedToolbar: View {
                 prompt.safeGenerationIndex < prompt.responses.count,
                 let model = prompt.sortedResponses[prompt.safeGenerationIndex].model {
                 Text("\(model)")
-                    .foregroundColor(Color.gray300)
+                    .styleText(
+                        size: 12,
+                        color: Color.S_2
+                    )
             }
         }
         .padding(.horizontal, 12)
@@ -42,6 +45,7 @@ struct GeneratedToolbar: View {
     var regenerate: some View {
         IconButton(
             icon: .arrowsSpin,
+            inactiveColor: Color.S_0,
             tooltipPrompt: "Retry"
         ) {
             state?.generate(prompt)
@@ -80,15 +84,15 @@ struct GeneratedToolbar: View {
 //                    .padding(.vertical, 5)
 //                    .background {
 //                        RoundedRectangle(cornerRadius: 7)
-//                            .fill(.blue350)
+//                            .fill(Color.blue350)
 //                    }
 //            }
 //            .padding(4)
 //            .background {
 //                RoundedRectangle(cornerRadius: 10)
-//                    .fill(mode == .local ? .limeGreen : .blue400)
+//                    .fill(mode == .local ? Color.lime400 : Color.blue400)
 //            }
-//            .foregroundStyle(.FG)
+//            .foregroundStyle(Color.S_0)
 //        }
 //        .keyboardShortcut(insertShortcut)
 //        .buttonStyle(.plain)

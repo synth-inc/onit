@@ -38,7 +38,7 @@ struct GeneralTabAccount: View {
                 
                 if !accountDeleteError.isEmpty {
                     Text(accountDeleteError)
-                        .styleText(size: 13, weight: .regular, color: .red)
+                        .styleText(size: 13, weight: .regular, color: Color.red500)
                 }
             }
         }
@@ -56,7 +56,7 @@ extension GeneralTabAccount {
             .styleText(
                 size: 13,
                 weight: weight,
-                color: Color(hex: "#A1A4AF") ?? .gray100
+                color: Color.S_1
             )
     }
     
@@ -82,12 +82,13 @@ extension GeneralTabAccount {
         SimpleButton(
             iconSystem: "person.crop.circle",
             text: "Create an account",
+            textColor: Color.white,
             action: {
                 AnalyticsManager.AccountEvents.createAccountPressed()
                 Defaults[.authFlowStatus] = .showSignUp
                 openPanel()
             },
-            background: .blue
+            background: Color.blue
         )
     }
     
@@ -115,12 +116,12 @@ extension GeneralTabAccount {
     private var deleteAccountButton: some View {
         SimpleButton(
             text: "Delete account",
-            textColor: .red,
+            textColor: Color.red,
             action: {
                 AnalyticsManager.AccountEvents.deletePressed()
                 showDeleteAccountAlert = true
             },
-            background: .redBrick
+            background: Color.redDisabledHover
         )
         .sheet(isPresented: $showDeleteAccountAlert) {
             GeneralTabAccountAlert(

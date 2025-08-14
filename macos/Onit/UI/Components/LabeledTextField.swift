@@ -17,7 +17,7 @@ struct LabeledTextField: View {
         VStack(alignment: .leading, spacing: 4) {
             Text(label)
                 .font(.subheadline)
-                .foregroundColor(.secondary)
+                .foregroundColor(Color.secondary)
                 .padding(.leading, 8)
 
             if secure {
@@ -25,14 +25,14 @@ struct LabeledTextField: View {
                     .textFieldStyle(.roundedBorder)
                     .frame(height: 22)
                     .font(.system(size: 13, weight: .regular))
-                    .foregroundColor(.primary)
+                    .foregroundColor(Color.S_0)
                     .textFieldStyle(PlainTextFieldStyle())
             } else {
                 TextField("", text: $text)
                     .textFieldStyle(.roundedBorder)
                     .frame(height: 22)
                     .font(.system(size: 13, weight: .regular))
-                    .foregroundColor(.primary)
+                    .foregroundColor(Color.S_0)
                     .textFieldStyle(PlainTextFieldStyle())
             }
         }

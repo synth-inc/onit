@@ -47,7 +47,7 @@ struct DatabaseSettingsView: View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
                 Image(systemName: "database")
-                    .foregroundColor(.blue)
+                    .foregroundColor(Color.blue)
                 Text("Storage Location")
                     .font(.headline)
             }
@@ -56,7 +56,7 @@ struct DatabaseSettingsView: View {
                 HStack {
                     Text("Current Database:")
                         .font(.caption)
-                        .foregroundColor(.secondary)
+                        .foregroundColor(Color.secondary)
                     Spacer()
                 }
                 
@@ -64,54 +64,52 @@ struct DatabaseSettingsView: View {
                     .font(.caption)
                     .textSelection(.enabled)
                     .padding(8)
-                    .background(Color.gray.opacity(0.1))
+                    .background(Color.T_8)
                     .cornerRadius(4)
                 
                 HStack {
                     Circle()
-                        .fill(info.secureExists ? Color.green : Color.orange)
+                        .fill(info.secureExists ? Color.green : Color.orange500)
                         .frame(width: 8, height: 8)
                     Text(info.secureExists ? "Database exists" : "Database not found")
                         .font(.caption)
-                        .foregroundColor(.secondary)
+                        .foregroundColor(Color.secondary)
                 }
             }
         }
         .padding()
-        .background(Color(.controlBackgroundColor))
-        .cornerRadius(8)
+        .addBorder(cornerRadius: 8)
     }
     
     private func migrationStatusCard(_ info: StorageInfo) -> some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
                 Image(systemName: info.migrationCompleted ? "checkmark.shield" : "clock")
-                    .foregroundColor(info.migrationCompleted ? .green : .orange)
+                    .foregroundColor(info.migrationCompleted ? Color.green : Color.orange500)
                 Text("Migration Status")
                     .font(.headline)
             }
             
             Text(migrationStatusText(info))
                 .font(.caption)
-                .foregroundColor(.secondary)
+                .foregroundColor(Color.secondary)
         }
         .padding()
-        .background(Color(.controlBackgroundColor))
-        .cornerRadius(8)
+        .addBorder(cornerRadius: 8)
     }
     
     private func legacyWarningCard(_ info: StorageInfo) -> some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
                 Image(systemName: "exclamationmark.triangle")
-                    .foregroundColor(.yellow)
+                    .foregroundColor(Color.yellow)
                 Text("Legacy Database Found")
                     .font(.headline)
             }
             
             Text("A legacy database file was found at the old location. If migration was successful, you can safely delete the backup file.")
                 .font(.caption)
-                .foregroundColor(.secondary)
+                .foregroundColor(Color.secondary)
             
             Text(info.legacyLocation?.appendingPathExtension("backup").path ?? "")
                 .font(.caption)
@@ -128,7 +126,7 @@ struct DatabaseSettingsView: View {
         }
         .padding()
         .background(Color.yellow.opacity(0.1))
-        .cornerRadius(8)
+        .addBorder(cornerRadius: 8)
     }
     
     private func migrationStatusText(_ info: StorageInfo) -> String {

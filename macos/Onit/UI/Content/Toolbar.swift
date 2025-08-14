@@ -15,12 +15,11 @@ struct Toolbar: View {
                 Spacer()
                 ToolbarRight()
             }
-            .padding(.top, 1)
             .padding(.trailing, 8)
             .padding(.leading, 12)
-            .frame(height: 31)
+            .frame(height: 40)
             
-            PromptDivider()
+            DividerHorizontal()
         }
     }
 }

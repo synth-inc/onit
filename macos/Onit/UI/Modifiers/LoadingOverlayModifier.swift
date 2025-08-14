@@ -82,7 +82,7 @@ extension View {
 // MARK: Preview
 
 #Preview {
-    Color.red
+    Color.red500
         .frame(width: 100, height: 100)
         .loadingOverlay(40, done: true)
 }

@@ -17,7 +17,7 @@ struct SearchBar: View {
         searchQuery: Binding<String>,
         placeholder: String = "Search for...",
         sidePadding: CGFloat = 0,
-        background: Color = .gray800
+        background: Color = Color.T_9
     ) {
         self._searchQuery = searchQuery
         self.placeholder = placeholder

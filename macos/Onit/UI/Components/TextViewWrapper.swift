@@ -26,8 +26,8 @@ struct TextViewWrapper: NSViewRepresentable {
     var isDisabled: Bool = false
     
     var font: NSFont = AppFont.medium14.nsFont
-    var textColor: NSColor = .white
-    var placeholderColor: NSColor = .gray300
+    var textColor: NSColor = NSColor.S_0
+    var placeholderColor: NSColor = NSColor.placeholderText
     var detectLinks: Bool = true // TODO remove this once we use TextInputView for prompt editing
 
     func makeNSView(context: Self.Context) -> NSScrollView {
@@ -283,7 +283,7 @@ private class CustomTextView: NSTextView {
     override func draw(_ dirtyRect: NSRect) {
         super.draw(dirtyRect)
         
-        insertionPointColor = (audioRecorder.isRecording || audioRecorder.isTranscribing) ? .clear : textColor
+        insertionPointColor = (audioRecorder.isRecording || audioRecorder.isTranscribing) ? NSColor.clear : textColor
         
         if string.isEmpty && !audioRecorder.isRecording && !audioRecorder.isTranscribing, let placeholder = placeholder {
             let attributes: [NSAttributedString.Key: Any] = [

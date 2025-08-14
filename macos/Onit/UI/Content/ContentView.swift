@@ -65,6 +65,8 @@ struct ContentView: View {
     
     var body: some View {
         ZStack(alignment: .top) {
+            GlassBackground()
+            
             if shouldShowOnboardingAccessibility {
                 VStack(spacing: 0) {
                     if state?.showChatView == true {
@@ -74,7 +76,6 @@ struct ContentView: View {
                     }
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .background(Color.black)
                 .onAppear {
                     if appState.account == nil {
                         authFlowStatus = .showSignUp
@@ -124,12 +125,8 @@ struct ContentView: View {
                 }
             }
         }
-        .background(Color.black)
-        .addBorder(
-            cornerRadius: 14,
-            lineWidth: 2,
-            stroke: .gray600
-        )
+        .background(Color.baseBG)
+        .addBorder()
         .edgesIgnoringSafeArea(.top)
         .buttonStyle(PlainButtonStyle())
         .simultaneousGesture(

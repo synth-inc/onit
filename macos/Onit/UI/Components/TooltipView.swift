@@ -61,7 +61,7 @@ struct TooltipView: View {
                         KeyboardShortcutView(shortcut: shortcut.native)
                             .padding(.horizontal, 4)
                             .padding(.vertical, 6)
-                            .background(.gray400, in: .rect(cornerRadius: 6))
+                            .background(Color.T_9, in: .rect(cornerRadius: 6))
                             .padding(4)
                             .fixedSize()
                     }
@@ -72,7 +72,7 @@ struct TooltipView: View {
             }
             .appFont(.medium10)
         }
-        .foregroundStyle(.white)
+        .foregroundStyle(Color.S_0)
         .padding(.leading, 8)
         .background {
             tooltipBackground
@@ -88,8 +88,8 @@ struct TooltipView: View {
     
     var tooltipBackground: some View {
         RoundedRectangle(cornerRadius: 8)
-            .fill(Color.gray500)
-        //            .shadow(color: .black.opacity(0.36), radius: 2.5, x: 0, y: 0)
+            .fill(Color.hintBG)
+//            .shadow(color: Color.black.opacity(0.36), radius: 2.5, x: 0, y: 0)
     }
 }
 

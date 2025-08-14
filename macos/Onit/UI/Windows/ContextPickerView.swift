@@ -47,7 +47,7 @@ struct ContextPickerView: View {
             .allowsHitTesting(!autoContextDisabled)
         }
         .padding(6)
-        .background(Color(.gray600))
+        .background(Color.S_6)
         .cornerRadius(12)
     }
 }
