@@ -23,8 +23,8 @@ struct AddModelAlert: View {
             HStack(alignment: .center, spacing: 8) {
                 ctaButton(
                     text: "Add in Settings",
-                    background: .gray500,
-                    hoverBackground: .gray400
+                    background: Color.T_7,
+                    hoverBackground: Color.T_9
                 ) {
                     appState.settingsTab = .models
                     openSettings()
@@ -32,8 +32,9 @@ struct AddModelAlert: View {
                 
                 ctaButton(
                     text: "Sign up",
-                    background: .blue400,
-                    hoverBackground: .blue350
+                    textColor: Color.white,
+                    background: Color.blue400,
+                    hoverBackground: Color.blue350
                 ) {
                     Defaults[.authFlowStatus] = .showSignUp
                 }
@@ -46,6 +47,7 @@ struct AddModelAlert: View {
     
     private func ctaButton(
         text: String,
+        textColor: Color = Color.S_0,
         background: Color,
         hoverBackground: Color,
         action: @escaping () -> Void
@@ -58,7 +60,12 @@ struct AddModelAlert: View {
         ) {
             Text(text)
                 .frame(maxWidth: .infinity)
-                .styleText(size: 13, weight: .regular, align: .center)
+                .styleText(
+                    size: 13,
+                    weight: .regular,
+                    color: textColor,
+                    align: .center
+                )
         } action: {
             action()
         }

@@ -73,7 +73,6 @@ struct AuthFlow: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .padding(.top, 134)
-        .background(Color.baseBG)
     }
 }
 
@@ -133,7 +132,7 @@ extension AuthFlow {
                     .styleText(size: 23, align: .center)
                 
                 Text("Sign up to access 30+ models from OpenAI, Anthropic & more!")
-                    .styleText(size: 15, weight: .regular, color: .gray100, align: .center)
+                    .styleText(size: 15, weight: .regular, color: Color.S_1, align: .center)
             }
             .padding(.bottom, 24)
             .frame(width: 291)

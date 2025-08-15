@@ -165,32 +165,13 @@ extension SubscriptionAlert {
         .buttonStyle(PlainButtonStyle())
     }
     
-    private var footerDivider: some View {
-        Rectangle()
-          .foregroundColor(.clear)
-          .frame(height: 1)
-          .background(
-            LinearGradient(
-              stops: [
-                Gradient.Stop(color: Color(red: 0.09, green: 0.09, blue: 0.1), location: 0.00),
-                Gradient.Stop(color: Color(red: 0.2, green: 0.21, blue: 0.23), location: 0.31),
-                Gradient.Stop(color: Color(red: 0.2, green: 0.21, blue: 0.23), location: 0.73),
-                Gradient.Stop(color: Color(red: 0.09, green: 0.09, blue: 0.1), location: 1.00),
-              ],
-              startPoint: UnitPoint(x: 0, y: 0.5),
-              endPoint: UnitPoint(x: 1, y: 0.5)
-            )
-          )
-    }
-    
     private func captionText(_ text: String) -> some View {
         Text(text).styleText(size: 13, weight: .regular, color: Color.S_1, align: .center)
     }
     
     private var footer: some View {
         VStack(alignment: .center, spacing: spacingBetweenSections) {
-            // DividerHorizontal()
-            footerDivider
+            DividerHorizontal()
             
             VStack(alignment: .center, spacing: 4) {
                 if let footerSupportingText = footerSupportingText {

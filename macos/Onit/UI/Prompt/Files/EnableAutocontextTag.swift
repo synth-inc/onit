@@ -35,7 +35,7 @@ struct EnableAutocontextTag: View {
             }
         }
         .padding(.horizontal, 4)
-        .background(Color(.blue300).opacity(0.25), in: .rect(cornerRadius: 4))
+        .background(Color(Color.blue300).opacity(0.25), in: .rect(cornerRadius: 4))
         .buttonStyle(.plain)
     }
 }

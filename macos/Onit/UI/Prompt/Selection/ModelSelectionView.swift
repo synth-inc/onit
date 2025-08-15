@@ -102,7 +102,7 @@ struct ModelSelectionView: View {
                     .styleText(
                         size: 13,
                         weight: .regular,
-                        color: .gray100
+                        color: Color.S_1
                     )
                 
                 Button("Sign In") {
@@ -191,8 +191,6 @@ struct ModelSelectionView: View {
 
     var local: some View {
         MenuSection(
-            titleIcon: availableLocalModels.isEmpty ? .warningSettings : nil,
-            titleIconColor: Color.orange500,
             title: "Local",
             showTopBorder: true,
             maxScrollHeight: !filteredLocalModels.isEmpty ? setModelListHeight(
