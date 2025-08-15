@@ -144,8 +144,8 @@ struct RemoteModelSection: View {
                 .padding(0)
                 .padding(.vertical, 4)
                 .padding(.horizontal, 7)
-                .background(Color.systemGray900)
-                .addBorder(cornerRadius: 5, stroke: Color.systemGray800)
+                .background(Color.T_8)
+                .addBorder(cornerRadius: 5, stroke: Color.genericBorder)
             
             SimpleButton(
                 isLoading: loading,

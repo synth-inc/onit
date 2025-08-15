@@ -77,15 +77,16 @@ struct WebSearchTab: View {
                 .padding(0)
                 .padding(.vertical, 4)
                 .padding(.horizontal, 7)
-                .background(.systemGray900)
-                .addBorder(cornerRadius: 5, stroke: .systemGray800)
+                .background(Color.T_8)
+                .addBorder(cornerRadius: 5, stroke: Color.genericBorder)
             
             SimpleButton(
                 isLoading: isValidating,
                 disabled: isTavilyAPITokenValidated || tavilyAPIToken.isEmpty || isValidating,
                 text: isValidating ? "Validating" : isTavilyAPITokenValidated ? "Validated" : "Validate",
                 textColor: isTavilyAPITokenValidated ? Color.black : Color.white,
-                action: validateTavilyAPIToken
+                action: validateTavilyAPIToken,
+                background: isTavilyAPITokenValidated ? Color.S_4 : Color.blue
             )
             
             if isTavilyAPITokenValidated {

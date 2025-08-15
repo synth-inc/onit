@@ -11,6 +11,7 @@ struct SimpleButton: View {
     let iconText: String?
     let iconImage: ImageResource?
     let iconSystem: String?
+    let iconColor: Color
     let isLoading: Bool
     let disabled: Bool
     let spacing: CGFloat
@@ -23,6 +24,7 @@ struct SimpleButton: View {
         iconText: String? = nil,
         iconImage: ImageResource? = nil,
         iconSystem: String? = nil,
+        iconColor: Color = Color.S_0,
         isLoading: Bool = false,
         disabled: Bool = false,
         spacing: CGFloat = 4,
@@ -34,6 +36,7 @@ struct SimpleButton: View {
         self.iconText = iconText
         self.iconImage = iconImage
         self.iconSystem = iconSystem
+        self.iconColor = iconColor
         self.isLoading = isLoading
         self.disabled = disabled
         self.spacing = spacing
@@ -58,7 +61,7 @@ struct SimpleButton: View {
                 Text(iconText).styleText(size: 12)
             } else if let iconSystem = iconSystem {
                 Image(systemName: iconSystem)
-                    .foregroundStyle(Color.primary)
+                    .foregroundStyle(iconColor)
             } else if let iconImage = iconImage {
                 Image(iconImage)
             }

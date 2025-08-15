@@ -94,13 +94,14 @@ struct LocalModelsSection: View {
                     .padding(0)
                     .padding(.vertical, 4)
                     .padding(.horizontal, 7)
-                    .background(.systemGray900)
-                    .addBorder(cornerRadius: 5, stroke: .systemGray800)
+                    .background(Color.T_8)
+                    .addBorder(cornerRadius: 5, stroke: Color.genericBorder)
                 Spacer()
                 SimpleButton(
                     isLoading: fetching,
                     disabled: fetching,
                     text: "Set",
+                    textColor: Color.white,
                     action: {
                         Task {
                             fetching = true
@@ -396,6 +397,7 @@ struct LocalModelsSection: View {
             isLoading: fetching,
             disabled: fetching,
             text: "Reload",
+            textColor: Color.white,
             action: {
                 fetching = true
                 Task {

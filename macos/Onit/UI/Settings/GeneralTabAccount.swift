@@ -81,6 +81,7 @@ extension GeneralTabAccount {
     static var createAnAccountButton: some View {
         SimpleButton(
             iconSystem: "person.crop.circle",
+            iconColor: Color.white,
             text: "Create an account",
             textColor: Color.white,
             action: {

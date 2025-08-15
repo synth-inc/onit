@@ -49,10 +49,10 @@ struct SettingsAuthCTA: View {
             .padding(.horizontal, 8)
             .padding(.vertical, 12)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .background(.systemGray900)
+            .background(Color.T_9)
             .addBorder(
                 cornerRadius: 6,
-                stroke: .systemGray800
+                stroke: Color.genericBorder
             )
         }
     }

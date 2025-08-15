@@ -104,7 +104,7 @@ struct NewSystemPromptView: View {
                                             .resizable()
                                             .frame(width: 16, height: 16)
                                         Text(url.deletingPathExtension().lastPathComponent)
-                                            .foregroundStyle(.FG)
+                                            .foregroundStyle(Color.S_0)
                                         Spacer()
                                     }
                                 }
