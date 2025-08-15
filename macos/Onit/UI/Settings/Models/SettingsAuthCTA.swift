@@ -9,6 +9,8 @@ import SwiftUI
 
 struct SettingsAuthCTA: View {
     @Environment(\.appState) var appState
+    
+    @ObservedObject private var authManager = AuthManager.shared
 
     private let title: String
     private let caption: String
@@ -21,12 +23,8 @@ struct SettingsAuthCTA: View {
         self.caption = caption
     }
 
-    private var isLoggedIn: Bool {
-        appState.account != nil
-    }
-
     var body: some View {
-        if !isLoggedIn {
+        if !authManager.userLoggedIn {
             VStack(alignment: .leading, spacing: 8) {
                 Text(title)
                     .styleText(

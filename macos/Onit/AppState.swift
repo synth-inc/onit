@@ -5,6 +5,7 @@
 //  Created by Kévin Naudin on 02/04/2025.
 //
 
+import Combine
 import Defaults
 import DefaultsMacros
 import Sparkle
@@ -13,6 +14,8 @@ import SwiftUI
 @MainActor
 @Observable
 class AppState: NSObject, SPUUpdaterDelegate {
+    private var modelProvidersManager = ModelProvidersManager.shared
+    private var authManager = AuthManager.shared
     
     // MARK: - Properties
     
@@ -23,22 +26,8 @@ class AppState: NSObject, SPUUpdaterDelegate {
                                                userDriverDelegate: nil)
     
     var remoteFetchFailed: Bool = false
-    var localFetchFailed: Bool = false 
-
-    var account: Account? {
-        didSet {
-            if account == nil {
-                fetchSubscriptionTask?.cancel()
-                fetchSubscriptionTask = nil
-                subscription = nil
-            } else {
-                fetchSubscriptionTask?.cancel()
-                fetchSubscriptionTask = Task {
-                    subscription = try? await FetchingClient().getSubscription()
-                }
-            }
-        }
-    }
+    var localFetchFailed: Bool = false
+    
     private var fetchSubscriptionTask: Task<Void, Never>?
     private var chatGenerationLimitTask: Task<Void, Never>? = nil
     
@@ -54,7 +43,7 @@ class AppState: NSObject, SPUUpdaterDelegate {
     }
     
     var subscriptionStatus: String? {
-        if account != nil && subscription == nil {
+        if authManager.userLoggedIn && subscription == nil {
             return SubscriptionStatus.free
         } else if let subscription = subscription {
             switch subscription.status {
@@ -73,11 +62,33 @@ class AppState: NSObject, SPUUpdaterDelegate {
     var showFreeLimitAlert: Bool = false
     var showProLimitAlert: Bool = false
     var subscriptionPlanError: String = ""
+    
+    var showAddModelAlert: Bool = false
+    
+    private var authCancellable: AnyCancellable? = nil
 
     // MARK: - Initializer
     
     override init() {
         super.init()
+        
+        // Used for updating subscription variables in response to account updates.
+        authCancellable = AuthManager.shared.$account
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] account in
+                if let self = self {
+                    if account == nil {
+                        fetchSubscriptionTask?.cancel()
+                        fetchSubscriptionTask = nil
+                        subscription = nil
+                    } else {
+                        fetchSubscriptionTask?.cancel()
+                        fetchSubscriptionTask = Task {
+                            subscription = try? await FetchingClient().getSubscription()
+                        }
+                    }
+                }
+            }
         
         // Used for showing/removing update available footer notification.
         updater = SPUStandardUpdaterController(
@@ -248,55 +259,8 @@ class AppState: NSObject, SPUUpdaterDelegate {
             handleUpdateDeeplink()
         default:
             // For backwards compatibility, if no path is specified, assume it's a token login
-            handleTokenLogin(url)
+            authManager.handleTokenLogin(url)
             
-        }
-    }
-    
-    func handleTokenLogin(_ url: URL) {
-        guard url.scheme == "onit" else {
-            return
-        }
-        
-        let provider = "email"
-        
-        guard let components = URLComponents(url: url, resolvingAgainstBaseURL: true) else {
-            let errorMsg = "Invalid URL"
-            
-            AnalyticsManager.Auth.failed(provider: provider, error: errorMsg)
-            print(errorMsg)
-            return
-        }
-
-        guard let token = components.queryItems?.first(where: { $0.name == "token" })?.value else {
-            let errorMsg = "Login token not found"
-            
-            AnalyticsManager.Auth.failed(provider: provider, error: errorMsg)
-            print(errorMsg)
-            return
-        }
-
-        Task { @MainActor in
-            do {
-                let loginResponse = try await FetchingClient().loginToken(loginToken: token)
-
-                AnalyticsManager.Auth.success(provider: provider)
-                TokenManager.token = loginResponse.token
-                account = loginResponse.account
-
-                if loginResponse.isNewAccount {
-                    AnalyticsManager.Identity.identify(account: loginResponse.account)
-                    useOpenAI = true
-                    useAnthropic = true
-                    useXAI = true
-                    useGoogleAI = true
-                    useDeepSeek = true
-                    usePerplexity = true
-                }
-            } catch {
-                AnalyticsManager.Auth.failed(provider: provider, error: error.localizedDescription)
-                print("Login by token failed with error: \(error)")
-            }
         }
     }
     
@@ -315,46 +279,11 @@ class AppState: NSObject, SPUUpdaterDelegate {
         // Don't allow check to pass when a remote model isn't selected.
         guard let currentModel = Defaults[.remoteModel] else { return false }
         
-        switch currentModel.provider {
-        case .openAI:
-            if Defaults[.openAIToken] != nil {
-                return isOpenAITokenValidated
-            } else {
-                return false
-            }
-        case .anthropic:
-            if Defaults[.anthropicToken] != nil {
-                return isAnthropicTokenValidated
-            } else {
-                return false
-            }
-        case .xAI:
-            if Defaults[.xAIToken] != nil {
-                return isXAITokenValidated
-            } else {
-                return false
-            }
-        case .googleAI:
-            if Defaults[.googleAIToken] != nil {
-                return isGoogleAITokenValidated
-            } else {
-                return false
-            }
-        case .deepSeek:
-            if Defaults[.deepSeekToken] != nil {
-                return isDeepSeekTokenValidated
-            } else {
-                return false
-            }
-        case .perplexity:
-            if Defaults[.perplexityToken] != nil {
-                return isPerplexityTokenValidated
-            } else {
-                return false
-            }
-        case .custom:
-            // Custom providers don't require subscription validation.
+        // Custom providers don't require subscription validation.
+        if currentModel.provider == .custom {
             return true
+        } else {
+            return modelProvidersManager.getHasValidRemoteProviderToken(provider: currentModel.provider)
         }
     }
     
@@ -411,7 +340,7 @@ class AppState: NSObject, SPUUpdaterDelegate {
         // If the user is logged out...
         //   Prevent the user from sending any messages or updating any past prompts
         //   if they haven't provided an API key for the current model.
-        if account == nil {
+        if !authManager.userLoggedIn {
             if !providerApiKeyExists {
                 subscriptionPlanError = "Add the provider API key to send a message."
             } else {
@@ -441,85 +370,38 @@ class AppState: NSObject, SPUUpdaterDelegate {
     @ObservableDefault(.availableRemoteModels)
     @ObservationIgnored
     var availableRemoteModels: [AIModel]
-
-    @ObservableDefault(.availableCustomProviders)
-    @ObservationIgnored
-    var availableCustomProvider: [CustomProvider]
-
-    @ObservableDefault(.isOpenAITokenValidated)
-    @ObservationIgnored
-    var isOpenAITokenValidated: Bool
-
-    @ObservableDefault(.useOpenAI)
-    @ObservationIgnored
-    var useOpenAI: Bool
-
-    @ObservableDefault(.isAnthropicTokenValidated)
-    @ObservationIgnored
-    var isAnthropicTokenValidated: Bool
-
-    @ObservableDefault(.useAnthropic)
-    @ObservationIgnored
-    var useAnthropic: Bool
-
-    @ObservableDefault(.isXAITokenValidated)
-    @ObservationIgnored
-    var isXAITokenValidated: Bool
-
-    @ObservableDefault(.useXAI)
-    @ObservationIgnored
-    var useXAI: Bool
-
-    @ObservableDefault(.isGoogleAITokenValidated)
-    @ObservationIgnored
-    var isGoogleAITokenValidated: Bool
-
-    @ObservableDefault(.useGoogleAI)
-    @ObservationIgnored
-    var useGoogleAI: Bool
-
-    @ObservableDefault(.isDeepSeekTokenValidated)
-    @ObservationIgnored
-    var isDeepSeekTokenValidated: Bool
-
-    @ObservableDefault(.useDeepSeek)
-    @ObservationIgnored
-    var useDeepSeek: Bool
-
-    @ObservableDefault(.isPerplexityTokenValidated)
-    @ObservationIgnored
-    var isPerplexityTokenValidated: Bool
-
-    @ObservableDefault(.usePerplexity)
-    @ObservationIgnored
-    var usePerplexity: Bool
-
+    
     var listedModels: [AIModel] {
         var models = availableRemoteModels.filter {
             Defaults[.visibleModelIds].contains($0.uniqueId)
         }
         
-        if !useOpenAI {
+        if !modelProvidersManager.getCanAccessStandardRemoteProvider(.openAI) {
             models = models.filter { $0.provider != .openAI }
         }
-        if !useAnthropic {
+        
+        if !modelProvidersManager.getCanAccessStandardRemoteProvider(.anthropic) {
             models = models.filter { $0.provider != .anthropic }
         }
-        if !useXAI {
+        
+        if !modelProvidersManager.getCanAccessStandardRemoteProvider(.xAI) {
             models = models.filter { $0.provider != .xAI }
         }
-        if !useGoogleAI {
+        
+        if !modelProvidersManager.getCanAccessStandardRemoteProvider(.googleAI) {
             models = models.filter { $0.provider != .googleAI }
         }
-        if !useDeepSeek {
+        
+        if !modelProvidersManager.getCanAccessStandardRemoteProvider(.deepSeek) {
             models = models.filter { $0.provider != .deepSeek }
         }
-        if !usePerplexity {
+        
+        if !modelProvidersManager.getCanAccessStandardRemoteProvider(.perplexity) {
             models = models.filter { $0.provider != .perplexity }
         }
 
         // Filter out models from disabled custom providers
-        for customProvider in availableCustomProvider {
+        for customProvider in modelProvidersManager.availableCustomProviders {
             models = models.filter { model in
                 if model.customProviderName == customProvider.name {
                     return customProvider.isEnabled
@@ -531,61 +413,9 @@ class AppState: NSObject, SPUUpdaterDelegate {
         return models
     }
 
-    var hasUserAPITokens: Bool {
-        if let token = Defaults[.openAIToken],
-           !token.isEmpty,
-           isOpenAITokenValidated {
-            return true
-        }
-        if let token = Defaults[.anthropicToken],
-           !token.isEmpty,
-           isAnthropicTokenValidated {
-            return true
-        }
-        if let token = Defaults[.xAIToken],
-           !token.isEmpty,
-           isXAITokenValidated {
-            return true
-        }
-        if let token = Defaults[.googleAIToken],
-           !token.isEmpty,
-           isGoogleAITokenValidated {
-            return true
-        }
-        if let token = Defaults[.deepSeekToken],
-           !token.isEmpty,
-           isDeepSeekTokenValidated {
-            return true
-        }
-        if let token = Defaults[.perplexityToken],
-           !token.isEmpty,
-           isPerplexityTokenValidated {
-            return true
-        }
-        for provider in availableCustomProvider {
-            if !provider.token.isEmpty && provider.isTokenValidated {
-                return true
-            }
-        }
-        return false
-    }
-
 //    var remoteNeedsSetup: Bool {
 //        listedModels.isEmpty
 //    }
-    
-    private func resetCurrentRemoteModel() {
-        if let currentModel = Defaults[.remoteModel],
-           !availableRemoteModels.contains(currentModel)
-        {
-            if listedModels.isEmpty {
-                Defaults[.remoteModel] = nil
-                Defaults[.mode] = .local
-            } else {
-                Defaults[.remoteModel] = listedModels.first
-            }
-        }
-    }
     
     func removeRemoteModels(_ remoteModelsToRemove: [AIModel]) {
         /// Updating the list of user-removed remote models.
@@ -608,9 +438,6 @@ class AppState: NSObject, SPUUpdaterDelegate {
         Defaults[.userAddedRemoteModels].removeAll { remoteModelsToRemoveUniqueIds.contains($0.uniqueId) }
         
         Defaults[.visibleModelIds].subtract(remoteModelsToRemoveUniqueIds)
-        
-        /// Properly setting the currently selected model in the case where the user removes the previously selected one.
-        resetCurrentRemoteModel()
     }
     
     func addRemoteModel(_ remoteModel: AIModel) {
@@ -636,6 +463,32 @@ class AppState: NSObject, SPUUpdaterDelegate {
         Defaults[.visibleModelIds].insert(remoteModel.uniqueId)
         
         AnalyticsManager.Settings.Models.remoteModelAdded(remoteModel)
+    }
+    
+    func setModeAndValidRemoteModel() {
+        let cannotAccessRemoteModels = listedModels.isEmpty
+        
+        if cannotAccessRemoteModels {
+            Defaults[.remoteModel] = nil
+            Defaults[.modeToggleShortcutDisabled] = true
+            Defaults[.mode] = .local
+            return
+        } else {
+            if let currentRemoteModel = Defaults[.remoteModel] {
+                let isCurrentRemoteProviderInUse = modelProvidersManager.getIsRemoteProviderInUse(
+                    provider: currentRemoteModel.provider,
+                    customProviderName: currentRemoteModel.customProviderName
+                )
+                
+                if !isCurrentRemoteProviderInUse || !listedModels.contains(currentRemoteModel) {
+                    Defaults[.remoteModel] = listedModels.first
+                }
+            } else {
+                Defaults[.remoteModel] = listedModels.first
+            }
+            
+            Defaults[.modeToggleShortcutDisabled] = false
+        }
     }
 }
 

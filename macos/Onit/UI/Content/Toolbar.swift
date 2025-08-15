@@ -8,12 +8,14 @@
 import SwiftUI
 
 struct Toolbar: View {
+    var mode: InferenceMode
+    
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             HStack(alignment: .center) {
                 ToolbarLeft()
                 Spacer()
-                ToolbarRight()
+                ToolbarRight(mode: mode)
             }
             .padding(.trailing, 8)
             .padding(.leading, 12)

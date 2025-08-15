@@ -12,6 +12,8 @@ import GoogleSignIn
 struct GeneralTabAccount: View {
     @Environment(\.appState) var appState
     
+    @ObservedObject private var authManager = AuthManager.shared
+    
     @Default(.authFlowStatus) var authFlowStatus
     
     @State private var showDeleteAccountAlert: Bool = false
@@ -23,11 +25,11 @@ struct GeneralTabAccount: View {
             title: "Account"
         ) {
             VStack(alignment: .leading) {
-                if appState.account == nil { loggedOutText }
+                if !authManager.userLoggedIn { loggedOutText }
                 else { loggedInText }
                 
                 HStack(spacing: 9) {
-                    if appState.account == nil {
+                    if !authManager.userLoggedIn {
                         Self.createAnAccountButton
                         Self.signInButton
                     } else {
@@ -66,10 +68,10 @@ extension GeneralTabAccount {
     
     private var loggedInText: some View {
         HStack(spacing: 4) {
-            if let email = appState.account?.email {
+            if let email = authManager.account?.email {
                 text(text: "You are signed in as")
                 text(text: email, weight: .semibold)
-            } else if let appleEmail = appState.account?.appleEmail {
+            } else if let appleEmail = authManager.account?.appleEmail {
                 text(text: "You are signed in as")
                 text(text: appleEmail, weight: .semibold)
             } else {
@@ -87,21 +89,16 @@ extension GeneralTabAccount {
             action: {
                 AnalyticsManager.AccountEvents.createAccountPressed()
                 Defaults[.authFlowStatus] = .showSignUp
-                openPanel()
+                Self.openPanel()
             },
             background: Color.blue
         )
     }
     
     static var signInButton: some View {
-        SimpleButton(
-            text: "Sign in",
-            action: {
-                AnalyticsManager.AccountEvents.signInPressed()
-                Defaults[.authFlowStatus] = .showSignIn
-                openPanel()
-            }
-        )
+        SimpleButton(text: "Sign in") {
+            Self.openSignInAuth()
+        }
     }
     
     private var logoutButton: some View {
@@ -109,7 +106,7 @@ extension GeneralTabAccount {
             text: "Log out",
             action: {
                 AnalyticsManager.AccountEvents.logoutPressed()
-                logout()
+                authManager.logout()
             }
         )
     }
@@ -125,10 +122,7 @@ extension GeneralTabAccount {
             background: Color.redDisabledHover
         )
         .sheet(isPresented: $showDeleteAccountAlert) {
-            GeneralTabAccountAlert(
-                show: $showDeleteAccountAlert,
-                logout: logout
-            )
+            GeneralTabAccountAlert(show: $showDeleteAccountAlert)
         }
     }
 }
@@ -136,22 +130,15 @@ extension GeneralTabAccount {
 // MARK: - Private Functions
 
 extension GeneralTabAccount {
-    @MainActor
-    private func logout() {
-        TokenManager.token = nil
-        appState.account = nil
-        Defaults[.authFlowStatus] = .showSignIn
-        GIDSignIn.sharedInstance.signOut()
-        
-        // Reset all chat state
-        for windowState in PanelStateCoordinator.shared.states {
-            windowState.newChat(clearContext: true)
-        }
-    }
-    
     static func openPanel() {
         if !PanelStateCoordinator.shared.state.panelOpened {
             PanelStateCoordinator.shared.launchPanel()
         }
+    }
+    
+    static func openSignInAuth() {
+        AnalyticsManager.AccountEvents.signInPressed()
+        Defaults[.authFlowStatus] = .showSignIn
+        Self.openPanel()
     }
 }

@@ -55,6 +55,11 @@ struct KeyboardShortcutsManager {
             }
         }
         
+        let modeToggleDisabled = Defaults[.modeToggleShortcutDisabled]
+        if modeToggleDisabled {
+            names.removeAll { $0 == .toggleLocalMode }
+        }
+        
         do {
             let storedPrompts = try modelContainer.mainContext.fetch(FetchDescriptor<SystemPrompt>())
             for systemPrompt in storedPrompts {

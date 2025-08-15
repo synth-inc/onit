@@ -13,8 +13,12 @@ import SwiftUI
 
 struct AuthFlow: View {
     @Environment(\.appState) var appState
+    @Environment(\.openSettings) var openSettings
+    
+    @ObservedObject private var authManager = AuthManager.shared
     
     @Default(.authFlowStatus) var authFlowStatus
+    @Default(.availableLocalModels) var availableLocalModels
     
     @Default(.useOpenAI) var useOpenAI
     @Default(.useAnthropic) var useAnthropic
@@ -22,6 +26,8 @@ struct AuthFlow: View {
     @Default(.useGoogleAI) var useGoogleAI
     @Default(.useDeepSeek) var useDeepSeek
     @Default(.usePerplexity) var usePerplexity
+    
+    @State private var modelProvidersManager = ModelProvidersManager.shared
 
     @State private var isHoveredContinueWithEmailButton: Bool = false
     @State private var isPressedContinueWithEmailButton: Bool = false
@@ -40,7 +46,15 @@ struct AuthFlow: View {
     @State private var errorMessageAuth: String = ""
     
     private var isSignUp: Bool {
-        return authFlowStatus == .showSignUp
+        authFlowStatus == .showSignUp
+    }
+    
+    private var hasLocalModels: Bool {
+        !availableLocalModels.isEmpty
+    }
+    
+    private var hasModels: Bool {
+        modelProvidersManager.userHasRemoteAPITokens || hasLocalModels
     }
     
     var body: some View {
@@ -49,8 +63,9 @@ struct AuthFlow: View {
                 emailAuthTokenForm
             } else {
                 form
-                redirectSection
+                redirectCTA
                 Spacer()
+                closeButton
             }
         }
         .onAppear {
@@ -58,7 +73,6 @@ struct AuthFlow: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .padding(.top, 134)
-        .background(Color.baseBG)
     }
 }
 
@@ -69,7 +83,13 @@ extension AuthFlow {
         VStack(spacing: 4) {
             OnboardingAuthButton(
                 icon: .logoGoogle,
-                action: handleGoogleSignInButton
+                action: {
+                    Task { @MainActor in
+                        if let errorMessage = await authManager.logInWithGoogle() {
+                            errorMessageAuth = errorMessage
+                        }
+                    }
+                }
             )
             
             if !errorMessageAuth.isEmpty {
@@ -107,9 +127,15 @@ extension AuthFlow {
         VStack(alignment: .center, spacing: 0) {
             Image("Logo").padding(.bottom, 19)
             
-            Text(isSignUp ? "Create your account" : "Sign in to Onit")
-                .styleText(size: 23)
-                .padding(.bottom, 28)
+            VStack(alignment: .center, spacing: 8) {
+                Text(isSignUp ? "Create your account" : "Sign in to Onit")
+                    .styleText(size: 23, align: .center)
+                
+                Text("Sign up to access 30+ models from OpenAI, Anthropic & more!")
+                    .styleText(size: 15, weight: .regular, color: Color.S_1, align: .center)
+            }
+            .padding(.bottom, 24)
+            .frame(width: 291)
             
             VStack(alignment: .center, spacing: 12) {
                 formAuthButtons
@@ -137,7 +163,7 @@ extension AuthFlow {
     private var redirectSection: some View {
         HStack(spacing: 6) {
             Text(isSignUp ? "Already have an account?" : "Don't have an account?")
-                .styleText(size: 13, weight: .regular, color: Color.S_1)
+                .styleText(size: 13, weight: .regular, color: Color.S_1, align: .center)
             
             Button {
                 if isSignUp {
@@ -156,19 +182,21 @@ extension AuthFlow {
         }
     }
     
-    private var signUpRedirect: some View {
-        VStack(alignment: .center, spacing: 12) {
+    private var redirectCTA: some View {
+        VStack(alignment: .center, spacing: 10) {
             redirectSection
             
-            Button {
-                authFlowStatus = .hideAuth
-            } label: {
-                Text(generateSkipText())
-                    .styleText(size: 13, weight: .regular, underline: isHoveredSkipButton)
-            }
-            .buttonStyle(PlainButtonStyle())
-            .onHover { isHovering in
-                isHoveredSkipButton = isHovering
+            if authFlowStatus == .showSignUp {
+                Button {
+                    authFlowStatus = .hideAuth
+                } label: {
+                    Text(generateSkipText())
+                        .styleText(size: 13, weight: .regular, align: .center, underline: isHoveredSkipButton)
+                }
+                .buttonStyle(PlainButtonStyle())
+                .onHover { isHovering in
+                    isHoveredSkipButton = isHovering
+                }
             }
         }
     }
@@ -239,6 +267,21 @@ extension AuthFlow {
         }
         .padding(.bottom, 53)
     }
+    
+    @ViewBuilder
+    private var closeButton: some View {
+        if !authManager.userLoggedIn && hasModels {
+            TextButton(height: 40) {
+                Text("Close")
+                    .frame(maxWidth: .infinity, alignment: .center)
+                    .styleText()
+            } action: {
+                authFlowStatus = .hideAuth
+            }
+            .padding(.horizontal, 40)
+            .padding(.bottom, 53)
+        }
+    }
 }
 
 
@@ -282,24 +325,6 @@ extension AuthFlow {
         skipText.append(mainText)
         
         return skipText
-    }
-    
-    @MainActor
-    private func handleLogin(loginResponse: LoginResponse) {
-        TokenManager.token = loginResponse.token
-        appState.account = loginResponse.account
-
-        if loginResponse.isNewAccount {
-            AnalyticsManager.Identity.identify(account: loginResponse.account)
-            useOpenAI = true
-            useAnthropic = true
-            useXAI = true
-            useGoogleAI = true
-            useDeepSeek = true
-            usePerplexity = true
-        }
-        
-        authFlowStatus = .hideAuth
     }
 }
 
@@ -346,77 +371,5 @@ extension AuthFlow {
                 }
             }
         }
-    }
-}
-
-// MARK: - Private Functions (Google, Apple)
-
-extension AuthFlow {
-    private func handleGoogleSignInButton() {
-        let provider = "google"
-        AnalyticsManager.Auth.pressed(provider: provider)
-        errorMessageAuth = ""
-        
-        guard let window = NSApp.keyWindow else { return }
-
-        AnalyticsManager.Auth.requested(provider: provider)
-        
-        GIDSignIn.sharedInstance.signIn(withPresenting: window) { result, error in
-            guard let result = result else {
-                if let error = error as? NSError, error.domain == "com.google.GIDSignIn", error.code == -5 {
-                    // The user canceled the sign-in flow
-                    AnalyticsManager.Auth.cancelled(provider: provider)
-                    return
-                } else if let error = error {
-                    let errorMsg = error.localizedDescription
-                    
-                    AnalyticsManager.Auth.error(provider: provider, error: errorMsg)
-                    errorMessageAuth = errorMsg
-                } else {
-                    let errorMsg = "Unknown Google sign in error"
-                    
-                    AnalyticsManager.Auth.error(provider: provider, error: errorMsg)
-                    errorMessageAuth = errorMsg
-                }
-                return
-            }
-
-            guard let idToken = result.user.idToken?.tokenString else {
-                let errorMsg = "Failed to get Google identity token"
-                
-                AnalyticsManager.Auth.error(provider: provider, error: errorMsg)
-                errorMessageAuth = errorMsg
-                return
-            }
-
-            Task {
-                do {
-                    let client = FetchingClient()
-                    let loginResponse = try await client.loginGoogle(idToken: idToken)
-                    handleLogin(loginResponse: loginResponse)
-                    AnalyticsManager.Auth.success(provider: provider)
-                } catch {
-                    let errorMsg = error.localizedDescription
-                    
-                    AnalyticsManager.Auth.failed(provider: provider, error: errorMsg)
-                    errorMessageAuth = errorMsg
-                }
-            }
-        }
-    }
-    
-    private func handleAppleCredential(_ authResults: ASAuthorization) async throws {
-        guard
-            let credentials = authResults.credential as? ASAuthorizationAppleIDCredential,
-            let identityToken = credentials.identityToken,
-            let identityTokenString = String(data: identityToken, encoding: .utf8)
-        else {
-            errorMessageAuth = "Failed to get Apple identity token"
-            return
-        }
-        
-        let client = FetchingClient()
-        let loginResponse = try await client.loginApple(idToken: identityTokenString)
-        handleLogin(loginResponse: loginResponse)
     }
 }

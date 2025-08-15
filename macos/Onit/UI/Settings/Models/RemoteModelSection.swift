@@ -10,6 +10,8 @@ import SwiftUI
 
 struct RemoteModelSection: View {
     @Environment(\.appState) var appState
+    
+    @ObservedObject private var authManager = AuthManager.shared
 
     @State private var use = false
     @State private var key = ""
@@ -21,7 +23,6 @@ struct RemoteModelSection: View {
     @State private var showAddModelSheet: Bool = false
     @State private var showRemoveModelsSheet: Bool = false
 
-    @Default(.mode) var mode
     @Default(.remoteModel) var remoteModel
     @Default(.availableRemoteModels) var availableRemoteModels
     @Default(.openAIToken) var openAIToken
@@ -117,22 +118,13 @@ struct RemoteModelSection: View {
         .onChange(of: use) {
             save(use: use)
             save(validated: validated)
-            // If we've turned off everything go into local mode.
-            if appState.listedModels.isEmpty {
-                mode = .local
-            } else {
-                // If it's our first time adding models, set the remoteModel
-                if remoteModel == nil {
-                    remoteModel = appState.listedModels.first
-                }
-            }
         }
     }
 
     // MARK: - Subviews
 
     var titleView: some View {
-        ModelTitle(title: provider.title, isOn: $use, showToggle: appState.account != nil || validated)
+        ModelTitle(title: provider.title, isOn: $use, showToggle: authManager.userLoggedIn || validated)
     }
 
     var textField: some View {
@@ -176,7 +168,7 @@ struct RemoteModelSection: View {
                         fetchKey()
                         checkValidated()
                         
-                        if appState.account == nil {
+                        if !authManager.userLoggedIn {
                             checkUse()
                         }
                     }
@@ -267,7 +259,7 @@ struct RemoteModelSection: View {
     @ViewBuilder
     var modelsView: some View {
         // If they're logged in, we should show these since they can always use them through the free plan.
-        if use && (appState.account != nil || validated) {
+        if use && (authManager.userLoggedIn || validated) {
             let noAvailableRemoteModels: Bool = models.isEmpty
             
             GroupBox {

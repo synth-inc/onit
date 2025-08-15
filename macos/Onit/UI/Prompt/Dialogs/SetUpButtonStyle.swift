@@ -29,7 +29,7 @@ struct SetUpButtonStyle: ButtonStyle {
 
         .padding(8)
         .foregroundStyle(foregroundColor)
-        .background(backgroundColor.opacity(hovering ? 0.9 : 1), in: .rect(cornerRadius: 8))
+        .background(backgroundColor.opacity(hovering ? 0.9 : 1), in: .rect(cornerRadius: 6))
         .opacity(configuration.isPressed ? 0.9 : 1)
         .animation(.spring(duration: 1 / 3), value: hovering)
         .fontWeight(.semibold)

@@ -62,13 +62,19 @@ class TokenValidationManager {
             case .custom:
                 throw FetchingError.invalidRequest(message: "Custom provider token validation is not supported")   
             }
+            
+            /// Setting provider token validation Defaults property to `true` when provider validation ping succeeds.
             Self.setTokenIsValid(true, provider: provider)
         } catch let error as FetchingError {
             print("Error: \(error.localizedDescription)")
             state.setInvalid(provider: provider, error: error)
+            
+            /// Setting provider token validation Defaults property to `false` when provider validation ping fails.
             Self.setTokenIsValid(false, provider: provider)
         } catch {
             state.setInvalid(provider: provider, error: error)
+            
+            /// Setting provider token validation Defaults property to `false` when provider validation ping fails.
             Self.setTokenIsValid(false, provider: provider)
         }
 

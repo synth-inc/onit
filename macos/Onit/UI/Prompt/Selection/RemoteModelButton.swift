@@ -10,19 +10,26 @@ import SwiftUI
 struct RemoteModelButton: View {
     @Environment(\.appState) var appState
     
+    @ObservedObject private var authManager = AuthManager.shared
+    
     private let modelSelectionViewOpen: Binding<Bool>
     private let selectedModel: Binding<SelectedModel?>
     private let remoteModel: AIModel
+    private let mode: InferenceMode
     
     init(
         modelSelectionViewOpen: Binding<Bool>,
         selectedModel: Binding<SelectedModel?>,
-        remoteModel: AIModel
+        remoteModel: AIModel,
+        mode: InferenceMode
     ) {
         self.modelSelectionViewOpen = modelSelectionViewOpen
         self.selectedModel = selectedModel
         self.remoteModel = remoteModel
+        self.mode = mode
     }
+    
+    @State private var modelProvidersManager = ModelProvidersManager.shared
     
     @State var planLimitReached: Bool = false
     
@@ -66,38 +73,19 @@ extension RemoteModelButton {
     }
     
     private func isSelectedRemoteModel(model: AIModel) -> Bool {
-        if let currentModel = selectedModel.wrappedValue,
-           case let .remote(selectedModel) = currentModel {
+        if mode == .remote,
+           let currentModel = selectedModel.wrappedValue,
+           case let .remote(selectedModel) = currentModel
+        {
             return model.id == selectedModel.id
         } else {
             return false
         }
     }
     
-    private func checkApiKeyExistsForProvider() -> Bool {
-        switch remoteModel.provider {
-        case .openAI:
-            return appState.isOpenAITokenValidated
-        case .anthropic:
-            return appState.isAnthropicTokenValidated
-        case .xAI:
-            return appState.isXAITokenValidated
-        case .googleAI:
-            return appState.isGoogleAITokenValidated
-        case .deepSeek:
-            return appState.isDeepSeekTokenValidated
-        case .perplexity:
-            return appState.isPerplexityTokenValidated
-        case .custom:
-            return true
-        }
-    }
-    
     private func checkPlanLimitReached() async {
         do {
-            let userLoggedIn = appState.account != nil
-            
-            if userLoggedIn {
+            if authManager.userLoggedIn {
                 let client = FetchingClient()
                 let chatUsageResponse = try await client.getChatUsage()
                 
@@ -105,7 +93,7 @@ extension RemoteModelButton {
                    let quota = chatUsageResponse?.quota
                 {
                     let hitPlanLimit = usage >= quota
-                    let providerApiKeyExists = checkApiKeyExistsForProvider()
+                    let providerApiKeyExists = modelProvidersManager.getHasValidRemoteProviderToken(provider: remoteModel.provider)
                     
                     if hitPlanLimit && !providerApiKeyExists {
                         planLimitReached = true

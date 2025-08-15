@@ -102,7 +102,7 @@ struct RemoteModelRemoveModel: View {
                 
                 SimpleButton(
                     text: "Remove Selected",
-                    textColor: .red,
+                    textColor: Color.red,
                     action: {
                         appState.removeRemoteModels(selectedRemoteModels)
                         showRemoveModelsSheet = false

@@ -21,6 +21,7 @@ struct QuickEditView: View {
     
     @ObservedObject private var accessibilityPermissionManager = AccessibilityPermissionManager.shared
     @ObservedObject private var quickEditManager = QuickEditManager.shared
+    @ObservedObject private var authManager = AuthManager.shared
     
     @State private var currentWindowInfo: (
         appBundleUrl: URL?,
@@ -227,7 +228,7 @@ extension QuickEditView {
         
         Task {
             await appState.checkSubscriptionAlerts {
-                windowState.sendAction(accountId: appState.account?.id)
+                windowState.sendAction(accountId: authManager.account?.id)
             }
         }
     }

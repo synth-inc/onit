@@ -13,6 +13,9 @@ import SwiftUI
 struct PromptCore: View {
     @Environment(\.appState) var appState
     @Environment(\.windowState) private var windowState
+    
+    @ObservedObject private var authManager = AuthManager.shared
+    
     @Query(sort: \Chat.timestamp, order: .reverse) private var allChats: [Chat]
     
     @Default(.mode) var mode
@@ -21,7 +24,7 @@ struct PromptCore: View {
     
     private var chats: [Chat] {
         let chatsFilteredByAccount = allChats
-            .filter { $0.accountId == appState.account?.id }
+            .filter { $0.accountId == authManager.account?.id }
         
         return PanelStateCoordinator.shared.filterPanelChats(chatsFilteredByAccount)
     }
@@ -257,7 +260,7 @@ extension PromptCore {
     }
     
     private var showingAlert: Bool {
-        showTwoWeekProTrialEndedAlert || appState.showFreeLimitAlert || appState.showProLimitAlert
+        appState.showAddModelAlert || showTwoWeekProTrialEndedAlert || appState.showFreeLimitAlert || appState.showProLimitAlert
     }
     
     private var isRemote: Bool {
@@ -298,7 +301,7 @@ extension PromptCore {
     private func handleSend() {
         Task {
             await appState.checkSubscriptionAlerts {
-                windowState?.sendAction(accountId: appState.account?.id)
+                windowState?.sendAction(accountId: authManager.account?.id)
             }
         }
     }

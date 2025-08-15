@@ -23,12 +23,12 @@ struct App: SwiftUI.App {
     
     @NSApplicationDelegateAdaptor(AppDelegate.self) var delegate
     @ObservedObject private var debugManager = DebugManager.shared
+    @ObservedObject private var authManager = AuthManager.shared
 
     @Default(.launchOnStartupRequested) var launchOnStartupRequested
     @Default(.autoContextFromCurrentWindow) var autoContextFromCurrentWindow
     @Default(.autoContextFromHighlights) var autoContextFromHighlights
     @Default(.autoContextOnLaunchTethered) var autoContextOnLaunchTethered
-    @Default(.authFlowStatus) var authFlowStatus
     
     private let appCoordinator: AppCoordinator
 
@@ -103,34 +103,6 @@ struct App: SwiftUI.App {
                     appState.handleDeeplink(url)
                 }
         }
-        
-        Window("Create an Account or Log In",id: windowOnboardingAuthId) {
-            if authFlowStatus != .hideAuth && appState.account == nil {
-                VStack {
-                    AuthFlow()
-                }
-                .background(Color.black)
-                .frame(width: 400, height: 800)
-                .addBorder(
-                    cornerRadius: 14,
-                    lineWidth: 2,
-                    stroke: Color.genericBorder
-                )
-                .edgesIgnoringSafeArea(.top)
-            }
-        }
-        .windowResizability(.contentSize)
-        .defaultPosition(.center)
-        .onChange(of: appState.account) { _, new in
-            if new != nil {
-                dismissWindow(id: windowOnboardingAuthId)
-            }
-        }
-        .onChange(of: authFlowStatus) { _, new in
-            if new == .hideAuth {
-                dismissWindow(id: windowOnboardingAuthId)
-            }
-        }
     }
     
     private static func configureSwiftBeaver() {
@@ -169,11 +141,11 @@ struct App: SwiftUI.App {
     }
 
     private func restoreSession() {
-        if TokenManager.token != nil && appState.account == nil {
-            Task { @MainActor in 
+        if TokenManager.token != nil && authManager.account == nil {
+            Task { @MainActor in
                 let client = FetchingClient()
                 if let fetched = try? await client.getAccount() {
-                    appState.account = fetched
+                    authManager.setAccount(account: fetched)
                     AnalyticsManager.Identity.identify(account: fetched)
                 }
             }

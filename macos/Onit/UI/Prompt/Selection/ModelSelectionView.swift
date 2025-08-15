@@ -12,6 +12,8 @@ struct ModelSelectionView: View {
     @Environment(\.appState) var appState
     @Environment(\.openSettings) var openSettings
     
+    @ObservedObject private var authManager = AuthManager.shared
+    
     @Default(.mode) var mode
     @Default(.localModel) var localModel
     @Default(.remoteModel) var remoteModel
@@ -82,6 +84,7 @@ struct ModelSelectionView: View {
                 placeholder: "Search models..."
             )
         ) {
+            signInCTA
             remote
             local
         }
@@ -89,14 +92,60 @@ struct ModelSelectionView: View {
             AnalyticsManager.ModelPicker.opened()
         }
     }
+    
+    @ViewBuilder
+    private var signInCTA: some View {
+        if !authManager.userLoggedIn {
+            VStack(alignment: .leading, spacing: 8) {
+                Text("Sign in to access 30+ models from OpenAI, Anthropic and more!")
+                    .fixedSize(horizontal: false, vertical: true)
+                    .styleText(
+                        size: 13,
+                        weight: .regular,
+                        color: Color.S_1
+                    )
+                
+                Button("Sign In") {
+                    GeneralTabAccount.openSignInAuth()
+                }
+                .buttonStyle(SetUpButtonStyle(showArrow: true))
+                .frame(maxWidth: .infinity, alignment: .leading)
+            }
+            .padding(.horizontal, 16)
+            .padding(.bottom, 8)
+        }
+    }
+    
+    private func addModelCTAButton(isLocal: Bool = false) -> some View {
+        TextButton(
+            fillContainer: false
+        ) {
+            HStack(alignment: .center, spacing: 10) {
+                Image(.plusThin)
+                    .padding(.leading, -1)
+                
+                Text("Add manually")
+                    .styleText(size: 14, color: .primary)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+        } action: {
+            if isLocal {
+                AnalyticsManager.ModelPicker.localSetupPressed()
+            }
+            
+            appState.settingsTab = .models
+            openSettings()
+            open.wrappedValue = false
+        }
+    }
 
     var remote: some View {
         return MenuSection(
             title: "Remote",
             showTopBorder: true,
-            maxScrollHeight: setModelListHeight(
+            maxScrollHeight: !filteredRemoteModels.isEmpty ? setModelListHeight(
                 listCount: CGFloat(filteredRemoteModels.count)
-            ),
+            ) : nil,
             contentRightPadding: 0,
             contentBottomPadding: 0,
             contentLeftPadding: 0
@@ -107,12 +156,33 @@ struct ModelSelectionView: View {
     
     var remoteModelsView: some View {
         VStack(spacing: 0) {
-            ForEach(filteredRemoteModels) { remoteModel in
-                RemoteModelButton(
-                    modelSelectionViewOpen: open,
-                    selectedModel: selectedModel,
-                    remoteModel: remoteModel
-                )
+            if filteredRemoteModels.isEmpty {
+                if !authManager.userLoggedIn {
+                    TextButton(fillContainer: false) {
+                        HStack(alignment: .center, spacing: 10) {
+                            Image(.user)
+                                .padding(.leading, -1)
+                            
+                            Text("Sign up for access")
+                                .styleText(size: 14, color: .primary)
+                        }
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                    } action: {
+                        Defaults[.authFlowStatus] = .showSignUp
+                        open.wrappedValue = false
+                    }
+                }
+                
+                addModelCTAButton()
+            } else {
+                ForEach(filteredRemoteModels) { remoteModel in
+                    RemoteModelButton(
+                        modelSelectionViewOpen: open,
+                        selectedModel: selectedModel,
+                        remoteModel: remoteModel,
+                        mode: mode
+                    )
+                }
             }
         }
         .padding(.horizontal, 8)
@@ -121,49 +191,37 @@ struct ModelSelectionView: View {
 
     var local: some View {
         MenuSection(
-            titleIcon: availableLocalModels.isEmpty ? .warningSettings : nil,
-            titleIconColor: Color.orange500,
             title: "Local",
             showTopBorder: true,
-            maxScrollHeight: setModelListHeight(
+            maxScrollHeight: !filteredLocalModels.isEmpty ? setModelListHeight(
                 listCount: CGFloat(filteredLocalModels.count)
-            ),
+            ) : nil,
             contentRightPadding: 0,
             contentBottomPadding: 0,
             contentLeftPadding: 0
         ) {
-            if availableLocalModels.isEmpty {
-                Button("Setup local models") {
-                    AnalyticsManager.ModelPicker.localSetupPressed()
-                    appState.settingsTab = .models
-                    openSettings()
-                }
-                .buttonStyle(SetUpButtonStyle(showArrow: true))
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(.horizontal, 12)
-                .padding(.top, 6)
-                .padding(.bottom, 10)
-
-            } else {
-                localModelsView
-            }
+            localModelsView
         }
     }
 
     var localModelsView: some View {
         VStack(spacing: 0) {
-            ForEach(filteredLocalModels, id: \.self) { localModelName in
-                TextButton(
-                    iconSize: 16,
-                    selected: isSelectedLocalModel(modelName: localModelName),
-                    icon: localModelName.lowercased().contains("llama") ? .logoOllama : .logoProviderUnknown,
-                    text: localModelName,
-                    action: {
-                        AnalyticsManager.ModelPicker.modelSelected(local: true, model: localModelName)
-                        selectedModel.wrappedValue = .local(localModelName)
-                        open.wrappedValue = false
-                    }
-                )
+            if availableLocalModels.isEmpty {
+                addModelCTAButton(isLocal: true)
+            } else {
+                ForEach(filteredLocalModels, id: \.self) { localModelName in
+                    TextButton(
+                        iconSize: 16,
+                        selected: isSelectedLocalModel(modelName: localModelName),
+                        icon: localModelName.lowercased().contains("llama") ? .logoOllama : .logoProviderUnknown,
+                        text: localModelName,
+                        action: {
+                            AnalyticsManager.ModelPicker.modelSelected(local: true, model: localModelName)
+                            selectedModel.wrappedValue = .local(localModelName)
+                            open.wrappedValue = false
+                        }
+                    )
+                }
             }
         }
         .padding(.horizontal, 8)
