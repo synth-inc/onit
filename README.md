@@ -10,10 +10,6 @@ Onit is an AI chat sidebar that can dock to any app on your Mac!
 
 It's like Cursor Chat, but for every _other_ app on your computer - not just in your IDE.
 
-<div align="center">
-<img src="https://syntheticco.blob.core.windows.net/onit-media/onit-tether-mode-demo.gif" alt="Onit Main Demo" width="800" height="auto">
-</div>
-
 ## 🚀 Quick Start
 
 - **Download:** Get the pre-built version from [www.getonit.ai](https://www.getonit.ai)
