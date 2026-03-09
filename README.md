@@ -6,7 +6,7 @@
 
   
 # Onit Sidepanel (Legacy)
-NOTE: This project does not contain the code for **Onit Dictate** or **Onit QuickEdit**!
+_NOTE: This project does not contain the code for **Onit Dictate** or **Onit QuickEdit**! Those projects aren’t open source and live in a separate repository._
 
 Onit is an AI chat sidebar that can dock to any app on your Mac!
 
