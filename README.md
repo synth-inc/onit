@@ -5,7 +5,9 @@
 </div>
 
   
-# Onit
+# Onit Sidepanel (Legacy)
+NOTE: This project does not contain the code for **Onit Dictate** or **Onit QuickEdit**!
+
 Onit is an AI chat sidebar that can dock to any app on your Mac!
 
 It's like Cursor Chat, but for every _other_ app on your computer - not just in your IDE.
