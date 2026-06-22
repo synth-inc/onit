@@ -1,0 +1,32 @@
+#!/bin/bash
+#
+#  post-checkout
+#  Onit
+#
+#  Created by Kévin Naudin on 2026-01-23.
+#
+
+# Update submodules after checkout
+# --init: Initialize any submodules not yet initialized
+# --recursive: Also update nested submodules
+# Silently succeeds if .gitmodules doesn't exist on this branch
+echo "Updating submodules..."
+git submodule update --init --recursive
+echo "✓ Submodules updated"
+
+# Clean potentially corrupted SPM binary caches
+# gRPC and Firebase binary targets sometimes get corrupted during download
+# This prevents "does not contain a binary artifact" errors
+SPM_CACHE_DIR="$HOME/Library/Caches/org.swift.swiftpm/repositories"
+if [ -d "$SPM_CACHE_DIR" ]; then
+    CLEANED=false
+    for pattern in grpc firebase; do
+        if ls "$SPM_CACHE_DIR"/*${pattern}* 1>/dev/null 2>&1; then
+            rm -rf "$SPM_CACHE_DIR"/*${pattern}*
+            CLEANED=true
+        fi
+    done
+    if [ "$CLEANED" = true ]; then
+        echo "✓ Cleaned SPM binary caches (gRPC/Firebase)"
+    fi
+fi

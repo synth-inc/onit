@@ -1,0 +1,12 @@
+{
+  "images" : [
+    {
+      "filename" : "onboarding-permission-example-without-access.png",
+      "idiom" : "universal"
+    }
+  ],
+  "info" : {
+    "author" : "xcode",
+    "version" : 1
+  }
+}

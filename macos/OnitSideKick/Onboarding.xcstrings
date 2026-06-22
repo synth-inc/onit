@@ -1,0 +1,1526 @@
+{
+  "sourceLanguage": "en",
+  "strings": {
+    " and ": {
+      "comment": "Onboarding: Conjunction between Terms and Privacy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": " and "
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": " et "
+          }
+        }
+      }
+    },
+    "(give it ~5 seconds)": {
+      "comment": "Loading text shown while waiting for Google Sign-In dialog",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "(give it ~5 seconds)"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "(patientez ~5 secondes)"
+          }
+        }
+      }
+    },
+    "(this is Google's fault, not ours)": {
+      "comment": "Blame text shown after 5 seconds while waiting for Google Sign-In",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "(this is Google's fault, not ours)"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "(c'est la faute de Google, pas la nôtre)"
+          }
+        }
+      }
+    },
+    "Accept": {
+      "comment": "Onboarding: Shortcut legend - accept",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Accept"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Accepter"
+          }
+        }
+      }
+    },
+    "Accept Invite": {
+      "comment": "Onboarding: Discord accept invite button",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Accept Invite"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Accepter l'invitation"
+          }
+        }
+      }
+    },
+    "Accessibility": {
+      "comment": "Onboarding: Accessibility permission title",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Accessibility"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Accessibilité"
+          }
+        }
+      }
+    },
+    "Added": {
+      "comment": "Onboarding: Input source added button state",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Added"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ajouté"
+          }
+        }
+      }
+    },
+    "Already have an account?": {
+      "comment": "Onboarding: Auth redirect prompt for existing users",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Already have an account?"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vous avez déjà un compte ?"
+          }
+        }
+      }
+    },
+    "Autocomplete": {
+      "comment": "Onboarding: Feature name - Autocomplete",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Autocomplete"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Autocomplétion"
+          }
+        }
+      }
+    },
+    "By continuing, you agree to our": {
+      "comment": "Onboarding: Terms agreement prefix",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "By continuing, you agree to our"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "En continuant, vous acceptez nos"
+          }
+        }
+      }
+    },
+    "Cancel": {
+      "comment": "Onboarding: Shortcut legend - cancel",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cancel"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Annuler"
+          }
+        }
+      }
+    },
+    "Click to start": {
+      "comment": "Onboarding: Tether tutorial overlay subtitle",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Click to start"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cliquez pour commencer"
+          }
+        }
+      }
+    },
+    "Close": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Close"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fermer"
+          }
+        }
+      }
+    },
+    "Company": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Company"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Entreprise"
+          }
+        }
+      }
+    },
+    "Continue with\\na limited experience?": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Continue with\\na limited experience?"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Continuer avec\\nune expérience limitée ?"
+          }
+        }
+      }
+    },
+    "Create your account": {
+      "comment": "Onboarding: Auth sign up title",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Create your account"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Créez votre compte"
+          }
+        }
+      }
+    },
+    "Don't have an account yet?": {
+      "comment": "Onboarding: Auth redirect prompt for new users",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Don't have an account yet?"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vous n'avez pas encore de compte ?"
+          }
+        }
+      }
+    },
+    "Failed to get Apple identity token": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Failed to get Apple identity token"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Échec de l'obtention du jeton d'identité Apple."
+          }
+        }
+      }
+    },
+    "Failed to get Google identity token": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Failed to get Google identity token"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Impossible d'obtenir le jeton d'identité Google"
+          }
+        }
+      }
+    },
+    "Failed to open Google sign in": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Failed to open Google sign in"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Impossible d'ouvrir la connexion Google"
+          }
+        }
+      }
+    },
+    "Grant Access": {
+      "comment": "Onboarding: Permission request button",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Grant Access"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Autoriser l'accès"
+          }
+        }
+      }
+    },
+    "Grant access": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Grant access"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Autoriser l'accès"
+          }
+        }
+      }
+    },
+    "Granted": {
+      "comment": "Onboarding: Permission granted button state",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Granted"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Autorisé"
+          }
+        }
+      }
+    },
+    "Hang tight while we set up your Onit experience.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hang tight while we set up your Onit experience."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Patientez pendant que nous préparons votre expérience Onit."
+          }
+        }
+      }
+    },
+    "Improve": {
+      "comment": "Onboarding: Demo step indicator - step 2",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Improve"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Améliorer"
+          }
+        }
+      }
+    },
+    "Insert": {
+      "comment": "Onboarding: Demo step indicator - step 3",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Insert"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Insérer"
+          }
+        }
+      }
+    },
+    "Join our Discord Server!": {
+      "comment": "Onboarding: Discord page title",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Join our Discord Server!"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rejoignez notre serveur Discord !"
+          }
+        }
+      }
+    },
+    "Logout": {
+      "comment": "Onboarding: Logout button",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Logout"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Déconnexion"
+          }
+        }
+      }
+    },
+    "Next": {
+      "comment": "Onboarding: Default next button text",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Next"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Suivant"
+          }
+        }
+      }
+    },
+    "Ok": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ok"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ok"
+          }
+        }
+      }
+    },
+    "Onit can access.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Onit can access."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Onit peut accéder."
+          }
+        }
+      }
+    },
+    "Onit has been designed to work side-by-side with accessibility permission and relies on it for a lot of its features.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Onit has been designed to work side-by-side with accessibility permission and relies on it for a lot of its features."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Onit a été conçu pour fonctionner en parallèle avec les autorisations d'accessibilité."
+          }
+        }
+      }
+    },
+    "Onit is up and running": {
+      "comment": "Onboarding: Complete page title",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Onit is up and running"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Onit est opérationnel"
+          }
+        }
+      }
+    },
+    "Onit is up and running!": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Onit is up and running!"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Onit est opérationnel !"
+          }
+        }
+      }
+    },
+    "Optional": {
+      "comment": "Onboarding: Optional permission caption",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Optional"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Facultatif"
+          }
+        }
+      }
+    },
+    "Or, ": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Or, "
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ou, "
+          }
+        }
+      }
+    },
+    "Previous": {
+      "comment": "Onboarding: Shortcut legend - previous",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Previous"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Précédent"
+          }
+        }
+      }
+    },
+    "Privacy": {
+      "comment": "Onboarding: Footer link to privacy policy",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Privacy"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confidentialité"
+          }
+        }
+      }
+    },
+    "Privacy Policy": {
+      "comment": "Onboarding: Privacy policy link",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Privacy Policy"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Politique de confidentialité"
+          }
+        }
+      }
+    },
+    "QuickEdit": {
+      "comment": "Onboarding: Feature name - QuickEdit",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "QuickEdit"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "QuickEdit"
+          }
+        }
+      }
+    },
+    "Required": {
+      "comment": "",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Required"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Requis"
+          }
+        }
+      }
+    },
+    "Reset": {
+      "comment": "Onboarding: Reset button tooltip",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reset"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Réinitialiser"
+          }
+        }
+      }
+    },
+    "Retry": {
+      "comment": "Onboarding: Server warmup retry button",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Retry"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Réessayer"
+          }
+        }
+      }
+    },
+    "Say hello to the team and other Onit users, get updates\nand give feedback.": {
+      "comment": "Onboarding: Discord page caption",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Say hello to the team and other Onit users, get updates\nand give feedback."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dites bonjour à l'équipe et aux autres utilisateurs d'Onit, recevez des mises à jour\net donnez votre avis."
+          }
+        }
+      }
+    },
+    "Say hello to the team and other Onit users, get updates\\nand give feedback.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Say hello to the team and other Onit users, get updates\\nand give feedback."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dites bonjour à l'équipe et aux autres utilisateurs d'Onit, recevez des mises à jour\\net donnez votre avis."
+          }
+        }
+      }
+    },
+    "Screenshots": {
+      "comment": "Onboarding: Screen recording permission title",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Screenshots"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Captures d'écran"
+          }
+        }
+      }
+    },
+    "Screenshots are used to find empty screen space, keeping Onit out of the way!": {
+      "comment": "Onboarding: Screenshot permission example sheet title",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Screenshots are used to find empty screen space, keeping Onit out of the way!"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Les captures d'écran sont utilisées pour trouver l'espace vide à l'écran, gardant Onit hors du chemin !"
+          }
+        }
+      }
+    },
+    "Sign In": {
+      "comment": "Onboarding: Auth sign in link",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sign In"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se connecter"
+          }
+        }
+      }
+    },
+    "Sign in to Onit": {
+      "comment": "Onboarding: Auth sign in title",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sign in to Onit"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Connectez-vous à Onit"
+          }
+        }
+      }
+    },
+    "Skip": {
+      "comment": "Onboarding: Skip button",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Skip"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Passer"
+          }
+        }
+      }
+    },
+    "Something went wrong": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Something went wrong"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Une erreur s'est produite"
+          }
+        }
+      }
+    },
+    "Terms": {
+      "comment": "Onboarding: Footer link to terms of service",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Terms"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Conditions"
+          }
+        }
+      }
+    },
+    "Terms of Service": {
+      "comment": "Onboarding: Terms of service link",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Terms of Service"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Conditions d'utilisation"
+          }
+        }
+      }
+    },
+    "To start, grant access to\\naccessibility features": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "To start, grant access to\\naccessibility features"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pour commencer, autorisez l'accès\\naux fonctionnalités d'accessibilité"
+          }
+        }
+      }
+    },
+    "Unable to present Apple authentication dialog.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unable to present Apple authentication dialog."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Impossible d'afficher la boîte de dialogue d'authentification Apple."
+          }
+        }
+      }
+    },
+    "Unknown Google sign in error": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unknown Google sign in error"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Erreur de connexion Google inconnue"
+          }
+        }
+      }
+    },
+    "Warming Up...": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Warming Up..."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Préchauffage..."
+          }
+        }
+      }
+    },
+    "Welcome to Onit": {
+      "comment": "Onboarding: Feature selection page title",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Welcome to Onit"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bienvenue sur Onit"
+          }
+        }
+      }
+    },
+    "With: ✅ Finds empty space": {
+      "comment": "Onboarding: Screenshot permission example - with access label",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "With: ✅ Finds empty space"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Avec : ✅ Trouve l'espace vide"
+          }
+        }
+      }
+    },
+    "Without: ❌ May cover content": {
+      "comment": "Onboarding: Screenshot permission example - without access label",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Without: ❌ May cover content"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sans : ❌ Peut recouvrir le contenu"
+          }
+        }
+      }
+    },
+    "Yes, continue →": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yes, continue →"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Oui, continuer →"
+          }
+        }
+      }
+    },
+    "You are always in control of the information": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You are always in control of the information"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vous êtes toujours en contrôle de l'information"
+          }
+        }
+      }
+    },
+    "You're all set to use Onit.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You're all set to use Onit."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vous êtes prêt à utiliser Onit."
+          }
+        }
+      }
+    },
+    "You've been invited to join": {
+      "comment": "Onboarding: Discord invite text",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You've been invited to join"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vous avez été invité à rejoindre"
+          }
+        }
+      }
+    },
+    "or ": {
+      "comment": "Onboarding: Project indexing connector",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "or "
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ou "
+          }
+        }
+      }
+    },
+    "use without accessibility →": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "use without accessibility →"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "utiliser sans accessibilité →"
+          }
+        }
+      }
+    },
+    "・\"Tether\" Onit to your apps": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "・\"Tether\" Onit to your apps"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "・Attacher Onit à vos apps"
+          }
+        }
+      }
+    },
+    "・Insert text and code anywhere": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "・Insert text and code anywhere"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "・Insérer du texte et du code n'importe où"
+          }
+        }
+      }
+    },
+    "・Load context from any window": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "・Load context from any window"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "・Charger le contexte de n'importe quelle fenêtre"
+          }
+        }
+      }
+    },
+    "・\\": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "・\\"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "・\\"
+          }
+        }
+      }
+    },
+    "Done": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Done"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Terminé"
+          }
+        }
+      }
+    },
+    "This helps Onit find empty space so it doesn't cover what you're working on.": {
+      "comment": "Onboarding: Screen recording permission bullet point",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This helps Onit find empty space so it doesn't cover what you're working on."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ceci aide Onit à trouver un espace libre pour ne pas masquer votre contenu."
+          }
+        }
+      }
+    },
+    "Screenshots never leave your Mac — they're used once and deleted instantly.": {
+      "comment": "Onboarding: Screen recording permission bullet point",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Screenshots never leave your Mac — they're used once and deleted instantly."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Les captures d'écran ne quittent jamais votre Mac — elles sont utilisées une fois puis supprimées instantanément."
+          }
+        }
+      }
+    },
+    "OR": {
+      "comment": "Onboarding: Divider between Google auth and email auth",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "OR"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "OU"
+          }
+        }
+      }
+    },
+    "Email Address": {
+      "comment": "Onboarding: Email input placeholder for magic link auth",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Email Address"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Adresse e-mail"
+          }
+        }
+      }
+    },
+    "Continue with email": {
+      "comment": "Onboarding: Magic link email submit button",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Continue with email"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Continuer avec l'e-mail"
+          }
+        }
+      }
+    },
+    "Check your email": {
+      "comment": "Onboarding: Magic link confirmation title",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check your email"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vérifiez votre e-mail"
+          }
+        }
+      }
+    },
+    "Click the link we sent to:": {
+      "comment": "Onboarding: Magic link confirmation subtitle",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Click the link we sent to:"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cliquez sur le lien que nous avons envoyé à :"
+          }
+        }
+      }
+    },
+    "Sign up": {
+      "comment": "Onboarding: Auth redirect to sign up",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sign up"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "S'inscrire"
+          }
+        }
+      }
+    },
+    "Didn't get it? Check your spam folder and the spelling": {
+      "comment": "Onboarding: Magic link blurb help text line 1",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Didn't get it? Check your spam folder and the spelling"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vous ne l'avez pas reçu ? Vérifiez votre dossier spam et l'orthographe"
+          }
+        }
+      }
+    },
+    "of your email address, or ": {
+      "comment": "Onboarding: Magic link blurb help text line 2",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "of your email address, or "
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "de votre adresse e-mail, ou "
+          }
+        }
+      }
+    },
+    "Sending...": {
+      "comment": "Onboarding: Magic link resend loading state",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sending..."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Envoi..."
+          }
+        }
+      }
+    },
+    "Resend Link": {
+      "comment": "Onboarding: Magic link resend button",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Resend Link"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Renvoyer le lien"
+          }
+        }
+      }
+    },
+    "Please enter your email": {
+      "comment": "Onboarding: Magic link empty email error",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Please enter your email"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Veuillez entrer votre e-mail"
+          }
+        }
+      }
+    },
+    "Invalid email format": {
+      "comment": "Onboarding: Magic link invalid email error",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Invalid email format"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Format d'e-mail invalide"
+          }
+        }
+      }
+    },
+    "Something went wrong. Please try again.": {
+      "comment": "Onboarding: Magic link request failed error",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Something went wrong. Please try again."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Une erreur est survenue. Veuillez réessayer."
+          }
+        }
+      }
+    }
+  },
+  "version": "1.0"
+}

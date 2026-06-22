@@ -1,0 +1,182 @@
+//
+//  TokenValidationManager.swift
+//  Onit
+//
+//  Created by Kévin Naudin on 02/04/2025.
+//
+
+import Defaults
+import Foundation
+
+@MainActor
+class TokenValidationManager {
+    
+    // MARK: - Singleton
+    
+    static let shared = TokenValidationManager()
+    
+    // MARK: - Properties
+    
+    var tokenValidation = TokenValidationState()
+    
+    // MARK: - Functions
+
+    @MainActor
+    func validateToken(provider: AIModel.ModelProvider, token: String) async {
+        var state = tokenValidation
+        state.setValidating(provider: provider)
+        tokenValidation = state
+
+        do {
+            switch provider {
+            case .openAI:
+                let endpoint = OpenAIValidationEndpoint(apiKey: token)
+                _ = try await FetchingClient().execute(endpoint)
+                state.setValid(provider: provider)
+                
+            case .anthropic:
+                let endpoint = AnthropicValidationEndpoint(apiKey: token)
+                _ = try await FetchingClient().execute(endpoint)
+                state.setValid(provider: provider)
+                
+            case .xAI:
+                let endpoint = XAIValidationEndpoint(apiKey: token)
+                _ = try await FetchingClient().execute(endpoint)
+                state.setValid(provider: provider)
+                
+            case .googleAI:
+                let endpoint = GoogleAIValidationEndpoint(apiKey: token)
+                _ = try await FetchingClient().execute(endpoint)
+                state.setValid(provider: provider)
+                
+            case .deepSeek:
+                let endpoint = DeepSeekValidationEndpoint(apiKey: token)
+                _ = try await FetchingClient().execute(endpoint)
+                state.setValid(provider: provider)
+                
+            case .perplexity:
+                let endpoint = PerplexityValidationEndpoint(apiKey: token)
+                _ = try await FetchingClient().execute(endpoint)
+                state.setValid(provider: provider)
+                
+            case .cerebras:
+                let endpoint = CerebrasValidationEndpoint(apiKey: token)
+                _ = try await FetchingClient().execute(endpoint)
+                state.setValid(provider: provider)
+                
+            case .custom:
+                throw FetchingError.invalidRequest(message: "Custom provider token validation is not supported")   
+            }
+            
+            /// Setting provider token validation Defaults property to `true` when provider validation ping succeeds.
+            Self.setTokenIsValid(true, provider: provider)
+        } catch let error as FetchingError {
+            print("Error: \(error.localizedDescription)")
+            state.setInvalid(provider: provider, error: error)
+            
+            /// Setting provider token validation Defaults property to `false` when provider validation ping fails.
+            Self.setTokenIsValid(false, provider: provider)
+        } catch {
+            state.setInvalid(provider: provider, error: error)
+            
+            /// Setting provider token validation Defaults property to `false` when provider validation ping fails.
+            Self.setTokenIsValid(false, provider: provider)
+        }
+
+        tokenValidation = state
+    }
+    
+    static func setTokenIsValid(_ isValid: Bool) {
+        if let provider = Defaults[.remoteModel]?.provider {
+            setTokenIsValid(isValid, provider: provider)
+        }
+    }
+
+    static func setTokenIsValid(_ isValid: Bool, provider: AIModel.ModelProvider) {
+        switch provider {
+        case .openAI:
+            Defaults[.isOpenAITokenValidated] = isValid
+        case .anthropic:
+            Defaults[.isAnthropicTokenValidated] = isValid
+        case .xAI:
+            Defaults[.isXAITokenValidated] = isValid
+        case .googleAI:
+            Defaults[.isGoogleAITokenValidated] = isValid
+        case .deepSeek:
+            Defaults[.isDeepSeekTokenValidated] = isValid
+        case .perplexity:
+            Defaults[.isPerplexityTokenValidated] = isValid
+        case .cerebras:
+            Defaults[.isCerebrasTokenValidated] = isValid
+        case .custom:
+            if let customProviderName = Defaults[.remoteModel]?.customProviderName,
+               let index = Defaults[.availableCustomProviders].firstIndex(where: { $0.name == customProviderName }) {
+                Defaults[.availableCustomProviders][index].isTokenValidated = isValid
+            }
+        }
+    }
+
+    static func getTokenForModel(_ model: AIModel?) -> String? {
+        if let provider = model?.provider {
+            switch provider {
+            case .openAI:
+                return Defaults[.isOpenAITokenValidated] ? Defaults[.openAIToken] : nil
+            case .anthropic:
+                return Defaults[.isAnthropicTokenValidated] ? Defaults[.anthropicToken] : nil
+            case .xAI:
+                return Defaults[.isXAITokenValidated] ? Defaults[.xAIToken] : nil
+            case .googleAI:
+                return Defaults[.isGoogleAITokenValidated] ? Defaults[.googleAIToken] : nil
+            case .deepSeek:
+                return Defaults[.isDeepSeekTokenValidated] ? Defaults[.deepSeekToken] : nil
+            case .perplexity:
+                return Defaults[.isPerplexityTokenValidated] ? Defaults[.perplexityToken] : nil
+            case .cerebras:
+                return Defaults[.isCerebrasTokenValidated] ? Defaults[.cerebrasToken] : nil
+            case .custom:
+                if let customProviderName = model?.customProviderName,
+                   let customProvider = Defaults[.availableCustomProviders].first(where: { $0.name == customProviderName }),
+                   customProvider.isTokenValidated {
+                    return customProvider.token
+                }
+                return nil
+            }
+        }
+        return nil
+    }
+    
+    static func removeTokenForNonCustomProvider(_ provider: AIModel.ModelProvider) {
+        switch provider {
+        case .openAI:
+            Defaults[.isOpenAITokenValidated] = false
+            Defaults[.openAIToken] = nil
+            Defaults[.useOpenAI] = false
+        case .anthropic:
+            Defaults[.isAnthropicTokenValidated] = false
+            Defaults[.anthropicToken] = nil
+            Defaults[.useAnthropic] = false
+        case .xAI:
+            Defaults[.isXAITokenValidated] = false
+            Defaults[.xAIToken] = nil
+            Defaults[.useXAI] = false
+        case .googleAI:
+            Defaults[.isGoogleAITokenValidated] = false
+            Defaults[.googleAIToken] = nil
+            Defaults[.useGoogleAI] = false
+        case .deepSeek:
+            Defaults[.isDeepSeekTokenValidated] = false
+            Defaults[.deepSeekToken] = nil
+            Defaults[.useDeepSeek] = false
+        case .perplexity:
+            Defaults[.isPerplexityTokenValidated] = false
+            Defaults[.perplexityToken] = nil
+            Defaults[.usePerplexity] = false
+        case .cerebras:
+            Defaults[.isCerebrasTokenValidated] = false
+            Defaults[.cerebrasToken] = nil
+            Defaults[.useCerebras] = false
+        default: // Custom
+            break /// This logic is handled in `CustomProviderRow` → `removeProvider()`
+        }
+    }
+}
