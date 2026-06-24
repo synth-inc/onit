@@ -50,7 +50,7 @@ struct DisableEverywhereSection: View {
         SettingsPageSubsection(
             horizontal: .init(alignment: globalDisableRuleIsActive ? .top : .center),
             header: .init(
-                title: String.localized("Disable Sidekick Everywhere", table: "Settings"),
+                title: String.localized("Disable SideKick Everywhere", table: "Settings"),
                 subtitle: disabledText
             )
         ) {

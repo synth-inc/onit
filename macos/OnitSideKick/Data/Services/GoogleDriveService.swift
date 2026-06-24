@@ -198,12 +198,12 @@ class GoogleDriveService: NSObject, ObservableObject {
 
         if httpResponse.statusCode == 404 {
             let extractionError =
-                "Onit needs permission to access this file."
+                "SideKick needs permission to access this file."
             self.extractionError = extractionError
             throw GoogleDriveServiceError.notFound(extractionError)
         } else if httpResponse.statusCode == 403 {
             var extractionError =
-                "Onit can't access this file."
+                "SideKick can't access this file."
             if let errorMessage = extractApiErrorMessage(from: data) {
                 extractionError += "\n\nError message: \(errorMessage)"
             }

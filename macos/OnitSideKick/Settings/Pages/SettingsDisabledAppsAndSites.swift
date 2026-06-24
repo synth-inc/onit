@@ -65,7 +65,7 @@ struct SettingsDisabledAppsAndSites: View {
     
     var body: some View {
         SettingsTitleView(
-            text: String.localized("You can enable and disable Sidekick to appear in specific apps or websites from the menu bar. Click the Onit icon in the menu bar and select one of the \"Disable\" options for the currently active app or website.", table: "Settings")
+            text: String.localized("You can enable and disable SideKick to appear in specific apps or websites from the menu bar. Click the SideKick icon in the menu bar and select one of the \"Disable\" options for the currently active app or website.", table: "Settings")
         )
         
         SettingsPageSection {

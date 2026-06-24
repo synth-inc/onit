@@ -414,13 +414,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Hang tight while we set up your Onit experience."
+            "value": "Hang tight while we set up your SideKick experience."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "Patientez pendant que nous préparons votre expérience Onit."
+            "value": "Patientez pendant que nous préparons votre expérience SideKick."
           }
         }
       }
@@ -538,13 +538,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Onit can access."
+            "value": "SideKick can access."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Onit peut accéder."
+            "value": "SideKick peut accéder."
           }
         }
       }
@@ -555,13 +555,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Onit has been designed to work side-by-side with accessibility permission and relies on it for a lot of its features."
+            "value": "SideKick has been designed to work side-by-side with accessibility permission and relies on it for a lot of its features."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Onit a été conçu pour fonctionner en parallèle avec les autorisations d'accessibilité."
+            "value": "SideKick a été conçu pour fonctionner en parallèle avec les autorisations d'accessibilité."
           }
         }
       }
@@ -573,13 +573,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Onit is up and running"
+            "value": "SideKick is up and running"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Onit est opérationnel"
+            "value": "SideKick est opérationnel"
           }
         }
       }
@@ -590,13 +590,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Onit is up and running!"
+            "value": "SideKick is up and running!"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Onit est opérationnel !"
+            "value": "SideKick est opérationnel !"
           }
         }
       }
@@ -769,13 +769,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Say hello to the team and other Onit users, get updates\nand give feedback."
+            "value": "Say hello to the team and other SideKick users, get updates\nand give feedback."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Dites bonjour à l'équipe et aux autres utilisateurs d'Onit, recevez des mises à jour\net donnez votre avis."
+            "value": "Dites bonjour à l'équipe et aux autres utilisateurs de SideKick, recevez des mises à jour\net donnez votre avis."
           }
         }
       }
@@ -786,13 +786,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Say hello to the team and other Onit users, get updates\\nand give feedback."
+            "value": "Say hello to the team and other SideKick users, get updates\\nand give feedback."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Dites bonjour à l'équipe et aux autres utilisateurs d'Onit, recevez des mises à jour\\net donnez votre avis."
+            "value": "Dites bonjour à l'équipe et aux autres utilisateurs de SideKick, recevez des mises à jour\\net donnez votre avis."
           }
         }
       }
@@ -822,13 +822,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Screenshots are used to find empty screen space, keeping Onit out of the way!"
+            "value": "Screenshots are used to find empty screen space, keeping SideKick out of the way!"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Les captures d'écran sont utilisées pour trouver l'espace vide à l'écran, gardant Onit hors du chemin !"
+            "value": "Les captures d'écran sont utilisées pour trouver l'espace vide à l'écran, gardant SideKick hors du chemin !"
           }
         }
       }
@@ -858,13 +858,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Sign in to Onit"
+            "value": "Sign in to SideKick"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Connectez-vous à Onit"
+            "value": "Connectez-vous à SideKick"
           }
         }
       }
@@ -1015,13 +1015,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Welcome to Onit"
+            "value": "Welcome to SideKick"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Bienvenue sur Onit"
+            "value": "Bienvenue sur SideKick"
           }
         }
       }
@@ -1102,13 +1102,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "You're all set to use Onit."
+            "value": "You're all set to use SideKick."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Vous êtes prêt à utiliser Onit."
+            "value": "Vous êtes prêt à utiliser SideKick."
           }
         }
       }
@@ -1172,13 +1172,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "・\"Tether\" Onit to your apps"
+            "value": "・\"Tether\" SideKick to your apps"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "・Attacher Onit à vos apps"
+            "value": "・Attacher SideKick à vos apps"
           }
         }
       }
@@ -1258,13 +1258,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "This helps Onit find empty space so it doesn't cover what you're working on."
+            "value": "This helps SideKick find empty space so it doesn't cover what you're working on."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ceci aide Onit à trouver un espace libre pour ne pas masquer votre contenu."
+            "value": "Ceci aide SideKick à trouver un espace libre pour ne pas masquer votre contenu."
           }
         }
       }

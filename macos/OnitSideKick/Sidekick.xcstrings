@@ -451,13 +451,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Adds context from the current window whenever Onit opens in Pinned mode, and automatically updates context as you switch between windows."
+            "value" : "Adds context from the current window whenever SideKick opens in Pinned mode, and automatically updates context as you switch between windows."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ajoute le contexte de la fenêtre actuelle chaque fois qu'Onit s'ouvre en mode Épinglé, et met automatiquement à jour le contexte lorsque vous changez de fenêtre."
+            "value" : "Ajoute le contexte de la fenêtre actuelle chaque fois que SideKick s'ouvre en mode Épinglé, et met automatiquement à jour le contexte lorsque vous changez de fenêtre."
           }
         }
       }
@@ -468,13 +468,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Adds context from the current window whenever Onit opens in Tethered mode."
+            "value" : "Adds context from the current window whenever SideKick opens in Tethered mode."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ajoute le contexte de la fenêtre actuelle chaque fois qu'Onit s'ouvre en mode Attaché."
+            "value" : "Ajoute le contexte de la fenêtre actuelle chaque fois que SideKick s'ouvre en mode Attaché."
           }
         }
       }
@@ -570,13 +570,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Applications where you've disabled the Onit entry point."
+            "value" : "Applications where you've disabled the SideKick entry point."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Applications pour lesquelles vous avez désactivé le point d'entrée Onit."
+            "value" : "Applications pour lesquelles vous avez désactivé le point d'entrée SideKick."
           }
         }
       }
@@ -689,13 +689,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Automatically add highlighted text as context when launching Onit."
+            "value" : "Automatically add highlighted text as context when launching SideKick."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ajouter automatiquement le texte surligné comme contexte lors du lancement d'Onit."
+            "value" : "Ajouter automatiquement le texte surligné comme contexte lors du lancement de SideKick."
           }
         }
       }
@@ -706,13 +706,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Automatically loads highlighted text as content. When enabled, Onit will read highlighted text from any application, and add it as context to your conversation. Context is not uploaded until you submit your conversation. In local mode, no context is ever uploaded."
+            "value" : "Automatically loads highlighted text as content. When enabled, SideKick will read highlighted text from any application, and add it as context to your conversation. Context is not uploaded until you submit your conversation. In local mode, no context is ever uploaded."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Charge automatiquement le texte surligné comme contenu. Lorsqu'activé, Onit lira le texte surligné depuis n'importe quelle application et l'ajoutera comme contexte à votre conversation. Le contexte n'est pas envoyé tant que vous ne soumettez pas votre conversation. En mode local, aucun contexte n'est jamais envoyé."
+            "value" : "Charge automatiquement le texte surligné comme contenu. Lorsqu'activé, SideKick lira le texte surligné depuis n'importe quelle application et l'ajoutera comme contexte à votre conversation. Le contexte n'est pas envoyé tant que vous ne soumettez pas votre conversation. En mode local, aucun contexte n'est jamais envoyé."
           }
         }
       }
@@ -962,13 +962,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Close Onit"
+            "value" : "Close SideKick"
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Fermer Onit"
+            "value" : "Fermer SideKick"
           }
         }
       }
@@ -1030,13 +1030,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Connect at least one remote or local model in Settings to chat with Onit."
+            "value" : "Connect at least one remote or local model in Settings to chat with SideKick."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Connectez au moins un modèle distant ou local dans Paramètres pour discuter avec Onit."
+            "value" : "Connectez au moins un modèle distant ou local dans Paramètres pour discuter avec SideKick."
           }
         }
       }
@@ -1796,7 +1796,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Enable Sidekick"
+            "value" : "Enable SideKick"
           }
         }
       }
@@ -2215,13 +2215,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Give permission to Onit to view this drive file."
+            "value" : "Give permission to SideKick to view this drive file."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Autorisez Onit à afficher ce fichier Drive."
+            "value" : "Autorisez SideKick à afficher ce fichier Drive."
           }
         }
       }
@@ -2449,13 +2449,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Launch Onit"
+            "value" : "Launch SideKick"
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Lancer Onit"
+            "value" : "Lancer SideKick"
           }
         }
       }
@@ -2615,13 +2615,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Loads context from the active window. When enabled, Onit adds a shortcut that, when triggered, will read the text from the foregrounded application and add it as context to your conversation. Note: this feature may not work in every application."
+            "value" : "Loads context from the active window. When enabled, SideKick adds a shortcut that, when triggered, will read the text from the foregrounded application and add it as context to your conversation. Note: this feature may not work in every application."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Charge le contexte depuis la fenêtre active. Lorsqu'activé, Onit ajoute un raccourci qui, une fois déclenché, lira le texte de l'application au premier plan et l'ajoutera comme contexte à votre conversation. Remarque : cette fonctionnalité peut ne pas fonctionner dans toutes les applications."
+            "value" : "Charge le contexte depuis la fenêtre active. Lorsqu'activé, SideKick ajoute un raccourci qui, une fois déclenché, lira le texte de l'application au premier plan et l'ajoutera comme contexte à votre conversation. Remarque : cette fonctionnalité peut ne pas fonctionner dans toutes les applications."
           }
         }
       }
@@ -3023,13 +3023,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Onit couldn't connect to local models - you may need to restart Ollama."
+            "value" : "SideKick couldn't connect to local models - you may need to restart Ollama."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Onit n'a pas pu se connecter aux modèles locaux - vous devrez peut-être redémarrer Ollama."
+            "value" : "SideKick n'a pas pu se connecter aux modèles locaux - vous devrez peut-être redémarrer Ollama."
           }
         }
       }
@@ -3040,13 +3040,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Onit couldn't load remote models - check your internet connection and try again!"
+            "value" : "SideKick couldn't load remote models - check your internet connection and try again!"
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Onit n'a pas pu charger les modèles distants - vérifiez votre connexion internet et réessayez !"
+            "value" : "SideKick n'a pas pu charger les modèles distants - vérifiez votre connexion internet et réessayez !"
           }
         }
       }
@@ -3057,13 +3057,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Onit needs access to your microphone for voice input. Please enable it in System Settings."
+            "value" : "SideKick needs access to your microphone for voice input. Please enable it in System Settings."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Onit a besoin d'accéder à votre microphone pour la saisie vocale. Veuillez l'activer dans les Préférences Système."
+            "value" : "SideKick a besoin d'accéder à votre microphone pour la saisie vocale. Veuillez l'activer dans les Préférences Système."
           }
         }
       }
@@ -3074,13 +3074,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Onit will always appear on the right side of your screen. You will only have one Onit panel at any given time. Other applications will be resized to make room for Onit."
+            "value" : "SideKick will always appear on the right side of your screen. You will only have one SideKick panel at any given time. Other applications will be resized to make room for SideKick."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Onit apparaîtra toujours sur le côté droit de votre écran. Vous n'aurez qu'un seul panneau Onit à la fois. Les autres applications seront redimensionnées pour faire place à Onit."
+            "value" : "SideKick apparaîtra toujours sur le côté droit de votre écran. Vous n'aurez qu'un seul panneau SideKick à la fois. Les autres applications seront redimensionnées pour faire place à SideKick."
           }
         }
       }
@@ -3091,13 +3091,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Onit will attach to your applications. There can be one Onit panel for each application window. If you move your app, Onit will move with it."
+            "value" : "SideKick will attach to your applications. There can be one SideKick panel for each application window. If you move your app, SideKick will move with it."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Onit s'attachera à vos applications. Il peut y avoir un panneau Onit pour chaque fenêtre d'application. Si vous déplacez votre application, Onit se déplacera avec elle."
+            "value" : "SideKick s'attachera à vos applications. Il peut y avoir un panneau SideKick pour chaque fenêtre d'application. Si vous déplacez votre application, SideKick se déplacera avec elle."
           }
         }
       }
@@ -3448,13 +3448,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Required for automatic context loading, text insertion, window resizing, and many other Onit features."
+            "value" : "Required for automatic context loading, text insertion, window resizing, and many other SideKick features."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Requis pour le chargement automatique du contexte, l'insertion de texte, le redimensionnement des fenêtres et de nombreuses autres fonctionnalités d'Onit."
+            "value" : "Requis pour le chargement automatique du contexte, l'insertion de texte, le redimensionnement des fenêtres et de nombreuses autres fonctionnalités de SideKick."
           }
         }
       }
@@ -3960,13 +3960,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Sidekick debug information."
+            "value" : "SideKick debug information."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Informations de débogage de Sidekick."
+            "value" : "Informations de débogage de SideKick."
           }
         }
       }
@@ -3996,13 +3996,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Sign in to Onit"
+            "value" : "Sign in to SideKick"
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Connectez-vous à Onit"
+            "value" : "Connectez-vous à SideKick"
           }
         }
       }
@@ -4439,13 +4439,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "To use Pinned or Tethered mode, enable Accessibility permission for Onit."
+            "value" : "To use Pinned or Tethered mode, enable Accessibility permission for SideKick."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Pour utiliser le mode Épinglé ou Attaché, activez la permission d'accessibilité pour Onit."
+            "value" : "Pour utiliser le mode Épinglé ou Attaché, activez la permission d'accessibilité pour SideKick."
           }
         }
       }
@@ -4813,13 +4813,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "When enabled, Onit will use your Tavily token to perform searches instead of Onit credits. By default, Onit uses model provider search tools when available for optimal quality."
+            "value" : "When enabled, SideKick will use your Tavily token to perform searches instead of SideKick credits. By default, SideKick uses model provider search tools when available for optimal quality."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Lorsque activé, Onit utilisera votre token Tavily pour effectuer des recherches au lieu des crédits Onit. Par défaut, Onit utilise les outils de recherche du fournisseur de modèle lorsqu'ils sont disponibles pour une qualité optimale."
+            "value" : "Lorsque activé, SideKick utilisera votre token Tavily pour effectuer des recherches au lieu des crédits SideKick. Par défaut, SideKick utilise les outils de recherche du fournisseur de modèle lorsqu'ils sont disponibles pour une qualité optimale."
           }
         }
       }
@@ -4830,13 +4830,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "When enabled, pressing ESC will not close the Onit panel."
+            "value" : "When enabled, pressing ESC will not close the SideKick panel."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Lorsqu'activé, appuyer sur ESC ne fermera pas le panneau Onit."
+            "value" : "Lorsqu'activé, appuyer sur ESC ne fermera pas le panneau SideKick."
           }
         }
       }
@@ -4864,13 +4864,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "With AutoContext, Onit can load context directly from your computer using Apple's screen reader APIs. AutoContext spares you the hassle of manually uploading files or copy/pasting. Data loaded with AutoContext is not uploaded until you submit your conversation. In local mode, no context is ever uploaded."
+            "value" : "With AutoContext, SideKick can load context directly from your computer using Apple's screen reader APIs. AutoContext spares you the hassle of manually uploading files or copy/pasting. Data loaded with AutoContext is not uploaded until you submit your conversation. In local mode, no context is ever uploaded."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Avec AutoContext, Onit peut charger le contexte directement depuis votre ordinateur en utilisant les API de lecteur d'écran d'Apple. AutoContext vous évite d'avoir à télécharger manuellement des fichiers ou à copier/coller. Les données chargées avec AutoContext ne sont pas envoyées tant que vous ne soumettez pas votre conversation. En mode local, aucun contexte n'est jamais envoyé."
+            "value" : "Avec AutoContext, SideKick peut charger le contexte directement depuis votre ordinateur en utilisant les API de lecteur d'écran d'Apple. AutoContext vous évite d'avoir à télécharger manuellement des fichiers ou à copier/coller. Les données chargées avec AutoContext ne sont pas envoyées tant que vous ne soumettez pas votre conversation. En mode local, aucun contexte n'est jamais envoyé."
           }
         }
       }
@@ -4966,13 +4966,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "You haven't disabled Onit on any apps yet."
+            "value" : "You haven't disabled SideKick on any apps yet."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Vous n'avez pas encore désactivé Onit sur aucune application."
+            "value" : "Vous n'avez pas encore désactivé SideKick sur aucune application."
           }
         }
       }

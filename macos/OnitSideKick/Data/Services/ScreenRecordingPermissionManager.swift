@@ -59,7 +59,7 @@ class ScreenRecordingPermissionManager: ObservableObject {
             // Permission denied or not yet granted
             // Always open Settings on Screen Recording tab, especially if Settings is already open on another tab
             openScreenRecordingSettings()
-            messageToShow = "Opening System Settings...\nPlease enable Screen Recording access for Onit, then click 'Quit & Reopen' to apply the changes."
+            messageToShow = "Opening System Settings...\nPlease enable Screen Recording access for SideKick, then click 'Quit & Reopen' to apply the changes."
             Defaults[.screenRecordingPermissionAsked] = true
             return false
         }
@@ -70,7 +70,7 @@ class ScreenRecordingPermissionManager: ObservableObject {
         isScreenRecordingEnabled = granted
         if !granted {
             openScreenRecordingSettings()
-            messageToShow = "Opening System Settings...\nPlease enable Screen Recording access for Onit, then click 'Quit & Reopen' to apply the changes."
+            messageToShow = "Opening System Settings...\nPlease enable Screen Recording access for SideKick, then click 'Quit & Reopen' to apply the changes."
             Defaults[.screenRecordingPermissionAsked] = true
         }
         return granted

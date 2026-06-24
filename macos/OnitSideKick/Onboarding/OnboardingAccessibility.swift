@@ -15,7 +15,7 @@ struct OnboardingAccessibility: View {
 
     private var instructionItems: [String] {
         [
-            String.localized("・\"Tether\" Onit to your apps", table: "Onboarding"),
+            String.localized("・\"Tether\" SideKick to your apps", table: "Onboarding"),
             String.localized("・Load context from any window", table: "Onboarding"),
             String.localized("・Insert text and code anywhere", table: "Onboarding")
         ]
