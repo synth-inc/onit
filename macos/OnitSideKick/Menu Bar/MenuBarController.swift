@@ -300,9 +300,10 @@ final class MenuBarController: NSObject, NSMenuDelegate {
     }
     
     func updateStatusDot() {
-        self.ensureStatusDotExists()
-        self.statusDot?.fillColor = self.determineStatusDotColor().cgColor
-        self.drawStatusDot()
+        // TEMP: status dot hidden for now (see addOnitEntryPointToMenuBar)
+        // self.ensureStatusDotExists()
+        // self.statusDot?.fillColor = self.determineStatusDotColor().cgColor
+        // self.drawStatusDot()
     }
     
     // MARK: - Private Functions: Window Delegate
@@ -332,7 +333,8 @@ final class MenuBarController: NSObject, NSMenuDelegate {
         if  let button = self.menuBarOnit.button,
             let icon = NSImage(named: iconName)?.copy() as? NSImage
         {
-            let iconWithStatusDotCrop = self.cropIconForStatusDot(icon: icon, cropSize: 10)
+            // TEMP: cropSize 0 = no hole carved for the status dot (dot hidden)
+            let iconWithStatusDotCrop = self.cropIconForStatusDot(icon: icon, cropSize: 0)
             button.image = iconWithStatusDotCrop
             button.font = NSFont.systemFont(ofSize: 11, weight: .semibold)
             button.wantsLayer = true
