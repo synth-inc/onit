@@ -128,7 +128,7 @@ struct OnboardingPermissions: View {
                 Button {
                     shouldShowScreenshotPermissionSheet = true
                 } label: {
-                    Text(String.localized("This helps Onit find empty space so it doesn't cover what you're working on. (", table: "Onboarding"))
+                    Text(String.localized("This helps SideKick find empty space so it doesn't cover what you're working on. (", table: "Onboarding"))
                     + Text(String.localized("See how", table: "Onboarding"))
                         .underline()
                         .foregroundColor(Color.S_0)

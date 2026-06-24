@@ -1120,13 +1120,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Onit"
+            "value" : "SideKick"
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Onit"
+            "value" : "SideKick"
           }
         }
       }
@@ -1453,13 +1453,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "to use Onit with local models. Models running locally on Ollama will be available here."
+            "value" : "to use SideKick with local models. Models running locally on Ollama will be available here."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "pour utiliser Onit avec des modèles locaux. Les modèles s'exécutant localement sur Ollama seront disponibles ici."
+            "value" : "pour utiliser SideKick avec des modèles locaux. Les modèles s'exécutant localement sur Ollama seront disponibles ici."
           }
         }
       }

@@ -106,7 +106,7 @@ enum OnboardingStep: String, CaseIterable, Codable, Defaults.Serializable {
         switch self {
         /// Common Steps
         case .permissions:
-            return String.localized("Grant access to use Onit", table: "Onboarding")
+            return String.localized("Grant access to use SideKick", table: "Onboarding")
         case .discord:
             return String.localized("Join our Discord Server!", table: "Onboarding")
 
@@ -119,7 +119,7 @@ enum OnboardingStep: String, CaseIterable, Codable, Defaults.Serializable {
         switch self {
         /// Common Steps
         case .permissions:
-            return "Permissions are needed for Onit to work properly."
+            return "Permissions are needed for SideKick to work properly."
         case .discord:
             return String.localized("Say hello to the team and other Onit users, get updates\nand give feedback.", table: "Onboarding")
 

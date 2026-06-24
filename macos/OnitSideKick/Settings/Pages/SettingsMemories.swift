@@ -29,7 +29,7 @@ struct SettingsMemories: View {
     var body: some View {
         Group {
             SettingsTitleView(
-                text: String.localized("Information that the AI will remember across all conversations.\nMemories are used in Sidekick to personalize responses.", table: "Settings")
+                text: String.localized("Information that the AI will remember across all conversations.\nMemories are used in SideKick to personalize responses.", table: "Settings")
             )
 
             SettingsPageSection {

@@ -553,13 +553,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Complete the setup list to ensure Onit works seamlessly."
+            "value": "Complete the setup list to ensure SideKick works seamlessly."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Complétez la liste de configuration pour garantir le bon fonctionnement d'Onit."
+            "value": "Complétez la liste de configuration pour garantir le bon fonctionnement de SideKick."
           }
         }
       }
@@ -1059,13 +1059,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Get better & more relevant suggestions (you'll need to quit & reopen Onit to activate permission)"
+            "value": "Get better & more relevant suggestions (you'll need to quit & reopen SideKick to activate permission)"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Obtenez de meilleures suggestions plus pertinentes (vous devrez quitter et rouvrir Onit pour activer la permission)"
+            "value": "Obtenez de meilleures suggestions plus pertinentes (vous devrez quitter et rouvrir SideKick pour activer la permission)"
           }
         }
       }
@@ -1584,13 +1584,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Open Onit automatically when you log into your computer."
+            "value": "Open SideKick automatically when you log into your computer."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ouvrir Onit automatiquement lorsque vous vous connectez à votre ordinateur."
+            "value": "Ouvrir SideKick automatiquement lorsque vous vous connectez à votre ordinateur."
           }
         }
       }
@@ -2196,13 +2196,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Sidekick - Database"
+            "value": "SideKick - Database"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Sidekick - Base de données"
+            "value": "SideKick - Base de données"
           }
         }
       }
@@ -2213,13 +2213,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Sidekick - Debug"
+            "value": "SideKick - Debug"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Sidekick - Débogage"
+            "value": "SideKick - Débogage"
           }
         }
       }
@@ -2453,13 +2453,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "This lets Onit load context and give relevant suggestions."
+            "value": "This lets SideKick load context and give relevant suggestions."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ceci permet à Onit de charger le contexte et de fournir des suggestions pertinentes."
+            "value": "Ceci permet à SideKick de charger le contexte et de fournir des suggestions pertinentes."
           }
         }
       }
@@ -2794,13 +2794,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "You are subscribed to the Onit Pro 2-Week Trial!"
+            "value": "You are subscribed to the SideKick Pro 2-Week Trial!"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Vous êtes abonné(e) à l'essai Onit Pro de 2 semaines !"
+            "value": "Vous êtes abonné(e) à l'essai SideKick Pro de 2 semaines !"
           }
         }
       }
@@ -2811,13 +2811,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "You are subscribed to the Onit Pro plan!"
+            "value": "You are subscribed to the SideKick Pro plan!"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Vous êtes abonné(e) au plan Onit Pro !"
+            "value": "Vous êtes abonné(e) au plan SideKick Pro !"
           }
         }
       }
@@ -2828,13 +2828,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Your Onit subscription expires on %@."
+            "value": "Your SideKick subscription expires on %@."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Votre abonnement Onit expire le %@."
+            "value": "Votre abonnement SideKick expire le %@."
           }
         }
       }

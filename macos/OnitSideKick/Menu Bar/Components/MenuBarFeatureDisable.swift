@@ -107,9 +107,9 @@ final class MenuBarFeatureDisable: MenuBarItemBase {
         switch status {
         case .notDisabled:
             if let appName = self.appName {
-                self.title = String.localized("Disable Sidekick in %@", table: "MenuBar", appName)
+                self.title = String.localized("Disable SideKick in %@", table: "MenuBar", appName)
             } else {
-                self.title = String.localized("Disable Sidekick Everywhere", table: "MenuBar")
+                self.title = String.localized("Disable SideKick Everywhere", table: "MenuBar")
             }
         default:
             self.title = ""

@@ -37,7 +37,7 @@ struct OnboardingNoAccountFAQOverlay: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 0) {
                     Text(String.localized(
-                        "No, you don't! You can use Onit without an account and dictation will still be free. However, we prefer you sign-in for a few reasons:",
+                        "No, you don't! You can use SideKick without an account and dictation will still be free. However, we prefer you sign-in for a few reasons:",
                         table: "Onboarding"
                     ))
                     .styleText(size: 14, weight: .regular, color: Color.T_1, align: .leading)
@@ -54,14 +54,14 @@ struct OnboardingNoAccountFAQOverlay: View {
                         bulletItem(
                             bold: String.localized("Mobile access", table: "Onboarding"),
                             body: String.localized(
-                                ". We're building a mobile version of Onit, and an account is what links your desktop and mobile experience together.",
+                                ". We're building a mobile version of SideKick, and an account is what links your desktop and mobile experience together.",
                                 table: "Onboarding"
                             )
                         )
                         bulletItem(
                             bold: String.localized("Help us improve", table: "Onboarding"),
                             body: String.localized(
-                                ". Without a way to reach our users, improving the product gets a lot harder. If you want Onit to keep getting better, an account helps us make that happen.",
+                                ". Without a way to reach our users, improving the product gets a lot harder. If you want SideKick to keep getting better, an account helps us make that happen.",
                                 table: "Onboarding"
                             )
                         )

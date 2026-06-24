@@ -62,9 +62,9 @@ struct FeatureDisableWindowView: View {
     private var titleText: String {
         if let window = self.foregroundWindow?.element {
             let appName = WindowHelpers.getWindowAppName(window: window)
-            return String(format: String.localized("Disable Sidekick in %@", table: "Settings"), appName)
+            return String(format: String.localized("Disable SideKick in %@", table: "Settings"), appName)
         } else {
-            return String.localized("Disable Sidekick Everywhere", table: "Settings")
+            return String.localized("Disable SideKick Everywhere", table: "Settings")
         }
     }
 

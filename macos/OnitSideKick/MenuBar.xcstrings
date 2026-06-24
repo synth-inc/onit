@@ -58,13 +58,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : " Open Onit"
+            "value" : " Open SideKick"
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : " Ouvrir Onit"
+            "value" : " Ouvrir SideKick"
           }
         }
       }
@@ -563,13 +563,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Open Sidekick"
+            "value" : "Open SideKick"
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ouvrir Sidekick"
+            "value" : "Ouvrir SideKick"
           }
         }
       }
@@ -733,13 +733,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "You have disabled Onit"
+            "value" : "You have disabled SideKick"
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Vous avez désactivé Onit"
+            "value" : "Vous avez désactivé SideKick"
           }
         }
       }

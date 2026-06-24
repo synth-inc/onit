@@ -24,13 +24,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": " to use Onit with local models. Models running locally on Ollama will be available here."
+            "value": " to use SideKick with local models. Models running locally on Ollama will be available here."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": " pour utiliser Onit avec des modèles locaux. Les modèles fonctionnant localement sur Ollama seront disponibles ici."
+            "value": " pour utiliser SideKick avec des modèles locaux. Les modèles fonctionnant localement sur Ollama seront disponibles ici."
           }
         }
       }
@@ -518,13 +518,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "If enabled, Onit streams partial responses from model providers, offering quicker replies. This may not function with all providers."
+            "value": "If enabled, SideKick streams partial responses from model providers, offering quicker replies. This may not function with all providers."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Si activé, Onit diffuse les réponses partielles des fournisseurs de modèles, offrant des réponses plus rapides. Cela peut ne pas fonctionner avec tous les fournisseurs."
+            "value": "Si activé, SideKick diffuse les réponses partielles des fournisseurs de modèles, offrant des réponses plus rapides. Cela peut ne pas fonctionner avec tous les fournisseurs."
           }
         }
       }
