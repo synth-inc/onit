@@ -93,7 +93,12 @@ extension Defaults.Keys {
 
     // Feature flags
     static let usePinnedMode = Key<Bool?>("use_screen_mode_with_accessibility", default: nil)
-    
+
+    /// One-time migration flag: SideKick moved its default positioning mode to
+    /// Pinned. Existing users have a persisted `usePinnedMode`, so this flips
+    /// them to Pinned exactly once (they can still switch back in Settings).
+    static let hasMigratedToPinnedDefault = Key<Bool>("hasMigratedToPinnedDefault", default: false)
+
     static let autoContextFromCurrentWindow = Key<Bool>("autoContextFromCurrentWindow", default: true)
     static let autoContextFromHighlights = Key<Bool>("autoContextFromHighlights", default: true)
     static let autoContextOnLaunchTethered = Key<Bool>("autoContextOnLaunchTethered", default: true)

@@ -17,7 +17,7 @@ extension FeatureDisableManager {
         captionKey: String?,
         action: NotificationWindowView.Action
     ) {
-        let titleKey: String = String.localized("You have disabled Onit", table: "MenuBar")
+        let titleKey: String = String.localized("You have disabled SideKick", table: "MenuBar")
 
         var captionKey: String? = nil
 

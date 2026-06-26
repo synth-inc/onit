@@ -534,7 +534,7 @@
 				);
 				LIBRARY_SEARCH_PATHS = "$(SRCROOT)/libs";
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 1.0;
+				MARKETING_VERSION = 3.0;
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_BUNDLE_IDENTIFIER = inc.synth.onit.sidekick.dev;
 				PRODUCT_MODULE_NAME = OnitSideKick;
@@ -578,7 +578,7 @@
 				);
 				LIBRARY_SEARCH_PATHS = "$(SRCROOT)/libs";
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 1.0;
+				MARKETING_VERSION = 3.0;
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_BUNDLE_IDENTIFIER = inc.synth.onit.sidekick;
 				PRODUCT_MODULE_NAME = OnitSideKick;

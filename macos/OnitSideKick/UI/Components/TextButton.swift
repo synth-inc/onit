@@ -229,7 +229,11 @@ struct TextButton <Children: View>: View {
             cornerRadius: sizeConfig.cornerRadius,
             disabled: statusConfig.disabled,
             shouldFadeOnDisabled: statusConfig.shouldFadeOnDisabled,
-            allowsHitTesting: !statusConfig.disabled && !statusConfig.selected,
+            // Note: do NOT gate hit-testing on `selected`. The context menu marks
+            // its keyboard-highlighted row (index 0 on open) as selected, and
+            // coupling hit-testing to selection made that first row unclickable by
+            // mouse. Selection only drives the highlight background (see backgroundColor).
+            allowsHitTesting: !statusConfig.disabled,
             isHovered: $isHovered,
             isPressed: $isPressed,
             tooltipPrompt: tooltipConfig.prompt,

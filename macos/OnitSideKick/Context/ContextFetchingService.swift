@@ -47,9 +47,15 @@ class ContextFetchingService {
         
         let windowHash = trackedWindow?.hash ?? CFHash(mainWindow)
         state.windowContextTasks[windowHash]?.cancel()
-        
-        // This task will automatically be cleaned up way down the call stack when it hits `addAutoContext()`.
+
+        // The task removes its own entry on completion. Cleanup used to rely on
+        // `addAutoContext()` calling `cleanupWindowContextTask`, but that recomputes
+        // the key from trackedWindow/foregroundWindow — which can be nil (key 0) or
+        // absent on the "cannot identify context" / early-return paths, leaving the
+        // entry (and its loading spinner) stuck forever. A defer keyed by the same
+        // `windowHash` used at registration guarantees the spinner always clears.
         let task = Task {
+            defer { state.windowContextTasks.removeValue(forKey: windowHash) }
             if let documentInfo = findDocument(in: mainWindow) {
                 handleWindowContent(
                     documentInfo,

@@ -44,8 +44,15 @@ extension OnitPanelState {
         }
         
         guard let activeTrackedWindow = trackedWindow ?? self.foregroundWindow else {
-            let errorContext = Context(appName: "Unable to add \(appName)", appHash: 0, appTitle: "", appContent: ["error": "Cannot identify context"])
-            pendingContextList.insert(errorContext, at: 0)
+            // No window could be identified. On an automatic trigger (panel just
+            // opened) this is an expected transient — the foreground window may not
+            // be resolved yet — so fail silently rather than flashing a scary
+            // "Cannot identify context" chip. Only surface the error for an explicit
+            // manual add, where the user is waiting on feedback.
+            if !wasTriggeredAutomatically {
+                let errorContext = Context(appName: "Unable to add \(appName)", appHash: 0, appTitle: "", appContent: ["error": "Cannot identify context"])
+                pendingContextList.insert(errorContext, at: 0)
+            }
             cleanupWindowContextTask(uniqueWindowIdentifier: trackedWindowHash)
             return
         }

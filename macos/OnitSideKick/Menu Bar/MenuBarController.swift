@@ -153,9 +153,14 @@ final class MenuBarController: NSObject, NSMenuDelegate {
         icon: NSImage,
         cropSize: CGFloat
     ) -> NSImage {
+        // Size the canvas to the icon's own aspect ratio so a wider-than-tall mark
+        // (the SideKick speech-bubble) fills the full menu-bar height instead of
+        // being letterboxed inside a square canvas (which made it render small).
+        let targetHeight: CGFloat = 16
+        let iconAspect = icon.size.height > 0 ? icon.size.width / icon.size.height : 1
         let croppedIconSize = NSSize(
-            width: 16,
-            height: 16
+            width: (targetHeight * iconAspect).rounded(),
+            height: targetHeight
         )
         
         let croppedIcon = NSImage(

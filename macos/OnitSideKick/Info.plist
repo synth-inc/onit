@@ -57,7 +57,7 @@
 	<key>NSMicrophoneUsageDescription</key>
 	<string>Onit needs access to your microphone to record voice messages for the chat.</string>
 	<key>PostHogApiKey</key>
-	<string>phc_AJyj4BpqxAyiE2T11hD1NKMLH6vlvnqUrpZD6aIJGNf</string>
+	<string>phc_ox58avZsLQJXgJhTeTXFtajJyDXMSZKATnymmBf2SU7Q</string>
 	<key>PostHogHost</key>
 	<string>https://us.i.posthog.com</string>
 	<key>SUEnableAutomaticChecks</key>

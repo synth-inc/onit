@@ -30,8 +30,20 @@ class FeatureFlagManager: ObservableObject {
 
     // MARK: - Functions
 
+    /// One-time migration to the new Pinned-by-default behavior. Existing users
+    /// carry a persisted `usePinnedMode` (often Tethered), which would otherwise
+    /// override the new default forever, so flip them to Pinned exactly once.
+    /// They remain free to switch back in Settings afterward.
+    private func migratePinnedDefaultIfNeeded() {
+        guard !Defaults[.hasMigratedToPinnedDefault] else { return }
+        togglePinnedMode(true)
+        Defaults[.hasMigratedToPinnedDefault] = true
+    }
+
     /** Configure the SDK */
     func configure() {
+        migratePinnedDefaultIfNeeded()
+
         guard let apiKey = Bundle.main.object(forInfoDictionaryKey: "PostHogApiKey") as? String,
             let host = Bundle.main.object(forInfoDictionaryKey: "PostHogHost") as? String
         else {
@@ -86,13 +98,13 @@ class FeatureFlagManager: ObservableObject {
             autocontextDemoVideoUrl = nil
         }
 
-        // Handle pinned mode feature flag
+        // Handle pinned mode. SideKick defaults new users to Pinned mode: it's
+        // the more reliable positioning mode (Tethered window-following is fragile).
+        // Respect an explicit user choice if one has been persisted.
         if let pinnedModeEnabled = Defaults[.usePinnedMode] {
             usePinnedMode = pinnedModeEnabled
         } else {
-            let pinnedModeFlag = PostHogSDK.shared.isFeatureEnabled("pinned_mode")
-
-            togglePinnedMode(pinnedModeFlag)
+            togglePinnedMode(true)
         }
 
         // Handle stop mode feature flag
