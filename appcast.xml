@@ -1,9 +1,17 @@
-<?xml version="1.0" encoding="utf-8"?>
-<rss version="2.0" xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle" xmlns:dc="http://purl.org/dc/elements/1.1/">
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle" xmlns:dc="http://purl.org/dc/elements/1.1/" version="2.0">
     <channel>
         <title>SideKick</title>
         <link>https://raw.githubusercontent.com/synth-inc/onit/main/appcast.xml</link>
         <description>Most recent updates to SideKick</description>
         <language>en</language>
+        <item>
+            <title>3.0</title>
+            <pubDate>Fri, 26 Jun 2026 13:38:07 -0700</pubDate>
+            <sparkle:version>70</sparkle:version>
+            <sparkle:shortVersionString>3.0</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+            <enclosure url="https://github.com/synth-inc/onit/releases/download/v3.0/SideKick-3.0.dmg" length="16812978" type="application/octet-stream" sparkle:edSignature="kHgPf9xXne8T9HsrZwnrTo8ErSkGmo5B8bTrp0kWXwUkYlJBye906KJDBQUTH7KTDljiN2hX5O/JSGIauIgkAQ=="/>
+        </item>
     </channel>
 </rss>
