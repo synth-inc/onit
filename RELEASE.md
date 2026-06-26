@@ -5,8 +5,8 @@ distributed through **GitHub Releases**, and the app reads a signed `appcast.xml
 served from `main`:
 
 ```
-SUFeedURL     = https://raw.githubusercontent.com/synth-inc/onit-sidekick/main/appcast.xml
-SUPublicEDKey = ZYxI7rMNxKQCSIZYQVV+vJ3tjBNjq8QNUJ+Fia4hb/c=   (Info.plist)
+SUFeedURL     = https://raw.githubusercontent.com/synth-inc/onit/main/appcast.xml
+SUPublicEDKey = Exm1gtRzTJItzeYn3oywxb3r0W75AVEhdCEHK5A1mec=   (Info.plist)
 ```
 
 > ⚠️ The feed is served by `raw.githubusercontent.com`, so **the repository must be

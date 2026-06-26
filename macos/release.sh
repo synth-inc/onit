@@ -29,7 +29,7 @@ set -euo pipefail
 
 # ───────────────────────── Configuration ─────────────────────────
 APP_NAME="SideKick"
-GH_REPO="synth-inc/onit-sidekick"
+GH_REPO="synth-inc/onit"
 SPARKLE_ACCOUNT="onit-sidekick"
 CASK_NAME="onit-sidekick"
 TAP_DIR="${TAP_DIR:-$HOME/SynthInc/homebrew-tap}"

@@ -2,7 +2,7 @@
 <rss version="2.0" xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle" xmlns:dc="http://purl.org/dc/elements/1.1/">
     <channel>
         <title>SideKick</title>
-        <link>https://raw.githubusercontent.com/synth-inc/onit-sidekick/main/appcast.xml</link>
+        <link>https://raw.githubusercontent.com/synth-inc/onit/main/appcast.xml</link>
         <description>Most recent updates to SideKick</description>
         <language>en</language>
     </channel>
