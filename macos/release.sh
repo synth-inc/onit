@@ -98,7 +98,7 @@ cp "$DMG_PATH" "$WORK/$DMG_VERSIONED"
 
 # ───────────────────────── Publish GitHub Release ─────────────────────────
 if [ "$NO_PUSH" = false ]; then
-  echo "📦 Creating GitHub Release $TAG…"
+  echo "📦 Creating GitHub Release ${TAG}…"
   if gh release view "$TAG" --repo "$GH_REPO" >/dev/null 2>&1; then
     gh release upload "$TAG" "$WORK/$DMG_VERSIONED" --repo "$GH_REPO" --clobber
   else
