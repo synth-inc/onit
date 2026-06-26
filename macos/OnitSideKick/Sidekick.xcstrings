@@ -2192,23 +2192,6 @@
         }
       }
     },
-    "Get the latest news & say hi to friends!" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Get the latest news & say hi to friends!"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Obtenez les dernières nouvelles et dites bonjour à vos amis !"
-          }
-        }
-      }
-    },
     "Give permission to Onit to view this drive file." : {
       "extractionState" : "manual",
       "localizations" : {
@@ -2405,23 +2388,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Clé API invalide. Veuillez vérifier et réessayer."
-          }
-        }
-      }
-    },
-    "Join Discord" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Join Discord"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Rejoindre Discord"
           }
         }
       }

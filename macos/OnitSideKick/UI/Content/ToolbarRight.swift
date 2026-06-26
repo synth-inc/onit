@@ -25,7 +25,6 @@ struct ToolbarRight: View {
 
     var body: some View {
         HStack(alignment: .center, spacing: 12) {
-            discord
             localMode
             history
             if memoriesEnabled {
@@ -87,16 +86,6 @@ struct ToolbarRight: View {
         .allowsHitTesting(!modeToggleShortcutDisabled)
     }
 
-    var discord: some View {
-        IconButton(
-            icon: .logoDiscord,
-            iconSize: 21,
-            tooltipPrompt: String.localized("Join Discord", table: "Sidekick")
-        ) {
-            MenuBarDiscord.openDiscord()
-        }
-    }
-   
     var showHistory: Bool { state?.showHistory ?? false }
     
     var showHistoryBinding: Binding<Bool> {

@@ -102,8 +102,8 @@ struct NotificationWindowView: View {
         HStack(alignment: .center, spacing: 0) {
             HStack(alignment: .center, spacing: 6) {
                 self.logo
-                
-                Text("Onit")
+
+                Text("SideKick")
                     .styleText(
                         size: 13,
                         color: Color.S_1

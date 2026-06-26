@@ -1,6 +1,24 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "This lets Onit load context and give relevant suggestions.": {
+      "comment": "Onboarding: Accessibility permission description",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This lets SideKick load context and give relevant suggestions."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ceci permet à SideKick de charger le contexte et de fournir des suggestions pertinentes."
+          }
+        }
+      }
+    },
     " and ": {
       "comment": "Onboarding: Conjunction between Terms and Privacy",
       "extractionState": "manual",
@@ -69,24 +87,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Accepter"
-          }
-        }
-      }
-    },
-    "Accept Invite": {
-      "comment": "Onboarding: Discord accept invite button",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Accept Invite"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Accepter l'invitation"
           }
         }
       }
@@ -408,23 +408,6 @@
         }
       }
     },
-    "Hang tight while we set up your Onit experience.": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Hang tight while we set up your SideKick experience."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "Patientez pendant que nous préparons votre expérience SideKick."
-          }
-        }
-      }
-    },
     "Improve": {
       "comment": "Onboarding: Demo step indicator - step 2",
       "extractionState": "manual",
@@ -457,24 +440,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Insérer"
-          }
-        }
-      }
-    },
-    "Join our Discord Server!": {
-      "comment": "Onboarding: Discord page title",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Join our Discord Server!"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Rejoignez notre serveur Discord !"
           }
         }
       }
@@ -762,41 +727,6 @@
         }
       }
     },
-    "Say hello to the team and other Onit users, get updates\nand give feedback.": {
-      "comment": "Onboarding: Discord page caption",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Say hello to the team and other SideKick users, get updates\nand give feedback."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Dites bonjour à l'équipe et aux autres utilisateurs de SideKick, recevez des mises à jour\net donnez votre avis."
-          }
-        }
-      }
-    },
-    "Say hello to the team and other Onit users, get updates\\nand give feedback.": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Say hello to the team and other SideKick users, get updates\\nand give feedback."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Dites bonjour à l'équipe et aux autres utilisateurs de SideKick, recevez des mises à jour\\net donnez votre avis."
-          }
-        }
-      }
-    },
     "Screenshots": {
       "comment": "Onboarding: Screen recording permission title",
       "extractionState": "manual",
@@ -991,23 +921,6 @@
         }
       }
     },
-    "Warming Up...": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Warming Up..."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "Préchauffage..."
-          }
-        }
-      }
-    },
     "Welcome to Onit": {
       "comment": "Onboarding: Feature selection page title",
       "extractionState": "manual",
@@ -1109,24 +1022,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Vous êtes prêt à utiliser SideKick."
-          }
-        }
-      }
-    },
-    "You've been invited to join": {
-      "comment": "Onboarding: Discord invite text",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "You've been invited to join"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Vous avez été invité à rejoindre"
           }
         }
       }

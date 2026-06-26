@@ -6,6 +6,7 @@
 //
 
 import Defaults
+import SwiftData
 import SwiftUI
 
 struct SettingsWindowView: View {
@@ -25,5 +26,11 @@ struct SettingsWindowView: View {
         .cornerRadius(20)
         .ignoresSafeArea(.container, edges: .top)
         .id(localization.currentLanguage)
+        // The settings window is hosted in a plain NSWindow (CenteredWindow),
+        // so it doesn't inherit any SwiftData container. Inject the shared app
+        // container — the same instance the panels use (state.container) — so
+        // @Query / modelContext work on the Prompts page (and any other
+        // SwiftData-backed settings page).
+        .modelContainer(SwiftDataContainer.appContainer)
     }
 }

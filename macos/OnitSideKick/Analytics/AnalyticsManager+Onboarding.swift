@@ -33,21 +33,6 @@ extension AnalyticsManager {
             AnalyticsManager.sendCommonEvent(event: "onboarding_continue_without_accessibility")
         }
 
-        /// Tracks when the Discord step is shown
-        static func discordShown() {
-            AnalyticsManager.sendCommonEvent(event: "onboarding_discord_shown")
-        }
-
-        /// Tracks when user accepts the Discord invite
-        static func discordAccepted() {
-            AnalyticsManager.sendCommonEvent(event: "onboarding_discord_accepted")
-        }
-
-        /// Tracks when user skips the Discord step
-        static func discordSkipped() {
-            AnalyticsManager.sendCommonEvent(event: "onboarding_discord_skipped")
-        }
-
         struct LimitedExperience {
             static func opened() {
                 AnalyticsManager.sendCommonEvent(event: "onboarding_limited_experience_opened")

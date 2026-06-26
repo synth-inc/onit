@@ -57,13 +57,9 @@ class KeyboardShortcutsManager {
 
         KeyboardShortcuts.disable(capsLockModifierShortcuts)
 
-        // Apply or remove HID remappings based on what features currently need.
-        // This also cleans up stale mappings from a previous crash/force-quit.
-        if KeystrokeNotificationManager.shared.isHIDRemappingNeededByAnyFeature() {
-            KeystrokeNotificationManager.shared.applyHIDRemapping(context: "Startup")
-        } else {
-            KeystrokeNotificationManager.shared.removeHIDRemapping()
-        }
+        // SideKick does not use CapsLock HID remapping. We intentionally do NOT
+        // touch the system-wide HID map here: calling removeHIDRemapping() would
+        // wipe a remap installed by a sibling app (e.g. Onit Dictate) on this Mac.
     }
 
     static func setShortcut(name: KeyboardShortcuts.Name, shortcut: KeyboardShortcuts.Shortcut, usesCapsLockModifier: Bool) {
@@ -83,12 +79,7 @@ class KeyboardShortcutsManager {
         Self.capsLockModifierShortcuts = currentShortcuts
         KeyboardShortcuts.setShortcut(shortcut, for: name)
 
-        // Re-evaluate HID remapping: apply if CapsLock is now needed, remove if not
-        if KeystrokeNotificationManager.shared.isHIDRemappingNeededByAnyFeature() {
-            KeystrokeNotificationManager.shared.applyHIDRemapping(context: "CapsLockModifierShortcut")
-        } else {
-            KeystrokeNotificationManager.shared.removeHIDRemappingIfNotNeeded()
-        }
+        // SideKick does not use CapsLock HID remapping; see configure().
     }
 
     static func enablePanelShortcuts(modelContainer: ModelContainer) {

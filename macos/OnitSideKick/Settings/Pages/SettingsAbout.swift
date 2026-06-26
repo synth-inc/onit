@@ -40,7 +40,7 @@ struct SettingsAbout: View {
                 .padding(4)
             
             VStack(alignment: .leading, spacing: 0) {
-                Text("Onit")
+                Text("SideKick")
                     .styleText(weight: .regular)
                 
                 Text(versionText)

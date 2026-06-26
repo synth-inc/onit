@@ -114,9 +114,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         appModeCoordinator?.cleanup()
         appCoordinator?.cleanup()
         AnalyticsManager.appQuit()
-
-        // Remove HID remapping to restore normal CapsLock behavior
-        KeystrokeNotificationManager.shared.removeHIDRemapping()
     }
 
     func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {

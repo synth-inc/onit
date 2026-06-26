@@ -169,7 +169,8 @@ final class AuthManager: ObservableObject {
     // MARK: - Magic Link Login
     
     func handleTokenLogin(_ url: URL) {
-        guard url.scheme == "onit" else {
+        // Must match the app's registered URL scheme (see AppState.urlScheme).
+        guard url.scheme == AppState.urlScheme else {
             return
         }
         

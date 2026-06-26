@@ -32,15 +32,22 @@ struct LoginLinkEndpoint: Endpoint {
     let email: String
 
     var requestBody: Request? {
-        LoginLinkRequest(email: email)
+        LoginLinkRequest(email: email, app: LoginLinkRequest.appIdentifier)
     }
-    
+
     var additionalHeaders: [String : String]? { nil }
-    
+
     var timeout: TimeInterval? { nil }
-    
+
 }
 
 struct LoginLinkRequest: Codable {
+    /// Identifies which app requested the magic link so the backend can choose
+    /// the correct deeplink scheme (onit-sidekick://) and email branding.
+    /// The shared Onit server serves multiple apps; without this it defaults to
+    /// Onit/Dictate. See the server-side ticket for how this is consumed.
+    static let appIdentifier = "sidekick"
+
     let email: String
+    let app: String
 }

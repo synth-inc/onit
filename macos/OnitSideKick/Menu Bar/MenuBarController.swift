@@ -438,11 +438,7 @@ final class MenuBarController: NSObject, NSMenuDelegate {
         self.showOrHideHideTimerStatus()
         self.showOrHideOpenPanelItem()
         self.addMenuDivider()
-        
-        let discordItem = MenuBarDiscord()
-        self.addMenuItem(discordItem)
-        discordItem.runPostInitilizationSetup()
-        
+
         let checkForUpdatesItem = MenuBarCheckForUpdates()
         self.addMenuItem(checkForUpdatesItem)
         checkForUpdatesItem.runPostInitilizationSetup()

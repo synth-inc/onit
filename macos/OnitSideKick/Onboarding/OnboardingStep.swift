@@ -14,15 +14,13 @@ enum OnboardingStep: String, CaseIterable, Codable, Defaults.Serializable {
 
     /// Common Steps
     case permissions
-    case discord
 
     case complete
 
     // MARK: - Feature-Specific Steps
 
     static let commonSteps: [OnboardingStep] = [
-        .permissions,
-        .discord
+        .permissions
     ]
 
     // MARK: - Onboarding Steps
@@ -36,7 +34,6 @@ enum OnboardingStep: String, CaseIterable, Codable, Defaults.Serializable {
 
         if !mainOnboardingCompleted {
             result.append(.permissions)
-            result.append(.discord)
         }
 
         result.append(.complete)
@@ -107,8 +104,6 @@ enum OnboardingStep: String, CaseIterable, Codable, Defaults.Serializable {
         /// Common Steps
         case .permissions:
             return String.localized("Grant access to use SideKick", table: "Onboarding")
-        case .discord:
-            return String.localized("Join our Discord Server!", table: "Onboarding")
 
         case .complete:
             return String.localized("Onit is up and running", table: "Onboarding")
@@ -120,8 +115,6 @@ enum OnboardingStep: String, CaseIterable, Codable, Defaults.Serializable {
         /// Common Steps
         case .permissions:
             return "Permissions are needed for SideKick to work properly."
-        case .discord:
-            return String.localized("Say hello to the team and other Onit users, get updates\nand give feedback.", table: "Onboarding")
 
         case .complete:
             return String.localized("You're all set to use Onit.", table: "Onboarding")

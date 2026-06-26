@@ -24,8 +24,6 @@ struct ContentViewFooterNotification: View {
     
     private var content: (HeaderText, ButtonText, ButtonIcon, ButtonIconSize) {
         switch footerNotification {
-        case .discord:
-            return (String.localized("Get the latest news & say hi to friends!", table: "Sidekick"), String.localized("Join Discord", table: "Sidekick"), .logoDiscord, 18)
         default:
             return (String.localized("New update available!", table: "Sidekick"), String.localized("Download Update", table: "Sidekick"), .lightning, 16)
         }
@@ -80,17 +78,13 @@ struct ContentViewFooterNotification: View {
 extension ContentViewFooterNotification {
     private func dismiss() {
         switch footerNotification {
-        case .discord:
-            appState.removeDiscordFooterNotifications()
         default:
             appState.removeUpdateFooterNotifications()
         }
     }
-    
+
     private func action() {
         switch footerNotification {
-        case .discord:
-            MenuBarDiscord.openDiscord()
         default:
             appState.checkForAvailableUpdateWithDownload()
         }

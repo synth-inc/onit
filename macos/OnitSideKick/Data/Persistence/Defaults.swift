@@ -16,7 +16,6 @@ enum AuthFlowStatus: String, Defaults.Serializable {
 }
 
 enum FooterNotification: String, Defaults.Serializable {
-    case discord
     case update
 }
 
@@ -176,7 +175,7 @@ extension Defaults.Keys {
     static let hasClosedTrialEndedAlert = Key<Bool>("hasClosedTrialEndedAlert", default: false)
     
     // Notifications
-    static let footerNotifications = Key<[FooterNotification]>("footerNotifications", default: [FooterNotification.discord])
+    static let footerNotifications = Key<[FooterNotification]>("footerNotifications", default: [])
 
     // Stop generation behavior
     static let stopMode = Key<StopMode>("stopMode", default: .removePartial)

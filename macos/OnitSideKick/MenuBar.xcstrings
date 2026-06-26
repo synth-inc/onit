@@ -523,23 +523,6 @@
         }
       }
     },
-    "Join Discord" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Join Discord"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Rejoindre Discord"
-          }
-        }
-      }
-    },
     "Microphone" : {
       "extractionState" : "manual",
       "localizations" : {
