@@ -6,7 +6,7 @@
 
   
 # Onit SideKick
-_NOTE: This project does not contain the code for **Onit Dictate** or **Onit QuickEdit**! Those projects aren’t open source and live in a separate repository._
+_NOTE: This project does not contain the code for **Onit Dictate** or **Onit QuickEdit**! Those projects live in a separate repository. Dictate is not open source!
 
 Onit SideKick is an AI chat sidebar that can dock to any app on your Mac!
 
