@@ -1,5 +1,5 @@
 <div align="center">
-<a href="https://www.getonit.ai">
+<a href="https://www.getonit.ai/ai-sidebar">
 <img src="macos/OnitSideKick/Assets.xcassets/AppIcon.appiconset/icon_256_rounded.png" alt="Onit SideKick Logo" width="128" height="128">
 </a>
 </div>
@@ -14,7 +14,7 @@ It's like Cursor Chat, but for every _other_ app on your computer - not just in 
 
 ## 🚀 Quick Start
 
-- **Download:** Get the pre-built version from [www.getonit.ai](https://www.getonit.ai)
+- **Download:** Get the pre-built version from [www.getonit.ai/ai-sidebar](https://www.getonit.ai/ai-sidebar)
 - **Build from source:** Clone this repository and run in Xcode  
 
 ## ✨ Features
@@ -104,7 +104,7 @@ Onit is released under a Creative Commons Non-Commercial license. We believe in:
 
 ## 💰 Monetization
 
-V2 offers a simple subscription that provides users with access to all the model providers we support through a single, low monthly fee. Details are [here](https://www.getonit.ai/#pricing). If you'd prefer not to use our subscription, you can still access models by adding your own API tokens. 
+V2 offers a simple subscription that provides users with access to all the model providers we support through a single, low monthly fee. Details are [here](https://www.getonit.ai/ai-sidebar). If you'd prefer not to use our subscription, you can still access models by adding your own API tokens. 
 
 - Local chat will always remain free
 - Source code will remain open for customization
