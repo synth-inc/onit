@@ -99,14 +99,20 @@ cp "$DMG_PATH" "$WORK/$DMG_VERSIONED"
 # ───────────────────────── Publish GitHub Release ─────────────────────────
 if [ "$NO_PUSH" = false ]; then
   echo "📦 Creating GitHub Release ${TAG}…"
+  # Upload BOTH the versioned DMG (referenced by the appcast enclosure) and a
+  # constant-named copy ("$DMG_PATH" == "$APP_NAME.dmg") so the stable download
+  # permalink stays alive across versions:
+  #   https://github.com/$GH_REPO/releases/latest/download/$APP_NAME.dmg
+  # NOTE: the constant-named copy is kept OUT of "$WORK" so generate_appcast
+  # (which scans "$WORK") still produces a single, correctly-versioned item.
   if gh release view "$TAG" --repo "$GH_REPO" >/dev/null 2>&1; then
-    gh release upload "$TAG" "$WORK/$DMG_VERSIONED" --repo "$GH_REPO" --clobber
+    gh release upload "$TAG" "$WORK/$DMG_VERSIONED" "$DMG_PATH" --repo "$GH_REPO" --clobber
   else
     if [ -n "$NOTES" ]; then
-      gh release create "$TAG" "$WORK/$DMG_VERSIONED" --repo "$GH_REPO" \
+      gh release create "$TAG" "$WORK/$DMG_VERSIONED" "$DMG_PATH" --repo "$GH_REPO" \
         --title "$APP_NAME $VERSION" --notes "$NOTES"
     else
-      gh release create "$TAG" "$WORK/$DMG_VERSIONED" --repo "$GH_REPO" \
+      gh release create "$TAG" "$WORK/$DMG_VERSIONED" "$DMG_PATH" --repo "$GH_REPO" \
         --title "$APP_NAME $VERSION" --generate-notes
     fi
   fi
